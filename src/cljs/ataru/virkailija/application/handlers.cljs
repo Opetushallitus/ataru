@@ -191,6 +191,7 @@
              (assoc-in [:application :selection-state-filter] (extract-unselected-review-states-from-query
                                                                 :selection-state-filter
                                                                 review-states/application-hakukohde-selection-states)))
+   :dispatch [:application/refresh-haut]
    :http {:method              :get
           :path                path
           :skip-parse-times?   true
