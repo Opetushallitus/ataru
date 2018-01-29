@@ -631,7 +631,7 @@
        (into {})))
 
 (defn- update-hakukohde-process-state!
-  [connection username organization-oid hakukohde-oid from-state to-state application-key]
+  [connection username organization-oid virkailija hakukohde-oid from-state to-state application-key]
   (let [application      (get-latest-application-by-key-with-hakukohde-reviews application-key)
         existing-reviews (filter
                            #(= (:state %) from-state)
@@ -642,16 +642,18 @@
                                 (assoc :application_key application-key))
                            existing-reviews)
         new-event        {:application_key  application-key
-                          :event_type       "review-state-change"
+                          :event_type       "hakukohde-review-state-change"
                           :new_review_state to-state
-                          :virkailija_oid   nil
-                          :hakukohde        hakukohde-oid
-                          :review_key       nil}]
+                          :virkailija_oid   (:oid virkailija)
+                          :first_name       (:first_name virkailija)
+                          :last_name        (:last_name virkailija)
+                          :review_key       "processing-state"}]
     (when (seq new-reviews)
       (info "Updating" (count new-reviews) "application-hakukohde-reviews"))
     (doseq [new-review new-reviews]
       (yesql-upsert-application-hakukohde-review! new-review connection)
-      (yesql-add-application-event<! new-event connection))
+      (yesql-add-application-event<! (assoc new-event :hakukohde (:hakukohde new-review))
+                                     connection))
     {:new              new-event
      :id               username
      :operation        audit-log/operation-new
@@ -662,9 +664,10 @@
   (let [audit-log-entries (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (let [connection       {:connection conn}
                                   username         (get-in session [:identity :username])
-                                  organization-oid (get-in session [:identity :organizations 0 :oid])]
+                                  organization-oid (get-in session [:identity :organizations 0 :oid])
+                                  virkailija (virkailija-edit/upsert-virkailija session)]
                               (mapv
-                                (partial update-hakukohde-process-state! connection username organization-oid hakukohde-oid from-state to-state)
+                                (partial update-hakukohde-process-state! connection username organization-oid virkailija hakukohde-oid from-state to-state)
                                 application-keys)))]
     (doseq [audit-log-entry audit-log-entries]
       (audit-log/log audit-log-entry))))
