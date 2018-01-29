@@ -19,7 +19,7 @@
             [ataru.application.review-states :as review-states]
             [ataru.application.application-states :as application-states]))
 
-(def max-value-length 32000)
+(def max-value-length 5000)
 
 (def tz (t/default-time-zone))
 
