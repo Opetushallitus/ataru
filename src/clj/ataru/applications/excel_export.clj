@@ -19,6 +19,8 @@
             [ataru.application.review-states :as review-states]
             [ataru.application.application-states :as application-states]))
 
+(def max-value-length 5000)
+
 (def tz (t/default-time-zone))
 
 (def ^:private modified-time-format
@@ -236,9 +238,16 @@
                                  (apply str))
 
                             :else
-                            (raw-values->human-readable-value form application (:key answer) value-or-values))]
-      (when (and value column)
-        (writer 0 (+ column (count application-meta-fields)) value))))
+                            (raw-values->human-readable-value form application (:key answer) value-or-values))
+          value-length    (count value)
+          value-truncated (if (< max-value-length value-length)
+                            (str
+                              (subs value 0 (- max-value-length 100))
+                              "—— [ vastaus liian pitkä Excel-vientiin, poistettu "
+                              (- value-length max-value-length -100) " merkkiä]")
+                            value)]
+      (when (and value-truncated column)
+        (writer 0 (+ column (count application-meta-fields)) value-truncated))))
   (let [application-key              (:key application)
         application-review (application-store/get-application-review application-key)
         beef-header-count  (- (apply max (map :column headers)) (count review-headers))
