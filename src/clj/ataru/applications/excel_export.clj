@@ -376,11 +376,6 @@
       (> (count name) 30)
       (subs 0 30))))
 
-(defn- inject-haku-info
-  [tarjonta-service ohjausparametrit-service application]
-  (merge application
-         (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service ohjausparametrit-service (:haku application))))
-
 (defn set-column-widths [workbook]
   (doseq [n (range (.getNumberOfSheets workbook))
           :let [sheet (.getSheetAt workbook n)]
@@ -447,7 +442,11 @@
         application-meta-fields (indexed-meta-fields application-meta-fields)
         get-form-by-id          (memoize form-store/fetch-by-id)
         get-latest-form-by-key  (memoize form-store/fetch-by-key)
-        get-koodisto-options    (memoize koodisto/get-koodisto-options)]
+        get-koodisto-options    (memoize koodisto/get-koodisto-options)
+        get-tarjonta-info       (memoize (fn [haku-oid] (tarjonta-parser/parse-tarjonta-info-by-haku
+                                                         tarjonta-service
+                                                         ohjausparametrit-service
+                                                         haku-oid)))]
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
          (map (partial add-hakukohde-names tarjonta-service))
@@ -473,7 +472,7 @@
                           (->> applications
                                (sort-by :created-time)
                                (reverse)
-                               (map (partial inject-haku-info tarjonta-service ohjausparametrit-service))
+                               (map #(merge % (get-tarjonta-info (:haku %))))
                                (map-indexed (fn [row-idx application]
                                               (let [row-writer (make-writer applications-sheet (inc row-idx) workbook)
                                                     application-review (get application-reviews (:key application))]
