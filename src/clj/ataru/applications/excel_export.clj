@@ -178,11 +178,8 @@
                    first)]
     (get-in koodi [:label lang])))
 
-(defn- raw-values->human-readable-value [{:keys [content]} {:keys [lang]} key get-koodisto-options value]
-  (let [field-descriptor (->> (util/flatten-form-fields content)
-                              (filter #(= key (:id %)))
-                              first)
-        lang (-> lang clojure.string/lower-case keyword)
+(defn- raw-values->human-readable-value [field-descriptor {:keys [lang]} get-koodisto-options value]
+  (let [lang (-> lang clojure.string/lower-case keyword)
         koodisto-source (:koodisto-source field-descriptor)
         options (:options field-descriptor)]
     (cond (some? koodisto-source)
@@ -211,7 +208,7 @@
   (and (sequential? value-or-values)
        (all-answers-sec-or-vec? value-or-values)))
 
-(defn- write-application! [writer application application-review headers application-meta-fields form get-koodisto-options]
+(defn- write-application! [writer application application-review headers application-meta-fields form-fields-by-key get-koodisto-options]
   (doseq [meta-field application-meta-fields]
     (let [meta-value ((or
                         (:format-fn meta-field)
@@ -221,24 +218,25 @@
                          application))]
       (writer 0 (:column meta-field) meta-value)))
   (doseq [answer (:answers application)]
-    (let [column          (:column (first (filter #(= (:key answer) (:id %)) headers)))
+    (let [field-descriptor (get form-fields-by-key (:key answer))
+          column          (:column (first (filter #(= (:key answer) (:id %)) headers)))
           value-or-values (:value answer)
           value           (cond
                             (kysymysryhma-answer? value-or-values)
                             (->> value-or-values
                                  (map #(clojure.string/join "," %))
-                                 (map (partial raw-values->human-readable-value form application (:key answer) get-koodisto-options))
+                                 (map (partial raw-values->human-readable-value field-descriptor application get-koodisto-options))
                                  (map-indexed #(format "#%s: %s,\n" %1 %2))
                                  (apply str))
 
                             (sequential? value-or-values)
                             (->> value-or-values
-                                 (map (partial raw-values->human-readable-value form application (:key answer) get-koodisto-options))
+                                 (map (partial raw-values->human-readable-value field-descriptor application get-koodisto-options))
                                  (interpose ",\n")
                                  (apply str))
 
                             :else
-                            (raw-values->human-readable-value form application (:key answer) get-koodisto-options value-or-values))
+                            (raw-values->human-readable-value field-descriptor application get-koodisto-options value-or-values))
           value-length    (count value)
           value-truncated (if (< max-value-length value-length)
                             (str
@@ -465,7 +463,10 @@
                         (let [applications-sheet (.createSheet workbook sheet-name)
                               headers            (extract-headers applications form)
                               meta-writer        (make-writer form-meta-sheet (inc sheet-idx) workbook)
-                              header-writer      (make-writer applications-sheet 0 workbook)]
+                              header-writer      (make-writer applications-sheet 0 workbook)
+                              form-fields-by-key (reduce #(assoc %1 (:id %2) %2)
+                                                         {}
+                                                         (util/flatten-form-fields (:content form)))]
                           (write-form-meta! meta-writer form applications form-meta-fields)
                           (write-headers! header-writer headers application-meta-fields)
                           (->> applications
@@ -480,7 +481,7 @@
                                                                     application-review
                                                                     headers
                                                                     application-meta-fields
-                                                                    form
+                                                                    form-fields-by-key
                                                                     get-koodisto-options))))
                                (dorun))
                           (.createFreezePane applications-sheet 0 1 0 1))))
