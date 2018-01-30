@@ -245,3 +245,12 @@
 
 (defn remove-review-note [note-id]
   (application-store/remove-review-note note-id))
+
+(defn get-application-version-changes
+  [application-key version-number session organization-service]
+  (aac/check-application-access
+    application-key
+    session
+    organization-service
+    [:view-applications])
+  (application-store/get-application-version-changes application-key version-number))

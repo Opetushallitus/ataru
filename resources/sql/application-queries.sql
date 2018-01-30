@@ -958,3 +958,11 @@ SELECT secret FROM latest_applications ORDER BY created_time DESC LIMIT 1;
 UPDATE applications
 SET hakukohde = ARRAY[:hakukohde]::character varying(127)[]
 WHERE secret = :secret;
+
+--name: yesql-get-application-version-and-previous
+SELECT content
+FROM applications
+WHERE key = :application_key
+ORDER BY id ASC
+LIMIT 2
+OFFSET :version_number;
