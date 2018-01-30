@@ -1,7 +1,7 @@
 (ns ataru.applications.excel-export
   (:import [org.apache.poi.ss.usermodel Row VerticalAlignment Row$MissingCellPolicy]
            [java.io ByteArrayOutputStream]
-           [org.apache.poi.xssf.usermodel XSSFWorkbook XSSFCell XSSFCellStyle])
+           [org.apache.poi.xssf.usermodel XSSFWorkbook XSSFSheet XSSFCell XSSFCellStyle])
   (:require [ataru.forms.form-store :as form-store]
             [ataru.util.language-label :as label]
             [ataru.applications.application-store :as application-store]
@@ -129,18 +129,18 @@
   [fields]
   (map-indexed (fn [idx field] (merge field {:column idx})) fields))
 
-(defn- set-cell-style [cell value]
+(defn- set-cell-style ^XSSFCell [^XSSFCell cell value]
   (if (and (string? value)
            (contains? #{\= \+ \- \@} (first value)))
     (.setCellStyle cell @cell-style-quote-prefixed)
     (.setCellStyle cell @cell-style))
   cell)
 
-(defn- update-row-cell! [sheet row column value workbook]
-  (when-let [v (not-empty (trim (str value)))]
-    (-> (or (.getRow sheet row)
-            (.createRow sheet row))
-        (.getCell column Row$MissingCellPolicy/CREATE_NULL_AS_BLANK)
+(defn- update-row-cell! [^XSSFSheet sheet row column value workbook]
+  (when-let [^String v (not-empty (trim (str value)))]
+    (-> (or (.getRow sheet (int row))
+            (.createRow sheet (int row)))
+        (.getCell (int column) Row$MissingCellPolicy/CREATE_NULL_AS_BLANK)
         (set-cell-style value)
         (.setCellValue v)))
   sheet)
@@ -374,9 +374,9 @@
       (> (count name) 30)
       (subs 0 30))))
 
-(defn set-column-widths [workbook]
+(defn set-column-widths [^XSSFWorkbook workbook]
   (doseq [n (range (.getNumberOfSheets workbook))
-          :let [sheet (.getSheetAt workbook n)]
+          :let [sheet (.getSheetAt workbook (int n))]
           y (range (.getLastCellNum (.getRow sheet 0)))]
     (.autoSizeColumn sheet (short y))))
 
