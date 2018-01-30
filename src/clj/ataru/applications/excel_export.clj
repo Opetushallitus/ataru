@@ -178,7 +178,7 @@
                    first)]
     (get-in koodi [:label lang])))
 
-(defn- raw-values->human-readable-value [{:keys [content]} {:keys [lang]} key value]
+(defn- raw-values->human-readable-value [{:keys [content]} {:keys [lang]} key get-koodisto-options value]
   (let [field-descriptor (->> (util/flatten-form-fields content)
                               (filter #(= key (:id %)))
                               first)
@@ -186,7 +186,7 @@
         koodisto-source (:koodisto-source field-descriptor)
         options (:options field-descriptor)]
     (cond (some? koodisto-source)
-          (let [koodisto (koodisto/get-koodisto-options (:uri koodisto-source) (:version koodisto-source))
+          (let [koodisto (get-koodisto-options (:uri koodisto-source) (:version koodisto-source))
                 koodi-uri->label (partial get-label koodisto lang)]
             (->> (clojure.string/split value #"\s*,\s*")
                  (mapv koodi-uri->label)
@@ -211,7 +211,7 @@
   (and (sequential? value-or-values)
        (all-answers-sec-or-vec? value-or-values)))
 
-(defn- write-application! [writer application headers application-meta-fields form]
+(defn- write-application! [writer application headers application-meta-fields form get-koodisto-options]
   (doseq [meta-field application-meta-fields]
     (let [meta-value ((or
                         (:format-fn meta-field)
@@ -227,18 +227,18 @@
                             (kysymysryhma-answer? value-or-values)
                             (->> value-or-values
                                  (map #(clojure.string/join "," %))
-                                 (map (partial raw-values->human-readable-value form application (:key answer)))
+                                 (map (partial raw-values->human-readable-value form application (:key answer) get-koodisto-options))
                                  (map-indexed #(format "#%s: %s,\n" %1 %2))
                                  (apply str))
 
                             (sequential? value-or-values)
                             (->> value-or-values
-                                 (map (partial raw-values->human-readable-value form application (:key answer)))
+                                 (map (partial raw-values->human-readable-value form application (:key answer) get-koodisto-options))
                                  (interpose ",\n")
                                  (apply str))
 
                             :else
-                            (raw-values->human-readable-value form application (:key answer) value-or-values))
+                            (raw-values->human-readable-value form application (:key answer) get-koodisto-options value-or-values))
           value-length    (count value)
           value-truncated (if (< max-value-length value-length)
                             (str
@@ -447,7 +447,8 @@
         form-meta-sheet         (create-form-meta-sheet workbook form-meta-fields)
         application-meta-fields (indexed-meta-fields application-meta-fields)
         get-form-by-id          (memoize form-store/fetch-by-id)
-        get-latest-form-by-key  (memoize form-store/fetch-by-key)]
+        get-latest-form-by-key  (memoize form-store/fetch-by-key)
+        get-koodisto-options    (memoize koodisto/get-koodisto-options)]
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
          (map (partial add-hakukohde-names tarjonta-service))
@@ -476,7 +477,7 @@
                                (map (partial inject-haku-info tarjonta-service ohjausparametrit-service))
                                (map-indexed (fn [row-idx application]
                                               (let [row-writer (make-writer applications-sheet (inc row-idx) workbook)]
-                                                (write-application! row-writer application headers application-meta-fields form))))
+                                                (write-application! row-writer application headers application-meta-fields form get-koodisto-options))))
                                (dorun))
                           (.createFreezePane applications-sheet 0 1 0 1))))
          (dorun))
