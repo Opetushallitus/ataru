@@ -950,3 +950,11 @@ ORDER BY created_time DESC;
 
 --name: yesql-get-latest-application-ids-distinct-by-person-oid
 SELECT DISTINCT ON (person_oid) id FROM latest_applications ORDER BY person_oid, id DESC;
+
+--name: yesql-get-application-version-and-previous
+SELECT content
+FROM applications
+WHERE key = :application_key
+ORDER BY id ASC
+LIMIT 2
+OFFSET :version_number;

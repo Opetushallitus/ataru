@@ -12,6 +12,7 @@
             [clj-time.core :as time]
             [clj-time.format :as f]
             [clj-time.coerce :as c]
+            [clojure.data :as data]
             [schema.core :as s]
             [ataru.db.db :as db]
             [yesql.core :refer [defqueries]]
@@ -19,7 +20,8 @@
             [ataru.dob :as dob]
             [ataru.util.random :as crypto]
             [taoensso.timbre :refer [info]]
-            [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]))
+            [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
+            [ataru.util :as util]))
 
 (defqueries "sql/application-queries.sql")
 (defqueries "sql/virkailija-credentials-queries.sql")
@@ -714,3 +716,24 @@
 
 (defn get-application-keys []
   (exec-db :db yesql-get-latest-application-ids-distinct-by-person-oid nil))
+
+(defn get-application-version-changes [application-key version-number]
+  "Versioning starts at 1, which describes the first edit made to the application.
+   The param is decremented since its given to psql offset, and we want to get application
+   versions 0 and 1 at version index 1."
+  (when (pos? version-number)
+    (let [[{older-content :content} {newer-content :content}]
+          (exec-db :db yesql-get-application-version-and-previous {:application_key application-key
+                                                                   :version_number  (dec version-number)})
+          older-answers (->> older-content
+                             :answers
+                             (util/group-by-first :key))
+          newer-answers (->> newer-content
+                             :answers
+                             (util/group-by-first :key))
+          [old-answers changed-answers] (data/diff older-answers newer-answers)
+          answer-keys   (set (concat (keys old-answers) (keys changed-answers)))]
+      (when (not-empty newer-answers) ; In this case we are at the lastest version of the application, no diff!
+        (for [key answer-keys]
+          {:old (:value (get old-answers key))
+           :new (:value (get changed-answers key))})))))

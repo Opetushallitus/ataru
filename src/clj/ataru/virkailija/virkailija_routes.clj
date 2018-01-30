@@ -350,7 +350,18 @@
                                  organization-service
                                  tarjonta-service
                                  ohjausparametrit-service
-                                 person-service)}))
+                                 person-service)})
+
+                   (api/GET "/:key/version-changes" {session :session}
+                     :summary "Get changes made to an application in version x"
+                     :path-params [application-key :- s/Str]
+                     :query-params [version-number :- s/Int]
+                     (if-let [diff (application-service/get-application-version-changes application-key
+                                                                                        version-number
+                                                                                        session
+                                                                                        organization-service)]
+                       (ok diff)
+                       (bad-request))))
 
                  (api/context "/cache" []
                    (api/POST "/clear/:cache" {session :session}
