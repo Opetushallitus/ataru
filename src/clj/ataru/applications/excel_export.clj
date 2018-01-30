@@ -391,36 +391,32 @@
       (update application :answers conj
         {:key "hakukohteet" :fieldType "hakukohteet" :value (:hakukohde application) :label "Hakukohteet"}))))
 
-(defn- get-hakukohde-name [tarjonta-service lang-s oid]
+(defn- get-hakukohde-name [get-hakukohde lang-s oid]
   (let [lang (keyword lang-s)]
-    (when-let [hakukohde (tarjonta-parser/parse-hakukohde
-                          tarjonta-service
-                          (tarjonta/get-hakukohde tarjonta-service oid))]
+    (when-let [hakukohde (get-hakukohde oid)]
       (str (get-in hakukohde [:name lang]) " - "
            (get-in hakukohde [:tarjoaja-name lang])))))
 
-(defn- add-hakukohde-name [tarjonta-service lang hakukohde-answer haku-oid]
-  (let [use-priority (some->> haku-oid
-                              (tarjonta/get-haku tarjonta-service)
-                              :usePriority)]
-    (update hakukohde-answer :value
-            (partial map-indexed (fn [index oid]
-                                   (let [name           (get-hakukohde-name tarjonta-service lang oid)
-                                         priority-index (when use-priority
-                                                          (str "(" (inc index) ") "))]
-                                     (if name
-                                       (str priority-index name " (" oid ")")
-                                       (str priority-index oid))))))))
+(defn- add-hakukohde-name [get-haku get-hakukohde lang hakukohde-answer haku-oid]
+  (update hakukohde-answer :value
+          (partial map-indexed
+                   (fn [index oid]
+                     (let [name           (get-hakukohde-name get-hakukohde lang oid)
+                           priority-index (when (:prioritize-hakukohteet (:tarjonta (get-haku haku-oid)))
+                                            (str "(" (inc index) ") "))]
+                       (if name
+                         (str priority-index name " (" oid ")")
+                         (str priority-index oid)))))))
 
-(defn- add-hakukohde-names [tarjonta-service application]
+(defn- add-hakukohde-names [get-haku get-hakukohde application]
   (update application :answers
           (partial map (fn [answer]
                          (if (= "hakukohteet" (:key answer))
-                           (add-hakukohde-name tarjonta-service (:lang application) answer (:haku application))
+                           (add-hakukohde-name get-haku get-hakukohde (:lang application) answer (:haku application))
                            answer)))))
 
 (defn- add-all-hakukohde-reviews
-  [tarjonta-service selected-hakukohde application]
+  [get-hakukohde selected-hakukohde application]
   (let [all-reviews            (application-states/get-all-reviews-for-all-requirements
                                  application
                                  selected-hakukohde)
@@ -429,7 +425,7 @@
                                    (assoc review
                                      :hakukohde-name
                                      (get-hakukohde-name
-                                       tarjonta-service
+                                       get-hakukohde
                                        (:lang application)
                                        hakukohde)))
                                  all-reviews)]
@@ -443,14 +439,17 @@
         get-form-by-id          (memoize form-store/fetch-by-id)
         get-latest-form-by-key  (memoize form-store/fetch-by-key)
         get-koodisto-options    (memoize koodisto/get-koodisto-options)
+        get-hakukohde           (memoize (fn [oid] (tarjonta-parser/parse-hakukohde
+                                                    tarjonta-service
+                                                    (tarjonta/get-hakukohde tarjonta-service oid))))
         get-tarjonta-info       (memoize (fn [haku-oid] (tarjonta-parser/parse-tarjonta-info-by-haku
                                                          tarjonta-service
                                                          ohjausparametrit-service
                                                          haku-oid)))]
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
-         (map (partial add-hakukohde-names tarjonta-service))
-         (map (partial add-all-hakukohde-reviews tarjonta-service selected-hakukohde))
+         (map (partial add-hakukohde-names get-tarjonta-info get-hakukohde))
+         (map (partial add-all-hakukohde-reviews get-hakukohde selected-hakukohde))
          (reduce (fn [result {:keys [form] :as application}]
                    (let [form-key (:key (get-form-by-id form))
                          form     (get-latest-form-by-key form-key)]
