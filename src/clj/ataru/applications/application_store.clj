@@ -306,6 +306,10 @@
        (map ->kebab-case-kw)
        (first)))
 
+(defn get-application-reviews-by-keys [application-keys]
+  (map ->kebab-case-kw
+       (exec-db :db yesql-get-application-reviews-by-keys {:application_keys application-keys})))
+
 (defn get-application [application-id]
   (unwrap-application (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
 

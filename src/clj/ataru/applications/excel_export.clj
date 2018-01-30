@@ -211,7 +211,7 @@
   (and (sequential? value-or-values)
        (all-answers-sec-or-vec? value-or-values)))
 
-(defn- write-application! [writer application headers application-meta-fields form get-koodisto-options]
+(defn- write-application! [writer application application-review headers application-meta-fields form get-koodisto-options]
   (doseq [meta-field application-meta-fields]
     (let [meta-value ((or
                         (:format-fn meta-field)
@@ -249,7 +249,6 @@
       (when (and value-truncated column)
         (writer 0 (+ column (count application-meta-fields)) value-truncated))))
   (let [application-key              (:key application)
-        application-review (application-store/get-application-review application-key)
         beef-header-count  (- (apply max (map :column headers)) (count review-headers))
         prev-header-count  (+ beef-header-count
                               (count application-meta-fields))
@@ -441,7 +440,7 @@
                                  all-reviews)]
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
-(defn export-applications [applications selected-hakukohde tarjonta-service ohjausparametrit-service]
+(defn export-applications [applications application-reviews selected-hakukohde tarjonta-service ohjausparametrit-service]
   (let [workbook                (create-workbook-and-styles!)
         form-meta-fields        (indexed-meta-fields form-meta-fields)
         form-meta-sheet         (create-form-meta-sheet workbook form-meta-fields)
@@ -476,8 +475,15 @@
                                (reverse)
                                (map (partial inject-haku-info tarjonta-service ohjausparametrit-service))
                                (map-indexed (fn [row-idx application]
-                                              (let [row-writer (make-writer applications-sheet (inc row-idx) workbook)]
-                                                (write-application! row-writer application headers application-meta-fields form get-koodisto-options))))
+                                              (let [row-writer (make-writer applications-sheet (inc row-idx) workbook)
+                                                    application-review (get application-reviews (:key application))]
+                                                (write-application! row-writer
+                                                                    application
+                                                                    application-review
+                                                                    headers
+                                                                    application-meta-fields
+                                                                    form
+                                                                    get-koodisto-options))))
                                (dorun))
                           (.createFreezePane applications-sheet 0 1 0 1))))
          (dorun))
