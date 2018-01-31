@@ -502,7 +502,7 @@
       [application-list-basic-column-header
        :created-time
        "application-handling__list-row--time"
-       "Saapunut"]
+       "Viimeksi muokattu"]
       [:span.application-handling__list-row--state
        [hakukohde-state-filter-controls
         :processing-state-filter
