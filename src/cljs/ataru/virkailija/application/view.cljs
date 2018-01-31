@@ -41,7 +41,7 @@
                :value filename}]
       [:input {:type  "hidden"
                :name  "skip-answers"
-               :value "true"}]
+               :value "false"}]
       (when-let [csrf-token (cljs-util/csrf-token)]
         [:input {:type  "hidden"
                  :name  "CSRF"
