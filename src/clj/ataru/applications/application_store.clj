@@ -738,9 +738,12 @@
           newer-answers (->> newer-content
                              :answers
                              (util/group-by-first :key))
-          [old-answers changed-answers] (data/diff older-answers newer-answers)
-          answer-keys   (set (concat (keys old-answers) (keys changed-answers)))]
-      (when (not-empty newer-answers) ; In this case we are at the lastest version of the application, no diff!
-        (for [key answer-keys]
-          {:old (:value (get old-answers key))
-           :new (:value (get changed-answers key))})))))
+          [old-answers new-answers _] (data/diff older-answers newer-answers)
+          answer-keys   (set (concat (keys old-answers) (keys new-answers)))]
+      (when (not-empty newer-answers)                       ; In this case we are at the lastest version of the application, no diff!
+        (into {}
+              (for [key answer-keys
+                    :let [old-value (:value (get older-answers key))
+                          new-value (:value (get newer-answers key))]]
+                {key {:old old-value
+                      :new new-value}}))))))
