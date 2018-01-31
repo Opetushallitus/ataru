@@ -19,6 +19,43 @@
             [ataru.application.review-states :as review-states]
             [ataru.application.application-states :as application-states]))
 
+(def answers-to-always-include
+  #{"higher-education-qualification-in-finland-institution"
+    "studies-required-by-higher-education-field"
+    "studies-required-by-higher-education-institution"
+    "address"
+    "email"
+    "preferred-name"
+    "last-name"
+    "country-of-residence"
+    "higher-education-qualification-outside-finland-country"
+    "other-eligibility-description"
+    "phone"
+    "passport-number"
+    "nationality"
+    "city"
+    "ssn"
+    "first-name"
+    "birth-date"
+    "postal-code"
+    "hakukohteet"
+    "higher-education-qualification-outside-finland-qualification"
+    "higher-education-qualification-in-finland-qualification"
+    "higher-education-qualification-outside-finland-institution"
+    "higher-education-qualification-outside-finland-level"
+    "studies-required-by-higher-education-scope"
+    "birthplace"
+    "language"
+    "upper-secondary-school-completed-country"
+    "higher-education-qualification-in-finland-year-and-date"
+    "higher-education-qualification-outside-finland-year-and-date"
+    "higher-education-qualification-in-finland-level"
+    "national-id-number"
+    "gender"
+    "postal-office"
+    "home-town"
+    "other-eligibility-year-of-completion"})
+
 (def max-value-length 5000)
 
 (def tz (t/default-time-zone))
@@ -136,7 +173,7 @@
     (.setCellStyle cell @cell-style))
   cell)
 
-(defn- update-row-cell! [^XSSFSheet sheet row column value workbook]
+(defn- update-row-cell! [^XSSFSheet sheet row column value]
   (when-let [^String v (not-empty (trim (str value)))]
     (-> (or (.getRow sheet (int row))
             (.createRow sheet (int row)))
@@ -145,13 +182,13 @@
         (.setCellValue v)))
   sheet)
 
-(defn- make-writer [sheet row-offset workbook]
+(defn- make-writer [sheet row-offset]
   (fn [row column value]
     (update-row-cell!
       sheet
       (+ row-offset row)
       column
-      value workbook)
+      value)
     [sheet row-offset row column value]))
 
 (defn- write-form-meta!
@@ -265,6 +302,10 @@
   (and (not= "infoElement" (:fieldClass form-element))
        (not (:exclude-from-answers form-element))))
 
+(defn- pick-answer? [skip-answers? element-id]
+  (or (not skip-answers?)
+      (contains? answers-to-always-include element-id)))
+
 (defn- hidden-answer? [form-element]
   (:exclude-from-answers form-element))
 
@@ -324,12 +365,14 @@
       (str "Liitepyyntö: " (label/get-language-label-in-preferred-order (:label element)))
       :else header)))
 
-(defn- extract-headers-from-applications [applications form]
+(defn- extract-headers-from-applications [applications form skip-answers]
   (let [hidden-answers (map first (pick-form-labels (:content form) hidden-answer?))]
     (mapcat (fn [application]
               (->> (:answers application)
                    (filter (fn [answer]
-                             (not (some (partial = (:key answer)) hidden-answers))))
+                             (and
+                               (pick-answer? skip-answers (:key answer))
+                               (not (some (partial = (:key answer)) hidden-answers)))))
                    (mapv (fn [answer]
                            (vals (select-keys answer [:key :label]))))))
             applications)))
@@ -342,9 +385,9 @@
             labels-in-applications)))
 
 (defn- extract-headers
-  [applications form]
-  (let [labels-in-form              (pick-form-labels (:content form) form-label?)
-        labels-in-applications      (extract-headers-from-applications applications form)
+  [applications form skip-answers?]
+  (let [labels-in-form              (pick-form-labels (:content form) #(and (form-label? %) (pick-answer? skip-answers? (:id %))))
+        labels-in-applications      (extract-headers-from-applications applications form skip-answers?)
         labels-only-in-applications (remove-duplicates-by-field-id labels-in-form labels-in-applications)
         all-labels                  (distinct (concat labels-in-form labels-only-in-applications (map vector (repeat nil) review-headers)))
         decorator                   (partial decorate (util/flatten-form-fields (:content form)) (:content form))]
@@ -357,7 +400,7 @@
 
 (defn- create-form-meta-sheet [workbook meta-fields]
   (let [sheet  (.createSheet workbook "Lomakkeiden tiedot")
-        writer (make-writer sheet 0 workbook)]
+        writer (make-writer sheet 0)]
     (doseq [meta-field meta-fields
             :let [column (:column meta-field)
                   label  (:label meta-field)]]
@@ -369,7 +412,7 @@
 (defn- sheet-name [{:keys [id name]}]
   {:pre [(some? id)
          (some? name)]}
-  (let [name (str id "_" (clojure.string/replace name invalid-char-matcher "_"))]
+  (let [name (str id "_" (clojure.string/replace (some (partial get name) [:fi :sv :en]) invalid-char-matcher "_"))]
     (cond-> name
       (> (count name) 30)
       (subs 0 30))))
@@ -429,7 +472,7 @@
                                  all-reviews)]
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
-(defn export-applications [applications application-reviews selected-hakukohde tarjonta-service ohjausparametrit-service]
+(defn export-applications [applications application-reviews selected-hakukohde skip-answers? tarjonta-service ohjausparametrit-service]
   (let [workbook                (create-workbook-and-styles!)
         form-meta-fields        (indexed-meta-fields form-meta-fields)
         form-meta-sheet         (create-form-meta-sheet workbook form-meta-fields)
@@ -461,9 +504,9 @@
          (map second)
          (map-indexed (fn [sheet-idx {:keys [sheet-name form applications]}]
                         (let [applications-sheet (.createSheet workbook sheet-name)
-                              headers            (extract-headers applications form)
-                              meta-writer        (make-writer form-meta-sheet (inc sheet-idx) workbook)
-                              header-writer      (make-writer applications-sheet 0 workbook)
+                              headers            (extract-headers applications form skip-answers?)
+                              meta-writer        (make-writer form-meta-sheet (inc sheet-idx))
+                              header-writer      (make-writer applications-sheet 0)
                               form-fields-by-key (reduce #(assoc %1 (:id %2) %2)
                                                          {}
                                                          (util/flatten-form-fields (:content form)))]
@@ -474,7 +517,7 @@
                                (reverse)
                                (map #(merge % (get-tarjonta-info (:haku %))))
                                (map-indexed (fn [row-idx application]
-                                              (let [row-writer (make-writer applications-sheet (inc row-idx) workbook)
+                                              (let [row-writer (make-writer applications-sheet (inc row-idx))
                                                     application-review (get application-reviews (:key application))]
                                                 (write-application! row-writer
                                                                     application
@@ -505,3 +548,4 @@
    "_"
    (time-formatter (t/now) filename-time-format)
    ".xlsx"))
+

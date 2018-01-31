@@ -43,6 +43,7 @@
                                                 {}
                                                 ~(second bindings))
                                         nil
+                                        false
                                         (tarjonta-service/new-tarjonta-service)
                                         (ohjausparametrit-service/new-ohjausparametrit-service))
               (.write output#)))
