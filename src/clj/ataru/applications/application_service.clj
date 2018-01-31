@@ -67,7 +67,7 @@
                                    koodisto (koodisto/get-koodisto-options koodisto-uri version)
                                    get-label (fn [koodi-uri]
                                                (let [koodi (get-koodi koodisto koodi-uri)]
-                                                 (get-in koodi [:label lang])))]
+                                                 (get-in koodi [:label lang] "")))]
                                (cond (string? koodi-value)
                                      (let [values (clojure.string/split koodi-value #"\s*,\s*")]
                                        (if (< 1 (count values))
