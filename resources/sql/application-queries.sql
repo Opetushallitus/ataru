@@ -380,6 +380,16 @@ SELECT
 FROM application_reviews
 WHERE application_key = :application_key;
 
+-- name: yesql-get-application-reviews-by-keys
+SELECT
+  id,
+  modified_time,
+  state,
+  score,
+  application_key
+FROM application_reviews
+WHERE application_key IN (:application_keys);
+
 -- name: yesql-get-application-review-notes
 SELECT rn.id, rn.created_time, rn.application_key, rn.notes, v.first_name, v.last_name
 FROM application_review_notes rn

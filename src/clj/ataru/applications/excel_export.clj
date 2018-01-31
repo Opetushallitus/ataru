@@ -1,7 +1,7 @@
 (ns ataru.applications.excel-export
   (:import [org.apache.poi.ss.usermodel Row VerticalAlignment Row$MissingCellPolicy]
            [java.io ByteArrayOutputStream]
-           [org.apache.poi.xssf.usermodel XSSFWorkbook XSSFCell XSSFCellStyle])
+           [org.apache.poi.xssf.usermodel XSSFWorkbook XSSFSheet XSSFCell XSSFCellStyle])
   (:require [ataru.forms.form-store :as form-store]
             [ataru.util.language-label :as label]
             [ataru.applications.application-store :as application-store]
@@ -129,18 +129,18 @@
   [fields]
   (map-indexed (fn [idx field] (merge field {:column idx})) fields))
 
-(defn- set-cell-style [cell value]
+(defn- set-cell-style ^XSSFCell [^XSSFCell cell value]
   (if (and (string? value)
            (contains? #{\= \+ \- \@} (first value)))
     (.setCellStyle cell @cell-style-quote-prefixed)
     (.setCellStyle cell @cell-style))
   cell)
 
-(defn- update-row-cell! [sheet row column value workbook]
-  (when-let [v (not-empty (trim (str value)))]
-    (-> (or (.getRow sheet row)
-            (.createRow sheet row))
-        (.getCell column Row$MissingCellPolicy/CREATE_NULL_AS_BLANK)
+(defn- update-row-cell! [^XSSFSheet sheet row column value workbook]
+  (when-let [^String v (not-empty (trim (str value)))]
+    (-> (or (.getRow sheet (int row))
+            (.createRow sheet (int row)))
+        (.getCell (int column) Row$MissingCellPolicy/CREATE_NULL_AS_BLANK)
         (set-cell-style value)
         (.setCellValue v)))
   sheet)
@@ -178,11 +178,8 @@
                    first)]
     (get-in koodi [:label lang])))
 
-(defn- raw-values->human-readable-value [{:keys [content]} {:keys [lang]} key get-koodisto-options value]
-  (let [field-descriptor (->> (util/flatten-form-fields content)
-                              (filter #(= key (:id %)))
-                              first)
-        lang (-> lang clojure.string/lower-case keyword)
+(defn- raw-values->human-readable-value [field-descriptor {:keys [lang]} get-koodisto-options value]
+  (let [lang (-> lang clojure.string/lower-case keyword)
         koodisto-source (:koodisto-source field-descriptor)
         options (:options field-descriptor)]
     (cond (some? koodisto-source)
@@ -211,7 +208,7 @@
   (and (sequential? value-or-values)
        (all-answers-sec-or-vec? value-or-values)))
 
-(defn- write-application! [writer application headers application-meta-fields form get-koodisto-options]
+(defn- write-application! [writer application application-review headers application-meta-fields form-fields-by-key get-koodisto-options]
   (doseq [meta-field application-meta-fields]
     (let [meta-value ((or
                         (:format-fn meta-field)
@@ -221,24 +218,25 @@
                          application))]
       (writer 0 (:column meta-field) meta-value)))
   (doseq [answer (:answers application)]
-    (let [column          (:column (first (filter #(= (:key answer) (:id %)) headers)))
+    (let [field-descriptor (get form-fields-by-key (:key answer))
+          column          (:column (first (filter #(= (:key answer) (:id %)) headers)))
           value-or-values (:value answer)
           value           (cond
                             (kysymysryhma-answer? value-or-values)
                             (->> value-or-values
                                  (map #(clojure.string/join "," %))
-                                 (map (partial raw-values->human-readable-value form application (:key answer) get-koodisto-options))
+                                 (map (partial raw-values->human-readable-value field-descriptor application get-koodisto-options))
                                  (map-indexed #(format "#%s: %s,\n" %1 %2))
                                  (apply str))
 
                             (sequential? value-or-values)
                             (->> value-or-values
-                                 (map (partial raw-values->human-readable-value form application (:key answer) get-koodisto-options))
+                                 (map (partial raw-values->human-readable-value field-descriptor application get-koodisto-options))
                                  (interpose ",\n")
                                  (apply str))
 
                             :else
-                            (raw-values->human-readable-value form application (:key answer) get-koodisto-options value-or-values))
+                            (raw-values->human-readable-value field-descriptor application get-koodisto-options value-or-values))
           value-length    (count value)
           value-truncated (if (< max-value-length value-length)
                             (str
@@ -249,7 +247,6 @@
       (when (and value-truncated column)
         (writer 0 (+ column (count application-meta-fields)) value-truncated))))
   (let [application-key              (:key application)
-        application-review (application-store/get-application-review application-key)
         beef-header-count  (- (apply max (map :column headers)) (count review-headers))
         prev-header-count  (+ beef-header-count
                               (count application-meta-fields))
@@ -377,14 +374,9 @@
       (> (count name) 30)
       (subs 0 30))))
 
-(defn- inject-haku-info
-  [tarjonta-service ohjausparametrit-service application]
-  (merge application
-         (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service ohjausparametrit-service (:haku application))))
-
-(defn set-column-widths [workbook]
+(defn set-column-widths [^XSSFWorkbook workbook]
   (doseq [n (range (.getNumberOfSheets workbook))
-          :let [sheet (.getSheetAt workbook n)]
+          :let [sheet (.getSheetAt workbook (int n))]
           y (range (.getLastCellNum (.getRow sheet 0)))]
     (.autoSizeColumn sheet (short y))))
 
@@ -397,36 +389,32 @@
       (update application :answers conj
         {:key "hakukohteet" :fieldType "hakukohteet" :value (:hakukohde application) :label "Hakukohteet"}))))
 
-(defn- get-hakukohde-name [tarjonta-service lang-s oid]
+(defn- get-hakukohde-name [get-hakukohde lang-s oid]
   (let [lang (keyword lang-s)]
-    (when-let [hakukohde (tarjonta-parser/parse-hakukohde
-                          tarjonta-service
-                          (tarjonta/get-hakukohde tarjonta-service oid))]
+    (when-let [hakukohde (get-hakukohde oid)]
       (str (get-in hakukohde [:name lang]) " - "
            (get-in hakukohde [:tarjoaja-name lang])))))
 
-(defn- add-hakukohde-name [tarjonta-service lang hakukohde-answer haku-oid]
-  (let [use-priority (some->> haku-oid
-                              (tarjonta/get-haku tarjonta-service)
-                              :usePriority)]
-    (update hakukohde-answer :value
-            (partial map-indexed (fn [index oid]
-                                   (let [name           (get-hakukohde-name tarjonta-service lang oid)
-                                         priority-index (when use-priority
-                                                          (str "(" (inc index) ") "))]
-                                     (if name
-                                       (str priority-index name " (" oid ")")
-                                       (str priority-index oid))))))))
+(defn- add-hakukohde-name [get-haku get-hakukohde lang hakukohde-answer haku-oid]
+  (update hakukohde-answer :value
+          (partial map-indexed
+                   (fn [index oid]
+                     (let [name           (get-hakukohde-name get-hakukohde lang oid)
+                           priority-index (when (:prioritize-hakukohteet (:tarjonta (get-haku haku-oid)))
+                                            (str "(" (inc index) ") "))]
+                       (if name
+                         (str priority-index name " (" oid ")")
+                         (str priority-index oid)))))))
 
-(defn- add-hakukohde-names [tarjonta-service application]
+(defn- add-hakukohde-names [get-haku get-hakukohde application]
   (update application :answers
           (partial map (fn [answer]
                          (if (= "hakukohteet" (:key answer))
-                           (add-hakukohde-name tarjonta-service (:lang application) answer (:haku application))
+                           (add-hakukohde-name get-haku get-hakukohde (:lang application) answer (:haku application))
                            answer)))))
 
 (defn- add-all-hakukohde-reviews
-  [tarjonta-service selected-hakukohde application]
+  [get-hakukohde selected-hakukohde application]
   (let [all-reviews            (application-states/get-all-reviews-for-all-requirements
                                  application
                                  selected-hakukohde)
@@ -435,24 +423,31 @@
                                    (assoc review
                                      :hakukohde-name
                                      (get-hakukohde-name
-                                       tarjonta-service
+                                       get-hakukohde
                                        (:lang application)
                                        hakukohde)))
                                  all-reviews)]
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
-(defn export-applications [applications selected-hakukohde tarjonta-service ohjausparametrit-service]
+(defn export-applications [applications application-reviews selected-hakukohde tarjonta-service ohjausparametrit-service]
   (let [workbook                (create-workbook-and-styles!)
         form-meta-fields        (indexed-meta-fields form-meta-fields)
         form-meta-sheet         (create-form-meta-sheet workbook form-meta-fields)
         application-meta-fields (indexed-meta-fields application-meta-fields)
         get-form-by-id          (memoize form-store/fetch-by-id)
         get-latest-form-by-key  (memoize form-store/fetch-by-key)
-        get-koodisto-options    (memoize koodisto/get-koodisto-options)]
+        get-koodisto-options    (memoize koodisto/get-koodisto-options)
+        get-hakukohde           (memoize (fn [oid] (tarjonta-parser/parse-hakukohde
+                                                    tarjonta-service
+                                                    (tarjonta/get-hakukohde tarjonta-service oid))))
+        get-tarjonta-info       (memoize (fn [haku-oid] (tarjonta-parser/parse-tarjonta-info-by-haku
+                                                         tarjonta-service
+                                                         ohjausparametrit-service
+                                                         haku-oid)))]
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
-         (map (partial add-hakukohde-names tarjonta-service))
-         (map (partial add-all-hakukohde-reviews tarjonta-service selected-hakukohde))
+         (map (partial add-hakukohde-names get-tarjonta-info get-hakukohde))
+         (map (partial add-all-hakukohde-reviews get-hakukohde selected-hakukohde))
          (reduce (fn [result {:keys [form] :as application}]
                    (let [form-key (:key (get-form-by-id form))
                          form     (get-latest-form-by-key form-key)]
@@ -468,16 +463,26 @@
                         (let [applications-sheet (.createSheet workbook sheet-name)
                               headers            (extract-headers applications form)
                               meta-writer        (make-writer form-meta-sheet (inc sheet-idx) workbook)
-                              header-writer      (make-writer applications-sheet 0 workbook)]
+                              header-writer      (make-writer applications-sheet 0 workbook)
+                              form-fields-by-key (reduce #(assoc %1 (:id %2) %2)
+                                                         {}
+                                                         (util/flatten-form-fields (:content form)))]
                           (write-form-meta! meta-writer form applications form-meta-fields)
                           (write-headers! header-writer headers application-meta-fields)
                           (->> applications
                                (sort-by :created-time)
                                (reverse)
-                               (map (partial inject-haku-info tarjonta-service ohjausparametrit-service))
+                               (map #(merge % (get-tarjonta-info (:haku %))))
                                (map-indexed (fn [row-idx application]
-                                              (let [row-writer (make-writer applications-sheet (inc row-idx) workbook)]
-                                                (write-application! row-writer application headers application-meta-fields form get-koodisto-options))))
+                                              (let [row-writer (make-writer applications-sheet (inc row-idx) workbook)
+                                                    application-review (get application-reviews (:key application))]
+                                                (write-application! row-writer
+                                                                    application
+                                                                    application-review
+                                                                    headers
+                                                                    application-meta-fields
+                                                                    form-fields-by-key
+                                                                    get-koodisto-options))))
                                (dorun))
                           (.createFreezePane applications-sheet 0 1 0 1))))
          (dorun))

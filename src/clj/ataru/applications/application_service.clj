@@ -174,8 +174,16 @@
                                              organization-service
                                              [:view-applications :edit-applications])
                                           forms))
-        allowed-applications (filter #(contains? allowed-forms (:form-key %)) applications)]
-    (ByteArrayInputStream. (excel/export-applications allowed-applications selected-hakukohde tarjonta-service ohjausparametrit-service))))
+        allowed-applications (filter #(contains? allowed-forms (:form-key %)) applications)
+        application-reviews  (->> allowed-applications
+                                  (map :key)
+                                  application-store/get-application-reviews-by-keys
+                                  (reduce #(assoc %1 (:application-key %2) %2) {}))]
+    (ByteArrayInputStream. (excel/export-applications allowed-applications
+                                                      application-reviews
+                                                      selected-hakukohde
+                                                      tarjonta-service
+                                                      ohjausparametrit-service))))
 
 (defn- save-application-hakukohde-reviews
   [virkailija application-key hakukohde-reviews session]
