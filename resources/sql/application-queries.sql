@@ -960,7 +960,7 @@ SET hakukohde = ARRAY[:hakukohde]::character varying(127)[]
 WHERE secret = :secret;
 
 --name: yesql-get-application-version-and-previous
-SELECT content
+SELECT content, form_id
 FROM applications
 WHERE key = :application_key
 ORDER BY id ASC

@@ -153,3 +153,8 @@
   (->> (execute-with-db :db yesql-get-latest-form-by-name {:form_name form-name})
        (map (comp keyword :key))
        (first)))
+
+(defn get-form-by-application [application]
+  (->> application
+       :form_id
+       fetch-by-id))

@@ -50,6 +50,39 @@
 
         :else field))))
 
+(defn form-fields-by-id [form]
+  (->> form
+       :content
+       flatten-form-fields
+       (group-by-first (comp keyword :id))))
+
+(defn- get-readable-koodi-value
+  [koodisto value]
+  (-> (filter #(= value (:value %)) koodisto)
+      first
+      :label
+      :fi
+      (or "")))
+
+(defn populate-answer-koodisto-values
+  [values field get-koodisto-options]
+  (if (:koodisto-source field)
+    (let [koodisto (get-koodisto-options (-> field :koodisto-source :uri)
+                                         (-> field :koodisto-source :version))]
+      (cond
+        (and (sequential? values)
+             (every? sequential? values))
+        (mapv (fn [value]
+               (mapv #(get-readable-koodi-value koodisto %) value))
+             values)
+
+        (sequential? values)
+        (mapv #(get-readable-koodi-value koodisto %) values)
+
+        :else
+        (get-readable-koodi-value koodisto values)))
+    values))
+
 (defn reduce-form-fields [f init [field & fs :as fields]]
   (if (empty? fields)
     init
@@ -61,6 +94,9 @@
 
 (defn answers-by-key [answers]
   (group-by-first (comp keyword :key) answers))
+
+(defn application-answers-by-key [application]
+  (-> application :content :answers answers-by-key))
 
 (defn group-answers-by-wrapperelement [wrapper-fields answers-by-key]
   (into {}
