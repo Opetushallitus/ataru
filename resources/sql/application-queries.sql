@@ -952,7 +952,7 @@ ORDER BY created_time DESC;
 SELECT DISTINCT ON (person_oid) id FROM latest_applications ORDER BY person_oid, id DESC;
 
 --name: yesql-get-application-version-and-previous
-SELECT content
+SELECT content, form_id
 FROM applications
 WHERE key = :application_key
 ORDER BY id ASC

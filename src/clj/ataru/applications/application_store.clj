@@ -2,6 +2,8 @@
   (:require [ataru.log.audit-log :as audit-log]
             [ataru.util.language-label :as label]
             [ataru.schema.form-schema :as schema]
+            [ataru.koodisto.koodisto :as koodisto]
+            [ataru.forms.form-store :as forms]
             [ataru.application.review-states :refer [incomplete-states]]
             [ataru.application.application-states :as application-states]
             [ataru.virkailija.authentication.virkailija-edit]
@@ -722,21 +724,20 @@
    The param is decremented since its given to psql offset, and we want to get application
    versions 0 and 1 at version index 1."
   (when (pos? version-number)
-    (let [[{older-content :content} {newer-content :content}]
+    (let [[old-application new-application]
           (exec-db :db yesql-get-application-version-and-previous {:application_key application-key
                                                                    :version_number  (dec version-number)})
-          older-answers (->> older-content
-                             :answers
-                             (util/group-by-first :key))
-          newer-answers (->> newer-content
-                             :answers
-                             (util/group-by-first :key))
-          [old-answers new-answers _] (data/diff older-answers newer-answers)
-          answer-keys   (set (concat (keys old-answers) (keys new-answers)))]
-      (when (not-empty newer-answers)                       ; In this case we are at the lastest version of the application, no diff!
+          old-answers          (util/application-answers-by-key old-application)
+          new-answers          (util/application-answers-by-key new-application)
+          answer-keys          (set (concat (keys old-answers) (keys new-answers)))
+          form-fields          (util/form-fields-by-id (forms/get-form-by-application new-application))
+          get-koodisto-options (memoize koodisto/get-koodisto-options)]
+      (when (not-empty new-answers) ; In this case we are at the lastest version of the application, no diff!
         (into {}
               (for [key answer-keys
-                    :let [old-value (:value (get older-answers key))
-                          new-value (:value (get newer-answers key))]]
-                {key {:old old-value
-                      :new new-value}}))))))
+                    :let [old-value (-> old-answers key :value)
+                          new-value (-> new-answers key :value)
+                          field     (key form-fields)]
+                    :when (not= old-value new-value)]
+                {key {:old (util/populate-answer-koodisto-values old-value field get-koodisto-options)
+                      :new (util/populate-answer-koodisto-values new-value field get-koodisto-options)}}))))))
