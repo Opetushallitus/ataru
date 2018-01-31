@@ -720,15 +720,16 @@
    The param is decremented since its given to psql offset, and we want to get application
    versions 0 and 1 at version index 1."
   (when (pos? version-number)
-    (let [[old-application new-application]
-          (exec-db :db yesql-get-application-version-and-previous {:application_key application-key
-                                                                   :version_number  (dec version-number)})
+    (let [[old-application new-application] (exec-db :db
+                                                     yesql-get-application-version-and-previous
+                                                     {:application_key application-key
+                                                      :version_number  (dec version-number)})
           old-answers          (util/application-answers-by-key old-application)
           new-answers          (util/application-answers-by-key new-application)
           answer-keys          (set (concat (keys old-answers) (keys new-answers)))
           form-fields          (util/form-fields-by-id (forms/get-form-by-application new-application))
           get-koodisto-options (memoize koodisto/get-koodisto-options)]
-      (when (not-empty new-answers) ; In this case we are at the lastest version of the application, no diff!
+      (when (not-empty new-answers)                         ; In this case we are at the lastest version of the application, no diff!
         (into {}
               (for [key answer-keys
                     :let [old-value (-> old-answers key :value)
