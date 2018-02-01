@@ -200,3 +200,21 @@
 
 (def person-info-form-with-more-questions
   (update person-info-form :content concat more-questions))
+
+(def version-test-form
+  {:name       {:fi "Test fixture!"}
+   :created-by "DEVELOPER"
+   :content    [{:id         "G__119"
+                 :fieldClass "formField"
+                 :fieldType  "textField"
+                 :label      {:fi "Eka kysymys"}}
+                {:id         "G__117"
+                 :fieldClass "formField"
+                 :fieldType  "textField"
+                 :label      {:fi "Toistuva kysymys"}
+                 :params     {:repeatable true}}
+                {:id         "G__224"
+                 :fieldClass "formField"
+                 :fieldType  "textField"
+                 :label      {:fi "Toistuva kysymys ryhmässä"}
+                 :params     {:repeatable true}}]})
