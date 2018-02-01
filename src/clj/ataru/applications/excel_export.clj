@@ -140,51 +140,46 @@
 
 (def ^:private review-headers ["Muistiinpanot" "Pisteet"])
 
-(def cell-style (atom nil))
-
-(def cell-style-quote-prefixed (atom nil))
-
-(defn- create-cell-styles!
+(defn- create-cell-styles
   [workbook]
-  (reset! cell-style
-          (doto (.createCellStyle workbook)
+  {:style (doto (.createCellStyle workbook)
             (.setWrapText true)
-            (.setVerticalAlignment VerticalAlignment/TOP)))
-  (reset! cell-style-quote-prefixed
-          (doto (.createCellStyle workbook)
-            (.setQuotePrefixed true)
-            (.setWrapText true)
-            (.setVerticalAlignment VerticalAlignment/TOP))))
+            (.setVerticalAlignment VerticalAlignment/TOP))
+   :quote-prefix-style
+   (doto (.createCellStyle workbook)
+     (.setQuotePrefixed true)
+     (.setWrapText true)
+     (.setVerticalAlignment VerticalAlignment/TOP))})
 
-(defn- create-workbook-and-styles!
+(defn- create-workbook-and-styles
   []
   (let [workbook (XSSFWorkbook.)]
-    (create-cell-styles! workbook)
-    workbook))
+    [workbook (create-cell-styles workbook)]))
 
 (defn- indexed-meta-fields
   [fields]
   (map-indexed (fn [idx field] (merge field {:column idx})) fields))
 
-(defn- set-cell-style ^XSSFCell [^XSSFCell cell value]
+(defn- set-cell-style ^XSSFCell [^XSSFCell cell value styles]
   (if (and (string? value)
            (contains? #{\= \+ \- \@} (first value)))
-    (.setCellStyle cell @cell-style-quote-prefixed)
-    (.setCellStyle cell @cell-style))
+    (.setCellStyle cell (:quote-prefix-style styles))
+    (.setCellStyle cell (:style styles)))
   cell)
 
-(defn- update-row-cell! [^XSSFSheet sheet row column value]
+(defn- update-row-cell! [styles ^XSSFSheet sheet row column value]
   (when-let [^String v (not-empty (trim (str value)))]
     (-> (or (.getRow sheet (int row))
             (.createRow sheet (int row)))
         (.getCell (int column) Row$MissingCellPolicy/CREATE_NULL_AS_BLANK)
-        (set-cell-style value)
+        (set-cell-style value styles)
         (.setCellValue v)))
   sheet)
 
-(defn- make-writer [sheet row-offset]
+(defn- make-writer [styles sheet row-offset]
   (fn [row column value]
     (update-row-cell!
+      styles
       sheet
       (+ row-offset row)
       column
@@ -398,9 +393,9 @@
        :header           header
        :column           idx})))
 
-(defn- create-form-meta-sheet [workbook meta-fields]
+(defn- create-form-meta-sheet [workbook styles meta-fields]
   (let [sheet  (.createSheet workbook "Lomakkeiden tiedot")
-        writer (make-writer sheet 0)]
+        writer (make-writer styles sheet 0)]
     (doseq [meta-field meta-fields
             :let [column (:column meta-field)
                   label  (:label meta-field)]]
@@ -473,9 +468,9 @@
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
 (defn export-applications [applications application-reviews selected-hakukohde skip-answers? tarjonta-service ohjausparametrit-service]
-  (let [workbook                (create-workbook-and-styles!)
+  (let [[workbook styles]       (create-workbook-and-styles)
         form-meta-fields        (indexed-meta-fields form-meta-fields)
-        form-meta-sheet         (create-form-meta-sheet workbook form-meta-fields)
+        form-meta-sheet         (create-form-meta-sheet workbook styles form-meta-fields)
         application-meta-fields (indexed-meta-fields application-meta-fields)
         get-form-by-id          (memoize form-store/fetch-by-id)
         get-latest-form-by-key  (memoize form-store/fetch-by-key)
@@ -505,8 +500,8 @@
          (map-indexed (fn [sheet-idx {:keys [sheet-name form applications]}]
                         (let [applications-sheet (.createSheet workbook sheet-name)
                               headers            (extract-headers applications form skip-answers?)
-                              meta-writer        (make-writer form-meta-sheet (inc sheet-idx))
-                              header-writer      (make-writer applications-sheet 0)
+                              meta-writer        (make-writer styles form-meta-sheet (inc sheet-idx))
+                              header-writer      (make-writer styles applications-sheet 0)
                               form-fields-by-key (reduce #(assoc %1 (:id %2) %2)
                                                          {}
                                                          (util/flatten-form-fields (:content form)))]
@@ -517,7 +512,7 @@
                                (reverse)
                                (map #(merge % (get-tarjonta-info (:haku %))))
                                (map-indexed (fn [row-idx application]
-                                              (let [row-writer (make-writer applications-sheet (inc row-idx))
+                                              (let [row-writer (make-writer styles applications-sheet (inc row-idx))
                                                     application-review (get application-reviews (:key application))]
                                                 (write-application! row-writer
                                                                     application
