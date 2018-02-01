@@ -143,7 +143,10 @@
    {:label     "Pisteet"
     :field     [:application-review :score]}
    {:label     "Hakijan henkilö-OID"
-    :field     [:application :person-oid]}])
+    :field     [:application :person-oid]}
+   {:label     "Turvakielto"
+    :field     [:person :turvakielto]
+    :format-fn (fnil (fn [turvakielto] (if turvakielto "kyllä" "ei")) false)}])
 
 (defn- create-cell-styles
   [workbook]
@@ -245,13 +248,14 @@
   (and (sequential? value-or-values)
        (all-answers-sec-or-vec? value-or-values)))
 
-(defn- write-application! [writer application application-review headers application-meta-fields form-fields-by-key get-koodisto-options]
+(defn- write-application! [writer application application-review person headers application-meta-fields form-fields-by-key get-koodisto-options]
   (doseq [meta-field application-meta-fields]
     (let [meta-value ((or
                         (:format-fn meta-field)
                         identity)
                       (get-in {:application application
-                               :application-review application-review}
+                               :application-review application-review
+                               :person person}
                               (:field meta-field)))]
       (writer 0 (:column meta-field) meta-value)))
   (doseq [answer (:answers application)]
@@ -446,7 +450,7 @@
                                  all-reviews)]
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
-(defn export-applications [applications application-reviews selected-hakukohde skip-answers? tarjonta-service ohjausparametrit-service]
+(defn export-applications [applications application-reviews persons selected-hakukohde skip-answers? tarjonta-service ohjausparametrit-service]
   (let [[^XSSFWorkbook workbook styles] (create-workbook-and-styles)
         form-meta-fields                (indexed-meta-fields form-meta-fields)
         form-meta-sheet                 (create-form-meta-sheet workbook styles form-meta-fields)
@@ -494,10 +498,12 @@
                                (map #(merge % (get-tarjonta-info (:haku %))))
                                (map-indexed (fn [row-idx application]
                                               (let [row-writer (make-writer styles applications-sheet (inc row-idx))
-                                                    application-review (get application-reviews (:key application))]
+                                                    application-review (get application-reviews (:key application))
+                                                    person (get persons (:person-oid application))]
                                                 (write-application! row-writer
                                                                     application
                                                                     application-review
+                                                                    person
                                                                     headers
                                                                     application-meta-fields
                                                                     form-fields-by-key

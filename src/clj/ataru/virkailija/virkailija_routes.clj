@@ -349,7 +349,8 @@
                                  session
                                  organization-service
                                  tarjonta-service
-                                 ohjausparametrit-service)}))
+                                 ohjausparametrit-service
+                                 person-service)}))
 
                  (api/context "/cache" []
                    (api/POST "/clear/:cache" {session :session}
