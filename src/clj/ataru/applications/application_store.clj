@@ -50,7 +50,6 @@
         answers              (->> application
                                   :answers
                                   (filter #(not-empty (:value %))))
-        secret               (:secret application)
         application-to-store {:form_id        (:form application)
                               :key            (:key application)
                               :lang           (:lang application)
@@ -62,7 +61,7 @@
                               :hakukohde      (or (:hakukohde application) [])
                               :haku           (:haku application)
                               :content        {:answers answers}
-                              :secret         (or secret (crypto/url-part 34))
+                              :secret         (crypto/url-part 34)
                               :person_oid     (:person-oid application)}
         application          (if (contains? application :key)
                                (yesql-add-application-version<! application-to-store connection)
