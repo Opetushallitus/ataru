@@ -37,6 +37,9 @@
                                         (reduce #(assoc %1 (:key %2) fixtures/application-review)
                                                 {}
                                                 ~(second bindings))
+                                        (reduce #(assoc %1 %2 {:turvakielto true})
+                                                {}
+                                                (keep :person-oid ~(second bindings)))
                                         nil
                                         false
                                         (tarjonta-service/new-tarjonta-service)
@@ -60,8 +63,6 @@
                                               "form_321_key" fixtures/form-for-hakukohde))]
       (spec)))
 
-
-
   (it "should export applications for a form without hakukohde or haku"
     (with-excel [file [fixtures/application-for-form]]
       (let [workbook          (WorkbookFactory/create file)
@@ -70,8 +71,8 @@
         (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
         (verify-row metadata-sheet 1 ["Form name" "123" "form_123_key" "2016-06-14 15:34:56" "SEPPO PAPUNEN"])
         (verify-row metadata-sheet 2 nil)
-        (verify-row application-sheet 0 ["Id" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Maksuvelvollisuus" "Valinnan tila" "Hakijan henkilö-OID" "Kysymys 1" "Kysymys 2" "Kysymys 3" "Pisteet"])
-        (verify-row application-sheet 1 ["application_9432_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelemättä" "Tarkastamatta" "Täyttyy" "Ei hakukelpoinen" "Tarkastamatta" "Kesken" nil "Vastaus 1" "Vastaus 2" "Vastaus 3" "12"])
+        (verify-row application-sheet 0 ["Id" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Maksuvelvollisuus" "Valinnan tila" "Pisteet" "Hakijan henkilö-OID" "Turvakielto" "Kysymys 1" "Kysymys 2" "Kysymys 3"])
+        (verify-row application-sheet 1 ["application_9432_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelemättä" "Tarkastamatta" "Täyttyy" "Ei hakukelpoinen" "Tarkastamatta" "Kesken" "12" nil "ei" "Vastaus 1" "Vastaus 2" "Vastaus 3"])
         (verify-row application-sheet 2 nil)
         (verify-pane-information application-sheet))))
 
@@ -83,8 +84,8 @@
         (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
         (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
         (verify-row metadata-sheet 2 nil)
-        (verify-row application-sheet 0 ["Id" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Maksuvelvollisuus" "Valinnan tila" "Hakijan henkilö-OID" "Kysymys 4" "Kysymys 5" "Hakukohteet" "Pisteet"])
-        (verify-row application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" "Hyväksytty" "1.123.345456567123" "Vastaus 4" "Vastaus 5" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)" "12"])
+        (verify-row application-sheet 0 ["Id" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Maksuvelvollisuus" "Valinnan tila" "Pisteet" "Hakijan henkilö-OID" "Turvakielto" "Kysymys 4" "Kysymys 5" "Hakukohteet"])
+        (verify-row application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" "Hyväksytty" "12" "1.123.345456567123" "kyllä" "Vastaus 4" "Vastaus 5" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"])
         (verify-row application-sheet 2 nil))))
 
   (it "should export applications to separate sheets, grouped by form"
@@ -97,9 +98,9 @@
         (verify-row metadata-sheet 1 ["Form name" "123" "form_123_key" "2016-06-14 15:34:56" "SEPPO PAPUNEN"])
         (verify-row metadata-sheet 2 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
         (verify-row metadata-sheet 3 nil)
-        (verify-row form-application-sheet 0 ["Id" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Maksuvelvollisuus" "Valinnan tila" "Hakijan henkilö-OID" "Kysymys 1" "Kysymys 2" "Kysymys 3" "Pisteet"])
-        (verify-row form-application-sheet 1 ["application_9432_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelemättä" "Tarkastamatta" "Täyttyy" "Ei hakukelpoinen" "Tarkastamatta" "Kesken" nil "Vastaus 1" "Vastaus 2" "Vastaus 3" "12"])
+        (verify-row form-application-sheet 0 ["Id" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Maksuvelvollisuus" "Valinnan tila" "Pisteet" "Hakijan henkilö-OID" "Turvakielto" "Kysymys 1" "Kysymys 2" "Kysymys 3"])
+        (verify-row form-application-sheet 1 ["application_9432_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelemättä" "Tarkastamatta" "Täyttyy" "Ei hakukelpoinen" "Tarkastamatta" "Kesken" "12" nil "ei" "Vastaus 1" "Vastaus 2" "Vastaus 3"])
         (verify-row form-application-sheet 2 nil)
-        (verify-row hakukohde-application-sheet 0 ["Id" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Maksuvelvollisuus" "Valinnan tila" "Hakijan henkilö-OID" "Kysymys 4" "Kysymys 5" "Hakukohteet" "Pisteet"])
-        (verify-row hakukohde-application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" "Hyväksytty" "1.123.345456567123" "Vastaus 4" "Vastaus 5" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)" "12"])
+        (verify-row hakukohde-application-sheet 0 ["Id" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Maksuvelvollisuus" "Valinnan tila" "Pisteet" "Hakijan henkilö-OID" "Turvakielto" "Kysymys 4" "Kysymys 5" "Hakukohteet"])
+        (verify-row hakukohde-application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" "Hyväksytty" "12" "1.123.345456567123" "kyllä" "Vastaus 4" "Vastaus 5" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"])
         (verify-row hakukohde-application-sheet 2 nil)))))
