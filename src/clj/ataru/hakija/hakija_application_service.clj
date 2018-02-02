@@ -263,9 +263,14 @@
                           [:hakija nil])
         application     (when (some? hakija-secret)
                           (application-store/get-latest-application-by-secret hakija-secret))
+<<<<<<< HEAD
         form-roles      (cond-> [actor-role]
                           (some? (:person-oid application))
                           (conj :with-henkilo))
+=======
+        secret-expired? (when (nil? application)
+                          (application-store/application-exists-with-secret? hakija-secret))
+>>>>>>> Always create new secret in separate table when editing application
         form            (cond (some? (:haku application)) (hakija-form-service/fetch-form-by-haku-oid
                                                            tarjonta-service
                                                            ohjausparametrit-service
@@ -280,9 +285,10 @@
                               :else                       nil)
         person          (some-> application
                                 (application-service/get-person person-client)
-                                (dissoc :ssn :birth-date))]
-    (some-> application
-            (remove-unviewable-answers form)
-            attachments-metadata->answers
-            (assoc :person person)
-            (dissoc :person-oid))))
+                                (dissoc :ssn :birth-date))
+        full-application (some-> application
+                                 (remove-unviewable-answers form)
+                                 attachments-metadata->answers
+                                 (assoc :person person)
+                                 (dissoc :person-oid))]
+    [full-application secret-expired?]))
