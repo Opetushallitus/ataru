@@ -1,26 +1,26 @@
 (ns ataru.virkailija.application.view
-  (:require
-    [cljs.core.match :refer-macros [match]]
-    [clojure.string :as string]
-    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
-    [reagent.ratom :refer-macros [reaction]]
-    [reagent.core :as r]
-    [cljs-time.format :as f]
-    [taoensso.timbre :refer-macros [spy debug]]
-    [ataru.virkailija.application.handlers]
-    [ataru.virkailija.application.application-subs]
-    [ataru.virkailija.routes :as routes]
-    [ataru.virkailija.temporal :as t]
-    [ataru.application.review-states :as application-review-states]
-    [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
-    [ataru.cljs-util :as util]
-    [ataru.virkailija.application.application-search-control :refer [application-search-control]]
-    [goog.string.format]
-    [ataru.application.review-states :as review-states]
-    [ataru.application.application-states :as application-states]
-    [ataru.cljs-util :as cljs-util]
-    [medley.core :refer [find-first]]
-    [ataru.virkailija.temporal :as temporal]))
+  (:require [cljs.core.match :refer-macros [match]]
+            [clojure.string :as string]
+            [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+            [reagent.ratom :refer-macros [reaction]]
+            [reagent.core :as r]
+            [cljs-time.format :as f]
+            [taoensso.timbre :refer-macros [spy debug]]
+            [ataru.virkailija.application.handlers]
+            [ataru.virkailija.application.application-subs]
+            [ataru.virkailija.routes :as routes]
+            [ataru.virkailija.temporal :as t]
+            [ataru.application.review-states :as application-review-states]
+            [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
+            [ataru.cljs-util :as util]
+            [ataru.virkailija.application.application-search-control :refer [application-search-control]]
+            [goog.string.format]
+            [ataru.application.review-states :as review-states]
+            [ataru.application.application-states :as application-states]
+            [ataru.cljs-util :as cljs-util]
+            [medley.core :refer [find-first]]
+            [ataru.virkailija.temporal :as temporal]
+            [ataru.virkailija.virkailija-ajax :as ajax]))
 
 (defn- icon-check []
   [:img.application-handling__review-state-selected-icon
@@ -716,16 +716,28 @@
 
          :else "Tuntematon"))
 
+(defn- modify-event? [event]
+  (some #{(:event-type event)} ["updated-by-applicant" "updated-by-virkailija"]))
+
 (defn to-event-row
-  [time-str caption]
+  [time-str caption event]
   [:div.application-handling__event-row
    [:span.application-handling__event-timestamp time-str]
-   [:span.application-handling__event-caption caption]])
+   [:span.application-handling__event-caption
+    {:on-click (when (modify-event? event)
+                 (fn [e]
+                   (ajax/http :get
+                              (str "/lomake-editori/api/applications/"
+                                   @(subscribe [:application/selected-application-key])
+                                   "/changes?version-number="
+                                   @(subscribe [:application/event-version-index (:id event)]))
+                              :application/handle-change-history-response)))}
+    caption]])
 
 (defn event-row [event]
   (let [time-str (t/time->short-str (or (:time event) (:created-time event)))
         caption (event-caption event)]
-    (to-event-row time-str caption)))
+    (to-event-row time-str caption event)))
 
 (defn application-review-events []
   (let [events (subscribe [:application/events-and-information-requests])]
@@ -1122,3 +1134,18 @@
           (when-not @review-canary-visible
             (dispatch [:state-update #(assoc-in % [:application :review-positioning] :in-flow)])
             (reset! review-canary-visible true)))))))
+
+(defn application-version-changes []
+  (let [history-items (subscribe [:application/current-history-items])]
+    (when @history-items
+      [:div.application-handling__application-version-history-container
+       {:on-click #(dispatch [:application/close-history])}
+       [:div.application-handling__application-version-history
+        [:table
+         (for [[key changes] @history-items]
+           ^{:key (str "application-change-history-" key)}
+           [:tbody
+            [:tr
+             [:td key]
+             [:td (str (:old changes))]
+             [:td (str (:new changes))]]])]]])))

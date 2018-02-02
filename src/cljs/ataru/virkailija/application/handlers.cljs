@@ -667,3 +667,13 @@
     (assoc-in db [:application :review :state] (if active?
                                                  application-active-state
                                                  application-inactive-state))))
+
+(reg-event-db
+  :application/handle-change-history-response
+  (fn [db [_ response]]
+    (assoc-in db [:application :current-history-items] response)))
+
+(reg-event-db
+  :application/close-history
+  (fn [db _]
+    (update-in db [:application] dissoc :current-history-items)))

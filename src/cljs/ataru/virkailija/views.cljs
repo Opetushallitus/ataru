@@ -2,7 +2,7 @@
     (:require [re-frame.core :as re-frame]
               [reagent.core :as r]
               [ataru.virkailija.views.banner :refer [top-banner]]
-              [ataru.virkailija.application.view :refer [application]]
+              [ataru.virkailija.application.view :refer [application application-version-changes]]
               [ataru.virkailija.dev.lomake :as l]
               [ataru.virkailija.editor.view :refer [editor]]
               [taoensso.timbre :refer-macros [spy]]))
@@ -34,5 +34,6 @@
   (let [active-panel (re-frame/subscribe [:active-panel])]
     (fn []
       [:div.main-container
+       [application-version-changes]
        [top-banner]
         [:div (panels @active-panel)]])))
