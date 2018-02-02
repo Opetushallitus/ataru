@@ -285,3 +285,22 @@
     (->> (-> db :application :selected-application-and-form :application :answers :hakukohteet :value)
          (keep-indexed #(when (= hakukohde-oid %2) (inc %1)))
          first)))
+
+(re-frame.core/reg-sub
+  :application/selected-application-key
+  (fn [db _]
+    (-> db :application :selected-application-and-form :application :key)))
+
+(re-frame.core/reg-sub
+  :application/current-history-items
+  (fn [db _]
+    (-> db :application :current-history-items)))
+
+(re-frame.core/reg-sub
+  :application/event-version-index
+  (fn [db [_ event-id]]
+    (->> db
+         :application
+         :events
+         (keep-indexed #(when (= (:id %2) event-id) %1))
+         first)))

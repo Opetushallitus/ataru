@@ -252,5 +252,5 @@
     application-key
     session
     organization-service
-    [:view-applications])
+    [:view-applications :edit-applications])
   (application-store/get-application-version-changes application-key version-number))
