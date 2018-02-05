@@ -292,3 +292,8 @@
                                  (assoc :person person)
                                  (dissoc :person-oid))]
     [full-application secret-expired?]))
+
+(defn create-new-secret-and-send-link
+  [tarjonta-service old-secret]
+  (let [application-id (application-store/add-new-secret-to-application-by-old-secret old-secret)]
+    (application-email/start-email-edit-confirmation-job tarjonta-service application-id)))

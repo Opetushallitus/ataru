@@ -188,6 +188,12 @@
 
             :else
             (response/bad-request {:error "No secret given"})))
+    (api/POST "/send-application-secret" []
+      :summary "Sends application link with fresh secret to applicant"
+      :body [request {:old-secret s/Str}]
+      (do
+        (hakija-application-service/create-new-secret-and-send-link tarjonta-service (:old-secret request))
+        (response/ok {})))
     (api/context "/files" []
       (api/POST "/" []
         :summary "Upload a file"

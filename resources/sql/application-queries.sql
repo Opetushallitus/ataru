@@ -646,6 +646,13 @@ SELECT count(id) AS count
 FROM application_secrets
 WHERE secret = :secret;
 
+-- name: yesql-get-application-key-for-any-version-of-secret
+SELECT application_key
+FROM application_secrets
+WHERE secret = :secret
+ORDER BY id DESC
+LIMIT 1;
+
 -- name: yesql-get-latest-version-by-virkailija-secret-lock-for-update
 WITH latest_version AS (
     SELECT max(a.created_time) AS latest_time
@@ -972,12 +979,17 @@ ORDER BY created_time DESC;
 SELECT DISTINCT ON (person_oid) id FROM latest_applications ORDER BY person_oid, id DESC;
 
 --name: yesql-get-latest-application-secret
-SELECT secret FROM latest_applications ORDER BY created_time DESC LIMIT 1;
+SELECT secret
+FROM latest_applications
+  JOIN latest_application_secrets ON latest_applications.key = latest_application_secrets.application_key
+ORDER BY latest_applications.id DESC
+LIMIT 1;
 
 --name: yesql-set-application-hakukohteet-by-secret!
 UPDATE applications
-SET hakukohde = ARRAY[:hakukohde]::character varying(127)[]
-WHERE secret = :secret;
+SET hakukohde = ARRAY [:hakukohde] :: CHARACTER VARYING(127) []
+FROM application_secrets
+WHERE application_secrets.secret = :secret AND application_secrets.application_key = applications.key;
 
 --name: yesql-get-application-versions
 SELECT content, form_id

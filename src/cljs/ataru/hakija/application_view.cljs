@@ -11,7 +11,8 @@
             [cljs-time.format :refer [unparse unparse-local formatter]]
             [cljs-time.coerce :refer [from-long]]
             [goog.string :as gstring]
-            [reagent.ratom :refer [reaction]]))
+            [reagent.ratom :refer [reaction]]
+            [reagent.core :as r]))
 
 (def ^:private language-names
   {:fi "Suomeksi"
@@ -95,11 +96,29 @@
           [editable-fields form])))))
 
 (defn application-contents []
-  (let [form       (subscribe [:state-query [:form]])
-        can-apply? (subscribe [:application/can-apply?])
-        editing?   (subscribe [:state-query [:application :editing?]])]
+  (let [form            (subscribe [:state-query [:form]])
+        can-apply?      (subscribe [:application/can-apply?])
+        editing?        (subscribe [:state-query [:application :editing?]])
+        expired         (subscribe [:state-query [:application :secret-expired?]])
+        delivery-status (subscribe [:state-query [:application :secret-delivery-status]])]
     (fn []
       [:div.application__form-content-area
+       (when @expired
+         [:div.application__secret-expired
+          [:h2 "Linkki hakemukseesi on vanhentunut"]
+          [:p "Tarkista että käytössäsi on uusin sinulle sähköpostilla lähetetty linkki. Linkki on voimassa yhden
+          muokkauskerran tai maksimissaan 30 päivää. Voit tarvittaessa tilata uuden hakemuksella käyttämääsi
+          sähköpostiosoitteeseen klikkaamalla allaolevaa nappia:"]
+          [:button
+           {:disabled (some? @delivery-status)
+            :on-click (fn []
+                        (dispatch [:application/set-secret-delivery-status :ongoing])
+                        (dispatch [:application/send-new-secret]))}
+           (case @delivery-status
+             :completed "Sähköposti on lähetetty!"
+             :ongoing "Lähetetään..."
+             "Lähetä uusi linkki")]])
+
        ^{:key (:id @form)}
        [application-header @form]
 
