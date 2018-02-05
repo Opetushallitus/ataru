@@ -1135,17 +1135,28 @@
             (dispatch [:state-update #(assoc-in % [:application :review-positioning] :in-flow)])
             (reset! review-canary-visible true)))))))
 
+(defn application-version-history-header []
+  [:thead
+   [:tr
+    [:th "Kenttä"]
+    [:th.application-handling__application-version-history-entry "Vanha tieto"]
+    [:th.application-handling__application-version-history-entry "Uusi tieto"]]])
+
+(defn application-version-history-row [item]
+  ^{:key (str "application-change-history-" (:key item))}
+  [:tr.application-handling__application-version-history-row
+   [:td (:label item)]
+   [:td (str (:old item))]
+   [:td (str (:new item))]])
+
 (defn application-version-changes []
   (let [history-items (subscribe [:application/current-history-items])]
     (when @history-items
       [:div.application-handling__application-version-history-container
        {:on-click #(dispatch [:application/close-history])}
        [:div.application-handling__application-version-history
-        [:table
-         (for [item @history-items]
-           ^{:key (str "application-change-history-" (:key item))}
-           [:tbody
-            [:tr
-             [:td (:label item)]
-             [:td (str (:old item))]
-             [:td (str (:new item))]]])]]])))
+        [:table.application-handling__application-version-history-table
+         [application-version-history-header]
+         (into [:tbody]
+               (for [item @history-items]
+                 [application-version-history-row item]))]]])))
