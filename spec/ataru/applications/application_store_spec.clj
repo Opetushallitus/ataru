@@ -114,12 +114,18 @@
                                               :version_number 0} params)
                                     expected)
                     forms/get-form-by-application (fn [_] form-fixtures/version-test-form)]
-        (should= {:G__224 {:old [["x" "y" "z"]
-                                 ["a" "b" "c"]]
-                           :new [["x" "y" "1"]
-                                 ["a" "b" "asdfa"]]}
-                  :G__119 {:old "z"
-                           :new ""}
-                  :G__117 {:old ["x" "y" "z"]
-                           :new ["x" "y" "a"]}}
+        (should== [{:key   :G__224
+                    :label "Toistuva kysymys ryhmässä"
+                    :old   [["x" "y" "z"]
+                            ["a" "b" "c"]]
+                    :new   [["x" "y" "1"]
+                            ["a" "b" "asdfa"]]}
+                   {:key   :G__119
+                    :label "Eka kysymys"
+                    :old   "z"
+                    :new   ""}
+                   {:key   :G__117
+                    :label "Toistuva kysymys"
+                    :old   ["x" "y" "z"]
+                    :new   ["x" "y" "a"]}]
                  (store/get-application-version-changes "9d24af7d-f672-4c0e-870f-aaaa" 1))))))

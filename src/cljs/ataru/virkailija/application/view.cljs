@@ -1142,10 +1142,10 @@
        {:on-click #(dispatch [:application/close-history])}
        [:div.application-handling__application-version-history
         [:table
-         (for [[key changes] @history-items]
-           ^{:key (str "application-change-history-" key)}
+         (for [item @history-items]
+           ^{:key (str "application-change-history-" (:key item))}
            [:tbody
             [:tr
-             [:td key]
-             [:td (str (:old changes))]
-             [:td (str (:new changes))]]])]]])))
+             [:td (:label item)]
+             [:td (str (:old item))]
+             [:td (str (:new item))]]])]]])))
