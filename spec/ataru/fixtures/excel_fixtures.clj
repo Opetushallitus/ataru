@@ -8,6 +8,8 @@
            :created-time (c/date-time 2016 6 14 12 34 56)
            :content      [{:id       "form_field_0"
                            :label    {:fi "Lomakeosio"}
+                           :fieldType "fieldset"
+                           :fieldClass "wrapperElement"
                            :children [{:id         "form_field_0_0"
                                        :label      {:fi "Kysymys 1"}
                                        :fieldType  "textField"
@@ -24,6 +26,8 @@
                          :created-time (c/date-time 2016 6 14 12 34 56)
                          :content      [{:id       "form_field_1"
                                          :label    {:fi "Lomakeosio"}
+                                         :fieldType "fieldset"
+                                         :fieldClass "wrapperElement"
                                          :children [{:id         "form_field_1_0"
                                                      :label      {:fi "Kysymys 4"}
                                                      :fieldType  "textField"
