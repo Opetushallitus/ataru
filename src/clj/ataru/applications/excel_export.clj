@@ -361,22 +361,23 @@
                    (and (pick-answer? skip-answers key)
                         (not (contains? hidden-answers key))))))))
 
-(defn- remove-duplicates-by-field-id
-  [labels-in-form labels-in-applications]
-  (let [form-element-ids (set (map first labels-in-form))]
-    (remove (fn [[key _]]
-              (contains? form-element-ids key))
-            labels-in-applications)))
-
 (defn- extract-headers
   [applications form skip-answers?]
-  (let [flat-fields                 (util/flatten-form-fields (:content form))
-        labels-in-form              (pick-form-labels flat-fields #(and (form-label? %) (pick-answer? skip-answers? (:id %))))
-        labels-in-applications      (extract-headers-from-applications applications flat-fields skip-answers?)
-        labels-only-in-applications (remove-duplicates-by-field-id labels-in-form labels-in-applications)
-        all-labels                  (distinct (concat labels-in-form labels-only-in-applications (map vector (repeat nil) review-headers)))]
+  (let [flat-fields            (util/flatten-form-fields (:content form))
+        labels-in-form         (pick-form-labels flat-fields
+                                                 #(and (form-label? %)
+                                                       (pick-answer? skip-answers? (:id %))))
+        labels-in-applications (let [form-ids (set (map first labels-in-form))]
+                                 (remove #(contains? form-ids (first %))
+                                         (extract-headers-from-applications
+                                          applications
+                                          flat-fields
+                                          skip-answers?)))
+        all-labels             (concat labels-in-form
+                                       labels-in-applications
+                                       (map vector (repeat nil) review-headers))]
     (for [[idx [id header]] (map vector (range) all-labels)
-          :when (string? header)]
+          :let [header (or header "")]]
       {:id               id
        :decorated-header (decorate flat-fields (:content form) id header)
        :header           header
