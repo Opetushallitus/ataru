@@ -468,20 +468,22 @@
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
 (defn export-applications [applications application-reviews selected-hakukohde skip-answers? tarjonta-service ohjausparametrit-service]
-  (let [[workbook styles]       (create-workbook-and-styles)
-        form-meta-fields        (indexed-meta-fields form-meta-fields)
-        form-meta-sheet         (create-form-meta-sheet workbook styles form-meta-fields)
-        application-meta-fields (indexed-meta-fields application-meta-fields)
-        get-form-by-id          (memoize form-store/fetch-by-id)
-        get-latest-form-by-key  (memoize form-store/fetch-by-key)
-        get-koodisto-options    (memoize koodisto/get-koodisto-options)
-        get-hakukohde           (memoize (fn [oid] (tarjonta-parser/parse-hakukohde
+  (let [[^XSSFWorkbook workbook styles] (create-workbook-and-styles)
+        form-meta-fields                (indexed-meta-fields form-meta-fields)
+        form-meta-sheet                 (create-form-meta-sheet workbook styles form-meta-fields)
+        application-meta-fields         (indexed-meta-fields application-meta-fields)
+        get-form-by-id                  (memoize form-store/fetch-by-id)
+        get-latest-form-by-key          (memoize form-store/fetch-by-key)
+        get-koodisto-options            (memoize koodisto/get-koodisto-options)
+        get-hakukohde                   (memoize (fn [oid]
+                                                   (tarjonta-parser/parse-hakukohde
                                                     tarjonta-service
                                                     (tarjonta/get-hakukohde tarjonta-service oid))))
-        get-tarjonta-info       (memoize (fn [haku-oid] (tarjonta-parser/parse-tarjonta-info-by-haku
-                                                         tarjonta-service
-                                                         ohjausparametrit-service
-                                                         haku-oid)))]
+        get-tarjonta-info               (memoize (fn [haku-oid]
+                                                   (tarjonta-parser/parse-tarjonta-info-by-haku
+                                                    tarjonta-service
+                                                    ohjausparametrit-service
+                                                    haku-oid)))]
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
          (map (partial add-hakukohde-names get-tarjonta-info get-hakukohde))
@@ -497,7 +499,7 @@
                          (assoc result form-key value)))))
                  {})
          (map second)
-         (map-indexed (fn [sheet-idx {:keys [sheet-name form applications]}]
+         (map-indexed (fn [sheet-idx {:keys [^String sheet-name form applications]}]
                         (let [applications-sheet (.createSheet workbook sheet-name)
                               headers            (extract-headers applications form skip-answers?)
                               meta-writer        (make-writer styles form-meta-sheet (inc sheet-idx))
@@ -524,9 +526,7 @@
                                (dorun))
                           (.createFreezePane applications-sheet 0 1 0 1))))
          (dorun))
-    (when (< (count applications) 1000)
-      ; turns out .autoSizeColumn is a performance killer for large sheets
-      (set-column-widths workbook))
+    (set-column-widths workbook)
     (with-open [stream (ByteArrayOutputStream.)]
       (.write workbook stream)
       (.toByteArray stream))))
