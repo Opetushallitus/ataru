@@ -341,18 +341,18 @@
       (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
 
     (it "should create"
-        (with-redefs [store/generate-new-application-secret (constantly "0000000010")]
-          (with-response :post resp application-fixtures/person-info-form-application
-                         (should= 200 (:status resp))
-                         (should (have-application-in-db (get-in resp [:body :id]))))))
+      (with-redefs [store/generate-new-application-secret (constantly "0000000010")]
+        (with-response :post resp application-fixtures/person-info-form-application
+          (should= 200 (:status resp))
+          (should (have-application-in-db (get-in resp [:body :id]))))))
 
     (it "should edit application"
-        (with-redefs [store/generate-new-application-secret (constantly "0000000011")]
-          (with-response :put resp application-edited-email
-                         (should= 200 (:status resp))
-                         (let [id          (-> resp :body :id)
-                               application (get-application-by-id id)]
-                           (should= "edited@foo.com" (get-answer application "email"))))))
+      (with-redefs [store/generate-new-application-secret (constantly "0000000011")]
+        (with-response :put resp application-edited-email
+          (should= 200 (:status resp))
+          (let [id          (-> resp :body :id)
+                application (get-application-by-id id)]
+            (should= "edited@foo.com" (get-answer application "email"))))))
 
     (it "should not allow editing ssn"
         (with-redefs [store/generate-new-application-secret (constantly "0000000012")]
@@ -363,7 +363,7 @@
                            (should= "010101A123N" (get-answer application "ssn"))))))
 
     (it "should create for hakukohde with hakukohde order check"
-      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing
+      (with-redefs [hakuaika/get-hakuaika-info            hakuaika-ongoing
                     store/generate-new-application-secret (constantly "0000000013")]
         (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
           (should= 200 (:status resp))
