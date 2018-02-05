@@ -138,7 +138,7 @@
     :field     :person-oid
     :format-fn str}])
 
-(def ^:private review-headers ["Muistiinpanot" "Pisteet"])
+(def ^:private review-headers ["Pisteet"])
 
 (defn- create-cell-styles
   [workbook]
@@ -282,15 +282,8 @@
         beef-header-count  (- (apply max (map :column headers)) (count review-headers))
         prev-header-count  (+ beef-header-count
                               (count application-meta-fields))
-        notes-column       (inc prev-header-count)
-        score-column       (inc notes-column)
-        notes              (:notes application-review)
+        score-column       (inc prev-header-count)
         score              (:score application-review)]
-    (when (not-empty notes)
-      (->> notes
-           (map :notes)
-           (clojure.string/join "\n")
-           (writer 0 notes-column)))
     (when score (writer 0 score-column score))))
 
 (defn- form-label? [form-element]
