@@ -61,7 +61,7 @@
                       ".html")
                 application-id))
 
-(defn start-email-job [application-id email]
+(defn start-email-job [email]
   (let [job-type (:type email-job/job-definition)
         job-id   (job/start-job
                   hakija-jobs/job-definitions
@@ -71,11 +71,7 @@
     (log/info email)))
 
 (defn start-email-submit-confirmation-job [tarjonta-service application-id]
-  (start-email-job application-id
-                   (create-submit-email tarjonta-service
-                                        application-id)))
+  (start-email-job (create-submit-email tarjonta-service application-id)))
 
 (defn start-email-edit-confirmation-job [tarjonta-service application-id]
-  (start-email-job application-id
-                   (create-edit-email tarjonta-service
-                                      application-id)))
+  (start-email-job (create-edit-email tarjonta-service application-id)))
