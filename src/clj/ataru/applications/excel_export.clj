@@ -305,27 +305,16 @@
   (:exclude-from-answers form-element))
 
 (defn- pick-label
-  [form-element pick-cond]
-  (when (pick-cond form-element)
-    [[(:id form-element)
-      (label/get-language-label-in-preferred-order (:label form-element))]]))
+  [form-element]
+  [(:id form-element)
+   (label/get-language-label-in-preferred-order (:label form-element))])
 
 (defn pick-form-labels
   [form-content pick-cond]
-  (reduce
-   (fn [acc form-element]
-     (let [followups (remove nil? (mapcat :followups (:options form-element)))]
-       (cond
-         (pos? (count (:children form-element)))
-         (into acc (pick-form-labels (:children form-element) pick-cond))
-
-         (pos? (count followups))
-         (into (into acc (pick-label form-element pick-cond)) (pick-form-labels followups pick-cond))
-
-         :else
-         (into acc (pick-label form-element pick-cond)))))
-   []
-   form-content))
+  (->> form-content
+       util/flatten-form-fields
+       (filter pick-cond)
+       (map pick-label)))
 
 (defn- find-parent [element fields]
   (let [contains-element? (fn [children] (some? ((set (map :id children)) (:id element))))
