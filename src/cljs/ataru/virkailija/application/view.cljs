@@ -1142,12 +1142,24 @@
     [:th.application-handling__application-version-history-entry "Vanha tieto"]
     [:th.application-handling__application-version-history-entry "Uusi tieto"]]])
 
+(defn application-version-history-value [value-or-values]
+  (cond
+    (every? sequential? value-or-values)
+    (into [:ol]
+          (for [values value-or-values]
+            [:li (clojure.string/join ", " values)]))
+
+    (sequential? value-or-values)
+    (clojure.string/join ", " value-or-values)
+
+    :else (str value-or-values)))
+
 (defn application-version-history-row [item]
   ^{:key (str "application-change-history-" (:key item))}
   [:tr.application-handling__application-version-history-row
    [:td (:label item)]
-   [:td (str (:old item))]
-   [:td (str (:new item))]])
+   [:td (application-version-history-value (:old item))]
+   [:td (application-version-history-value (:new item))]])
 
 (defn application-version-changes []
   (let [history-items (subscribe [:application/current-history-items])]
