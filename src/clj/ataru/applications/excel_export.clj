@@ -374,12 +374,11 @@
         labels-in-form              (pick-form-labels flat-fields #(and (form-label? %) (pick-answer? skip-answers? (:id %))))
         labels-in-applications      (extract-headers-from-applications applications flat-fields skip-answers?)
         labels-only-in-applications (remove-duplicates-by-field-id labels-in-form labels-in-applications)
-        all-labels                  (distinct (concat labels-in-form labels-only-in-applications (map vector (repeat nil) review-headers)))
-        decorator                   (partial decorate flat-fields (:content form))]
+        all-labels                  (distinct (concat labels-in-form labels-only-in-applications (map vector (repeat nil) review-headers)))]
     (for [[idx [id header]] (map vector (range) all-labels)
           :when (string? header)]
       {:id               id
-       :decorated-header (decorator id header)
+       :decorated-header (decorate flat-fields (:content form) id header)
        :header           header
        :column           idx})))
 
