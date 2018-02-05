@@ -117,7 +117,8 @@
            (case @delivery-status
              :completed "Sähköposti on lähetetty!"
              :ongoing "Lähetetään..."
-             "Lähetä uusi linkki")]])
+             "Lähetä uusi linkki")]
+          [:p "Ongelmatilanteessa ota yhteyttä hakemaasi oppilaitokseen."]])
 
        ^{:key (:id @form)}
        [application-header @form]
