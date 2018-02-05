@@ -361,16 +361,17 @@
       :else header)))
 
 (defn- extract-headers-from-applications [applications form skip-answers]
-  (let [hidden-answers (map first (pick-form-labels (:content form) hidden-answer?))]
-    (mapcat (fn [application]
-              (->> (:answers application)
-                   (filter (fn [answer]
-                             (and
-                               (pick-answer? skip-answers (:key answer))
-                               (not (some (partial = (:key answer)) hidden-answers)))))
-                   (mapv (fn [answer]
-                           (vals (select-keys answer [:key :label]))))))
-            applications)))
+  (let [hidden-answers (->> (pick-form-labels (:content form) hidden-answer?)
+                            (map first)
+                            set)]
+    (->> applications
+         (mapcat (fn [application]
+                   (map (fn [{:keys [key label]}] [key label])
+                        (:answers application))))
+         (into {})
+         (filter (fn [[key _]]
+                   (and (pick-answer? skip-answers key)
+                        (not (contains? hidden-answers key))))))))
 
 (defn- remove-duplicates-by-field-id
   [labels-in-form labels-in-applications]
