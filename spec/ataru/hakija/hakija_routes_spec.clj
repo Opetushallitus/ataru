@@ -341,9 +341,10 @@
       (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
 
     (it "should create"
-      (with-response :post resp application-fixtures/person-info-form-application
-        (should= 200 (:status resp))
-        (should (have-application-in-db (get-in resp [:body :id])))))
+        (with-redefs [store/generate-new-application-secret (constantly "123456")]
+          (with-response :post resp application-fixtures/person-info-form-application
+                         (should= 200 (:status resp))
+                         (should (have-application-in-db (get-in resp [:body :id]))))))
 
     (it "should edit application"
       (with-response :put resp application-edited-email
@@ -394,7 +395,8 @@
       (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
 
     (it "should create"
-      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
+      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing
+                    store/generate-new-application-secret (constantly "1234567")]
         (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
           (should= 200 (:status resp))
           (should (have-application-in-db (get-in resp [:body :id]))))))
@@ -441,9 +443,10 @@
                  (:body resp))))
 
     (it "should create"
-      (with-response :post resp application-fixtures/person-info-form-application-with-more-answers
-        (should= 200 (:status resp))
-        (should (have-application-in-db (get-in resp [:body :id])))))
+        (with-redefs [store/generate-new-application-secret (constantly "12345678")]
+          (with-response :post resp application-fixtures/person-info-form-application-with-more-answers
+                         (should= 200 (:status resp))
+                         (should (have-application-in-db (get-in resp [:body :id]))))))
 
     (it "should update answers"
       (with-response :put resp application-fixtures/person-info-form-application-with-more-modified-answers
