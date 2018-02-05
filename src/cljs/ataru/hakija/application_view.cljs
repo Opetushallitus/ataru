@@ -134,8 +134,7 @@
 
 (defn feedback-form
   []
-  (let [form           (subscribe [:state-query [:form]])
-        submit-status  (subscribe [:state-query [:application :submit-status]])
+  (let [submit-status  (subscribe [:state-query [:application :submit-status]])
         star-hovered   (subscribe [:state-query [:application :feedback :star-hovered]])
         stars          (subscribe [:state-query [:application :feedback :stars]])
         hidden?        (subscribe [:state-query [:application :feedback :hidden?]])
