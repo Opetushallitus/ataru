@@ -222,7 +222,6 @@
    (s/optional-key :haku)               (s/maybe s/Str)
    (s/optional-key :id)                 s/Int
    (s/optional-key :created-time)       org.joda.time.DateTime
-   (s/optional-key :secret)             s/Str
    (s/optional-key :virkailija-secret)  s/Str
    (s/optional-key :form-key)           s/Str
    (s/optional-key :tarjonta)           FormTarjontaMetadata
