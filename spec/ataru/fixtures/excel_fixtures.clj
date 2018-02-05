@@ -14,10 +14,10 @@
                                        :label      {:fi "Kysymys 1"}
                                        :fieldType  "textField"
                                        :fieldClass "formField"}
-                                      {:children [{:id         "form_field_0_1"
-                                                   :label      {:fi "Kysymys 2"}
-                                                   :fieldType  "textField"
-                                                   :fieldClass "formField"}]}]}]})
+                                      {:id         "form_field_0_1"
+                                       :label      {:fi "Kysymys 2"}
+                                       :fieldType  "textField"
+                                       :fieldClass "formField"}]}]})
 
 (def form-for-hakukohde {:id           321
                          :key          "form_321_key"
