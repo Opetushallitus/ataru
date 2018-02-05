@@ -310,9 +310,8 @@
    (label/get-language-label-in-preferred-order (:label form-element))])
 
 (defn pick-form-labels
-  [form-content pick-cond]
-  (->> form-content
-       util/flatten-form-fields
+  [flat-fields pick-cond]
+  (->> flat-fields
        (filter pick-cond)
        (map pick-label)))
 
@@ -349,8 +348,8 @@
       (str "Liitepyyntö: " (label/get-language-label-in-preferred-order (:label element)))
       :else header)))
 
-(defn- extract-headers-from-applications [applications form skip-answers]
-  (let [hidden-answers (->> (pick-form-labels (:content form) hidden-answer?)
+(defn- extract-headers-from-applications [applications flat-fields skip-answers]
+  (let [hidden-answers (->> (pick-form-labels flat-fields hidden-answer?)
                             (map first)
                             set)]
     (->> applications
@@ -371,11 +370,12 @@
 
 (defn- extract-headers
   [applications form skip-answers?]
-  (let [labels-in-form              (pick-form-labels (:content form) #(and (form-label? %) (pick-answer? skip-answers? (:id %))))
-        labels-in-applications      (extract-headers-from-applications applications form skip-answers?)
+  (let [flat-fields                 (util/flatten-form-fields (:content form))
+        labels-in-form              (pick-form-labels flat-fields #(and (form-label? %) (pick-answer? skip-answers? (:id %))))
+        labels-in-applications      (extract-headers-from-applications applications flat-fields skip-answers?)
         labels-only-in-applications (remove-duplicates-by-field-id labels-in-form labels-in-applications)
         all-labels                  (distinct (concat labels-in-form labels-only-in-applications (map vector (repeat nil) review-headers)))
-        decorator                   (partial decorate (util/flatten-form-fields (:content form)) (:content form))]
+        decorator                   (partial decorate flat-fields (:content form))]
     (for [[idx [id header]] (map vector (range) all-labels)
           :when (string? header)]
       {:id               id
