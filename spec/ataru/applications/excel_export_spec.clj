@@ -15,15 +15,10 @@
   (let [row (.getRow sheet row-num)]
     (if (nil? expected-values)
       (should-be-nil row)
-      (do (should-not-be-nil row)
-          (doseq [col-idx (range (count expected-values))]
-            (let [cell     (.getCell row col-idx)
-                  expected (nth expected-values col-idx)]
-              (if-not (nil? expected)
-                (do (should-not-be-nil cell)
-                    (should= (nth expected-values col-idx) (.getStringCellValue cell)))
-                (should-be-nil cell))))
-          (should-be-nil (.getCell row (count expected-values)))))))
+      (should== expected-values
+                (map (fn [col] (some-> (.getCell row col)
+                                       .getStringCellValue))
+                     (range (.getLastCellNum row)))))))
 
 (defn- verify-pane-information
   [sheet]
