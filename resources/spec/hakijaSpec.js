@@ -35,6 +35,7 @@
       describe('filling out', function() {
         before(
           setNthFieldInputValue(0, 'Etunimi Tokanimi'),
+          selectNthField(1),
           setNthFieldInputValue(2, 'Sukunimi'),
           setNthFieldInputValue(4, '020202A0202'),
           setNthFieldInputValue(5, 'test@example.com'),
