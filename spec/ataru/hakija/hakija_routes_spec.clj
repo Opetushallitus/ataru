@@ -348,19 +348,19 @@
 
     (it "should edit application"
       (with-redefs [store/generate-new-application-secret (constantly "0000000011")]
-        (with-response :put resp application-edited-email
+        (with-response :put resp (merge application-edited-email {:secret "0000000010"})
           (should= 200 (:status resp))
           (let [id          (-> resp :body :id)
                 application (get-application-by-id id)]
             (should= "edited@foo.com" (get-answer application "email"))))))
 
     (it "should not allow editing ssn"
-        (with-redefs [store/generate-new-application-secret (constantly "0000000012")]
-          (with-response :put resp application-edited-ssn
-                         (should= 200 (:status resp))
-                         (let [id          (-> resp :body :id)
-                               application (get-application-by-id id)]
-                           (should= "010101A123N" (get-answer application "ssn"))))))
+      (with-redefs [store/generate-new-application-secret (constantly "0000000012")]
+        (with-response :put resp (merge application-edited-ssn {:secret "0000000011"})
+          (should= 200 (:status resp))
+          (let [id          (-> resp :body :id)
+                application (get-application-by-id id)]
+            (should= "010101A123N" (get-answer application "ssn"))))))
 
     (it "should create for hakukohde with hakukohde order check"
       (with-redefs [hakuaika/get-hakuaika-info            hakuaika-ongoing
@@ -377,7 +377,7 @@
                         :value)))))
 
     (it "should change hakukohde order"
-      (with-response :put resp application-for-hakukohde-hakukohde-order-edited
+      (with-response :put resp (merge application-for-hakukohde-hakukohde-order-edited {:secret "0000000013"})
         (should= 200 (:status resp))
         (should= ["1.2.246.562.20.49028196524" "1.2.246.562.20.49028196523"]
                  (->> (get-application-by-id (-> resp :body :id))
@@ -399,14 +399,15 @@
 
     (it "should create"
       (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing
-                    store/generate-new-application-secret (constantly "1234567")]
+                    store/generate-new-application-secret (constantly "0000000020")]
         (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
           (should= 200 (:status resp))
           (should (have-application-in-db (get-in resp [:body :id]))))))
 
     (it "should allow application edit after hakuaika within 10 days and only changes to attachments and limited person info"
-      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-grace-period-hakukierros-ongoing]
-        (with-response :put resp application-for-hakukohde-edited
+      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-grace-period-hakukierros-ongoing
+                    store/generate-new-application-secret (constantly "0000000021")]
+        (with-response :put resp (merge application-for-hakukohde-edited {:secret "0000000020"})
           (should= 200 (:status resp))
           (let [id          (-> resp :body :id)
                 application (get-application-by-id id)]
@@ -416,8 +417,9 @@
                      (get-answer application "164954b5-7b23-4774-bd44-dee14071316b"))))))
 
     (it "should allow application edit after grace period and only changes to limited person info"
-      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing]
-        (with-response :put resp application-fixtures/person-info-form-application-for-hakukohde
+      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing
+                    store/generate-new-application-secret (constantly "0000000022")]
+        (with-response :put resp (merge application-fixtures/person-info-form-application-for-hakukohde {:secret "0000000021"})
           (should= 200 (:status resp))
           (let [id          (-> resp :body :id)
                 application (get-application-by-id id)]
@@ -446,29 +448,30 @@
                  (:body resp))))
 
     (it "should create"
-        (with-redefs [store/generate-new-application-secret (constantly "12345678")]
-          (with-response :post resp application-fixtures/person-info-form-application-with-more-answers
-                         (should= 200 (:status resp))
-                         (should (have-application-in-db (get-in resp [:body :id]))))))
+      (with-redefs [store/generate-new-application-secret (constantly "0000000030")]
+        (with-response :post resp application-fixtures/person-info-form-application-with-more-answers
+          (should= 200 (:status resp))
+          (should (have-application-in-db (get-in resp [:body :id]))))))
 
     (it "should update answers"
-      (with-response :put resp application-fixtures/person-info-form-application-with-more-modified-answers
-        (should= 200 (:status resp))
-        (let [id          (-> resp :body :id)
-              application (get-application-by-id id)]
-          (should= "Toistuva pakollinen 4" (last (get-answer application "repeatable-required")))
-          (should= "modified-attachment-id" (get-answer application "more-questions-attachment-id"))
-          (should= "Vierekkäinen vastaus 2" (get-answer application "adjacent-answer-2"))
-          (should= "toka vaihtoehto" (get-answer application "more-answers-dropdown-id")))))
+      (with-redefs [store/generate-new-application-secret (constantly "0000000031")]
+        (with-response :put resp (merge application-fixtures/person-info-form-application-with-more-modified-answers {:secret "0000000030"})
+          (should= 200 (:status resp))
+          (let [id          (-> resp :body :id)
+                application (get-application-by-id id)]
+            (should= "Toistuva pakollinen 4" (last (get-answer application "repeatable-required")))
+            (should= "modified-attachment-id" (get-answer application "more-questions-attachment-id"))
+            (should= "Vierekkäinen vastaus 2" (get-answer application "adjacent-answer-2"))
+            (should= "toka vaihtoehto" (get-answer application "more-answers-dropdown-id"))))))
 
     (it "should not update dropdown answer when required followups are not answered"
-      (with-response :put resp (-> application-fixtures/person-info-form-application-with-modified-answers
+      (with-response :put resp (-> (merge application-fixtures/person-info-form-application-with-modified-answers {:secret "0000000031"})
                                    (assoc-in [:answers 18 :value] "eka vaihtoehto"))
         (should= 400 (:status resp))
         (should= {:failures {:dropdown-followup-2 {:passed? false}}} (:body resp))))
 
     (it "should update dropdown answer"
-      (with-response :put resp (-> application-fixtures/person-info-form-application-with-more-modified-answers
+      (with-response :put resp (-> (merge application-fixtures/person-info-form-application-with-more-modified-answers {:secret "0000000031"})
                                    (assoc-in [:answers 18 :value] "eka vaihtoehto"))
         (should= 200 (:status resp))
         (let [id          (-> resp :body :id)

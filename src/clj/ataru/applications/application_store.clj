@@ -61,7 +61,7 @@
   [hakija-secret]
   (application-exists-with-secret-tx? hakija-secret (get-datasource)))
 
-(defn- generate-new-application-secret
+(defn generate-new-application-secret
   [connection]
   (loop [secret (crypto/url-part 34)]
     (if (not (application-exists-with-secret-tx? secret connection))
