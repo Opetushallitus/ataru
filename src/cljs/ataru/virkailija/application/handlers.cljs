@@ -701,3 +701,16 @@
       (assoc-in db
                 [:application :selected-application-and-form :expanded-event-ids]
                 new-event-ids))))
+
+(reg-event-db
+  :application/remove-field-highlight
+  (fn [db [_ field-id]]
+    (let [highlighted-fields (-> db :application :selected-application-and-form :highligted-fields)
+          updated-fields     (remove #(= field-id %) highlighted-fields)]
+      (assoc-in db [:application :selected-application-and-form :highligted-fields] updated-fields))))
+
+(reg-event-fx
+  :application/highlight-field
+  (fn [{:keys [db]} [_ field-id]]
+    {:db (update-in db [:application :selected-application-and-form :highligted-fields] conj field-id)
+     :dispatch-later [{:ms 2000 :dispatch [:application/remove-field-highlight field-id]}]}))
