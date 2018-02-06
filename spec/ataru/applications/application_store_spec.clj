@@ -109,23 +109,19 @@
     (let [expected (filter #(= "9d24af7d-f672-4c0e-870f-aaaa" (:key %)) fixtures/applications)]
       (with-redefs [store/exec-db (fn [ds-key query-fn params]
                                     (should= :db ds-key)
-                                    (should= "yesql-get-application-version-and-previous" (-> query-fn .meta :name))
-                                    (should= {:application_key "9d24af7d-f672-4c0e-870f-aaaa"
-                                              :version_number 0} params)
+                                    (should= "yesql-get-application-versions" (-> query-fn .meta :name))
+                                    (should= {:application_key "9d24af7d-f672-4c0e-870f-aaaa"} params)
                                     expected)
                     forms/get-form-by-application (fn [_] form-fixtures/version-test-form)]
-        (should== [{:key   :G__224
-                    :label "Toistuva kysymys ryhmässä"
-                    :old   [["x" "y" "z"]
-                            ["a" "b" "c"]]
-                    :new   [["x" "y" "1"]
-                            ["a" "b" "asdfa"]]}
-                   {:key   :G__119
-                    :label "Eka kysymys"
-                    :old   "z"
-                    :new   ""}
-                   {:key   :G__117
-                    :label "Toistuva kysymys"
-                    :old   ["x" "y" "z"]
-                    :new   ["x" "y" "a"]}]
-                 (store/get-application-version-changes "9d24af7d-f672-4c0e-870f-aaaa" 1))))))
+        (should== [{:G__224 {:label "Toistuva kysymys ryhmässä"
+                             :old   [["x" "y" "z"]
+                                     ["a" "b" "c"]]
+                             :new   [["x" "y" "1"]
+                                     ["a" "b" "asdfa"]]}
+                    :G__119 {:label "Eka kysymys"
+                             :old   "z"
+                             :new   ""}
+                    :G__117 {:label "Toistuva kysymys"
+                             :old   ["x" "y" "z"]
+                             :new   ["x" "y" "a"]}}]
+                  (store/get-application-version-changes "9d24af7d-f672-4c0e-870f-aaaa"))))))

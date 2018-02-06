@@ -355,9 +355,7 @@
                    (api/GET "/:application-key/changes" {session :session}
                      :summary "Get changes made to an application in version x"
                      :path-params [application-key :- s/Str]
-                     :query-params [version-number :- s/Int]
                      (if-let [diff (application-service/get-application-version-changes application-key
-                                                                                        version-number
                                                                                         session
                                                                                         organization-service)]
                        (ok diff)

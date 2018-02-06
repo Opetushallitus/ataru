@@ -341,11 +341,12 @@
   (fn [{:keys [db]} [_ response]]
     (let [response-with-parsed-times (parse-application-times response)
           db                         (update-application-details db response-with-parsed-times)]
-      {:db       db
-       :dispatch (if (and (fc/feature-enabled? :attachment)
-                          (application-has-attachments? db))
-                   [:application/fetch-application-attachment-metadata]
-                   [:application/start-autosave])})))
+      {:db         db
+       :dispatch-n [(if (and (fc/feature-enabled? :attachment)
+                             (application-has-attachments? db))
+                      [:application/fetch-application-attachment-metadata]
+                      [:application/start-autosave])
+                    [:application/get-application-change-history (-> response :application :key)]]})))
 
 (reg-event-fx
   :application/fetch-application
@@ -671,7 +672,15 @@
 (reg-event-db
   :application/handle-change-history-response
   (fn [db [_ response]]
-    (assoc-in db [:application :current-history-items] response)))
+    (assoc-in db [:application :selected-application-and-form :application-change-history] response)))
+
+(reg-event-fx
+  :application/get-application-change-history
+  (fn [{:keys [db]} [_ application-key]]
+    {:db   db
+     :http {:method              :get
+            :path                (str "/lomake-editori/api/applications/" application-key "/changes")
+            :handler-or-dispatch :application/handle-change-history-response}}))
 
 (reg-event-db
   :application/close-history

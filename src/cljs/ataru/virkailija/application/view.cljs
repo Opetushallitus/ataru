@@ -724,14 +724,6 @@
   [:div.application-handling__event-row
    [:span.application-handling__event-timestamp time-str]
    [:span.application-handling__event-caption
-    {:on-click (when (modify-event? event)
-                 (fn [e]
-                   (ajax/http :get
-                              (str "/lomake-editori/api/applications/"
-                                   @(subscribe [:application/selected-application-key])
-                                   "/changes?version-number="
-                                   @(subscribe [:application/event-version-index (:id event)]))
-                              :application/handle-change-history-response)))}
     caption]])
 
 (defn event-row [event]
