@@ -672,7 +672,11 @@
 (reg-event-db
   :application/handle-change-history-response
   (fn [db [_ response]]
-    (assoc-in db [:application :selected-application-and-form :application-change-history] response)))
+    (let [db (assoc-in db [:application :selected-application-and-form :application-change-history] response)]
+      (assoc-in db [:application :selected-application-and-form :expanded-event-ids] (-> (cljs-util/application-modify-events db)
+                                                                                         last
+                                                                                         :id
+                                                                                         hash-set)))))
 
 (reg-event-fx
   :application/get-application-change-history
@@ -690,9 +694,10 @@
 (reg-event-db
   :application/toggle-event-expanded
   (fn [db [_ event-id]]
-    (let [expanded-events (-> db :application :selected-application-and-form :expanded-event-ids)]
+    (let [expanded-events (-> db :application :selected-application-and-form :expanded-event-ids)
+          new-event-ids   (set (if (some #{event-id} expanded-events)
+                                 (remove #(= event-id %) expanded-events)
+                                 (conj expanded-events event-id)))]
       (assoc-in db
                 [:application :selected-application-and-form :expanded-event-ids]
-                (if (some #{event-id} expanded-events)
-                  (remove #(= event-id %) expanded-events)
-                  (conj expanded-events event-id))))))
+                new-event-ids))))
