@@ -48,20 +48,20 @@ check out `https://github.com/Opetushallitus/ataru-secrets` (you'll
 need privileges). You also need to forward untuva ldap to a local port:
 
 ```
-ssh -L31337:ldap.ldap.untuva.aws.opintopolku.fi:389 ubuntu@bastion.untuva.aws.opintopolku.fi
+ssh -L31337:ldap.ldap.untuvaopintopolku.fi:389 ubuntu@bastion.untuvaopintopolku.fi
 ```
 
 Or you can edit your `~/.ssh/config` file to contain a host definition like:
  
 ```
-Host bastion.untuva.aws.opintopolku.fi
-    LocalForward 31337 ldap.ldap.untuva.aws.opintopolku.fi:389
+Host bastion.untuvaopintopolku.fi
+    LocalForward 31337 ldap.ldap.untuvaopintopolku.fi:389
     user <your username here>
     IdentityFile <your private key file path here>
-    HostName bastion.untuva.aws.opintopolku.fi
+    HostName bastion.untuvaopintopolku.fi
 ```
 
-Possibly with multiple LocalForward definitions for whatever you need. Then you can simply `ssh ubuntu@bastion.untuva.aws.opintopolku.fi`
+Possibly with multiple LocalForward definitions for whatever you need. Then you can simply `ssh ubuntu@bastion.untuvaopintopolku.fi`
 
 After setting up the tunnel you can run:
 
@@ -79,7 +79,7 @@ ataru repo. Figwheel will automatically push cljs changes to the browser.
 
 It is recommended to use figwheel with rlwrap to enable a better ux for the repl!
 
-Navigate to untuva virkailija.untuva.aws.opintopolku.fi and login with ataru-user to get cas session.
+Navigate to untuva virkailija.untuvaopintopolku.fi and login with ataru-user to get cas session.
 Browse to [http://localhost:8350](http://localhost:8350).
 
 You can also run a "minimal" version of the virkailija system with
@@ -176,7 +176,7 @@ Remeber to compile all changed UI code before running UI-tests. To clean and rec
 Also remember to restart applications after re-compiling code!
 
 To run virkailija tests:
-* Navigate to untuva virkailija.untuva.aws.opintopolku.fi and login with ataru-user to get cas session.
+* Navigate to untuva virkailija.untuvaopintopolku.fi and login with ataru-user to get cas session.
 * Navigate to [http://localhost:8350/lomake-editori/virkailija-test.html](http://localhost:8350/lomake-editori/virkailija-test.html)
 
 That will run the tests for virkailija.
