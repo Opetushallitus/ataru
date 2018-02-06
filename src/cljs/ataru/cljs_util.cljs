@@ -209,3 +209,6 @@
 
 (defn get-translation [key]
   (translation-util/get-translation key @(subscribe [:application/form-language])))
+
+(defn modify-event? [event]
+  (some #{(:event-type event)} ["updated-by-applicant" "updated-by-virkailija"]))

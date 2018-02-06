@@ -2,7 +2,8 @@
   (:require [cljs-time.core :as t]
             [re-frame.core :as re-frame]
             [ataru.util :as u]
-            [ataru.application.review-states :as review-states]))
+            [ataru.application.review-states :as review-states]
+            [ataru.cljs-util :as util]))
 
 (defn- from-multi-lang [text]
   (some #(get text %) [:fi :sv :en]))
@@ -296,11 +297,18 @@
   (fn [db _]
     (-> db :application :current-history-items)))
 
+(defn event-index
+  [db event-id]
+  (->> db
+       :application
+       :events
+       (filter util/modify-event?)
+       (keep-indexed #(when (= (:id %2) event-id) %1))
+       first))
+
 (re-frame.core/reg-sub
-  :application/event-version-index
+  :application/changes-made-for-event
   (fn [db [_ event-id]]
-    (->> db
-         :application
-         :events
-         (keep-indexed #(when (= (:id %2) event-id) %1))
-         first)))
+    (let [event-index (event-index db event-id)
+          change-history (-> db :application :selected-application-and-form :application-change-history)]
+      (nth change-history event-index))))
