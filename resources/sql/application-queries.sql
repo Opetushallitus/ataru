@@ -657,14 +657,24 @@ LIMIT 1;
 WITH latest_version AS (
     SELECT max(a.created_time) AS latest_time
     FROM applications a
-    JOIN virkailija_credentials AS vc
-      ON a.key = vc.application_key
+      JOIN virkailija_credentials AS vc
+        ON a.key = vc.application_key
     WHERE vc.secret = :virkailija_secret
+), latest_secret_version AS (
+    SELECT
+      ass.secret AS latest_secret,
+      ass.application_key
+    FROM application_secrets ass
+      JOIN virkailija_credentials AS vc
+        ON ass.application_key = vc.application_key
+    WHERE vc.secret = :virkailija_secret
+    ORDER BY ass.id DESC
+    LIMIT 1
 )
 SELECT
   a.id,
   a.key,
-  las.secret,
+  las.latest_secret as secret,
   a.lang,
   a.form_id AS form,
   a.created_time,
@@ -674,7 +684,7 @@ SELECT
   a.person_oid
 FROM applications a
   JOIN latest_version lv ON a.created_time = lv.latest_time
-  JOIN latest_application_secrets las ON a.key = las.application_key
+  JOIN latest_secret_version las ON las.application_key = a.key
 FOR UPDATE;
 
 -- name: yesql-get-application-organization-by-key
