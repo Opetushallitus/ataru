@@ -88,7 +88,7 @@
     (api/GET "/spec/:filename.js" [filename]
       ;; Test vars params is a hack to get form ids from fixtures to the test file
       ;; without having to pass them as url params. Also enables tests to be run
-      ;; individually when navigationg to any test file.
+      ;; individually when navigating to any test file.
       (if (is-dev-env?)
         (render-file-in-dev (str "spec/" filename ".js")
                             (when (= "hakijaCommon" filename)
