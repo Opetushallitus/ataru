@@ -212,3 +212,10 @@
 
 (defn modify-event? [event]
   (some #{(:event-type event)} ["updated-by-applicant" "updated-by-virkailija"]))
+
+(defn application-modify-events
+  [db]
+  (->> db
+       :application
+       :events
+       (filter modify-event?)))

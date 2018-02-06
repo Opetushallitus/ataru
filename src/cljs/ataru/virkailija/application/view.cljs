@@ -718,17 +718,18 @@
 
 (defn to-event-row
   [time-str caption event]
-  [:div.application-handling__event-row
-   [:span.application-handling__event-timestamp time-str]
-   [:span.application-handling__event-caption
-    {:on-click #(dispatch [:application/toggle-event-expanded (:id event)])}
-    caption
-    (when (and (util/modify-event? event)
-               (some #{(:id event)} @(subscribe [:application/expanded-event-ids])))
-      [:ul.application-handling--event-row-details
-       (for [[key field] @(subscribe [:application/changes-made-for-event (:id event)])]
-         ^{:key (str "event-list-for" key)}
-         [:li [:a (:label field)]])])]])
+  (let [modify-event? (util/modify-event? event)]
+    [:div.application-handling__event-row
+     [:span.application-handling__event-timestamp time-str]
+     [:span.application-handling__event-caption
+      {:on-click (when modify-event? #(dispatch [:application/toggle-event-expanded (:id event)]))}
+      caption
+      (when (and modify-event?
+                 (some #{(:id event)} @(subscribe [:application/expanded-event-ids])))
+        [:ul.application-handling--event-row-details
+         (for [[key field] @(subscribe [:application/changes-made-for-event (:id event)])]
+           ^{:key (str "event-list-for" key)}
+           [:li [:a (:label field)]])])]]))
 
 (defn event-row [event]
   (let [time-str (t/time->short-str (or (:time event) (:created-time event)))
