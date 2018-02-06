@@ -722,29 +722,26 @@
 (defn get-application-keys []
   (exec-db :db yesql-get-latest-application-ids-distinct-by-person-oid nil))
 
-(defn get-application-version-changes [application-key version-number]
-  "Versioning starts at 1, which describes the first edit made to the application.
-   The param is decremented since its given to psql offset, and we want to get application
-   versions 0 and 1 at version index 1."
-  (when (pos? version-number)
-    (let [[old-application new-application] (exec-db :db
-                                                     yesql-get-application-version-and-previous
-                                                     {:application_key application-key
-                                                      :version_number  (dec version-number)})
-          old-answers          (util/application-answers-by-key old-application)
-          new-answers          (util/application-answers-by-key new-application)
-          answer-keys          (set (concat (keys old-answers) (keys new-answers)))
-          form-fields          (util/form-fields-by-id (forms/get-form-by-application new-application))
-          get-koodisto-options (memoize koodisto/get-koodisto-options)
-          lang                 (or (-> new-application :lang keyword) :fi)]
-      (when (not-empty new-answers)                         ; In this case we are at the lastest version of the application, no diff!
-        (into []
-              (for [key answer-keys
-                    :let [old-value (-> old-answers key :value)
-                          new-value (-> new-answers key :value)
-                          field     (key form-fields)]
-                    :when (not= old-value new-value)]
-                {:label (-> field :label lang)
-                 :key   key
-                 :old   (util/populate-answer-koodisto-values old-value field get-koodisto-options)
-                 :new   (util/populate-answer-koodisto-values new-value field get-koodisto-options)}))))))
+(defn get-application-version-changes [application-key]
+  (let [all-versions         (exec-db :db
+                                      yesql-get-application-versions
+                                      {:application_key application-key})
+        all-versions-paired  (map vector all-versions (rest all-versions))
+        get-koodisto-options (memoize koodisto/get-koodisto-options)]
+    (when (not-empty all-versions-paired)
+      (map (fn [[older-application newer-application]]
+             (let [older-version-answers (util/application-answers-by-key older-application)
+                   newer-version-answers (util/application-answers-by-key newer-application)
+                   answer-keys           (set (concat (keys older-version-answers) (keys newer-version-answers)))
+                   lang                  (or (-> newer-application :lang keyword) :fi)
+                   form-fields           (util/form-fields-by-id (forms/get-form-by-application newer-application))]
+               (into {}
+                     (for [key answer-keys
+                           :let [old-value (-> older-version-answers key :value)
+                                 new-value (-> newer-version-answers key :value)
+                                 field     (key form-fields)]
+                           :when (not= old-value new-value)]
+                       {key {:label (-> field :label lang)
+                             :old   (util/populate-answer-koodisto-values old-value field get-koodisto-options)
+                             :new   (util/populate-answer-koodisto-values new-value field get-koodisto-options)}}))))
+           all-versions-paired))))

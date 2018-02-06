@@ -959,10 +959,8 @@ UPDATE applications
 SET hakukohde = ARRAY[:hakukohde]::character varying(127)[]
 WHERE secret = :secret;
 
---name: yesql-get-application-version-and-previous
+--name: yesql-get-application-versions
 SELECT content, form_id
 FROM applications
 WHERE key = :application_key
-ORDER BY id ASC
-LIMIT 2
-OFFSET :version_number;
+ORDER BY id ASC;
