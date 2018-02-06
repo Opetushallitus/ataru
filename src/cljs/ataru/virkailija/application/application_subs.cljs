@@ -297,12 +297,17 @@
   (fn [db _]
     (-> db :application :current-history-items)))
 
-(defn event-index
-  [db event-id]
+(defn- application-modify-events
+  [db]
   (->> db
        :application
        :events
-       (filter util/modify-event?)
+       (filter util/modify-event?)))
+
+(defn- event-index
+  [db event-id]
+  (->> db
+       application-modify-events
        (keep-indexed #(when (= (:id %2) event-id) %1))
        first))
 
@@ -312,3 +317,9 @@
     (let [event-index (event-index db event-id)
           change-history (-> db :application :selected-application-and-form :application-change-history)]
       (nth change-history event-index))))
+
+(re-frame.core/reg-sub
+  :application/expanded-event-ids
+  (fn [db _]
+    (conj (-> db :application :selected-application-and-form :expanded-event-ids)
+          (-> db application-modify-events last :id))))
