@@ -35,7 +35,6 @@
           "Katutie 12 B",
           "40100",
           "JYVÄSKYLÄ",
-          "Jyväskylä",
           "Tekstikentän vastaus",
           "Toistuva vastaus 1",
           "Toistuva vastaus 2",
@@ -73,6 +72,7 @@
         var expectedDropdownInputValues = [
           "Suomi",
           "Suomi",
+          "Jyväskylä",
           "suomi",
           "Kolmas vaihtoehto",
           "Lisensiaatin tutkinto",

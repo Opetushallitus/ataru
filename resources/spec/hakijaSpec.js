@@ -42,7 +42,7 @@
           setNthFieldInputValue(6, '0123456789'),
           setNthFieldInputValue(8, 'Katutie 12 B'),
           setNthFieldInputValue(9, '40100'),
-          setNthFieldInputValue(11, 'Jyväskylä'),
+          setNthFieldOption(11, '179'),
           wait.until(function() {
             return formFields().eq(10).find('input').val() !== ''
           })

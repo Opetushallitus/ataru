@@ -72,7 +72,7 @@
         wait.until(function() {
           return formFields().eq(15).find('input').val() !== ''
         }),
-        setNthFieldInputValue(16, 'Jyväskylä')
+        setNthFieldOption(16, "179")
       )
 
       it('works and validates correctly', function () {

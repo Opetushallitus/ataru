@@ -138,10 +138,12 @@
 
 (defn ^:private home-town-component
   []
-  (text-field (:home-town person-info-module-texts)
-              :id :home-town
-              :validators [:home-town]
-              :exclude-from-answers-if-hidden true))
+  (merge (component/dropdown)
+         {:label (:home-town person-info-module-texts)
+          :id :home-town
+          :validators [:home-town]
+          :koodisto-source {:uri "kunta" :version 1}
+          :exclude-from-answers-if-hidden true}))
 
 (defn- city-component
   []
