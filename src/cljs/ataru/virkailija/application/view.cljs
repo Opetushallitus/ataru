@@ -716,15 +716,17 @@
 
          :else "Tuntematon"))
 
-(defn- modify-event? [event]
-  (some #{(:event-type event)} ["updated-by-applicant" "updated-by-virkailija"]))
-
 (defn to-event-row
   [time-str caption event]
   [:div.application-handling__event-row
    [:span.application-handling__event-timestamp time-str]
    [:span.application-handling__event-caption
-    caption]])
+    caption
+    (when (util/modify-event? event)
+      [:ul.application-handling--event-row-details
+       (for [[key field] @(subscribe [:application/changes-made-for-event (:id event)])]
+         ^{:key (str "event-list-for" key)}
+         [:li [:a (:label field)]])])]])
 
 (defn event-row [event]
   (let [time-str (t/time->short-str (or (:time event) (:created-time event)))
