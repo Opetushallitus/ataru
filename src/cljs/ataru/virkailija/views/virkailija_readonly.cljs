@@ -34,7 +34,8 @@
                                    (replace-with-option-label (:options field-descriptor) lang)))
         highlight-field? (subscribe [:application/field-highlighted? id])]
     [:div.application__form-field
-     {:class (when @highlight-field? "highlighted")}
+     {:class (when @highlight-field? "highlighted")
+      :id    id}
      [:label.application__form-field-label
       (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
      [:div.application__form-field-value
@@ -201,7 +202,8 @@
       [scroll-to-anchor content]]
      [:div.application__wrapper-contents
       {:class (when @(subscribe [:application/field-highlighted? :hakukohteet])
-                "highlighted")}
+                "highlighted")
+       :id    "hakukohteet"}
       (for [hakukohde-oid hakukohteet]
         ^{:key (str "hakukohteet-list-row-" hakukohde-oid)}
         [hakukohteet-list-row hakukohde-oid])]]))
