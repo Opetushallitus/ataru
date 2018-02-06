@@ -24,18 +24,21 @@
             [ataru.feature-config :as fc]))
 
 (defn text [field-descriptor application lang group-idx]
-  [:div.application__form-field
-   [:label.application__form-field-label
-    (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
-   [:div.application__form-field-value
-    (let [id (keyword (:id field-descriptor))
-          use-onr-info? (contains? (:person application) id)
-          values (if use-onr-info?
-                   (-> application :person id)
-                   (cond-> (get-value (-> application :answers id) group-idx)
-                     (and (predefined-value-answer? field-descriptor)
-                          (not (contains? field-descriptor :koodisto-source)))
-                     (replace-with-option-label (:options field-descriptor) lang)))]
+  (let [id               (keyword (:id field-descriptor))
+        use-onr-info?    (contains? (:person application) id)
+        values           (if use-onr-info?
+                           (-> application :person id)
+                           (cond-> (get-value (-> application :answers id) group-idx)
+                                   (and (predefined-value-answer? field-descriptor)
+                                        (not (contains? field-descriptor :koodisto-source)))
+                                   (replace-with-option-label (:options field-descriptor) lang)))
+        highlight-field? (subscribe [:application/field-highlighted? id])]
+    [:div.application__form-field
+     {:class (when @highlight-field? "highlighted")}
+     [:label.application__form-field-label
+      (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
+     [:div.application__form-field-value
+
       (cond (and (sequential? values) (< 1 (count values)))
             [:ul.application__form-field-list
              (map-indexed
@@ -46,7 +49,7 @@
             (sequential? values)
             (render-paragraphs (first values))
             :else
-            (render-paragraphs values)))]])
+            (render-paragraphs values))]]))
 
 (defn- attachment-list [attachments]
   [:div
@@ -197,6 +200,8 @@
       [:h2 @(subscribe [:application/hakukohteet-header])]
       [scroll-to-anchor content]]
      [:div.application__wrapper-contents
+      {:class (when @(subscribe [:application/field-highlighted? :hakukohteet])
+                "highlighted")}
       (for [hakukohde-oid hakukohteet]
         ^{:key (str "hakukohteet-list-row-" hakukohde-oid)}
         [hakukohteet-list-row hakukohde-oid])]]))

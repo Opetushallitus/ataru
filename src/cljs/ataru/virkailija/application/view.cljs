@@ -729,7 +729,11 @@
         [:ul.application-handling--event-row-details
          (for [[key field] @(subscribe [:application/changes-made-for-event (:id event)])]
            ^{:key (str "event-list-for" key)}
-           [:li [:a (:label field)]])])]]))
+           [:li
+            {:on-click (fn [e]
+                         (.stopPropagation e)
+                         (dispatch [:application/highlight-field key]))}
+            [:a (:label field)]])])]]))
 
 (defn event-row [event]
   (let [time-str (t/time->short-str (or (:time event) (:created-time event)))
