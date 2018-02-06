@@ -721,8 +721,10 @@
   [:div.application-handling__event-row
    [:span.application-handling__event-timestamp time-str]
    [:span.application-handling__event-caption
+    {:on-click #(dispatch [:application/toggle-event-expanded (:id event)])}
     caption
-    (when (util/modify-event? event)
+    (when (and (util/modify-event? event)
+               (some #{(:id event)} @(subscribe [:application/expanded-event-ids])))
       [:ul.application-handling--event-row-details
        (for [[key field] @(subscribe [:application/changes-made-for-event (:id event)])]
          ^{:key (str "event-list-for" key)}

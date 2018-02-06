@@ -686,3 +686,13 @@
   :application/close-history
   (fn [db _]
     (update-in db [:application] dissoc :current-history-items)))
+
+(reg-event-db
+  :application/toggle-event-expanded
+  (fn [db [_ event-id]]
+    (let [expanded-events (-> db :application :selected-application-and-form :expanded-event-ids)]
+      (assoc-in db
+                [:application :selected-application-and-form :expanded-event-ids]
+                (if (some #{event-id} expanded-events)
+                  (remove #(= event-id %) expanded-events)
+                  (conj expanded-events event-id))))))
