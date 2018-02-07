@@ -145,7 +145,7 @@
 
 (defn- merge-applications [new-application old-application]
   (merge new-application
-         (select-keys old-application [:key :haku :person-oid])))
+         (select-keys old-application [:key :haku :person-oid :secret])))
 
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
