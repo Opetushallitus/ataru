@@ -685,9 +685,19 @@
             :handler-or-dispatch :application/handle-change-history-response}}))
 
 (reg-event-db
-  :application/close-history
+  :application/open-application-version-history
+  (fn [db [_ event-id]]
+    (let [event-index    (cljs-util/event-index db event-id)
+          change-history (-> db :application :selected-application-and-form :application-change-history)]
+      (assoc-in db
+                [:application :selected-application-and-form :current-history-items]
+                (nth change-history event-index)))))
+
+(reg-event-db
+  :application/close-application-version-history
   (fn [db _]
-    (update-in db [:application] dissoc :current-history-items)))
+    (update-in db
+               [:application :selected-application-and-form] dissoc :current-history-items)))
 
 (reg-event-db
   :application/toggle-event-expanded

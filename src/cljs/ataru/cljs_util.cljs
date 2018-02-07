@@ -219,3 +219,10 @@
        :application
        :events
        (filter modify-event?)))
+
+(defn event-index
+  [db event-id]
+  (->> db
+       application-modify-events
+       (keep-indexed #(when (= (:id %2) event-id) %1))
+       first))

@@ -733,7 +733,13 @@
             {:on-click (fn [e]
                          (.stopPropagation e)
                          (dispatch [:application/highlight-field key]))}
-            [:a (:label field)]])])]]))
+            [:a (:label field)]])
+         [:li.application-handling__show-history-as-list
+          [:a
+           {:on-click (fn [e]
+                        (.stopPropagation e)
+                        (dispatch [:application/open-application-version-history (:id event)]))}
+           "Näytä taulukkona"]]])]]))
 
 (defn event-row [event]
   (let [time-str (t/time->short-str (or (:time event) (:created-time event)))
@@ -1155,21 +1161,23 @@
 
     :else (str value-or-values)))
 
-(defn application-version-history-row [item]
-  ^{:key (str "application-change-history-" (:key item))}
+(defn application-version-history-row [key values]
+  ^{:key (str "application-change-history-" key)}
   [:tr.application-handling__application-version-history-row
-   [:td (:label item)]
-   [:td (application-version-history-value (:old item))]
-   [:td (application-version-history-value (:new item))]])
+   [:td (:label values)]
+   [:td (application-version-history-value (:old values))]
+   [:td (application-version-history-value (:new values))]])
 
 (defn application-version-changes []
   (let [history-items (subscribe [:application/current-history-items])]
     (when @history-items
       [:div.application-handling__application-version-history-container
-       {:on-click #(dispatch [:application/close-history])}
        [:div.application-handling__application-version-history
+        [:span.application-handling__close-version-history
+         {:on-click #(dispatch [:application/close-application-version-history])}
+         [:i.zmdi.zmdi-close.closedetails-button-mark]]
         [:table.application-handling__application-version-history-table
          [application-version-history-header]
          (into [:tbody]
-               (for [item @history-items]
-                 [application-version-history-row item]))]]])))
+               (for [[key values] @history-items]
+                 [application-version-history-row key values]))]]])))

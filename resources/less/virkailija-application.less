@@ -1096,6 +1096,7 @@ and (max-width: 1000px) {
   z-index: 1000;
 }
 
+
 .application-handling__application-version-history {
   position: relative;
   left: 5%;
@@ -1108,6 +1109,24 @@ and (max-width: 1000px) {
   z-index: 1000;
 }
 
+.application-handling__close-version-history {
+  align-items: center;
+  background-color: #DFEBEF;
+  border-radius: 50%;
+  display: flex;
+  height: 25px;
+  justify-content: center;
+  right: 10px;
+  position: absolute;
+  top: 10px;
+  width: 25px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #08526A;
+  }
+}
+
 .application-handling__application-version-history-table {
   padding: 10px;
   border-spacing: 0;
@@ -1116,7 +1135,7 @@ and (max-width: 1000px) {
     padding: 7px;
   }
 
-  tr:hover {
+  tbody > tr:hover {
     background-color: #f1efef;
   }
 
@@ -1153,8 +1172,13 @@ and (max-width: 1000px) {
 
 .application-handling--event-row-details {
   list-style: none;
-  padding: 0 0 0 5px;
+  padding: 0;
   margin: 0;
+}
+
+.application-handling__show-history-as-list {
+  font-style: initial;
+  padding-top: 5px;
 }
 
 .application-handling__multi-line-event-caption {
@@ -1223,7 +1247,7 @@ and (max-width: 1000px) {
 }
 
 .highlighted {
-  background-color: @light-green;
+  background-color: #E2F9D1;
 }
 
 .application__form-field-label {
