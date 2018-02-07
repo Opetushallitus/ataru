@@ -200,6 +200,5 @@ case "$command" in
 * ui-compile
 * prepare-ui-tests
 * create-uberjar
-* run-tests
-* run-browser-tests"
+* run-tests"
 esac
