@@ -295,19 +295,12 @@
 (re-frame.core/reg-sub
   :application/current-history-items
   (fn [db _]
-    (-> db :application :current-history-items)))
-
-(defn- event-index
-  [db event-id]
-  (->> db
-       util/application-modify-events
-       (keep-indexed #(when (= (:id %2) event-id) %1))
-       first))
+    (-> db :application :selected-application-and-form :current-history-items)))
 
 (re-frame.core/reg-sub
   :application/changes-made-for-event
   (fn [db [_ event-id]]
-    (let [event-index (event-index db event-id)
+    (let [event-index (util/event-index db event-id)
           change-history (-> db :application :selected-application-and-form :application-change-history)]
       (nth change-history event-index))))
 
