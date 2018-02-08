@@ -673,10 +673,12 @@
   :application/handle-change-history-response
   (fn [db [_ response]]
     (let [db (assoc-in db [:application :selected-application-and-form :application-change-history] response)]
-      (assoc-in db [:application :selected-application-and-form :expanded-event-ids] (-> (cljs-util/application-modify-events db)
-                                                                                         last
-                                                                                         :id
-                                                                                         hash-set)))))
+      (assoc-in db
+                [:application :selected-application-and-form :expanded-event-ids]
+                (-> (cljs-util/application-modify-events db)
+                    last
+                    :id
+                    hash-set)))))
 
 (reg-event-fx
   :application/get-application-change-history

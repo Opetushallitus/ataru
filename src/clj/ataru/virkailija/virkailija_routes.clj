@@ -355,11 +355,9 @@
                    (api/GET "/:application-key/changes" {session :session}
                      :summary "Get changes made to an application in version x"
                      :path-params [application-key :- s/Str]
-                     (if-let [diff (application-service/get-application-version-changes application-key
-                                                                                        session
-                                                                                        organization-service)]
-                       (ok diff)
-                       (bad-request))))
+                     (ok (application-service/get-application-version-changes application-key
+                                                                              session
+                                                                              organization-service))))
 
                  (api/context "/cache" []
                    (api/POST "/clear/:cache" {session :session}
