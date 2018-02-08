@@ -8,14 +8,16 @@
            :created-time (c/date-time 2016 6 14 12 34 56)
            :content      [{:id       "form_field_0"
                            :label    {:fi "Lomakeosio"}
+                           :fieldType "fieldset"
+                           :fieldClass "wrapperElement"
                            :children [{:id         "form_field_0_0"
                                        :label      {:fi "Kysymys 1"}
                                        :fieldType  "textField"
                                        :fieldClass "formField"}
-                                      {:children [{:id         "form_field_0_1"
-                                                   :label      {:fi "Kysymys 2"}
-                                                   :fieldType  "textField"
-                                                   :fieldClass "formField"}]}]}]})
+                                      {:id         "form_field_0_1"
+                                       :label      {:fi "Kysymys 2"}
+                                       :fieldType  "textField"
+                                       :fieldClass "formField"}]}]})
 
 (def form-for-hakukohde {:id           321
                          :key          "form_321_key"
@@ -24,6 +26,8 @@
                          :created-time (c/date-time 2016 6 14 12 34 56)
                          :content      [{:id       "form_field_1"
                                          :label    {:fi "Lomakeosio"}
+                                         :fieldType "fieldset"
+                                         :fieldClass "wrapperElement"
                                          :children [{:id         "form_field_1_0"
                                                      :label      {:fi "Kysymys 4"}
                                                      :fieldType  "textField"
@@ -85,5 +89,4 @@
 (def application-review {:id              1
                          :application_key "c58df586-fdb9-4ee1-b4c4-030d4cfe9f81"
                          :state           "active"
-                         :notes           [{:id    342
-                                            :notes "Some notes about the applicant"}]})
+                         :score           12})

@@ -138,7 +138,7 @@
     :field     :person-oid
     :format-fn str}])
 
-(def ^:private review-headers ["Muistiinpanot" "Pisteet"])
+(def ^:private review-headers ["Pisteet"])
 
 (defn- create-cell-styles
   [workbook]
@@ -282,15 +282,8 @@
         beef-header-count  (- (apply max (map :column headers)) (count review-headers))
         prev-header-count  (+ beef-header-count
                               (count application-meta-fields))
-        notes-column       (inc prev-header-count)
-        score-column       (inc notes-column)
-        notes              (:notes application-review)
+        score-column       (inc prev-header-count)
         score              (:score application-review)]
-    (when (not-empty notes)
-      (->> notes
-           (map :notes)
-           (clojure.string/join "\n")
-           (writer 0 notes-column)))
     (when score (writer 0 score-column score))))
 
 (defn- form-label? [form-element]
@@ -305,27 +298,15 @@
   (:exclude-from-answers form-element))
 
 (defn- pick-label
-  [form-element pick-cond]
-  (when (pick-cond form-element)
-    [[(:id form-element)
-      (label/get-language-label-in-preferred-order (:label form-element))]]))
+  [form-element]
+  [(:id form-element)
+   (label/get-language-label-in-preferred-order (:label form-element))])
 
 (defn pick-form-labels
-  [form-content pick-cond]
-  (reduce
-   (fn [acc form-element]
-     (let [followups (remove nil? (mapcat :followups (:options form-element)))]
-       (cond
-         (pos? (count (:children form-element)))
-         (into acc (pick-form-labels (:children form-element) pick-cond))
-
-         (pos? (count followups))
-         (into (into acc (pick-label form-element pick-cond)) (pick-form-labels followups pick-cond))
-
-         :else
-         (into acc (pick-label form-element pick-cond)))))
-   []
-   form-content))
+  [flat-fields pick-cond]
+  (->> flat-fields
+       (filter pick-cond)
+       (map pick-label)))
 
 (defn- find-parent [element fields]
   (let [contains-element? (fn [children] (some? ((set (map :id children)) (:id element))))
@@ -360,36 +341,38 @@
       (str "Liitepyyntö: " (label/get-language-label-in-preferred-order (:label element)))
       :else header)))
 
-(defn- extract-headers-from-applications [applications form skip-answers]
-  (let [hidden-answers (map first (pick-form-labels (:content form) hidden-answer?))]
-    (mapcat (fn [application]
-              (->> (:answers application)
-                   (filter (fn [answer]
-                             (and
-                               (pick-answer? skip-answers (:key answer))
-                               (not (some (partial = (:key answer)) hidden-answers)))))
-                   (mapv (fn [answer]
-                           (vals (select-keys answer [:key :label]))))))
-            applications)))
-
-(defn- remove-duplicates-by-field-id
-  [labels-in-form labels-in-applications]
-  (let [form-element-ids (set (map first labels-in-form))]
-    (remove (fn [[key _]]
-              (contains? form-element-ids key))
-            labels-in-applications)))
+(defn- extract-headers-from-applications [applications flat-fields skip-answers]
+  (let [hidden-answers (->> (pick-form-labels flat-fields hidden-answer?)
+                            (map first)
+                            set)]
+    (->> applications
+         (mapcat (fn [application]
+                   (map (fn [{:keys [key label]}] [key label])
+                        (:answers application))))
+         (into {})
+         (filter (fn [[key _]]
+                   (and (pick-answer? skip-answers key)
+                        (not (contains? hidden-answers key))))))))
 
 (defn- extract-headers
   [applications form skip-answers?]
-  (let [labels-in-form              (pick-form-labels (:content form) #(and (form-label? %) (pick-answer? skip-answers? (:id %))))
-        labels-in-applications      (extract-headers-from-applications applications form skip-answers?)
-        labels-only-in-applications (remove-duplicates-by-field-id labels-in-form labels-in-applications)
-        all-labels                  (distinct (concat labels-in-form labels-only-in-applications (map vector (repeat nil) review-headers)))
-        decorator                   (partial decorate (util/flatten-form-fields (:content form)) (:content form))]
+  (let [flat-fields            (util/flatten-form-fields (:content form))
+        labels-in-form         (pick-form-labels flat-fields
+                                                 #(and (form-label? %)
+                                                       (pick-answer? skip-answers? (:id %))))
+        labels-in-applications (let [form-ids (set (map first labels-in-form))]
+                                 (remove #(contains? form-ids (first %))
+                                         (extract-headers-from-applications
+                                          applications
+                                          flat-fields
+                                          skip-answers?)))
+        all-labels             (concat labels-in-form
+                                       labels-in-applications
+                                       (map vector (repeat nil) review-headers))]
     (for [[idx [id header]] (map vector (range) all-labels)
-          :when (string? header)]
+          :let [header (or header "")]]
       {:id               id
-       :decorated-header (decorator id header)
+       :decorated-header (decorate flat-fields (:content form) id header)
        :header           header
        :column           idx})))
 
@@ -468,20 +451,22 @@
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
 (defn export-applications [applications application-reviews selected-hakukohde skip-answers? tarjonta-service ohjausparametrit-service]
-  (let [[workbook styles]       (create-workbook-and-styles)
-        form-meta-fields        (indexed-meta-fields form-meta-fields)
-        form-meta-sheet         (create-form-meta-sheet workbook styles form-meta-fields)
-        application-meta-fields (indexed-meta-fields application-meta-fields)
-        get-form-by-id          (memoize form-store/fetch-by-id)
-        get-latest-form-by-key  (memoize form-store/fetch-by-key)
-        get-koodisto-options    (memoize koodisto/get-koodisto-options)
-        get-hakukohde           (memoize (fn [oid] (tarjonta-parser/parse-hakukohde
+  (let [[^XSSFWorkbook workbook styles] (create-workbook-and-styles)
+        form-meta-fields                (indexed-meta-fields form-meta-fields)
+        form-meta-sheet                 (create-form-meta-sheet workbook styles form-meta-fields)
+        application-meta-fields         (indexed-meta-fields application-meta-fields)
+        get-form-by-id                  (memoize form-store/fetch-by-id)
+        get-latest-form-by-key          (memoize form-store/fetch-by-key)
+        get-koodisto-options            (memoize koodisto/get-koodisto-options)
+        get-hakukohde                   (memoize (fn [oid]
+                                                   (tarjonta-parser/parse-hakukohde
                                                     tarjonta-service
                                                     (tarjonta/get-hakukohde tarjonta-service oid))))
-        get-tarjonta-info       (memoize (fn [haku-oid] (tarjonta-parser/parse-tarjonta-info-by-haku
-                                                         tarjonta-service
-                                                         ohjausparametrit-service
-                                                         haku-oid)))]
+        get-tarjonta-info               (memoize (fn [haku-oid]
+                                                   (tarjonta-parser/parse-tarjonta-info-by-haku
+                                                    tarjonta-service
+                                                    ohjausparametrit-service
+                                                    haku-oid)))]
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
          (map (partial add-hakukohde-names get-tarjonta-info get-hakukohde))
@@ -497,7 +482,7 @@
                          (assoc result form-key value)))))
                  {})
          (map second)
-         (map-indexed (fn [sheet-idx {:keys [sheet-name form applications]}]
+         (map-indexed (fn [sheet-idx {:keys [^String sheet-name form applications]}]
                         (let [applications-sheet (.createSheet workbook sheet-name)
                               headers            (extract-headers applications form skip-answers?)
                               meta-writer        (make-writer styles form-meta-sheet (inc sheet-idx))
@@ -524,9 +509,7 @@
                                (dorun))
                           (.createFreezePane applications-sheet 0 1 0 1))))
          (dorun))
-    (when (< (count applications) 1000)
-      ; turns out .autoSizeColumn is a performance killer for large sheets
-      (set-column-widths workbook))
+    (set-column-widths workbook)
     (with-open [stream (ByteArrayOutputStream.)]
       (.write workbook stream)
       (.toByteArray stream))))
