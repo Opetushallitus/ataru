@@ -355,6 +355,13 @@
     (get-latest-application-by-secret secret)
     (get-latest-application-for-virkailija-edit virkailija-secret)))
 
+(defn get-latest-application-secret []
+      (:secret (first (->> (exec-db :db yesql-get-latest-application-secret {})))))
+
+(defn alter-application-hakukohteet-with-secret [secret new-hakukohteet]
+      (when-not (= (exec-db :db yesql-set-application-hakukohteet-by-secret! {:secret secret :hakukohde new-hakukohteet}) 0)
+                secret))
+
 (defn get-application-events [application-key]
   (mapv ->kebab-case-kw (exec-db :db yesql-get-application-events {:application_key application-key})))
 
