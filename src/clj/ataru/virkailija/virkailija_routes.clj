@@ -555,7 +555,7 @@
 (defn- proxy-request [service-path request]
   (let [prefix   (str "https://" (get-in config [:urls :virkailija-host]) service-path)
         path     (-> request :params :*)
-        response @(http/get (str prefix path) {:headers (:headers request)})]
+        response @(http/get (str prefix path) {:headers (dissoc (:headers request) "host")})]
     (assoc
      response
      ;; http-kit returns header names as keywords, but Ring requires strings :(
