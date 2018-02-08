@@ -98,7 +98,7 @@
         setNthFieldInputValue(6, '0123456789'),
         setNthFieldInputValue(8, 'Katutie 12 B'),
         setNthFieldInputValue(9, '00100'),
-        setNthFieldInputValue(11, 'Helsinki'),
+        setNthFieldOption(11, '091'),
         setNthFieldInputValue(13, '55cm'),
         wait.until(function () {
           return formFields().eq(10).find('input').val() !== ''
