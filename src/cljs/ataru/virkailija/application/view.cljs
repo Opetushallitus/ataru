@@ -734,7 +734,7 @@
                          (.stopPropagation e)
                          (dispatch [:application/highlight-field key]))}
             [:a (:label field)]])
-         [:li.application-handling__show-history-as-list
+         [:li.application-handling__show-history-as-table
           [:a
            {:on-click (fn [e]
                         (.stopPropagation e)
