@@ -106,7 +106,8 @@
                                   :ataruLomakeAvain "41101b4f-1762-49af-9db0-e3603adae3ae"
                                   :hakukohdeOids    ["1.2.246.562.20.49028196523"
                                                      "1.2.246.562.20.49028196524"
-                                                     "1.2.246.562.20.49028196525"]})})
+                                                     "1.2.246.562.20.49028196525"
+                                                     "1.2.246.562.20.49028196526"]})})
 
 (def hakukohde
   {:1.2.246.562.20.49028196522 base-hakukohde
@@ -139,7 +140,20 @@
                                   :koulutukset      [{:oid "1.2.246.562.17.74335799464"}]
                                   :hakukohteenNimet
                                                     {:kieli_fi "Testihakukohde 3"
-                                                     :kieli_sv "sv Testihakukohde 3"}})})
+                                                     :kieli_sv "sv Testihakukohde 3"}})
+   :1.2.246.562.20.49028196526 (merge
+                                 base-hakukohde
+                                 {:ataruLomakeAvain "41101b4f-1762-49af-9db0-e3603adae3ae"
+                                  :oid              "1.2.246.562.20.49028196526"
+                                  :hakuOid          "1.2.246.562.29.65950024186"
+                                  :hakuaikaAlkuPvm  (- (System/currentTimeMillis)
+                                                       86400000)
+                                  :hakuaikaLoppuPvm (- (System/currentTimeMillis)
+                                                       16400000)
+                                  :koulutukset      [{:oid "1.2.246.562.17.74335799465"}]
+                                  :hakukohteenNimet
+                                                    {:kieli_fi "Aikaloppu 4"
+                                                     :kieli_sv "sv Aikaloppu 4"}})})
 
 (def koulutus
   {:1.2.246.562.17.74335799461 {:oid             "1.2.246.562.17.74335799461"
@@ -161,7 +175,12 @@
                                 :koulutuskoodi   {:nimi "Koulutuskoodi C"}
                                 :tutkintonimike  {:nimi "Tutkintonimike C"}
                                 :koulutusohjelma {:nimi "Koulutusohjelma C"}
-                                :tarkenne        "Tarkenne C"}})
+                                :tarkenne        "Tarkenne C"}
+   :1.2.246.562.17.74335799465 {:oid             "1.2.246.562.17.74335799465"
+                                :koulutuskoodi   {:nimi "Koulutuskoodi D"}
+                                :tutkintonimike  {:nimi "Tutkintonimike D"}
+                                :koulutusohjelma {:nimi "Koulutusohjelma D"}
+                                :tarkenne        "Tarkenne D"}})
 
 (defn- parse-multi-lang-text
   [text]
