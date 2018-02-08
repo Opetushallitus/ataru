@@ -858,6 +858,7 @@
      [:div.application-handling__information-request-text-input-container
       [:input.application-handling__information-request-text-input
        {:value     @subject
+        :maxLength 78
         :on-change (fn [event]
                      (let [subject (-> event .-target .-value)]
                        (dispatch [:application/set-information-request-subject subject])))}]]]))

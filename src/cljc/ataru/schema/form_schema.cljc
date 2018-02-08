@@ -387,7 +387,10 @@
 (s/defschema PermissionCheckResponseDto {:accessAllowed s/Bool
                                          (s/optional-key :errorMessage) s/Str})
 
-(s/defschema InformationRequest {:subject                         s/Str
+(defn- length-at-most-78 [s]
+  (<= (count s) 78))
+
+(s/defschema InformationRequest {:subject                         (s/constrained s/Str length-at-most-78)
                                  :message                         s/Str
                                  :application-key                 s/Str
                                  (s/optional-key :id)             s/Int
