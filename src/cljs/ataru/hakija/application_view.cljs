@@ -105,20 +105,18 @@
       [:div.application__form-content-area
        (when @expired
          [:div.application__secret-expired
-          [:h2 "Linkki hakemukseesi on vanhentunut"]
-          [:p "Tarkista että käytössäsi on uusin sinulle sähköpostilla lähetetty linkki. Linkki on voimassa yhden
-          muokkauskerran tai maksimissaan 30 päivää. Voit tarvittaessa tilata uuden hakemuksella käyttämääsi
-          sähköpostiosoitteeseen klikkaamalla allaolevaa nappia:"]
-          [:button
+          [:div.application__secret-expired-icon
+           [:i.zmdi.zmdi-lock-outline]]
+          [:h2 (get-translation :expired-secret-heading)]
+          [:p (get-translation :expired-secret-paragraph)]
+          [:button.application__secret-resend-button
            {:disabled (some? @delivery-status)
             :on-click (fn []
                         (dispatch [:application/set-secret-delivery-status :ongoing])
                         (dispatch [:application/send-new-secret]))}
-           (case @delivery-status
-             :completed "Sähköposti on lähetetty!"
-             :ongoing "Lähetetään..."
-             "Lähetä uusi linkki")]
-          [:p "Ongelmatilanteessa ota yhteyttä hakemaasi oppilaitokseen."]])
+           (if (= :completed @delivery-status)
+             (get-translation :expired-secret-sent)
+             (get-translation :expired-secret-button))]])
 
        ^{:key (:id @form)}
        [application-header @form]

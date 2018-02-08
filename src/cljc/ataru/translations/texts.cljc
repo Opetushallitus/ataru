@@ -147,7 +147,19 @@
                                        :sv "Frågan är för ansökningsmålar"}
    :show-more                         {:fi "Näytä lisää.."
                                        :en "Show more.."
-                                       :sv "Visa mer.."}})
+                                       :sv "Visa mer.."}
+   :expired-secret-heading            {:fi "Tämä hakemuslinkki on vanhentunut"
+                                       :en "This application link has expired"
+                                       :sv ""}
+   :expired-secret-paragraph          {:fi "Turvallisuussyistä hakemuslinkki on voimassa yhden muokkauskerran tai maksimissaan 30 päivää."
+                                       :en "For security reasons the link is valid for one application update or a maximum of 30 days."
+                                       :sv ""}
+   :expired-secret-button             {:fi "Tilaa uusi hakemuslinkki sähköpostiisi"
+                                       :en "Send a new application link to your email"
+                                       :sv ""}
+   :expired-secret-sent               {:fi "Uusi linkki lähetetty!"
+                                       :en "The new link has been emailed!"
+                                       :sv ""}})
 
 (def general-texts
   {:yes      {:en "Yes"

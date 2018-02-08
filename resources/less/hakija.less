@@ -192,6 +192,39 @@
   border-bottom: 9px solid white;
   z-index: 2;
 }
+
+.application__secret-expired {
+  position: relative;
+  margin: 100px 60px 60px 60px;
+}
+
+.application__secret-expired-icon {
+  position: absolute;
+  left: -30px;
+  top: -3px;
+  font-size: 30px;
+  color: gray;
+}
+
+.application__secret-resend-button {
+  background-color: @button-green;
+  cursor: pointer;
+  border-radius: 3px;
+  color: @white;
+  padding: 10px 30px;
+  font-size: 16px;
+  border: none;
+}
+
+.application__secret-resend-button:disabled {
+  background-color: @light-gray;
+  cursor: default;
+  border-radius: 3px;
+  color: @gray-of-the-beast;
+  padding: 10px;
+  font-size: 16px;
+}
+
 .application__send-application-button {
   background: #fff;
   color: #149ECB;
