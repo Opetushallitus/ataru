@@ -975,6 +975,11 @@ and (max-width: @desktop-content-width) {
   }
 }
 
+.application__hakukohde-sub-header-dates {
+  font-size: 12px;
+  color: @gray-of-the-beast;
+}
+
 .application__hakukohde-selection-header {
   margin-bottom: 0;
 }
@@ -1156,7 +1161,10 @@ and (max-width: @desktop-content-width) {
   color: @pale-blue;
   &[disabled] {
     opacity: 0.33;
-    cursor: default;
+    a {
+      color: @gray-of-the-beast;
+      cursor: default;
+    }
   }
 }
 

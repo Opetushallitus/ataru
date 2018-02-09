@@ -128,7 +128,9 @@
        @(subscribe [:application/hakukohde-description hakukohde-oid])]
       (when (not hakukohde-editable?)
         [:div.application__hakukohde-selected-row-description
-         [:span.application__sub-header-dates (str "(" (get-translation :not-within-application-period) ")")]])]
+         [:span.application__hakukohde-sub-header-dates
+          [:i.application__hakukohde-selected-check.zmdi.zmdi-lock]
+          (get-translation :not-editable-application-period-ended)]])]
      (cond (and haku-editable? hakukohde-editable?) [selected-hakukohde-row-remove hakukohde-oid]
            (not hakukohde-editable?) [selected-hakukohde-disabled-row-remove hakukohde-oid]
            haku-editable? [selected-hakukohde-row-remove hakukohde-oid])]))
