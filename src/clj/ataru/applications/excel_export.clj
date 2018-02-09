@@ -80,10 +80,10 @@
     "Tuntematon"))
 
 (defn hakukohde-review-formatter
-  [requirement-name application]
+  [requirement-name application-hakukohde-reviews]
   (let [reviews     (filter
                       #(= (:requirement %) requirement-name)
-                      (:application-hakukohde-reviews application))
+                      application-hakukohde-reviews)
         requirement (last
                       (first
                         (filter #(= (first %) (keyword requirement-name)) review-states/hakukohde-review-types)))
@@ -114,31 +114,39 @@
     :field :created-by}])
 
 (def ^:private application-meta-fields
-  [{:label "Id"
-    :field :key}
+  [{:label     "Id"
+    :field     [:application :key]}
    {:label     "Lähetysaika"
-    :field     :created-time
+    :field     [:application :created-time]
     :format-fn time-formatter}
    {:label     "Hakemuksen tila"
-    :field     :state
+    :field     [:application :state]
     :format-fn application-state-formatter}
    {:label     "Hakukohteen käsittelyn tila"
+    :field     [:application :application-hakukohde-reviews]
     :format-fn (partial hakukohde-review-formatter "processing-state")}
    {:label     "Kielitaitovaatimus"
+    :field     [:application :application-hakukohde-reviews]
     :format-fn (partial hakukohde-review-formatter "language-requirement")}
    {:label     "Tutkinnon kelpoisuus"
+    :field     [:application :application-hakukohde-reviews]
     :format-fn (partial hakukohde-review-formatter "degree-requirement")}
    {:label     "Hakukelpoisuus"
+    :field     [:application :application-hakukohde-reviews]
     :format-fn (partial hakukohde-review-formatter "eligibility-state")}
    {:label     "Maksuvelvollisuus"
+    :field     [:application :application-hakukohde-reviews]
     :format-fn (partial hakukohde-review-formatter "payment-obligation")}
    {:label     "Valinnan tila"
+    :field     [:application :application-hakukohde-reviews]
     :format-fn (partial hakukohde-review-formatter "selection-state")}
+   {:label     "Pisteet"
+    :field     [:application-review :score]}
    {:label     "Hakijan henkilö-OID"
-    :field     :person-oid
-    :format-fn str}])
-
-(def ^:private review-headers ["Pisteet"])
+    :field     [:application :person-oid]}
+   {:label     "Turvakielto"
+    :field     [:person :turvakielto]
+    :format-fn (fnil (fn [turvakielto] (if turvakielto "kyllä" "ei")) false)}])
 
 (defn- create-cell-styles
   [workbook]
@@ -240,14 +248,15 @@
   (and (sequential? value-or-values)
        (all-answers-sec-or-vec? value-or-values)))
 
-(defn- write-application! [writer application application-review headers application-meta-fields form-fields-by-key get-koodisto-options]
+(defn- write-application! [writer application application-review person headers application-meta-fields form-fields-by-key get-koodisto-options]
   (doseq [meta-field application-meta-fields]
     (let [meta-value ((or
                         (:format-fn meta-field)
                         identity)
-                       ((or (:field meta-field)
-                            identity)
-                         application))]
+                      (get-in {:application application
+                               :application-review application-review
+                               :person person}
+                              (:field meta-field)))]
       (writer 0 (:column meta-field) meta-value)))
   (doseq [answer (:answers application)]
     (let [field-descriptor (get form-fields-by-key (:key answer))
@@ -277,14 +286,7 @@
                               (- value-length max-value-length -100) " merkkiä]")
                             value)]
       (when (and value-truncated column)
-        (writer 0 (+ column (count application-meta-fields)) value-truncated))))
-  (let [application-key              (:key application)
-        beef-header-count  (- (apply max (map :column headers)) (count review-headers))
-        prev-header-count  (+ beef-header-count
-                              (count application-meta-fields))
-        score-column       (inc prev-header-count)
-        score              (:score application-review)]
-    (when score (writer 0 score-column score))))
+        (writer 0 (+ column (count application-meta-fields)) value-truncated)))))
 
 (defn- form-label? [form-element]
   (and (not= "infoElement" (:fieldClass form-element))
@@ -366,9 +368,7 @@
                                           applications
                                           flat-fields
                                           skip-answers?)))
-        all-labels             (concat labels-in-form
-                                       labels-in-applications
-                                       (map vector (repeat nil) review-headers))]
+        all-labels             (concat labels-in-form labels-in-applications)]
     (for [[idx [id header]] (map vector (range) all-labels)
           :let [header (or header "")]]
       {:id               id
@@ -450,7 +450,7 @@
                                  all-reviews)]
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
-(defn export-applications [applications application-reviews selected-hakukohde skip-answers? tarjonta-service ohjausparametrit-service]
+(defn export-applications [applications application-reviews persons selected-hakukohde skip-answers? tarjonta-service ohjausparametrit-service]
   (let [[^XSSFWorkbook workbook styles] (create-workbook-and-styles)
         form-meta-fields                (indexed-meta-fields form-meta-fields)
         form-meta-sheet                 (create-form-meta-sheet workbook styles form-meta-fields)
@@ -498,10 +498,12 @@
                                (map #(merge % (get-tarjonta-info (:haku %))))
                                (map-indexed (fn [row-idx application]
                                               (let [row-writer (make-writer styles applications-sheet (inc row-idx))
-                                                    application-review (get application-reviews (:key application))]
+                                                    application-review (get application-reviews (:key application))
+                                                    person (get persons (:person-oid application))]
                                                 (write-application! row-writer
                                                                     application
                                                                     application-review
+                                                                    person
                                                                     headers
                                                                     application-meta-fields
                                                                     form-fields-by-key
