@@ -239,6 +239,7 @@
 
 (defn send-modify-application-link-email [application-key session organization-service tarjonta-service]
   (when-let [application-id (:id (aac/get-latest-application-by-key application-key session organization-service))]
+    (application-store/add-new-secret-to-application application-key)
     (email/start-email-submit-confirmation-job tarjonta-service application-id)
     (application-store/add-application-event {:application-key application-key
                                               :event-type      "modification-link-sent"}

@@ -394,6 +394,15 @@
   (when-not (= (exec-db :db yesql-set-application-hakukohteet-by-secret! {:secret secret :hakukohde new-hakukohteet}) 0)
     secret))
 
+(defn add-new-secret-to-application
+  [application-key]
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+    (let [connection      {:connection conn}
+          application     (get-latest-application-by-key-unrestricted application-key)
+          new-secret      (generate-new-application-secret connection)]
+      (yesql-add-application-secret! {:application_key application-key :secret new-secret} connection)
+      (:id application))))
+
 (defn add-new-secret-to-application-by-old-secret
   [old-secret]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
