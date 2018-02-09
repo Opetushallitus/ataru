@@ -103,22 +103,28 @@
         [markdown-paragraph info]))))
 
 (defn question-hakukohde-names [field-descriptor]
-  (let [lang                           @(subscribe [:application/form-language])
-        tarjonta-hakukohtet            @(subscribe [:application/tarjonta-hakukohteet])
-        selected-hakukohteet           @(subscribe [:application/selected-hakukohteet])
-        field-hakukohteet              (:belongs-to-hakukohteet field-descriptor)
-        selected-hakukohteet-for-field (clojure.set/intersection (set field-hakukohteet)
-                                                                 (set selected-hakukohteet))
-        selected-hakukohde-names       (->> tarjonta-hakukohtet
-                                            (filter #(some #{(:oid %)} selected-hakukohteet-for-field))
-                                            (map :name)
-                                            (map #(some % [lang :fi :sv :en])))]
-    [:div.application__question_hakukohde_names_container
-     (get-translation :question-for-hakukohde)
-     [:ul.application__question_hakukohde_names
-      (for [name selected-hakukohde-names]
-        [:li {:key (str (:id field-descriptor) name)}
-         name])]]))
+  (let [show-hakukohde-list? (r/atom false)]
+    (fn [field-descriptor]
+      (let [lang                           @(subscribe [:application/form-language])
+            tarjonta-hakukohtet            @(subscribe [:application/tarjonta-hakukohteet])
+            selected-hakukohteet           @(subscribe [:application/selected-hakukohteet])
+            field-hakukohteet              (:belongs-to-hakukohteet field-descriptor)
+            selected-hakukohteet-for-field (clojure.set/intersection (set field-hakukohteet)
+                                                                     (set selected-hakukohteet))
+            selected-hakukohde-names       (->> tarjonta-hakukohtet
+                                                (filter #(some #{(:oid %)} selected-hakukohteet-for-field))
+                                                (map :name)
+                                                (map #(some % [lang :fi :sv :en])))]
+        [:div.application__question_hakukohde_names_container
+         [:a
+          {:on-click #(reset! show-hakukohde-list? (not @show-hakukohde-list?))}
+          [:i.zmdi.zmdi-info.application__question_hakukohde_names_info]
+          (get-translation :question-for-hakukohde)]
+         (when @show-hakukohde-list?
+           [:ul.application__question_hakukohde_names
+            (for [name selected-hakukohde-names]
+              [:li {:key (str (:id field-descriptor) name)}
+               name])])]))))
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing idx] :or {div-kwd :div.application__form-field disabled false editing false}}]
   (let [id           (keyword (:id field-descriptor))

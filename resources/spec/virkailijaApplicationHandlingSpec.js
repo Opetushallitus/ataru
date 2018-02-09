@@ -20,11 +20,11 @@
         clickElement(function () { return selectedState().first() }),
         wait.until(function() { return notSelectedStates().length === 6 }),
         wait.until(function() {
-            firstNotSelected = notSelectedStates().first();
-            return eventCaptions().length === 1;
+          firstNotSelected = notSelectedStates().first();
+          return eventCaptions().length === 1;
         }),
         clickElement(function () { return firstNotSelected }),
-        wait.until(function() { return eventCaptions().length == 2 })
+        wait.until(function() { return eventCaptions().length === 2 })
       );
       it('has applications', function() {
         expect(applicationHeader().text()).to.equal('Selaintestilomake1');

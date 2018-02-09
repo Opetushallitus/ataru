@@ -1178,24 +1178,32 @@ and (max-width: @desktop-content-width) {
 }
 
 .application__question_hakukohde_names_container {
-  border-left: 1px solid #d8d8d8;
-  color: #2a2a2a;
+  color: #4A4A4A;
   font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 14px;
-  font-style: italic;
   line-height: 1;
-  margin-bottom: 6px;
-  padding-left: 8px;
+  margin-bottom: 10px;
   text-rendering: optimizeLegibility;
 }
 
+.application__question_hakukohde_names_info {
+  display: flex;
+  align-items: center;
+
+  i {
+    margin-right: 5px;
+    font-size: 20px;
+  }
+}
+
 .application__question_hakukohde_names {
+  border-left: 1px solid #d8d8d8;
   font-style: initial;
   font-weight: normal;
-  line-height: 1.1;
+  line-height: 1.4;
   list-style: none;
-  margin: 3px 0 0 0;
-  padding: 0;
+  margin: 3px 0 0 7px;
+  padding: 0 0 0 10px;
 }
 
 .application-feedback-form {
