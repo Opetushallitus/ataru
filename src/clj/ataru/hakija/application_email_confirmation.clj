@@ -61,6 +61,15 @@
                       ".html")
                 application-id))
 
+(defn- create-refresh-secret-email
+  [tarjonta-service application-id]
+  (create-email tarjonta-service
+                {:fi "Opintopolku: uusi hakemuslinkkisi"
+                 :sv "Studieinfo: ny länk till din ansökan"
+                 :en "Studyinfo: your new application link"}
+                #(str "templates/email_refresh_secret_template_" (name %) ".html")
+                application-id))
+
 (defn start-email-job [email]
   (let [job-type (:type email-job/job-definition)
         job-id   (job/start-job
@@ -75,3 +84,7 @@
 
 (defn start-email-edit-confirmation-job [tarjonta-service application-id]
   (start-email-job (create-edit-email tarjonta-service application-id)))
+
+(defn start-email-refresh-secret-confirmation-job
+  [tarjonta-service application-id]
+  (start-email-job (create-refresh-secret-email tarjonta-service application-id)))
