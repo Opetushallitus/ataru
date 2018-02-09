@@ -1154,6 +1154,10 @@ and (max-width: @desktop-content-width) {
   right: 20px;
   top: 25px;
   color: @pale-blue;
+  &[disabled] {
+    opacity: 0.33;
+    cursor: default;
+  }
 }
 
 .application__hakukohde-row--search-hit-selected {

@@ -23,28 +23,34 @@
 (defn- jatkuva-haku? [haku]
   (clojure.string/starts-with? (:hakutapaUri haku) "hakutapa_03#"))
 
+(defn hakuaika-on [start end]
+      (cond
+        (and start end (time-within? (time/now) start end))
+        true
+
+        ;; "Jatkuva haku"
+        (and start (not end) (time/after? (time/now) (time-coerce/from-long start)))
+        true
+
+        :else
+        false))
+
+(defn parse-hakuaika-from-hakukohde [hakukohde]
+      (if-let [start (:hakuaikaAlkuPvm hakukohde)]
+              (let [end (:hakuaikaLoppuPvm hakukohde)]
+                   {:start (:hakuaikaAlkuPvm hakukohde)
+                    :end   (:hakuaikaLoppuPvm hakukohde)
+                    :on (hakuaika-on start end)})))
+
 (defn- parse-hakuaika
   "Hakuaika from hakuaika can override hakuaika from haku. Haku may have multiple hakuaikas defined."
   [hakukohde haku]
   ; TODO need to check that hakukohde hakuaika is valid wrt. haku hakuaika?
-  (if (and (:hakuaikaAlkuPvm hakukohde) (:hakuaikaLoppuPvm hakukohde))
-    {:start (:hakuaikaAlkuPvm hakukohde)
-     :end   (:hakuaikaLoppuPvm hakukohde)}
-    (let [this-haku-hakuaika (find-current-or-last-hakuaika (:hakuaikas haku))]
-      {:start (:alkuPvm this-haku-hakuaika)
-       :end   (:loppuPvm this-haku-hakuaika)})))
-
-(defn hakuaika-on [start end]
-  (cond
-    (and start end (time-within? (time/now) start end))
-    true
-
-    ;; "Jatkuva haku"
-    (and start (not end) (time/after? (time/now) (time-coerce/from-long start)))
-    true
-
-    :else
-    false))
+  (if-let [hakukohde-hakuaika (parse-hakuaika-from-hakukohde hakukohde)]
+          hakukohde-hakuaika
+          (let [this-haku-hakuaika (find-current-or-last-hakuaika (:hakuaikas haku))]
+               {:start (:alkuPvm this-haku-hakuaika)
+                :end   (:loppuPvm this-haku-hakuaika)})))
 
 (defn get-hakuaika-info [hakukohde haku ohjausparametrit]
   (as-> (parse-hakuaika hakukohde haku) {:keys [start end] :as interval}

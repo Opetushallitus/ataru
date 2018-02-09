@@ -65,6 +65,14 @@
 (defn- hakukohde-search-toggle-event-handler [_]
   (dispatch [:application/hakukohde-search-toggle]))
 
+(defn- selected-hakukohde-disabled-row-remove [hakukohde-oid]
+       [:div.application__hakukohde-row-button-container
+        {:disabled "disabled"}
+        [:a.application__hakukohde-remove-link
+         {:data-hakukohde-oid hakukohde-oid
+          :role               "button"}
+         (get-translation :remove)]])
+
 (defn- selected-hakukohde-row-remove
   [hakukohde-oid]
   [:div.application__hakukohde-row-button-container
@@ -75,49 +83,55 @@
     (get-translation :remove)]])
 
 (defn- selected-hakukohde-increase-priority
-  [hakukohde-oid priority-number]
-  (let [disabled? (= priority-number 1)]
-    [:span.application__hakukohde-priority-changer.increase
+  [hakukohde-oid priority-number disabled?]
+  [:span.application__hakukohde-priority-changer.increase
      {:class    (when disabled? "disabled")
       :on-click (when-not disabled?
-                  #(dispatch [:application/change-hakukohde-priority hakukohde-oid -1]))}]))
+                  #(dispatch [:application/change-hakukohde-priority hakukohde-oid -1]))}])
 
 (defn- selected-hakukohde-decrease-priority
-  [hakukohde-oid priority-number]
-  (let [selected-hakukohteet @(subscribe [:application/selected-hakukohteet])
-        disabled? (= priority-number (count selected-hakukohteet))]
+  [hakukohde-oid priority-number disabled?]
     [:span.application__hakukohde-priority-changer.decrease
      {:class    (when disabled? "disabled")
       :on-click (when-not disabled?
-                  #(dispatch [:application/change-hakukohde-priority hakukohde-oid 1]))}]))
+                  #(dispatch [:application/change-hakukohde-priority hakukohde-oid 1]))}])
 
 (defn- prioritize-hakukohde-buttons
-  [hakukohde-oid]
-  (let [priority-number @(subscribe [:application/hakukohde-priority-number hakukohde-oid])]
+  [hakukohde-oid disabled?]
+  (let [priority-number @(subscribe [:application/hakukohde-priority-number hakukohde-oid])
+        selected-hakukohteet @(subscribe [:application/selected-hakukohteet])
+        increase-disabled? (or (= priority-number 1) disabled?)
+        decrease-disabled? (or (= priority-number (count selected-hakukohteet)) disabled?)]
     [:div.application__hakukohde-row-priority-container
-     [selected-hakukohde-increase-priority hakukohde-oid priority-number]
+     [selected-hakukohde-increase-priority hakukohde-oid priority-number increase-disabled?]
      priority-number
-     [selected-hakukohde-decrease-priority hakukohde-oid priority-number]]))
+     [selected-hakukohde-decrease-priority hakukohde-oid priority-number decrease-disabled?]]))
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
   (let [deleting? @(subscribe [:application/hakukohde-deleting? hakukohde-oid])
-        prioritize-hakukohteet? @(subscribe [:application/prioritize-hakukohteet?])]
+        prioritize-hakukohteet? @(subscribe [:application/prioritize-hakukohteet?])
+        haku-editable? @(subscribe [:application/hakukohteet-editable?])
+        hakukohde-editable? @(subscribe [:application/hakukohde-editable? hakukohde-oid])]
     [:div.application__hakukohde-row.application__hakukohde-row--selected.animated
      {:class (if deleting?
                "fadeOut"
                "fadeIn")}
      (when prioritize-hakukohteet?
-       [prioritize-hakukohde-buttons hakukohde-oid])
+       [prioritize-hakukohde-buttons hakukohde-oid (not hakukohde-editable?)])
      [:div.application__hakukohde-row-icon-container
       [:i.zmdi.zmdi-graduation-cap.zmdi-hc-3x]]
      [:div.application__hakukohde-row-text-container.application__hakukohde-row-text-container--selected
       [:div.application__hakukohde-selected-row-header
        @(subscribe [:application/hakukohde-label hakukohde-oid])]
       [:div.application__hakukohde-selected-row-description
-       @(subscribe [:application/hakukohde-description hakukohde-oid])]]
-     (when @(subscribe [:application/hakukohteet-editable?])
-       [selected-hakukohde-row-remove hakukohde-oid])]))
+       @(subscribe [:application/hakukohde-description hakukohde-oid])]
+      (when (not hakukohde-editable?)
+        [:div.application__hakukohde-selected-row-description
+         [:span.application__sub-header-dates (str "(" (get-translation :not-within-application-period) ")")]])]
+     (cond (and haku-editable? hakukohde-editable?) [selected-hakukohde-row-remove hakukohde-oid]
+           (not hakukohde-editable?) [selected-hakukohde-disabled-row-remove hakukohde-oid]
+           haku-editable? [selected-hakukohde-row-remove hakukohde-oid])]))
 
 (defn- search-hit-hakukohde-row
   [hakukohde-oid]
