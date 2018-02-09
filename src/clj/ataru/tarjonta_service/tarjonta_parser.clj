@@ -46,7 +46,8 @@
 (defn parse-hakukohde
   [tarjonta-service hakukohde]
   (when (:oid hakukohde)
-    {:oid           (:oid hakukohde)
+    (let [hakuaika (hakuaika/parse-hakuaika-from-hakukohde hakukohde)
+          hk {:oid           (:oid hakukohde)
      :name          (->> (clojure.set/rename-keys (:hakukohteenNimet hakukohde)
                                                   lang-key-renames)
                          (remove (comp clojure.string/blank? second))
@@ -55,7 +56,10 @@
      :form-key      (:ataruLomakeAvain hakukohde)
      :koulutukset   (->> (map :oid (:koulutukset hakukohde))
                          (map #(.get-koulutus tarjonta-service %))
-                         (map parse-koulutus))}))
+                         (map parse-koulutus))}]
+         (if (some? hakuaika)
+           (assoc hk :hakuaika-dates hakuaika)
+           hk))))
 
 (defn parse-tarjonta-info-by-haku
   ([tarjonta-service ohjausparametrit-service haku-oid included-hakukohde-oids]
@@ -68,6 +72,7 @@
                                 (keep #(.get-hakukohde tarjonta-service %))
                                 (map #(parse-hakukohde tarjonta-service %)))
            max-hakukohteet (:maxHakukohdes haku)]
+          (prn hakukohteet)
        (when (pos? (count hakukohteet))                     ;; If tarjonta doesn't return hakukohde, let's not return a crippled map here
          {:tarjonta
           {:hakukohteet      hakukohteet

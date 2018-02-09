@@ -127,6 +127,9 @@
    :name                         LocalizedStringOptional
    :tarjoaja-name                LocalizedStringOptional
    (s/optional-key :form-key)    (s/maybe s/Str)
+   (s/optional-key :hakuaika-dates)    {:start                               s/Int
+                                        (s/optional-key :end)                (s/maybe s/Int)
+                                        :on                                  s/Bool}
    (s/optional-key :koulutukset) [{:oid                  s/Str
                                    :koulutuskoodi-name   LocalizedStringOptional
                                    :tutkintonimike-name  LocalizedStringOptional

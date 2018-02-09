@@ -120,6 +120,16 @@
          (not @(re-frame/subscribe [:application/cannot-edit? :hakukohteet])))))
 
 (re-frame/reg-sub
+  :application/hakukohde-editable?
+  (fn [db [_ hakukohde-oid]]
+      (if-let [hakukohde (first (filter #(= (do
+                                       (:oid %)) hakukohde-oid) (get-in db [:form :tarjonta :hakukohteet])))]
+              (if (nil? (hakukohde :hakuaika-dates))
+                true
+                (get-in hakukohde [:hakuaika-dates :on])))))
+
+
+(re-frame/reg-sub
   :application/hakukohde-query
   (fn [db _] (get-in db [:application :hakukohde-query])))
 
