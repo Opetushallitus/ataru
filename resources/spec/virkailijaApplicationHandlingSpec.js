@@ -71,10 +71,10 @@
           })
           .then(clickElement(thirdApplication))
           .then(wait.until(applicationHeadingIs('Tyrni, Johanna Irmeli — 020202A0202')))
-          .then(function () {
-            expect(elementExists(testFrame().find('.individualization'))).to.equal(true);
-            done()
-          })
+          .then(wait.until(function() {
+            return elementExists(testFrame().find('.individualization'))
+          }))
+          .then(done)
           .fail(done)
       });
 
