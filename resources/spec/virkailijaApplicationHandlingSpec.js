@@ -55,11 +55,11 @@
         .then(function () {
           expect(testFrame().find('.application-handling__review-details-column > span:eq(0)').text()).to.equal('Veijo Virkailija');
           expect(score().val()).to.equal(scoreForVatanen + '');
-          done()
         })
         .then(clickElement(thirdApplication))
         .then(wait.until(applicationHeadingIs('Tyrni, Johanna Irmeli — 020202A0202')))
         .then(setTextFieldValue(score, scoreForTyrni))
+        .then(done)
         .fail(done)
       });
 
