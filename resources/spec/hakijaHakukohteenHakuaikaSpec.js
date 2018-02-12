@@ -1,6 +1,6 @@
 (function() {
     before(function () {
-        loadInFrame('/hakemus/hakukohde/1.2.246.562.20.49028196523')
+        loadInFrame('/hakemus/hakukohde/1.2.246.562.20.49028100003')
     })
 
     afterEach(function() {
@@ -11,7 +11,7 @@
 
         describe('form loads', function () {
             before(
-                wait.until(function() { return formSections().length == 3 }, 10000),
+                wait.until(function() { return formSections().length == 2 }, 10000),
                 clickElement(addHakukohdeLink),
                 clickElement(function() { return nthHakukohdeSearchResultButton(1) }),
                 setNthFieldInputValue(0, 'Etunimi Tokanimi'),
@@ -22,7 +22,10 @@
                 setNthFieldInputValue(6, '0123456789'),
                 setNthFieldInputValue(8, 'Katutie 12 B'),
                 setNthFieldInputValue(9, '40100'),
-                setNthFieldInputValue(11, 'Jyväskylä'),
+                //setNthFieldInputValue(11, 'Jyväskylä'),
+                setNthFieldOption(11, '001'),
+                setNthFieldOption(12, 'FI'),
+                setNthFieldInputValue(13, 'Jee'),
                 wait.until(function() {
                     return formFields().eq(10).find('input').val() !== ''
                 }),
@@ -41,11 +44,19 @@
             }
             before(
                 reloadEditPage,
-                wait.until(function() { return formSections().length == 3 }, 10000)
+                wait.until(function() { return formSections().length == 2 }, 10000)
             )
 
             it('reloads and edits hakutoiveita', function() {
-                expect(hakukohdeTexts()).to.equal('Aikaloppu 4 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne DTestihakukohde 2 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne B')
+                console.log(testFrame().find('.application__hakukohde-row-button-container'))
+
+                expect(testFrame().find('.application__hakukohde-row-button-container').length).to.equal(2)
+                expect(testFrame().find('.application__hakukohde-row-button-container[disabled]').length).to.equal(1)
+
+                //expect(testFrame().find('.application__hakukohde-row-button-container').prop('disabled')).to.equal(true)
+
+                //expect(hakukohdeTexts()).to.equal('Aikaloppu 1 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne DAikaa jäljellä 2 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne B')
+
             })
         })
 
