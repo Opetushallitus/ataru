@@ -72,7 +72,6 @@
                                 (keep #(.get-hakukohde tarjonta-service %))
                                 (map #(parse-hakukohde tarjonta-service %)))
            max-hakukohteet (:maxHakukohdes haku)]
-          (prn hakukohteet)
        (when (pos? (count hakukohteet))                     ;; If tarjonta doesn't return hakukohde, let's not return a crippled map here
          {:tarjonta
           {:hakukohteet      hakukohteet
