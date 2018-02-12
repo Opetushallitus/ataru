@@ -100,11 +100,23 @@
                                        :content
                                        [(component/hakukohteet)
                                         (person-info-module/person-info-module)
-                                        {:label      {:fi "Hakukohdekohtainen"},
+                                        {:label      {:fi "Hakukohteiden hakuajat ohi!"},
                                          :fieldClass "formField",
-                                         :id         "c2e4536c-1cdb-4450-b019-1b38856296ae",
+                                         :id         "hakuajat-ohi",
                                          :params     {},
-                                         :belongs-to-hakukohteet ["1.2.246.562.20.49028100001" "1.2.246.562.20.49028100002"]
+                                         :belongs-to-hakukohteet ["1.2.246.562.20.49028100001" "1.2.246.562.20.49028100003"]
+                                         :fieldType  "textField"}
+                                        {:label      {:fi "Osa hakuajoista voimassa!"},
+                                         :fieldClass "formField",
+                                         :id         "osa-hakuajoista-ohi",
+                                         :params     {},
+                                         :belongs-to-hakukohteet ["1.2.246.562.20.49028100002" "1.2.246.562.20.49028100001"]
+                                         :fieldType  "textField"}
+                                        {:label      {:fi "Kaikki hakuajat voimassa!"},
+                                         :fieldClass "formField",
+                                         :id         "kaikki-hakuajat-voimassa",
+                                         :params     {},
+                                         :belongs-to-hakukohteet ["1.2.246.562.20.49028100002" "1.2.246.562.20.49028100003"]
                                          :fieldType  "textField"}]})
 
 (def application1 {:form       1
