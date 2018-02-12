@@ -19,10 +19,10 @@
         wait.until(function() { return reviewHeader().length > 0 }),
         clickElement(function () { return selectedState().first() }),
         wait.until(function() { return notSelectedStates().length === 6 }),
-        function() {
-          firstNotSelected = notSelectedStates().first();
-          expect(eventCaptions().length).to.equal(1);
-        },
+        wait.until(function() {
+            firstNotSelected = notSelectedStates().first();
+            return eventCaptions().length === 1;
+        }),
         clickElement(function () { return firstNotSelected }),
         wait.until(function() { return eventCaptions().length == 2 })
       );
