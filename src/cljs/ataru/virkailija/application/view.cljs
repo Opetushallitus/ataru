@@ -726,13 +726,13 @@
       caption
       (when (and modify-event?
                  (some #{(:id event)} @(subscribe [:application/expanded-event-ids])))
-        [:ul.application-handling--event-row-details
+        [:ul.application-handling__event-row-details
          (for [[key field] @(subscribe [:application/changes-made-for-event (:id event)])]
-           ^{:key (str "event-list-for" key)}
            [:li
             {:on-click (fn [e]
                          (.stopPropagation e)
-                         (dispatch [:application/highlight-field key]))}
+                         (dispatch [:application/highlight-field key]))
+             :key (str "event-list-for" key)}
             [:a (:label field)]])
          [:li.application-handling__show-history-as-table
           [:a

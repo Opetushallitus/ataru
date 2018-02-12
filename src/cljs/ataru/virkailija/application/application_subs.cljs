@@ -313,4 +313,4 @@
 (re-frame.core/reg-sub
   :application/field-highlighted?
   (fn [db [_ field-id]]
-    (some #{field-id} (-> db :application :selected-application-and-form :highligted-fields))))
+    (some #{field-id} (-> db :application :selected-application-and-form :highlighted-fields))))
