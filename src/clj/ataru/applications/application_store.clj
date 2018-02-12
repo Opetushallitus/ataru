@@ -70,7 +70,7 @@
 
 (defn- add-new-application-version
   "Add application and also initial metadata (event for receiving application, and initial review record)"
-  [application keep-old-secret? conn]
+  [application create-new-secret? conn]
   (let [connection                  {:connection conn}
         answers                     (->> application
                                          :answers
@@ -89,12 +89,12 @@
                                      :person_oid     (:person-oid application)}
         new-application             (if (contains? application :key)
                                       (yesql-add-application-version<! application-to-store connection)
-                                      (yesql-add-application<! application-to-store connection))
-        application-secret-to-store {:application_key (:key new-application)
-                                     :secret          (if keep-old-secret?
-                                                        (:secret application)
-                                                        (generate-new-application-secret connection))}]
-    (yesql-add-application-secret! application-secret-to-store connection)
+                                      (yesql-add-application<! application-to-store connection))]
+    (when create-new-secret?
+      (yesql-add-application-secret!
+        {:application_key (:key new-application)
+         :secret          (generate-new-application-secret connection)}
+        connection))
     (unwrap-application new-application)))
 
 (def ^:private email-pred (comp (partial = "email") :key))
@@ -118,7 +118,7 @@
 (defn add-application [new-application]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (info (str "Inserting new application"))
-    (let [{:keys [id key] :as new-application} (add-new-application-version new-application false conn)
+    (let [{:keys [id key] :as new-application} (add-new-application-version new-application true conn)
           connection                {:connection conn}]
       (audit-log/log {:new       new-application
                       :operation audit-log/operation-new
@@ -167,7 +167,7 @@
                                   (get-latest-version-for-virkailija-edit-and-lock-for-update virkailija-secret lang conn))
           {:keys [id key] :as new-application} (add-new-application-version
                                                  (merge-applications new-application old-application)
-                                                 (not updated-by-applicant?)
+                                                 updated-by-applicant?
                                                  conn)
           virkailija-oid        (when-not updated-by-applicant? (get-virkailija-oid virkailija-secret key conn))]
       (info (str "Updating application with key "

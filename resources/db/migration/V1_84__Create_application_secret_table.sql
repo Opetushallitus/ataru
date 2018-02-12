@@ -2,7 +2,7 @@ CREATE TABLE application_secrets (
   id              BIGSERIAL PRIMARY KEY,
   created_time    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   application_key VARCHAR(40)              NOT NULL,
-  secret          VARCHAR(512)             NOT NULL
+  secret          VARCHAR(512)             NOT NULL UNIQUE
 );
 
 CREATE VIEW latest_application_secrets AS
