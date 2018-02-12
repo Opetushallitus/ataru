@@ -64,7 +64,7 @@
 (defn alter-application-to-hakuaikaloppu-for-secret [secret]
       (let [app (application-store/get-latest-application-by-secret secret)
             hakukohteet (:hakukohde app)
-            switched-hakukohteet (concat ["1.2.246.562.20.49028196526"] (rest hakukohteet))]
+            switched-hakukohteet (concat ["1.2.246.562.20.49028100001"] (rest hakukohteet))]
            (application-store/alter-application-hakukohteet-with-secret secret switched-hakukohteet)
            (str switched-hakukohteet)))
 
