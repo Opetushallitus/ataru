@@ -13,10 +13,14 @@ CREATE VIEW latest_application_secrets AS
 CREATE INDEX application_secrets_application_key_idx
   ON application_secrets (application_key);
 
-INSERT INTO application_secrets (application_key, secret)
+CREATE INDEX application_secrets_application_key_id_idx
+  ON application_secrets (application_key, id DESC);
+
+INSERT INTO application_secrets (application_key, secret, created_time)
   SELECT
     key,
-    secret
+    secret,
+    created_time
   FROM latest_applications
   WHERE secret IS NOT NULL;
 
