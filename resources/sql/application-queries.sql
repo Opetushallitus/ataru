@@ -842,16 +842,11 @@ INSERT INTO application_feedback (created_time, form_key, form_id, form_name, st
 VALUES
   (now(), :form_key, :form_id, :form_name, :rating, left(:feedback, 2000), :user_agent);
 
--- TODO generate new secret every time
 -- name: yesql-get-hakija-secret-by-virkailija-secret
-SELECT secret
-FROM latest_application_secrets
-WHERE application_key = (
-  SELECT key
-  FROM latest_applications a
-    INNER JOIN virkailija_credentials c ON a.key = c.application_key
-  WHERE c.secret = :virkailija_secret
-);
+SELECT las.secret
+FROM latest_applications_secrets AS las
+  JOIN virkailija_credentials AS vc ON vc.application_key = las.application_key
+WHERE vc.secret = :virkailija_secret;
 
 -- name: yesql-get-application-hakukohde-reviews
 SELECT
