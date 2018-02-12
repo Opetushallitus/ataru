@@ -119,7 +119,6 @@
       (throw (Exception. (str "No haku found for haku " haku-oid " and keys " (pr-str form-keys)))))
     (if form
       (-> form
-          ; remove hakukohteet from form tarjonta for deduplication
           (merge tarjonta-info)
           (inject-hakukohde-component-if-missing)
           (flag-uneditable-and-unviewable-fields hakuaika virkailija?)
