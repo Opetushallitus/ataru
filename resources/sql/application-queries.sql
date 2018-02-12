@@ -620,25 +620,28 @@ JOIN virkailija_credentials AS vc ON vc.application_key = a.key
 WHERE vc.secret = :virkailija_secret;
 
 -- name: yesql-get-latest-version-by-secret-lock-for-update
-WITH latest_version AS (
-    SELECT max(a.id) AS latest_id
-    FROM applications a
-      JOIN application_secrets ass ON a.key = ass.application_key
-    WHERE ass.secret = :secret
-          AND ass.created_time > now() - INTERVAL '30 days'
-)
-SELECT
-  id,
-  key,
-  lang,
-  form_id AS form,
-  created_time,
-  content,
-  haku,
-  hakukohde,
-  person_oid
+WITH application_secret AS (SELECT
+                              application_key,
+                              id
+                            FROM application_secrets
+                            WHERE secret = :secret
+                            ORDER BY id DESC
+                            LIMIT 1),
+    latest_secret AS (SELECT
+                        application_key,
+                        id
+                      FROM application_secrets
+                      WHERE application_key = (SELECT application_key
+                                               FROM application_secret)
+                      ORDER BY id DESC
+                      LIMIT 1)
+SELECT *
 FROM applications a
-  JOIN latest_version lv ON a.id = lv.latest_id
+  JOIN application_secret ON application_secret.application_key = a.key
+  JOIN latest_secret ON latest_secret.application_key = a.key
+WHERE application_secret.id = latest_secret.id
+ORDER BY a.id DESC
+LIMIT 1
 FOR UPDATE;
 
 -- name: yesql-get-application-count-for-secret
@@ -655,35 +658,38 @@ LIMIT 1;
 
 -- name: yesql-get-latest-version-by-virkailija-secret-lock-for-update
 WITH latest_version AS (
-    SELECT max(a.created_time) AS latest_time
+    SELECT
+      a.id AS latest_id,
+      key
     FROM applications a
       JOIN virkailija_credentials AS vc
         ON a.key = vc.application_key
     WHERE vc.secret = :virkailija_secret
+    ORDER BY id DESC
+    LIMIT 1
 ), latest_secret_version AS (
     SELECT
       ass.secret AS latest_secret,
       ass.application_key
     FROM application_secrets ass
-      JOIN virkailija_credentials AS vc
-        ON ass.application_key = vc.application_key
-    WHERE vc.secret = :virkailija_secret
+    WHERE ass.application_key = (SELECT key
+                                 FROM latest_version)
     ORDER BY ass.id DESC
     LIMIT 1
 )
 SELECT
   a.id,
   a.key,
-  las.latest_secret as secret,
+  las.latest_secret AS secret,
   a.lang,
-  a.form_id AS form,
+  a.form_id         AS form,
   a.created_time,
   a.content,
   a.haku,
   a.hakukohde,
   a.person_oid
 FROM applications a
-  JOIN latest_version lv ON a.created_time = lv.latest_time
+  JOIN latest_version lv ON a.id = lv.latest_id
   JOIN latest_secret_version las ON las.application_key = a.key
 FOR UPDATE;
 
