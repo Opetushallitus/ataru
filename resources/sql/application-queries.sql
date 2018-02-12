@@ -844,7 +844,7 @@ VALUES
 
 -- name: yesql-get-hakija-secret-by-virkailija-secret
 SELECT las.secret
-FROM latest_applications_secrets AS las
+FROM latest_application_secrets AS las
   JOIN virkailija_credentials AS vc ON vc.application_key = las.application_key
 WHERE vc.secret = :virkailija_secret;
 
