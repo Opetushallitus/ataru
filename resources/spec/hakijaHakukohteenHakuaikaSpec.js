@@ -47,15 +47,15 @@
                 wait.until(function() { return formSections().length == 2 }, 10000)
             )
 
-            it('reloads and edits hakutoiveita', function() {
+            it('check that components are disabled when hakuaika is over (and enabled when some hakuaika is on going)', function() {
                 console.log(testFrame().find('.application__hakukohde-row-button-container'))
 
                 expect(testFrame().find('.application__hakukohde-row-button-container').length).to.equal(2)
                 expect(testFrame().find('.application__hakukohde-row-button-container[disabled]').length).to.equal(1)
 
-                //expect(testFrame().find('.application__hakukohde-row-button-container').prop('disabled')).to.equal(true)
-
-                //expect(hakukohdeTexts()).to.equal('Aikaloppu 1 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne DAikaa jäljellä 2 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne B')
+                expect(testFrame().find("#hakuajat-ohi").prop('disabled')).to.equal(true)
+                expect(testFrame().find("#osa-hakuajoista-ohi").prop('disabled')).to.equal(false)
+                expect(testFrame().find("#kaikki-hakuajat-voimassa").prop('disabled')).to.equal(false)
 
             })
         })

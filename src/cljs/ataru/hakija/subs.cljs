@@ -49,8 +49,15 @@
     (let [field (->> (:flat-form-content db)
                      (filter #(= (keyword key) (keyword (:id %))))
                      first)
-          editing? (get-in db [:application :editing?])]
-      (and editing? (:cannot-edit field)))))
+          editing? (get-in db [:application :editing?])
+          hakukohde-selected (fn [oid] @(re-frame/subscribe
+                                          [:application/hakukohde-selected? oid]))
+          hakuajat-on? @(re-frame/subscribe [:application/hakukohteet-hakuaika-on?
+                                             (filter hakukohde-selected
+                                                     (:belongs-to-hakukohteet field))])]
+      (and editing?
+           (or (not hakuajat-on?)
+               (:cannot-edit field))))))
 
 (re-frame/reg-sub
   :application/default-language
@@ -128,6 +135,14 @@
                 true
                 (get-in hakukohde [:hakuaika-dates :on])))))
 
+(re-frame/reg-sub
+  :application/hakukohteet-hakuaika-on?
+  (fn [db [_ hakukohde-oids]]
+      (cond
+        (or (nil? hakukohde-oids) (empty? hakukohde-oids)) true
+        :else
+        (let [hakuaika-on (fn [oid] @(re-frame/subscribe [:application/hakukohde-hakuaika-on? oid]))]
+             (some identity (map hakuaika-on hakukohde-oids))))))
 
 (re-frame/reg-sub
   :application/hakukohde-query
