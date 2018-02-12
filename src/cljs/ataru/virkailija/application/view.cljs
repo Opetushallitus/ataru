@@ -718,33 +718,36 @@
 
 (defn to-event-row
   [time-str caption event]
-  (let [modify-event? (util/modify-event? event)]
-    [:div.application-handling__event-row
-     [:span.application-handling__event-timestamp time-str]
-     [:span.application-handling__event-caption
-      {:on-click (when modify-event? #(dispatch [:application/toggle-event-expanded (:id event)]))}
-      caption
-      (when (and modify-event?
-                 (some #{(:id event)} @(subscribe [:application/expanded-event-ids])))
-        [:ul.application-handling__event-row-details
-         (for [[key field] @(subscribe [:application/changes-made-for-event (:id event)])]
-           [:li
-            {:on-click (fn [e]
-                         (.stopPropagation e)
-                         (dispatch [:application/highlight-field key]))
-             :key (str "event-list-for" key)}
-            [:a (:label field)]])
-         [:li.application-handling__show-history-as-table
-          [:a
-           {:on-click (fn [e]
-                        (.stopPropagation e)
-                        (dispatch [:application/open-application-version-history (:id event)]))}
-           "Näytä taulukkona"]]])]]))
+  (let [modify-event? (util/modify-event? event)
+        modifications (when modify-event?
+                        (subscribe [:application/changes-made-for-event (:id event)]))
+        show-details? (r/atom false)]
+    (fn [time-str caption event]
+      [:div.application-handling__event-row
+       [:span.application-handling__event-timestamp time-str]
+       [:span.application-handling__event-caption
+        {:on-click (when modify-event? #(swap! show-details? not))}
+        caption
+        (when @show-details?
+          [:ul.application-handling__event-row-details
+           (for [[key field] @modifications]
+             [:li
+              {:on-click (fn [e]
+                           (.stopPropagation e)
+                           (dispatch [:application/highlight-field key]))
+               :key      (str "event-list-for" key)}
+              [:a (:label field)]])
+           [:li.application-handling__show-history-as-table
+            [:a
+             {:on-click (fn [e]
+                          (.stopPropagation e)
+                          (dispatch [:application/open-application-version-history (:id event)]))}
+             "Näytä taulukkona"]]])]])))
 
 (defn event-row [event]
   (let [time-str (t/time->short-str (or (:time event) (:created-time event)))
         caption (event-caption event)]
-    (to-event-row time-str caption event)))
+    [to-event-row time-str caption event]))
 
 (defn application-review-events []
   (let [events (subscribe [:application/events-and-information-requests])]
