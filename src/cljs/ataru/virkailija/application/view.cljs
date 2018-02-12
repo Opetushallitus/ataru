@@ -721,12 +721,14 @@
   (let [modify-event? (util/modify-event? event)
         modifications (when modify-event?
                         (subscribe [:application/changes-made-for-event (:id event)]))
-        show-details? (r/atom false)]
+        show-details? (r/atom (if (:last-modify-event? event) true false))]
     (fn [time-str caption event]
       [:div.application-handling__event-row
        [:span.application-handling__event-timestamp time-str]
        [:span.application-handling__event-caption
-        {:on-click (when modify-event? #(swap! show-details? not))}
+        (when modify-event?
+          {:on-click #(swap! show-details? not)
+           :class    "application-handling__event-caption-modify-event"})
         caption
         (when @show-details?
           [:ul.application-handling__event-row-details

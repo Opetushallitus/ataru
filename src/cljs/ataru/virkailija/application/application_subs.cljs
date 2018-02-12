@@ -211,10 +211,18 @@
       -1
       1)))
 
+(defn- mark-last-modify-event [events]
+  (let [last-modify-event-id (-> (filter util/modify-event? events)
+                                 last
+                                 :id)]
+    (map #(if (= (:id %) last-modify-event-id)
+            (assoc % :last-modify-event? true)
+            %) events)))
+
 (re-frame/reg-sub
   :application/events-and-information-requests
   (fn [db _]
-    (->> (concat (-> db :application :events)
+    (->> (concat (-> db :application :events mark-last-modify-event)
                  (-> db :application :information-requests))
          (sort event-and-information-request-comparator))))
 
