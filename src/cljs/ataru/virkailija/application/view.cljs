@@ -1,26 +1,26 @@
 (ns ataru.virkailija.application.view
-  (:require
-    [cljs.core.match :refer-macros [match]]
-    [clojure.string :as string]
-    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
-    [reagent.ratom :refer-macros [reaction]]
-    [reagent.core :as r]
-    [cljs-time.format :as f]
-    [taoensso.timbre :refer-macros [spy debug]]
-    [ataru.virkailija.application.handlers]
-    [ataru.virkailija.application.application-subs]
-    [ataru.virkailija.routes :as routes]
-    [ataru.virkailija.temporal :as t]
-    [ataru.application.review-states :as application-review-states]
-    [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
-    [ataru.cljs-util :as util]
-    [ataru.virkailija.application.application-search-control :refer [application-search-control]]
-    [goog.string.format]
-    [ataru.application.review-states :as review-states]
-    [ataru.application.application-states :as application-states]
-    [ataru.cljs-util :as cljs-util]
-    [medley.core :refer [find-first]]
-    [ataru.virkailija.temporal :as temporal]))
+  (:require [cljs.core.match :refer-macros [match]]
+            [clojure.string :as string]
+            [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+            [reagent.ratom :refer-macros [reaction]]
+            [reagent.core :as r]
+            [cljs-time.format :as f]
+            [taoensso.timbre :refer-macros [spy debug]]
+            [ataru.virkailija.application.handlers]
+            [ataru.virkailija.application.application-subs]
+            [ataru.virkailija.routes :as routes]
+            [ataru.virkailija.temporal :as t]
+            [ataru.application.review-states :as application-review-states]
+            [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
+            [ataru.cljs-util :as util]
+            [ataru.virkailija.application.application-search-control :refer [application-search-control]]
+            [goog.string.format]
+            [ataru.application.review-states :as review-states]
+            [ataru.application.application-states :as application-states]
+            [ataru.cljs-util :as cljs-util]
+            [medley.core :refer [find-first]]
+            [ataru.virkailija.temporal :as temporal]
+            [ataru.virkailija.virkailija-ajax :as ajax]))
 
 (defn- icon-check []
   [:img.application-handling__review-state-selected-icon
@@ -717,15 +717,39 @@
          :else "Tuntematon"))
 
 (defn to-event-row
-  [time-str caption]
-  [:div.application-handling__event-row
-   [:span.application-handling__event-timestamp time-str]
-   [:span.application-handling__event-caption caption]])
+  [time-str caption event]
+  (let [modify-event? (util/modify-event? event)
+        modifications (when modify-event?
+                        (subscribe [:application/changes-made-for-event (:id event)]))
+        show-details? (r/atom (if (:last-modify-event? event) true false))]
+    (fn [time-str caption event]
+      [:div.application-handling__event-row
+       [:span.application-handling__event-timestamp time-str]
+       [:span.application-handling__event-caption
+        (when modify-event?
+          {:on-click #(swap! show-details? not)
+           :class    "application-handling__event-caption-modify-event"})
+        caption
+        (when @show-details?
+          [:ul.application-handling__event-row-details
+           (for [[key field] @modifications]
+             [:li
+              {:on-click (fn [e]
+                           (.stopPropagation e)
+                           (dispatch [:application/highlight-field key]))
+               :key      (str "event-list-for" key)}
+              [:a (:label field)]])
+           [:li.application-handling__show-history-as-table
+            [:a
+             {:on-click (fn [e]
+                          (.stopPropagation e)
+                          (dispatch [:application/open-application-version-history (:id event)]))}
+             "Näytä taulukkona"]]])]])))
 
 (defn event-row [event]
   (let [time-str (t/time->short-str (or (:time event) (:created-time event)))
         caption (event-caption event)]
-    (to-event-row time-str caption)))
+    [to-event-row time-str caption event]))
 
 (defn application-review-events []
   (let [events (subscribe [:application/events-and-information-requests])]
@@ -1122,3 +1146,43 @@
           (when-not @review-canary-visible
             (dispatch [:state-update #(assoc-in % [:application :review-positioning] :in-flow)])
             (reset! review-canary-visible true)))))))
+
+(defn application-version-history-header []
+  [:thead
+   [:tr
+    [:th "Kenttä"]
+    [:th.application-handling__application-version-history-entry "Vanha tieto"]
+    [:th.application-handling__application-version-history-entry "Uusi tieto"]]])
+
+(defn application-version-history-value [value-or-values]
+  (cond
+    (every? sequential? value-or-values)
+    (into [:ol]
+          (for [values value-or-values]
+            [:li (clojure.string/join ", " values)]))
+
+    (sequential? value-or-values)
+    (clojure.string/join ", " value-or-values)
+
+    :else (str value-or-values)))
+
+(defn application-version-history-row [key values]
+  ^{:key (str "application-change-history-" key)}
+  [:tr.application-handling__application-version-history-row
+   [:td (:label values)]
+   [:td (application-version-history-value (:old values))]
+   [:td (application-version-history-value (:new values))]])
+
+(defn application-version-changes []
+  (let [history-items (subscribe [:application/current-history-items])]
+    (when @history-items
+      [:div.application-handling__application-version-history-container
+       [:div.application-handling__application-version-history
+        [:span.application-handling__close-version-history
+         {:on-click #(dispatch [:application/close-application-version-history])}
+         [:i.zmdi.zmdi-close.closedetails-button-mark]]
+        [:table.application-handling__application-version-history-table
+         [application-version-history-header]
+         (into [:tbody]
+               (for [[key values] @history-items]
+                 [application-version-history-row key values]))]]])))

@@ -1,8 +1,10 @@
 (ns ataru.applications.application-store-spec
   (:require [ataru.applications.application-store :as store]
             [ataru.fixtures.application :as fixtures]
+            [ataru.fixtures.form :as form-fixtures]
             [clj-time.core :as c]
-            [speclj.core :refer :all]))
+            [speclj.core :refer :all]
+            [ataru.forms.form-store :as forms]))
 
 (def form-key (:key fixtures/form))
 
@@ -99,3 +101,27 @@
                                               expected)]
                   (should= expected
                            (store/add-person-oid (:id expected) person-oid))))))
+
+(describe "getting application edit history"
+  (tags :unit :versions)
+
+  (it "should get history"
+    (let [expected (filter #(= "9d24af7d-f672-4c0e-870f-aaaa" (:key %)) fixtures/applications)]
+      (with-redefs [store/exec-db (fn [ds-key query-fn params]
+                                    (should= :db ds-key)
+                                    (should= "yesql-get-application-versions" (-> query-fn .meta :name))
+                                    (should= {:application_key "9d24af7d-f672-4c0e-870f-aaaa"} params)
+                                    expected)
+                    forms/get-form-by-application (fn [_] form-fixtures/version-test-form)]
+        (should== [{:G__224 {:label "Toistuva kysymys ryhmässä"
+                             :old   [["x" "y" "z"]
+                                     ["a" "b" "c"]]
+                             :new   [["x" "y" "1"]
+                                     ["a" "b" "asdfa"]]}
+                    :G__119 {:label "Eka kysymys"
+                             :old   "z"
+                             :new   ""}
+                    :G__117 {:label "Toistuva kysymys"
+                             :old   ["x" "y" "z"]
+                             :new   ["x" "y" "a"]}}]
+                  (store/get-application-version-changes "9d24af7d-f672-4c0e-870f-aaaa"))))))
