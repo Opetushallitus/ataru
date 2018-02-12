@@ -672,13 +672,7 @@
 (reg-event-db
   :application/handle-change-history-response
   (fn [db [_ response]]
-    (let [db (assoc-in db [:application :selected-application-and-form :application-change-history] response)]
-      (assoc-in db
-                [:application :selected-application-and-form :expanded-event-ids]
-                (-> (cljs-util/application-modify-events db)
-                    last
-                    :id
-                    hash-set)))))
+    (assoc-in db [:application :selected-application-and-form :application-change-history] response)))
 
 (reg-event-fx
   :application/get-application-change-history
@@ -702,17 +696,6 @@
   (fn [db _]
     (update-in db
                [:application :selected-application-and-form] dissoc :current-history-items)))
-
-(reg-event-db
-  :application/toggle-event-expanded
-  (fn [db [_ event-id]]
-    (let [expanded-events (-> db :application :selected-application-and-form :expanded-event-ids)
-          new-event-ids   (set (if (some #{event-id} expanded-events)
-                                 (remove #(= event-id %) expanded-events)
-                                 (conj expanded-events event-id)))]
-      (assoc-in db
-                [:application :selected-application-and-form :expanded-event-ids]
-                new-event-ids))))
 
 (reg-event-db
   :application/remove-field-highlight

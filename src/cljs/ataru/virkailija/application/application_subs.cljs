@@ -305,12 +305,6 @@
       (nth change-history event-index))))
 
 (re-frame.core/reg-sub
-  :application/expanded-event-ids
-  (fn [db _]
-    (or (-> db :application :selected-application-and-form :expanded-event-ids)
-        (-> db util/application-modify-events last :id))))
-
-(re-frame.core/reg-sub
   :application/field-highlighted?
   (fn [db [_ field-id]]
     (some #{field-id} (-> db :application :selected-application-and-form :highlighted-fields))))
