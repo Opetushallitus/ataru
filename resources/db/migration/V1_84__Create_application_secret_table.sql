@@ -10,6 +10,9 @@ CREATE VIEW latest_application_secrets AS
   FROM application_secrets
   ORDER BY application_key, id DESC;
 
+CREATE INDEX application_secrets_application_secret_idx
+  ON application_secrets (secret);
+
 CREATE INDEX application_secrets_application_key_idx
   ON application_secrets (application_key);
 
