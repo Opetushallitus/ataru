@@ -113,13 +113,14 @@
    {:label "Viimeinen muokkaaja"
     :field :created-by}])
 
-(def ^:private answer-to-onr-record-mapping
-  {:date-of-birth  :syntymaaika
-   :ssn            :hetu
-   :first-name     :etunimet
-   :preferred-name :kutsumanimi
-   :last-name      :sukunimi
-   :gender         :sukupuoli})
+(def ^:private answers-from-person-record
+  #{:birth-date
+    :ssn
+    :first-name
+    :preferred-name
+    :last-name
+    :gender
+    :nationality})
 
 (def ^:private application-meta-fields
   [{:label     "Id"
@@ -258,9 +259,8 @@
 
 (defn- get-answer-from-person-record
   [answer-key person]
-  (->> (get answer-to-onr-record-mapping answer-key)
-       (get person)
-       (not-empty)))
+  (when (contains? answers-from-person-record answer-key)
+    (get person answer-key)))
 
 (defn- write-application! [writer application application-review person headers application-meta-fields form-fields-by-key get-koodisto-options]
   (doseq [meta-field application-meta-fields]

@@ -118,10 +118,8 @@
    :gender         (-> person :sukupuoli)
    :nationality    (-> person :kansalaisuus first (get :kansalaisuusKoodi "999"))})
 
-(defn get-person [application person-client]
-  (let [person-from-onr (when-let [oid (:person-oid application)]
-                          (person-service/get-person person-client oid))
-        yksiloity       (or (-> person-from-onr :yksiloity)
+(defn parse-person [application person-from-onr]
+  (let [yksiloity       (or (-> person-from-onr :yksiloity)
                             (-> person-from-onr :yksiloityVTJ))
         person-info     (if yksiloity
                           (person-info-from-onr-person person-from-onr)
@@ -131,6 +129,11 @@
       :turvakielto (-> person-from-onr :turvakielto boolean)
       :yksiloity   (boolean yksiloity)}
      person-info)))
+
+(defn get-person
+  [application person-client]
+  (when-let [oid (:person-oid application)]
+    (parse-person application (person-service/get-person person-client oid))))
 
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
@@ -182,10 +185,13 @@
         persons              (->> (map :person-oid allowed-applications)
                                   distinct
                                   (person-service/get-persons person-service)
-                                  (reduce #(assoc %1 (:oidHenkilo %2) %2) {}))]
+                                  (reduce #(assoc %1 (:oidHenkilo %2) %2) {}))
+        parsed-persons       (->> (for [application allowed-applications
+                                        :let [person-oid (:person-oid application)]]
+                                    (parse-person application (get persons person-oid))))]
     (ByteArrayInputStream. (excel/export-applications allowed-applications
                                                       application-reviews
-                                                      persons
+                                                      parsed-persons
                                                       selected-hakukohde
                                                       skip-answers?
                                                       tarjonta-service
