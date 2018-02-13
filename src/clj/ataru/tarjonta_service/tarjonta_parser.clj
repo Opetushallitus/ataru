@@ -80,8 +80,7 @@
            :prioritize-hakukohteet (:usePriority haku)
            :max-hakukohteet  (when (and max-hakukohteet (pos? max-hakukohteet))
                                max-hakukohteet)
-           :hakuaika-dates   (hakuaika/get-hakuaika-info (first hakukohteet)
-                                                         haku ; TODO take into account each hakukohde time?
+           :hakuaika-dates   (hakuaika/get-hakuaika-info haku
                                                          ohjausparametrit)
            :can-submit-multiple-applications (:canSubmitMultipleApplications haku)}}))))
   ([tarjonta-service ohjausparametrit-service haku-oid]

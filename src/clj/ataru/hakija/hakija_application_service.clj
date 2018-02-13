@@ -46,14 +46,11 @@
       (:hakukohde application)))
 
 (defn- get-hakuaikas
-  [tarjonta-service ohjausparametrit-service application]
-  (let [application-hakukohde (-> application get-hakukohteet first) ; TODO check apply times for each hakukohde separately?
-        hakukohde             (when application-hakukohde (get-hakukohde tarjonta-service application-hakukohde))
-        haku-oid              (:hakuOid hakukohde)
-        haku                  (when haku-oid (get-haku tarjonta-service haku-oid))
+  [haku-oid tarjonta-service ohjausparametrit-service]
+  (let [haku                  (when haku-oid (get-haku tarjonta-service haku-oid))
         ohjausparametrit      (when haku-oid (.get-parametri ohjausparametrit-service haku-oid))]
-    (when (every? some? [haku hakukohde])
-      (hakuaika/get-hakuaika-info hakukohde haku ohjausparametrit))))
+    (when (some? haku)
+      (hakuaika/get-hakuaika-info haku ohjausparametrit))))
 
 (defn in-processing-state-in-jatkuva-haku?
   [application-hakukohde-reviews hakuaika]
@@ -128,9 +125,11 @@
                                          tarjonta-service
                                          ohjausparametrit-service
                                          (:haku application)))
-        hakuaika                      (get-hakuaikas tarjonta-service
-                                                     ohjausparametrit-service
-                                                     application)
+        haku-oid                      (get-in tarjonta-info [:tarjonta :haku-oid])
+        hakukohteet                   (get-in tarjonta-info [:tarjonta :hakukohteet])
+        hakuaika                      (get-hakuaikas haku-oid
+                                                     tarjonta-service
+                                                     ohjausparametrit-service)
         virkailija-secret             (valid-virkailija-secret application)
         form                          (-> application
                                           (:form)
@@ -139,7 +138,8 @@
                                           (hakukohde/populate-hakukohde-answer-options tarjonta-info)
                                           (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)
                                           (hakija-form-service/flag-uneditable-and-unviewable-fields
-                                           hakuaika
+                                            hakukohteet
+                                            hakuaika
                                            (some? virkailija-secret)))
         latest-application            (application-store/get-latest-version-of-application-for-edit application)
         application-hakukohde-reviews (some-> latest-application
@@ -284,6 +284,7 @@
                                                                 :form
                                                                 form-store/fetch-by-id
                                                                 :key)
+                                                           nil
                                                            nil
                                                            virkailija?)
                               :else                       nil)

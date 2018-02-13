@@ -53,33 +53,57 @@
           :public-config
           (get :attachment-modify-grace-period-days 14))))
 
+(defn- get-hakukohteiden-hakuajat-for-oids [hakukohde-oids hakukohteet]
+       (let [belongs-to (set hakukohde-oids)
+             filters [#(contains? belongs-to (:oid %))
+                      #(some? (:hakuaika-dates %))]]
+            (if-let [hakukokohde-hakuajat (filter (fn [x] (every? #(% x) filters)) hakukohteet)]
+                    (map :hakuaika-dates hakukokohde-hakuajat))))
+
+(defn- select-first-ongoing-hakuaika-or-hakuaika-with-last-ending [hakuajat]
+  (if-let [ongoing-hakuaika (first (filter :on hakuajat))]
+    ongoing-hakuaika
+    (first (sort-by :end > hakuajat))))
+
+(defn- select-hakuaika-for-field [field hakukohteet haun-hakuaika]
+  (let [hakukohteet-with-hakuajat (filter #(some? (:hakuaika-dates %)) hakukohteet)
+        all-hakuajat (concat [haun-hakuaika] (map :hakuaika-dates hakukohteet-with-hakuajat))
+        belongs-to-hakukohteet (if-let [b (seq (:belongs-to-hakukohteet field))] b)
+        belonging-hakuajat (some-> belongs-to-hakukohteet (get-hakukohteiden-hakuajat-for-oids hakukohteet-with-hakuajat))]
+    (cond
+      (seq belonging-hakuajat) (if-let [first-valid-belonging-hakuaika (first (filter :on belonging-hakuajat))]
+                                 first-valid-belonging-hakuaika
+                                 (select-first-ongoing-hakuaika-or-hakuaika-with-last-ending all-hakuajat))
+      :else (select-first-ongoing-hakuaika-or-hakuaika-with-last-ending all-hakuajat))))
+
 (defn- editing-allowed-by-hakuaika?
-  [field hakuaika]
-  (let [hakuaika-start      (some-> hakuaika :start t/from-long)
-        hakuaika-end        (some-> hakuaika :end t/from-long)
-        attachment-edit-end (some-> hakuaika-end (time/plus (time/days (attachment-modify-grace-period hakuaika))))
-        hakukierros-end     (some-> hakuaika :hakukierros-end t/from-long)
-        after?              (fn [t] (or (nil? t)
-                                        (time/after? (time/now) t)))
-        before?             (fn [t] (and (some? t)
-                                         (time/before? (time/now) t)))]
-    (or (nil? hakuaika)
-        (and (after? hakuaika-start)
-             (or (before? hakuaika-end)
-                 (and (before? attachment-edit-end)
-                      (= "attachment" (:fieldType field)))
-                 (and (before? hakukierros-end)
-                      (contains? editing-allowed-person-info-field-ids
-                                 (keyword (:id field)))))))))
+  [field hakukohteet haun-hakuaika]
+   (let [hakuaika (select-hakuaika-for-field field hakukohteet haun-hakuaika)
+         hakuaika-start      (some-> hakuaika :start t/from-long)
+         hakuaika-end        (some-> hakuaika :end t/from-long)
+         attachment-edit-end (some-> hakuaika-end (time/plus (time/days (attachment-modify-grace-period hakuaika))))
+         hakukierros-end     (some-> hakuaika :hakukierros-end t/from-long)
+         after?              (fn [t] (or (nil? t)
+                                         (time/after? (time/now) t)))
+         before?             (fn [t] (and (some? t)
+                                          (time/before? (time/now) t)))]
+        (or (nil? hakuaika)
+            (and (after? hakuaika-start)
+                 (or (before? hakuaika-end)
+                     (and (before? attachment-edit-end)
+                          (= "attachment" (:fieldType field)))
+                     (and (before? hakukierros-end)
+                          (contains? editing-allowed-person-info-field-ids
+                                     (keyword (:id field)))))))))
 
 (defn- uneditable?
-  [field hakuaika virkailija?]
+  [field hakukohteet hakuaika virkailija?]
   (or (contains? editing-forbidden-person-info-field-ids (keyword (:id field)))
       (not (or virkailija?
-               (editing-allowed-by-hakuaika? field hakuaika)))))
+               (editing-allowed-by-hakuaika? field hakukohteet hakuaika)))))
 
 (defn flag-uneditable-and-unviewable-fields
-  [form hakuaika virkailija?]
+  [form hakukohteet hakuaika virkailija?]
   (update form :content
           (fn [content]
             (clojure.walk/prewalk
@@ -88,7 +112,7 @@
                  (let [cannot-view? (contains? viewing-forbidden-person-info-field-ids
                                                (keyword (:id field)))
                        cannot-edit? (or cannot-view?
-                                        (uneditable? field hakuaika virkailija?))]
+                                        (uneditable? field hakukohteet hakuaika virkailija?))]
                    (assoc field
                           :cannot-view cannot-view?
                           :cannot-edit cannot-edit?))
@@ -96,12 +120,12 @@
              content))))
 
 (defn fetch-form-by-key
-  [key hakuaika virkailija?]
+  [key hakukohteet hakuaika virkailija?]
   (when-let [form (form-store/fetch-by-key key)]
     (when (not (:deleted form))
       (-> form
           koodisto/populate-form-koodisto-fields
-          (flag-uneditable-and-unviewable-fields hakuaika virkailija?)))))
+          (flag-uneditable-and-unviewable-fields hakukohteet hakuaika virkailija?)))))
 
 (defn fetch-form-by-haku-oid
   [tarjonta-service ohjausparametrit-service haku-oid virkailija?]
@@ -110,9 +134,11 @@
                            (map :form-key)
                            (distinct)
                            (remove nil?))
+        hakukohteet   (get-in tarjonta-info [:tarjonta :hakukohteet])
         hakuaika      (get-in tarjonta-info [:tarjonta :hakuaika-dates])
         form          (when (= 1 (count form-keys))
                         (fetch-form-by-key (first form-keys)
+                                           hakukohteet
                                            hakuaika
                                            virkailija?))]
     (when (not tarjonta-info)
@@ -122,7 +148,7 @@
           ; remove hakukohteet from form tarjonta for deduplication
           (merge (assoc-in tarjonta-info [:tarjonta :hakukohteet] (-> tarjonta-info :tarjonta :hakukohteet)))
           (inject-hakukohde-component-if-missing)
-          (flag-uneditable-and-unviewable-fields hakuaika virkailija?)
+          (flag-uneditable-and-unviewable-fields hakukohteet hakuaika virkailija?)
           (populate-hakukohde-answer-options tarjonta-info)
           (populate-can-submit-multiple-applications tarjonta-info))
       (warn "could not find local form for haku" haku-oid "with keys" (pr-str form-keys)))))
