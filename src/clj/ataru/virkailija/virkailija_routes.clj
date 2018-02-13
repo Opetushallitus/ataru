@@ -419,6 +419,13 @@
                      (if-let [resp (file-store/get-metadata key)]
                        (ok resp)
                        (not-found)))
+                   (api/POST "/metadata" []
+                     :body-params [keys :- (api/describe [s/Str] "File keys")]
+                     :summary "Get metadata for one or more files"
+                     :return [ataru-schema/File]
+                     (if-let [resp (file-store/get-metadata keys)]
+                       (ok resp)
+                       (not-found)))
                    (api/GET "/content/:key" []
                      :path-params [key :- (api/describe s/Str "File key")]
                      :summary "Download a file"

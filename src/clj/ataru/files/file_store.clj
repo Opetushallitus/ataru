@@ -23,10 +23,9 @@
       (json/parse-string (:body resp) true))))
 
 (defn get-metadata [file-keys]
-  (let [query-part (clojure.string/join (url/items->query-part "key" file-keys))
-        ; TODO: fix query-part to use url.props correctly
-        url        (str (resolve-url :liiteri.metadata) query-part)
-        resp       @(http/get url)]
+  (let [resp @(http/post (resolve-url :liiteri.metadata)
+                         {:headers {"Content-Type" "application/json"}
+                          :body (json/generate-string {:keys file-keys})})]
     (when (= (:status resp) 200)
       (json/parse-string (:body resp) true))))
 
