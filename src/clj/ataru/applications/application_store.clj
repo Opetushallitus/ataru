@@ -64,7 +64,7 @@
 (defn generate-new-application-secret
   [connection]
   (loop [secret (crypto/url-part 34)]
-    (if (not (application-exists-with-secret-tx? secret connection))
+    (if-not (application-exists-with-secret-tx? secret connection)
       secret
       (recur (crypto/url-part 34)))))
 
