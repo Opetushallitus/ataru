@@ -1,11 +1,12 @@
 (ns ataru.koodisto.koodisto-db-cache
-  (:require [org.httpkit.client :as http]
-            [ataru.config.url-helper :refer [resolve-url]]
+  (:require [ataru.config.url-helper :refer [resolve-url]]
+            [ataru.db.db :as db]
+            [ataru.virkailija.user.organization-client :as organization-client]
             [cheshire.core :as cheshire]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
+            [org.httpkit.client :as http]
             [pandect.algo.sha256 :refer :all]
-            [ataru.db.db :as db]
             [yesql.core :refer [defqueries]]))
 
 ; TODO url.config
@@ -30,14 +31,6 @@
                                                             :body    body
                                                             :error   error
                                                             :headers headers})))))
-
-(defn- get-organization [url]
-  (let [{:keys [status headers body error] :as resp} @(http/get url)]
-    (if (= 200 status)
-      (let [body (json->map body)]
-        (log/info (str "Fetched koodisto from URL: " url))
-        body)
-      (log/error (str "Couldn't fetch organization by number from url: " url)))))
 
 (defn- fetch-all-koodisto-groups []
   (do-get (str koodisto-base-url all-koodisto-groups-path)))
@@ -123,7 +116,7 @@
 
 (defn- get-institution [number]
   (let [institution-uri (resolve-url :organisaatio-service.get-by-oid number)
-        institution (get-organization institution-uri)]
+        institution     (organization-client/get-organization institution-uri)]
     (when institution
       {:value number
        :label (:nimi institution)})))
