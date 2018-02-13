@@ -1,5 +1,6 @@
 (ns ataru.koodisto.koodisto-db-cache
   (:require [org.httpkit.client :as http]
+            [ataru.config.url-helper :refer [resolve-url]]
             [cheshire.core :as cheshire]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
@@ -29,6 +30,14 @@
                                                             :body    body
                                                             :error   error
                                                             :headers headers})))))
+
+(defn- get-organization [url]
+  (let [{:keys [status headers body error] :as resp} @(http/get url)]
+    (if (= 200 status)
+      (let [body (json->map body)]
+        (log/info (str "Fetched koodisto from URL: " url))
+        body)
+      (log/error (str "Couldn't fetch organization by number from url: " url)))))
 
 (defn- fetch-all-koodisto-groups []
   (do-get (str koodisto-base-url all-koodisto-groups-path)))
@@ -95,10 +104,45 @@
          (map (fn [[key values]]
                 (-> values last parse-vocational-code-element))))))
 
+(def institution-type-codes ["21"   ; AMMATILLINEN_OPPILAITOS
+                             "22"   ; AMMATILLINEN_ERITYISOPPILAITOS
+                             "23"   ; AMMATILLINEN_ERIKOISOPPILAITOS
+                             "24"   ; AMMATILLINEN_AIKUISKOULUTUSKESKUS
+                             "28"   ; PALO_POLIISI_VARTIOINTI_OPPILAITOS
+                             "29"   ; SOTILASALAN_OPPILAITOS
+                             "61"   ; LIIKUNNAN_KOULUTUSKEKUS
+                             "62"   ; MUSIIKKIOPPILAITOS
+                             "63"]) ; KANSANOPISTO
+
+(defn- get-vocational-institutions-by-type [type version]
+  (let [koodisto-uri (str koodisto-base-url "codeelement/oppilaitostyyppi_" type "/" version)]
+    (->> (do-get koodisto-uri)
+         :withinCodeElements
+         (filter #(-> % :passive not))
+         (map :codeElementValue))))
+
+(defn- get-institution [number]
+  (let [institution-uri (resolve-url :organisaatio-service.get-by-oid number)
+        institution (get-organization institution-uri)]
+    (when institution
+      {:value number
+       :label (:nimi institution)})))
+
+(defn get-vocational-institutions [version]
+  (->> institution-type-codes
+       (pmap #(get-vocational-institutions-by-type % version))
+       flatten
+       set
+       (pmap get-institution)
+       (filter some?)))
+
+
 (defn get-koodi-options [koodisto-uri version]
   (condp = koodisto-uri
 
     "AmmatillisetOPSperustaiset" (get-vocational-degree-options version)
+
+    "oppilaitostyyppi" (get-vocational-institutions version)
 
     (let [koodisto-version-url (str koodisto-base-url koodisto-version-path koodisto-uri "/" version)]
       (->> (do-get koodisto-version-url)

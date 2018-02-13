@@ -76,7 +76,7 @@
                                                                           (s/optional-key :default-option) s/Any
                                                                           (s/optional-key :title)          s/Str}
                         (s/optional-key :options)                        [{:value                          s/Str
-                                                                           (s/optional-key :label)         LocalizedString
+                                                                           (s/optional-key :label)         LocalizedStringOptional
                                                                            (s/optional-key :description)   LocalizedString
                                                                            (s/optional-key :default-value) (s/maybe s/Bool)
                                                                            (s/optional-key :followups)     [(s/if (comp some? :children) (s/recursive #'WrapperElement) (s/recursive #'BasicElement))]}]

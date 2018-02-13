@@ -7,4 +7,5 @@
                          {:uri "maatjavaltiot2" :version 1 :title "Maat ja valtiot"}
                          {:uri "kktutkinnot" :version 1 :title "Kk-tutkinnot"}
                          {:uri "kunta" :version 1 :title "Kunta"}
-                         {:uri "AmmatillisetOPSperustaiset" :version 1 :title "Ammatilliset tutkinnot"}])
+                         {:uri "AmmatillisetOPSperustaiset" :version 1 :title "Ammatilliset tutkinnot"}
+                         {:uri "oppilaitostyyppi" :version 1 :title "Ammatilliset oppilaitokset"}])
