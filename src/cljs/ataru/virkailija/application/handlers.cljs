@@ -304,20 +304,18 @@
 (reg-event-fx
   :application/fetch-application-attachment-metadata
   (fn [{:keys [db]} _]
-    (let [query-part (->> (get-in db [:application :selected-application-and-form :application :answers])
-                          (filter (comp (partial = "attachment") :fieldType second))
-                          (map (comp :value second))
-                          (flatten)
-                          (url/items->query-part "key")
-                          (clojure.string/join))
-          path       (str "/lomake-editori/api/files/metadata" query-part)]
-      (if (clojure.string/blank? query-part)
-        ; sanity check to ensure autosave start in cases of (broken) applications with no values in attachment answer
+    (let [file-keys (->> (get-in db [:application :selected-application-and-form :application :answers])
+                         (filter (comp (partial = "attachment") :fieldType second))
+                         (map (comp :value second))
+                         (flatten))]
+      (if (empty? file-keys)
+        ; sanity check to ensure autosave starts if application has no attachments
         {:db       db
          :dispatch [:application/start-autosave]}
         {:db   db
-         :http {:method              :get
-                :path                path
+         :http {:method              :post
+                :path                "/lomake-editori/api/files/metadata"
+                :params              {:keys file-keys}
                 :handler-or-dispatch :application/handle-fetch-application-attachment-metadata}}))))
 
 (defn- application-has-attachments? [db]
