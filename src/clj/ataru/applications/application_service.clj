@@ -132,8 +132,9 @@
 
 (defn get-person
   [application person-client]
-  (when-let [oid (:person-oid application)]
-    (parse-person application (person-service/get-person person-client oid))))
+  (let [person-from-onr (when-let [oid (:person-oid application)]
+                          (person-service/get-person person-client oid))]
+    (parse-person application person-from-onr)))
 
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
@@ -186,9 +187,11 @@
                                   distinct
                                   (person-service/get-persons person-service)
                                   (reduce #(assoc %1 (:oidHenkilo %2) %2) {}))
-        parsed-persons       (->> (for [application allowed-applications
-                                        :let [person-oid (:person-oid application)]]
-                                    (parse-person application (get persons person-oid))))]
+        parsed-persons       (for [application allowed-applications
+                                   :let [person-oid (:person-oid application)]
+                                   :when (some? person-oid)]
+                               (->> (get persons person-oid)
+                                    (parse-person application)))]
     (ByteArrayInputStream. (excel/export-applications allowed-applications
                                                       application-reviews
                                                       parsed-persons
