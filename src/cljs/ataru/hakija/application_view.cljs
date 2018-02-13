@@ -111,9 +111,7 @@
           [:p (get-translation :expired-secret-paragraph)]
           [:button.application__secret-resend-button
            {:disabled (some? @delivery-status)
-            :on-click (fn []
-                        (dispatch [:application/set-secret-delivery-status :ongoing])
-                        (dispatch [:application/send-new-secret]))}
+            :on-click #(dispatch [:application/send-new-secret])}
            (if (= :completed @delivery-status)
              (get-translation :expired-secret-sent)
              (get-translation :expired-secret-button))]])

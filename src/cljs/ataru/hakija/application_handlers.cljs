@@ -85,11 +85,12 @@
   :application/send-new-secret
   (fn [{:keys [db]}]
     (let [old-secret (get-in db [:application :old-secret])]
-      {:db   db
-       :http {:method    :post
-              :post-data {:old-secret old-secret}
-              :url       "/hakemus/api/send-application-secret"
-              :handler   [:application/handle-send-new-secret]}})))
+      {:db       db
+       :dispatch [:application/set-secret-delivery-status :ongoing]
+       :http     {:method    :post
+                  :post-data {:old-secret old-secret}
+                  :url       "/hakemus/api/send-application-secret"
+                  :handler   [:application/handle-send-new-secret]}})))
 
 (defn- get-application-by-hakija-secret
   [{:keys [db]} [_ secret]]
