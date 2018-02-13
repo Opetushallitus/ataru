@@ -130,7 +130,7 @@
       :path-params [key :- s/Str]
       :query-params [{virkailija-secret :- s/Str nil}]
       :return ataru-schema/FormWithContent
-      (if-let [form (form-service/fetch-form-by-key key nil (some? virkailija-secret))]
+      (if-let [form (form-service/fetch-form-by-key key nil nil (some? virkailija-secret))]
         (response/ok form)
         (response/not-found)))
     (api/POST "/feedback" []
