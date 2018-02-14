@@ -102,6 +102,30 @@
                                      (@default-lang (-> field-descriptor :params :info-text :label)))]
         [markdown-paragraph info]))))
 
+(defn question-hakukohde-names [field-descriptor]
+  (let [show-hakukohde-list? (r/atom false)]
+    (fn [field-descriptor]
+      (let [lang                           @(subscribe [:application/form-language])
+            tarjonta-hakukohtet            @(subscribe [:application/tarjonta-hakukohteet])
+            selected-hakukohteet           @(subscribe [:application/selected-hakukohteet])
+            field-hakukohteet              (:belongs-to-hakukohteet field-descriptor)
+            selected-hakukohteet-for-field (clojure.set/intersection (set field-hakukohteet)
+                                                                     (set selected-hakukohteet))
+            selected-hakukohde-names       (->> tarjonta-hakukohtet
+                                                (filter #(some #{(:oid %)} selected-hakukohteet-for-field))
+                                                (map :name)
+                                                (map #(some % [lang :fi :sv :en])))]
+        [:div.application__question_hakukohde_names_container
+         [:a.application__question_hakukohde_names_info
+          {:on-click #(swap! show-hakukohde-list? not)}
+          [:i.zmdi.zmdi-info]
+          (get-translation :question-for-hakukohde)]
+         (when @show-hakukohde-list?
+           [:ul.application__question_hakukohde_names
+            (for [name selected-hakukohde-names]
+              [:li {:key (str (:id field-descriptor) name)}
+               name])])]))))
+
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing idx] :or {div-kwd :div.application__form-field disabled false editing false}}]
   (let [id           (keyword (:id field-descriptor))
         answer       (if (and @editing
@@ -125,6 +149,8 @@
                                                    (:valid answer))]
     [div-kwd
      [label field-descriptor]
+     (when (:belongs-to-hakukohteet field-descriptor)
+       [question-hakukohde-names field-descriptor])
      [:div.application__form-text-input-info-text
       [info-text field-descriptor]]
      [:div.application__form-text-input-and-validation-errors
@@ -174,6 +200,8 @@
                           (dispatch [:application/set-repeatable-application-field field-descriptor value data-idx question-group-idx])))]
         (into [div-kwd
                [label field-descriptor]
+               (when (:belongs-to-hakukohteet field-descriptor)
+                 [question-hakukohde-names field-descriptor])
                [:div.application__form-text-input-info-text
                 [info-text field-descriptor]]]
           (cons
@@ -249,6 +277,8 @@
                         (partial textual-field-change field-descriptor))]
         [div-kwd
          [label field-descriptor]
+         (when (:belongs-to-hakukohteet field-descriptor)
+           [question-hakukohde-names field-descriptor])
          [:div.application__form-text-area-info-text
           [info-text field-descriptor]]
          [:textarea.application__form-text-input.application__form-text-area
@@ -385,6 +415,8 @@
                                   idx]))]
     [div-kwd
      [label field-descriptor]
+     (when (:belongs-to-hakukohteet field-descriptor)
+       [question-hakukohde-names field-descriptor])
      [:div.application__form-text-input-info-text
       [info-text field-descriptor]]
      [:div.application__form-select-wrapper
@@ -462,6 +494,8 @@
     (fn [field-descriptor & {:keys [div-kwd disabled idx] :or {div-kwd :div.application__form-field disabled false}}]
       [div-kwd
        [label field-descriptor]
+       (when (:belongs-to-hakukohteet field-descriptor)
+         [question-hakukohde-names field-descriptor])
        [:div.application__form-text-input-info-text
         [info-text field-descriptor]]
        [:div.application__form-outer-checkbox-container
@@ -525,6 +559,8 @@
     (fn [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
       [div-kwd
        [label field-descriptor]
+       (when (:belongs-to-hakukohteet field-descriptor)
+         [question-hakukohde-names field-descriptor])
        [:div.application__form-text-input-info-text
         [info-text field-descriptor]]
        [:div.application__form-single-choice-button-outer-container
@@ -637,6 +673,8 @@
       (let [attachment-count (reaction (count @(subscribe [:state-query [:application :answers (keyword id) :values question-group-idx]])))]
         [:div.application__form-field
          [label field-descriptor]
+         (when (:belongs-to-hakukohteet field-descriptor)
+           [question-hakukohde-names field-descriptor])
          (when-not (clojure.string/blank? @text)
            [markdown-paragraph @text])
          (when (> @attachment-count 0)
@@ -688,6 +726,8 @@
                            (dispatch [:application/add-adjacent-fields field-descriptor question-group-idx]))]
         [:div.application__form-field
          [label field-descriptor]
+         (when (:belongs-to-hakukohteet field-descriptor)
+           [question-hakukohde-names field-descriptor])
          (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
            [:div.application__form-info-text [markdown-paragraph info]])
          [:div

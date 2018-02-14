@@ -132,7 +132,10 @@
                                        :sv "Fil inte laddat, försök igen"}
    :file-type-forbidden               {:fi "Tiedostoa ei ladattu, yritä uudelleen"
                                        :en "File failed to upload, try again"
-                                       :sv "Fil inte laddat, försök igen"}})
+                                       :sv "Fil inte laddat, försök igen"}
+   :question-for-hakukohde            {:fi "Kysymys koskee hakukohteita"
+                                       :en "This question is for application options"
+                                       :sv "Frågan är för ansökningsmålar"}})
 
 (def general-texts
   {:yes      {:en "Yes"
