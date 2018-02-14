@@ -48,8 +48,6 @@
             )
 
             it('check that components are disabled when hakuaika is over (and enabled when some hakuaika is on going)', function() {
-                console.log(testFrame().find('.application__hakukohde-row-button-container'))
-
                 expect(testFrame().find('.application__hakukohde-row-button-container').length).to.equal(2)
                 expect(testFrame().find('.application__hakukohde-row-button-container[disabled]').length).to.equal(1)
 
