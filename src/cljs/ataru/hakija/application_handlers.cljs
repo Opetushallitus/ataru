@@ -46,11 +46,11 @@
                  [:application/get-latest-form-by-haku
                   haku
                   answers
-                  (when (= :virkailija-secret secret-kwd) secret-val)]
+                  (if (= :virkailija-secret secret-kwd) :virkailija :hakija)]
                  [:application/get-latest-form-by-key
                   form-key
                   answers
-                  (when (= :virkailija-secret secret-kwd) secret-val)])}))
+                  (if (= :virkailija-secret secret-kwd) :virkailija :hakija)])}))
 
 (reg-event-fx
   :application/handle-get-application
@@ -80,22 +80,20 @@
 
 (reg-event-fx
   :application/get-latest-form-by-key
-  (fn [{:keys [db]} [_ form-key answers virkailija-secret]]
+  (fn [{:keys [db]} [_ form-key answers role]]
     {:db   db
      :http {:method  :get
             :url     (str "/hakemus/api/form/"
                           form-key
-                          (when virkailija-secret
-                            (str "?virkailija-secret=" virkailija-secret)))
+                          "?role=" (name role))
             :handler [:application/handle-form answers]}}))
 
-(defn- get-latest-form-by-hakukohde [{:keys [db]} [_ hakukohde-oid answers virkailija-secret]]
+(defn- get-latest-form-by-hakukohde [{:keys [db]} [_ hakukohde-oid answers role]]
   {:db   (assoc-in db [:application :preselected-hakukohde] hakukohde-oid)
    :http {:method  :get
           :url     (str "/hakemus/api/hakukohde/"
                         hakukohde-oid
-                        (when virkailija-secret
-                          (str "?virkailija-secret=" virkailija-secret)))
+                        "?role=" (name role))
           :handler [:application/handle-form answers]}})
 
 (reg-event-fx
@@ -104,13 +102,12 @@
 
 (reg-event-fx
   :application/get-latest-form-by-haku
-  (fn [{:keys [db]} [_ haku-oid answers virkailija-secret]]
+  (fn [{:keys [db]} [_ haku-oid answers role]]
     {:db db
      :http {:method  :get
             :url     (str "/hakemus/api/haku/"
                           haku-oid
-                          (when virkailija-secret
-                            (str "?virkailija-secret=" virkailija-secret)))
+                          "?role=" (name role))
             :handler [:application/handle-form answers]}}))
 
 (defn handle-submit [db _]

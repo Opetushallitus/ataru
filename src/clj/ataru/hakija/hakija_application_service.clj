@@ -122,8 +122,10 @@
                                           (hakukohde/populate-hakukohde-answer-options tarjonta-info)
                                           (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)
                                           (hakija-form-service/flag-uneditable-and-unviewable-fields
-                                            hakukohteet
-                                           (some? virkailija-secret)))
+                                           hakukohteet
+                                           (if (some? virkailija-secret)
+                                             [:virkailija]
+                                             [:hakija])))
         latest-application            (application-store/get-latest-version-of-application-for-edit application)
         application-hakukohde-reviews (some-> latest-application
                                               :key
@@ -244,29 +246,29 @@
                                         tarjonta-service
                                         ohjausparametrit-service
                                         person-client]
-  (let [[virkailija?
+  (let [[roles
          hakija-secret] (match [secret]
                           [{:virkailija s}]
-                          [true
+                          [[:virkailija]
                            (when (virkailija-edit/virkailija-secret-valid? s)
                              (application-store/get-hakija-secret-by-virkailija-secret s))]
                           [{:hakija s}]
-                          [false s]
+                          [[:hakija] s]
                           :else
-                          [false nil])
+                          [[:hakija] nil])
         application     (when (some? hakija-secret)
                           (application-store/get-latest-application-by-secret hakija-secret))
         form            (cond (some? (:haku application)) (hakija-form-service/fetch-form-by-haku-oid
                                                            tarjonta-service
                                                            ohjausparametrit-service
                                                            (:haku application)
-                                                           virkailija?)
+                                                           roles)
                               (some? (:form application)) (hakija-form-service/fetch-form-by-key
                                                            (->> application
                                                                 :form
                                                                 form-store/fetch-by-id
                                                                 :key)
-                                                           virkailija?)
+                                                           roles)
                               :else                       nil)
         person          (some-> application
                                 (application-service/get-person person-client)

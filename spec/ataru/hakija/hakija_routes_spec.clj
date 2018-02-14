@@ -69,7 +69,7 @@
 
 (defmacro with-haku-form-response
   [haku-oid resp & body]
-  `(let [~resp (-> (mock/request :get (str "/hakemus/api/haku/" ~haku-oid))
+  `(let [~resp (-> (mock/request :get (str "/hakemus/api/haku/" ~haku-oid "?role=hakija"))
                    (mock/content-type "application/json")
                    handler
                    parse-body)]
