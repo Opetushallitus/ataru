@@ -53,7 +53,7 @@
           :public-config
           (get :attachment-modify-grace-period-days 14))))
 
-(defn- get-hakukohteiden-hakuajat-for-oids [hakukohde-oids hakukohteet]
+(defn- find-existing-hakuajat-for-set-of-hakukohde-oids [hakukohde-oids hakukohteet]
        (let [belongs-to (set hakukohde-oids)
              filters [#(contains? belongs-to (:oid %))
                       #(some? (:hakuaika-dates %))]]
@@ -69,7 +69,7 @@
   (let [hakukohteet-with-hakuajat (filter #(some? (:hakuaika-dates %)) hakukohteet)
         all-hakuajat (concat [haun-hakuaika] (map :hakuaika-dates hakukohteet-with-hakuajat))
         belonging-hakuajat (cond-> (:belongs-to-hakukohteet field)
-                                   not-empty (get-hakukohteiden-hakuajat-for-oids hakukohteet-with-hakuajat))]
+                                   not-empty (find-existing-hakuajat-for-set-of-hakukohde-oids hakukohteet-with-hakuajat))]
     (cond
       (seq belonging-hakuajat) (if-let [first-valid-belonging-hakuaika (first (filter :on belonging-hakuajat))]
                                  first-valid-belonging-hakuaika
