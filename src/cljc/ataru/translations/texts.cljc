@@ -135,7 +135,10 @@
                                        :sv "Fil inte laddat, försök igen"}
    :question-for-hakukohde            {:fi "Kysymys koskee hakukohteita"
                                        :en "This question is for application options"
-                                       :sv "Frågan är för ansökningsmålar"}})
+                                       :sv "Frågan är för ansökningsmålar"}
+   :show-more                         {:fi "Näytä lisää.."
+                                       :en "Show more.."
+                                       :sv "Visa mer.."}})
 
 (def general-texts
   {:yes      {:en "Yes"
