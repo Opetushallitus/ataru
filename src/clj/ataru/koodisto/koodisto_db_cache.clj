@@ -115,11 +115,9 @@
          (map :codeElementValue))))
 
 (defn- get-institution [number]
-  (let [institution-uri (resolve-url :organisaatio-service.get-by-oid number)
-        institution     (organization-client/get-organization institution-uri)]
-    (when institution
-      {:value number
-       :label (:nimi institution)})))
+  (when-let [institution (organization-client/get-organization-by-oid-or-number number)]
+    {:value number
+     :label (:nimi institution)}))
 
 (defn get-vocational-institutions [version]
   (->> institution-type-codes
