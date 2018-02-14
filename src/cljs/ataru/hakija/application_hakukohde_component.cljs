@@ -182,7 +182,7 @@
 (defn- hakukohde-selection-search
   []
   (let [hakukohde-query @(subscribe [:application/hakukohde-query])]
-    [:div
+    [:div.application__hakukohde-selection
      [:div.application__hakukohde-selection-search-arrow-up]
      [:div.application__hakukohde-selection-search-container
       [:div.application__hakukohde-selection-search-close-button
@@ -210,6 +210,23 @@
    [:h2 @(subscribe [:application/hakukohteet-header])]
    [scroll-to-anchor field-descriptor]])
 
+(defn- select-new-hakukohde-row []
+  (when @(subscribe [:application/hakukohteet-editable?])
+    ;[:
+    [:div
+    [:div.application__hakukohde-row--search-toggle
+     {:class (when (not @(subscribe [:application/show-hakukohde-search])) "closed")}
+     [:div.application__hakukohde-row-icon-container
+      [:i.zmdi.zmdi-graduation-cap.zmdi-hc-3x]]
+     [:a.application__hakukohde-selection-open-search
+      {:on-click hakukohde-search-toggle-event-handler}
+      (get-translation :add-application-option)
+      (when-let [max-hakukohteet "6"]
+        [:span.application__hakukohde-selection-max-label
+         (get-translation :applications_at_most max-hakukohteet)])]]
+     (when @(subscribe [:application/show-hakukohde-search])
+       [hakukohde-selection-search])]))
+
 (defn hakukohteet
   [field-descriptor]
   [:div.application__wrapper-element.application__wrapper-element-border
@@ -217,13 +234,5 @@
    [:div.application__hakukohde-selected-list
     (for [hakukohde-oid @(subscribe [:application/selected-hakukohteet])]
       ^{:key (str "selected-hakukohde-row-" hakukohde-oid)}
-      [selected-hakukohde-row hakukohde-oid])
-    (when @(subscribe [:application/hakukohteet-editable?])
-      [:div.application__hakukohde-row.application__hakukohde-row--search-toggle
-       [:a.application__hakukohde-selection-open-search
-        {:on-click hakukohde-search-toggle-event-handler}
-        (get-translation :add-application-option)]
-       (when-let [max-hakukohteet @(subscribe [:application/max-hakukohteet])]
-         [:span.application__hakukohde-selection-max-label (str "(max. " max-hakukohteet ")")])
-       (when @(subscribe [:application/show-hakukohde-search])
-         [hakukohde-selection-search])])]])
+      [selected-hakukohde-row hakukohde-oid])]
+    (select-new-hakukohde-row)])

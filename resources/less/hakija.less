@@ -999,7 +999,6 @@ and (max-width: @desktop-content-width) {
 }
 
 .application__hakukohde-selection-max-label {
-  color: @gray-of-the-beast;
   margin-left: 8px;
 }
 
@@ -1103,8 +1102,28 @@ and (max-width: @desktop-content-width) {
     margin-left: 10px;
   }
 
-  &.application__hakukohde-row--search-toggle {
-    display: block;
+}
+.application__hakukohde-row--search-toggle {
+  /*color: @blue-text-color;*/
+  display: flex;
+  align-items: center;
+  position: relative;
+  color: @gray-of-the-beast;
+  padding: 20px 0px 20px 24px;
+  i {
+    opacity: 0.33;
+  }
+  margin-bottom: 10px;
+  border-width: 1px;
+  border-color: white;
+  border-style: dashed;
+  &.closed {
+    border-width: 1px;
+    border-style: dashed;
+    border-color: @gray-of-the-beast;
+    border-image-source: url(/hakemus/images/border.png);
+    border-image-slice: 2;
+    border-image-repeat: round;
   }
 }
 
@@ -1137,6 +1156,20 @@ and (max-width: @desktop-content-width) {
 .application__hakukohde-row:last-child {
   border-bottom: 0;
   padding-bottom: 0;
+}
+.application__hakukohde-selection {
+  margin-top: -25px;
+  animation: 0.8s fadeIn;
+  animation-fill-mode: forwards;
+}
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    visibility: visible;
+    opacity: 1;
+  }
 }
 
 .application__hakukohde-selection-search-close-button {
