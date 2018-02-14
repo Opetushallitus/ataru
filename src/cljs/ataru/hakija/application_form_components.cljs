@@ -149,7 +149,7 @@
                                                    (:valid answer))]
     [div-kwd
      [label field-descriptor]
-     (when (:belongs-to-hakukohteet field-descriptor)
+     (when (not-empty (:belongs-to-hakukohteet field-descriptor))
        [question-hakukohde-names field-descriptor])
      [:div.application__form-text-input-info-text
       [info-text field-descriptor]]
@@ -200,7 +200,7 @@
                           (dispatch [:application/set-repeatable-application-field field-descriptor value data-idx question-group-idx])))]
         (into [div-kwd
                [label field-descriptor]
-               (when (:belongs-to-hakukohteet field-descriptor)
+               (when (not-empty (:belongs-to-hakukohteet field-descriptor))
                  [question-hakukohde-names field-descriptor])
                [:div.application__form-text-input-info-text
                 [info-text field-descriptor]]]
@@ -277,7 +277,7 @@
                         (partial textual-field-change field-descriptor))]
         [div-kwd
          [label field-descriptor]
-         (when (:belongs-to-hakukohteet field-descriptor)
+         (when (not-empty (:belongs-to-hakukohteet field-descriptor))
            [question-hakukohde-names field-descriptor])
          [:div.application__form-text-area-info-text
           [info-text field-descriptor]]
@@ -415,7 +415,7 @@
                                   idx]))]
     [div-kwd
      [label field-descriptor]
-     (when (:belongs-to-hakukohteet field-descriptor)
+     (when (not-empty (:belongs-to-hakukohteet field-descriptor))
        [question-hakukohde-names field-descriptor])
      [:div.application__form-text-input-info-text
       [info-text field-descriptor]]
@@ -494,7 +494,7 @@
     (fn [field-descriptor & {:keys [div-kwd disabled idx] :or {div-kwd :div.application__form-field disabled false}}]
       [div-kwd
        [label field-descriptor]
-       (when (:belongs-to-hakukohteet field-descriptor)
+       (when (not-empty (:belongs-to-hakukohteet field-descriptor))
          [question-hakukohde-names field-descriptor])
        [:div.application__form-text-input-info-text
         [info-text field-descriptor]]
@@ -559,7 +559,7 @@
     (fn [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
       [div-kwd
        [label field-descriptor]
-       (when (:belongs-to-hakukohteet field-descriptor)
+       (when (not-empty (:belongs-to-hakukohteet field-descriptor))
          [question-hakukohde-names field-descriptor])
        [:div.application__form-text-input-info-text
         [info-text field-descriptor]]
@@ -673,7 +673,7 @@
       (let [attachment-count (reaction (count @(subscribe [:state-query [:application :answers (keyword id) :values question-group-idx]])))]
         [:div.application__form-field
          [label field-descriptor]
-         (when (:belongs-to-hakukohteet field-descriptor)
+         (when (not-empty (:belongs-to-hakukohteet field-descriptor))
            [question-hakukohde-names field-descriptor])
          (when-not (clojure.string/blank? @text)
            [markdown-paragraph @text])
@@ -726,7 +726,7 @@
                            (dispatch [:application/add-adjacent-fields field-descriptor question-group-idx]))]
         [:div.application__form-field
          [label field-descriptor]
-         (when (:belongs-to-hakukohteet field-descriptor)
+         (when (not-empty (:belongs-to-hakukohteet field-descriptor))
            [question-hakukohde-names field-descriptor])
          (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
            [:div.application__form-info-text [markdown-paragraph info]])
