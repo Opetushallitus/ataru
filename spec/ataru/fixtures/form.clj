@@ -143,6 +143,7 @@
                                  {:label {:fi "Eka liite"
                                           :sv ""}
                                   :fieldClass "formField"
+                                  :belongs-to-hakukohteet ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
                                   :id "164954b5-7b23-4774-bd44-dee14071316b"
                                   :params {}
                                   :options []

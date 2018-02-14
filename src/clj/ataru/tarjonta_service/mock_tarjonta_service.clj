@@ -106,7 +106,17 @@
                                   :ataruLomakeAvain "41101b4f-1762-49af-9db0-e3603adae3ae"
                                   :hakukohdeOids    ["1.2.246.562.20.49028196523"
                                                      "1.2.246.562.20.49028196524"
-                                                     "1.2.246.562.20.49028196525"]})})
+                                                     "1.2.246.562.20.49028196525"
+                                                     "1.2.246.562.20.49028196526"]})
+  :1.2.246.562.29.65950024187 (merge
+                                base-haku
+                                {:oid              "1.2.246.562.29.65950024187"
+                                 :nimi  {:kieli_fi "hakija-hakukohteen-hakuaika-haku"}
+                                 :usePriority      true
+                                 :ataruLomakeAvain "hakija-hakukohteen-hakuaika-test-form"
+                                 :hakukohdeOids    ["1.2.246.562.20.49028100001"
+                                                    "1.2.246.562.20.49028100002"
+                                                    "1.2.246.562.20.49028100003"]})})
 
 (def hakukohde
   {:1.2.246.562.20.49028196522 base-hakukohde
@@ -139,7 +149,42 @@
                                   :koulutukset      [{:oid "1.2.246.562.17.74335799464"}]
                                   :hakukohteenNimet
                                                     {:kieli_fi "Testihakukohde 3"
-                                                     :kieli_sv "sv Testihakukohde 3"}})})
+                                                     :kieli_sv "sv Testihakukohde 3"}})
+   :1.2.246.562.20.49028100001 (merge
+                                 base-hakukohde
+                                 {:ataruLomakeAvain "hakija-hakukohteen-hakuaika-test-form"
+                                  :oid              "1.2.246.562.20.49028100001"
+                                  :hakuOid          "1.2.246.562.29.65950024187"
+                                  :hakuaikaAlkuPvm  (- (System/currentTimeMillis)
+                                                       86400000)
+                                  :hakuaikaLoppuPvm (- (System/currentTimeMillis)
+                                                       16400000)
+                                  :koulutukset      [{:oid "1.2.246.562.17.74335799465"}]
+                                  :hakukohteenNimet
+                                                    {:kieli_fi "Aikaloppu 1"
+                                                     :kieli_sv "sv Aikaloppu 1"}})
+   :1.2.246.562.20.49028100002 (merge
+                                 base-hakukohde
+                                 {:ataruLomakeAvain "hakija-hakukohteen-hakuaika-test-form"
+                                  :oid              "1.2.246.562.20.49028100002"
+                                  :hakuOid          "1.2.246.562.29.65950024187"
+                                  :hakuaikaAlkuPvm  (- (System/currentTimeMillis)
+                                                       86400000)
+                                  :hakuaikaLoppuPvm (+ (System/currentTimeMillis)
+                                                       86400000)
+                                  :koulutukset      [{:oid "1.2.246.562.17.74335799465"}]
+                                  :hakukohteenNimet
+                                                    {:kieli_fi "Aikaa jäljellä 2"
+                                                     :kieli_sv "sv Aikaa jäljellä 2"}})
+   :1.2.246.562.20.49028100003 (merge
+                                 base-hakukohde
+                                 {:ataruLomakeAvain "hakija-hakukohteen-hakuaika-test-form"
+                                  :oid              "1.2.246.562.20.49028100003"
+                                  :hakuOid          "1.2.246.562.29.65950024187"
+                                  :koulutukset      [{:oid "1.2.246.562.17.74335799465"}]
+                                  :hakukohteenNimet
+                                                    {:kieli_fi "Aikaa loputtomasti 3"
+                                                     :kieli_sv "sv Aikaa loputtomasti 3"}})})
 
 (def koulutus
   {:1.2.246.562.17.74335799461 {:oid             "1.2.246.562.17.74335799461"
@@ -161,7 +206,12 @@
                                 :koulutuskoodi   {:nimi "Koulutuskoodi C"}
                                 :tutkintonimike  {:nimi "Tutkintonimike C"}
                                 :koulutusohjelma {:nimi "Koulutusohjelma C"}
-                                :tarkenne        "Tarkenne C"}})
+                                :tarkenne        "Tarkenne C"}
+   :1.2.246.562.17.74335799465 {:oid             "1.2.246.562.17.74335799465"
+                                :koulutuskoodi   {:nimi "Koulutuskoodi D"}
+                                :tutkintonimike  {:nimi "Tutkintonimike D"}
+                                :koulutusohjelma {:nimi "Koulutusohjelma D"}
+                                :tarkenne        "Tarkenne D"}})
 
 (defn- parse-multi-lang-text
   [text]
@@ -196,12 +246,17 @@
       {:fi "Ajoneuvonosturinkuljettajan ammattitutkinto"}
       {:fi "Testihakukohde"}))
 
-  (hakukohde-search [_ _ _]
-    (->> [(:1.2.246.562.20.49028196523 hakukohde)
-          (:1.2.246.562.20.49028196524 hakukohde)
-          (:1.2.246.562.20.49028196525 hakukohde)]
-         (map #(assoc % :nimi (:hakukohteenNimet %)))
-         (map parse-hakukohde)))
+  (hakukohde-search [_ haku-oid _]
+    (let [to-hakukohteet (fn [hakukohde-oids] (->> (map #(get hakukohde %) hakukohde-oids)
+                                                   (map #(assoc % :nimi (:hakukohteenNimet %)))
+                                                   (map parse-hakukohde)))]
+         (case haku-oid
+               "1.2.246.562.29.65950024187" (to-hakukohteet [:1.2.246.562.20.49028100001
+                                                             :1.2.246.562.20.49028100002
+                                                             :1.2.246.562.20.49028100003])
+               (to-hakukohteet [:1.2.246.562.20.49028196523
+                                :1.2.246.562.20.49028196524
+                                :1.2.246.562.20.49028196525]))))
 
   (get-haku [this haku-oid]
     ((keyword haku-oid) haku))
@@ -219,4 +274,8 @@
     {"belongs-to-hakukohteet-test-form"
      {(:oid base-haku)
       {:haku-oid (:oid base-haku)
-       :haku-name {:fi (:kieli_fi (:nimi base-haku))}}}}))
+       :haku-name {:fi (:kieli_fi (:nimi base-haku))}}}
+     "hakija-hakukohteen-hakuaika-test-form"
+     {"1.2.246.562.29.65950024187"
+      {:haku-oid "1.2.246.562.29.65950024187"
+       :haku-name {:fi "hakija-hakukohteen-hakuaika-haku"}}}}))

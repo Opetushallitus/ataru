@@ -35,6 +35,9 @@ switch (app) {
   case 'hakija-hakukohde':
     url = 'http://localhost:8351/hakemus/hakija-hakukohde-test.html'
     break;
+  case 'hakija-hakukohteen-hakuaika':
+      url = 'http://localhost:8351/hakemus/hakija-hakukohteen-hakuaika-test.html'
+      break;
   case 'hakija-ssn':
     url = 'http://localhost:8351/hakemus/hakija-ssn-test.html'
     break;

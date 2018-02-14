@@ -956,3 +956,11 @@ SELECT content, form_id
 FROM applications
 WHERE key = :application_key
 ORDER BY id ASC;
+
+--name: yesql-get-latest-application-secret
+SELECT secret FROM latest_applications ORDER BY created_time DESC LIMIT 1;
+
+--name: yesql-set-application-hakukohteet-by-secret!
+UPDATE applications
+SET hakukohde = ARRAY[:hakukohde]::character varying(127)[]
+WHERE secret = :secret;

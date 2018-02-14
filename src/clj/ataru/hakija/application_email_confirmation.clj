@@ -34,7 +34,8 @@
                          {:hakukohteet (hakukohde-names tarjonta-service
                                                         lang
                                                         (:hakukohde application))
-                          :application-url application-url})]
+                          :application-url application-url
+                          :application-oid (:oid application)})]
     {:from       "no-reply@opintopolku.fi"
      :recipients [recipient]
      :subject    subject

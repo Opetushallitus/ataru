@@ -7,6 +7,12 @@
    :not-within-application-period     {:fi "hakuaika ei ole käynnissä"
                                        :sv "inte inom ansökningstiden"
                                        :en "application period currently not ongoing"}
+   :not-selectable-application-period-ended {:fi "Hakuaika ei ole käynnissä"
+                                             :sv "Inte inom ansökningstiden"
+                                             :en "Application period currently not ongoing"}
+   :not-editable-application-period-ended {:fi "Tämä hakutoive ei ole muokattavissa koska sen hakuaika on päättynyt."
+                                           :sv "Tämä hakutoive ei ole muokattavissa koska sen hakuaika on päättynyt."
+                                           :en "Tämä hakutoive ei ole muokattavissa koska sen hakuaika on päättynyt."}
    :application-processed-cant-modify {:fi "Tämä hakemus on käsitelty eikä ole enää muokattavissa"
                                        :sv "Denna ansökan har behandlats och kan inte längre bearbetas"
                                        :en "This application has been processed and can no longer be modified"}
@@ -127,6 +133,9 @@
    :add-application-option            {:fi "Lisää hakukohde"
                                        :sv "Lägg till ansökningsmål"
                                        :en "Add application option"}
+   :applications_at_most              {:fi "(enintään %s)"
+                                       :sv "(som mest %s)"
+                                       :en "(at most %s)"}
    :file-upload-failed                {:fi "Tiedostoa ei ladattu, yritä uudelleen"
                                        :en "File failed to upload, try again"
                                        :sv "Fil inte laddat, försök igen"}

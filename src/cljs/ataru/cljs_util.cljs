@@ -10,7 +10,9 @@
             [camel-snake-kebab.core :refer [->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [goog.string.format]
-            [ataru.translations.translation-util :as translation-util])
+            [ataru.translations.translation-util :as translation-util]
+            [goog.string :as gstring]
+            [goog.string.format])
   (:import [goog.net Cookies]))
 
 (defn console-log [& args]
@@ -207,8 +209,13 @@
   (comp (partial resize-vector target-length)
         (fnil identity [])))
 
-(defn get-translation [key]
-  (translation-util/get-translation key @(subscribe [:application/form-language])))
+(defn get-translation [key & params]
+  (if (some? params)
+    (apply gstring/format
+      (translation-util/get-translation key @(subscribe [:application/form-language]))
+      params)
+    (translation-util/get-translation key @(subscribe [:application/form-language]))))
+
 
 (defn modify-event? [event]
   (some #{(:event-type event)} ["updated-by-applicant" "updated-by-virkailija"]))
@@ -216,13 +223,13 @@
 (defn application-modify-events
   [db]
   (->> db
-       :application
-       :events
-       (filter modify-event?)))
+    :application
+    :events
+    (filter modify-event?)))
 
 (defn event-index
   [db event-id]
   (->> db
-       application-modify-events
-       (keep-indexed #(when (= (:id %2) event-id) %1))
-       first))
+    application-modify-events
+    (keep-indexed #(when (= (:id %2) event-id) %1))
+    first))

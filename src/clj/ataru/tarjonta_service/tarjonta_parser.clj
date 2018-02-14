@@ -46,7 +46,8 @@
 (defn parse-hakukohde
   [tarjonta-service hakukohde]
   (when (:oid hakukohde)
-    {:oid           (:oid hakukohde)
+    (let [hakuaika (hakuaika/parse-hakuaika-from-hakukohde hakukohde)
+          hk {:oid           (:oid hakukohde)
      :name          (->> (clojure.set/rename-keys (:hakukohteenNimet hakukohde)
                                                   lang-key-renames)
                          (remove (comp clojure.string/blank? second))
@@ -55,7 +56,10 @@
      :form-key      (:ataruLomakeAvain hakukohde)
      :koulutukset   (->> (map :oid (:koulutukset hakukohde))
                          (map #(.get-koulutus tarjonta-service %))
-                         (map parse-koulutus))}))
+                         (map parse-koulutus))}]
+         (if (some? hakuaika)
+           (assoc hk :hakuaika-dates hakuaika)
+           hk))))
 
 (defn parse-tarjonta-info-by-haku
   ([tarjonta-service ohjausparametrit-service haku-oid included-hakukohde-oids]
@@ -76,8 +80,7 @@
            :prioritize-hakukohteet (:usePriority haku)
            :max-hakukohteet  (when (and max-hakukohteet (pos? max-hakukohteet))
                                max-hakukohteet)
-           :hakuaika-dates   (hakuaika/get-hakuaika-info (first hakukohteet)
-                                                         haku ; TODO take into account each hakukohde time?
+           :hakuaika-dates   (hakuaika/get-hakuaika-info haku
                                                          ohjausparametrit)
            :can-submit-multiple-applications (:canSubmitMultipleApplications haku)}}))))
   ([tarjonta-service ohjausparametrit-service haku-oid]
