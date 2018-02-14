@@ -1,6 +1,7 @@
 (ns ataru.koodisto.koodisto-db-cache
   (:require [ataru.config.url-helper :refer [resolve-url]]
             [ataru.db.db :as db]
+            [ataru.koodisto.koodisto-codes :refer [institution-type-codes]]
             [ataru.virkailija.user.organization-client :as organization-client]
             [cheshire.core :as cheshire]
             [clojure.string :as str]
@@ -96,16 +97,6 @@
          (group-by :codeElementValue)
          (map (fn [[key values]]
                 (-> values last parse-vocational-code-element))))))
-
-(def institution-type-codes ["21"   ; AMMATILLINEN_OPPILAITOS
-                             "22"   ; AMMATILLINEN_ERITYISOPPILAITOS
-                             "23"   ; AMMATILLINEN_ERIKOISOPPILAITOS
-                             "24"   ; AMMATILLINEN_AIKUISKOULUTUSKESKUS
-                             "28"   ; PALO_POLIISI_VARTIOINTI_OPPILAITOS
-                             "29"   ; SOTILASALAN_OPPILAITOS
-                             "61"   ; LIIKUNNAN_KOULUTUSKEKUS
-                             "62"   ; MUSIIKKIOPPILAITOS
-                             "63"]) ; KANSANOPISTO
 
 (defn- get-vocational-institutions-by-type [type version]
   (let [koodisto-uri (str koodisto-base-url "codeelement/oppilaitostyyppi_" type "/" version)]
