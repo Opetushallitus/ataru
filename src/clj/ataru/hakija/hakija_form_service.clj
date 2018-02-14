@@ -68,8 +68,8 @@
 (defn- select-hakuaika-for-field [field hakukohteet haun-hakuaika]
   (let [hakukohteet-with-hakuajat (filter #(some? (:hakuaika-dates %)) hakukohteet)
         all-hakuajat (concat [haun-hakuaika] (map :hakuaika-dates hakukohteet-with-hakuajat))
-        belongs-to-hakukohteet (if-let [b (seq (:belongs-to-hakukohteet field))] b)
-        belonging-hakuajat (some-> belongs-to-hakukohteet (get-hakukohteiden-hakuajat-for-oids hakukohteet-with-hakuajat))]
+        belonging-hakuajat (cond-> (:belongs-to-hakukohteet field)
+                                   not-empty (get-hakukohteiden-hakuajat-for-oids hakukohteet-with-hakuajat))]
     (cond
       (seq belonging-hakuajat) (if-let [first-valid-belonging-hakuaika (first (filter :on belonging-hakuajat))]
                                  first-valid-belonging-hakuaika
