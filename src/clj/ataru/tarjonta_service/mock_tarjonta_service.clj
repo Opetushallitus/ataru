@@ -56,7 +56,7 @@
    :koulutuslaji                            "A",
    :hakukelpoisuusvaatimusUris              [],
    :opintoOikeusUris                        [],
-   :hakuaikaId                              10291885,
+   :hakuaikaId                              "10291885",
    :hakukohteenLiitteet                     [],
    :modified                                1480330275077,
    :alinValintaPistemaara                   0,
@@ -97,7 +97,8 @@
   {:1.2.246.562.29.65950024185 base-haku
    :haku.oid                   (merge
                                  base-haku
-                                 {:hakukohdeOids ["hakukohde_oid"]
+                                 {:oid "haku.oid"
+                                  :hakukohdeOids ["hakukohde.oid"]
                                   :usePriority true})
    :1.2.246.562.29.65950024186 (merge
                                  base-haku
@@ -120,7 +121,9 @@
 
 (def hakukohde
   {:1.2.246.562.20.49028196522 base-hakukohde
-   :hakukohde.oid              base-hakukohde
+   :hakukohde.oid              (merge base-hakukohde
+                                      {:oid "hakukohde.oid"
+                                       :hakuOid "haku.oid"})
    :hakukohde_oid              base-hakukohde
    :1.2.246.562.20.49028196523 (merge
                                  base-hakukohde
@@ -155,6 +158,7 @@
                                  {:ataruLomakeAvain "hakija-hakukohteen-hakuaika-test-form"
                                   :oid              "1.2.246.562.20.49028100001"
                                   :hakuOid          "1.2.246.562.29.65950024187"
+                                  :kaytetaanHakukohdekohtaistaHakuaikaa true
                                   :hakuaikaAlkuPvm  (- (System/currentTimeMillis)
                                                        86400000)
                                   :hakuaikaLoppuPvm (- (System/currentTimeMillis)
@@ -168,6 +172,7 @@
                                  {:ataruLomakeAvain "hakija-hakukohteen-hakuaika-test-form"
                                   :oid              "1.2.246.562.20.49028100002"
                                   :hakuOid          "1.2.246.562.29.65950024187"
+                                  :kaytetaanHakukohdekohtaistaHakuaikaa true
                                   :hakuaikaAlkuPvm  (- (System/currentTimeMillis)
                                                        86400000)
                                   :hakuaikaLoppuPvm (+ (System/currentTimeMillis)

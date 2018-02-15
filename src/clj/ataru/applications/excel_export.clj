@@ -410,9 +410,9 @@
       (update application :answers conj
         {:key "hakukohteet" :fieldType "hakukohteet" :value (:hakukohde application) :label "Hakukohteet"}))))
 
-(defn- get-hakukohde-name [get-hakukohde lang-s oid]
+(defn- get-hakukohde-name [get-hakukohde lang-s haku-oid hakukohde-oid]
   (let [lang (keyword lang-s)]
-    (when-let [hakukohde (get-hakukohde oid)]
+    (when-let [hakukohde (get-hakukohde haku-oid hakukohde-oid)]
       (str (get-in hakukohde [:name lang]) " - "
            (get-in hakukohde [:tarjoaja-name lang])))))
 
@@ -420,7 +420,7 @@
   (update hakukohde-answer :value
           (partial map-indexed
                    (fn [index oid]
-                     (let [name           (get-hakukohde-name get-hakukohde lang oid)
+                     (let [name           (get-hakukohde-name get-hakukohde lang haku-oid oid)
                            priority-index (when (:prioritize-hakukohteet (:tarjonta (get-haku haku-oid)))
                                             (str "(" (inc index) ") "))]
                        (if name
@@ -446,6 +446,7 @@
                                      (get-hakukohde-name
                                        get-hakukohde
                                        (:lang application)
+                                       (:haku application)
                                        hakukohde)))
                                  all-reviews)]
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
@@ -458,15 +459,16 @@
         get-form-by-id                  (memoize form-store/fetch-by-id)
         get-latest-form-by-key          (memoize form-store/fetch-by-key)
         get-koodisto-options            (memoize koodisto/get-koodisto-options)
-        get-hakukohde                   (memoize (fn [oid]
-                                                   (tarjonta-parser/parse-hakukohde
-                                                    tarjonta-service
-                                                    (tarjonta/get-hakukohde tarjonta-service oid))))
         get-tarjonta-info               (memoize (fn [haku-oid]
                                                    (tarjonta-parser/parse-tarjonta-info-by-haku
                                                     tarjonta-service
                                                     ohjausparametrit-service
-                                                    haku-oid)))]
+                                                    haku-oid)))
+        get-hakukohde                   (memoize (fn [haku-oid hakukohde-oid]
+                                                   (->> (get-tarjonta-info haku-oid)
+                                                        :tarjonta
+                                                        :hakukohteet
+                                                        (some #(when (= hakukohde-oid (:oid %)) %)))))]
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
          (map (partial add-hakukohde-names get-tarjonta-info get-hakukohde))

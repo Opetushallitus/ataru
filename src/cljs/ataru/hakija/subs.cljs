@@ -2,8 +2,7 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :as re-frame]
             [ataru.util :as util]
-            [ataru.hakija.application :refer [answers->valid-status
-                                              applying-possible?]]))
+            [ataru.hakija.application :refer [answers->valid-status]]))
 
 (re-frame/reg-sub
   :state-query
@@ -20,7 +19,9 @@
 (re-frame/reg-sub
  :application/can-apply?
  (fn [db]
-   (applying-possible? (:form db) (:application db))))
+   (if-let [hakukohteet (get-in db [:form :tarjonta :hakukohteet])]
+     (some #(get-in % [:hakuaika :on]) hakukohteet)
+     true)))
 
 (re-frame/reg-sub
   :application/hakukohde-count
@@ -129,11 +130,10 @@
 (re-frame/reg-sub
   :application/hakukohde-hakuaika-on?
   (fn [db [_ hakukohde-oid]]
-      (if-let [hakukohde (first (filter #(= (do
-                                       (:oid %)) hakukohde-oid) (get-in db [:form :tarjonta :hakukohteet])))]
-              (if (nil? (hakukohde :hakuaika-dates))
-                true
-                (get-in hakukohde [:hakuaika-dates :on])))))
+    (->> (get-in db [:form :tarjonta :hakukohteet])
+         (some #(when (= hakukohde-oid (:oid %)) %))
+         :hakuaika
+         :on)))
 
 (re-frame/reg-sub
   :application/hakukohteet-hakuaika-on?

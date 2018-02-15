@@ -119,22 +119,8 @@
        first
        :value))
 
-(defn- hakukohde-hakuaika-ongoing
-  [_]
-  {:on                                  true
-   :start                               (- (System/currentTimeMillis) (* 1 24 3600 1000))
-   :end                                 (+ (System/currentTimeMillis) (* 1 24 3600 1000))
-   })
-
-(defn- hakukohde-hakuaika-ended
-  [_]
-  {:on                                  false
-   :start                               (- (System/currentTimeMillis) (* 1 24 3600 1000))
-   :end                                 (- (System/currentTimeMillis) (* 1 24 3600 1000))
-   })
-
 (defn- hakuaika-ongoing
-  [_ _]
+  [_ _ _]
   {:on                                  true
    :start                               (- (System/currentTimeMillis) (* 2 24 3600 1000))
    :end                                 (+ (System/currentTimeMillis) (* 2 24 3600 1000))
@@ -143,7 +129,7 @@
    :attachment-modify-grace-period-days (-> config :public-config :attachment-modify-grace-period-days)})
 
 (defn- hakuaika-ended
-  [_ _]
+  [_ _ _]
   {:on                                  false
    :start                               (- (System/currentTimeMillis) (* 2 24 3600 1000))
    :end                                 (- (System/currentTimeMillis) (* 2 24 3600 1000))
@@ -153,7 +139,7 @@
    })
 
 (defn- hakuaika-ended-within-grace-period
-  [_ _]
+  [_ _ _]
   (let [edit-grace-period (-> config :public-config :attachment-modify-grace-period-days)
         start             (* 2 edit-grace-period)
         end               (quot edit-grace-period 2)]
@@ -165,7 +151,7 @@
      :attachment-modify-grace-period-days edit-grace-period}))
 
 (defn- hakuaika-ended-within-grace-period-hakukierros-ongoing
-  [_ _]
+  [_ _ _]
   (let [edit-grace-period (-> config :public-config :attachment-modify-grace-period-days)
         start             (* 2 edit-grace-period)
         end               (quot edit-grace-period 2)]
@@ -177,7 +163,7 @@
      :attachment-modify-grace-period-days edit-grace-period}))
 
 (defn- hakuaika-ended-grace-period-passed-hakukierros-ongoing
-  [_ _]
+  [_ _ _]
   (let [edit-grace-period (-> config :public-config :attachment-modify-grace-period-days)
         start             (* 2 edit-grace-period)
         end               (+ edit-grace-period 1)]
@@ -198,27 +184,9 @@
   (before
    (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
 
-  (it "should get ongoing hakuaika from hakukohde (when haku hakuaika is over)"
-      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended
-                    hakuaika/parse-hakuaika-from-hakukohde hakukohde-hakuaika-ongoing]
-        (with-haku-form-response "1.2.246.562.29.65950024185" resp
-                                 (should= 200 (:status resp))
-                                 (let [fields (-> resp :body :content util/flatten-form-fields)]
-                                   (should= 7 (count (filter cannot-edit? fields)))
-                                   (should= 1 (count (filter cannot-view? fields)))))))
-
-  (it "should get ended hakuaika from hakukohde (when haku hakuaika is over)"
-      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended
-                    hakuaika/parse-hakuaika-from-hakukohde hakukohde-hakuaika-ended]
-        (with-haku-form-response "1.2.246.562.29.65950024185" resp
-                                 (should= 200 (:status resp))
-                                 (let [fields (-> resp :body :content util/flatten-form-fields)]
-                                   (should= 15 (count (filter cannot-edit? fields)))
-                                   (should= 1 (count (filter cannot-view? fields)))))))
-
   (it "should get form"
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
-      (with-haku-form-response "1.2.246.562.29.65950024185" resp
+      (with-haku-form-response "1.2.246.562.29.65950024186" resp
         (should= 200 (:status resp))
         (let [fields (-> resp :body :content util/flatten-form-fields)]
           (should= 7 (count (filter cannot-edit? fields)))
@@ -226,7 +194,7 @@
 
   (it "should get application with hakuaika ended"
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-grace-period]
-      (with-haku-form-response "1.2.246.562.29.65950024185" resp
+      (with-haku-form-response "1.2.246.562.29.65950024186" resp
         (should= 200 (:status resp))
         (let [fields (-> resp :body :content util/flatten-form-fields)]
           (should= 1  (count (remove cannot-edit? fields)))
@@ -235,7 +203,7 @@
 
   (it "should get application with hakuaika ended but hakukierros ongoing"
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing]
-      (with-haku-form-response "1.2.246.562.29.65950024185" resp
+      (with-haku-form-response "1.2.246.562.29.65950024186" resp
         (should= 200 (:status resp))
         (let [fields (-> resp :body :content util/flatten-form-fields)]
           (should= 6 (count (remove cannot-edit? fields)))
@@ -255,8 +223,7 @@
       (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
 
     (it "should validate application for hakukohde"
-        (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing
-                      hakuaika/parse-hakuaika-from-hakukohde hakukohde-hakuaika-ongoing]
+        (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
           (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
                          (should= 200 (:status resp))
                          (should (have-application-for-hakukohde-in-db (get-in resp [:body :id]))))))
@@ -290,7 +257,8 @@
 
   (describe "GET application"
     (around [spec]
-      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])]
+      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])
+                    hakuaika/get-hakuaika-info                            hakuaika-ongoing]
         (spec)))
 
     (before-all

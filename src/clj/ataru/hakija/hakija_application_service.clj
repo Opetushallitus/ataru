@@ -37,24 +37,9 @@
      :id application-id
      :application application}))
 
-(defn- get-hakukohteet [application]
-  (or (->> application
-           :answers
-           (filter #(= (:key %) "hakukohteet"))
-           first
-           :value)
-      (:hakukohde application)))
-
-(defn- get-hakuaikas
-  [haku-oid tarjonta-service ohjausparametrit-service]
-  (let [haku                  (when haku-oid (get-haku tarjonta-service haku-oid))
-        ohjausparametrit      (when haku-oid (.get-parametri ohjausparametrit-service haku-oid))]
-    (when (some? haku)
-      (hakuaika/get-hakuaika-info haku ohjausparametrit))))
-
 (defn in-processing-state-in-jatkuva-haku?
-  [application-hakukohde-reviews hakuaika]
-  (and (:jatkuva-haku? hakuaika)
+  [application-hakukohde-reviews applied-hakukohteet]
+  (and (some #(get-in % [:hakuaika :jatkuva-haku?]) applied-hakukohteet)
        (util/application-in-processing? application-hakukohde-reviews)))
 
 (defn remove-unviewable-answers
@@ -127,9 +112,8 @@
                                          (:haku application)))
         haku-oid                      (get-in tarjonta-info [:tarjonta :haku-oid])
         hakukohteet                   (get-in tarjonta-info [:tarjonta :hakukohteet])
-        hakuaika                      (get-hakuaikas haku-oid
-                                                     tarjonta-service
-                                                     ohjausparametrit-service)
+        applied-hakukohteet           (filter #(contains? (set (:hakukohde application)) (:oid %))
+                                              hakukohteet)
         virkailija-secret             (valid-virkailija-secret application)
         form                          (-> application
                                           (:form)
@@ -139,7 +123,6 @@
                                           (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)
                                           (hakija-form-service/flag-uneditable-and-unviewable-fields
                                             hakukohteet
-                                            hakuaika
                                            (some? virkailija-secret)))
         latest-application            (application-store/get-latest-version-of-application-for-edit application)
         application-hakukohde-reviews (some-> latest-application
@@ -170,14 +153,13 @@
       {:passed? false :failures ["Hakukohde must be specified"]}
 
       (and (not is-modify?)
-           (and (some? hakuaika)
-                (not (:on hakuaika))))
+           (some #(not (:on (:hakuaika %))) applied-hakukohteet))
       {:passed? false :failures ["Application period is not open."]}
 
       (and is-modify?
            (not virkailija-secret)
            (in-processing-state-in-jatkuva-haku? application-hakukohde-reviews
-                                                 hakuaika))
+                                                 applied-hakukohteet))
       {:passed false :failures ["Application is in review state and cannot be modified."]}
 
       (not (:passed? validation-result))
@@ -284,8 +266,6 @@
                                                                 :form
                                                                 form-store/fetch-by-id
                                                                 :key)
-                                                           nil
-                                                           nil
                                                            virkailija?)
                               :else                       nil)
         person          (some-> application
