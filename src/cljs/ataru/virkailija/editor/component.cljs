@@ -335,6 +335,38 @@
 (defn- get-val [event]
   (-> event .-target .-value))
 
+(defn- decimal-places-selector [path]
+  (let [decimal-places (subscribe [:editor/get-component-value path :params :decimals])]
+    (fn [path]
+      [:div.editor-form__additional-params-container
+       [:header.editor-form__component-item-header "Desimaaleja (tyhjä kokonaisluvulle):"]
+       [:input.editor-form__text-field.editor-form__text-field-narrow
+        {:value     @decimal-places
+         :type      "number"
+         :max       10
+         :on-change #(dispatch [:editor/set-component-value (get-val %) path :params :decimals])}]])))
+
+(defn- text-component-type-selector [path radio-group-id]
+  (let [id       (util/new-uuid)
+        checked? (subscribe [:editor/get-component-value path :params :numeric?])]
+    (fn [path radio-group-id]
+      [:div
+       [:div.editor-form__checkbox-container
+        [:input.editor-form__checkbox
+         {:type      "checkbox"
+          :id        id
+          :checked   @checked?
+          :on-change (fn [event]
+                       (let [checked-now? (-> event .-target .-checked)]
+                         (dispatch [:editor/set-component-value checked-now? path :params :numeric?])
+                         (when-not checked-now?
+                           (dispatch [:editor/set-component-value nil path :params :decimals]))))}]
+        [:label.editor-form__checkbox-label
+         {:for id}
+         "Kenttään voi täyttää vain numeerisia arvoja."]]
+       (when @checked?
+         [decimal-places-selector path])])))
+
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages         (subscribe [:editor/languages])
         size              (subscribe [:editor/get-component-value path :params :size])
@@ -385,7 +417,7 @@
                                :else nil)}
                      btn-name]]))]
          (when text-area?
-           [:div.editor-form__max-length-container
+           [:div.editor-form__additional-params-container
             [:header.editor-form__component-item-header "Max. merkkimäärä"]
             [:input.editor-form__text-field.editor-form__text-field-auto-width
              {:value @max-length
@@ -393,7 +425,9 @@
         [:div.editor-form__checkbox-wrapper
          [required-checkbox path initial-content]
          (when-not text-area?
-           [repeater-checkbox path initial-content])]
+           [repeater-checkbox path initial-content])
+         (when-not text-area?
+           [text-component-type-selector path radio-group-id])]
         [belongs-to-hakukohteet path initial-content]]
        [info-addon path]])))
 
