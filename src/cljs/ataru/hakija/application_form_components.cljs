@@ -118,8 +118,7 @@
         [:div.application__question_hakukohde_names_container
          [:a.application__question_hakukohde_names_info
           {:on-click #(swap! show-hakukohde-list? not)}
-          [:i.zmdi.zmdi-info]
-          (get-translation :question-for-hakukohde)]
+          (str (get-translation :question-for-hakukohde) " (" (count selected-hakukohde-names) ")")]
          (when @show-hakukohde-list?
            [:ul.application__question_hakukohde_names
             (for [name selected-hakukohde-names]
