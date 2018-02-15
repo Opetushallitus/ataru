@@ -68,8 +68,12 @@
      ~@body))
 
 (defmacro with-haku-form-response
-  [haku-oid resp & body]
-  `(let [~resp (-> (mock/request :get (str "/hakemus/api/haku/" ~haku-oid "?role=hakija"))
+  [haku-oid roles resp & body]
+  `(let [~resp (-> (mock/request :get (str "/hakemus/api/haku/" ~haku-oid
+                                           (when (not-empty ~roles)
+                                             (str "?role=" (clojure.string/join
+                                                            "&role="
+                                                            (map name ~roles))))))
                    (mock/content-type "application/json")
                    handler
                    parse-body)]
@@ -186,29 +190,65 @@
 
   (it "should get form"
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
-      (with-haku-form-response "1.2.246.562.29.65950024186" resp
+      (with-haku-form-response "1.2.246.562.29.65950024186" [:hakija :with-henkilo] resp
         (should= 200 (:status resp))
         (let [fields (-> resp :body :content util/flatten-form-fields)]
           (should= 7 (count (filter cannot-edit? fields)))
           (should= 1 (count (filter cannot-view? fields)))))))
 
+  (it "should get form as virkailija"
+    (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
+      (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija :with-henkilo] resp
+        (should= 200 (:status resp))
+        (let [fields (-> resp :body :content util/flatten-form-fields)]
+          (should= 9 (count (remove cannot-edit? fields)))
+          (should= 7 (count (filter cannot-edit? fields)))
+          (should= 1 (count (filter cannot-view? fields)))))))
+
+  (it "should get form as virkailija without henkilo"
+    (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
+      (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija] resp
+        (should= 200 (:status resp))
+        (let [fields (-> resp :body :content util/flatten-form-fields)]
+          (should= 15 (count (remove cannot-edit? fields)))
+          (should= 1  (count (filter cannot-edit? fields)))
+          (should= 1  (count (filter cannot-view? fields)))))))
+
   (it "should get application with hakuaika ended"
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-grace-period]
-      (with-haku-form-response "1.2.246.562.29.65950024186" resp
+      (with-haku-form-response "1.2.246.562.29.65950024186" [:hakija :with-henkilo] resp
         (should= 200 (:status resp))
         (let [fields (-> resp :body :content util/flatten-form-fields)]
           (should= 1  (count (remove cannot-edit? fields)))
           (should= 15 (count (filter cannot-edit? fields)))
           (should= 1  (count (filter cannot-view? fields)))))))
 
+  (it "should get application with hakuaika ended as virkailija"
+    (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-grace-period]
+      (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija :with-henkilo] resp
+        (should= 200 (:status resp))
+        (let [fields (-> resp :body :content util/flatten-form-fields)]
+          (should= 9 (count (remove cannot-edit? fields)))
+          (should= 7 (count (filter cannot-edit? fields)))
+          (should= 1 (count (filter cannot-view? fields)))))))
+
   (it "should get application with hakuaika ended but hakukierros ongoing"
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing]
-      (with-haku-form-response "1.2.246.562.29.65950024186" resp
+      (with-haku-form-response "1.2.246.562.29.65950024186" [:hakija :with-henkilo] resp
         (should= 200 (:status resp))
         (let [fields (-> resp :body :content util/flatten-form-fields)]
           (should= 6 (count (remove cannot-edit? fields)))
           (should= 10 (count (filter cannot-edit? fields)))
-          (should= 1  (count (filter cannot-view? fields))))))))
+          (should= 1  (count (filter cannot-view? fields)))))))
+
+  (it "should get application with hakuaika ended but hakukierros ongoing as virkailija"
+    (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing]
+      (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija :with-henkilo] resp
+        (should= 200 (:status resp))
+        (let [fields (-> resp :body :content util/flatten-form-fields)]
+          (should= 9 (count (remove cannot-edit? fields)))
+          (should= 7 (count (filter cannot-edit? fields)))
+          (should= 1 (count (filter cannot-view? fields))))))))
 
 (describe "/application"
   (tags :unit :hakija-routes)
