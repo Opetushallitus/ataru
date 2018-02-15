@@ -115,6 +115,14 @@
         applied-hakukohteet           (filter #(contains? (set (:hakukohde application)) (:oid %))
                                               hakukohteet)
         virkailija-secret             (valid-virkailija-secret application)
+        latest-application            (application-store/get-latest-version-of-application-for-edit application)
+        form-roles                    (cond-> []
+                                        (some? virkailija-secret)
+                                        (conj :virkailija)
+                                        (nil? virkailija-secret)
+                                        (conj :hakija)
+                                        (some? (:person-oid latest-application))
+                                        (conj :with-henkilo))
         form                          (-> application
                                           (:form)
                                           (form-store/fetch-by-id)
@@ -123,10 +131,7 @@
                                           (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)
                                           (hakija-form-service/flag-uneditable-and-unviewable-fields
                                            hakukohteet
-                                           (if (some? virkailija-secret)
-                                             [:virkailija]
-                                             [:hakija])))
-        latest-application            (application-store/get-latest-version-of-application-for-edit application)
+                                           form-roles))
         application-hakukohde-reviews (some-> latest-application
                                               :key
                                               application-store/get-application-hakukohde-reviews)
@@ -246,29 +251,32 @@
                                         tarjonta-service
                                         ohjausparametrit-service
                                         person-client]
-  (let [[roles
+  (let [[actor-role
          hakija-secret] (match [secret]
                           [{:virkailija s}]
-                          [[:virkailija]
+                          [:virkailija
                            (when (virkailija-edit/virkailija-secret-valid? s)
                              (application-store/get-hakija-secret-by-virkailija-secret s))]
                           [{:hakija s}]
-                          [[:hakija] s]
+                          [:hakija s]
                           :else
-                          [[:hakija] nil])
+                          [:hakija nil])
         application     (when (some? hakija-secret)
                           (application-store/get-latest-application-by-secret hakija-secret))
+        form-roles      (cond-> [actor-role]
+                          (some? (:person-oid application))
+                          (conj :with-henkilo))
         form            (cond (some? (:haku application)) (hakija-form-service/fetch-form-by-haku-oid
                                                            tarjonta-service
                                                            ohjausparametrit-service
                                                            (:haku application)
-                                                           roles)
+                                                           form-roles)
                               (some? (:form application)) (hakija-form-service/fetch-form-by-key
                                                            (->> application
                                                                 :form
                                                                 form-store/fetch-by-id
                                                                 :key)
-                                                           roles)
+                                                           form-roles)
                               :else                       nil)
         person          (some-> application
                                 (application-service/get-person person-client)

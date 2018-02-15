@@ -89,9 +89,11 @@
 
 (defn- uneditable?
   [field hakukohteet roles]
-  (or (contains? editing-forbidden-person-info-field-ids (keyword (:id field)))
-      (not (or (form-role/virkailija? roles)
-               (editing-allowed-by-hakuaika? field hakukohteet)))))
+  (not (and (or (and (form-role/virkailija? roles)
+                     (not (form-role/with-henkilo? roles)))
+                (not (contains? editing-forbidden-person-info-field-ids (keyword (:id field)))))
+            (or (form-role/virkailija? roles)
+                (editing-allowed-by-hakuaika? field hakukohteet)))))
 
 (s/defn ^:always-validate flag-uneditable-and-unviewable-fields :- s/Any
   [form :- s/Any
