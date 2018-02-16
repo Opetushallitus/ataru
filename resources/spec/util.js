@@ -19,9 +19,7 @@ var loadInFrame = function(src) {
 }
 
 var httpGet = function(url) {
-    return fetch(url).then(function(response) {
-        return response.text();
-    })
+  return $.get(url).promise();
 }
 
 var testFrame = function() {
