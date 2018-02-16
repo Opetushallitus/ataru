@@ -1075,9 +1075,9 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review-state-initials {
-  margin-left: 3px;
   color: @sg-color-gray-2;
   cursor: inherit;
+  font-weight: lighter;
 }
 
 .application-handling__event-list {
@@ -1189,11 +1189,23 @@ and (max-width: 1000px) {
 .application-handling__event-caption {
   flex: 0 0 100%;
   max-width: 240px;
-  font-style: italic;
 }
 
 .application-handling__event-caption-modify-event {
   cursor: pointer;
+  font-weight: 400;
+}
+
+.application-handling__event-caption-chevron {
+  font-size: 20px;
+  line-height: 0;
+  position: relative;
+  top: 3px;
+  padding: 0 5px;
+}
+
+.application-handling__event-caption-compare {
+  padding-left: 5px;
 }
 
 .application-handling__event-caption--extra-info {
@@ -1204,11 +1216,6 @@ and (max-width: 1000px) {
   list-style: none;
   padding: 0;
   margin: 0;
-}
-
-.application-handling__show-history-as-table {
-  font-style: initial;
-  padding-top: 5px;
 }
 
 .application-handling__multi-line-event-caption {

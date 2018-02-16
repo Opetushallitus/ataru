@@ -672,7 +672,7 @@
   [event]
   (let [[name initials] (name-and-initials event)]
     (when (and name initials)
-      [:span.application-handling__review-state-initials {:data-tooltip name} (str " (" initials ")")])))
+      [:span.application-handling__review-state-initials {:data-tooltip name} (str "(" initials ")")])))
 
 (defn event-caption [event]
   (match event
@@ -685,10 +685,16 @@
              label))
 
          {:event-type "updated-by-applicant"}
-         "Hakija muokannut hakemusta"
+         (str "Hakija lähetti "
+              (count @(subscribe [:application/changes-made-for-event (:id event)]))
+              " muutosta")
 
          {:event-type "updated-by-virkailija"}
-         [:span.application-handling__event-caption--inner "Virkailija " (virkailija-initials-span event) " muokannut hakemusta"]
+         [:span.application-handling__event-caption--inner
+          (virkailija-initials-span event)
+          " teki "
+          (count @(subscribe [:application/changes-made-for-event (:id event)]))
+          " muutosta"]
 
          {:event-type "received-from-applicant"}
          "Hakemus vastaanotettu"
@@ -726,11 +732,23 @@
     (fn [time-str caption event]
       [:div.application-handling__event-row
        [:span.application-handling__event-timestamp time-str]
-       [:span.application-handling__event-caption
-        (when modify-event?
-          {:on-click #(swap! show-details? not)
-           :class    "application-handling__event-caption-modify-event"})
-        caption
+       [:div.application-handling__event-caption-container
+        [:div.application-handling__event-caption
+         (when modify-event?
+           {:on-click #(swap! show-details? not)
+            :class    "application-handling__event-caption-modify-event"})
+         caption
+         (when modify-event?
+           [:span
+            (if @show-details?
+              [:i.zmdi.zmdi-chevron-up.application-handling__event-caption-chevron]
+              [:i.zmdi.zmdi-chevron-down.application-handling__event-caption-chevron])
+            "|"
+            [:a.application-handling__event-caption-compare
+             {:on-click (fn [e]
+                          (.stopPropagation e)
+                          (dispatch [:application/open-application-version-history event]))}
+             "Vertaile"]])]
         (when @show-details?
           [:ul.application-handling__event-row-details
            (for [[key field] @modifications]
@@ -739,13 +757,7 @@
                            (.stopPropagation e)
                            (dispatch [:application/highlight-field key]))
                :key      (str "event-list-for" key)}
-              [:a (:label field)]])
-           [:li.application-handling__show-history-as-table
-            [:a
-             {:on-click (fn [e]
-                          (.stopPropagation e)
-                          (dispatch [:application/open-application-version-history event]))}
-             "Näytä taulukkona"]]])]])))
+              [:a (:label field)]])])]])))
 
 (defn event-row [event]
   (let [time-str (t/time->short-str (or (:time event) (:created-time event)))
