@@ -2,8 +2,7 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :as re-frame]
             [ataru.util :as util]
-            [ataru.hakija.application :refer [answers->valid-status
-                                              applying-possible?]]))
+            [ataru.hakija.application :refer [answers->valid-status]]))
 
 (re-frame/reg-sub
   :state-query
@@ -20,7 +19,9 @@
 (re-frame/reg-sub
  :application/can-apply?
  (fn [db]
-   (applying-possible? (:form db) (:application db))))
+   (if-let [hakukohteet (get-in db [:form :tarjonta :hakukohteet])]
+     (some #(get-in % [:hakuaika :on]) hakukohteet)
+     true)))
 
 (re-frame/reg-sub
   :application/hakukohde-count
@@ -49,8 +50,15 @@
     (let [field (->> (:flat-form-content db)
                      (filter #(= (keyword key) (keyword (:id %))))
                      first)
-          editing? (get-in db [:application :editing?])]
-      (and editing? (:cannot-edit field)))))
+          editing? (get-in db [:application :editing?])
+          hakukohde-selected (fn [oid] @(re-frame/subscribe
+                                          [:application/hakukohde-selected? oid]))
+          hakuajat-on? @(re-frame/subscribe [:application/hakukohteet-hakuaika-on?
+                                             (filter hakukohde-selected
+                                                     (:belongs-to-hakukohteet field))])]
+      (and editing?
+           (or (not hakuajat-on?)
+               (:cannot-edit field))))))
 
 (re-frame/reg-sub
   :application/default-language
@@ -118,6 +126,23 @@
   (fn [db _]
     (and (< 1 (count @(re-frame/subscribe [:application/hakukohde-options])))
          (not @(re-frame/subscribe [:application/cannot-edit? :hakukohteet])))))
+
+(re-frame/reg-sub
+  :application/hakukohde-hakuaika-on?
+  (fn [db [_ hakukohde-oid]]
+    (->> (get-in db [:form :tarjonta :hakukohteet])
+         (some #(when (= hakukohde-oid (:oid %)) %))
+         :hakuaika
+         :on)))
+
+(re-frame/reg-sub
+  :application/hakukohteet-hakuaika-on?
+  (fn [db [_ hakukohde-oids]]
+      (cond
+        (or (nil? hakukohde-oids) (empty? hakukohde-oids)) true
+        :else
+        (let [hakuaika-on (fn [oid] @(re-frame/subscribe [:application/hakukohde-hakuaika-on? oid]))]
+             (some identity (map hakuaika-on hakukohde-oids))))))
 
 (re-frame/reg-sub
   :application/hakukohde-query

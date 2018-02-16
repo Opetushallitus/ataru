@@ -127,6 +127,12 @@
    :name                         LocalizedStringOptional
    :tarjoaja-name                LocalizedStringOptional
    (s/optional-key :form-key)    (s/maybe s/Str)
+   :hakuaika                     {:start                               s/Int
+                                  :end                                 (s/maybe s/Int)
+                                  :on                                  s/Bool
+                                  :jatkuva-haku?                       s/Bool
+                                  :attachment-modify-grace-period-days (s/maybe s/Int)
+                                  :hakukierros-end                     (s/maybe s/Int)}
    (s/optional-key :koulutukset) [{:oid                  s/Str
                                    :koulutuskoodi-name   LocalizedStringOptional
                                    :tutkintonimike-name  LocalizedStringOptional
@@ -139,13 +145,7 @@
    :prioritize-hakukohteet             s/Bool
    :max-hakukohteet                    (s/maybe s/Int)
    :can-submit-multiple-applications   s/Bool
-   (s/optional-key :default-hakukohde) FormTarjontaHakukohde
-   (s/optional-key :hakuaika-dates)    {:start                               s/Int
-                                        (s/optional-key :end)                (s/maybe s/Int)
-                                        :on                                  s/Bool
-                                        :hakukierros-end                     (s/maybe s/Int)
-                                        :jatkuva-haku?                       s/Bool
-                                        :attachment-modify-grace-period-days (s/maybe s/Int)}})
+   (s/optional-key :default-hakukohde) FormTarjontaHakukohde})
 
 (s/defschema Haku
   {:oid s/Str

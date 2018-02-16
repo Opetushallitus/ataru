@@ -165,10 +165,7 @@
                      (not= (:fieldType %) "adjacentfieldset")))
        (map #(select-keys % [:id :label :children]))))
 
-(defn application-processing-jatkuva-haku? [application hakuaika]
+(defn application-processing-jatkuva-haku? [application applied-hakukohteet]
   (when-let [application-hakukohde-reviews (:application-hakukohde-reviews application)]
-    (and (:jatkuva-haku? hakuaika)
+    (and (some #(get-in % [:hakuaika :jatkuva-haku?]) applied-hakukohteet)
          (util/application-in-processing? application-hakukohde-reviews))))
-
-(defn applying-possible? [form application]
-  (get-in form [:tarjonta :hakuaika-dates :on] true))

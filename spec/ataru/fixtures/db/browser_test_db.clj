@@ -91,6 +91,34 @@
                                          :params     {},
                                          :fieldType  "textField"}]})
 
+(def hakija-hakukohteen-hakuaika-test-form {:id 6
+                                       :key "hakija-hakukohteen-hakuaika-test-form"
+                                       :name {:fi "hakija-hakukohteen-hakuaika-test-form"}
+                                       :created-by "DEVELOPER"
+                                       :organization-oid "1.2.246.562.10.0439845"
+                                       :languages ["fi"]
+                                       :content
+                                       [(component/hakukohteet)
+                                        (person-info-module/person-info-module)
+                                        {:label      {:fi "Hakukohteiden hakuajat ohi!"},
+                                         :fieldClass "formField",
+                                         :id         "hakuajat-ohi",
+                                         :params     {},
+                                         :belongs-to-hakukohteet ["1.2.246.562.20.49028100001" "1.2.246.562.20.49028100003"]
+                                         :fieldType  "textField"}
+                                        {:label      {:fi "Osa hakuajoista voimassa!"},
+                                         :fieldClass "formField",
+                                         :id         "osa-hakuajoista-ohi",
+                                         :params     {},
+                                         :belongs-to-hakukohteet ["1.2.246.562.20.49028100002" "1.2.246.562.20.49028100001"]
+                                         :fieldType  "textField"}
+                                        {:label      {:fi "Kaikki hakuajat voimassa!"},
+                                         :fieldClass "formField",
+                                         :id         "kaikki-hakuajat-voimassa",
+                                         :params     {},
+                                         :belongs-to-hakukohteet ["1.2.246.562.20.49028100002" "1.2.246.562.20.49028100003"]
+                                         :fieldType  "textField"}]})
+
 (def application1 {:form       1
                    :lang       "fi"
                    :key        "application-key1"
@@ -194,6 +222,8 @@
   (form-store/create-new-form! form3 "41101b4f-1762-49af-9db0-e3603adae3ae")
   (form-store/create-new-form! belongs-to-hakukohteet-test-form
                                (:key belongs-to-hakukohteet-test-form))
+  (form-store/create-new-form! hakija-hakukohteen-hakuaika-test-form
+                               (:key hakija-hakukohteen-hakuaika-test-form))
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (application-store/add-application application1)
     (application-store/add-application application2)

@@ -18,6 +18,10 @@ var loadInFrame = function(src) {
     });
 }
 
+var httpGet = function(url) {
+  return $.get(url).promise();
+}
+
 var testFrame = function() {
   return $('#test').contents()
 }

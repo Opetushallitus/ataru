@@ -58,6 +58,16 @@
       first
       :id))
 
+(defn get-latest-application-secret []
+      (application-store/get-latest-application-secret))
+
+(defn alter-application-to-hakuaikaloppu-for-secret [secret]
+      (let [app (application-store/get-latest-application-by-secret secret)
+            hakukohteet (:hakukohde app)
+            switched-hakukohteet (concat ["1.2.246.562.20.49028100001"] (rest hakukohteet))]
+           (application-store/alter-application-hakukohteet-with-secret secret switched-hakukohteet)
+           (str switched-hakukohteet)))
+
 (defn get-latest-application-by-form-name [form-name]
   (if-let [latest-application-id (get-latest-application-id-for-form form-name)]
     (application-store/get-application latest-application-id)

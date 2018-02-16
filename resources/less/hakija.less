@@ -975,6 +975,16 @@ and (max-width: @desktop-content-width) {
   }
 }
 
+.application__hakukohde-sub-header-dates {
+  font-size: 13px;
+  font-style: italic;
+  color: #06526B;
+  i {
+    color: #9B9B9B;
+    margin-right: 4px;
+  }
+}
+
 .application__hakukohde-selection-header {
   margin-bottom: 0;
 }
@@ -1063,6 +1073,13 @@ and (max-width: @desktop-content-width) {
       border-top-color: @sg-gray-lighten-3;
     }
   }
+  &[disabled] {
+    opacity: 0.00;
+    a {
+      color: @gray-of-the-beast;
+      cursor: default;
+    }
+  }
 }
 
 .application__hakukohde-selection-search-input {
@@ -1138,7 +1155,7 @@ and (max-width: @desktop-content-width) {
 }
 
 .application__hakukohde-row-text-container {
-   padding-right: 120px;
+   padding-right: 140px;
 }
 
 .application__hakukohde-selected-row-header {
@@ -1149,17 +1166,34 @@ and (max-width: @desktop-content-width) {
   font-size: 14px;
 }
 
+.application__hakukohde-row-additional-text-container {
+  position: absolute;
+  right: 0px;
+  top: 20px;
+  color: @pale-blue;
+  max-width: 140px;
+}
+
 .application__hakukohde-row-button-container {
   position: absolute;
   right: 20px;
   top: 25px;
   color: @pale-blue;
+  &[disabled] {
+    opacity: 0.33;
+    a {
+      color: @gray-of-the-beast;
+      cursor: default;
+    }
+  }
 }
 
 .application__hakukohde-row--search-hit-selected {
   color: @sg-gray-lighten-3;
 }
-
+.application__hakukohde-row--search-hit-hakuaika-over {
+  color: @sg-gray-lighten-3;
+}
 .application__hakukohde-row--search-hit-highlight {
   background-color: #b8e3f0;
 }

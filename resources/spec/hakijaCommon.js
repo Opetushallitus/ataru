@@ -130,6 +130,10 @@ function selectedHakukohdeTexts() {
   return testFrame().find('.application__hakukohde-row-text-container--selected').text()
 }
 
+function hakukohdeTexts() {
+    return testFrame().find('.application__hakukohde-row-text-container').text()
+}
+
 function assertOnlyFinnishSsn() {
   expect(hasFormField('ssn')).to.equal(true);
   expect(hasFormField('have-finnish-ssn')).to.equal(false);

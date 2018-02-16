@@ -65,6 +65,14 @@
 (defn- hakukohde-search-toggle-event-handler [_]
   (dispatch [:application/hakukohde-search-toggle]))
 
+(defn- selected-hakukohde-disabled-row-remove [hakukohde-oid]
+       [:div.application__hakukohde-row-button-container
+        {:disabled "disabled"}
+        [:a.application__hakukohde-remove-link
+         {:data-hakukohde-oid hakukohde-oid
+          :role               "button"}
+         (get-translation :remove)]])
+
 (defn- selected-hakukohde-row-remove
   [hakukohde-oid]
   [:div.application__hakukohde-row-button-container
@@ -75,56 +83,68 @@
     (get-translation :remove)]])
 
 (defn- selected-hakukohde-increase-priority
-  [hakukohde-oid priority-number]
-  (let [disabled? (= priority-number 1)]
-    [:span.application__hakukohde-priority-changer.increase
-     {:class    (when disabled? "disabled")
-      :on-click (when-not disabled?
+  [hakukohde-oid priority-number disabled?]
+ (let [increase-disabled? (= priority-number 1)]
+  [:span.application__hakukohde-priority-changer.increase
+     {:disabled (when disabled? "disabled")
+      :class    (when increase-disabled? "disabled")
+      :on-click (when-not increase-disabled?
                   #(dispatch [:application/change-hakukohde-priority hakukohde-oid -1]))}]))
 
 (defn- selected-hakukohde-decrease-priority
-  [hakukohde-oid priority-number]
+  [hakukohde-oid priority-number disabled?]
   (let [selected-hakukohteet @(subscribe [:application/selected-hakukohteet])
-        disabled? (= priority-number (count selected-hakukohteet))]
+        decrease-disabled? (= priority-number (count selected-hakukohteet))]
     [:span.application__hakukohde-priority-changer.decrease
-     {:class    (when disabled? "disabled")
-      :on-click (when-not disabled?
+     {:disabled (when disabled? "disabled")
+      :class    (when decrease-disabled? "disabled")
+      :on-click (when-not decrease-disabled?
                   #(dispatch [:application/change-hakukohde-priority hakukohde-oid 1]))}]))
 
 (defn- prioritize-hakukohde-buttons
-  [hakukohde-oid]
+  [hakukohde-oid disabled?]
   (let [priority-number @(subscribe [:application/hakukohde-priority-number hakukohde-oid])]
     [:div.application__hakukohde-row-priority-container
-     [selected-hakukohde-increase-priority hakukohde-oid priority-number]
+     [selected-hakukohde-increase-priority hakukohde-oid priority-number disabled?]
      priority-number
-     [selected-hakukohde-decrease-priority hakukohde-oid priority-number]]))
+     [selected-hakukohde-decrease-priority hakukohde-oid priority-number disabled?]]))
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
   (let [deleting? @(subscribe [:application/hakukohde-deleting? hakukohde-oid])
-        prioritize-hakukohteet? @(subscribe [:application/prioritize-hakukohteet?])]
+        prioritize-hakukohteet? @(subscribe [:application/prioritize-hakukohteet?])
+        haku-editable? @(subscribe [:application/hakukohteet-editable?])
+        hakukohde-editable? @(subscribe [:application/hakukohde-hakuaika-on? hakukohde-oid])]
     [:div.application__hakukohde-row.application__hakukohde-row--selected.animated
      {:class (if deleting?
                "fadeOut"
                "fadeIn")}
      (when prioritize-hakukohteet?
-       [prioritize-hakukohde-buttons hakukohde-oid])
+       [prioritize-hakukohde-buttons hakukohde-oid (not hakukohde-editable?)])
      [:div.application__hakukohde-row-icon-container
       [:i.zmdi.zmdi-graduation-cap.zmdi-hc-3x]]
      [:div.application__hakukohde-row-text-container.application__hakukohde-row-text-container--selected
       [:div.application__hakukohde-selected-row-header
        @(subscribe [:application/hakukohde-label hakukohde-oid])]
       [:div.application__hakukohde-selected-row-description
-       @(subscribe [:application/hakukohde-description hakukohde-oid])]]
-     (when @(subscribe [:application/hakukohteet-editable?])
-       [selected-hakukohde-row-remove hakukohde-oid])]))
+       @(subscribe [:application/hakukohde-description hakukohde-oid])]
+      (when (not hakukohde-editable?)
+        [:div.application__hakukohde-selected-row-description
+         [:span.application__hakukohde-sub-header-dates
+          [:i.application__hakukohde-selected-check.zmdi.zmdi-lock]
+          (get-translation :not-editable-application-period-ended)]])]
+     (cond (and haku-editable? hakukohde-editable?) [selected-hakukohde-row-remove hakukohde-oid]
+           (not hakukohde-editable?) [selected-hakukohde-disabled-row-remove hakukohde-oid]
+           haku-editable? [selected-hakukohde-row-remove hakukohde-oid])]))
 
 (defn- search-hit-hakukohde-row
   [hakukohde-oid]
   (let [hakukohde-selected? @(subscribe [:application/hakukohde-selected? hakukohde-oid])
         search-term         @(subscribe [:application/hakukohde-query])
         aria-header-id      (str "hakukohde-search-hit-header-" hakukohde-oid)
-        aria-description-id (str "hakukohde-search-hit-description-" hakukohde-oid)]
+        aria-description-id (str "hakukohde-search-hit-description-" hakukohde-oid)
+        hakukohde-hakuaika-on? @(subscribe [:application/hakukohde-hakuaika-on? hakukohde-oid])
+        hakukohteet-full?   @(subscribe [:application/hakukohteet-full?])]
     [:div.application__hakukohde-row.application__hakukohde-row--search-hit
      {:class         (when hakukohde-selected? "application__hakukohde-row--search-hit-selected")
       :aria-selected hakukohde-selected?}
@@ -135,23 +155,29 @@
       [:div.application__hakukohde-selected-row-description
        {:id aria-description-id}
        (hilight-text @(subscribe [:application/hakukohde-description hakukohde-oid]) search-term)]]
-     [:div.application__hakukohde-row-button-container
-      (if hakukohde-selected?
-        [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
-        (if @(subscribe [:application/hakukohteet-full?])
-          [:a.application__hakukohde-select-button.application__hakukohde-select-button--disabled
-           {:role             "button"
-            :aria-labelledby  aria-header-id
-            :aria-describedby aria-description-id
-            :aria-disabled    true}
-           (get-translation :add)]
-          [:a.application__hakukohde-select-button
-           {:on-click           hakukohde-select-event-handler
-            :role               "button"
-            :data-hakukohde-oid hakukohde-oid
-            :aria-labelledby    aria-header-id
-            :aria-describedby   aria-description-id}
-           (get-translation :add)]))]]))
+      (cond
+        (not hakukohde-hakuaika-on?) [:div.application__hakukohde-row-additional-text-container
+                                      {:aria-labelledby  aria-header-id
+                                       :aria-describedby aria-description-id
+                                       :aria-disabled    true}
+                                      (get-translation :not-selectable-application-period-ended)]
+        :else [:div.application__hakukohde-row-button-container
+               (cond
+                 hakukohde-selected? [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
+                 hakukohteet-full? [:a.application__hakukohde-select-button.application__hakukohde-select-button--disabled
+                                    {:role             "button"
+                                     :aria-labelledby  aria-header-id
+                                     :aria-describedby aria-description-id
+                                     :aria-disabled    true}
+                                    (get-translation :add)]
+                 :else [:a.application__hakukohde-select-button
+                        {:on-click           hakukohde-select-event-handler
+                         :role               "button"
+                         :data-hakukohde-oid hakukohde-oid
+                         :aria-labelledby    aria-header-id
+                         :aria-describedby   aria-description-id}
+                        (get-translation :add)])]
+                )]))
 
 (defn- hakukohde-selection-search
   []

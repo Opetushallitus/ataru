@@ -84,8 +84,8 @@
       before(
         wait.until(editorPageIsLoaded, 10000)
       )
-      it('has 5 fixture forms', function() {
-        expect(formListItems()).to.have.length(5)
+      it('has 6 fixture forms', function() {
+        expect(formListItems()).to.have.length(6)
       })
     })
 

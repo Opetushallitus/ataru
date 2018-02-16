@@ -25,7 +25,7 @@
             [cheshire.core :as json]
             [ataru.config.core :refer [config]]
             [ataru.flowdock.flowdock-client :as flowdock-client]
-            [ataru.test-utils :refer [get-test-vars-params]])
+            [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret alter-application-to-hakuaikaloppu-for-secret]])
   (:import [ring.swagger.upload Upload]
            [java.io InputStream]))
 
@@ -69,10 +69,18 @@
       (if (is-dev-env?)
         (render-file-in-dev (str "templates/hakija-" testname "-test.html"))
         (response/not-found "Not found")))
-    (api/GET "/virkailija-hakemus-edit-test.html" []
+    (api/GET "/latest-application-secret" []
       (if (is-dev-env?)
-        (render-file-in-dev "templates/virkailija-hakemus-edit-test.html")
+        (get-latest-application-secret)
         (response/not-found "Not found")))
+    (api/GET "/alter-application-to-hakuaikaloppu-for-secret/:secret" [secret]
+             (if (is-dev-env?)
+               (alter-application-to-hakuaikaloppu-for-secret secret)
+               (response/not-found "Not found")))
+    (api/GET "/virkailija-hakemus-edit-test.html" []
+             (if (is-dev-env?)
+               (render-file-in-dev "templates/virkailija-hakemus-edit-test.html")
+               (response/not-found "Not found")))
     (api/GET "/spec/:filename.js" [filename]
       ;; Test vars params is a hack to get form ids from fixtures to the test file
       ;; without having to pass them as url params. Also enables tests to be run
@@ -122,7 +130,7 @@
       :path-params [key :- s/Str]
       :query-params [{virkailija-secret :- s/Str nil}]
       :return ataru-schema/FormWithContent
-      (if-let [form (form-service/fetch-form-by-key key nil (some? virkailija-secret))]
+      (if-let [form (form-service/fetch-form-by-key key (some? virkailija-secret))]
         (response/ok form)
         (response/not-found)))
     (api/POST "/feedback" []
