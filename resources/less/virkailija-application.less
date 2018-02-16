@@ -1097,7 +1097,6 @@ and (max-width: 1000px) {
   z-index: 1000;
 }
 
-
 .application-handling__application-version-history {
   position: relative;
   left: 5%;
@@ -1107,47 +1106,73 @@ and (max-width: 1000px) {
   background-color: white;
   border-radius: 2px;
   box-shadow: 5px 5px 5px rgb(39, 39, 39);
+  padding: 70px;
   z-index: 1000;
+  overflow: scroll;
 }
 
 .application-handling__close-version-history {
-  align-items: center;
-  background-color: #DFEBEF;
-  border-radius: 50%;
-  display: flex;
-  height: 25px;
-  justify-content: center;
-  right: 10px;
-  position: absolute;
-  top: 10px;
-  width: 25px;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #08526A;
-  }
+  position: fixed;
+  right: 6%;
+  top: 6%;
 }
 
-.application-handling__application-version-history-table {
+.application-handling__version-history-header {
+  text-align: center;
+}
+
+.application-handling__version-history-header-text {
+  font-size: 24px;
+}
+
+.application-handling__version-history-header-sub-text {
+  font-size: 18px;
+  color: @gray;
+}
+
+.application-handling__version-history-row {
+  margin-top: 25px;
+}
+
+.application-handling__version-history-row-label {
+  margin-bottom: 15px;
+}
+
+.application-handling__version-history-row-value {
   padding: 10px;
-  border-spacing: 0;
+  display: flex;
+  align-items: center;
 
-  td {
-    padding: 7px;
+  &-old {
+    background-color: @very-light-red;
+    margin-bottom: 1px;
+    opacity: 0.6;
   }
 
-  tbody > tr:hover {
-    background-color: #f1efef;
-  }
-
-  ol {
-    padding-left: 19px;
-    margin: 0;
+  &-new {
+    background-color: @very-light-green;
   }
 }
 
-.application-handling__application-version-history-entry {
-  width: 40%;
+.application-handling__version-history-row-value-sign {
+  font-size: 50px;
+  color: white;
+  font-weight: bold;
+  width: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 10px;
+}
+
+.application-handling__version-history-question-group-value {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.application-handling__version-history-list-value {
+  list-style: none;
+  padding-left: 0;
 }
 
 .application-handling__event-row {

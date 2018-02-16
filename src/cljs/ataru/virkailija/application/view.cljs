@@ -15,6 +15,7 @@
             [ataru.cljs-util :as util]
             [ataru.virkailija.application.application-search-control :refer [application-search-control]]
             [goog.string.format]
+            [goog.string :as gstring]
             [ataru.application.review-states :as review-states]
             [ataru.application.application-states :as application-states]
             [ataru.cljs-util :as cljs-util]
@@ -743,7 +744,7 @@
             [:a
              {:on-click (fn [e]
                           (.stopPropagation e)
-                          (dispatch [:application/open-application-version-history (:id event)]))}
+                          (dispatch [:application/open-application-version-history event]))}
              "Näytä taulukkona"]]])]])))
 
 (defn event-row [event]
@@ -1147,42 +1148,52 @@
             (dispatch [:state-update #(assoc-in % [:application :review-positioning] :in-flow)])
             (reset! review-canary-visible true)))))))
 
-(defn application-version-history-header []
-  [:thead
-   [:tr
-    [:th "Kenttä"]
-    [:th.application-handling__application-version-history-entry "Vanha tieto"]
-    [:th.application-handling__application-version-history-entry "Uusi tieto"]]])
+(defn application-version-history-header [changes-amount]
+  (let [event (subscribe [:application/selected-event])]
+    (fn []
+      [:div.application-handling__version-history-header
+       [:div.application-handling__version-history-header-text
+        "Vertailu muutoksesta " (t/time->short-str (or (:time @event) (:created-time @event)))]
+       [:div.application-handling__version-history-header-sub-text
+        (str (:first-name @event) " " (:last-name @event) " muutti " changes-amount " vastausta:")]])))
+
+(defn- application-version-history-list-value [values]
+  [:ol.application-handling__version-history-list-value
+   (for [value values]
+     [:li value])])
 
 (defn application-version-history-value [value-or-values]
   (cond
     (every? sequential? value-or-values)
-    (into [:ol]
+    (into [:ol.application-handling__version-history-question-group-value]
           (for [values value-or-values]
-            [:li (clojure.string/join ", " values)]))
+            [:li (application-version-history-list-value values)]))
 
     (sequential? value-or-values)
-    (clojure.string/join ", " value-or-values)
+    (application-version-history-list-value value-or-values)
 
     :else (str value-or-values)))
 
-(defn application-version-history-row [key values]
+(defn application-version-history-row [key history-item]
   ^{:key (str "application-change-history-" key)}
-  [:tr.application-handling__application-version-history-row
-   [:td (:label values)]
-   [:td (application-version-history-value (:old values))]
-   [:td (application-version-history-value (:new values))]])
+  [:div.application-handling__version-history-row
+   [:div.application-handling__version-history-row-label
+    (:label history-item)]
+   [:div.application-handling__version-history-row-value.application-handling__version-history-row-value-old
+    [:div.application-handling__version-history-row-value-sign (gstring/unescapeEntities "&minus;")]
+    (application-version-history-value (:old history-item))]
+   [:div.application-handling__version-history-row-value.application-handling__version-history-row-value-new
+    [:div.application-handling__version-history-row-value-sign (gstring/unescapeEntities "&plus;")]
+    (application-version-history-value (:new history-item))]])
 
 (defn application-version-changes []
   (let [history-items (subscribe [:application/current-history-items])]
     (when @history-items
       [:div.application-handling__application-version-history-container
        [:div.application-handling__application-version-history
-        [:span.application-handling__close-version-history
+        [:a.application-handling__close-version-history
          {:on-click #(dispatch [:application/close-application-version-history])}
-         [:i.zmdi.zmdi-close.closedetails-button-mark]]
-        [:table.application-handling__application-version-history-table
-         [application-version-history-header]
-         (into [:tbody]
-               (for [[key values] @history-items]
-                 [application-version-history-row key values]))]]])))
+         "Sulje"]
+        [application-version-history-header (count @history-items)]
+        (for [[key item] @history-items]
+          [application-version-history-row key item])]])))

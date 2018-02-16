@@ -306,6 +306,11 @@
     (-> db :application :selected-application-and-form :current-history-items)))
 
 (re-frame.core/reg-sub
+  :application/selected-event
+  (fn [db _]
+    (-> db :application :selected-application-and-form :selected-event)))
+
+(re-frame.core/reg-sub
   :application/changes-made-for-event
   (fn [db [_ event-id]]
     (let [event-index (util/event-index db event-id)
