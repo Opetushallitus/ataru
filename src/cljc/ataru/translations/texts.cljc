@@ -9,7 +9,7 @@
                                        :en "application period currently not ongoing"}
    :not-selectable-application-period-ended {:fi "Hakuaika ei ole käynnissä"
                                              :sv "Inte inom ansökningstiden"
-                                             :en "Application period currently not ongoing"}
+                                             :en "Application period not ongoing"}
    :not-editable-application-period-ended {:fi "Tämä hakutoive ei ole muokattavissa koska sen hakuaika on päättynyt."
                                            :sv "Tämä hakutoive ei ole muokattavissa koska sen hakuaika on päättynyt."
                                            :en "Tämä hakutoive ei ole muokattavissa koska sen hakuaika on päättynyt."}
