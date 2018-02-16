@@ -72,7 +72,9 @@
     (it "is possible to edit a plain application successfully"
       (run-phantom-test "hakija-edit"))
     (it "is possbile to edit an application successfully as virkailija"
-      (run-phantom-test "virkailija-hakemus-edit")))
+      (run-phantom-test "virkailija-hakemus-edit"))
+    (it "is taking hakuaika into account"
+      (run-phantom-test "hakija-hakukohteen-hakuaika")))
 
   (describe "application handling /"
     (it "is possbile to handle application with a question group"
