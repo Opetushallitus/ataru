@@ -208,8 +208,8 @@
   (let [time-a (or (:time a) (:created-time a))
         time-b (or (:time b) (:created-time b))]
     (if (t/before? time-a time-b)
-      -1
-      1)))
+      1
+      -1)))
 
 (defn- mark-last-modify-event [events]
   (let [last-modify-event-id (-> (filter util/modify-event? events)

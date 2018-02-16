@@ -681,7 +681,7 @@
                        application-review-states/application-review-states
                        (:new-review-state event))]
            (if (= (:new-review-state event) "information-request")
-             [:span.application-handling__event-caption--inner label (virkailija-initials-span event)]
+             [:span.application-handling__event-caption--inner label "asdfasd " (virkailija-initials-span event)]
              label))
 
          {:event-type "updated-by-applicant"}
@@ -711,6 +711,7 @@
                       (apply concat)
                       (distinct))
                  (:new-review-state event)))
+          " "
           (virkailija-initials-span event)]
 
          {:event-type "modification-link-sent"}
@@ -718,7 +719,7 @@
 
          {:subject _ :message message}
          [:div.application-handling__multi-line-event-caption
-          [:span.application-handling__event-caption--inner "Täydennyspyyntö lähetetty" (virkailija-initials-span event)]
+          [:span.application-handling__event-caption--inner "Täydennyspyyntö lähetetty " (virkailija-initials-span event)]
           [:span.application-handling__event-caption--inner.application-handling__event-caption--extra-info (str "\"" message "\"")]]
 
          :else "Tuntematon"))
