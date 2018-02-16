@@ -114,7 +114,8 @@
             :on-click #(dispatch [:application/send-new-secret])}
            (if (= :completed @delivery-status)
              (get-translation :expired-secret-sent)
-             (get-translation :expired-secret-button))]])
+             (get-translation :expired-secret-button))]
+          [:p (get-translation :expired-secret-contact)]])
 
        ^{:key (:id @form)}
        [application-header @form]

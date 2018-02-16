@@ -159,7 +159,10 @@
                                        :sv ""}
    :expired-secret-sent               {:fi "Uusi linkki lähetetty!"
                                        :en "The new link has been sent!"
-                                       :sv ""}})
+                                       :sv ""}
+   :expired-secret-contact            {:fi "Ongelmatilanteessa ota yhteys hakemaasi oppilaitokseen."
+                                       :en "If problems arise, please contact the educational organization to which you have applied."
+                                       :sv "Vid eventuella problemsituationer kontakta den läroanstalt du söker till."}})
 
 (def general-texts
   {:yes      {:en "Yes"
