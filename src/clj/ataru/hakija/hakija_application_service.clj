@@ -269,6 +269,7 @@
                                  (conj :with-henkilo))
         secret-expired?  (when (nil? application)
                            (application-store/application-exists-with-secret? secret))
+        lang-override    (when secret-expired? (application-store/get-application-language-by-secret secret))
         form             (cond (some? (:haku application)) (hakija-form-service/fetch-form-by-haku-oid
                                                              tarjonta-service
                                                              ohjausparametrit-service
@@ -288,7 +289,7 @@
                                  attachments-metadata->answers
                                  (assoc :person person)
                                  (dissoc :person-oid))]
-    [full-application secret-expired?]))
+    [full-application secret-expired? lang-override]))
 
 (defn create-new-secret-and-send-link
   [tarjonta-service old-secret]

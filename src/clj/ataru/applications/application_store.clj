@@ -61,6 +61,13 @@
   [hakija-secret]
   (application-exists-with-secret-tx? hakija-secret (get-datasource)))
 
+(defn get-application-language-by-secret
+  "NB: takes into account also expired secrets"
+  [hakija-secret]
+  (-> (exec-db :db yesql-get-latest-application-language-by-any-version-of-secret {:secret hakija-secret})
+      (first)
+      :lang))
+
 (defn generate-new-application-secret
   [connection]
   (loop [secret (crypto/url-part 34)]

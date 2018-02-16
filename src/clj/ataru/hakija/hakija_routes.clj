@@ -37,7 +37,7 @@
 
 (defn- get-application
   [secret tarjonta-service ohjausparametrit-service person-client]
-  (let [[application secret-expired?]
+  (let [[application secret-expired? lang-override]
         (hakija-application-service/get-latest-application-by-secret secret
                                                                      tarjonta-service
                                                                      ohjausparametrit-service
@@ -45,7 +45,8 @@
     (cond (some? application)
           (response/ok application)
           secret-expired?
-          (response/unauthorized {:secret-expired true})
+          (response/unauthorized {:secret-expired true
+                                  :lang           lang-override})
           (:virkailija secret)
           (response/bad-request {:error "Invalid virkailija secret"})
           :else
