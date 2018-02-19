@@ -168,32 +168,32 @@
 
 (defn get-excel-report-of-applications-by-key
   [application-keys selected-hakukohde skip-answers? session organization-service tarjonta-service ohjausparametrit-service person-service]
-  (let [applications         (application-store/get-applications-by-keys application-keys)
-        forms                (->> applications
-                                  (map :form-key)
-                                  (distinct))
-        allowed-forms        (set (filter #(form-access-control/form-allowed-by-key?
-                                             %
-                                             session
-                                             organization-service
-                                             [:view-applications :edit-applications])
-                                          forms))
-        allowed-applications (filter #(contains? allowed-forms (:form-key %)) applications)
-        application-reviews  (->> allowed-applications
-                                  (map :key)
-                                  application-store/get-application-reviews-by-keys
-                                  (reduce #(assoc %1 (:application-key %2) %2) {}))
-        persons              (->> (map :person-oid allowed-applications)
-                                  distinct
-                                  (person-service/get-persons person-service)
-                                  (reduce #(assoc %1 (:oidHenkilo %2) %2) {}))
-        parsed-persons       (for [application allowed-applications
-                                   :let [person-oid (:person-oid application)]]
-                               (->> (get persons person-oid)
-                                    (parse-person application)))]
-    (ByteArrayInputStream. (excel/export-applications allowed-applications
+  (let [applications              (application-store/get-applications-by-keys application-keys)
+        forms                     (->> applications
+                                       (map :form-key)
+                                       (distinct))
+        allowed-forms             (set (filter #(form-access-control/form-allowed-by-key?
+                                                  %
+                                                  session
+                                                  organization-service
+                                                  [:view-applications :edit-applications])
+                                               forms))
+        allowed-applications      (filter #(contains? allowed-forms (:form-key %)) applications)
+        application-reviews       (->> allowed-applications
+                                       (map :key)
+                                       application-store/get-application-reviews-by-keys
+                                       (reduce #(assoc %1 (:application-key %2) %2) {}))
+        onr-persons               (->> (map :person-oid allowed-applications)
+                                       (filter some?)
+                                       distinct
+                                       (person-service/get-persons person-service)
+                                       (reduce #(assoc %1 (:oidHenkilo %2) %2) {}))
+        applications-with-persons (for [application allowed-applications
+                                        :let [person-oid (:person-oid application)]]
+                                    (update application :person (->> (get onr-persons person-oid)
+                                                                     (parse-person application))))]
+    (ByteArrayInputStream. (excel/export-applications applications-with-persons
                                                       application-reviews
-                                                      parsed-persons
                                                       selected-hakukohde
                                                       skip-answers?
                                                       tarjonta-service

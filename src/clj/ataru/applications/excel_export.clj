@@ -471,7 +471,7 @@
                                  all-reviews)]
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
-(defn export-applications [applications application-reviews persons selected-hakukohde skip-answers? tarjonta-service ohjausparametrit-service]
+(defn export-applications [applications application-reviews selected-hakukohde skip-answers? tarjonta-service ohjausparametrit-service]
   (let [[^XSSFWorkbook workbook styles] (create-workbook-and-styles)
         form-meta-fields                (indexed-meta-fields form-meta-fields)
         form-meta-sheet                 (create-form-meta-sheet workbook styles form-meta-fields)
@@ -519,9 +519,9 @@
                                (reverse)
                                (map #(merge % (get-tarjonta-info (:haku %))))
                                (map-indexed (fn [row-idx application]
-                                              (let [row-writer (make-writer styles applications-sheet (inc row-idx))
+                                              (let [row-writer         (make-writer styles applications-sheet (inc row-idx))
                                                     application-review (get application-reviews (:key application))
-                                                    person (get persons (:person-oid application))]
+                                                    person             (:person application)]
                                                 (write-application! row-writer
                                                                     application
                                                                     application-review
