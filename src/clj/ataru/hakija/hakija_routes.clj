@@ -6,6 +6,7 @@
             [ataru.files.file-store :as file-store]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.schema.form-schema :as ataru-schema]
+            [ataru.hakija.form-role :as form-role]
             [ataru.util.client-error :as client-error]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
@@ -105,32 +106,32 @@
     (api/GET ["/haku/:haku-oid" :haku-oid #"[0-9\.]+"] []
       :summary "Gets form for haku"
       :path-params [haku-oid :- s/Str]
-      :query-params [{virkailija-secret :- s/Str nil}]
+      :query-params [role :- [form-role/FormRole]]
       :return ataru-schema/FormWithContentAndTarjontaMetadata
       (if-let [form-with-tarjonta (form-service/fetch-form-by-haku-oid
                                    tarjonta-service
                                    ohjausparametrit-service
                                    haku-oid
-                                   (some? virkailija-secret))]
+                                   role)]
         (response/ok form-with-tarjonta)
         (response/not-found)))
     (api/GET ["/hakukohde/:hakukohde-oid", :hakukohde-oid #"[0-9\.]+"] []
       :summary "Gets form for hakukohde"
       :path-params [hakukohde-oid :- s/Str]
-      :query-params [{virkailija-secret :- s/Str nil}]
+      :query-params [role :- [form-role/FormRole]]
       :return ataru-schema/FormWithContentAndTarjontaMetadata
       (if-let [form-with-tarjonta (form-service/fetch-form-by-hakukohde-oid
                                    tarjonta-service
                                    ohjausparametrit-service
                                    hakukohde-oid
-                                   (some? virkailija-secret))]
+                                   role)]
         (response/ok form-with-tarjonta)
         (response/not-found)))
     (api/GET "/form/:key" []
       :path-params [key :- s/Str]
-      :query-params [{virkailija-secret :- s/Str nil}]
+      :query-params [role :- [form-role/FormRole]]
       :return ataru-schema/FormWithContent
-      (if-let [form (form-service/fetch-form-by-key key (some? virkailija-secret))]
+      (if-let [form (form-service/fetch-form-by-key key role)]
         (response/ok form)
         (response/not-found)))
     (api/POST "/feedback" []

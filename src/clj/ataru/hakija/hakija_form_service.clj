@@ -10,6 +10,8 @@
             [taoensso.timbre :refer [warn]]
             [clj-time.core :as time]
             [clj-time.coerce :as t]
+            [schema.core :as s]
+            [ataru.hakija.form-role :as form-role]
             [ataru.component-data.component :as component]))
 
 (defn inject-hakukohde-component-if-missing
@@ -86,38 +88,46 @@
                   (keyword (:id field)))))))))
 
 (defn- uneditable?
-  [field hakukohteet virkailija?]
-  (or (contains? editing-forbidden-person-info-field-ids (keyword (:id field)))
-      (not (or virkailija?
-               (editing-allowed-by-hakuaika? field hakukohteet)))))
+  [field hakukohteet roles]
+  (not (and (or (and (form-role/virkailija? roles)
+                     (not (form-role/with-henkilo? roles)))
+                (not (contains? editing-forbidden-person-info-field-ids (keyword (:id field)))))
+            (or (form-role/virkailija? roles)
+                (editing-allowed-by-hakuaika? field hakukohteet)))))
 
-(defn flag-uneditable-and-unviewable-fields
-  [form hakukohteet virkailija?]
+(s/defn ^:always-validate flag-uneditable-and-unviewable-fields :- s/Any
+  [form :- s/Any
+   hakukohteet :- s/Any
+   roles :- [form-role/FormRole]]
   (update form :content
-    (fn [content]
-      (clojure.walk/prewalk
-        (fn [field]
-          (if (= "formField" (:fieldClass field))
-            (let [cannot-view? (contains? viewing-forbidden-person-info-field-ids
-                                 (keyword (:id field)))
-                  cannot-edit? (or cannot-view?
-                                   (uneditable? field hakukohteet virkailija?))]
-              (assoc field
-                :cannot-view cannot-view?
-                :cannot-edit cannot-edit?))
-            field))
-        content))))
+          (fn [content]
+            (clojure.walk/prewalk
+             (fn [field]
+               (if (= "formField" (:fieldClass field))
+                 (let [cannot-view? (contains? viewing-forbidden-person-info-field-ids
+                                               (keyword (:id field)))
+                       cannot-edit? (or cannot-view?
+                                        (uneditable? field hakukohteet roles))]
+                   (assoc field
+                          :cannot-view cannot-view?
+                          :cannot-edit cannot-edit?))
+                 field))
+             content))))
 
-(defn fetch-form-by-key
-  [key virkailija?]
+(s/defn ^:always-validate fetch-form-by-key :- s/Any
+  [key :- s/Any
+   roles :- [form-role/FormRole]]
   (when-let [form (form-store/fetch-by-key key)]
     (when (not (:deleted form))
       (-> form
-        koodisto/populate-form-koodisto-fields
-        (flag-uneditable-and-unviewable-fields nil virkailija?)))))
+          koodisto/populate-form-koodisto-fields
+          (flag-uneditable-and-unviewable-fields nil roles)))))
 
-(defn fetch-form-by-haku-oid
-  [tarjonta-service ohjausparametrit-service haku-oid virkailija?]
+(s/defn ^:always-validate fetch-form-by-haku-oid :- s/Any
+  [tarjonta-service :- s/Any
+   ohjausparametrit-service :- s/Any
+   haku-oid :- s/Any
+   roles :- [form-role/FormRole]]
   (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service ohjausparametrit-service haku-oid)
         form-keys     (->> (-> tarjonta-info :tarjonta :hakukohteet)
                         (map :form-key)
@@ -125,25 +135,28 @@
                         (remove nil?))
         hakukohteet   (get-in tarjonta-info [:tarjonta :hakukohteet])
         form          (when (= 1 (count form-keys))
-                        (fetch-form-by-key (first form-keys) virkailija?))]
+                        (fetch-form-by-key (first form-keys) roles))]
     (when (not tarjonta-info)
       (throw (Exception. (str "No haku found for haku " haku-oid " and keys " (pr-str form-keys)))))
     (if form
       (-> form
           (merge tarjonta-info)
           (inject-hakukohde-component-if-missing)
-          (flag-uneditable-and-unviewable-fields hakukohteet virkailija?)
+          (flag-uneditable-and-unviewable-fields hakukohteet roles)
           (populate-hakukohde-answer-options tarjonta-info)
           (populate-can-submit-multiple-applications tarjonta-info))
       (warn "could not find local form for haku" haku-oid "with keys" (pr-str form-keys)))))
 
-(defn fetch-form-by-hakukohde-oid
-  [tarjonta-service ohjausparametrit-service hakukohde-oid virkailija?]
+(s/defn ^:always-validate fetch-form-by-hakukohde-oid :- s/Any
+  [tarjonta-service :- s/Any
+   ohjausparametrit-service :- s/Any
+   hakukohde-oid :- s/Any
+   roles :- [form-role/FormRole]]
   (let [hakukohde (.get-hakukohde tarjonta-service hakukohde-oid)
         form      (fetch-form-by-haku-oid tarjonta-service
-                    ohjausparametrit-service
-                    (:hakuOid hakukohde)
-                    virkailija?)]
+                                          ohjausparametrit-service
+                                          (:hakuOid hakukohde)
+                                          roles)]
     (when form
       (assoc-in form [:tarjonta :default-hakukohde]
                 (some #(when (= hakukohde-oid (:oid %)) %)
