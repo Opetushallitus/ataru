@@ -126,9 +126,8 @@
 (re-frame/reg-sub
   :application/show-more-hakukohdes?
   (fn [db _]
-    (let [hakukohdes-visible          (-> db :application :hakukohde-hits count)
-          remaining-hakukohde-results (-> db :application :remaining-hakukohde-search-results count)]
-      (> remaining-hakukohde-results hakukohdes-visible))))
+    (let [remaining-hakukohde-results (-> db :application :remaining-hakukohde-search-results count)]
+      (> remaining-hakukohde-results 0))))
 
 (re-frame/reg-sub
   :application/hakukohde-hits
