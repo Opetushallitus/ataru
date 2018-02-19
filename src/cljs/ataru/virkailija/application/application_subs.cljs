@@ -2,7 +2,8 @@
   (:require [cljs-time.core :as t]
             [re-frame.core :as re-frame]
             [ataru.util :as u]
-            [ataru.application.review-states :as review-states]))
+            [ataru.application.review-states :as review-states]
+            [ataru.cljs-util :as util]))
 
 (defn- from-multi-lang [text]
   (some #(get text %) [:fi :sv :en]))
@@ -207,13 +208,21 @@
   (let [time-a (or (:time a) (:created-time a))
         time-b (or (:time b) (:created-time b))]
     (if (t/before? time-a time-b)
-      -1
-      1)))
+      1
+      -1)))
+
+(defn- mark-last-modify-event [events]
+  (let [last-modify-event-id (-> (filter util/modify-event? events)
+                                 last
+                                 :id)]
+    (map #(if (= (:id %) last-modify-event-id)
+            (assoc % :last-modify-event? true)
+            %) events)))
 
 (re-frame/reg-sub
   :application/events-and-information-requests
   (fn [db _]
-    (->> (concat (-> db :application :events)
+    (->> (concat (-> db :application :events mark-last-modify-event)
                  (-> db :application :information-requests))
          (sort event-and-information-request-comparator))))
 
@@ -285,3 +294,30 @@
     (->> (-> db :application :selected-application-and-form :application :answers :hakukohteet :value)
          (keep-indexed #(when (= hakukohde-oid %2) (inc %1)))
          first)))
+
+(re-frame.core/reg-sub
+  :application/selected-application-key
+  (fn [db _]
+    (-> db :application :selected-application-and-form :application :key)))
+
+(re-frame.core/reg-sub
+  :application/current-history-items
+  (fn [db _]
+    (-> db :application :selected-application-and-form :current-history-items)))
+
+(re-frame.core/reg-sub
+  :application/selected-event
+  (fn [db _]
+    (-> db :application :selected-application-and-form :selected-event)))
+
+(re-frame.core/reg-sub
+  :application/changes-made-for-event
+  (fn [db [_ event-id]]
+    (let [event-index    (util/event-index db event-id)
+          change-history (-> db :application :selected-application-and-form :application-change-history)]
+      (nth change-history event-index))))
+
+(re-frame.core/reg-sub
+  :application/field-highlighted?
+  (fn [db [_ field-id]]
+    (some #{field-id} (-> db :application :selected-application-and-form :highlighted-fields))))

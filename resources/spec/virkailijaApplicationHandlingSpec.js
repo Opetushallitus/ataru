@@ -31,8 +31,8 @@
         expect(downloadLink().text()).to.equal('Lataa Excel')
       });
       it('stores an event for review state change', function() {
-        var lastEventNow = testFrame().find('.application-handling__event-caption').last().text();
-        expect(lastEventNow).to.equal('Käsittelyvaihe: Käsittelyssä (VV)')
+        var firstEventNow = testFrame().find('.application-handling__event-caption').first().text();
+        expect(firstEventNow).to.equal('Käsittelyvaihe: Käsittelyssä (VV)')
       });
       it('Successfully stores notes and score for an application', function(done) {
         var scoreForVatanen = Math.floor((Math.random() * 50) + 1);

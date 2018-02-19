@@ -339,11 +339,12 @@
   (fn [{:keys [db]} [_ response]]
     (let [response-with-parsed-times (parse-application-times response)
           db                         (update-application-details db response-with-parsed-times)]
-      {:db       db
-       :dispatch (if (and (fc/feature-enabled? :attachment)
-                          (application-has-attachments? db))
-                   [:application/fetch-application-attachment-metadata]
-                   [:application/start-autosave])})))
+      {:db         db
+       :dispatch-n [(if (and (fc/feature-enabled? :attachment)
+                             (application-has-attachments? db))
+                      [:application/fetch-application-attachment-metadata]
+                      [:application/start-autosave])
+                    [:application/get-application-change-history (-> response :application :key)]]})))
 
 (reg-event-fx
   :application/fetch-application
@@ -665,3 +666,45 @@
     (assoc-in db [:application :review :state] (if active?
                                                  application-active-state
                                                  application-inactive-state))))
+
+(reg-event-db
+  :application/handle-change-history-response
+  (fn [db [_ response]]
+    (assoc-in db [:application :selected-application-and-form :application-change-history] response)))
+
+(reg-event-fx
+  :application/get-application-change-history
+  (fn [{:keys [db]} [_ application-key]]
+    {:db   db
+     :http {:method              :get
+            :path                (str "/lomake-editori/api/applications/" application-key "/changes")
+            :handler-or-dispatch :application/handle-change-history-response}}))
+
+(reg-event-db
+  :application/open-application-version-history
+  (fn [db [_ event]]
+    (let [event-index    (cljs-util/event-index db (:id event))
+          change-history (-> db :application :selected-application-and-form :application-change-history)]
+      (-> db
+          (assoc-in [:application :selected-application-and-form :current-history-items]
+                    (nth change-history event-index))
+          (assoc-in [:application :selected-application-and-form :selected-event] event)))))
+
+(reg-event-db
+  :application/close-application-version-history
+  (fn [db _]
+    (update-in db [:application :selected-application-and-form] dissoc :current-history-items :selected-event)))
+
+(reg-event-db
+  :application/remove-field-highlight
+  (fn [db [_ field-id]]
+    (let [highlighted-fields (-> db :application :selected-application-and-form :highlighted-fields)
+          updated-fields     (remove #(= field-id %) highlighted-fields)]
+      (assoc-in db [:application :selected-application-and-form :highlighted-fields] updated-fields))))
+
+(reg-event-fx
+  :application/highlight-field
+  (fn [{:keys [db]} [_ field-id]]
+    (.scrollIntoView (.getElementById js/document (name field-id)) (js-obj "behavior" "smooth"))
+    {:db (update-in db [:application :selected-application-and-form :highlighted-fields] conj field-id)
+     :dispatch-later [{:ms 3000 :dispatch [:application/remove-field-highlight field-id]}]}))

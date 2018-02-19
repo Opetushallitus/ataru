@@ -1,26 +1,27 @@
 (ns ataru.virkailija.application.view
-  (:require
-    [cljs.core.match :refer-macros [match]]
-    [clojure.string :as string]
-    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
-    [reagent.ratom :refer-macros [reaction]]
-    [reagent.core :as r]
-    [cljs-time.format :as f]
-    [taoensso.timbre :refer-macros [spy debug]]
-    [ataru.virkailija.application.handlers]
-    [ataru.virkailija.application.application-subs]
-    [ataru.virkailija.routes :as routes]
-    [ataru.virkailija.temporal :as t]
-    [ataru.application.review-states :as application-review-states]
-    [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
-    [ataru.cljs-util :as util]
-    [ataru.virkailija.application.application-search-control :refer [application-search-control]]
-    [goog.string.format]
-    [ataru.application.review-states :as review-states]
-    [ataru.application.application-states :as application-states]
-    [ataru.cljs-util :as cljs-util]
-    [medley.core :refer [find-first]]
-    [ataru.virkailija.temporal :as temporal]))
+  (:require [cljs.core.match :refer-macros [match]]
+            [clojure.string :as string]
+            [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+            [reagent.ratom :refer-macros [reaction]]
+            [reagent.core :as r]
+            [cljs-time.format :as f]
+            [taoensso.timbre :refer-macros [spy debug]]
+            [ataru.virkailija.application.handlers]
+            [ataru.virkailija.application.application-subs]
+            [ataru.virkailija.routes :as routes]
+            [ataru.virkailija.temporal :as t]
+            [ataru.application.review-states :as application-review-states]
+            [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
+            [ataru.cljs-util :as util]
+            [ataru.virkailija.application.application-search-control :refer [application-search-control]]
+            [goog.string.format]
+            [goog.string :as gstring]
+            [ataru.application.review-states :as review-states]
+            [ataru.application.application-states :as application-states]
+            [ataru.cljs-util :as cljs-util]
+            [medley.core :refer [find-first]]
+            [ataru.virkailija.temporal :as temporal]
+            [ataru.virkailija.virkailija-ajax :as ajax]))
 
 (defn- icon-check []
   [:img.application-handling__review-state-selected-icon
@@ -671,7 +672,7 @@
   [event]
   (let [[name initials] (name-and-initials event)]
     (when (and name initials)
-      [:span.application-handling__review-state-initials {:data-tooltip name} (str " (" initials ")")])))
+      [:span.application-handling__review-state-initials {:data-tooltip name} (str "(" initials ")")])))
 
 (defn event-caption [event]
   (match event
@@ -684,10 +685,16 @@
              label))
 
          {:event-type "updated-by-applicant"}
-         "Hakija muokannut hakemusta"
+         (str "Hakijalta "
+              (count @(subscribe [:application/changes-made-for-event (:id event)]))
+              " muutosta")
 
          {:event-type "updated-by-virkailija"}
-         [:span.application-handling__event-caption--inner "Virkailija " (virkailija-initials-span event) " muokannut hakemusta"]
+         [:span.application-handling__event-caption--inner
+          (virkailija-initials-span event)
+          " teki "
+          (count @(subscribe [:application/changes-made-for-event (:id event)]))
+          " muutosta"]
 
          {:event-type "received-from-applicant"}
          "Hakemus vastaanotettu"
@@ -704,6 +711,7 @@
                       (apply concat)
                       (distinct))
                  (:new-review-state event)))
+          " "
           (virkailija-initials-span event)]
 
          {:event-type "modification-link-sent"}
@@ -711,29 +719,58 @@
 
          {:subject _ :message message}
          [:div.application-handling__multi-line-event-caption
-          [:span.application-handling__event-caption--inner "Täydennyspyyntö lähetetty" (virkailija-initials-span event)]
+          [:span.application-handling__event-caption--inner "Täydennyspyyntö lähetetty " (virkailija-initials-span event)]
           [:span.application-handling__event-caption--inner.application-handling__event-caption--extra-info (str "\"" message "\"")]]
 
          :else "Tuntematon"))
 
-(defn to-event-row
-  [time-str caption]
-  [:div.application-handling__event-row
-   [:span.application-handling__event-timestamp time-str]
-   [:span.application-handling__event-caption caption]])
-
-(defn event-row [event]
-  (let [time-str (t/time->short-str (or (:time event) (:created-time event)))
-        caption (event-caption event)]
-    (to-event-row time-str caption)))
+(defn event-row
+  [event]
+  (let [modify-event? (util/modify-event? event)
+        modifications (when modify-event?
+                        (subscribe [:application/changes-made-for-event (:id event)]))
+        show-details? (r/atom (if (:last-modify-event? event) true false))
+        time-str      (t/time->short-str (or (:time event) (:created-time event)))
+        caption       (event-caption event)]
+    (fn [event]
+      [:div.application-handling__event-row
+       [:span.application-handling__event-timestamp time-str]
+       [:div.application-handling__event-caption-container
+        [:div.application-handling__event-caption
+         (when modify-event?
+           {:on-click #(swap! show-details? not)
+            :class    "application-handling__event-caption-modify-event"})
+         caption
+         (when modify-event?
+           [:span
+            (if @show-details?
+              [:i.zmdi.zmdi-chevron-up.application-handling__event-caption-chevron]
+              [:i.zmdi.zmdi-chevron-down.application-handling__event-caption-chevron])
+            "|"
+            [:a.application-handling__event-caption-compare
+             {:on-click (fn [e]
+                          (.stopPropagation e)
+                          (dispatch [:application/open-application-version-history event]))}
+             "Vertaile"]])]
+        (when @show-details?
+          [:ul.application-handling__event-row-details
+           (for [[key field] @modifications]
+             [:li
+              {:on-click (fn [e]
+                           (.stopPropagation e)
+                           (dispatch [:application/highlight-field key]))
+               :key      (str "event-list-row-for-" (:id event) "-" key)}
+              [:a (:label field)]])])]])))
 
 (defn application-review-events []
   (let [events (subscribe [:application/events-and-information-requests])]
     (fn []
       (into
-        [:div.application-handling__event-list
+       [:div.application-handling__event-list
          [:div.application-handling__review-header "Tapahtumat"]]
-        (mapv event-row @events)))))
+       (for [event @events]
+         ^{:key (str "event-row-for-" (:id event))}
+          [event-row event])))))
 
 (defn update-review-field [field convert-fn evt]
   (let [new-value (-> evt .-target .-value)]
@@ -1122,3 +1159,63 @@
           (when-not @review-canary-visible
             (dispatch [:state-update #(assoc-in % [:application :review-positioning] :in-flow)])
             (reset! review-canary-visible true)))))))
+
+(defn application-version-history-header [changes-amount]
+  (let [event (subscribe [:application/selected-event])]
+    (fn []
+      (let [changed-by (if (= (:event-type @event) "updated-by-applicant")
+                         "hakija"
+                         (str (:first-name @event) " " (:last-name @event)))]
+        [:div.application-handling__version-history-header
+         [:div.application-handling__version-history-header-text
+          "Vertailu muutoksesta " (t/time->short-str (or (:time @event) (:created-time @event)))]
+         [:div.application-handling__version-history-header-sub-text
+          (str changed-by " muutti " changes-amount " vastausta:")]]))))
+
+(defn- application-version-history-list-value [values]
+  [:ol.application-handling__version-history-list-value
+   (map-indexed
+    (fn [index value]
+      ^{:key index}
+      [:li value])
+    values)])
+
+(defn application-version-history-value [value-or-values]
+  (cond
+    (every? sequential? value-or-values)
+    [:ol.application-handling__version-history-question-group-value
+     (map-indexed
+      (fn [index values]
+        ^{:key index}
+        [:li (application-version-history-list-value values)])
+      value-or-values)]
+
+    (sequential? value-or-values)
+    (application-version-history-list-value value-or-values)
+
+    :else (str value-or-values)))
+
+(defn application-version-history-row [key history-item]
+  ^{:key (str "application-change-history-" key)}
+  [:div.application-handling__version-history-row
+   [:div.application-handling__version-history-row-label
+    (:label history-item)]
+   [:div.application-handling__version-history-row-value.application-handling__version-history-row-value-old
+    [:div.application-handling__version-history-row-value-sign (gstring/unescapeEntities "&minus;")]
+    (application-version-history-value (:old history-item))]
+   [:div.application-handling__version-history-row-value.application-handling__version-history-row-value-new
+    [:div.application-handling__version-history-row-value-sign (gstring/unescapeEntities "&plus;")]
+    (application-version-history-value (:new history-item))]])
+
+(defn application-version-changes []
+  (let [history-items (subscribe [:application/current-history-items])]
+    (when @history-items
+      [:div.application-handling__application-version-history-container
+       [:div.application-handling__application-version-history
+        [:a.application-handling__close-version-history
+         {:on-click #(dispatch [:application/close-application-version-history])}
+         "Sulje"]
+        [application-version-history-header (count @history-items)]
+        (for [[key item] @history-items]
+          ^{:key (str "application-history-row-for-" key)}
+          [application-version-history-row key item])]])))

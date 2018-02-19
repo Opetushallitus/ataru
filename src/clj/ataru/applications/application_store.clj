@@ -1,25 +1,25 @@
 (ns ataru.applications.application-store
-  (:require [ataru.log.audit-log :as audit-log]
-            [ataru.util.language-label :as label]
+  (:require [ataru.application.application-states :as application-states]
+            [ataru.application.review-states :refer [incomplete-states] :as application-review-states]
+            [ataru.db.db :as db]
+            [ataru.dob :as dob]
+            [ataru.forms.form-store :as forms]
+            [ataru.koodisto.koodisto :as koodisto]
+            [ataru.log.audit-log :as audit-log]
             [ataru.schema.form-schema :as schema]
-            [ataru.application.review-states :refer [incomplete-states]]
-            [ataru.application.application-states :as application-states]
-            [ataru.virkailija.authentication.virkailija-edit]
-            [ataru.util :refer [answers-by-key]]
-            [ataru.application.review-states :as application-review-states]
+            [ataru.util :refer [answers-by-key] :as util]
+            [ataru.util.language-label :as label]
+            [ataru.util.random :as crypto]
+            [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword ->camelCase]]
             [camel-snake-kebab.extras :refer [transform-keys]]
+            [clj-time.coerce :as c]
             [clj-time.core :as time]
             [clj-time.format :as f]
-            [clj-time.coerce :as c]
-            [schema.core :as s]
-            [ataru.db.db :as db]
-            [yesql.core :refer [defqueries]]
             [clojure.java.jdbc :as jdbc]
-            [ataru.dob :as dob]
-            [ataru.util.random :as crypto]
+            [schema.core :as s]
             [taoensso.timbre :refer [info]]
-            [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]))
+            [yesql.core :refer [defqueries]]))
 
 (defqueries "sql/application-queries.sql")
 (defqueries "sql/virkailija-credentials-queries.sql")
@@ -721,3 +721,27 @@
 
 (defn get-application-keys []
   (exec-db :db yesql-get-latest-application-ids-distinct-by-person-oid nil))
+
+(defn get-application-version-changes [application-key]
+  (let [all-versions         (exec-db :db
+                                      yesql-get-application-versions
+                                      {:application_key application-key})
+        all-versions-paired  (map vector all-versions (rest all-versions))
+        get-koodisto-options (memoize koodisto/get-koodisto-options)]
+    (when (not-empty all-versions-paired)
+      (map (fn [[older-application newer-application]]
+             (let [older-version-answers (util/application-answers-by-key older-application)
+                   newer-version-answers (util/application-answers-by-key newer-application)
+                   answer-keys           (set (concat (keys older-version-answers) (keys newer-version-answers)))
+                   lang                  (or (-> newer-application :lang keyword) :fi)
+                   form-fields           (util/form-fields-by-id (forms/get-form-by-application newer-application))]
+               (into {}
+                     (for [key answer-keys
+                           :let [old-value (-> older-version-answers key :value)
+                                 new-value (-> newer-version-answers key :value)
+                                 field     (key form-fields)]
+                           :when (not= old-value new-value)]
+                       {key {:label (-> field :label lang)
+                             :old   (util/populate-answer-koodisto-values old-value field get-koodisto-options)
+                             :new   (util/populate-answer-koodisto-values new-value field get-koodisto-options)}}))))
+           all-versions-paired))))
