@@ -125,10 +125,10 @@
                           (person-info-from-onr-person person-from-onr)
                           (person-info-from-application application))]
     (merge
-     {:oid         (:person-oid application)
-      :turvakielto (-> person-from-onr :turvakielto boolean)
-      :yksiloity   (boolean yksiloity)}
-     person-info)))
+      {:oid         (:person-oid application)
+       :turvakielto (-> person-from-onr :turvakielto boolean)
+       :yksiloity   (boolean yksiloity)}
+      person-info)))
 
 (defn get-person
   [application person-client]
@@ -188,8 +188,7 @@
                                   (person-service/get-persons person-service)
                                   (reduce #(assoc %1 (:oidHenkilo %2) %2) {}))
         parsed-persons       (for [application allowed-applications
-                                   :let [person-oid (:person-oid application)]
-                                   :when (some? person-oid)]
+                                   :let [person-oid (:person-oid application)]]
                                (->> (get persons person-oid)
                                     (parse-person application)))]
     (ByteArrayInputStream. (excel/export-applications allowed-applications
