@@ -111,6 +111,11 @@
     (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term-value] "")))
 
 (re-frame/reg-sub
+  :editor/belongs-to-hakukohteet-modal-show-more-value
+  (fn [db [_ id haku-oid]]
+    (get-in db [:editor :ui id :belongs-to-hakukohteet :modal haku-oid :show-more-value] 15)))
+
+(re-frame/reg-sub
   :editor/all-folded
   (fn [db _]
     (get-in db [:editor :ui :all-folded] false)))

@@ -76,15 +76,20 @@
 
 (defn- haku-list-item
   [path id haku selected-hakukohteet]
-  (let [name (subscribe [:editor/haku-name haku])]
-    (fn [path id haku selected-hakukohteet]
-      [:li.belongs-to-hakukohteet-modal__haku-list-item
-       [:span.belongs-to-hakukohteet-modal__haku-label
-        @name]
-       [:ul.belongs-to-hakukohteet-modal__hakukohde-list
-        (for [hakukohde (:hakukohteet haku)]
-          ^{:key (:oid hakukohde)}
-          [hakukohde-list-item path id hakukohde selected-hakukohteet])]])))
+  (let [name         @(subscribe [:editor/haku-name haku])
+        show-at-most @(subscribe [:editor/belongs-to-hakukohteet-modal-show-more-value id (:oid haku)])]
+    [:li.belongs-to-hakukohteet-modal__haku-list-item
+     [:span.belongs-to-hakukohteet-modal__haku-label
+      name]
+     [:ul.belongs-to-hakukohteet-modal__hakukohde-list
+      (for [hakukohde (first (split-at show-at-most (:hakukohteet haku)))]
+        ^{:key (:oid hakukohde)}
+        [hakukohde-list-item path id hakukohde selected-hakukohteet])
+      (when (< show-at-most (count (:hakukohteet haku)))
+        [:li.belongs-to-hakukohteet-modal__hakukohde-list-item--show-more
+         {:on-click #(dispatch [:editor/belongs-to-hakukohteet-modal-show-more id (:oid haku)])}
+         [:span.belongs-to-hakukohteet-modal__hakukohde-label
+          "Näytä lisää.."]])]]))
 
 (defn- belongs-to-hakukohteet-modal
   [path id selected-hakukohteet]
@@ -114,7 +119,7 @@
             [:ul.belongs-to-hakukohteet-modal__haku-list
              (for [[_ haku] @haut]
                ^{:key (:oid haku)}
-               [haku-list-item path id haku selected-hakukohteet])])]
+                 [haku-list-item path id haku selected-hakukohteet])])]
          [:div.belongs-to-hakukohteet-modal__box
           [:div.belongs-to-hakukohteet-modal__no-haku-row
            [:p.belongs-to-hakukohteet-modal__no-haku
