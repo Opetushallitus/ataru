@@ -681,7 +681,7 @@
                        application-review-states/application-review-states
                        (:new-review-state event))]
            (if (= (:new-review-state event) "information-request")
-             [:span.application-handling__event-caption--inner label "asdfasd " (virkailija-initials-span event)]
+             [:span.application-handling__event-caption--inner label (virkailija-initials-span event)]
              label))
 
          {:event-type "updated-by-applicant"}
