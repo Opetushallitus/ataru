@@ -313,7 +313,7 @@
 (re-frame.core/reg-sub
   :application/changes-made-for-event
   (fn [db [_ event-id]]
-    (let [event-index (util/event-index db event-id)
+    (let [event-index    (util/event-index db event-id)
           change-history (-> db :application :selected-application-and-form :application-change-history)]
       (nth change-history event-index))))
 

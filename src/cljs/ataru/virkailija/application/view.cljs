@@ -1163,11 +1163,14 @@
 (defn application-version-history-header [changes-amount]
   (let [event (subscribe [:application/selected-event])]
     (fn []
-      [:div.application-handling__version-history-header
-       [:div.application-handling__version-history-header-text
-        "Vertailu muutoksesta " (t/time->short-str (or (:time @event) (:created-time @event)))]
-       [:div.application-handling__version-history-header-sub-text
-        (str (:first-name @event) " " (:last-name @event) " muutti " changes-amount " vastausta:")]])))
+      (let [changed-by (if (= (:event-type @event) "updated-by-applicant")
+                         "hakija"
+                         (str (:first-name @event) " " (:last-name @event)))]
+        [:div.application-handling__version-history-header
+         [:div.application-handling__version-history-header-text
+          "Vertailu muutoksesta " (t/time->short-str (or (:time @event) (:created-time @event)))]
+         [:div.application-handling__version-history-header-sub-text
+          (str changed-by " muutti " changes-amount " vastausta:")]]))))
 
 (defn- application-version-history-list-value [values]
   [:ol.application-handling__version-history-list-value
