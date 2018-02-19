@@ -150,16 +150,16 @@
                                        :sv "Visa mer.."}
    :expired-secret-heading            {:fi "Tämä hakemuslinkki on vanhentunut"
                                        :en "This application link has expired"
-                                       :sv ""}
+                                       :sv "Denna ansökningslänk har föråldrats"}
    :expired-secret-paragraph          {:fi "Turvallisuussyistä hakemuslinkki on voimassa yhden muokkauskerran tai enintään 30 päivää."
                                        :en "For security reasons the link is valid for one application update or a maximum of 30 days."
-                                       :sv ""}
+                                       :sv "Av säkerhetsskäl är ansökningslänken i kraft under en session eller i högst 30 dagar."}
    :expired-secret-button             {:fi "Tilaa uusi hakemuslinkki sähköpostiisi"
                                        :en "Send a new application link to your email"
-                                       :sv ""}
+                                       :sv "Beställ en ny ansökningslänk till din e-post"}
    :expired-secret-sent               {:fi "Uusi linkki lähetetty!"
                                        :en "The new link has been sent!"
-                                       :sv ""}
+                                       :sv "Den nya länken har skickats!"}
    :expired-secret-contact            {:fi "Ongelmatilanteessa ota yhteys hakemaasi oppilaitokseen."
                                        :en "If problems arise, please contact the educational organization to which you have applied."
                                        :sv "Vid eventuella problemsituationer kontakta den läroanstalt du söker till."}})
