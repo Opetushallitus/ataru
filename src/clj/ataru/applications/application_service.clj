@@ -132,8 +132,8 @@
 
 (defn get-person
   [application person-client]
-  (let [person-from-onr (when-let [oid (:person-oid application)]
-                          (person-service/get-person person-client oid))]
+  (let [person-from-onr (some->> (:person-oid application)
+                                 (person-service/get-person person-client))]
     (parse-person application person-from-onr)))
 
 (defn get-application-with-human-readable-koodis
