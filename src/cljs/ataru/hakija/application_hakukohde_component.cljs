@@ -233,7 +233,7 @@
       [:a.application__hakukohde-selection-open-search
 
        (get-translation :add-application-option)
-       (when-let [max-hakukohteet "6"]
+       (when-let [max-hakukohteet @(subscribe [:application/max-hakukohteet])]
          [:span.application__hakukohde-selection-max-label
           (get-translation :applications_at_most max-hakukohteet)])]]
      (when @(subscribe [:application/show-hakukohde-search])
