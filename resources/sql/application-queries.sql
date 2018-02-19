@@ -624,9 +624,7 @@ WITH application_secret AS (SELECT
                               application_key,
                               id
                             FROM application_secrets
-                            WHERE secret = :secret
-                            ORDER BY id DESC
-                            LIMIT 1),
+                            WHERE secret = :secret),
     latest_secret AS (SELECT
                         application_key,
                         id
@@ -657,14 +655,11 @@ ORDER BY id DESC
 LIMIT 1;
 
 -- name: yesql-get-latest-application-language-by-any-version-of-secret
-WITH application_secret AS (SELECT DISTINCT ON (application_key) *
-                            FROM application_secrets
-                            WHERE secret = :secret
-                            ORDER BY application_key, id DESC)
 SELECT lang
 FROM latest_applications
 WHERE key = (SELECT application_key
-             FROM application_secret);
+             FROM application_secrets
+             WHERE secret = :secret);
 
 -- name: yesql-get-latest-version-by-virkailija-secret-lock-for-update
 WITH latest_version AS (
