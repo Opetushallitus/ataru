@@ -685,7 +685,7 @@
              label))
 
          {:event-type "updated-by-applicant"}
-         (str "Hakija lähetti "
+         (str "Hakijalta "
               (count @(subscribe [:application/changes-made-for-event (:id event)]))
               " muutosta")
 
@@ -724,13 +724,15 @@
 
          :else "Tuntematon"))
 
-(defn to-event-row
-  [time-str caption event]
+(defn event-row
+  [event]
   (let [modify-event? (util/modify-event? event)
         modifications (when modify-event?
                         (subscribe [:application/changes-made-for-event (:id event)]))
-        show-details? (r/atom (if (:last-modify-event? event) true false))]
-    (fn [time-str caption event]
+        show-details? (r/atom (if (:last-modify-event? event) true false))
+        time-str (t/time->short-str (or (:time event) (:created-time event)))
+        caption (event-caption event)]
+    (fn [event]
       [:div.application-handling__event-row
        [:span.application-handling__event-timestamp time-str]
        [:div.application-handling__event-caption-container
@@ -757,21 +759,18 @@
               {:on-click (fn [e]
                            (.stopPropagation e)
                            (dispatch [:application/highlight-field key]))
-               :key      (str "event-list-for" key)}
+               :key      (str "event-list-row-for-" (:id event) "-" key)}
               [:a (:label field)]])])]])))
-
-(defn event-row [event]
-  (let [time-str (t/time->short-str (or (:time event) (:created-time event)))
-        caption (event-caption event)]
-    [to-event-row time-str caption event]))
 
 (defn application-review-events []
   (let [events (subscribe [:application/events-and-information-requests])]
     (fn []
       (into
-        [:div.application-handling__event-list
+       [:div.application-handling__event-list
          [:div.application-handling__review-header "Tapahtumat"]]
-        (mapv event-row @events)))))
+       (for [event @events]
+         ^{:key (str "event-row-for-" (:id event))}
+          [event-row event])))))
 
 (defn update-review-field [field convert-fn evt]
   (let [new-value (-> evt .-target .-value)]
