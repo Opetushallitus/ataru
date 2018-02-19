@@ -47,11 +47,13 @@
                                 (map :value hakukohde-options)
                                 (->> hakukohde-options
                                      (filter #(re-find query-pattern
-                                                       (str
-                                                         (get-in % [:label lang] "")
-                                                         (get-in % [:description lang] ""))))
-                                     (map :value)))]
-        (assoc-in db [:application :hakukohde-hits] results))
+                                                       (str (get-in % [:label lang] "")
+                                                            (get-in % [:description lang] ""))))
+                                     (map :value)))
+            [hakukohde-hits rest-results] (split-at 15 results)]
+        (-> db
+            (assoc-in [:application :remaining-hakukohde-search-results] rest-results)
+            (assoc-in [:application :hakukohde-hits] hakukohde-hits)))
       db)))
 
 (reg-event-fx
@@ -61,6 +63,15 @@
      :dispatch-debounced {:timeout  (or timeout 500)
                           :id       :hakukohde-query
                           :dispatch [:application/hakukohde-query-process hakukohde-query]}}))
+
+(reg-event-db
+  :application/show-more-hakukohdes
+  (fn [db _]
+    (let [remaining-results (-> db :application :remaining-hakukohde-search-results)
+          [more-hits rest-results] (split-at 15 remaining-results)]
+      (-> db
+          (assoc-in [:application :remaining-hakukohde-search-results] rest-results)
+          (update-in [:application :hakukohde-hits] concat more-hits)))))
 
 (reg-event-db
   :application/set-hakukohde-valid

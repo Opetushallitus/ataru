@@ -202,7 +202,12 @@
       [:div.application__hakukohde-selection-search-results
        (for [hakukohde-oid @(subscribe [:application/hakukohde-hits])]
          ^{:key (str "found-hakukohde-row-" hakukohde-oid)}
-         [search-hit-hakukohde-row hakukohde-oid])]]]))
+         [search-hit-hakukohde-row hakukohde-oid])]
+      (when @(subscribe [:application/show-more-hakukohdes?])
+        [:div.application__show_more_hakukohdes_container
+         [:span.application__show_more_hakukohdes
+          {:on-click #(dispatch [:application/show-more-hakukohdes])}
+          (get-translation :show-more)]])]]))
 
 (defn- hakukohde-selection-header
   [field-descriptor]

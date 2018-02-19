@@ -149,6 +149,12 @@
   (fn [db _] (get-in db [:application :hakukohde-query])))
 
 (re-frame/reg-sub
+  :application/show-more-hakukohdes?
+  (fn [db _]
+    (let [remaining-hakukohde-results (-> db :application :remaining-hakukohde-search-results count)]
+      (> remaining-hakukohde-results 0))))
+
+(re-frame/reg-sub
   :application/hakukohde-hits
   (fn [db _]
     (get-in db [:application :hakukohde-hits])))
