@@ -129,7 +129,7 @@
     (let [koodisto-version-url (str koodisto-base-url koodisto-version-path koodisto-uri "/" version)]
       (->> (do-get koodisto-version-url)
            (mapv koodi-value->soresu-option)
-           (sort-by (fn [x] (-> x :label :fi)) compare-case-insensitively)))))
+           (sort-by (comp :fi :label) compare-case-insensitively)))))
 
 (defn- get-cached-koodisto [db-key koodisto-uri version checksum]
   (->> {:koodisto_uri koodisto-uri
