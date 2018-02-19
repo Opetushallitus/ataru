@@ -1,10 +1,13 @@
 (ns ataru.koodisto.koodisto-db-cache
-  (:require [org.httpkit.client :as http]
+  (:require [ataru.config.url-helper :refer [resolve-url]]
+            [ataru.db.db :as db]
+            [ataru.koodisto.koodisto-codes :refer [institution-type-codes]]
+            [ataru.virkailija.user.organization-client :as organization-client]
             [cheshire.core :as cheshire]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
+            [org.httpkit.client :as http]
             [pandect.algo.sha256 :refer :all]
-            [ataru.db.db :as db]
             [yesql.core :refer [defqueries]]))
 
 ; TODO url.config
@@ -79,11 +82,54 @@
                           (mapv koodisto-version->uri-and-name)
                           (sort compare-case-insensitively)))
 
+(defn- parse-vocational-code-element [element]
+  {:value (:codeElementValue element)
+   :label {:fi (->> element :relationMetadata (extract-name-with-language "FI"))
+           :sv (->> element :relationMetadata (extract-name-with-language "SV"))
+           :en (->> element :relationMetadata (extract-name-with-language "EN"))}})
+
+(defn- get-vocational-degree-options [version]
+  (let [koodisto-uri (str koodisto-base-url "codeelement/ammatillisetopsperustaiset_1/" version)]
+    (->> (do-get koodisto-uri)
+         :withinCodeElements
+         (filter #(-> % :passive not))
+         (sort-by :codeElementVersion)
+         (group-by :codeElementValue)
+         (map (fn [[key values]]
+                (-> values last parse-vocational-code-element))))))
+
+(defn- get-vocational-institutions-by-type [type version]
+  (let [koodisto-uri (str koodisto-base-url "codeelement/oppilaitostyyppi_" type "/" version)]
+    (->> (do-get koodisto-uri)
+         :withinCodeElements
+         (filter #(-> % :passive not))
+         (map :codeElementValue))))
+
+(defn- get-institution [number]
+  (when-let [institution (organization-client/get-organization-by-oid-or-number number)]
+    {:value number
+     :label (:nimi institution)}))
+
+(defn get-vocational-institutions [version]
+  (->> institution-type-codes
+       (pmap #(get-vocational-institutions-by-type % version))
+       flatten
+       set
+       (pmap get-institution)
+       (filter some?)))
+
+
 (defn get-koodi-options [koodisto-uri version]
-                        (let [koodisto-version-url (str koodisto-base-url koodisto-version-path koodisto-uri "/" version)]
-                          (->> (do-get koodisto-version-url)
-                               (mapv koodi-value->soresu-option)
-                               (sort-by (fn [x] (-> x :label :fi)) compare-case-insensitively))))
+  (condp = koodisto-uri
+
+    "AmmatillisetOPSperustaiset" (get-vocational-degree-options version)
+
+    "oppilaitostyyppi" (get-vocational-institutions version)
+
+    (let [koodisto-version-url (str koodisto-base-url koodisto-version-path koodisto-uri "/" version)]
+      (->> (do-get koodisto-version-url)
+           (mapv koodi-value->soresu-option)
+           (sort-by (comp :fi :label) compare-case-insensitively)))))
 
 (defn- get-cached-koodisto [db-key koodisto-uri version checksum]
   (->> {:koodisto_uri koodisto-uri

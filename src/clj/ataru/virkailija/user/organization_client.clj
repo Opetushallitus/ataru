@@ -1,9 +1,11 @@
 (ns ataru.virkailija.user.organization-client
-  (:require
-    [ataru.config.url-helper :refer [resolve-url]]
-    [ataru.config.core :refer [config]]
-    [cheshire.core :as json]
-    [ataru.cas.client :as cas-client]))
+  (:require [ataru.cas.client :as cas-client]
+            [ataru.config.core :refer [config]]
+            [ataru.config.url-helper :refer [resolve-url]]
+            [cheshire.core :as json]
+            [cheshire.core :as cheshire]
+            [clojure.tools.logging :as log]
+            [org.httpkit.client :as http]))
 
 (def oph-organization "1.2.246.562.10.00000000001")
 
@@ -74,3 +76,15 @@
     (if (= 200 (:status response))
       (->> response read-body (map group->map))
       (throw (Exception. (str "Got status code " (:status response) " While reading groups"))))))
+
+; Apis that don't require cas client
+
+(defn get-organization-by-oid-or-number [oid-or-number]
+  "Get organization by oid or number."
+  (let [url (resolve-url :organisaatio-service.get-by-oid oid-or-number)
+        {:keys [status headers body error] :as resp} @(http/get url)]
+    (if (= 200 status)
+      (let [body (cheshire/parse-string body true)]
+        (log/info (str "Fetched organization from URL: " url))
+        body)
+      (log/error (str "Couldn't fetch organization by number from url: " url)))))

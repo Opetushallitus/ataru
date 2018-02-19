@@ -391,6 +391,10 @@
        ^{:key (:id followup)}
        [render-field followup])]))
 
+(defn- non-blank-option-label [option lang]
+  (non-blank-val (get-in option [:label lang])
+                 (some #(-> option :label %) [lang :fi :sv :en])))
+
 (defn dropdown [field-descriptor & {:keys [div-kwd editing idx] :or {div-kwd :div.application__form-field editing false}}]
   (let [application  (subscribe [:state-query [:application]])
         lang         (subscribe [:application/form-language])
@@ -438,14 +442,12 @@
            [^{:key (str "blank-" (:id field-descriptor))} [:option {:value ""} ""]])
          (map-indexed
           (fn [idx option]
-            (let [label        (non-blank-val (get-in option [:label @lang])
-                                              (get-in option [:label @default-lang]))
-                  option-value (:value option)]
-              ^{:key idx}
-              [:option {:value option-value} label]))
+            [:option {:value (:value option)
+                      :key   idx}
+             (non-blank-option-label option @lang)])
           (cond->> (:options field-descriptor)
             (some? (:koodisto-source field-descriptor))
-            (sort-by #(get-in % [:label @lang]))))))]]
+            (sort-by #(non-blank-option-label % @lang))))))]]
      (when-not idx
        (dropdown-followups field-descriptor @value))]))
 
@@ -461,8 +463,7 @@
 (defn- multiple-choice-option [field-descriptor option parent-id question-group-idx]
   (let [lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
-        label        (non-blank-val (get-in option [:label @lang])
-                                    (get-in option [:label @default-lang]))
+        label        (non-blank-option-label option @lang)
         value        (:value option)
         option-id    (util/component-id)
         cannot-edit? (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])]
@@ -507,7 +508,7 @@
                          [multiple-choice-option field-descriptor option id idx])
                        (cond->> (:options field-descriptor)
                          (some? (:koodisto-source field-descriptor))
-                         (sort-by #(get-in % [:label @lang])))))]])))
+                         (sort-by #(non-blank-option-label % @lang)))))]])))
 
 (defn- single-choice-option [option parent-id field-descriptor question-group-idx]
   (let [lang         (subscribe [:application/form-language])
