@@ -730,8 +730,8 @@
         modifications (when modify-event?
                         (subscribe [:application/changes-made-for-event (:id event)]))
         show-details? (r/atom (if (:last-modify-event? event) true false))
-        time-str (t/time->short-str (or (:time event) (:created-time event)))
-        caption (event-caption event)]
+        time-str      (t/time->short-str (or (:time event) (:created-time event)))
+        caption       (event-caption event)]
     (fn [event]
       [:div.application-handling__event-row
        [:span.application-handling__event-timestamp time-str]
@@ -1171,15 +1171,21 @@
 
 (defn- application-version-history-list-value [values]
   [:ol.application-handling__version-history-list-value
-   (for [value values]
-     [:li value])])
+   (map-indexed
+    (fn [index value]
+      ^{:key index}
+      [:li value])
+    values)])
 
 (defn application-version-history-value [value-or-values]
   (cond
     (every? sequential? value-or-values)
-    (into [:ol.application-handling__version-history-question-group-value]
-          (for [values value-or-values]
-            [:li (application-version-history-list-value values)]))
+    [:ol.application-handling__version-history-question-group-value
+     (map-indexed
+      (fn [index values]
+        ^{:key index}
+        [:li (application-version-history-list-value values)])
+      value-or-values)]
 
     (sequential? value-or-values)
     (application-version-history-list-value value-or-values)
@@ -1208,4 +1214,5 @@
          "Sulje"]
         [application-version-history-header (count @history-items)]
         (for [[key item] @history-items]
+          ^{:key (str "application-history-row-for-" key)}
           [application-version-history-row key item])]])))
