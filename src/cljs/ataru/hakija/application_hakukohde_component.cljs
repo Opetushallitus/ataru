@@ -222,6 +222,7 @@
     [:div
      [:div.application__hakukohde-row--search-toggle
       {:on-click hakukohde-search-toggle-event-handler
+       :role "button"
        :class    (clojure.string/join " " [(when (not @(subscribe [:application/show-hakukohde-search]))
                                              "application__hakukohde-row--search-toggle--closed")
                                            (when @(subscribe [:application/prioritize-hakukohteet?])
