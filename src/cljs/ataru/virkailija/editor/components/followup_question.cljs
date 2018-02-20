@@ -47,13 +47,16 @@
               (dispatch [:editor/generate-followup-component generate-fn option-path]))]]]]))))
 
 (defn followup-question [option-path]
-  (let [layer-visible?      (subscribe [:editor/followup-overlay option-path :visible?])
-        followup-component  (subscribe [:editor/get-component-value (vec (flatten [option-path :followups]))])
-        ; disallow nesting followup questions
-        top-level-followup? (nil? ((set (flatten option-path)) :followups))]
+  (let [layer-visible?        (subscribe [:editor/followup-overlay option-path :visible?])
+        followup-component    (subscribe [:editor/get-component-value (vec (flatten [option-path :followups]))])
+        allow-more-followups? (->> option-path
+                                   flatten
+                                   (filter #(= :followups %))
+                                   count
+                                   (> 2))]
     (fn [option-path]
       [:div.editor-form__followup-question
-       (when top-level-followup?
+       (when allow-more-followups?
          (match [@followup-component @layer-visible?]
            [(_ :guard not-empty) _] "Lisäkysymykset"
            [_ true] [:a {:on-click #(dispatch [:editor/followup-overlay-close option-path])} "Lisäkysymykset"]
