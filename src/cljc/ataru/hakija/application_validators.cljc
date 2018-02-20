@@ -300,6 +300,21 @@
         (and (pos? num-answers) answers-subset-of-options?))
       true)))
 
+(def numeric-matcher #"[+-]?(0|[1-9][0-9]*)([,.][0-9]+)?")
+
+(defn- numeric?
+  [value _ field-descriptor]
+  (let [[_ integer-part decimal-part] (re-matches numeric-matcher value)
+        decimal-places (-> field-descriptor :params :decimals inc)] ; inc to conside separator!
+    (cond
+      (not integer-part) false
+
+      (and decimal-part
+           (> (count decimal-part) decimal-places))
+      false
+
+      :else true)))
+
 (def pure-validators {:required        required?
                       :postal-code     postal-code?
                       :postal-office   postal-office?

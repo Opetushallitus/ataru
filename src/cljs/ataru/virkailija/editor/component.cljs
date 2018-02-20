@@ -362,7 +362,7 @@
                          (dispatch [:editor/set-component-value checked-now? path :params :numeric?])
                          (dispatch [(if checked-now?
                                       :editor/add-validator
-                                      :editor/remove-validator) "numericg" path])
+                                      :editor/remove-validator) "numeric" path])
                          (when-not checked-now?
                            (dispatch [:editor/set-component-value nil path :params :decimals]))))}]
         [:label.editor-form__checkbox-label

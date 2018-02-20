@@ -6,6 +6,7 @@
             [ataru.fixtures.ssn :as ssn]
             [ataru.fixtures.first-name :as first-name]
             [ataru.fixtures.hakukohde :as hakukohde]
+            [ataru.fixtures.numeric-input :refer [numbers]]
             [ataru.hakija.application-validators :as validator]
             [speclj.core :refer :all]
             [clojure.core.async :as async]))
@@ -137,3 +138,12 @@
             (for [[answer field expected] hakukohde/hakukohteet]
               (it (str "should validate hakukohteet " answer " with field " field " as " expected)
                   (should= expected (validate! :hakukohteet answer nil field))))))
+
+(describe "numeric validator"
+  (tags :unit :numeric)
+  (doall
+    (for [number (keys numbers)
+          :let [expected (get numbers number)]]
+      (it (str "should " (when-not expected "not ") "validate " number)
+        (should= expected (validate! :numeric number nil {:params {:decimals 8,
+                                                                   :numeric? true}}))))))
