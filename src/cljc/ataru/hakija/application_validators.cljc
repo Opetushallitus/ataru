@@ -304,8 +304,6 @@
 
 (defn- numeric?
   [value _ field-descriptor]
-  (println value)
-  (println field-descriptor)
   (let [[_ integer-part decimal-part] (re-matches numeric-matcher value)
         decimal-places (-> field-descriptor :params :decimals)]
     (cond
