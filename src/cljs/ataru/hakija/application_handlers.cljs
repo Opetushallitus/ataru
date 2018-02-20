@@ -247,21 +247,18 @@
 
 (defn- toggle-values
   [answer options]
-  (let [question-group-answer? (and (vector? options)
-                                    (every? vector? options))]
-    (->> options
-         (map-indexed (fn [question-group-idx option-or-options]
-                        [(when question-group-answer? question-group-idx)
-                         option-or-options]))
-         (reduce (fn [answer [question-group-idx option-or-options]]
-                   (if question-group-idx
-                     (reduce #(toggle-multiple-choice-option %1 %2 question-group-idx)
-                             answer
-                             option-or-options)
-                     (toggle-multiple-choice-option answer
-                                                    option-or-options
-                                                    nil)))
-                 answer))))
+  (reduce (fn [answer [idx option]]
+            (if (vector? option)
+              (reduce #(toggle-multiple-choice-option %1 %2 idx)
+                      (-> answer
+                          (update :options (fnil identity []))
+                          (update-in [:options idx] (fnil identity {}))
+                          (update :value (fnil identity []))
+                          (update-in [:value idx] (fnil identity [])))
+                      option)
+              (toggle-multiple-choice-option answer option nil)))
+          answer
+          (map-indexed vector options)))
 
 (defn- merge-multiple-choice-option-values [value answer]
   (if (string? value)
