@@ -309,7 +309,8 @@
                       :birthplace      birthplace?
                       :home-town       home-town?
                       :city            city?
-                      :hakukohteet     hakukohteet?})
+                      :hakukohteet     hakukohteet?
+                      :numeric         numeric?})
 
 (def async-validators {:ssn ssn?
                        :email email?})

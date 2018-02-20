@@ -340,11 +340,12 @@
     (fn [path]
       [:div.editor-form__additional-params-container
        [:header.editor-form__component-item-header "Desimaaleja (tyhjä kokonaisluvulle):"]
-       [:input.editor-form__text-field.editor-form__text-field-narrow
+       [:select.editor-form__decimal-places-selector
         {:value     @decimal-places
-         :type      "number"
          :max       10
-         :on-change #(dispatch [:editor/set-component-value (get-val %) path :params :decimals])}]])))
+         :on-change #(dispatch [:editor/set-component-value (get-val %) path :params :decimals])}
+        (for [i (range 11)]
+          [:option {:value i :key i} i])]])))
 
 (defn- text-component-type-selector [path radio-group-id]
   (let [id       (util/new-uuid)
@@ -359,6 +360,9 @@
           :on-change (fn [event]
                        (let [checked-now? (-> event .-target .-checked)]
                          (dispatch [:editor/set-component-value checked-now? path :params :numeric?])
+                         (dispatch [(if checked-now?
+                                      :editor/add-validator
+                                      :editor/remove-validator) "numericg" path])
                          (when-not checked-now?
                            (dispatch [:editor/set-component-value nil path :params :decimals]))))}]
         [:label.editor-form__checkbox-label
