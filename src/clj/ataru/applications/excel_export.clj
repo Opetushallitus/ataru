@@ -113,6 +113,15 @@
    {:label "Viimeinen muokkaaja"
     :field :created-by}])
 
+(def ^:private answers-from-person-record
+  #{:birth-date
+    :ssn
+    :first-name
+    :preferred-name
+    :last-name
+    :gender
+    :nationality})
+
 (def ^:private application-meta-fields
   [{:label     "Id"
     :field     [:application :key]}
@@ -248,6 +257,11 @@
   (and (sequential? value-or-values)
        (all-answers-sec-or-vec? value-or-values)))
 
+(defn- get-answer-from-person-record
+  [answer-key person]
+  (when (contains? answers-from-person-record answer-key)
+    (get person answer-key)))
+
 (defn- write-application! [writer application application-review person headers application-meta-fields form-fields-by-key get-koodisto-options]
   (doseq [meta-field application-meta-fields]
     (let [meta-value ((or
@@ -259,32 +273,38 @@
                               (:field meta-field)))]
       (writer 0 (:column meta-field) meta-value)))
   (doseq [answer (:answers application)]
-    (let [field-descriptor (get form-fields-by-key (:key answer))
-          column          (:column (first (filter #(= (:key answer) (:id %)) headers)))
-          value-or-values (:value answer)
-          value           (cond
-                            (kysymysryhma-answer? value-or-values)
-                            (->> value-or-values
-                                 (map #(clojure.string/join "," %))
-                                 (map (partial raw-values->human-readable-value field-descriptor application get-koodisto-options))
-                                 (map-indexed #(format "#%s: %s,\n" %1 %2))
-                                 (apply str))
+    (let [answer-key                (:key answer)
+          field-descriptor          (get form-fields-by-key answer-key)
+          column                    (:column (first (filter #(= answer-key (:id %)) headers)))
+          answer-from-person-record (get-answer-from-person-record (keyword answer-key) person)
+          value-or-values           (:value answer)
+          ->human-readable-value    (partial raw-values->human-readable-value field-descriptor application get-koodisto-options)
+          value                     (cond
+                                      answer-from-person-record
+                                      (->human-readable-value answer-from-person-record)
 
-                            (sequential? value-or-values)
-                            (->> value-or-values
-                                 (map (partial raw-values->human-readable-value field-descriptor application get-koodisto-options))
-                                 (interpose ",\n")
-                                 (apply str))
+                                      (kysymysryhma-answer? value-or-values)
+                                      (->> value-or-values
+                                           (map #(clojure.string/join "," %))
+                                           (map ->human-readable-value)
+                                           (map-indexed #(format "#%s: %s,\n" %1 %2))
+                                           (apply str))
 
-                            :else
-                            (raw-values->human-readable-value field-descriptor application get-koodisto-options value-or-values))
-          value-length    (count value)
-          value-truncated (if (< max-value-length value-length)
-                            (str
-                              (subs value 0 (- max-value-length 100))
-                              "—— [ vastaus liian pitkä Excel-vientiin, poistettu "
-                              (- value-length max-value-length -100) " merkkiä]")
-                            value)]
+                                      (sequential? value-or-values)
+                                      (->> value-or-values
+                                           (map ->human-readable-value)
+                                           (interpose ",\n")
+                                           (apply str))
+
+                                      :else
+                                      (->human-readable-value value-or-values))
+          value-length              (count value)
+          value-truncated           (if (< max-value-length value-length)
+                                      (str
+                                        (subs value 0 (- max-value-length 100))
+                                        "—— [ vastaus liian pitkä Excel-vientiin, poistettu "
+                                        (- value-length max-value-length -100) " merkkiä]")
+                                      value)]
       (when (and value-truncated column)
         (writer 0 (+ column (count application-meta-fields)) value-truncated)))))
 
@@ -451,7 +471,7 @@
                                  all-reviews)]
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
-(defn export-applications [applications application-reviews persons selected-hakukohde skip-answers? tarjonta-service ohjausparametrit-service]
+(defn export-applications [applications application-reviews selected-hakukohde skip-answers? tarjonta-service ohjausparametrit-service]
   (let [[^XSSFWorkbook workbook styles] (create-workbook-and-styles)
         form-meta-fields                (indexed-meta-fields form-meta-fields)
         form-meta-sheet                 (create-form-meta-sheet workbook styles form-meta-fields)
@@ -499,9 +519,9 @@
                                (reverse)
                                (map #(merge % (get-tarjonta-info (:haku %))))
                                (map-indexed (fn [row-idx application]
-                                              (let [row-writer (make-writer styles applications-sheet (inc row-idx))
+                                              (let [row-writer         (make-writer styles applications-sheet (inc row-idx))
                                                     application-review (get application-reviews (:key application))
-                                                    person (get persons (:person-oid application))]
+                                                    person             (:person application)]
                                                 (write-application! row-writer
                                                                     application
                                                                     application-review
