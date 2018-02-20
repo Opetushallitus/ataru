@@ -539,6 +539,11 @@
     (assoc-in db [:editor :ui id :belongs-to-hakukohteet :modal :show] false)))
 
 (reg-event-db
+  :editor/belongs-to-hakukohteet-modal-show-more
+  (fn [db [_ id haku-oid]]
+      (update-in db [:editor :ui id :belongs-to-hakukohteet :modal haku-oid :show-more-value] + 15)))
+
+(reg-event-db
   :editor/set-belongs-to-hakukohteet-modal-search-term
   (fn [db [_ id search-term]]
     (if (< (count search-term) 3)
