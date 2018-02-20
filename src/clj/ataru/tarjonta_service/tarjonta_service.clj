@@ -64,7 +64,9 @@
   {:oid (:oid hakukohde)
    :haku-oid (:hakuOid hakukohde)
    :name (parse-multi-lang-text (:hakukohteenNimet hakukohde))
-   :tarjoaja-name (parse-multi-lang-text (:tarjoajaNimet hakukohde))})
+   :tarjoaja-name (parse-multi-lang-text (:tarjoajaNimet hakukohde))
+   :ryhmaliitokset (some->> (:ryhmaliitokset hakukohde)
+                     (map #(:ryhmaOid %)))})
 
 (defn- parse-search-result
   [search-result]
