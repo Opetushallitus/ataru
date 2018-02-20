@@ -6,7 +6,7 @@
             [ataru.fixtures.ssn :as ssn]
             [ataru.fixtures.first-name :as first-name]
             [ataru.fixtures.hakukohde :as hakukohde]
-            [ataru.fixtures.numeric-input :refer [numbers]]
+            [ataru.fixtures.numeric-input :refer [numbers integers]]
             [ataru.hakija.application-validators :as validator]
             [speclj.core :refer :all]
             [clojure.core.async :as async]))
@@ -141,9 +141,19 @@
 
 (describe "numeric validator"
   (tags :unit :numeric)
-  (doall
-    (for [number (keys numbers)
-          :let [expected (get numbers number)]]
-      (it (str "should " (when-not expected "not ") "validate " number)
-        (should= expected (validate! :numeric number nil {:params {:decimals 8,
-                                                                   :numeric? true}}))))))
+  (describe "integers and floats"
+    (doall
+      (for [number (keys numbers)
+            :let [expected (get numbers number)]]
+        (it (str "should " (when-not expected "not ") "validate " number)
+          (should= expected (validate! :numeric number nil {:params {:decimals 8
+                                                                     :numeric? true}}))))))
+
+  (describe "only integers"
+    (doall
+      (for [number (keys integers)
+            :let [expected (get integers number)]]
+        (it (str "should " (when-not expected "not ") "validate " number)
+          (should= expected (validate! :numeric number nil {:params {:decimals nil
+                                                                     :numeric? true}})))))))
+

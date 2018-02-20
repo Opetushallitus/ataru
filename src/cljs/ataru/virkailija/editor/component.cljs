@@ -343,8 +343,13 @@
        [:select.editor-form__decimal-places-selector
         {:value     @decimal-places
          :max       10
-         :on-change #(dispatch [:editor/set-component-value (get-val %) path :params :decimals])}
-        (for [i (range 11)]
+         :on-change (fn [e]
+                      (let [new-val (get-val e)
+                            value   (when (not-empty new-val)
+                                      (js/parseInt new-val))]
+                        (dispatch [:editor/set-component-value value path :params :decimals])))}
+        [:option {:value "" :key 0} ""]
+        (for [i (range 1 11)]
           [:option {:value i :key i} i])]])))
 
 (defn- text-component-type-selector [path radio-group-id]

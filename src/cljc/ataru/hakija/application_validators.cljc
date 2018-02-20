@@ -304,13 +304,20 @@
 
 (defn- numeric?
   [value _ field-descriptor]
+  (println value)
+  (println field-descriptor)
   (let [[_ integer-part decimal-part] (re-matches numeric-matcher value)
-        decimal-places (-> field-descriptor :params :decimals inc)] ; inc to conside separator!
+        decimal-places (-> field-descriptor :params :decimals)]
     (cond
       (not integer-part) false
 
       (and decimal-part
-           (> (count decimal-part) decimal-places))
+           (not decimal-places))
+      false
+
+      (and decimal-part
+           (> (count decimal-part)
+              (inc decimal-places))) ; inc to conside separator!
       false
 
       :else true)))

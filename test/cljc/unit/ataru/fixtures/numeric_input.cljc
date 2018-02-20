@@ -29,3 +29,33 @@
    "10."            false    ; No decimal part
    ".1201"          false    ; No integer part
    "1,231231239"    false})  ; Too many (9) decimals
+
+
+(def integers
+  {"0"              true
+   "-1"             true
+   "+1"             true
+   "1234"           true
+   "0,00"           false
+   "0.1231"         false
+   "0,1231"         false
+   "-0.12313"       false
+   "+0.31231"       false
+   "+0,31231"       false
+   "0,0001"         false
+   "-0,1231"        false
+   "1,23123123"     false
+   "asfda"          false
+   "asfda123"       false
+   "asfda123adf"    false
+   "123asdf"        false
+   "as123,faf234"   false
+   "12313,asda"     false
+   "asfa,1231"      false
+   "00.1231"        false
+   "001"            false
+   "0,121.0"        false
+   "0,121,0"        false
+   "10."            false
+   ".1201"          false
+   "1,231231239"    false})
