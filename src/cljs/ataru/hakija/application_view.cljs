@@ -11,7 +11,8 @@
             [cljs-time.format :refer [unparse unparse-local formatter]]
             [cljs-time.coerce :refer [from-long]]
             [goog.string :as gstring]
-            [reagent.ratom :refer [reaction]]))
+            [reagent.ratom :refer [reaction]]
+            [reagent.core :as r]))
 
 (def ^:private language-names
   {:fi "Suomeksi"
@@ -95,11 +96,27 @@
           [editable-fields form])))))
 
 (defn application-contents []
-  (let [form       (subscribe [:state-query [:form]])
-        can-apply? (subscribe [:application/can-apply?])
-        editing?   (subscribe [:state-query [:application :editing?]])]
+  (let [form            (subscribe [:state-query [:form]])
+        can-apply?      (subscribe [:application/can-apply?])
+        editing?        (subscribe [:state-query [:application :editing?]])
+        expired         (subscribe [:state-query [:application :secret-expired?]])
+        delivery-status (subscribe [:state-query [:application :secret-delivery-status]])]
     (fn []
       [:div.application__form-content-area
+       (when @expired
+         [:div.application__secret-expired
+          [:div.application__secret-expired-icon
+           [:i.zmdi.zmdi-lock-outline]]
+          [:h2 (get-translation :expired-secret-heading)]
+          [:p (get-translation :expired-secret-paragraph)]
+          [:button.application__secret-resend-button
+           {:disabled (some? @delivery-status)
+            :on-click #(dispatch [:application/send-new-secret])}
+           (if (= :completed @delivery-status)
+             (get-translation :expired-secret-sent)
+             (get-translation :expired-secret-button))]
+          [:p (get-translation :expired-secret-contact)]])
+
        ^{:key (:id @form)}
        [application-header @form]
 
@@ -115,8 +132,7 @@
 
 (defn feedback-form
   []
-  (let [form           (subscribe [:state-query [:form]])
-        submit-status  (subscribe [:state-query [:application :submit-status]])
+  (let [submit-status  (subscribe [:state-query [:application :submit-status]])
         star-hovered   (subscribe [:state-query [:application :feedback :star-hovered]])
         stars          (subscribe [:state-query [:application :feedback :stars]])
         hidden?        (subscribe [:state-query [:application :feedback :hidden?]])

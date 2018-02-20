@@ -61,12 +61,45 @@
   :application/handle-get-application
   handle-get-application)
 
+(reg-event-db
+  :application/set-secret-delivery-status
+  (fn [db [_ status]]
+    (assoc-in db [:application :secret-delivery-status] status)))
+
+(reg-event-fx
+  :application/handle-get-application-by-hakija-secret-error
+  (fn [{:keys [db]} [_ {:keys [status response] :as params}]]
+    (if (and (= status 401) (:secret-expired response))
+      {:db (-> db
+               (assoc-in [:form :selected-language] (keyword (:lang response)))
+               (assoc-in [:application :secret-expired?] true)
+               (assoc-in [:application :old-secret] (:modify (util/extract-query-params))))}
+      {:db       db
+       :dispatch [:application/default-handle-error params]})))
+
+(reg-event-db
+  :application/handle-send-new-secret
+  (fn [db]
+    (assoc-in db [:application :secret-delivery-status] :completed)))
+
+(reg-event-fx
+  :application/send-new-secret
+  (fn [{:keys [db]}]
+    (let [old-secret (get-in db [:application :old-secret])]
+      {:db       db
+       :dispatch [:application/set-secret-delivery-status :ongoing]
+       :http     {:method    :post
+                  :post-data {:old-secret old-secret}
+                  :url       "/hakemus/api/send-application-secret"
+                  :handler   [:application/handle-send-new-secret]}})))
+
 (defn- get-application-by-hakija-secret
   [{:keys [db]} [_ secret]]
   {:db   db
-   :http {:method  :get
-          :url     (str "/hakemus/api/application?secret=" secret)
-          :handler [:application/handle-get-application {:secret secret}]}})
+   :http {:method        :get
+          :url           (str "/hakemus/api/application?secret=" secret)
+          :error-handler :application/handle-get-application-by-hakija-secret-error
+          :handler       [:application/handle-get-application {:secret secret}]}})
 
 (reg-event-fx
   :application/get-application-by-hakija-secret

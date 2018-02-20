@@ -186,7 +186,6 @@
 (def person-info-form-application {:form 2147483647,
                                    :lang "fi",
                                    :id 1
-                                   :secret "asdfgh"
                                    :person-oid "1.2.3.4.5.6"
                                    :answers [{:key "b0839467-a6e8-4294-b5cc-830756bbda8a",
                                               :value "Vastaus tekstikysymykseen",
@@ -226,8 +225,7 @@
 
 (def person-info-form-application-with-more-answers
   (-> person-info-form-application
-      (merge {:id     555
-              :secret "more-answers-secret"})
+      (merge {:id     555})
       (update
         :answers
         (comp vec concat)
@@ -272,7 +270,6 @@
   {:form      2147483647
    :lang      "fi"
    :id        2
-   :secret    "12345"
    :haku      "1.2.246.562.29.65950024186"
    :hakukohde ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
    :answers   [{:key       "b0839467-a6e8-4294-b5cc-830756bbda8a",

@@ -28,6 +28,11 @@
   [ds-key query params]
   (db/exec ds-key query params))
 
+(defn- get-datasource
+  []
+  {:connection
+   {:datasource (db/get-datasource :db)}})
+
 (def ^:private ->kebab-case-kw (partial transform-keys ->kebab-case-keyword))
 
 (defn- find-value-from-answers [key answers]
@@ -43,31 +48,61 @@
                                       (label/get-language-label-in-preferred-order label))))
             (-> application :content :answers)))))
 
+(defn- application-exists-with-secret-tx?
+  "NB: takes into account also expired secrets"
+  [hakija-secret connection]
+  (let [application-count (->> (yesql-get-application-count-for-secret {:secret hakija-secret} connection)
+                               (first)
+                               :count)]
+    (pos? application-count)))
+
+(defn application-exists-with-secret?
+  "NB: takes into account also expired secrets"
+  [hakija-secret]
+  (application-exists-with-secret-tx? hakija-secret (get-datasource)))
+
+(defn get-application-language-by-secret
+  "NB: takes into account also expired secrets"
+  [hakija-secret]
+  (-> (exec-db :db yesql-get-latest-application-language-by-any-version-of-secret {:secret hakija-secret})
+      (first)
+      :lang))
+
+(defn generate-new-application-secret
+  [connection]
+  (loop [secret (crypto/url-part 34)]
+    (if-not (application-exists-with-secret-tx? secret connection)
+      secret
+      (recur (crypto/url-part 34)))))
+
 (defn- add-new-application-version
   "Add application and also initial metadata (event for receiving application, and initial review record)"
-  [application conn]
-  (let [connection           {:connection conn}
-        answers              (->> application
-                                  :answers
-                                  (filter #(not-empty (:value %))))
-        secret               (:secret application)
-        application-to-store {:form_id        (:form application)
-                              :key            (:key application)
-                              :lang           (:lang application)
-                              :preferred_name (find-value-from-answers "preferred-name" answers)
-                              :last_name      (find-value-from-answers "last-name" answers)
-                              :ssn            (find-value-from-answers "ssn" answers)
-                              :dob            (dob/str->dob (find-value-from-answers "birth-date" answers))
-                              :email          (find-value-from-answers "email" answers)
-                              :hakukohde      (or (:hakukohde application) [])
-                              :haku           (:haku application)
-                              :content        {:answers answers}
-                              :secret         (or secret (crypto/url-part 34))
-                              :person_oid     (:person-oid application)}
-        application          (if (contains? application :key)
-                               (yesql-add-application-version<! application-to-store connection)
-                               (yesql-add-application<! application-to-store connection))]
-    (unwrap-application application)))
+  [application create-new-secret? conn]
+  (let [connection                  {:connection conn}
+        answers                     (->> application
+                                         :answers
+                                         (filter #(not-empty (:value %))))
+        application-to-store        {:form_id        (:form application)
+                                     :key            (:key application)
+                                     :lang           (:lang application)
+                                     :preferred_name (find-value-from-answers "preferred-name" answers)
+                                     :last_name      (find-value-from-answers "last-name" answers)
+                                     :ssn            (find-value-from-answers "ssn" answers)
+                                     :dob            (dob/str->dob (find-value-from-answers "birth-date" answers))
+                                     :email          (find-value-from-answers "email" answers)
+                                     :hakukohde      (or (:hakukohde application) [])
+                                     :haku           (:haku application)
+                                     :content        {:answers answers}
+                                     :person_oid     (:person-oid application)}
+        new-application             (if (contains? application :key)
+                                      (yesql-add-application-version<! application-to-store connection)
+                                      (yesql-add-application<! application-to-store connection))]
+    (when create-new-secret?
+      (yesql-add-application-secret!
+        {:application_key (:key new-application)
+         :secret          (generate-new-application-secret connection)}
+        connection))
+    (unwrap-application new-application)))
 
 (def ^:private email-pred (comp (partial = "email") :key))
 
@@ -90,7 +125,7 @@
 (defn add-application [new-application]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (info (str "Inserting new application"))
-    (let [{:keys [id key] :as new-application} (add-new-application-version new-application conn)
+    (let [{:keys [id key] :as new-application} (add-new-application-version new-application true conn)
           connection                {:connection conn}]
       (audit-log/log {:new       new-application
                       :operation audit-log/operation-new
@@ -117,7 +152,7 @@
 
 (defn- merge-applications [new-application old-application]
   (merge new-application
-         (select-keys old-application [:key :secret :haku :person-oid])))
+         (select-keys old-application [:key :haku :person-oid :secret])))
 
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
@@ -138,19 +173,21 @@
                                   (get-latest-version-and-lock-for-update secret lang conn)
                                   (get-latest-version-for-virkailija-edit-and-lock-for-update virkailija-secret lang conn))
           {:keys [id key] :as new-application} (add-new-application-version
-                                                 (merge-applications new-application old-application) conn)
+                                                 (merge-applications new-application old-application)
+                                                 updated-by-applicant?
+                                                 conn)
           virkailija-oid        (when-not updated-by-applicant? (get-virkailija-oid virkailija-secret key conn))]
       (info (str "Updating application with key "
                  (:key old-application)
-                 " based on valid application secret, retaining key and secret from previous version"))
+                 " based on valid application secret, retaining key" (when-not updated-by-applicant? " and secret") " from previous version"))
       (yesql-add-application-event<! {:application_key  key
-                                     :event_type       (if updated-by-applicant?
-                                                         "updated-by-applicant"
-                                                         "updated-by-virkailija")
-                                     :new_review_state nil
-                                     :virkailija_oid   virkailija-oid
-                                     :hakukohde        nil
-                                     :review_key       nil}
+                                      :event_type       (if updated-by-applicant?
+                                                          "updated-by-applicant"
+                                                          "updated-by-virkailija")
+                                      :new_review_state nil
+                                      :virkailija_oid   virkailija-oid
+                                      :hakukohde        nil
+                                      :review_key       nil}
                                     {:connection conn})
       (audit-log/log {:new       (application->loggable-form new-application)
                       :old       (application->loggable-form old-application)
@@ -256,10 +293,25 @@
                                                         :authorized_organization_oids [""]})
        (map ->kebab-case-kw)))
 
-(defn get-full-application-list-by-person-oid-for-omatsivut [person-oid]
-  (->> (exec-db :db yesql-get-application-list-by-person-oid-for-omatsivut
-                {:person_oid person-oid})
-       (map ->kebab-case-kw)))
+(defn get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
+  [person-oid]
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+    (let [connection       {:connection conn}
+          application-keys (map :key (yesql-get-application-list-by-person-oid-for-omatsivut
+                                       {:person_oid person-oid} connection))
+          old-secrets      (if (not-empty application-keys)
+                             (yesql-get-expiring-secrets-for-applications
+                               {:application_keys application-keys} connection)
+                             [])]
+      (doseq [old-secret old-secrets]
+        (info "Refreshing secret for application" (:application_key old-secret))
+        (yesql-add-application-secret!
+          {:application_key (:application_key old-secret)
+           :secret          (generate-new-application-secret connection)}
+          connection))
+      (->kebab-case-kw
+        (yesql-get-application-list-by-person-oid-for-omatsivut
+          {:person_oid person-oid} connection)))))
 
 (defn- unwrap-onr-application
   [{:keys [key haku form email content]}]
@@ -343,7 +395,7 @@
                               (unwrap-application))]
     (assoc application :state (-> (:key application) get-application-review :state))))
 
-(defn- get-latest-application-for-virkailija-edit [virkailija-secret]
+(defn get-latest-application-for-virkailija-edit [virkailija-secret]
   (when-let [application (->> (exec-db :db yesql-get-latest-application-by-virkailija-secret {:virkailija_secret virkailija-secret})
                               (first)
                               (unwrap-application))]
@@ -355,12 +407,35 @@
     (get-latest-application-by-secret secret)
     (get-latest-application-for-virkailija-edit virkailija-secret)))
 
-(defn get-latest-application-secret []
-      (:secret (first (->> (exec-db :db yesql-get-latest-application-secret {})))))
+(defn get-latest-application-secret
+  []
+  (:secret (first (->> (exec-db :db yesql-get-latest-application-secret {})))))
 
-(defn alter-application-hakukohteet-with-secret [secret new-hakukohteet]
-      (when-not (= (exec-db :db yesql-set-application-hakukohteet-by-secret! {:secret secret :hakukohde new-hakukohteet}) 0)
-                secret))
+(defn alter-application-hakukohteet-with-secret
+  [secret new-hakukohteet]
+  (when-not (= (exec-db :db yesql-set-application-hakukohteet-by-secret! {:secret secret :hakukohde new-hakukohteet}) 0)
+    secret))
+
+(defn add-new-secret-to-application
+  [application-key]
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+    (let [connection      {:connection conn}
+          application     (get-latest-application-by-key-unrestricted application-key)
+          new-secret      (generate-new-application-secret connection)]
+      (yesql-add-application-secret! {:application_key application-key :secret new-secret} connection)
+      (:id application))))
+
+(defn add-new-secret-to-application-by-old-secret
+  [old-secret]
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+    (let [connection      {:connection conn}
+          application-key (-> (yesql-get-application-key-for-any-version-of-secret {:secret old-secret} connection)
+                              (first)
+                              :application_key)
+          application     (get-latest-application-by-key-unrestricted application-key)
+          new-secret      (generate-new-application-secret connection)]
+      (yesql-add-application-secret! {:application_key application-key :secret new-secret} connection)
+      (:id application))))
 
 (defn get-application-events [application-key]
   (mapv ->kebab-case-kw (exec-db :db yesql-get-application-events {:application_key application-key})))

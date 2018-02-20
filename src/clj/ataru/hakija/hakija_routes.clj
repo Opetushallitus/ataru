@@ -37,12 +37,16 @@
 
 (defn- get-application
   [secret tarjonta-service ohjausparametrit-service person-client]
-  (let [application (hakija-application-service/get-latest-application-by-secret secret
-                                                                                 tarjonta-service
-                                                                                 ohjausparametrit-service
-                                                                                 person-client)]
+  (let [[application secret-expired? lang-override]
+        (hakija-application-service/get-latest-application-by-secret secret
+                                                                     tarjonta-service
+                                                                     ohjausparametrit-service
+                                                                     person-client)]
     (cond (some? application)
           (response/ok application)
+          secret-expired?
+          (response/unauthorized {:secret-expired true
+                                  :lang           lang-override})
           (:virkailija secret)
           (response/bad-request {:error "Invalid virkailija secret"})
           :else
@@ -85,7 +89,7 @@
     (api/GET "/spec/:filename.js" [filename]
       ;; Test vars params is a hack to get form ids from fixtures to the test file
       ;; without having to pass them as url params. Also enables tests to be run
-      ;; individually when navigationg to any test file.
+      ;; individually when navigating to any test file.
       (if (is-dev-env?)
         (render-file-in-dev (str "spec/" filename ".js")
                             (when (= "hakijaCommon" filename)
@@ -185,6 +189,12 @@
 
             :else
             (response/bad-request {:error "No secret given"})))
+    (api/POST "/send-application-secret" []
+      :summary "Sends application link with fresh secret to applicant"
+      :body [request {:old-secret s/Str}]
+      (do
+        (hakija-application-service/create-new-secret-and-send-link tarjonta-service (:old-secret request))
+        (response/ok {})))
     (api/context "/files" []
       (api/POST "/" []
         :summary "Upload a file"

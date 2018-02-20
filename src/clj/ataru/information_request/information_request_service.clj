@@ -21,7 +21,8 @@
        (first)))
 
 (defn- initial-state [information-request]
-  (let [application     (-> information-request :application-key app-store/get-latest-application-by-key-unrestricted)
+  (let [application-id  (app-store/add-new-secret-to-application (:application-key information-request))
+        application     (app-store/get-application application-id)
         lang            (-> application :lang keyword)
         first-name      (extract-answer-value "preferred-name" application)
         recipient-email (extract-answer-value "email" application)

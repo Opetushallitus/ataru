@@ -247,42 +247,51 @@
 (defn attachments-metadata->answers [application]
   (update application :answers (partial map attachment-metadata->answer)))
 
-(defn get-latest-application-by-secret [secret
-                                        tarjonta-service
-                                        ohjausparametrit-service
-                                        person-client]
-  (let [[actor-role
-         hakija-secret] (match [secret]
-                          [{:virkailija s}]
-                          [:virkailija
-                           (when (virkailija-edit/virkailija-secret-valid? s)
-                             (application-store/get-hakija-secret-by-virkailija-secret s))]
-                          [{:hakija s}]
-                          [:hakija s]
-                          :else
-                          [:hakija nil])
-        application     (when (some? hakija-secret)
-                          (application-store/get-latest-application-by-secret hakija-secret))
-        form-roles      (cond-> [actor-role]
-                          (some? (:person-oid application))
-                          (conj :with-henkilo))
-        form            (cond (some? (:haku application)) (hakija-form-service/fetch-form-by-haku-oid
-                                                           tarjonta-service
-                                                           ohjausparametrit-service
-                                                           (:haku application)
-                                                           form-roles)
-                              (some? (:form application)) (hakija-form-service/fetch-form-by-key
-                                                           (->> application
-                                                                :form
-                                                                form-store/fetch-by-id
-                                                                :key)
-                                                           form-roles)
-                              :else                       nil)
-        person          (some-> application
-                                (application-service/get-person person-client)
-                                (dissoc :ssn :birth-date))]
-    (some-> application
-            (remove-unviewable-answers form)
-            attachments-metadata->answers
-            (assoc :person person)
-            (dissoc :person-oid))))
+(defn get-latest-application-by-secret
+  [secret tarjonta-service ohjausparametrit-service person-client]
+  (let [[actor-role secret] (match [secret]
+                                   [{:virkailija s}]
+                                   [:virkailija s]
+
+                                   [{:hakija s}]
+                                   [:hakija s]
+
+                                   :else
+                                   [:hakija nil])
+        application      (cond
+                           (and (= actor-role :virkailija) (virkailija-edit/virkailija-secret-valid? secret))
+                           (application-store/get-latest-application-for-virkailija-edit secret)
+
+                           (and (= actor-role :hakija) (some? secret))
+                           (application-store/get-latest-application-by-secret secret))
+        form-roles       (cond-> [actor-role]
+                                 (some? (:person-oid application))
+                                 (conj :with-henkilo))
+        secret-expired?  (when (nil? application)
+                           (application-store/application-exists-with-secret? secret))
+        lang-override    (when secret-expired? (application-store/get-application-language-by-secret secret))
+        form             (cond (some? (:haku application)) (hakija-form-service/fetch-form-by-haku-oid
+                                                             tarjonta-service
+                                                             ohjausparametrit-service
+                                                             (:haku application)
+                                                             form-roles)
+                               (some? (:form application)) (hakija-form-service/fetch-form-by-key
+                                                             (->> application
+                                                                  :form
+                                                                  form-store/fetch-by-id
+                                                                  :key)
+                                                             form-roles))
+        person           (some-> application
+                                 (application-service/get-person person-client)
+                                 (dissoc :ssn :birth-date))
+        full-application (some-> application
+                                 (remove-unviewable-answers form)
+                                 attachments-metadata->answers
+                                 (assoc :person person)
+                                 (dissoc :person-oid))]
+    [full-application secret-expired? lang-override]))
+
+(defn create-new-secret-and-send-link
+  [tarjonta-service old-secret]
+  (let [application-id (application-store/add-new-secret-to-application-by-old-secret old-secret)]
+    (application-email/start-email-refresh-secret-confirmation-job tarjonta-service application-id)))

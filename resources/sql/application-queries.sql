@@ -8,7 +8,6 @@ INSERT INTO applications (
   last_name,
   hakukohde,
   haku,
-  secret,
   person_oid,
   ssn,
   dob,
@@ -21,7 +20,6 @@ INSERT INTO applications (
   :last_name,
   ARRAY[:hakukohde]::character varying(127)[],
   :haku,
-  :secret,
   :person_oid,
   upper(:ssn),
   :dob,
@@ -39,7 +37,6 @@ INSERT INTO applications (
   last_name,
   hakukohde,
   haku,
-  secret,
   person_oid,
   ssn,
   dob,
@@ -53,12 +50,14 @@ INSERT INTO applications (
   :last_name,
   ARRAY[:hakukohde]::character varying(127)[],
   :haku,
-  :secret,
   :person_oid,
   upper(:ssn),
   :dob,
   :email
 );
+
+-- name: yesql-add-application-secret!
+INSERT INTO application_secrets (application_key, secret) VALUES (:application_key, :secret);
 
 -- name: yesql-get-application-list-by-form
 WITH latest_information_request_event AS (
@@ -340,18 +339,19 @@ ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-list-by-person-oid-for-omatsivut
 SELECT
-  a.key AS oid,
-  a.key AS key,
-  a.secret AS secret,
-  ar.state AS state,
-  a.haku AS haku,
-  a.email AS email,
+  a.key       AS oid,
+  a.key       AS key,
+  las.secret  AS secret,
+  ar.state    AS state,
+  a.haku      AS haku,
+  a.email     AS email,
   a.hakukohde AS hakukohteet
 FROM latest_applications AS a
-JOIN application_reviews ar ON a.key = ar.application_key
+  JOIN application_reviews ar ON a.key = ar.application_key
+  JOIN latest_application_secrets las ON a.key = las.application_key
 WHERE a.person_oid = :person_oid
-  AND a.haku IS NOT NULL
-  AND ar.state <> 'inactivated'
+      AND a.haku IS NOT NULL
+      AND ar.state <> 'inactivated'
 ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-events
@@ -486,17 +486,18 @@ ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-by-id
 SELECT
-  id,
-  key,
-  lang,
-  form_id AS form,
-  created_time,
-  content,
-  hakukohde,
-  person_oid,
-  secret
-FROM applications
-WHERE id = :application_id;
+  a.id,
+  a.key,
+  a.lang,
+  a.form_id AS form,
+  a.created_time,
+  a.content,
+  a.hakukohde,
+  a.person_oid,
+  las.secret
+FROM applications a
+  JOIN latest_application_secrets las ON a.key = las.application_key
+WHERE a.id = :application_id;
 
 -- name: yesql-has-ssn-applied
 SELECT EXISTS (SELECT 1 FROM latest_applications
@@ -516,45 +517,48 @@ SELECT EXISTS (SELECT 1 FROM latest_applications
 
 -- name: yesql-get-latest-application-by-key
 SELECT
-  id,
-  key,
-  lang,
-  form_id AS form,
-  created_time,
-  content,
-  hakukohde,
-  haku,
-  person_oid,
-  secret,
+  a.id,
+  a.key,
+  a.lang,
+  a.form_id AS form,
+  a.created_time,
+  a.content,
+  a.hakukohde,
+  a.haku,
+  a.person_oid,
+  las.secret,
   CASE
-    WHEN ssn IS NOT NULL THEN (SELECT count(*)
-                               FROM latest_applications AS aa
-                               JOIN forms AS f ON f.id = aa.form_id
-                               JOIN latest_forms AS lf ON lf.key = f.key
-                               WHERE aa.ssn = a.ssn
-                                 AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids)))
-    WHEN email IS NOT NULL THEN (SELECT count(*)
-                                 FROM latest_applications AS aa
-                                 JOIN forms AS f ON f.id = aa.form_id
-                                 JOIN latest_forms AS lf ON lf.key = f.key
-                                 WHERE aa.email = a.email
-                                   AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids)))
-  END AS applications_count
+  WHEN ssn IS NOT NULL
+    THEN (SELECT count(*)
+          FROM latest_applications AS aa
+            JOIN forms AS f ON f.id = aa.form_id
+            JOIN latest_forms AS lf ON lf.key = f.key
+          WHERE aa.ssn = a.ssn
+                AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids)))
+  WHEN email IS NOT NULL
+    THEN (SELECT count(*)
+          FROM latest_applications AS aa
+            JOIN forms AS f ON f.id = aa.form_id
+            JOIN latest_forms AS lf ON lf.key = f.key
+          WHERE aa.email = a.email
+                AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids)))
+  END       AS applications_count
 FROM latest_applications AS a
+  JOIN latest_application_secrets las ON a.key = las.application_key
 WHERE a.key = :application_key;
 
 -- name: yesql-get-latest-application-by-key-with-hakukohde-reviews
 SELECT
-  id,
-  key,
-  lang,
-  form_id                             AS form,
-  created_time,
-  content,
-  hakukohde,
-  haku,
-  person_oid,
-  secret,
+  a.id,
+  a.key,
+  a.lang,
+  a.form_id                           AS form,
+  a.created_time,
+  a.content,
+  a.hakukohde,
+  a.haku,
+  a.person_oid,
+  las.secret,
   CASE
   WHEN ssn IS NOT NULL
     THEN (SELECT count(*)
@@ -577,6 +581,7 @@ SELECT
    FROM application_hakukohde_reviews ahr
    WHERE ahr.application_key = a.key) AS application_hakukohde_reviews
 FROM latest_applications AS a
+  JOIN latest_application_secrets las ON a.key = las.application_key
 WHERE a.key = :application_key;
 
 -- name: yesql-get-latest-application-by-secret
@@ -592,8 +597,10 @@ SELECT
   a.hakukohde,
   f.key     AS form_key
 FROM latest_applications AS a
-JOIN forms AS f ON a.form_id = f.id
-WHERE a.secret = :secret;
+  JOIN forms AS f ON a.form_id = f.id
+  JOIN latest_application_secrets las ON a.key = las.application_key
+WHERE las.secret = :secret
+      AND las.created_time > now() - INTERVAL '30 days';
 
 -- name: yesql-get-latest-application-by-virkailija-secret
 SELECT
@@ -613,46 +620,82 @@ JOIN virkailija_credentials AS vc ON vc.application_key = a.key
 WHERE vc.secret = :virkailija_secret;
 
 -- name: yesql-get-latest-version-by-secret-lock-for-update
-WITH latest_version AS (
-    SELECT max(created_time) AS latest_time
-    FROM applications a
-    WHERE a.secret = :secret
-)
-SELECT
-  id,
-  key,
-  lang,
-  form_id AS form,
-  created_time,
-  content,
-  haku,
-  hakukohde,
-  person_oid
+WITH application_secret AS (SELECT
+                              application_key,
+                              id
+                            FROM application_secrets
+                            WHERE secret = :secret),
+    latest_secret AS (SELECT
+                        application_key,
+                        id
+                      FROM application_secrets
+                      WHERE application_key = (SELECT application_key
+                                               FROM application_secret)
+                      ORDER BY id DESC
+                      LIMIT 1)
+SELECT *
 FROM applications a
-  JOIN latest_version lv ON a.created_time = lv.latest_time
+  JOIN application_secret ON application_secret.application_key = a.key
+  JOIN latest_secret ON latest_secret.application_key = a.key
+WHERE application_secret.id = latest_secret.id
+ORDER BY a.id DESC
+LIMIT 1
 FOR UPDATE;
+
+-- name: yesql-get-application-count-for-secret
+SELECT count(id) AS count
+FROM application_secrets
+WHERE secret = :secret;
+
+-- name: yesql-get-application-key-for-any-version-of-secret
+SELECT application_key
+FROM application_secrets
+WHERE secret = :secret
+ORDER BY id DESC
+LIMIT 1;
+
+-- name: yesql-get-latest-application-language-by-any-version-of-secret
+SELECT lang
+FROM latest_applications
+WHERE key = (SELECT application_key
+             FROM application_secrets
+             WHERE secret = :secret);
 
 -- name: yesql-get-latest-version-by-virkailija-secret-lock-for-update
 WITH latest_version AS (
-    SELECT max(a.created_time) AS latest_time
+    SELECT
+      a.id AS latest_id,
+      key
     FROM applications a
-    JOIN virkailija_credentials AS vc
-      ON a.key = vc.application_key
+      JOIN virkailija_credentials AS vc
+        ON a.key = vc.application_key
     WHERE vc.secret = :virkailija_secret
+    ORDER BY id DESC
+    LIMIT 1
+), latest_secret_version AS (
+    SELECT
+      ass.secret AS latest_secret,
+      ass.application_key
+    FROM application_secrets ass
+    WHERE ass.application_key = (SELECT key
+                                 FROM latest_version)
+    ORDER BY ass.id DESC
+    LIMIT 1
 )
 SELECT
-  id,
-  key,
-  secret,
-  lang,
-  form_id AS form,
-  created_time,
-  content,
-  haku,
-  hakukohde,
-  person_oid
+  a.id,
+  a.key,
+  las.latest_secret AS secret,
+  a.lang,
+  a.form_id         AS form,
+  a.created_time,
+  a.content,
+  a.haku,
+  a.hakukohde,
+  a.person_oid
 FROM applications a
-  JOIN latest_version lv ON a.created_time = lv.latest_time
+  JOIN latest_version lv ON a.id = lv.latest_id
+  JOIN latest_secret_version las ON las.application_key = a.key
 FOR UPDATE;
 
 -- name: yesql-get-application-organization-by-key
@@ -811,10 +854,10 @@ VALUES
   (now(), :form_key, :form_id, :form_name, :rating, left(:feedback, 2000), :user_agent);
 
 -- name: yesql-get-hakija-secret-by-virkailija-secret
-SELECT a.secret FROM applications a
-INNER JOIN virkailija_credentials c ON a.key = c.application_key
-WHERE c.secret = :virkailija_secret
-ORDER BY a.created_time DESC LIMIT 1;
+SELECT las.secret
+FROM latest_application_secrets AS las
+  JOIN virkailija_credentials AS vc ON vc.application_key = las.application_key
+WHERE vc.secret = :virkailija_secret;
 
 -- name: yesql-get-application-hakukohde-reviews
 SELECT
@@ -952,15 +995,25 @@ ORDER BY created_time DESC;
 SELECT DISTINCT ON (person_oid) id FROM latest_applications ORDER BY person_oid, id DESC;
 
 --name: yesql-get-latest-application-secret
-SELECT secret FROM latest_applications ORDER BY created_time DESC LIMIT 1;
+SELECT secret
+FROM latest_applications
+  JOIN latest_application_secrets ON latest_applications.key = latest_application_secrets.application_key
+ORDER BY latest_applications.id DESC
+LIMIT 1;
 
 --name: yesql-set-application-hakukohteet-by-secret!
 UPDATE applications
-SET hakukohde = ARRAY[:hakukohde]::character varying(127)[]
-WHERE secret = :secret;
+SET hakukohde = ARRAY [:hakukohde] :: CHARACTER VARYING(127) []
+FROM application_secrets
+WHERE application_secrets.secret = :secret AND application_secrets.application_key = applications.key;
 
 --name: yesql-get-application-versions
 SELECT content, form_id
 FROM applications
 WHERE key = :application_key
 ORDER BY id ASC;
+
+-- name: yesql-get-expiring-secrets-for-applications
+SELECT *
+FROM latest_application_secrets
+WHERE application_key IN (:application_keys) AND created_time < now() - INTERVAL '29 days';
