@@ -136,7 +136,7 @@
    [:view-applications :edit-applications]
    (constantly nil)
    (constantly nil)
-   #(application-store/get-full-application-list-by-person-oid-for-omatsivut
+   #(application-store/get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
      person-oid)))
 
 (defn onr-applications [organization-service session person-oid]

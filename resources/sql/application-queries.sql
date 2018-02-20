@@ -1012,3 +1012,8 @@ SELECT content, form_id
 FROM applications
 WHERE key = :application_key
 ORDER BY id ASC;
+
+-- name: yesql-get-expiring-secrets-for-applications
+SELECT *
+FROM latest_application_secrets
+WHERE application_key IN (:application_keys) AND created_time < now() - INTERVAL '29 days';

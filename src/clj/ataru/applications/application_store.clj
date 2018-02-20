@@ -293,10 +293,25 @@
                                                         :authorized_organization_oids [""]})
        (map ->kebab-case-kw)))
 
-(defn get-full-application-list-by-person-oid-for-omatsivut [person-oid]
-  (->> (exec-db :db yesql-get-application-list-by-person-oid-for-omatsivut
-                {:person_oid person-oid})
-       (map ->kebab-case-kw)))
+(defn get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
+  [person-oid]
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+    (let [connection       {:connection conn}
+          application-keys (map :key (yesql-get-application-list-by-person-oid-for-omatsivut
+                                       {:person_oid person-oid} connection))
+          old-secrets      (if (not-empty application-keys)
+                             (yesql-get-expiring-secrets-for-applications
+                               {:application_keys application-keys} connection)
+                             [])]
+      (doseq [old-secret old-secrets]
+        (info "Refreshing secret for application" (:application_key old-secret))
+        (yesql-add-application-secret!
+          {:application_key (:application_key old-secret)
+           :secret          (generate-new-application-secret connection)}
+          connection))
+      (->kebab-case-kw
+        (yesql-get-application-list-by-person-oid-for-omatsivut
+          {:person_oid person-oid} connection)))))
 
 (defn- unwrap-onr-application
   [{:keys [key haku form email content]}]
