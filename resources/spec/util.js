@@ -40,7 +40,7 @@ var isRadioButton = function($e) {
   return $e.attr('for') && $e.parent().find("#" + $e.attr('for')) !== null
 }
 
-var clickElement = function(selectFn) {
+var clickElement = function(selectFn, infoText) {
   return wait.until(function () {
     $e = selectFn()
     if (elementExists($e)) {
@@ -51,7 +51,7 @@ var clickElement = function(selectFn) {
       }
       return true
     }
-  })
+  }, null, infoText)
 }
 
 function setTextFieldValue(selectFn, contents) {
@@ -68,7 +68,7 @@ function setTextFieldValue(selectFn, contents) {
 var wait = {
   waitIntervalMs: 100,
   testTimeoutDefault: 10000,
-  until: function(condition, maxWaitMs) {
+  until: function(condition, maxWaitMs, infoText) {
     return function() {
       if (maxWaitMs == undefined) maxWaitMs = wait.testTimeoutDefault;
       var deferred = Q.defer()
@@ -78,7 +78,7 @@ var wait = {
         if (condition()) {
           deferred.resolve()
         } else if (remaining === 0) {
-          const errorStr = "timeout of " + maxWaitMs + "ms in wait.until for condition:\n" + condition + "\ncaller: " + condition.caller
+          const errorStr = "timeout of " + maxWaitMs + "ms in wait.until for condition:\n" + condition + "\ninfo: " + infoText
           console.error(new Error(errorStr))
           deferred.reject(errorStr)
         } else {
