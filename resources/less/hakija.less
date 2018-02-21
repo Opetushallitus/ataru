@@ -708,7 +708,6 @@ textarea.application__form-text-area__size-large {
   flex-flow: column nowrap;
   max-width: 610px;
   width: 100%;
-  padding-right: 10px;
 }
 
 .application__form-checkbox {
@@ -755,7 +754,7 @@ textarea.application__form-text-area__size-large {
   flex-flow: column nowrap;
   padding: 20px;
   position: relative;
-  max-width: 650px;
+  max-width: 610px;
 }
 
 .application__form-multi-choice-followups-container .application__form-field {
@@ -981,7 +980,10 @@ and (max-width: @desktop-content-width) {
   .application__form-adjacent-row--desktop-only {
     display: none;
   }
-  .application__form-multi-choice-followups-container {
+  .application__form-outer-checkbox-container {
+    padding-right: 10px;
+  }
+  .application__form-single-choice-button-followups-container {
     margin-right: 10px;
   }
 }

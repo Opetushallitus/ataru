@@ -572,7 +572,8 @@
                         [single-choice-option option button-id field-descriptor idx])
                       (:options field-descriptor)))]
        (when-not idx
-         [single-choice-followups field-descriptor])])))
+         [:div.application__form-single-choice-button-followups-container
+          [single-choice-followups field-descriptor]])])))
 
 (defonce max-attachment-size-bytes (* 10 1024 1024))
 
