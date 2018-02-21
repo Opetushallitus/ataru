@@ -45,6 +45,11 @@
       (get-in db [:editor :used-by-haut :haut] {}))))
 
 (re-frame/reg-sub
+  :editor/filtered-hakukohderyhmat
+  (fn [db [_ id]]
+    (get-in db [:editor :used-by-haut :hakukohderyhmat] {})))
+
+(re-frame/reg-sub
   :editor/fetching-haut?
   (fn [db]
     (get-in db [:editor :used-by-haut :fetching?] false)))
@@ -68,21 +73,33 @@
         haut))
 
 (re-frame/reg-sub
-  :editor/haku-name
+  :editor/get-some-name
   (fn [db [_ haku]]
     (some #(get (:name haku) %) [:fi :sv :en])))
 
 (re-frame/reg-sub
-  :editor/hakukohde-name-parts
-  (fn [db [_ id hakukohde]]
+  :editor/get-hakukohde-name
+  (fn [db [_ hakukohde]]
     (let [hakukohde-name (some #(get (:name hakukohde) %) [:fi :sv :en])
           tarjoaja-name (some #(get (:tarjoaja-name hakukohde) %) [:fi :sv :en])
           name (str hakukohde-name " - " tarjoaja-name)]
-      (if-let [search-term (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term])]
-        (map-indexed (fn [i part] [part (= 1 (mod i 2))])
-                     (clojure.string/split name
-                                           (re-pattern (str "(?i)(" search-term ")"))))
-        [[name false]]))))
+      name)))
+
+(re-frame/reg-sub
+  :editor/name-parts
+  (fn [db [_ id name]]
+    (if-let [search-term (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term])]
+      (map-indexed (fn [i part] [part (= 1 (mod i 2))])
+                   (clojure.string/split name
+                                         (re-pattern (str "(?i)(" search-term ")"))))
+      [[name false]])))
+
+(re-frame/reg-sub
+  :editor/belongs-to-hakukohderyhma-name
+  (fn [db [_ oid]]
+    (let [l (get-in db [:editor :used-by-haut :hakukohderyhmat])
+          s (filter #(= oid (:oid %)) l)]
+      @(re-frame/subscribe [:editor/get-some-name (first s)]))))
 
 (re-frame/reg-sub
   :editor/belongs-to-hakukohde-name

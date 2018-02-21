@@ -3,6 +3,7 @@
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.virkailija-ajax :as http]
             [ataru.virkailija.tarjonta :as tarjonta]
+            [ataru.virkailija.organization :as organization]
             [cljs.core.async :as async]
             [re-frame.core :as re-frame]))
 
@@ -37,10 +38,12 @@
 
 (re-frame/reg-fx
  :fetch-haut-with-hakukohteet
- (fn fetch-haut-with-hakukohteet [[organization-oids haku-oids on-succes on-error]]
-   (async/take! (tarjonta/fetch-haut-with-hakukohteet haku-oids
-                                                      organization-oids)
-                (fn [r]
-                  (if (instance? js/Error r)
-                    (on-error r)
-                    (on-succes r))))))
+ (fn fetch-haut-with-hakukohteet [[c organization-oids haku-oids]]
+   (async/go
+     (let [v (<! (tarjonta/fetch-haut-with-hakukohteet haku-oids organization-oids))]
+       (async/>! c v)))))
+
+(re-frame/reg-fx
+  :fetch-hakukohde-groups
+  (fn fetch-hakukohde-groups [[c]]
+    (organization/fetch-hakukohderyhmat c)))

@@ -19,7 +19,8 @@
             [ataru.cljs-util :as cu]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.virkailija.temporal :as temporal])
-  (:require-macros [cljs.core.async.macros :refer [go-loop]]))
+  (:require-macros [ataru.async-macros :as asyncm]
+                   [cljs.core.async.macros :refer [go-loop]]))
 
 (defn get-user-info [db _]
   (http
@@ -164,19 +165,33 @@
     {:db (assoc-in db [:editor :ui :remove-component-button-state path] :confirm)
      :dispatch-later [{:ms 2000 :dispatch [:editor/unstart-remove-component path]}]}))
 
+(defn- on-haku-data-fetched [hakukohteet-promise hakukohderyhmat-promise]
+  (async/go
+    (try
+      (let [hakukohderyhmat (asyncm/<? hakukohderyhmat-promise)
+            haut            (asyncm/<? hakukohteet-promise)
+            haun-ryhmaliitokset (set (mapcat #(:ryhmaliitokset %) (mapcat #(:hakukohteet %) (vals haut))))]
+        (dispatch [:editor/set-used-by-haut
+                   haut
+                   (filter #(contains? haun-ryhmaliitokset (:oid %)) hakukohderyhmat)]))
+      (catch js/Error e #(do (dispatch [:editor/unset-used-by-haut])
+                             (.log js/console e))))))
+
 (reg-event-fx
   :editor/refresh-used-by-haut
   (fn [{db :db} _]
     (when-let [form-key (get-in db [:editor :selected-form-key])]
       (let [haku-oids (map (comp :haku-oid second) (get-in db [:editor :forms-in-use (keyword form-key)]))
-            organization-oids (map :oid (get-in db [:editor :user-info :organizations] []))]
+            organization-oids (map :oid (get-in db [:editor :user-info :organizations] []))
+            hakukohderyhmat-promise (async/promise-chan)
+            hakukohteet-promise (async/promise-chan)]
+        (on-haku-data-fetched hakukohteet-promise hakukohderyhmat-promise)
         {:db (-> db
-                 (assoc-in [:editor :used-by-haut :fetching?] true)
-                 (assoc-in [:editor :used-by-haut :error?] false))
-         :fetch-haut-with-hakukohteet [organization-oids haku-oids
-                                       #(dispatch [:editor/set-used-by-haut %])
-                                       #(do (dispatch [:editor/unset-used-by-haut])
-                                            (.log js/console %))]}))))
+               (assoc-in [:editor :used-by-haut :fetching?] true)
+               (assoc-in [:editor :used-by-haut :error?] false))
+         :fetch-haut-with-hakukohteet [hakukohteet-promise organization-oids haku-oids]
+         :fetch-hakukohde-groups [hakukohderyhmat-promise]
+         }))))
 
 (reg-event-db
   :editor/handle-user-info
@@ -234,19 +249,21 @@
 
 (reg-event-db
   :editor/set-used-by-haut
-  (fn [db [_ haut]]
+  (fn [db [_ haut hakukohderyhmat]]
     (-> db
-        (assoc-in [:editor :used-by-haut :fetching?] false)
-        (assoc-in [:editor :used-by-haut :error?] false)
-        (assoc-in [:editor :used-by-haut :haut] haut))))
+      (assoc-in [:editor :used-by-haut :fetching?] false)
+      (assoc-in [:editor :used-by-haut :error?] false)
+      (assoc-in [:editor :used-by-haut :haut] haut)
+      (assoc-in [:editor :used-by-haut :hakukohderyhmat] hakukohderyhmat))))
 
 (reg-event-db
   :editor/unset-used-by-haut
   (fn [db [_ haut]]
     (-> db
-        (assoc-in [:editor :used-by-haut :fetching?] false)
-        (assoc-in [:editor :used-by-haut :error?] true)
-        (update-in [:editor :used-by-haut] dissoc :haut))))
+      (assoc-in [:editor :used-by-haut :fetching?] false)
+      (assoc-in [:editor :used-by-haut :error?] true)
+      (update-in [:editor :used-by-haut] dissoc :haut)
+      (update-in [:editor :used-by-haut] dissoc :hakukohderyhmat))))
 
 (reg-event-db
   :editor/handle-fetch-form
@@ -572,6 +589,20 @@
   (fn [db [_ path oid]]
     (let [path (conj (vec (current-form-content-path db path))
                      :belongs-to-hakukohteet)]
+      (update-in db path (fnil (comp vec #(disj % oid) set) [])))))
+
+(reg-event-db
+  :editor/add-to-belongs-to-hakukohderyhma
+  (fn [db [_ path oid]]
+    (let [path (conj (vec (current-form-content-path db path))
+                 :belongs-to-hakukohderyhma)]
+      (update-in db path (fnil (comp vec #(conj % oid) set) [])))))
+
+(reg-event-db
+  :editor/remove-from-belongs-to-hakukohderyhma
+  (fn [db [_ path oid]]
+    (let [path (conj (vec (current-form-content-path db path))
+                 :belongs-to-hakukohderyhma)]
       (update-in db path (fnil (comp vec #(disj % oid) set) [])))))
 
 (reg-event-db
