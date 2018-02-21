@@ -1,5 +1,6 @@
 (ns ataru.hakija.application-hakukohde-handlers
   (:require
+    [clojure.string :as string]
     [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch]]
     [ataru.util :as util]
     [ataru.hakija.application-validators :as validator]))
@@ -36,19 +37,27 @@
   (fn [db _]
     (update-in db [:application :show-hakukohde-search] not)))
 
+
 (reg-event-db
   :application/hakukohde-query-process
   (fn [db [_ hakukohde-query]]
     (if (= hakukohde-query (get-in db [:application :hakukohde-query]))
       (let [hakukohde-options (:options (hakukohteet-field db))
             lang              (-> db :form :selected-language)
-            query-pattern     (re-pattern (str "(?i)" hakukohde-query))
-            results           (if (clojure.string/blank? hakukohde-query)
+            query-parts       (map string/lower-case (string/split hakukohde-query #"\s+"))
+            results           (if (or (string/blank? hakukohde-query)
+                                      (< (count hakukohde-query) 2))
                                 (map :value hakukohde-options)
                                 (->> hakukohde-options
-                                     (filter #(re-find query-pattern
-                                                       (str (get-in % [:label lang] "")
-                                                            (get-in % [:description lang] ""))))
+                                     (filter
+                                       (fn [option]
+                                         (let [haystack (string/lower-case
+                                                          (str (get-in option [:label lang] "")
+                                                               (get-in option [:description lang] "")))]
+                                           (every? true? (map
+                                                           (fn [needle]
+                                                             (string/includes? haystack needle))
+                                                           query-parts)))))
                                      (map :value)))
             [hakukohde-hits rest-results] (split-at 15 results)]
         (-> db

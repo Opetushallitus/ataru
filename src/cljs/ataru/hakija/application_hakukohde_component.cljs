@@ -4,37 +4,78 @@
     [ataru.application-common.application-field-common :refer [scroll-to-anchor]]
     [ataru.cljs-util :refer [get-translation]]))
 
-(defn index-of [s val from-index]
-  (clojure.string/index-of (clojure.string/lower-case s)
-                           (clojure.string/lower-case val)
-                           from-index))
-
 (defn- should-search? [search-term]
   (> (count search-term) 1))
 
-(defn match-text [text search-term]
-  (if-not (should-search? search-term)
+(defn text-matches
+  [text search-terms]
+  (let [text         (clojure.string/lower-case text)
+        search-terms (->> search-terms
+                          (filter should-search?)
+                          (map clojure.string/lower-case))]
+    (apply concat
+           (for [search-term search-terms]
+             (loop [res           []
+                    current-index 0]
+               (let [match-index (clojure.string/index-of text search-term current-index)
+                     match-end   (when match-index (+ match-index (count search-term)))]
+                 (if (nil? (and match-index match-end))
+                   res
+                   (recur
+                     (conj res [match-index match-end])
+                     match-end))))))))
+
+(defn- reduce-matches-pass
+  [text-matches]
+  (reduce
+    (fn [acc [match-start match-end]]
+      (let [[previous-start previous-end] (last acc)]
+        (if (and previous-start (<= match-start previous-end))
+          (conj (butlast acc) [previous-start match-end])
+          (conj acc [match-start match-end]))))
+    []
+    (sort text-matches)))
+
+(defn reduce-matches
+  [text-matches]
+  (loop [prev-matches text-matches
+         reduced (reduce-matches-pass text-matches)]
+    (if (= (count prev-matches) (count reduced))
+      reduced
+      (recur reduced (reduce-matches-pass reduced)))))
+
+(defn match-text [text search-terms]
+  (if (or (empty? search-terms)
+          (every? false? (map should-search? search-terms)))
     [{:text text :hilight false}]
-    (loop [res           []
-           current-index 0]
-      (let [match-index (index-of text search-term current-index)]
-        (cond
-          (nil? match-index)
-          (conj res {:text    (subs text current-index)
-                     :hilight false})
+    (let [highlights (-> text
+                         (text-matches search-terms)
+                         (reduce-matches))]
+      (loop [res               []
+             current-index     0
+             current-highlight 0]
+        (let [[match-begin match-end] (when (< current-highlight (count highlights))
+                                        (nth highlights current-highlight))]
+          (cond
+            (nil? match-begin)
+            (conj res {:text    (subs text current-index)
+                       :hilight false})
 
-          (< current-index match-index)
-          (recur (conj res
-                       {:text    (subs text current-index match-index)
-                        :hilight false}
-                       {:text    (subs text match-index (+ (count search-term) match-index))
-                        :hilight true})
-                 (+ match-index (count search-term)))
+            (< current-index match-begin)
+            (recur (conj res
+                         {:text    (subs text current-index match-begin)
+                          :hilight false}
+                         {:text    (subs text match-begin match-end)
+                          :hilight true})
+                   match-end
+                   (inc current-highlight))
 
-          :else
-          (recur (conj res {:text    (subs text current-index (+ (count search-term) current-index))
-                            :hilight true})
-                 (+ current-index (count search-term))))))))
+            :else
+            (recur (conj res
+                         {:text    (subs text current-index match-end)
+                          :hilight true})
+                   match-end
+                   (inc current-highlight))))))))
 
 (defn hilighted-text->span [idx {:keys [text hilight]}]
   (let [key (str "hilight-" idx)]
@@ -46,7 +87,7 @@
 
 (defn hilight-text [text hilight-text]
   (if (some? text)
-    (map-indexed hilighted-text->span (match-text text hilight-text))
+    (map-indexed hilighted-text->span (match-text text (clojure.string/split hilight-text #"\s+")))
     [:span ""]))
 
 (defn- hakukohde-remove-event-handler [e]
