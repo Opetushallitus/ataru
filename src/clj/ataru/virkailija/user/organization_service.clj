@@ -85,9 +85,9 @@
   OrganizationService
 
   (get-hakukohde-groups [this]
-    (vals (get-groups-from-cache-or-client
-      (:group-cache this)
-      (:cas-client this))))
+    (map #(select-keys % [:oid :name]) (vals (get-groups-from-cache-or-client
+                                               (:group-cache this)
+                                               (:cas-client this)))))
 
   (get-direct-organizations-for-rights [this user-name rights]
     (let [direct-right-oids (ldap-client/get-right-organization-oids (:ldap-connection this) user-name rights)]
