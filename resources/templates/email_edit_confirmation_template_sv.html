@@ -8,15 +8,6 @@
     <table style="width: 600px;">
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
-          Ändringarna i din ansökan har mottagits. Under ansökningstiden kan
-          du ändra dina ansökningsönskemål eller ansökan via följande
-          länk: <a style="color: #0093C4;"
-          href="{{application-url|safe}}">{{application-url|safe}}</a>. Dela
-          inte länken vidare till utomstående.
-        </td>
-      </tr>
-      <tr>
-        <td style="padding-left: 20px; padding-top: 20px;">
           Ansökans nummer: {{application-oid}}
         </td>
       </tr>
@@ -34,6 +25,15 @@
       </tr>
       {% endfor %}
       {% endif %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Ändringarna i din ansökan har mottagits. Under ansökningstiden kan
+          du ändra dina ansökningsönskemål eller ansökan via följande
+          länk: <a style="color: #0093C4;"
+          href="{{application-url|safe}}">{{application-url|safe}}</a>. Dela
+          inte länken vidare till utomstående.
+        </td>
+      </tr>
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
           Svara inte på detta meddelande, det har skickats automatiskt.
