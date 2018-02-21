@@ -730,8 +730,7 @@
         modifications (when modify-event?
                         (subscribe [:application/changes-made-for-event (:id event)]))
         show-details? (r/atom (if (:last-modify-event? event) true false))
-        time-str      (t/time->short-str (or (:time event) (:created-time event)))
-        caption       (event-caption event)]
+        time-str      (t/time->short-str (or (:time event) (:created-time event)))]
     (fn [event]
       [:div.application-handling__event-row
        [:span.application-handling__event-timestamp time-str]
@@ -740,7 +739,7 @@
          (when modify-event?
            {:on-click #(swap! show-details? not)
             :class    "application-handling__event-caption-modify-event"})
-         caption
+         (event-caption event)
          (when modify-event?
            [:span
             (if @show-details?
