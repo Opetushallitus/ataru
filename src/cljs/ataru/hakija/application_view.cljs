@@ -7,7 +7,7 @@
             [ataru.hakija.application :refer [application-processing-jatkuva-haku?]]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
-            [cljs-time.core :refer [to-default-time-zone]]
+            [cljs-time.core :refer [to-default-time-zone now after?]]
             [cljs-time.format :refer [unparse unparse-local formatter]]
             [cljs-time.coerce :refer [from-long]]
             [goog.string :as gstring]
@@ -41,18 +41,35 @@
       (let [hakutoiveet         (set (:hakukohde @application))
             applied-hakukohteet (filter #(contains? hakutoiveet (:oid %))
                                         (get-in form [:tarjonta :hakukohteet]))
-            apply-dates         (map (fn [{:keys [hakuaika]}]
-                                       (if (:jatkuva-haku? hakuaika)
-                                         (get-translation :continuous-period)
-                                         (str (get-translation :application-period)
-                                              " "
-                                              (millis->str (:start hakuaika))
-                                              " - "
-                                              (millis->str (:end hakuaika))
-                                              (when (and (not (:on hakuaika))
-                                                         (nil? @virkailija-secret))
-                                                (str " (" (get-translation :not-within-application-period) ")")))))
-                                     applied-hakukohteet)]
+            longest-open        (->> (get-in form [:tarjonta :hakukohteet])
+                                     (map :hakuaika)
+                                     (filter :on)
+                                     (sort-by :end >)
+                                     first)
+            next-open           (->> (get-in form [:tarjonta :hakukohteet])
+                                     (map :hakuaika)
+                                     (remove :on)
+                                     (filter #(after? (from-long (:start %)) (now)))
+                                     (sort-by :start <)
+                                     first)
+            last-open           (->> (get-in form [:tarjonta :hakukohteet])
+                                     (map :hakuaika)
+                                     (sort-by :end >)
+                                     first)
+            apply-dates         (if-let [hakuaika (or longest-open
+                                                      next-open
+                                                      last-open)]
+                                  (if (:jatkuva-haku? hakuaika)
+                                    (get-translation :continuous-period)
+                                    (str (get-translation :application-period)
+                                         " "
+                                         (millis->str (:start hakuaika))
+                                         " - "
+                                         (millis->str (:end hakuaika))
+                                         (when (and (not (:on hakuaika))
+                                                    (nil? @virkailija-secret))
+                                           (str " (" (get-translation :not-within-application-period) ")"))))
+                                  (get-translation :not-within-application-period))]
         [:div
          [:div.application__header-container
           [:span.application__header (or (-> form :tarjonta :haku-name selected-lang)
@@ -70,9 +87,7 @@
                           languages)])]
          (when (not-empty apply-dates)
            [:div.application__sub-header-container
-            (doall
-             (for [date apply-dates]
-               [:span.application__sub-header-dates date]))])
+            [:span.application__sub-header-dates apply-dates]])
          (when (and (application-processing-jatkuva-haku?
                      @application
                      applied-hakukohteet)
