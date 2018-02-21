@@ -42,8 +42,10 @@
   :application/hakukohde-query-process
   (fn [db [_ hakukohde-query]]
     (if (= hakukohde-query (get-in db [:application :hakukohde-query]))
-      (let [hakukohde-options (:options (hakukohteet-field db))
-            lang              (-> db :form :selected-language)
+      (let [lang              (-> db :form :selected-language)
+            hakukohde-options (->> (hakukohteet-field db)
+                                   :options
+                                   (sort-by #(get-in % [:label lang])))
             query-parts       (map string/lower-case (string/split hakukohde-query #"\s+"))
             results           (if (or (string/blank? hakukohde-query)
                                       (< (count hakukohde-query) 2))
