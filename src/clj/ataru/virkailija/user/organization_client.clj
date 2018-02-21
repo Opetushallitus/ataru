@@ -18,8 +18,9 @@
                                  :type :organization})
 
 (defn- group->map [group] {:name (:nimi group)
-                                 :oid (:oid group)
-                                 :type :group})
+                           :oid  (:oid group)
+                           :type :group
+                           :hakukohderyhma? (some->> (:ryhmatyypit group) #(contains? % "hakukohde"))})
 
 (defn get-all-organizations-as-seq
   "Flattens hierarchy and includes all suborganizations"
@@ -88,3 +89,9 @@
         (log/info (str "Fetched organization from URL: " url))
         body)
       (log/error (str "Couldn't fetch organization by number from url: " url)))))
+
+(defn fake-hakukohderyhma [index]
+  (group->map {:oid (format "1.2.246.562.28.0000000000%d" index)
+               :nimi {:fi (format "Testihakukohderyhma %d" index)}
+               :ryhmatyypit ["hakukohde"]
+               }))

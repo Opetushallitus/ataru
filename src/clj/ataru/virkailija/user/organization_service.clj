@@ -79,15 +79,20 @@
                                           group-oids)]
       (concat normal-orgs groups)))
 
+(defn- hakukohderyhmat-from-groups [groups]
+  (let [hakukohde-groups (filter #(:hakukohderyhma? %) groups)]
+    (map #(select-keys % [:oid :name]) hakukohde-groups)))
+
 ;; The real implementation for Organization service
 (defrecord IntegratedOrganizationService []
   component/Lifecycle
   OrganizationService
 
   (get-hakukohde-groups [this]
-    (map #(select-keys % [:oid :name]) (vals (get-groups-from-cache-or-client
-                                               (:group-cache this)
-                                               (:cas-client this)))))
+    (let [groups (vals (get-groups-from-cache-or-client
+                         (:group-cache this)
+                         (:cas-client this)))]
+    (hakukohderyhmat-from-groups groups)))
 
   (get-direct-organizations-for-rights [this user-name rights]
     (let [direct-right-oids (ldap-client/get-right-organization-oids (:ldap-connection this) user-name rights)]
@@ -117,18 +122,16 @@
 (def fake-orgs [{:name {:fi "Test org"}, :oid "1.2.246.562.10.0439845" :type :organization}
                 {:name {:fi "Test group"}, :oid "1.2.246.562.28.1" :type :group}])
 
-(defn fake-org-group [index]
-  {:name {:fi (format "Testihakukohderyhma %d" index)}, :oid (format "1.2.246.562.28.0000000000%d" index)})
-
 ;; Test double for UI tests
 (defrecord FakeOrganizationService []
   OrganizationService
 
   (get-hakukohde-groups [this]
-    [(fake-org-group 1)
-     (fake-org-group 2)
-     (fake-org-group 3)
-     (fake-org-group 4)])
+    (hakukohderyhmat-from-groups
+    [(org-client/fake-hakukohderyhma 1)
+     (org-client/fake-hakukohderyhma 2)
+     (org-client/fake-hakukohderyhma 3)
+     (org-client/fake-hakukohderyhma 4)]))
 
   (get-direct-organizations-for-rights [this user-name rights]
     {:form-edit         fake-orgs
