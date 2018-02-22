@@ -108,7 +108,7 @@
   (tags :unit)
   (it "fails answers with extraneous keys"
     (should= false
-      (-> (validator/valid-application? has-never-applied extra-answers f)
+      (-> (validator/valid-application? has-never-applied extra-answers f [])
         :passed?))
     (should= #{:foo}
       (validator/extra-answers-not-in-original-form
@@ -116,13 +116,13 @@
         (keys (util/answers-by-key (:answers extra-answers))))))
   (it "fails answers with missing answers"
     (should= false
-      (:passed? (validator/valid-application? has-never-applied (assoc a :answers []) f)))
+      (:passed? (validator/valid-application? has-never-applied (assoc a :answers []) f [])))
     (should= false
-      (:passed? (validator/valid-application? has-never-applied (update a :answers rest) f))))
+      (:passed? (validator/valid-application? has-never-applied (update a :answers rest) f []))))
 
   (it "passes validation"
     (should= true
-      (:passed? (validator/valid-application? has-never-applied a f)))
+      (:passed? (validator/valid-application? has-never-applied a f [])))
     (should=
       {:address                              {:passed? true}
        :email                                {:passed? true}
@@ -146,7 +146,7 @@
        :b05a6057-2c65-40a8-9312-c837429f44bb {:passed? true}}
       (validator/build-results has-never-applied answers-by-key
         []
-        (:content f))))
+        (:content f) [])))
 
   (it "passes validation on multipleChoice answer being empty"
     (should
@@ -157,7 +157,7 @@
               assoc
               :value "")
             []
-            (:content f))
+            (:content f) [])
           :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
           :passed?)))
 
@@ -176,7 +176,7 @@
                     {:id "gender"}
                     (dissoc form :validators)
                     :else form))
-                (:content f)))
+                (:content f))  [])
             :gender
             :passed?)))
 
@@ -195,7 +195,7 @@
                   {:id "c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0"}
                   (assoc form :validators ["required"])
                   :else form))
-              (:content f)))
+              (:content f)) [])
           :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
           :passed?)))
 
@@ -214,7 +214,7 @@
                     {:id "gender"}
                     (assoc form :validators ["required"])
                     :else form))
-                (:content f)))
+                (:content f)) [])
           :gender
           :passed?)))
 
@@ -227,7 +227,7 @@
               assoc
               :value [])
             []
-            (:content f))
+            (:content f) [])
           :047da62c-9afe-4e28-bfe8-5b50b21b4277
           :passed?)))
 
@@ -246,7 +246,7 @@
                     {:id "047da62c-9afe-4e28-bfe8-5b50b21b4277"}
                     (assoc form :validators ["required"])
                     :else form))
-                (:content f)))
+                (:content f)) [])
           :047da62c-9afe-4e28-bfe8-5b50b21b4277
           :passed?)))
 
@@ -261,7 +261,7 @@
                     {:id "fbe3522d-6f1d-4e05-85e3-4e716146c686"}
                     (assoc form :validators ["required"])
                     :else form))
-                (:content f)))
+                (:content f)) [])
             :fbe3522d-6f1d-4e05-85e3-4e716146c686
             :passed?)))
 
@@ -280,7 +280,7 @@
                     {:id "fbe3522d-6f1d-4e05-85e3-4e716146c686"}
                     (assoc form :validators ["required"])
                     :else form))
-                (:content f)))
+                (:content f)) [])
           :fbe3522d-6f1d-4e05-85e3-4e716146c686
           :passed?)))
 
@@ -302,70 +302,70 @@
                          {:id "a3199cdf-fba3-4be1-8ab1-760f75f16d54"}
                          (assoc form-field :child-validator "birthdate-and-gender-component")
                          :else form-field))
-                (:content f)))
+                (:content f)) [])
             :a3199cdf-fba3-4be1-8ab1-760f75f16d54
             :passed?)))
 
   (it "passes validation when no hakukohde selected (and no answers are specified to a hakukohde)"
-      (should (:passed? (validator/valid-application? has-never-applied a (update f :content conj hakukohde-specific-question)))))
+      (should (:passed? (validator/valid-application? has-never-applied a (update f :content conj hakukohde-specific-question) []))))
 
   (it "passes validation when no hakukohde is selected, a question belongs to a hakukohde a but has no value"
       (should (:passed? (validator/valid-application? has-never-applied
                          (update a :answers conj hakukohde-specific-question-answer-nil-value)
-                         (update f :content conj hakukohde-specific-question)))))
+                         (update f :content conj hakukohde-specific-question) []))))
 
   (it "fails when no hakukohde is selected, a question belongs to a hakukohde and has a value"
       (should-not (:passed? (validator/valid-application? has-never-applied
                              (update a :answers conj hakukohde-specific-question-answer)
-                             (update f :content conj hakukohde-specific-question)))))
+                             (update f :content conj hakukohde-specific-question) []))))
 
 
   (it "passes validation when hakukohde is selected and no answers are specified to a hakukohde"
-      (should (:passed? (validator/valid-application? has-never-applied a (update f :content conj hakukohde-specific-question)))))
+      (should (:passed? (validator/valid-application? has-never-applied a (update f :content conj hakukohde-specific-question) []))))
 
   (it "passes validation when hakukohde is selected and an answer belongs to it"
       (should (:passed? (validator/valid-application? has-never-applied
                          (update a :answers conj hakukohde-specific-question-answer hakukohde-answer)
-                         (update f :content conj hakukohde-question hakukohde-specific-question)))))
+                         (update f :content conj hakukohde-question hakukohde-specific-question) []))))
 
   (it "passes validation when hakukohde is selected, a question belongs to different hakukohde but has no value"
       (should (:passed? (validator/valid-application? has-never-applied
                          (update a :answers conj hakukohde-specific-question-answer-nil-value hakukohde-answer)
-                         (update f :content conj hakukohde-question hakukohde-specific-question-another-hakukohde)))))
+                         (update f :content conj hakukohde-question hakukohde-specific-question-another-hakukohde) []))))
 
   (it "fails validation when hakukohde is selected, a question belongs to different hakukohde but has a value"
       (should-not (:passed? (validator/valid-application? has-never-applied
                              (update a :answers conj hakukohde-specific-question-answer hakukohde-answer)
-                             (update f :content conj hakukohde-question hakukohde-specific-question-another-hakukohde)))))
+                             (update f :content conj hakukohde-question hakukohde-specific-question-another-hakukohde) []))))
 
   (it "passes validation when a dropdown question is hakukohde specific, no answers"
       (should (:passed? (validator/valid-application? has-never-applied
                          a
-                         (update f :content conj hakukohde-specific-dropdown-with-followups)))))
+                         (update f :content conj hakukohde-specific-dropdown-with-followups) []))))
 
   (it "passes validation when a dropdown question is hakukohde specific and has answers",
       (should (:passed? (validator/valid-application? has-never-applied
                          (update a :answers conj hakukohde-answer dropdown-answer dropdown-followup-answer)
-                         (update f :content conj hakukohde-question hakukohde-specific-dropdown-with-followups)))))
+                         (update f :content conj hakukohde-question hakukohde-specific-dropdown-with-followups) []))))
 
   (it "fails validation when a dropdown question is hakukohde specific and has no required followup answers",
       (should-not (:passed? (validator/valid-application? has-never-applied
                              (update a :answers conj hakukohde-answer dropdown-answer)
-                             (update f :content conj hakukohde-question hakukohde-specific-dropdown-with-followups)))))
+                             (update f :content conj hakukohde-question hakukohde-specific-dropdown-with-followups) []))))
 
   (it "passes validation when a dropdown question is hakukohde specific to wrong hakukohde and has no answers",
       (should (:passed? (validator/valid-application? has-never-applied
                          (update a :answers conj hakukohde-answer)
                          (update f :content conj hakukohde-question (assoc hakukohde-specific-dropdown-with-followups
                                                                           :belongs-to-hakukohteet
-                                                                          ["1.2.246.562.20.352373851711"]))))))
+                                                                          ["1.2.246.562.20.352373851711"])) []))))
 
   (it "fails validation when a dropdown question is hakukohde specific to wrong hakukohde and has answers",
       (should-not (:passed? (validator/valid-application? has-never-applied
                              (update a :answers conj hakukohde-answer dropdown-answer dropdown-followup-answer)
                              (update f :content conj hakukohde-question (assoc hakukohde-specific-dropdown-with-followups
                                                                                :belongs-to-hakukohteet
-                                                                               ["1.2.246.562.20.352373851711"]))))))
+                                                                               ["1.2.246.562.20.352373851711"])) []))))
 
   (it "fails validation when cannot submit multiple applications and has applied"
       (let [has-applied (fn [_ _] (async/go true))
@@ -373,7 +373,7 @@
             answers (update a :answers (partial remove #(= "birth-date" (:key %))))]
         (should-not (:passed? (validator/valid-application?
                                has-applied
-                               answers form)))))
+                               answers form [])))))
 
   (it "passes validation when cannot submit multiple applications and has not applied"
       (let [has-applied (fn [_ _] (async/go false))
@@ -381,7 +381,7 @@
             answers (update a :answers (partial remove #(= "birth-date" (:key %))))]
         (should (:passed? (validator/valid-application?
                            has-applied
-                           answers form)))))
+                           answers form [])))))
 
   (it "passes validation when can submit multiple applications and has applied"
       (let [has-applied (fn [_ _] (async/go true))
@@ -389,7 +389,7 @@
             answers (update a :answers (partial remove #(= "birth-date" (:key %))))]
         (should (:passed? (validator/valid-application?
                            has-applied
-                           answers form)))))
+                           answers form [])))))
 
   (it "passes validation when can submit multiple applications and has not applied"
       (let [has-applied (fn [_ _] (async/go false))
@@ -397,4 +397,4 @@
             answers (update a :answers (partial remove #(= "birth-date" (:key %))))]
         (should (:passed? (validator/valid-application?
                            has-applied
-                           answers form))))))
+                           answers form []))))))
