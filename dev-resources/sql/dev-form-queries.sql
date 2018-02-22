@@ -16,6 +16,11 @@ WHERE application_key in (SELECT key
                          FROM applications
                          WHERE form_id = :form_id);
 
+-- name: yesql-delete-fixture-application-secrets!
+DELETE FROM application_secrets
+WHERE application_key IN (SELECT key FROM applications
+                          WHERE form_id = :form_id);
+
 -- name: yesql-delete-fixture-application!
 DELETE FROM applications
 WHERE form_id = :form_id;
