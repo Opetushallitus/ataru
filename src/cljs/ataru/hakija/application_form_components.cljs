@@ -105,19 +105,13 @@
 (defn question-hakukohde-names [field-descriptor]
   (let [show-hakukohde-list? (r/atom false)]
     (fn [field-descriptor]
-      (let [lang                                      @(subscribe [:application/form-language])
-            selected-hakukohde-oids                   (->> @(subscribe [:application/selected-hakukohteet]) (set))
-            tarjonta-hakukohteet                      @(subscribe [:application/tarjonta-hakukohteet])
-            selected-hakukohteet-and-ryhmat-for-field @(subscribe [:application/field-intersection-with-selected-hakukohteet-and-ryhmat
-                                                                   field-descriptor])
-            only-selected                             #(let [oids         (set (concat [(:oid %)] (:hakukohderyhmat %)))
-                                                             intersection (clojure.set/intersection selected-hakukohteet-and-ryhmat-for-field oids)]
-                                                         (not-empty intersection))
-            selected-hakukohde-names                  (->> tarjonta-hakukohteet
-                                                           (filter only-selected)
-                                                           (filter #(contains? selected-hakukohde-oids (:oid %)))
-                                                           (map :name)
-                                                           (map #(some % [lang :fi :sv :en])))]
+      (let [lang                     @(subscribe [:application/form-language])
+            tarjonta-hakukohteet     @(subscribe [:application/tarjonta-hakukohteet])
+            selected-hakukohteet     (set @(subscribe [:application/selected-hakukohteet-for-field field-descriptor]))
+            selected-hakukohde-names (->> tarjonta-hakukohteet
+                                          (filter #(contains? selected-hakukohteet (:oid %)))
+                                          (map :name)
+                                          (map #(some % [lang :fi :sv :en])))]
         [:div.application__question_hakukohde_names_container
          [:a.application__question_hakukohde_names_info
           {:on-click #(swap! show-hakukohde-list? not)}

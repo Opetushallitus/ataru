@@ -164,6 +164,7 @@
                                   :hakuaikaLoppuPvm (- (System/currentTimeMillis)
                                                        16400000)
                                   :koulutukset      [{:oid "1.2.246.562.17.74335799465"}]
+                                  :ryhmaliitokset [{:ryhmaOid "1.2.246.562.28.00000000001"}]
                                   :hakukohteenNimet
                                                     {:kieli_fi "Aikaloppu 1"
                                                      :kieli_sv "sv Aikaloppu 1"}})

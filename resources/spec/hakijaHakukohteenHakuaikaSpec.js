@@ -53,6 +53,7 @@
                 expect(testFrame().find("#hakuajat-ohi").prop('disabled')).to.equal(true)
                 expect(testFrame().find("#osa-hakuajoista-ohi").prop('disabled')).to.equal(false)
                 expect(testFrame().find("#kaikki-hakuajat-voimassa").prop('disabled')).to.equal(false)
+                expect(testFrame().find("#assosiaatio-hakukohderyhman-kautta").prop('disabled')).to.equal(true)
 
             })
         })

@@ -35,6 +35,27 @@
       (get-in db [:form :selected-language])
       :fi))) ; When user lands on the page, there isn't any language set until the form is loaded)
 
+(defn- selected-hakukohteet [db]
+  (map :value (get-in db [:application :answers :hakukohteet :values] [])))
+
+(defn- selected-hakukohteet-from-tarjonta [db]
+  (let [selected-hakukohteet     (set (selected-hakukohteet db))]
+    (->> (get-in db [:form :tarjonta :hakukohteet])
+         (filter #(contains? selected-hakukohteet (:oid %))))))
+
+(re-frame/reg-sub
+  :application/selected-hakukohteet-for-field
+  (fn [db [_ field]]
+    (if-let [ids (seq (concat (get field :belongs-to-hakukohderyhma [])
+                              (get field :belongs-to-hakukohteet [])))]
+      (if-let [selected-hakukohteet-from-tarjonta (selected-hakukohteet-from-tarjonta db)]
+        (->> selected-hakukohteet-from-tarjonta
+             (filter #(not (empty? (clojure.set/intersection
+                                    (set ids)
+                                    (set (concat [(:oid %)] (get % :hakukohderyhmat [])))))))
+             (map :oid)
+             (seq))))))
+
 (re-frame/reg-sub
   :application/cannot-view?
   (fn [db [_ key]]
@@ -51,11 +72,9 @@
                      (filter #(= (keyword key) (keyword (:id %))))
                      first)
           editing? (get-in db [:application :editing?])
-          hakukohde-selected (fn [oid] @(re-frame/subscribe
-                                          [:application/hakukohde-selected? oid]))
+          selected-hakukohteet-for-field @(re-frame/subscribe [:application/selected-hakukohteet-for-field field])
           hakuajat-on? @(re-frame/subscribe [:application/hakukohteet-hakuaika-on?
-                                             (filter hakukohde-selected
-                                                     (:belongs-to-hakukohteet field))])]
+                                             selected-hakukohteet-for-field])]
       (and editing?
            (or (not hakuajat-on?)
                (:cannot-edit field))))))
@@ -116,30 +135,10 @@
     (into {} (map (juxt :value identity)
                   @(re-frame/subscribe [:application/hakukohde-options])))))
 
-(defn- selected-hakukohteet [db]
-  (map :value (get-in db [:application :answers :hakukohteet :values] [])))
-
-(defn- selected-hakukohteet-and-ryhmat [db]
-    (let [selected-hakukohteet     (set (selected-hakukohteet db))
-          selected-hakukohderyhmat (->> (get-in db [:form :tarjonta :hakukohteet])
-                                        (filter #(contains? selected-hakukohteet (:oid %)))
-                                        (mapcat :hakukohderyhmat))]
-      (set (concat selected-hakukohteet selected-hakukohderyhmat))))
-
 (re-frame/reg-sub
   :application/selected-hakukohteet
   (fn [db _]
     (selected-hakukohteet db)))
-
-(re-frame/reg-sub
-  :application/field-intersection-with-selected-hakukohteet-and-ryhmat
-  (fn [db [_ field]]
-    (if-let [ids (seq (concat (get field :belongs-to-hakukohderyhma [])
-                              (get field :belongs-to-hakukohteet [])))]
-      (if-let [selected-hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat db)]
-        (clojure.set/intersection
-          (set ids)
-          selected-hakukohteet-and-ryhmat)))))
 
 (re-frame/reg-sub
   :application/hakukohteet-editable?
