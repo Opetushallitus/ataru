@@ -255,6 +255,13 @@
       {:fi "Ajoneuvonosturinkuljettajan ammattitutkinto"}
       {:fi "Testihakukohde"}))
 
+  (get-hakukohde-and-tarjoaja-name [this hakukohde-oid]
+    (if (= hakukohde-oid "hakukohde.oid")
+      {:name {:fi "Ajoneuvonosturinkuljettajan ammattitutkinto"}
+       :tarjoaja-name {:fi "Kuskien Amis"}}
+      {:name {:fi "Testihakukohde"}
+       :tarjoaja-name {:fi "Testitarjoaja"}}))
+
   (hakukohde-search [_ haku-oid _]
     (let [to-hakukohteet (fn [hakukohde-oids] (->> (map #(get hakukohde %) hakukohde-oids)
                                                    (map #(assoc % :nimi (:hakukohteenNimet %)))

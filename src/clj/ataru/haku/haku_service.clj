@@ -8,10 +8,9 @@
   [tarjonta-service {:keys [hakukohde application-count processed processing] :as raw-haku-row}]
   (merge (select-keys raw-haku-row [:application-count :processed :haku])
          {:oid         hakukohde
-          :unprocessed (- application-count processed processing)
-          :name        (or
-                         (.get-hakukohde-name tarjonta-service hakukohde)
-                         {:fi hakukohde})}))
+          :unprocessed (- application-count processed processing)}
+         (or (.get-hakukohde-and-tarjoaja-name tarjonta-service hakukohde)
+             {:name {:fi hakukohde}})))
 
 (defn- haku-processed-counts
   [hakukohteet]

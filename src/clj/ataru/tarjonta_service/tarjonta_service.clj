@@ -86,6 +86,11 @@
     (when-let [hakukohde (.get-hakukohde this hakukohde-oid)]
       (parse-multi-lang-text (:hakukohteenNimet hakukohde))))
 
+  (get-hakukohde-and-tarjoaja-name [this hakukohde-oid]
+    (when-let [hakukohde (.get-hakukohde this hakukohde-oid)]
+      {:name (parse-multi-lang-text (:hakukohteenNimet hakukohde))
+       :tarjoaja-name (:tarjoajaNimet hakukohde)}))
+
   (hakukohde-search [this haku-oid organization-oid]
     (some->> (client/hakukohde-search haku-oid organization-oid)
              parse-search-result

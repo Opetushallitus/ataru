@@ -78,12 +78,14 @@
       "/lomake-editori/applications/complete"
       (str "Käsitellyt haut" (haku-count-str @complete-count))]]))
 
-(defn haku-info-link [link-href {:keys [name haku-application-count application-count unprocessed processed]}]
+(defn haku-info-link [link-href {:keys [name tarjoaja-name haku-application-count application-count unprocessed processed]}]
   (let [processing (- application-count unprocessed processed)]
     [:a.application__search-control-haku-link
      {:href link-href}
      [:span.application__search-control-haku-title
-      (some #(get name %) [:fi :sv :en])]
+      (some #(get name %) [:fi :sv :en])
+      (when tarjoaja-name
+        (str " - " (some #(get tarjoaja-name %) [:fi :sv :en])))]
      [:span.application__search-control-haku-hl]
      (when haku-application-count
        [:span.application__search-control-haku-count (str haku-application-count " hakemus" (when (< 1 haku-application-count) "ta"))])
