@@ -35,27 +35,41 @@
       (assoc-in [:application :search-control :search-term :value] term)
       (assoc-in [:application :search-control :search-term :show-error] false)))
 
+(defn- person-oid?
+  [maybe-oid]
+  (re-matches #"^1\.2\.246\.562\.24\.\d+$" maybe-oid))
+
+(defn- application-oid?
+  [maybe-oid]
+  (re-matches #"^1\.2\.246\.562\.11\.\d+$" maybe-oid))
+
 (reg-event-fx
   :application/search-by-term
   (fn [{:keys [db]} [_ search-term]]
-    (let [search-term-ucase   (-> search-term
-                                  clojure.string/trim
-                                  clojure.string/upper-case)
-          term-type           (cond (ssn/ssn? search-term-ucase)
-                                    [search-term-ucase :ssn]
+    (let [search-term-ucase (-> search-term
+                                clojure.string/trim
+                                clojure.string/upper-case)
+          term-type         (cond (application-oid? search-term-ucase)
+                                  [search-term-ucase :application-oid]
 
-                                    (dob/dob? search-term-ucase)
-                                    [search-term-ucase :dob]
+                                  (person-oid? search-term-ucase)
+                                  [search-term-ucase :person-oid]
 
-                                    (email/email? search-term)
-                                    [search-term :email]
+                                  (ssn/ssn? search-term-ucase)
+                                  [search-term-ucase :ssn]
 
-                                    (< 2 (count search-term))
-                                    [search-term :name])]
+                                  (dob/dob? search-term-ucase)
+                                  [search-term-ucase :dob]
+
+                                  (email/email? search-term)
+                                  [search-term :email]
+
+                                  (< 2 (count search-term))
+                                  [search-term :name])]
       (if-let [[term type] term-type]
-        {:db (set-search-term db search-term)
-         :dispatch-debounced {:timeout 500
-                              :id :application-search
+        {:db                 (set-search-term db search-term)
+         :dispatch-debounced {:timeout  500
+                              :id       :application-search
                               :dispatch [:application/fetch-applications-by-term term type]}}
         {:db (-> db
                  (set-search-term search-term)

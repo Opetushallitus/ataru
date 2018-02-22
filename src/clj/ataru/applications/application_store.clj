@@ -293,6 +293,19 @@
                                                         :authorized_organization_oids [""]})
        (map ->kebab-case-kw)))
 
+(defn get-application-list-by-person-oid
+  [person-oid])
+
+(defn get-full-application-list-by-person-oid
+  [person-oid])
+
+(defn get-application-list-by-application-oid
+  [application-oid])
+
+(defn get-full-application-list-by-application-oid
+  [application-oid])
+
+
 (defn get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
   [person-oid]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
