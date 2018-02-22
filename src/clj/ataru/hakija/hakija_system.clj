@@ -44,7 +44,7 @@
 
      :handler              (component/using
                              (handler/new-handler)
-                             [:tarjonta-service :ohjausparametrit-service :person-service])
+                             [:tarjonta-service :organization-service :ohjausparametrit-service :person-service])
 
      :server-setup         {:port      http-port
                             :repl-port repl-port}
