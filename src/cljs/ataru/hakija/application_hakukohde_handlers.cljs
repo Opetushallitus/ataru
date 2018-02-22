@@ -1,7 +1,7 @@
 (ns ataru.hakija.application-hakukohde-handlers
   (:require
     [clojure.string :as string]
-    [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch]]
+    [re-frame.core :refer [subscribe reg-event-db reg-fx reg-event-fx dispatch]]
     [ataru.util :as util]
     [ataru.hakija.application-validators :as validator]))
 
@@ -12,17 +12,16 @@
 
 (defn- set-visibility-of-belongs-to-hakukohteet-questions
   [db]
-  (let [selected-hakukohteet (set (map :value (get-in db [:application :answers :hakukohteet :values] [])))]
+  (let [selected-hakukohteet-and-ryhmat @(subscribe [:application/selected-hakukohteet-and-ryhmat])]
     (util/reduce-form-fields
-     (fn [db field]
-       (if (empty? (:belongs-to-hakukohteet field))
-         db
-         (assoc-in db [:application :ui (keyword (:id field)) :visible?]
-                   (not (empty? (clojure.set/intersection
-                                 (set (:belongs-to-hakukohteet field))
-                                 selected-hakukohteet))))))
-     db
-     (get-in db [:form :content]))))
+      (fn [db field]
+        (if-let [intersection @(subscribe [:application/field-intersection-with-selected-hakukohteet-and-ryhmat field])]
+          (assoc-in db [:application :ui (keyword (:id field)) :visible?]
+            (not (empty? intersection)))
+          db)
+        )
+      db
+      (get-in db [:form :content]))))
 
 (defn- set-values-changed
   [db]

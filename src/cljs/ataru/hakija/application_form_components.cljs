@@ -102,19 +102,22 @@
                                      (@default-lang (-> field-descriptor :params :info-text :label)))]
         [markdown-paragraph info]))))
 
+(comment
+  @(subscribe [:application/field-intersection-with-selected-hakukohteet-and-ryhmat
+               field-descriptor]))
+
 (defn question-hakukohde-names [field-descriptor]
   (let [show-hakukohde-list? (r/atom false)]
     (fn [field-descriptor]
-      (let [lang                           @(subscribe [:application/form-language])
-            tarjonta-hakukohtet            @(subscribe [:application/tarjonta-hakukohteet])
-            selected-hakukohteet           @(subscribe [:application/selected-hakukohteet])
-            field-hakukohteet              (:belongs-to-hakukohteet field-descriptor)
-            selected-hakukohteet-for-field (clojure.set/intersection (set field-hakukohteet)
-                                                                     (set selected-hakukohteet))
-            selected-hakukohde-names       (->> tarjonta-hakukohtet
-                                                (filter #(some #{(:oid %)} selected-hakukohteet-for-field))
-                                                (map :name)
-                                                (map #(some % [lang :fi :sv :en])))]
+      (let [lang                                      @(subscribe [:application/form-language])
+            tarjonta-hakukohtet                       @(subscribe [:application/tarjonta-hakukohteet])
+            selected-hakukohteet-and-ryhmat-for-field @(subscribe [:application/field-intersection-with-selected-hakukohteet-and-ryhmat
+                                                                   field-descriptor true])
+            selected-hakukohde-names                  (->> tarjonta-hakukohtet
+                                                           (filter #(seq (clojure.set/intersection selected-hakukohteet-and-ryhmat-for-field
+                                                                           (set (concat [(:oid %)] (:hakukohderyhmat %))))))
+                                                           (map :name)
+                                                           (map #(some % [lang :fi :sv :en])))]
         [:div.application__question_hakukohde_names_container
          [:a.application__question_hakukohde_names_info
           {:on-click #(swap! show-hakukohde-list? not)}

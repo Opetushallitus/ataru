@@ -122,6 +122,25 @@
     (map :value (get-in db [:application :answers :hakukohteet :values] []))))
 
 (re-frame/reg-sub
+  :application/selected-hakukohteet-and-ryhmat
+  (fn [db _]
+    (let [selected-hakukohteet     (set (map :value (get-in db [:application :answers :hakukohteet :values] [])))
+          selected-hakukohderyhmat (->> (get-in db [:form :tarjonta :hakukohteet])
+                                        (filter #(contains? selected-hakukohteet (:oid %)))
+                                        (mapcat :hakukohderyhmat))]
+      (set (concat selected-hakukohteet selected-hakukohderyhmat)))))
+
+(re-frame/reg-sub
+  :application/field-intersection-with-selected-hakukohteet-and-ryhmat
+  (fn [db [_ field l]]
+    (if-let [ids (seq (concat (get field :belongs-to-hakukohderyhma [])
+                              (get field :belongs-to-hakukohteet [])))]
+      (if-let [selected-hakukohteet-and-ryhmat @(re-frame/subscribe [:application/selected-hakukohteet-and-ryhmat])]
+        (clojure.set/intersection
+          (set ids)
+          selected-hakukohteet-and-ryhmat)))))
+
+(re-frame/reg-sub
   :application/hakukohteet-editable?
   (fn [db _]
     (and (< 1 (count @(re-frame/subscribe [:application/hakukohde-options])))
