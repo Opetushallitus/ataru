@@ -15,10 +15,13 @@
       (get-in [:public-config :applicant :service_url])
       (str "/hakemus?modify=" secret)))
 
-(defn- hakukohde-names [tarjonta-service lang hakukohde-oids]
-  (->> hakukohde-oids
-       (map #(tarjonta-service/get-hakukohde-name tarjonta-service %))
-       (map #(some % [lang :fi :sv :en]))))
+(defn- hakukohde-names [tarjonta-service lang application]
+  (when-let [haku-oid (:haku application)]
+    (let [priority? (:usePriority (tarjonta-service/get-haku tarjonta-service haku-oid))]
+      (->> (:hakukohde application)
+           (map #(tarjonta-service/get-hakukohde-name tarjonta-service %))
+           (map-indexed #(cond->> (some %2 [lang :fi :sv :en])
+                                  priority? (str (inc %1) ". ")))))))
 
 (defn- create-email [tarjonta-service subject template-name application-id]
   (let [application     (application-store/get-application application-id)
@@ -33,7 +36,7 @@
                          (template-name lang)
                          {:hakukohteet (hakukohde-names tarjonta-service
                                                         lang
-                                                        (:hakukohde application))
+                                                        application)
                           :application-url application-url
                           :application-oid (:key application)})]
     {:from       "no-reply@opintopolku.fi"
