@@ -106,20 +106,24 @@
 (defn question-hakukohde-names [field-descriptor]
   (let [show-hakukohde-list? (r/atom false)]
     (fn [field-descriptor]
-      (let [lang                     @(subscribe [:application/form-language])
-            selected-hakukohteet     @(subscribe [:application/selected-hakukohteet-for-field field-descriptor])
-            selected-hakukohde-names (->> selected-hakukohteet
-                                          (map :name)
-                                          (map #(some % [lang :fi :sv :en])))]
+      (let [lang                           @(subscribe [:application/form-language])
+            tarjonta-hakukohtet            @(subscribe [:application/tarjonta-hakukohteet])
+            selected-hakukohteet           @(subscribe [:application/selected-hakukohteet])
+            field-hakukohteet              (:belongs-to-hakukohteet field-descriptor)
+            selected-hakukohde-oids        (clojure.set/intersection (set field-hakukohteet)
+                                                                     (set selected-hakukohteet))
+            selected-hakukohteet-for-field (filter #(some #{(:oid %)} selected-hakukohde-oids) tarjonta-hakukohtet)]
         [:div.application__question_hakukohde_names_container
          [:a.application__question_hakukohde_names_info
           {:on-click #(swap! show-hakukohde-list? not)}
-          (str (get-translation :question-for-hakukohde) " (" (count selected-hakukohde-names) ")")]
+          (str (get-translation :question-for-hakukohde) " (" (count selected-hakukohteet-for-field) ")")]
          (when @show-hakukohde-list?
            [:ul.application__question_hakukohde_names
-            (for [name selected-hakukohde-names]
-              [:li {:key (str (:id field-descriptor) name)}
-               name])])]))))
+            (for [hakukohde selected-hakukohteet-for-field
+                  :let [name          (some (:name hakukohde) [lang :fi :sv :en])
+                        tarjoaja-name (some (:tarjoaja-name hakukohde) [lang :fi :sv :en])]]
+              [:li {:key (str (:id field-descriptor) "-" (:oid hakukohde))}
+               name " - " tarjoaja-name])])]))))
 
 (defn- belongs-to-hakukohde-or-ryhma? [field]
   (seq (concat (:belongs-to-hakukohteet field)
