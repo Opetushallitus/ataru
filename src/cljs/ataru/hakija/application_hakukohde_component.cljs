@@ -39,7 +39,7 @@
 (defn reduce-matches
   [text-matches]
   (loop [prev-matches text-matches
-         reduced (reduce-matches-pass text-matches)]
+         reduced      (reduce-matches-pass text-matches)]
     (if (= (count prev-matches) (count reduced))
       reduced
       (recur reduced (reduce-matches-pass reduced)))))
@@ -217,8 +217,7 @@
                          :data-hakukohde-oid hakukohde-oid
                          :aria-labelledby    aria-header-id
                          :aria-describedby   aria-description-id}
-                        (get-translation :add)])]
-                )]))
+                        (get-translation :add)])])]))
 
 (defn- hakukohde-selection-search
   []
