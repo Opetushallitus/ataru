@@ -102,21 +102,19 @@
                                      (@default-lang (-> field-descriptor :params :info-text :label)))]
         [markdown-paragraph info]))))
 
-(comment
-  @(subscribe [:application/field-intersection-with-selected-hakukohteet-and-ryhmat
-               field-descriptor]))
-
 (defn question-hakukohde-names [field-descriptor]
   (let [show-hakukohde-list? (r/atom false)]
     (fn [field-descriptor]
       (let [lang                                      @(subscribe [:application/form-language])
-            selected-hakukohde-oids                   (->> @(subscribe [:application/selected-hakukohteet]) (map :oid) (set))
+            selected-hakukohde-oids                   (->> @(subscribe [:application/selected-hakukohteet]) (set))
             tarjonta-hakukohteet                      @(subscribe [:application/tarjonta-hakukohteet])
             selected-hakukohteet-and-ryhmat-for-field @(subscribe [:application/field-intersection-with-selected-hakukohteet-and-ryhmat
-                                                                   field-descriptor true])
+                                                                   field-descriptor])
+            only-selected                             #(let [oids         (set (concat [(:oid %)] (:hakukohderyhmat %)))
+                                                             intersection (clojure.set/intersection selected-hakukohteet-and-ryhmat-for-field oids)]
+                                                         (not-empty intersection))
             selected-hakukohde-names                  (->> tarjonta-hakukohteet
-                                                           (filter #(seq (clojure.set/intersection selected-hakukohteet-and-ryhmat-for-field
-                                                                           (set (concat [(:oid %)] (:hakukohderyhmat %))))))
+                                                           (filter only-selected)
                                                            (filter #(contains? selected-hakukohde-oids (:oid %)))
                                                            (map :name)
                                                            (map #(some % [lang :fi :sv :en])))]
@@ -129,6 +127,10 @@
             (for [name selected-hakukohde-names]
               [:li {:key (str (:id field-descriptor) name)}
                name])])]))))
+
+(defn- belongs-to-hakukohde-or-ryhma? [field]
+  (seq (concat (:belongs-to-hakukohteet field)
+               (:belongs-to-hakukohderyhma field))))
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing idx] :or {div-kwd :div.application__form-field disabled false editing false}}]
   (let [id           (keyword (:id field-descriptor))
@@ -153,7 +155,7 @@
                                                    (:valid answer))]
     [div-kwd
      [label field-descriptor]
-     (when (not-empty (:belongs-to-hakukohteet field-descriptor))
+     (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
        [question-hakukohde-names field-descriptor])
      [:div.application__form-text-input-info-text
       [info-text field-descriptor]]
@@ -204,7 +206,7 @@
                           (dispatch [:application/set-repeatable-application-field field-descriptor value data-idx question-group-idx])))]
         (into [div-kwd
                [label field-descriptor]
-               (when (not-empty (:belongs-to-hakukohteet field-descriptor))
+               (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
                  [question-hakukohde-names field-descriptor])
                [:div.application__form-text-input-info-text
                 [info-text field-descriptor]]]
@@ -281,7 +283,7 @@
                         (partial textual-field-change field-descriptor))]
         [div-kwd
          [label field-descriptor]
-         (when (not-empty (:belongs-to-hakukohteet field-descriptor))
+         (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [question-hakukohde-names field-descriptor])
          [:div.application__form-text-area-info-text
           [info-text field-descriptor]]
@@ -423,7 +425,7 @@
                                   idx]))]
     [div-kwd
      [label field-descriptor]
-     (when (not-empty (:belongs-to-hakukohteet field-descriptor))
+     (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
        [question-hakukohde-names field-descriptor])
      [:div.application__form-text-input-info-text
       [info-text field-descriptor]]
@@ -499,7 +501,7 @@
     (fn [field-descriptor & {:keys [div-kwd disabled idx] :or {div-kwd :div.application__form-field disabled false}}]
       [div-kwd
        [label field-descriptor]
-       (when (not-empty (:belongs-to-hakukohteet field-descriptor))
+       (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
          [question-hakukohde-names field-descriptor])
        [:div.application__form-text-input-info-text
         [info-text field-descriptor]]
@@ -564,7 +566,7 @@
     (fn [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
       [div-kwd
        [label field-descriptor]
-       (when (not-empty (:belongs-to-hakukohteet field-descriptor))
+       (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
          [question-hakukohde-names field-descriptor])
        [:div.application__form-text-input-info-text
         [info-text field-descriptor]]
@@ -678,7 +680,7 @@
       (let [attachment-count (reaction (count @(subscribe [:state-query [:application :answers (keyword id) :values question-group-idx]])))]
         [:div.application__form-field
          [label field-descriptor]
-         (when (not-empty (:belongs-to-hakukohteet field-descriptor))
+         (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [question-hakukohde-names field-descriptor])
          (when-not (clojure.string/blank? @text)
            [markdown-paragraph @text])
@@ -731,7 +733,7 @@
                            (dispatch [:application/add-adjacent-fields field-descriptor question-group-idx]))]
         [:div.application__form-field
          [label field-descriptor]
-         (when (not-empty (:belongs-to-hakukohteet field-descriptor))
+         (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [question-hakukohde-names field-descriptor])
          (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
            [:div.application__form-info-text [markdown-paragraph info]])

@@ -10,14 +10,34 @@
        (filter #(= "hakukohteet" (:id %)))
        first))
 
+(defn- selected-hakukohteet [db]
+  (map :value (get-in db [:application :answers :hakukohteet :values] [])))
+
+(defn- selected-hakukohteet-and-ryhmat [db]
+  (let [selected-hakukohteet     (set (selected-hakukohteet db))
+        selected-hakukohderyhmat (->> (get-in db [:form :tarjonta :hakukohteet])
+                                      (filter #(contains? selected-hakukohteet (:oid %)))
+                                      (mapcat :hakukohderyhmat))]
+    (set (concat selected-hakukohteet selected-hakukohderyhmat))))
+
+(defn- field-intersection-with-selected-hakukohteet-and-ryhmat [db field]
+  (if-let [ids (seq (concat (get field :belongs-to-hakukohderyhma [])
+                            (get field :belongs-to-hakukohteet [])))]
+    (if-let [selected-hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat db)]
+      (clojure.set/intersection
+        (set ids)
+        selected-hakukohteet-and-ryhmat))))
+
 (defn- set-visibility-of-belongs-to-hakukohteet-questions
   [db]
-  (let [selected-hakukohteet-and-ryhmat @(subscribe [:application/selected-hakukohteet-and-ryhmat])]
+  (let [selected-hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat db)]
     (util/reduce-form-fields
       (fn [db field]
-        (if-let [intersection @(subscribe [:application/field-intersection-with-selected-hakukohteet-and-ryhmat field])]
+        (if-let [intersection (field-intersection-with-selected-hakukohteet-and-ryhmat db field)]
+          (do
+            (prn "Selected" selected-hakukohteet-and-ryhmat " intersects with " intersection )
           (assoc-in db [:application :ui (keyword (:id field)) :visible?]
-            (not (empty? intersection)))
+            (not (empty? intersection))))
           db)
         )
       db

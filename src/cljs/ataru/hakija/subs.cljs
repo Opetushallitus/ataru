@@ -116,26 +116,27 @@
     (into {} (map (juxt :value identity)
                   @(re-frame/subscribe [:application/hakukohde-options])))))
 
-(re-frame/reg-sub
-  :application/selected-hakukohteet
-  (fn [db _]
-    (map :value (get-in db [:application :answers :hakukohteet :values] []))))
+(defn- selected-hakukohteet [db]
+  (map :value (get-in db [:application :answers :hakukohteet :values] [])))
 
-(re-frame/reg-sub
-  :application/selected-hakukohteet-and-ryhmat
-  (fn [db _]
-    (let [selected-hakukohteet     (set @(re-frame/subscribe [:application/selected-hakukohteet]))
+(defn- selected-hakukohteet-and-ryhmat [db]
+    (let [selected-hakukohteet     (set (selected-hakukohteet db))
           selected-hakukohderyhmat (->> (get-in db [:form :tarjonta :hakukohteet])
                                         (filter #(contains? selected-hakukohteet (:oid %)))
                                         (mapcat :hakukohderyhmat))]
-      (set (concat selected-hakukohteet selected-hakukohderyhmat)))))
+      (set (concat selected-hakukohteet selected-hakukohderyhmat))))
+
+(re-frame/reg-sub
+  :application/selected-hakukohteet
+  (fn [db _]
+    (selected-hakukohteet db)))
 
 (re-frame/reg-sub
   :application/field-intersection-with-selected-hakukohteet-and-ryhmat
-  (fn [db [_ field l]]
+  (fn [db [_ field]]
     (if-let [ids (seq (concat (get field :belongs-to-hakukohderyhma [])
                               (get field :belongs-to-hakukohteet [])))]
-      (if-let [selected-hakukohteet-and-ryhmat @(re-frame/subscribe [:application/selected-hakukohteet-and-ryhmat])]
+      (if-let [selected-hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat db)]
         (clojure.set/intersection
           (set ids)
           selected-hakukohteet-and-ryhmat)))))
