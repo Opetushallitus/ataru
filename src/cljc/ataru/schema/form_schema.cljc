@@ -131,6 +131,7 @@
    :name                         LocalizedStringOptional
    :tarjoaja-name                LocalizedStringOptional
    (s/optional-key :form-key)    (s/maybe s/Str)
+   :hakukohderyhmat              [s/Str]
    :hakuaika                     {:start                               s/Int
                                   :end                                 (s/maybe s/Int)
                                   :on                                  s/Bool

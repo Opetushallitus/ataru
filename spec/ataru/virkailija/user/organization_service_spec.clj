@@ -82,7 +82,7 @@
               (with-redefs [cas-client/cas-authenticated-get fake-cas-auth-org-and-group
                             ldap/search                      fake-ldap-search-orgs-and-groups]
                 (let [org-service-instance (create-org-service-instance)
-                      expected-group       {:name {:fi "Yhteiskäyttöryhmä"}, :oid "1.2.246.562.28.1.2", :type :group}
+                      expected-group       {:name {:fi "Yhteiskäyttöryhmä"}, :oid "1.2.246.562.28.1.2", :type :group :hakukohderyhma? false}
                       result      (org-service/get-direct-organizations-for-rights org-service-instance "user-name" [:form-edit])]
                   (should=
                    {:form-edit [telajarvi-org expected-group]}

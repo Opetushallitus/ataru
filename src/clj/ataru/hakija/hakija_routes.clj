@@ -36,10 +36,11 @@
   (true? deleted))
 
 (defn- get-application
-  [secret tarjonta-service ohjausparametrit-service person-client]
+  [secret tarjonta-service organization-service ohjausparametrit-service person-client]
   (let [[application secret-expired? lang-override]
         (hakija-application-service/get-latest-application-by-secret secret
                                                                      tarjonta-service
+                                                                     organization-service
                                                                      ohjausparametrit-service
                                                                      person-client)]
     (cond (some? application)
@@ -104,7 +105,7 @@
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
 
-(defn api-routes [tarjonta-service ohjausparametrit-service person-service]
+(defn api-routes [tarjonta-service organization-service ohjausparametrit-service person-service]
   (api/context "/api" []
     :tags ["application-api"]
     (api/GET ["/haku/:haku-oid" :haku-oid #"[0-9\.]+"] []
@@ -114,6 +115,7 @@
       :return ataru-schema/FormWithContentAndTarjontaMetadata
       (if-let [form-with-tarjonta (form-service/fetch-form-by-haku-oid
                                    tarjonta-service
+                                   organization-service
                                    ohjausparametrit-service
                                    haku-oid
                                    role)]
@@ -126,6 +128,7 @@
       :return ataru-schema/FormWithContentAndTarjontaMetadata
       (if-let [form-with-tarjonta (form-service/fetch-form-by-hakukohde-oid
                                    tarjonta-service
+                                   organization-service
                                    ohjausparametrit-service
                                    hakukohde-oid
                                    role)]
@@ -151,6 +154,7 @@
       :body [application ataru-schema/Application]
       (match (hakija-application-service/handle-application-submit
               tarjonta-service
+              organization-service
               ohjausparametrit-service
               application)
         {:passed? false :failures failures}
@@ -163,6 +167,7 @@
       :body [application ataru-schema/Application]
       (match (hakija-application-service/handle-application-edit
               tarjonta-service
+              organization-service
               ohjausparametrit-service
               application)
         {:passed? false :failures failures}
@@ -178,12 +183,14 @@
       (cond (not-blank? secret)
             (get-application {:hakija secret}
                              tarjonta-service
+                             organization-service
                              ohjausparametrit-service
                              person-service)
 
             (not-blank? virkailija-secret)
             (get-application {:virkailija virkailija-secret}
                              tarjonta-service
+                             organization-service
                              ohjausparametrit-service
                              person-service)
 
@@ -266,6 +273,7 @@
                                (api/context "/hakemus" []
                                   test-routes
                                   (api-routes (:tarjonta-service this)
+                                              (:organization-service this)
                                               (:ohjausparametrit-service this)
                                               (:person-service this))
                                   (route/resources "/")

@@ -471,7 +471,7 @@
                                  all-reviews)]
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
-(defn export-applications [applications application-reviews selected-hakukohde skip-answers? tarjonta-service ohjausparametrit-service]
+(defn export-applications [applications application-reviews selected-hakukohde skip-answers? tarjonta-service organization-service ohjausparametrit-service]
   (let [[^XSSFWorkbook workbook styles] (create-workbook-and-styles)
         form-meta-fields                (indexed-meta-fields form-meta-fields)
         form-meta-sheet                 (create-form-meta-sheet workbook styles form-meta-fields)
@@ -482,6 +482,7 @@
         get-tarjonta-info               (memoize (fn [haku-oid]
                                                    (tarjonta-parser/parse-tarjonta-info-by-haku
                                                     tarjonta-service
+                                                    organization-service
                                                     ohjausparametrit-service
                                                     haku-oid)))
         get-hakukohde                   (memoize (fn [haku-oid hakukohde-oid]

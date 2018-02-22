@@ -143,6 +143,7 @@
   (let [bare-application (aac/get-latest-application-by-key application-key session organization-service)
         tarjonta-info    (tarjonta-parser/parse-tarjonta-info-by-haku
                           tarjonta-service
+                          organization-service
                           ohjausparametrit-service
                           (:haku bare-application)
                           (:hakukohde bare-application))
@@ -197,6 +198,7 @@
                                                       selected-hakukohde
                                                       skip-answers?
                                                       tarjonta-service
+                                                      organization-service
                                                       ohjausparametrit-service))))
 
 (defn- save-application-hakukohde-reviews

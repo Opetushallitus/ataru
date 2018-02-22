@@ -125,10 +125,11 @@
 
 (s/defn ^:always-validate fetch-form-by-haku-oid :- s/Any
   [tarjonta-service :- s/Any
+   organization-service :- s/Any
    ohjausparametrit-service :- s/Any
    haku-oid :- s/Any
    roles :- [form-role/FormRole]]
-  (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service ohjausparametrit-service haku-oid)
+  (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service organization-service ohjausparametrit-service haku-oid)
         form-keys     (->> (-> tarjonta-info :tarjonta :hakukohteet)
                         (map :form-key)
                         (distinct)
@@ -149,11 +150,13 @@
 
 (s/defn ^:always-validate fetch-form-by-hakukohde-oid :- s/Any
   [tarjonta-service :- s/Any
+   organization-service :- s/Any
    ohjausparametrit-service :- s/Any
    hakukohde-oid :- s/Any
    roles :- [form-role/FormRole]]
   (let [hakukohde (.get-hakukohde tarjonta-service hakukohde-oid)
         form      (fetch-form-by-haku-oid tarjonta-service
+                                          organization-service
                                           ohjausparametrit-service
                                           (:hakuOid hakukohde)
                                           roles)]

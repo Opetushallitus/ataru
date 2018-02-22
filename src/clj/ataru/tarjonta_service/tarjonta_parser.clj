@@ -44,13 +44,16 @@
    :tarkenne             (:tarkenne response)})
 
 (defn- parse-hakukohde
-  [tarjonta-service haku ohjausparametrit hakukohde]
+  [tarjonta-service hakukohderyhmat haku ohjausparametrit hakukohde]
   (when (:oid hakukohde)
     {:oid           (:oid hakukohde)
      :name          (->> (clojure.set/rename-keys (:hakukohteenNimet hakukohde)
                                                   lang-key-renames)
                          (remove (comp clojure.string/blank? second))
                          (into {}))
+     :hakukohderyhmat (->> (get hakukohde :ryhmaliitokset [])
+                        (map :ryhmaOid)
+                        (filter #(contains? hakukohderyhmat %)))
      :tarjoaja-name (:tarjoajaNimet hakukohde)
      :form-key      (:ataruLomakeAvain hakukohde)
      :koulutukset   (->> (map :oid (:koulutukset hakukohde))
@@ -59,15 +62,19 @@
      :hakuaika      (hakuaika/get-hakuaika-info haku ohjausparametrit hakukohde)}))
 
 (defn parse-tarjonta-info-by-haku
-  ([tarjonta-service ohjausparametrit-service haku-oid included-hakukohde-oids]
+  ([tarjonta-service organization-service ohjausparametrit-service haku-oid included-hakukohde-oids]
    {:pre [(some? tarjonta-service)
+          (some? organization-service)
           (some? ohjausparametrit-service)]}
    (when haku-oid
-     (let [haku             (.get-haku tarjonta-service haku-oid)
+     (let [hakukohderyhmat  (->> (.get-hakukohde-groups organization-service)
+                              (map :oid)
+                              (set))
+           haku             (.get-haku tarjonta-service haku-oid)
            ohjausparametrit (.get-parametri ohjausparametrit-service haku-oid)
            hakukohteet      (->> included-hakukohde-oids
                                  (keep #(.get-hakukohde tarjonta-service %))
-                                 (map #(parse-hakukohde tarjonta-service haku ohjausparametrit %)))
+                                 (map #(parse-hakukohde tarjonta-service hakukohderyhmat haku ohjausparametrit %)))
            max-hakukohteet  (:maxHakukohdes haku)]
        (when (not-empty hakukohteet)
          {:tarjonta
@@ -78,12 +85,13 @@
            :max-hakukohteet  (when (and max-hakukohteet (pos? max-hakukohteet))
                                max-hakukohteet)
            :can-submit-multiple-applications (:canSubmitMultipleApplications haku)}}))))
-  ([tarjonta-service ohjausparametrit-service haku-oid]
+  ([tarjonta-service organization-service ohjausparametrit-service haku-oid]
    (when haku-oid
      (parse-tarjonta-info-by-haku tarjonta-service
+                                  organization-service
                                   ohjausparametrit-service
                                   haku-oid
                                   (or (->> haku-oid
-                                           (.get-haku tarjonta-service)
-                                           :hakukohdeOids)
+                                        (.get-haku tarjonta-service)
+                                        :hakukohdeOids)
                                       [])))))
