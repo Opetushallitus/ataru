@@ -43,33 +43,31 @@
     (let [highlights (-> text
                          (text-matches search-terms)
                          (combine-overlapping-matches))]
-      (loop [res               []
-             current-index     0
-             current-highlight 0]
-        (let [[match-begin match-end] (when (< current-highlight (count highlights))
-                                        (nth highlights current-highlight))]
-          (cond
-            (nil? match-begin)
-            (if (= current-index (count text))
-              res
-              (conj res {:text    (subs text current-index)
-                         :hilight false}))
+      (loop [res           []
+             current-index 0
+             [[match-begin match-end] & rest-highlights] highlights]
+        (cond
+          (nil? match-begin)
+          (if (= current-index (count text))
+            res
+            (conj res {:text    (subs text current-index)
+                       :hilight false}))
 
-            (< current-index match-begin)
-            (recur (conj res
-                         {:text    (subs text current-index match-begin)
-                          :hilight false}
-                         {:text    (subs text match-begin match-end)
-                          :hilight true})
-                   match-end
-                   (inc current-highlight))
+          (< current-index match-begin)
+          (recur (conj res
+                       {:text    (subs text current-index match-begin)
+                        :hilight false}
+                       {:text    (subs text match-begin match-end)
+                        :hilight true})
+                 match-end
+                 rest-highlights)
 
-            :else
-            (recur (conj res
-                         {:text    (subs text current-index match-end)
-                          :hilight true})
-                   match-end
-                   (inc current-highlight))))))))
+          :else
+          (recur (conj res
+                       {:text    (subs text current-index match-end)
+                        :hilight true})
+                 match-end
+                 rest-highlights))))))
 
 (defn hilighted-text->span [idx {:keys [text hilight]}]
   (let [key (str "hilight-" idx)]
