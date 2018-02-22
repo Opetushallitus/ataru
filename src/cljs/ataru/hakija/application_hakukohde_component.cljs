@@ -25,24 +25,16 @@
                      (conj res [match-index match-end])
                      match-end))))))))
 
-(defn- combine-overlapping-matches-pass
+(defn- combine-overlapping-matches
   [text-matches]
   (reduce
     (fn [acc [match-start match-end]]
       (let [[previous-start previous-end] (last acc)]
         (if (and previous-start (<= match-start previous-end))
-          (conj (butlast acc) [previous-start match-end])
+          (conj (vec (butlast acc)) [previous-start match-end])
           (conj acc [match-start match-end]))))
     []
     (sort text-matches)))
-
-(defn combine-overlapping-matches
-  [text-matches]
-  (loop [prev-matches text-matches
-         reduced      (combine-overlapping-matches-pass text-matches)]
-    (if (= (count prev-matches) (count reduced))
-      reduced
-      (recur reduced (combine-overlapping-matches-pass reduced)))))
 
 (defn match-text [text search-terms]
   (if (or (empty? search-terms)
