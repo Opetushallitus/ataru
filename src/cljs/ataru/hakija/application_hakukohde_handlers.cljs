@@ -56,10 +56,7 @@
                                          (let [haystack (string/lower-case
                                                           (str (get-in option [:label lang] "")
                                                                (get-in option [:description lang] "")))]
-                                           (every? true? (map
-                                                           (fn [needle]
-                                                             (string/includes? haystack needle))
-                                                           query-parts)))))
+                                           (every? #(string/includes? haystack %) query-parts))))
                                      (map :value)))
             [hakukohde-hits rest-results] (split-at 15 results)]
         (-> db

@@ -19,13 +19,13 @@
                     current-index 0]
                (let [match-index (clojure.string/index-of text search-term current-index)
                      match-end   (when match-index (+ match-index (count search-term)))]
-                 (if (nil? (and match-index match-end))
+                 (if (nil? match-index)
                    res
                    (recur
                      (conj res [match-index match-end])
                      match-end))))))))
 
-(defn- reduce-matches-pass
+(defn- combine-overlapping-matches-pass
   [text-matches]
   (reduce
     (fn [acc [match-start match-end]]
@@ -36,13 +36,13 @@
     []
     (sort text-matches)))
 
-(defn reduce-matches
+(defn combine-overlapping-matches
   [text-matches]
   (loop [prev-matches text-matches
-         reduced      (reduce-matches-pass text-matches)]
+         reduced      (combine-overlapping-matches-pass text-matches)]
     (if (= (count prev-matches) (count reduced))
       reduced
-      (recur reduced (reduce-matches-pass reduced)))))
+      (recur reduced (combine-overlapping-matches-pass reduced)))))
 
 (defn match-text [text search-terms]
   (if (or (empty? search-terms)
@@ -50,7 +50,7 @@
     [{:text text :hilight false}]
     (let [highlights (-> text
                          (text-matches search-terms)
-                         (reduce-matches))]
+                         (combine-overlapping-matches))]
       (loop [res               []
              current-index     0
              current-highlight 0]
