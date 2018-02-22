@@ -50,8 +50,10 @@
                                         (nth highlights current-highlight))]
           (cond
             (nil? match-begin)
-            (conj res {:text    (subs text current-index)
-                       :hilight false})
+            (if (= current-index (count text))
+              res
+              (conj res {:text    (subs text current-index)
+                         :hilight false}))
 
             (< current-index match-begin)
             (recur (conj res
