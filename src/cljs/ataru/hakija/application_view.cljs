@@ -57,8 +57,8 @@
                                      (sort-by :end >)
                                      first)
             apply-dates         (when-let [hakuaika (or longest-open
-                                                      next-open
-                                                      last-open)]
+                                                        next-open
+                                                        last-open)]
                                   (if (:jatkuva-haku? hakuaika)
                                     (get-translation :continuous-period)
                                     (str (get-translation :application-period)
