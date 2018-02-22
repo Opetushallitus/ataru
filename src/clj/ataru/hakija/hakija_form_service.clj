@@ -61,9 +61,12 @@
     (first (sort-by :end > (filter :end hakuajat)))))
 
 (defn- select-hakuaika-for-field [field hakukohteet]
-  (let [relevant-hakukohteet (cond->> hakukohteet
-                               (not-empty (:belongs-to-hakukohteet field))
-                               (filter #(contains? (set (:belongs-to-hakukohteet field)) (:oid %))))]
+  (let [field-hakukohde-and-group-oids (set (concat (:belongs-to-hakukohteet field)
+                                                    (:belongs-to-hakukohderyhma field)))
+        relevant-hakukohteet (cond->> hakukohteet
+                               (not-empty field-hakukohde-and-group-oids)
+                               (filter #(clojure.set/intersection field-hakukohde-and-group-oids
+                                                                  (set (concat [(:oid %)] (:hakukohderyhmat %))))))]
     (select-first-ongoing-hakuaika-or-hakuaika-with-last-ending
      (map :hakuaika relevant-hakukohteet))))
 
