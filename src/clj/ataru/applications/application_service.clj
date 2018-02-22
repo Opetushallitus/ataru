@@ -187,8 +187,7 @@
         onr-persons               (->> (map :person-oid allowed-applications)
                                        (filter some?)
                                        distinct
-                                       (person-service/get-persons person-service)
-                                       (reduce #(assoc %1 (:oidHenkilo %2) %2) {}))
+                                       (person-service/get-persons person-service))
         applications-with-persons (for [application allowed-applications
                                         :let [person-oid (:person-oid application)]]
                                     (update application :person (->> (get onr-persons person-oid)
