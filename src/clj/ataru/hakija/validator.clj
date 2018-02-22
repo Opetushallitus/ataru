@@ -65,8 +65,8 @@
                     (when (contains? answers-to-validate-as-vector (-> field-descriptor :id (keyword))) [answers])
                     answers))))
 
-(defn- field-belongs-to-hakukohde? [field]
-  (not-empty (:belongs-to-hakukohteet field)))
+(defn- field-belongs-to-hakukohde-or-hakukohderyhma? [field]
+  (not-empty (concat (:belongs-to-hakukohderyhma field) (:belongs-to-hakukohteet field))))
 
 (defn- not-dropdown-or-multiple-choice [field]
   (empty? (some #{(:fieldType field)} '("dropdown" "multipleChoice"))))
@@ -99,7 +99,7 @@
   (not-empty (clojure.set/intersection (-> field :belongs-to-hakukohteet set) hakukohteet)))
 
 (defn- belongs-to-correct-hakukohderyhma? [field hakukohderyhmat]
-  (not-empty (clojure.set/intersection (-> field :belongs-to-hakukohderyhmat set) (set hakukohderyhmat))))
+  (not-empty (clojure.set/intersection (-> field :belongs-to-hakukohderyhma set) (set hakukohderyhmat))))
 
 (defn- belongs-to-existing-hakukohde-or-hakukohderyma? [field hakukohteet hakukohderyhmat]
   (and (or (belongs-to-correct-hakukohde? field hakukohteet)
@@ -148,7 +148,7 @@
                                     non-empty-answers (get-non-empty-answers field answers)
                                     followups         (get-followup-questions options non-empty-answers)]
                                 (concat results
-                                        {id {:passed? (if (or (not (field-belongs-to-hakukohde? field))
+                                        {id {:passed? (if (or (not (field-belongs-to-hakukohde-or-hakukohderyhma? field))
                                                               (belongs-to-existing-hakukohde-or-hakukohderyma? field hakukohteet hakukohderyhmat))
                                                         (and (all-answers-allowed? non-empty-answers allowed-values)
                                                              (passes-all? has-applied validators non-empty-answers answers-by-key field))
@@ -163,7 +163,7 @@
                               {:fieldClass "formField"
                                :validators validators}
                               (concat results
-                                      {id {:passed? (if (or (not (field-belongs-to-hakukohde? field))
+                                      {id {:passed? (if (or (not (field-belongs-to-hakukohde-or-hakukohderyhma? field))
                                                             (belongs-to-existing-hakukohde-or-hakukohderyma? field hakukohteet hakukohderyhmat))
                                                       (passes-all? has-applied validators answers answers-by-key field)
                                                       (every? nil? answers))}})
