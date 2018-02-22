@@ -126,8 +126,10 @@
 
     "oppilaitostyyppi" (get-vocational-institutions version)
 
-    (let [koodisto-version-url (str koodisto-base-url koodisto-version-path koodisto-uri "/" version)]
-      (->> (do-get koodisto-version-url)
+    (let [url (resolve-url :koodisto-service.koodi koodisto-uri
+                           {"koodistoVersio" (str version)
+                            "onlyValidKoodis" "true"})]
+      (->> (do-get url)
            (mapv koodi-value->soresu-option)
            (sort-by (comp :fi :label) compare-case-insensitively)))))
 
