@@ -124,7 +124,7 @@
 (re-frame/reg-sub
   :application/selected-hakukohteet-and-ryhmat
   (fn [db _]
-    (let [selected-hakukohteet     (set (map :value (get-in db [:application :answers :hakukohteet :values] [])))
+    (let [selected-hakukohteet     (set @(re-frame/subscribe [:application/selected-hakukohteet]))
           selected-hakukohderyhmat (->> (get-in db [:form :tarjonta :hakukohteet])
                                         (filter #(contains? selected-hakukohteet (:oid %)))
                                         (mapcat :hakukohderyhmat))]

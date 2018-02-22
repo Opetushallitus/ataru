@@ -110,12 +110,14 @@
   (let [show-hakukohde-list? (r/atom false)]
     (fn [field-descriptor]
       (let [lang                                      @(subscribe [:application/form-language])
-            tarjonta-hakukohtet                       @(subscribe [:application/tarjonta-hakukohteet])
+            selected-hakukohde-oids                   (->> @(subscribe [:application/selected-hakukohteet]) (map :oid) (set))
+            tarjonta-hakukohteet                      @(subscribe [:application/tarjonta-hakukohteet])
             selected-hakukohteet-and-ryhmat-for-field @(subscribe [:application/field-intersection-with-selected-hakukohteet-and-ryhmat
                                                                    field-descriptor true])
-            selected-hakukohde-names                  (->> tarjonta-hakukohtet
+            selected-hakukohde-names                  (->> tarjonta-hakukohteet
                                                            (filter #(seq (clojure.set/intersection selected-hakukohteet-and-ryhmat-for-field
                                                                            (set (concat [(:oid %)] (:hakukohderyhmat %))))))
+                                                           (filter #(contains? selected-hakukohde-oids (:oid %)))
                                                            (map :name)
                                                            (map #(some % [lang :fi :sv :en])))]
         [:div.application__question_hakukohde_names_container
