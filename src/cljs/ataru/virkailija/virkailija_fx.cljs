@@ -39,9 +39,7 @@
 (re-frame/reg-fx
  :fetch-haut-with-hakukohteet
  (fn fetch-haut-with-hakukohteet [[c organization-oids haku-oids]]
-   (async/go
-     (let [v (<! (tarjonta/fetch-haut-with-hakukohteet haku-oids organization-oids))]
-       (async/>! c v)))))
+   (async/pipe (tarjonta/fetch-haut-with-hakukohteet haku-oids organization-oids) c)))
 
 (re-frame/reg-fx
   :fetch-hakukohde-groups
