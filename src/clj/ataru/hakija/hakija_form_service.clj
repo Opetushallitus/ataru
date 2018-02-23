@@ -65,8 +65,8 @@
                                                     (:belongs-to-hakukohderyhma field)))
         relevant-hakukohteet (cond->> hakukohteet
                                (not-empty field-hakukohde-and-group-oids)
-                               (filter #(clojure.set/intersection field-hakukohde-and-group-oids
-                                                                  (set (concat [(:oid %)] (:hakukohderyhmat %))))))]
+                               (filter #(not-empty (clojure.set/intersection field-hakukohde-and-group-oids
+                                                                  (set (cons (:oid %) (:hakukohderyhmat %)))))))]
     (select-first-ongoing-hakuaika-or-hakuaika-with-last-ending
      (map :hakuaika relevant-hakukohteet))))
 
