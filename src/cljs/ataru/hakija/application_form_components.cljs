@@ -106,10 +106,8 @@
   (let [show-hakukohde-list? (r/atom false)]
     (fn [field-descriptor]
       (let [lang                     @(subscribe [:application/form-language])
-            tarjonta-hakukohteet     @(subscribe [:application/tarjonta-hakukohteet])
-            selected-hakukohteet     (set @(subscribe [:application/selected-hakukohteet-for-field field-descriptor]))
-            selected-hakukohde-names (->> tarjonta-hakukohteet
-                                          (filter #(contains? selected-hakukohteet (:oid %)))
+            selected-hakukohteet     @(subscribe [:application/selected-hakukohteet-for-field field-descriptor])
+            selected-hakukohde-names (->> selected-hakukohteet
                                           (map :name)
                                           (map #(some % [lang :fi :sv :en])))]
         [:div.application__question_hakukohde_names_container

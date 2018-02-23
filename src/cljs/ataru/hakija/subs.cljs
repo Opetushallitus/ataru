@@ -48,12 +48,10 @@
   (fn [db [_ field]]
     (when-let [ids (seq (concat (get field :belongs-to-hakukohderyhma [])
                                 (get field :belongs-to-hakukohteet [])))]
-      (->> (selected-hakukohteet-from-tarjonta db)
-           (filter #(not (empty? (clojure.set/intersection
-                                  (set ids)
-                                  (set (concat [(:oid %)] (get % :hakukohderyhmat [])))))))
-           (map :oid)
-           (seq)))))
+      (filter #(not (empty? (clojure.set/intersection
+                             (set ids)
+                             (set (concat [(:oid %)] (get % :hakukohderyhmat []))))))
+              (selected-hakukohteet-from-tarjonta db)))))
 
 (re-frame/reg-sub
   :application/cannot-view?
@@ -155,12 +153,10 @@
 
 (re-frame/reg-sub
   :application/hakukohteet-hakuaika-on?
-  (fn [db [_ hakukohde-oids]]
-      (cond
-        (or (nil? hakukohde-oids) (empty? hakukohde-oids)) true
-        :else
-        (let [hakuaika-on (fn [oid] @(re-frame/subscribe [:application/hakukohde-hakuaika-on? oid]))]
-             (some identity (map hakuaika-on hakukohde-oids))))))
+  (fn [db [_ hakukohteet]]
+    (if (empty? hakukohteet)
+      true
+      (some #(get-in % [:hakuaika :on]) hakukohteet))))
 
 (re-frame/reg-sub
   :application/hakukohde-query
