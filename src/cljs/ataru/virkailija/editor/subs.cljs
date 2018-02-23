@@ -74,8 +74,8 @@
 
 (re-frame/reg-sub
   :editor/get-some-name
-  (fn [db [_ haku]]
-    (some #(get (:name haku) %) [:fi :sv :en])))
+  (fn [db [_ {:keys [name]}]]
+    (some #(get name %) [:fi :sv :en])))
 
 (re-frame/reg-sub
   :editor/get-hakukohde-name
