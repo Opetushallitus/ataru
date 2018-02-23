@@ -226,7 +226,7 @@
                                               (access-controlled-application/get-application-list-by-ssn ssn session organization-service)
 
                                               (some? dob)
-                                              (let [dob (dob/str->dob dob)]
+                                              (when (dob/dob? dob)
                                                 (access-controlled-application/get-application-list-by-dob dob session organization-service))
 
                                               (some? email)
