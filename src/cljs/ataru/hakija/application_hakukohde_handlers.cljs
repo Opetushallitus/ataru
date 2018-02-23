@@ -21,24 +21,23 @@
     (set (concat selected-hakukohteet selected-hakukohderyhmat))))
 
 (defn- field-intersection-with-selected-hakukohteet-and-ryhmat [db field]
-  (if-let [ids (seq (concat (get field :belongs-to-hakukohderyhma [])
-                            (get field :belongs-to-hakukohteet [])))]
-    (if-let [selected-hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat db)]
+  (when-let [ids (seq (concat (:belongs-to-hakukohderyhma field)
+                              (:belongs-to-hakukohteet field)))]
+    (let [selected-hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat db)]
       (clojure.set/intersection
-        (set ids)
-        selected-hakukohteet-and-ryhmat))))
+       (set ids)
+       selected-hakukohteet-and-ryhmat))))
 
 (defn- set-visibility-of-belongs-to-hakukohteet-questions
   [db]
-  (let [selected-hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat db)]
-    (util/reduce-form-fields
-      (fn [db field]
-        (if-let [intersection (field-intersection-with-selected-hakukohteet-and-ryhmat db field)]
-          (assoc-in db [:application :ui (keyword (:id field)) :visible?] (not (empty? intersection)))
-          db)
-        )
-      db
-      (get-in db [:form :content]))))
+  (util/reduce-form-fields
+    (fn [db field]
+      (if-let [intersection (field-intersection-with-selected-hakukohteet-and-ryhmat db field)]
+        (assoc-in db [:application :ui (keyword (:id field)) :visible?] (not (empty? intersection)))
+        db)
+      )
+    db
+    (get-in db [:form :content])))
 
 (defn- set-values-changed
   [db]
