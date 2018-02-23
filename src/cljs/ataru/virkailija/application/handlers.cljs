@@ -612,13 +612,15 @@
   :application/add-review-note
   (fn [{:keys [db]} [_ note]]
     (let [application-key (-> db :application :selected-key)
-          note-idx        (-> db :application :review-notes count)
+          tmp-id          (cljs-util/new-uuid)
           db              (-> db
                               (update-in [:application :review-notes]
-                                         (cljs-util/vector-of-length (inc note-idx)))
-                              (assoc-in [:application :review-notes note-idx] {:created-time (t/now)
-                                                                               :notes        note
-                                                                               :animated?    true})
+                                         (fn [notes]
+                                           (vec (cons {:created-time (t/now)
+                                                       :id           tmp-id
+                                                       :notes        note
+                                                       :animated?    true}
+                                                      notes))))
                               (assoc-in [:application :review-comment] nil))]
       {:db   db
        :http {:method              :post
@@ -626,17 +628,28 @@
                                     :application-key application-key}
               :path                "/lomake-editori/api/applications/notes"
               :handler-or-dispatch :application/handle-add-review-note-response
-              :handler-args        {:note-idx note-idx}}})))
+              :handler-args        {:tmp-id tmp-id}}})))
 
 (reg-event-fx :application/handle-add-review-note-response
-  (fn [{:keys [db]} [_ resp args]]
-    (let [db (update-in db [:application :review-notes (:note-idx args)] merge resp)]
-      {:db             db
-       :dispatch-later [{:ms 1000 :dispatch [:application/reset-review-note-animations (:note-idx args)]}]})))
+  (fn [{:keys [db]} [_ resp {:keys [tmp-id]}]]
+    {:db             (update-in db [:application :review-notes]
+                                (fn [notes]
+                                  (mapv (fn [note]
+                                          (if (= tmp-id (:id note))
+                                            (merge note resp)
+                                            note))
+                                        notes)))
+     :dispatch-later [{:ms 1000 :dispatch [:application/reset-review-note-animations (:id resp)]}]}))
 
 (reg-event-db :application/reset-review-note-animations
-  (fn [db [_ note-idx]]
-    (update-in db [:application :review-notes note-idx] dissoc :animated?)))
+  (fn [db [_ note-id]]
+    (update-in db [:application :review-notes]
+               (fn [notes]
+                 (mapv (fn [note]
+                         (if (= note-id (:id note))
+                           (dissoc note :animated?)
+                           note))
+                       notes)))))
 
 (reg-event-db :application/set-review-comment-value
   (fn [db [_ review-comment]]

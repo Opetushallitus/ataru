@@ -864,11 +864,11 @@
                           (partial update-review-field :score (partial convert-score @review)))}]])
        [:div.application-handling__review-row--nocolumn
         [:div.application-handling__review-header "Muistiinpanot"]
+        [application-review-note-input]
         (->> (range @notes-count)
              (map (fn [idx]
                     ^{:key (str "application-review-note-" idx)}
-                    [application-review-note idx])))]
-       [application-review-note-input]])))
+                    [application-review-note idx])))]])))
 
 (defn- application-modify-link []
   (let [application-key   (subscribe [:state-query [:application :selected-key]])
