@@ -82,12 +82,14 @@
 (defn- have-any-application-in-db
   []
   (let [app-count
-        (+ (count (ataru-db/exec :db
-                    yesql-get-application-list-by-hakukohde
-                    {:hakukohde_oid                (:hakukohde @form)
+        (+ (count (ataru-db/exec
+                    :db
+                    yesql-get-application-list-for-virkailija
+                    {:query_key                    "hakukohde-oid"
+                     :query_value                  (:hakukohde @form)
                      :query_type                   "ALL"
                      :authorized_organization_oids [""]}))
-          (count (ataru-db/exec :db yesql-get-application-list-by-form {:form_key (:key @form)})))]
+           (count (ataru-db/exec :db yesql-get-application-list-by-form {:form_key (:key @form)})))]
     (< 0 app-count)))
 
 (defmacro add-failing-post-spec
