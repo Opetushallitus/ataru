@@ -607,8 +607,6 @@
                   "editor-form__drag_n_drop_spacer--dashbox-visible"
                   "editor-form__drag_n_drop_spacer--dashbox-hidden")}]])))
 
-;{:children [], :label {:fi "Kysymysryhmä", :sv ""}, :fieldClass "questionGroup", :id "722d4388-8814-4f66-8b0b-7a860a70475e", :params {}, :fieldType "fieldset"}
-
 (defn component-group [content path children]
   (let [languages         (subscribe [:editor/languages])
         value             (subscribe [:editor/get-component-value path])
