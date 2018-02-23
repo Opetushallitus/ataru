@@ -78,7 +78,7 @@
   (and
     (not valid?)
     (or (is-required-field? field-descriptor)
-        (-> field-descriptor :params :numeric?))
+        (-> field-descriptor :params :numeric))
     (if (string? value)
       (not (clojure.string/blank? value))
       (not (empty? value)))))

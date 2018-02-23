@@ -147,7 +147,7 @@
             :let [expected (get numbers number)]]
         (it (str "should " (when-not expected "not ") "validate " number)
           (should= expected (validate! :numeric number nil {:params {:decimals 8
-                                                                     :numeric? true}}))))))
+                                                                     :numeric true}}))))))
 
   (describe "only integers"
     (doall
@@ -155,5 +155,5 @@
             :let [expected (get integers number)]]
         (it (str "should " (when-not expected "not ") "validate " number)
           (should= expected (validate! :numeric number nil {:params {:decimals nil
-                                                                     :numeric? true}})))))))
+                                                                     :numeric true}})))))))
 

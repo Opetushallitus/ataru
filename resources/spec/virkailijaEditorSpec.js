@@ -62,7 +62,21 @@
     }
   }
 
-  function clickInfoTextCheckbox(selector) {
+  function clickNumericAnswer(question) {
+    return function() {
+      return testFrame()
+        .find("input.editor-form__text-field")
+        .filter(function() {
+          return this.value === question
+        })
+        .parent().parent().parent()
+        .find(".editor-form__checkbox-wrapper label:contains('Kenttään voi täyttää vain numeerisia arvoja')")
+        .prev().click()
+    }
+  }
+
+
+    function clickInfoTextCheckbox(selector) {
     return function() {
       return selector()
         .find(".editor-form__info-addon-checkbox > input")
@@ -404,7 +418,25 @@
           expect(formComponents().eq(15).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field').eq(1).val()).to.equal('Jatkokysymys B')
           expect(formComponents().eq(15).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field').eq(2).val()).to.equal('Jatkokysymys C')
         })
-      })
+      });
+
+      describe('numeric textfield', function() {
+        before(
+          clickComponentMenuItem('Tekstikenttä'),
+          setTextFieldValue(function() { return formComponents().eq(16).find('.editor-form__text-field') }, 'Tekstikenttä numeerisilla arvoilla'),
+          clickNumericAnswer('Tekstikenttä numeerisilla arvoilla'),
+          function() {
+            formComponents().eq(16).find('option').eq(4).prop('selected', true);
+            triggerEvent(testFrame().find('select'), 'change');
+          }
+        );
+        it('has expected contents', function() {
+          expect(formComponents()).to.have.length(17);
+          expect(formComponents().eq(16).find('.editor-form__text-field').val()).to.equal('Tekstikenttä numeerisilla arvoilla');
+          expect(formComponents().eq(16).find('.editor-form__checkbox-container input').eq(2).prop('checked')).to.equal(true);
+          expect(formComponents().eq(16).find('select')[0].selectedIndex).to.equal(4);
+        })
+      });
 
       describe('autosave', function () {
         before(

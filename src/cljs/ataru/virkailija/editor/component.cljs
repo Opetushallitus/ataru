@@ -354,7 +354,7 @@
 
 (defn- text-component-type-selector [path radio-group-id]
   (let [id       (util/new-uuid)
-        checked? (subscribe [:editor/get-component-value path :params :numeric?])]
+        checked? (subscribe [:editor/get-component-value path :params :numeric])]
     (fn [path radio-group-id]
       [:div
        [:div.editor-form__checkbox-container
@@ -364,7 +364,7 @@
           :checked   @checked?
           :on-change (fn [event]
                        (let [checked-now? (-> event .-target .-checked)]
-                         (dispatch [:editor/set-component-value checked-now? path :params :numeric?])
+                         (dispatch [:editor/set-component-value checked-now? path :params :numeric])
                          (dispatch [(if checked-now?
                                       :editor/add-validator
                                       :editor/remove-validator) "numeric" path])
