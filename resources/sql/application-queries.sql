@@ -337,6 +337,52 @@ WHERE to_tsvector('simple', a.preferred_name || ' ' || a.last_name) @@ to_tsquer
       AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
 
+-- name: yesql-get-application-list-for-virkailija
+WITH latest_information_request_event AS (
+    SELECT DISTINCT ON (application_key) * FROM application_events WHERE new_review_state = 'information-request' ORDER BY application_key, time DESC
+), latest_modification_by_applicant AS (
+    SELECT * FROM application_events WHERE event_type = 'updated-by-applicant' ORDER BY application_key, time DESC
+), new_application_modifications AS (
+    SELECT up.application_key
+    FROM latest_information_request_event ir
+      JOIN latest_modification_by_applicant up ON ir.application_key = up.application_key
+    WHERE ir.time < up.time
+)
+SELECT
+  a.id,
+  a.person_oid,
+  a.key,
+  a.lang,
+  a.preferred_name,
+  a.last_name,
+  a.created_time,
+  a.haku,
+  a.hakukohde,
+  ar.state                            AS state,
+  ar.score                            AS score,
+  a.form_id                           AS form,
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_reviews ahr
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+  (SELECT COUNT(*)
+   FROM new_application_modifications am
+   WHERE am.application_key = a.key)  AS new_application_modifications
+FROM latest_applications AS a
+  JOIN application_reviews AS ar ON a.key = ar.application_key
+  JOIN forms AS f ON a.form_id = f.id
+  JOIN latest_forms AS lf ON lf.key = f.key
+WHERE
+  CASE
+  WHEN :query_key = 'application-oid'
+    THEN a.key = :query_value
+  WHEN :query_key = 'person-oid'
+    THEN a.person_oid = :query_value
+  END
+  AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
+ORDER BY a.created_time DESC;
+
 -- name: yesql-get-application-list-by-person-oid-for-omatsivut
 SELECT
   a.key       AS oid,

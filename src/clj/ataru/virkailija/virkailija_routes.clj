@@ -239,7 +239,7 @@
                                               (access-controlled-application/get-application-list-by-person-oid personOid session organization-service)
 
                                               (some? applicationOid)
-                                              (access-controlled-application/get-application-list-by-application-oid application session organization-service))
+                                              (access-controlled-application/get-application-list-by-application-oid applicationOid session organization-service))
 
                                             :applications)
                            persons      (->> (person-service/get-persons person-service (distinct (keep :person-oid applications)))

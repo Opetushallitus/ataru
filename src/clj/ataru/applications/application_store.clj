@@ -294,16 +294,40 @@
        (map ->kebab-case-kw)))
 
 (defn get-application-list-by-person-oid
-  [person-oid])
+  [person-oid organization-oids]
+  (->> (exec-db :db yesql-get-application-list-for-virkailija {:person_oid                   person-oid
+                                                               :query_key                    "person-oid"
+                                                               :query_value                  person-oid
+                                                               :query_type                   "ORGS"
+                                                               :authorized_organization_oids organization-oids})
+       (map ->kebab-case-kw)))
 
 (defn get-full-application-list-by-person-oid
-  [person-oid])
+  [person-oid]
+  (->> (exec-db :db yesql-get-application-list-for-virkailija {:person_oid                   person-oid
+                                                               :query_key                    "person-oid"
+                                                               :query_value                  person-oid
+                                                               :query_type                   "ALL"
+                                                               :authorized_organization_oids [""]})
+       (map ->kebab-case-kw)))
 
 (defn get-application-list-by-application-oid
-  [application-oid])
+  [application-oid organization-oids]
+  (->> (exec-db :db yesql-get-application-list-for-virkailija {:application_oid              application-oid
+                                                               :query_key                    "application-oid"
+                                                               :query_value                  application-oid
+                                                               :query_type                   "ORGS"
+                                                               :authorized_organization_oids organization-oids})
+       (map ->kebab-case-kw)))
 
 (defn get-full-application-list-by-application-oid
-  [application-oid])
+  [application-oid]
+  (->> (exec-db :db yesql-get-application-list-for-virkailija {:application_oid              application-oid
+                                                               :query_key                    "application-oid"
+                                                               :query_value                  application-oid
+                                                               :query_type                   "ALL"
+                                                               :authorized_organization_oids [""]})
+       (map ->kebab-case-kw)))
 
 
 (defn get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
