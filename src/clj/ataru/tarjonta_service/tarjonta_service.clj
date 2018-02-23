@@ -92,10 +92,13 @@
              (mapv parse-hakukohde)))
 
   (get-haku [this haku-oid]
-    (when-let [h (cache/cache-get-or-fetch cache-service :haku haku-oid #(client/get-haku haku-oid))]
-      ;; Serialization breaks boxed booleans, as it doesn't return the
-      ;; canonical instance
-      (update h :canSubmitMultipleApplications #(.booleanValue %))))
+    ;; Serialization breaks boxed booleans, as it doesn't return the
+    ;; canonical instance
+    (some-> (cache/cache-get-or-fetch cache-service
+                                      :haku haku-oid
+                                      #(client/get-haku haku-oid))
+            (update :canSubmitMultipleApplications #(.booleanValue %))
+            (update :usePriority #(.booleanValue %))))
 
   (get-haku-name [this haku-oid]
     (when-let [haku (.get-haku this haku-oid)]
