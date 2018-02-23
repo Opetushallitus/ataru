@@ -115,8 +115,7 @@
         hakukohteet                   (get-in tarjonta-info [:tarjonta :hakukohteet])
         applied-hakukohteet           (filter #(contains? (set (:hakukohde application)) (:oid %))
                                               hakukohteet)
-        applied-hakukohderyhmat       (->> applied-hakukohteet
-                                           (mapcat :hakukohderyhmat))
+        applied-hakukohderyhmat       (mapcat :hakukohderyhmat applied-hakukohteet)
         virkailija-secret             (valid-virkailija-secret application)
         latest-application            (application-store/get-latest-version-of-application-for-edit application)
         form-roles                    (cond-> []

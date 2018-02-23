@@ -49,7 +49,7 @@
 (defn- selectable-list-item
   [path id hakukohde selected-hakukohteet get-name on-click-add on-click-remove]
   (let [
-        parts            (subscribe [:editor/name-parts id (get-name hakukohde)])]
+        parts (subscribe [:editor/name-parts id (get-name hakukohde)])]
     (fn [path id hakukohde selected-hakukohteet]
       (let [selected? (contains? (set selected-hakukohteet) (:oid hakukohde))]
         [(keyword

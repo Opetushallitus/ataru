@@ -238,8 +238,7 @@
    :haku-oid (:hakuOid hakukohde)
    :name (parse-multi-lang-text (:nimi hakukohde))
    :tarjoaja-name (:tarjoajaNimet hakukohde)
-   :ryhmaliitokset (some->> (:ryhmaliitokset hakukohde)
-                     (map #(:ryhmaOid %)))})
+   :ryhmaliitokset (map :ryhmaOid (:ryhmaliitokset hakukohde))})
 
 (defrecord MockTarjontaService []
   component/Lifecycle

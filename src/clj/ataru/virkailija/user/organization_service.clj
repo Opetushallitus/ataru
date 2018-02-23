@@ -80,7 +80,7 @@
       (concat normal-orgs groups)))
 
 (defn- hakukohderyhmat-from-groups [groups]
-  (let [hakukohde-groups (filter #(:hakukohderyhma? %) groups)]
+  (let [hakukohde-groups (filter :hakukohderyhma? groups)]
     (map #(select-keys % [:oid :name]) hakukohde-groups)))
 
 ;; The real implementation for Organization service

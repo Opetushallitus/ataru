@@ -34,8 +34,7 @@
     (util/reduce-form-fields
       (fn [db field]
         (if-let [intersection (field-intersection-with-selected-hakukohteet-and-ryhmat db field)]
-          (assoc-in db [:application :ui (keyword (:id field)) :visible?]
-            (not (empty? intersection)))
+          (assoc-in db [:application :ui (keyword (:id field)) :visible?] (not (empty? intersection)))
           db)
         )
       db
