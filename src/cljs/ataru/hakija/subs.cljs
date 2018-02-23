@@ -46,9 +46,9 @@
 (re-frame/reg-sub
   :application/selected-hakukohteet-for-field
   (fn [db [_ field]]
-    (if-let [ids (seq (concat (get field :belongs-to-hakukohderyhma [])
-                              (get field :belongs-to-hakukohteet [])))]
-      (if-let [selected-hakukohteet-from-tarjonta (selected-hakukohteet-from-tarjonta db)]
+    (when-let [ids (seq (concat (get field :belongs-to-hakukohderyhma [])
+                                (get field :belongs-to-hakukohteet [])))]
+      (let [selected-hakukohteet-from-tarjonta (selected-hakukohteet-from-tarjonta db)]
         (->> selected-hakukohteet-from-tarjonta
              (filter #(not (empty? (clojure.set/intersection
                                     (set ids)
