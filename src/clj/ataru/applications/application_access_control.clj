@@ -24,79 +24,15 @@
 
 (defn- empty-applications-result-fn [] {:applications []})
 
-(defn get-application-list-by-hakukohde [hakukohde-oid session organization-service]
-  (session-orgs/run-org-authorized
-   session
-   organization-service
-   [:view-applications :edit-applications]
-   empty-applications-result-fn
-   #(hash-map :applications (application-store/get-application-list-by-hakukohde hakukohde-oid %))
-   #(hash-map :applications (application-store/get-full-application-list-by-hakukohde hakukohde-oid))))
-
-(defn get-application-list-by-haku [haku-oid session organization-service]
-  (session-orgs/run-org-authorized
-   session
-   organization-service
-   [:view-applications :edit-applications]
-   empty-applications-result-fn
-   #(hash-map :applications (application-store/get-application-list-by-haku haku-oid %))
-   #(hash-map :applications (application-store/get-full-application-list-by-haku haku-oid))))
-
-(defn get-application-list-by-ssn [ssn session organization-service]
-  (session-orgs/run-org-authorized
-   session
-   organization-service
-   [:view-applications :edit-applications]
-   empty-applications-result-fn
-   #(hash-map :applications (application-store/get-application-list-by-ssn ssn %))
-   #(hash-map :applications (application-store/get-full-application-list-by-ssn ssn))))
-
-(defn get-application-list-by-dob [dob session organization-service]
+(defn get-application-list-by-query
+  [query-key query-value session organization-service]
   (session-orgs/run-org-authorized
     session
     organization-service
     [:view-applications :edit-applications]
     empty-applications-result-fn
-    #(hash-map :applications (application-store/get-application-list-by-dob dob %))
-    #(hash-map :applications (application-store/get-full-application-list-by-dob dob))))
-
-(defn get-application-list-by-email [email session organization-service]
-  (session-orgs/run-org-authorized
-    session
-    organization-service
-    [:view-applications :edit-applications]
-    empty-applications-result-fn
-    #(hash-map :applications (application-store/get-application-list-by-email email %))
-    #(hash-map :applications (application-store/get-full-application-list-by-email email))))
-
-(defn get-application-list-by-name [name session organization-service]
-  (session-orgs/run-org-authorized
-   session
-   organization-service
-   [:view-applications :edit-applications]
-   empty-applications-result-fn
-   #(hash-map :applications (application-store/get-application-list-by-name name %))
-   #(hash-map :applications (application-store/get-full-application-list-by-name name))))
-
-(defn get-application-list-by-person-oid
-  [person-oid session organization-service]
-  (session-orgs/run-org-authorized
-    session
-    organization-service
-    [:view-applications :edit-applications]
-    empty-applications-result-fn
-    #(hash-map :applications (application-store/get-application-list-by-person-oid person-oid %))
-    #(hash-map :applications (application-store/get-full-application-list-by-person-oid person-oid))))
-
-(defn get-application-list-by-application-oid
-  [application-oid session organization-service]
-  (session-orgs/run-org-authorized
-    session
-    organization-service
-    [:view-applications :edit-applications]
-    empty-applications-result-fn
-    #(hash-map :applications (application-store/get-application-list-by-application-oid application-oid %))
-    #(hash-map :applications (application-store/get-full-application-list-by-application-oid application-oid))))
+    #(hash-map :applications (application-store/get-application-heading-list query-key query-value %))
+    #(hash-map :applications (application-store/get-application-heading-list query-key query-value))))
 
 (defn get-latest-application-by-key [application-key session organization-service]
   (-> (session-orgs/run-org-authorized

@@ -212,36 +212,19 @@
                                     {applicationOid :- s/Str nil}]
                      :summary "Return applications header-level info for form"
                      :return {:applications [ataru-schema/ApplicationInfo]}
-                     (let [applications (-> (cond
-                                              (some? formKey)
-                                              (application-service/get-application-list-by-form formKey session organization-service)
-
-                                              (some? hakukohdeOid)
-                                              (access-controlled-application/get-application-list-by-hakukohde hakukohdeOid session organization-service)
-
-                                              (some? hakuOid)
-                                              (access-controlled-application/get-application-list-by-haku hakuOid session organization-service)
-
-                                              (some? ssn)
-                                              (access-controlled-application/get-application-list-by-ssn ssn session organization-service)
-
-                                              (some? dob)
-                                              (when (dob/dob? dob)
-                                                (access-controlled-application/get-application-list-by-dob dob session organization-service))
-
-                                              (some? email)
-                                              (access-controlled-application/get-application-list-by-email email session organization-service)
-
-                                              (some? name)
-                                              (access-controlled-application/get-application-list-by-name name session organization-service)
-
-                                              (some? personOid)
-                                              (access-controlled-application/get-application-list-by-person-oid personOid session organization-service)
-
-                                              (some? applicationOid)
-                                              (access-controlled-application/get-application-list-by-application-oid applicationOid session organization-service))
-
-                                            :applications)
+                     (let [[query-key query-value] (cond
+                                                     (some? formKey) [:form formKey]
+                                                     (some? hakukohdeOid) [:hakukohde-oid hakukohdeOid]
+                                                     (some? hakuOid) [:haku-oid hakuOid]
+                                                     (some? ssn) [:ssn ssn]
+                                                     (some? dob) [:dob (when (dob/dob? dob) dob)]
+                                                     (some? email) [:email email]
+                                                     (some? name) [:name name]
+                                                     (some? personOid) [:person-oid personOid]
+                                                     (some? applicationOid) [:application-oid applicationOid])
+                           applications (:applications (if (= query-key :form)
+                                                         (application-service/get-application-list-by-form query-value session organization-service)
+                                                         (access-controlled-application/get-application-list-by-query query-key query-value session organization-service)))
                            persons      (->> (person-service/get-persons person-service (distinct (keep :person-oid applications)))
                                              (reduce (fn [res person]
                                                        (assoc res (:oidHenkilo person) person))
