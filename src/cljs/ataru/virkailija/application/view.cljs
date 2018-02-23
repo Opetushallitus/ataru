@@ -988,11 +988,6 @@
 
 (defn application-review []
   (let [review-positioning      (subscribe [:state-query [:application :review-positioning]])
-        hakukohde-review-states (subscribe [:state-query [:application :review :hakukohde-reviews]])
-        in-info-request-state?  (some?
-                                  (find-first
-                                    #(= (:processing-state (val %)) "information-request")
-                                    @hakukohde-review-states))
         settings-visible        (subscribe [:state-query [:application :review-settings :visible?]])]
     [:div.application-handling__review-outer
      {:class (when (= :fixed @review-positioning)
@@ -1017,7 +1012,7 @@
       [:div.application-handling__review-outer-container
        [application-hakukohde-selection]
        [application-hakukohde-review-inputs review-states/hakukohde-review-types]
-       (when in-info-request-state?
+       (when @(subscribe [:application/show-info-request-ui?])
          [application-information-request])
        [application-review-inputs]
        [application-modify-link]

@@ -321,3 +321,13 @@
   :application/field-highlighted?
   (fn [db [_ field-id]]
     (some #{field-id} (-> db :application :selected-application-and-form :highlighted-fields))))
+
+(re-frame.core/reg-sub
+  :application/show-info-request-ui?
+  (fn [db _]
+    (let [selected-hakukohde (get-in db [:application :selected-review-hakukohde])]
+      (= "information-request" (get-in db [:application
+                                           :review
+                                           :hakukohde-reviews
+                                           (keyword selected-hakukohde)
+                                           :processing-state])))))
