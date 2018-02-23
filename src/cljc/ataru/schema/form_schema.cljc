@@ -167,7 +167,7 @@
    :haku-oid s/Str
    :name LocalizedStringOptional
    :tarjoaja-name LocalizedStringOptional
-   (s/optional-key :ryhmaliitokset) [s/Str]})
+   :ryhmaliitokset [s/Str]})
 
 (s/defschema File
   {:key                      s/Str
