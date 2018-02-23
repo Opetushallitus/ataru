@@ -142,7 +142,7 @@ WHERE
   WHEN :query_key = 'name'
     THEN to_tsvector('simple', a.preferred_name || ' ' || a.last_name) @@ to_tsquery(:query_value)
   WHEN :query_key = 'email'
-    THEN a.email = :query_value
+    THEN lower(a.email) = lower(:query_value)
   WHEN :query_key = 'dob'
     THEN a.dob = to_date(:query_value, 'DD.MM.YYYY')
   WHEN :query_key = 'ssn'
