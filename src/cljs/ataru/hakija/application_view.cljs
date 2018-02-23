@@ -56,9 +56,9 @@
                                      (map :hakuaika)
                                      (sort-by :end >)
                                      first)
-            apply-dates         (if-let [hakuaika (or longest-open
-                                                      next-open
-                                                      last-open)]
+            apply-dates         (when-let [hakuaika (or longest-open
+                                                        next-open
+                                                        last-open)]
                                   (if (:jatkuva-haku? hakuaika)
                                     (get-translation :continuous-period)
                                     (str (get-translation :application-period)
@@ -68,8 +68,7 @@
                                          (millis->str (:end hakuaika))
                                          (when (and (not (:on hakuaika))
                                                     (nil? @virkailija-secret))
-                                           (str " (" (get-translation :not-within-application-period) ")"))))
-                                  (get-translation :not-within-application-period))]
+                                           (str " (" (get-translation :not-within-application-period) ")")))))]
         [:div
          [:div.application__header-container
           [:span.application__header (or (-> form :tarjonta :haku-name selected-lang)

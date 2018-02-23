@@ -12,8 +12,8 @@
         describe('form loads', function () {
             before(
                 wait.until(function() { return formSections().length == 2 }, 10000),
-                clickElement(addHakukohdeLink),
-                clickElement(function() { return nthHakukohdeSearchResultButton(1) }),
+                clickElement(addHakukohdeLink, "hakukohdeLink"),
+                clickElement(function() { return nthHakukohdeSearchResultButton(0) }, "searchResult1"),
                 setNthFieldInputValue(0, 'Etunimi Tokanimi'),
                 selectNthField(1),
                 setNthFieldInputValue(2, 'Lastname'),
