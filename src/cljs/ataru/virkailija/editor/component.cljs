@@ -341,14 +341,14 @@
       [:div.editor-form__additional-params-container
        [:header.editor-form__component-item-header "Desimaaleja (tyhjä kokonaisluvulle):"]
        [:select.editor-form__decimal-places-selector
-        {:value     @decimal-places
-         :max       10
+        {:value     (or @decimal-places "")
          :on-change (fn [e]
                       (let [new-val (get-val e)
                             value   (when (not-empty new-val)
                                       (js/parseInt new-val))]
                         (dispatch [:editor/set-component-value value path :params :decimals])))}
         [:option {:value "" :key 0} ""]
+
         (for [i (range 1 11)]
           [:option {:value i :key i} i])]])))
 
@@ -361,7 +361,7 @@
         [:input.editor-form__checkbox
          {:type      "checkbox"
           :id        id
-          :checked   @checked?
+          :checked   (or @checked? false)
           :on-change (fn [event]
                        (let [checked-now? (-> event .-target .-checked)]
                          (dispatch [:editor/set-component-value checked-now? path :params :numeric])
