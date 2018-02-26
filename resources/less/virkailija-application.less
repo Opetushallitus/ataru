@@ -252,6 +252,8 @@ and (max-width: 1000px) {
   .application-handling__list-row--applicant-unknown {
     color: gray;
   }
+
+  .unselectable
 }
 
 .application-handling__list-row:hover {
@@ -325,6 +327,15 @@ and (max-width: 1000px) {
 .application-handling__list-row--applicant {
   flex: 0 3 450px;
   display: inline-block;
+}
+
+.application-handling__list-row--identification {
+  cursor: pointer;
+  display: inline-block;
+  i {
+    margin-left: 12px;
+    margin-right: 5px;
+  }
 }
 
 .application-handling__list-row--application-applicant {

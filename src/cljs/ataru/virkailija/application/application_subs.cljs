@@ -231,6 +231,11 @@
   (fn [db _]
     (-> db :application :modify-application-link :state nil?)))
 
+(defn- filter-by-yksiloity
+  [application only-identified?]
+  (or (not only-identified?)
+      (not (-> application :person :yksiloity))))
+
 (defn- filter-by-hakukohde-review
   [application requirement-name default-state-name states-to-include]
   (let [states (->> (:application-hakukohde-reviews application)
@@ -252,10 +257,12 @@
   (fn [db _]
     (let [applications                 (-> db :application :applications)
           processing-states-to-include (-> db :application :processing-state-filter set)
-          selection-states-to-include  (-> db :application :selection-state-filter set)]
+          selection-states-to-include  (-> db :application :selection-state-filter set)
+          only-identified? (-> db :application :only-identified?)]
       (filter
         (fn [application]
           (and
+            (filter-by-yksiloity application only-identified?)
             (filter-by-hakukohde-review application "processing-state" review-states/initial-application-hakukohde-processing-state processing-states-to-include)
             (filter-by-hakukohde-review application "selection-state" "incomplete" selection-states-to-include)))
         applications))))
