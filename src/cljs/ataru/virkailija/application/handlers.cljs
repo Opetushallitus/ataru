@@ -216,6 +216,8 @@
   :application/fetch-applications-by-term
   (fn [{:keys [db]} [_ term type]]
     (let [query-param (case type
+                        :application-oid "applicationOid"
+                        :person-oid "personOid"
                         :ssn "ssn"
                         :dob "dob"
                         :email "email"

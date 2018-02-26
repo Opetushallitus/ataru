@@ -203,95 +203,26 @@
   (->> (exec-db :db yesql-get-application-list-by-form {:form_key form-key})
        (map ->kebab-case-kw)))
 
-(defn get-application-list-by-hakukohde
-  "Only list with header-level info, not answers. ONLY include applications associated with given hakukohde."
-  [hakukohde-oid organization-oids]
-  (->> (exec-db :db yesql-get-application-list-by-hakukohde {:hakukohde_oid                hakukohde-oid
-                                                             :query_type                   "ORGS"
-                                                             :authorized_organization_oids organization-oids})
-       (map ->kebab-case-kw)))
-
-(defn get-full-application-list-by-hakukohde
-  "Only list with header-level info, not answers. ONLY include applications associated with given hakukohde."
-  [hakukohde-oid]
-  (->> (exec-db :db yesql-get-application-list-by-hakukohde {:hakukohde_oid hakukohde-oid
-                                                             :query_type "ALL"
-                                                             :authorized_organization_oids [""]})
-       (map ->kebab-case-kw)))
-
-(defn get-application-list-by-haku
-  "Only list with header-level info, not answers. ONLY include applications associated with given hakukohde."
-  [haku-oid organization-oids]
-  (->> (exec-db :db yesql-get-application-list-by-haku {:haku_oid                     haku-oid
-                                                        :query_type                   "ORGS"
-                                                        :authorized_organization_oids organization-oids})
-       (map ->kebab-case-kw)))
-
-(defn get-full-application-list-by-haku
-  "Only list with header-level info, not answers. ONLY include applications associated with given hakukohde."
-  [haku-oid]
-  (->> (exec-db :db yesql-get-application-list-by-haku {:haku_oid haku-oid
-                                                        :query_type "ALL"
-                                                        :authorized_organization_oids [""]})
-       (map ->kebab-case-kw)))
-
-(defn get-application-list-by-ssn
-  "Only list with header-level info"
-  [ssn organization-oids]
-  (->> (exec-db :db yesql-get-application-list-by-ssn {:ssn                          ssn
-                                                       :query_type                   "ORGS"
-                                                       :authorized_organization_oids organization-oids})
-       (map ->kebab-case-kw)))
-
-(defn get-full-application-list-by-ssn
-  "Only list with header-level info"
-  [ssn]
-  (->> (exec-db :db yesql-get-application-list-by-ssn {:ssn                          ssn
-                                                       :query_type                   "ALL"
-                                                       :authorized_organization_oids [""]})
-       (map ->kebab-case-kw)))
-
-(defn get-application-list-by-dob [dob organization-oids]
-  (->> (exec-db :db yesql-get-application-list-by-dob {:dob                          dob
-                                                       :query_type                   "ORGS"
-                                                       :authorized_organization_oids organization-oids})
-       (map ->kebab-case-kw)))
-
-(defn get-full-application-list-by-dob [dob]
-  (->> (exec-db :db yesql-get-application-list-by-dob {:dob                          dob
-                                                       :query_type                   "ALL"
-                                                       :authorized_organization_oids [""]})
-       (map ->kebab-case-kw)))
-
-(defn get-application-list-by-email [email organization-oids]
-  (->> (exec-db :db yesql-get-application-list-by-email {:email                        email
-                                                         :query_type                   "ORGS"
-                                                         :authorized_organization_oids organization-oids})
-       (map ->kebab-case-kw)))
-
-(defn get-full-application-list-by-email [email]
-  (->> (exec-db :db yesql-get-application-list-by-email {:email                        email
-                                                         :query_type                   "ALL"
-                                                         :authorized_organization_oids [""]})
-       (map ->kebab-case-kw)))
-
 (defn- name-search-query [name]
   (->> (clojure.string/split name #"\s+")
        (remove clojure.string/blank?)
        (map #(str % ":*"))
        (clojure.string/join " & ")))
 
-(defn get-application-list-by-name [name organization-oids]
-  (->> (exec-db :db yesql-get-application-list-by-name {:name                         (name-search-query name)
-                                                        :query_type                   "ORGS"
-                                                        :authorized_organization_oids organization-oids})
-       (map ->kebab-case-kw)))
-
-(defn get-full-application-list-by-name [name]
-  (->> (exec-db :db yesql-get-application-list-by-name {:name                         (name-search-query name)
-                                                        :query_type                   "ALL"
-                                                        :authorized_organization_oids [""]})
-       (map ->kebab-case-kw)))
+(defn get-application-heading-list
+  ([query-key query-value organization-oids]
+   (let [have-organization? (not-empty organization-oids)
+         parsed-value       (case :query-key
+                              :name (name-search-query query-value)
+                              query-value)]
+     (->> (exec-db :db yesql-get-application-list-for-virkailija
+                   {:query_type                   (if have-organization? "ORGS" "ALL")
+                    :query_key                    (name query-key)
+                    :query_value                  parsed-value
+                    :authorized_organization_oids (if have-organization? organization-oids [""])})
+          (map ->kebab-case-kw))))
+  ([query-key query-value]
+   (get-application-heading-list query-key query-value nil)))
 
 (defn get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
   [person-oid]

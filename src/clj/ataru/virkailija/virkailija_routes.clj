@@ -200,54 +200,50 @@
                                                                              (:from-state body)
                                                                              (:to-state body))))
 
-                  (api/GET "/list" {session :session}
-                           :query-params [{formKey      :- s/Str nil}
-                                          {hakukohdeOid :- s/Str nil}
-                                          {hakuOid      :- s/Str nil}
-                                          {ssn          :- s/Str nil}
-                                          {dob          :- s/Str nil}
-                                          {email        :- s/Str nil}
-                                          {name         :- s/Str nil}]
-                           :summary "Return applications header-level info for form"
-                           :return {:applications [ataru-schema/ApplicationInfo]}
-                           (let [applications (-> (cond
-                                                    (some? formKey)
-                                                    (application-service/get-application-list-by-form formKey session organization-service)
-
-                                                    (some? hakukohdeOid)
-                                                    (access-controlled-application/get-application-list-by-hakukohde hakukohdeOid session organization-service)
-
-                                                    (some? hakuOid)
-                                                    (access-controlled-application/get-application-list-by-haku hakuOid session organization-service)
-
-                                                    (some? ssn)
-                                                    (access-controlled-application/get-application-list-by-ssn ssn session organization-service)
-
-                                                    (some? dob)
-                                                    (let [dob (dob/str->dob dob)]
-                                                      (access-controlled-application/get-application-list-by-dob dob session organization-service))
-
-                                                    (some? email)
-                                                    (access-controlled-application/get-application-list-by-email email session organization-service)
-
-                                                    (some? name)
-                                                    (access-controlled-application/get-application-list-by-name name session organization-service))
-                                                  :applications)
-                                 persons      (->> (person-service/get-persons person-service (distinct (keep :person-oid applications)))
-                                                   (reduce (fn [res person]
-                                                             (assoc res (:oidHenkilo person) person))
-                                                           {}))]
-                             (response/ok {:applications (for [application applications
-                                                               :let [person      (get persons (:person-oid application))
-                                                                     yksiloity   (or (-> person :yksiloity)
-                                                                                     (-> person :yksiloityVTJ))
-                                                                     person-info (if yksiloity
-                                                                                   {:preferred-name (:kutsumanimi person)
-                                                                                    :last-name      (:sukunimi person)}
-                                                                                   (select-keys application [:preferred-name :last-name]))]]
-                                                           (-> application
-                                                               (assoc :person person-info)
-                                                               (dissoc :person-oid :preferred-name :last-name)))})))
+                   (api/GET "/list" {session :session}
+                     :query-params [{formKey :- s/Str nil}
+                                    {hakukohdeOid :- s/Str nil}
+                                    {hakuOid :- s/Str nil}
+                                    {ssn :- s/Str nil}
+                                    {dob :- s/Str nil}
+                                    {email :- s/Str nil}
+                                    {name :- s/Str nil}
+                                    {personOid :- s/Str nil}
+                                    {applicationOid :- s/Str nil}]
+                     :summary "Return applications header-level info for form"
+                     :return {:applications [ataru-schema/ApplicationInfo]}
+                     (let [[query-key query-value] (cond
+                                                     (some? formKey) [:form formKey]
+                                                     (some? hakukohdeOid) [:hakukohde-oid hakukohdeOid]
+                                                     (some? hakuOid) [:haku-oid hakuOid]
+                                                     (some? ssn) [:ssn ssn]
+                                                     (some? dob) [:dob (when (dob/dob? dob) dob)]
+                                                     (some? email) [:email email]
+                                                     (some? name) [:name name]
+                                                     (some? personOid) [:person-oid personOid]
+                                                     (some? applicationOid) [:application-oid applicationOid])
+                           applications (when query-key
+                                          (:applications
+                                            (if (= query-key :form)
+                                              (application-service/get-application-list-by-form query-value session organization-service)
+                                              (access-controlled-application/get-application-list-by-query query-key query-value session organization-service))))
+                           persons      (->> (person-service/get-persons person-service (distinct (keep :person-oid applications)))
+                                             (reduce (fn [res person]
+                                                       (assoc res (:oidHenkilo person) person))
+                                                     {}))]
+                       (if applications
+                         (response/ok {:applications (for [application applications
+                                                           :let [person      (get persons (:person-oid application))
+                                                                 yksiloity   (or (-> person :yksiloity)
+                                                                                 (-> person :yksiloityVTJ))
+                                                                 person-info (if yksiloity
+                                                                               {:preferred-name (:kutsumanimi person)
+                                                                                :last-name      (:sukunimi person)}
+                                                                               (select-keys application [:preferred-name :last-name]))]]
+                                                       (-> application
+                                                           (assoc :person person-info)
+                                                           (dissoc :person-oid :preferred-name :last-name)))})
+                         (response/bad-request))))
                   (api/GET "/virkailija-settings" {session :session}
                     :return ataru-schema/VirkailijaSettings
                     (ok (virkailija-edit/get-review-settings session)))
