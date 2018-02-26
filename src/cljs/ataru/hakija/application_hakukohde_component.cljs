@@ -213,7 +213,8 @@
 
 (defn- hakukohde-selection-search
   []
-  (let [hakukohde-query @(subscribe [:application/hakukohde-query])]
+  (let [hakukohde-query @(subscribe [:application/hakukohde-query])
+        hakukohde-hits @(subscribe [:application/hakukohde-hits])]
     [:div.application__hakukohde-selection
      [:div.application__hakukohde-selection-search-arrow-up
       {:class (when @(subscribe [:application/prioritize-hakukohteet?])
@@ -234,9 +235,13 @@
            {:on-click hakukohde-query-clear-event-handler}
            [:i.zmdi.zmdi-close]]])]
       [:div.application__hakukohde-selection-search-results
-       (for [hakukohde-oid @(subscribe [:application/hakukohde-hits])]
-         ^{:key (str "found-hakukohde-row-" hakukohde-oid)}
-         [search-hit-hakukohde-row hakukohde-oid])]
+       (if (and
+             (empty? hakukohde-hits)
+             (not (clojure.string/blank? hakukohde-query)))
+         [:div.application__hakukohde-selection-search-no-hits (get-translation :no-hakukohde-search-hits)]
+         (for [hakukohde-oid hakukohde-hits]
+           ^{:key (str "found-hakukohde-row-" hakukohde-oid)}
+           [search-hit-hakukohde-row hakukohde-oid]))]
       (when @(subscribe [:application/show-more-hakukohdes?])
         [:div.application__show_more_hakukohdes_container
          [:span.application__show_more_hakukohdes

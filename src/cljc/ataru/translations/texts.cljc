@@ -162,7 +162,10 @@
                                        :sv "Den nya länken har skickats!"}
    :expired-secret-contact            {:fi "Ongelmatilanteessa ota yhteys hakemaasi oppilaitokseen."
                                        :en "If problems arise, please contact the educational organization to which you have applied."
-                                       :sv "Vid eventuella problemsituationer kontakta den läroanstalt du söker till."}})
+                                       :sv "Vid eventuella problemsituationer kontakta den läroanstalt du söker till."}
+   :no-hakukohde-search-hits          {:fi "Ei hakutuloksia"
+                                       :en "No search results found"
+                                       :sv "Inga sökresultat"}})
 
 (def general-texts
   {:yes      {:en "Yes"
