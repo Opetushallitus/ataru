@@ -375,13 +375,13 @@
    (s/optional-key :score)             (s/maybe s/Int)
    (s/optional-key :hakukohde-reviews) HakukohdeReviews})
 
-(s/defschema ApplicationCountsHakukohde {:oid                            s/Str
-                                         :name                           LocalizedStringOptional
-                                         (s/optional-key :tarjoaja-name) LocalizedStringOptional
-                                         :application-count              s/Int
-                                         :processed                      s/Int
-                                         :unprocessed                    s/Int
-                                         :haku                           s/Str})
+(s/defschema ApplicationCountsHakukohde {:oid               s/Str
+                                         :name              LocalizedStringOptional
+                                         :tarjoaja-name     LocalizedStringOptional
+                                         :application-count s/Int
+                                         :processed         s/Int
+                                         :unprocessed       s/Int
+                                         :haku              s/Str})
 
 (s/defschema TarjontaHaku {:oid                    s/Str
                            :name                   LocalizedStringOptional

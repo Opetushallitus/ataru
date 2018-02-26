@@ -112,7 +112,7 @@
             field-hakukohteet              (:belongs-to-hakukohteet field-descriptor)
             selected-hakukohde-oids        (clojure.set/intersection (set field-hakukohteet)
                                                                      (set selected-hakukohteet))
-            selected-hakukohteet-for-field (filter #(some #{(:oid %)} selected-hakukohde-oids) tarjonta-hakukohtet)]
+            selected-hakukohteet-for-field (filter #(contains? selected-hakukohde-oids (:oid %)) tarjonta-hakukohtet)]
         [:div.application__question_hakukohde_names_container
          [:a.application__question_hakukohde_names_info
           {:on-click #(swap! show-hakukohde-list? not)}

@@ -10,7 +10,8 @@
          {:oid         hakukohde
           :unprocessed (- application-count processed processing)}
          (or (.get-hakukohde-and-tarjoaja-name tarjonta-service hakukohde)
-             {:name {:fi hakukohde}})))
+             {:name {:fi hakukohde}
+              :tarjoaja-name {:fi "Tarjoajaa ei löytynyt"}})))
 
 (defn- haku-processed-counts
   [hakukohteet]
