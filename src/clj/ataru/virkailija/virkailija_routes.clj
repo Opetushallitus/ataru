@@ -222,24 +222,28 @@
                                                      (some? name) [:name name]
                                                      (some? personOid) [:person-oid personOid]
                                                      (some? applicationOid) [:application-oid applicationOid])
-                           applications (:applications (if (= query-key :form)
-                                                         (application-service/get-application-list-by-form query-value session organization-service)
-                                                         (access-controlled-application/get-application-list-by-query query-key query-value session organization-service)))
+                           applications (when query-key
+                                          (:applications
+                                            (if (= query-key :form)
+                                              (application-service/get-application-list-by-form query-value session organization-service)
+                                              (access-controlled-application/get-application-list-by-query query-key query-value session organization-service))))
                            persons      (->> (person-service/get-persons person-service (distinct (keep :person-oid applications)))
                                              (reduce (fn [res person]
                                                        (assoc res (:oidHenkilo person) person))
                                                      {}))]
-                       (response/ok {:applications (for [application applications
-                                                         :let [person      (get persons (:person-oid application))
-                                                               yksiloity   (or (-> person :yksiloity)
-                                                                               (-> person :yksiloityVTJ))
-                                                               person-info (if yksiloity
-                                                                             {:preferred-name (:kutsumanimi person)
-                                                                              :last-name      (:sukunimi person)}
-                                                                             (select-keys application [:preferred-name :last-name]))]]
-                                                     (-> application
-                                                         (assoc :person person-info)
-                                                         (dissoc :person-oid :preferred-name :last-name)))})))
+                       (if applications
+                         (response/ok {:applications (for [application applications
+                                                           :let [person      (get persons (:person-oid application))
+                                                                 yksiloity   (or (-> person :yksiloity)
+                                                                                 (-> person :yksiloityVTJ))
+                                                                 person-info (if yksiloity
+                                                                               {:preferred-name (:kutsumanimi person)
+                                                                                :last-name      (:sukunimi person)}
+                                                                               (select-keys application [:preferred-name :last-name]))]]
+                                                       (-> application
+                                                           (assoc :person person-info)
+                                                           (dissoc :person-oid :preferred-name :last-name)))})
+                         (response/bad-request))))
                   (api/GET "/virkailija-settings" {session :session}
                     :return ataru-schema/VirkailijaSettings
                     (ok (virkailija-edit/get-review-settings session)))
