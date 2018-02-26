@@ -57,7 +57,7 @@
                      (s/optional-key :can-submit-multiple-applications) s/Bool
                      (s/optional-key :repeatable)                       s/Bool
                      (s/optional-key :numeric)                          s/Bool
-                     (s/optional-key :decimals)                         s/Int
+                     (s/optional-key :decimals)                         (s/maybe s/Int)
                      (s/optional-key :max-hakukohteet)                  (s/maybe s/Int)
                      (s/optional-key :question-group-id)                s/Int
                      (s/optional-key :max-length)                       s/Str
