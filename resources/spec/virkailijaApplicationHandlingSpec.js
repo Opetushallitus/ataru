@@ -197,11 +197,11 @@
       }
 
       function applicantColumn() {
-        return testFrame().find('.application-handling__list-row--applicant')
+        return testFrame().find('.application-handling__list-row--applicant > span')
       }
 
       function timeColumn() {
-        return testFrame().find('.application-handling__list-row--time')
+        return testFrame().find('.application-handling__list-row--time > span')
       }
 
     });
