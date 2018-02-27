@@ -374,6 +374,46 @@
 (defn- get-val [event]
   (-> event .-target .-value))
 
+(defn- decimal-places-selector [path]
+  (let [decimal-places (subscribe [:editor/get-component-value path :params :decimals])]
+    (fn [path]
+      [:div.editor-form__additional-params-container
+       [:header.editor-form__component-item-header "Muoto:"]
+       [:select.editor-form__decimal-places-selector
+        {:value     (or @decimal-places "")
+         :on-change (fn [e]
+                      (let [new-val (get-val e)
+                            value   (when (not-empty new-val)
+                                      (js/parseInt new-val))]
+                        (dispatch [:editor/set-component-value value path :params :decimals])))}
+        [:option {:value "" :key 0} "kokonaisluku"]
+        (for [i (range 1 10)]
+          [:option {:value i :key i} (str i " desimaalia")])]])))
+
+(defn- text-component-type-selector [path radio-group-id]
+  (let [id       (util/new-uuid)
+        checked? (subscribe [:editor/get-component-value path :params :numeric])]
+    (fn [path radio-group-id]
+      [:div
+       [:div.editor-form__checkbox-container
+        [:input.editor-form__checkbox
+         {:type      "checkbox"
+          :id        id
+          :checked   (or @checked? false)
+          :on-change (fn [event]
+                       (let [checked-now? (-> event .-target .-checked)]
+                         (dispatch [:editor/set-component-value checked-now? path :params :numeric])
+                         (dispatch [(if checked-now?
+                                      :editor/add-validator
+                                      :editor/remove-validator) "numeric" path])
+                         (when-not checked-now?
+                           (dispatch [:editor/set-component-value nil path :params :decimals]))))}]
+        [:label.editor-form__checkbox-label
+         {:for id}
+         "Kenttään voi täyttää vain numeroita"]]
+       (when @checked?
+         [decimal-places-selector path])])))
+
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages         (subscribe [:editor/languages])
         size              (subscribe [:editor/get-component-value path :params :size])
@@ -424,7 +464,7 @@
                                :else nil)}
                      btn-name]]))]
          (when text-area?
-           [:div.editor-form__max-length-container
+           [:div.editor-form__additional-params-container
             [:header.editor-form__component-item-header "Max. merkkimäärä"]
             [:input.editor-form__text-field.editor-form__text-field-auto-width
              {:value     @max-length
@@ -432,7 +472,9 @@
         [:div.editor-form__checkbox-wrapper
          [required-checkbox path initial-content]
          (when-not text-area?
-           [repeater-checkbox path initial-content])]
+           [repeater-checkbox path initial-content])
+         (when-not text-area?
+           [text-component-type-selector path radio-group-id])]
         [belongs-to-hakukohteet path initial-content]]
        [info-addon path]])))
 
@@ -602,8 +644,6 @@
         {:class (if @expanded?
                   "editor-form__drag_n_drop_spacer--dashbox-visible"
                   "editor-form__drag_n_drop_spacer--dashbox-hidden")}]])))
-
-;{:children [], :label {:fi "Kysymysryhmä", :sv ""}, :fieldClass "questionGroup", :id "722d4388-8814-4f66-8b0b-7a860a70475e", :params {}, :fieldType "fieldset"}
 
 (defn component-group [content path children]
   (let [languages         (subscribe [:editor/languages])

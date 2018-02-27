@@ -49,10 +49,27 @@
 
 (s/defschema Module (s/enum :person-info))
 
+(s/defschema InfoText {(s/optional-key :enabled?) s/Bool
+                       (s/optional-key :value)    LocalizedStringOptional
+                       (s/optional-key :label)    LocalizedStringOptional})
+
+(s/defschema Params {(s/optional-key :adjacent)                         s/Bool
+                     (s/optional-key :can-submit-multiple-applications) s/Bool
+                     (s/optional-key :repeatable)                       s/Bool
+                     (s/optional-key :numeric)                          s/Bool
+                     (s/optional-key :decimals)                         (s/maybe s/Int)
+                     (s/optional-key :max-hakukohteet)                  (s/maybe s/Int)
+                     (s/optional-key :question-group-id)                s/Int
+                     (s/optional-key :max-length)                       s/Str
+                     (s/optional-key :size)                             s/Str
+                     (s/optional-key :haku-oid)                         s/Str
+                     (s/optional-key :placeholder)                      LocalizedString
+                     (s/optional-key :info-text)                        InfoText})
+
 (s/defschema Button {:fieldClass                              (s/eq "button")
                      :id                                      s/Str
                      (s/optional-key :label)                  LocalizedString
-                     (s/optional-key :params)                 s/Any
+                     (s/optional-key :params)                 Params
                      :fieldType                               s/Keyword
                      (s/optional-key :belongs-to-hakukohteet) [s/Str]
                      (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
@@ -68,7 +85,7 @@
                         (s/optional-key :label)                          LocalizedString
                         (s/optional-key :label-amendment)                LocalizedString
                         (s/optional-key :initialValue)                   (s/cond-pre LocalizedString s/Int)
-                        (s/optional-key :params)                         s/Any
+                        (s/optional-key :params)                         Params
                         (s/optional-key :no-blank-option)                s/Bool
                         (s/optional-key :exclude-from-answers)           s/Bool
                         (s/optional-key :exclude-from-answers-if-hidden) s/Bool
@@ -94,7 +111,7 @@
                                                                                   "bulletList"
                                                                                   "dateRange"
                                                                                   "endOfDateRange"])
-                          (s/optional-key :params)                 s/Any
+                          (s/optional-key :params)                 Params
                           (s/optional-key :label)                  LocalizedString
                           (s/optional-key :text)                   LocalizedString
                           (s/optional-key :belongs-to-hakukohteet) [s/Str]
@@ -114,7 +131,7 @@
                                                                                       :else
                                                                                       BasicElement)]
                              (s/optional-key :child-validator)        (s/enum :one-of :birthdate-and-gender-component)
-                             (s/optional-key :params)                 s/Any
+                             (s/optional-key :params)                 Params
                              (s/optional-key :label)                  LocalizedString
                              (s/optional-key :label-amendment)        LocalizedString ; Additional info which can be displayed next to the label
                              (s/optional-key :module)                 Module

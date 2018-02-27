@@ -300,6 +300,28 @@
         (and (pos? num-answers) answers-subset-of-options?))
       true)))
 
+(def numeric-matcher #"[+-]?(0|[1-9][0-9]*)([,.][0-9]+)?")
+
+(defn- numeric?
+  [value _ field-descriptor]
+  (if (clojure.string/blank? value)
+    true
+    (let [[_ integer-part decimal-part] (re-matches numeric-matcher value)
+          decimal-places (-> field-descriptor :params :decimals)]
+      (cond
+        (not integer-part) false
+
+        (and decimal-part
+             (not decimal-places))
+        false
+
+        (and decimal-part
+             (> (count decimal-part)
+                (inc decimal-places)))                      ; inc to conside separator!
+        false
+
+        :else true))))
+
 (def pure-validators {:required        required?
                       :postal-code     postal-code?
                       :postal-office   postal-office?
@@ -309,7 +331,8 @@
                       :birthplace      birthplace?
                       :home-town       home-town?
                       :city            city?
-                      :hakukohteet     hakukohteet?})
+                      :hakukohteet     hakukohteet?
+                      :numeric         numeric?})
 
 (def async-validators {:ssn ssn?
                        :email email?})
