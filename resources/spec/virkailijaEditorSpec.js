@@ -70,7 +70,7 @@
           return this.value === question
         })
         .parent().parent().parent()
-        .find(".editor-form__checkbox-wrapper label:contains('Kenttään voi täyttää vain numeerisia arvoja')")
+        .find(".editor-form__checkbox-wrapper label:contains('Kenttään voi täyttää vain numeroita')")
         .prev().click()
     }
   }
@@ -427,7 +427,7 @@
           clickNumericAnswer('Tekstikenttä numeerisilla arvoilla'),
           function() {
             formComponents().eq(16).find('option').eq(4).prop('selected', true);
-            triggerEvent(testFrame().find('select'), 'change');
+            triggerEvent(formComponents().eq(16).find('select'), 'change');
           }
         );
         it('has expected contents', function() {

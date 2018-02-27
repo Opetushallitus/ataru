@@ -339,7 +339,7 @@
   (let [decimal-places (subscribe [:editor/get-component-value path :params :decimals])]
     (fn [path]
       [:div.editor-form__additional-params-container
-       [:header.editor-form__component-item-header "Desimaaleja:"]
+       [:header.editor-form__component-item-header "Muoto:"]
        [:select.editor-form__decimal-places-selector
         {:value     (or @decimal-places "")
          :on-change (fn [e]
@@ -348,8 +348,8 @@
                                       (js/parseInt new-val))]
                         (dispatch [:editor/set-component-value value path :params :decimals])))}
         [:option {:value "" :key 0} "kokonaisluku"]
-        (for [i (range 1 11)]
-          [:option {:value i :key i} i])]])))
+        (for [i (range 1 10)]
+          [:option {:value i :key i} (str i " desimaalia")])]])))
 
 (defn- text-component-type-selector [path radio-group-id]
   (let [id       (util/new-uuid)
