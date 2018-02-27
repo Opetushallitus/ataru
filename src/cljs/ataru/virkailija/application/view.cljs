@@ -1086,7 +1086,8 @@
                            "/duplikaatit?permissionCheckService=ATARU")
               :target "_blank"}
              [:i.zmdi.zmdi-account-o]
-             [:span "Hakijaa ei ole yksilöity. Tee yksilöinti henkilöpalvelussa."]])])]
+             [:span "Hakijaa ei ole yksilöity. "
+              [:span.important "Tee yksilöinti henkilöpalvelussa."]]])])]
       (when (and (not (contains? (:answers application) :hakukohteet))
                  (not-empty hakukohteet-by-oid))
         (hakukohteet-list (map hakukohteet-by-oid (:hakukohde application))))]]))
