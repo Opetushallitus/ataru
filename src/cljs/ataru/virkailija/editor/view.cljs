@@ -203,8 +203,7 @@
      [:span.editor-form__preview-button-text text]]))
 
 (defn- form-toolbar [form]
-  (let [fixed? (= :fixed @(subscribe [:state-query [:banner :type]]))
-        languages @(subscribe [:editor/languages])]
+  (let [languages @(subscribe [:editor/languages])]
     [:div.editor-form__toolbar
      [:div.editor-form__toolbar-left
       [:div.editor-form__language-controls
@@ -217,7 +216,10 @@
         [:div.editor-form__preview-buttons
          [:span "Lomakkeen esikatselu:"]
          (map (partial preview-link form) languages)])
-      [form-owner-organization form]]
+      [:div.editor-form__preview-buttons
+       [:a.editor-form__email-template-editor-link
+        {:on-click #(dispatch [:editor/toggle-email-template-editor])}
+        "Muokkaa sähköpostipohjia"]]]
      [:div.editor-form__toolbar-right
       [fold-all]]]))
 

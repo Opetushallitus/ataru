@@ -623,3 +623,8 @@
   :editor/unfold-all
   (fn [db _]
     (assoc-in db [:editor :ui :all-folded] false)))
+
+(reg-event-db
+  :editor/toggle-email-template-editor
+  (fn [db _]
+    (update-in db [:editor :ui :template-editor-visible?] not)))
