@@ -228,7 +228,8 @@
    :score                                          (s/maybe s/Int)
    :new-application-modifications                  s/Int
    :person                                         {:preferred-name s/Str
-                                                    :last-name      s/Str}
+                                                    :last-name      s/Str
+                                                    :yksiloity      s/Bool}
    (s/optional-key :form)                          s/Int
    (s/optional-key :created-time)                  org.joda.time.DateTime
    (s/optional-key :haku)                          (s/maybe s/Str)

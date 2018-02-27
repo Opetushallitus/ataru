@@ -147,6 +147,11 @@
             (application-sorting/sort-by-column current-applications column-id :descending))))))
 
 (reg-event-db
+  :application/update-identification
+  (fn [db _]
+    (update-in db [:application :only-identified?] not)))
+
+(reg-event-db
  :application/update-sort
  (fn [db [_ column-id]]
    (update-sort db column-id true)))

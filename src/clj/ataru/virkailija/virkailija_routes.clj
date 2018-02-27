@@ -238,8 +238,11 @@
                                                                                  (-> person :yksiloityVTJ))
                                                                  person-info (if yksiloity
                                                                                {:preferred-name (:kutsumanimi person)
-                                                                                :last-name      (:sukunimi person)}
-                                                                               (select-keys application [:preferred-name :last-name]))]]
+                                                                                :last-name      (:sukunimi person)
+                                                                                :yksiloity      true}
+                                                                               (-> application
+                                                                                 (select-keys [:preferred-name :last-name])
+                                                                                 (assoc :yksiloity false)))]]
                                                        (-> application
                                                            (assoc :person person-info)
                                                            (dissoc :person-oid :preferred-name :last-name)))})

@@ -474,19 +474,17 @@
 (defn sortable-column-click [column-id evt]
   (dispatch [:application/update-sort column-id]))
 
-(defn application-list-basic-column-header [column-id css-class heading]
+(defn application-list-basic-column-header [column-id heading]
   (let [application-sort (subscribe [:state-query [:application :sort]])]
-    (fn [column-id css-class heading]
-      [:span
-       {:class    css-class
-        :on-click (partial sortable-column-click column-id)}
-       [:span.application-handling__basic-list-basic-column-header
+    (fn [column-id heading]
+      [:span.application-handling__basic-list-basic-column-header
+       {:on-click (partial sortable-column-click column-id)}
         heading
         (if (= column-id (:column @application-sort))
           (if (= :descending (:order @application-sort))
             [:i.zmdi.zmdi-chevron-down.application-handling__sort-arrow]
             [:i.zmdi.zmdi-chevron-up.application-handling__sort-arrow])
-          [:i.zmdi.zmdi-chevron-down..application-handling__sort-arrow.application-handling__sort-arrow--disabled])]])))
+          [:i.zmdi.zmdi-chevron-down..application-handling__sort-arrow.application-handling__sort-arrow--disabled])])))
 
 (defn application-list-loading-indicator []
   (let [fetching (subscribe [:state-query [:application :fetching-applications]])]
@@ -496,17 +494,24 @@
 
 (defn application-list [applications]
   (let [fetching        (subscribe [:state-query [:application :fetching-applications]])
-        review-settings (subscribe [:state-query [:application :review-settings :config]])]
+        review-settings (subscribe [:state-query [:application :review-settings :config]])
+        only-identified? (subscribe [:state-query [:application :only-identified?]])]
     [:div
      [:div.application-handling__list-header.application-handling__list-row
-      [application-list-basic-column-header
-       :applicant-name
-       "application-handling__list-row--applicant"
-       "Hakija"]
-      [application-list-basic-column-header
-       :created-time
-       "application-handling__list-row--time"
-       "Viimeksi muokattu"]
+      [:span.application-handling__list-row--applicant
+       [application-list-basic-column-header
+        :applicant-name
+        "Hakija"]
+       [:span.application-handling__list-row--identification
+        {:on-click #(dispatch [:application/update-identification])}
+        (if @only-identified?
+          [:i.application-handling__list-row--identification.zmdi.zmdi-check-square]
+          [:i.application-handling__list-row--identification.zmdi.zmdi-square-o])
+        "Vain yksilöimättömät"]]
+      [:span.application-handling__list-row--time
+       [application-list-basic-column-header
+        :created-time
+        "Viimeksi muokattu"]]
       [:span.application-handling__list-row--state
        [hakukohde-state-filter-controls
         :processing-state-filter
