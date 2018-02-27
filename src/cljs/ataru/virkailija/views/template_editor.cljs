@@ -4,9 +4,9 @@
 (defn email-template-editor
   []
   (when @(subscribe [:state-query [:editor :ui :template-editor-visible?]])
-    [:div.application-handling__application-version-history-container
-     [:div.application-handling__application-version-history
-      [:a.application-handling__close-version-history
+    [:div.virkailija-modal__container
+     [:div.virkailija-modal__content
+      [:a.virkailija-modal__close-link
        {:on-click #(dispatch [:editor/toggle-email-template-editor])}
        "Sulje"]
       [:div]]]))

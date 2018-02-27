@@ -76,3 +76,32 @@ body {
   display: block;
   z-index: 5;
 }
+
+.virkailija-modal__container {
+  position: fixed;
+  background-color: @opaque-grey;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+}
+
+.virkailija-modal__content {
+  position: relative;
+  left: 5%;
+  top: 5%;
+  width: 90%;
+  height: 90%;
+  background-color: white;
+  border-radius: 2px;
+  box-shadow: 5px 5px 5px rgb(39, 39, 39);
+  padding: 70px;
+  z-index: 1000;
+}
+
+.virkailija-modal__close-link {
+  position: fixed;
+  right: 80px;
+  top: 75px;
+}

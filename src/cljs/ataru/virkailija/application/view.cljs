@@ -1211,9 +1211,9 @@
 (defn application-version-changes []
   (let [history-items (subscribe [:application/current-history-items])]
     (when @history-items
-      [:div.application-handling__application-version-history-container
-       [:div.application-handling__application-version-history
-        [:a.application-handling__close-version-history
+      [:div.virkailija-modal__container
+       [:div.virkailija-modal__content
+        [:a.virkailija-modal__close-link
          {:on-click #(dispatch [:application/close-application-version-history])}
          "Sulje"]
         [application-version-history-header (count @history-items)]
