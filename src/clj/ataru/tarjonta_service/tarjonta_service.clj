@@ -72,6 +72,10 @@
   [search-result]
   (doall (mapcat :tulokset (:tulokset search-result))))
 
+(defn get-hakukohde-and-tarjoaja-name [hakukohde]
+  {:name          (parse-multi-lang-text (:hakukohteenNimet hakukohde))
+   :tarjoaja-name (parse-multi-lang-text (:tarjoajaNimet hakukohde))})
+
 (defrecord CachedTarjontaService [cache-service]
   TarjontaService
   (get-hakukohde [this hakukohde-oid]
@@ -85,11 +89,6 @@
   (get-hakukohde-name [this hakukohde-oid]
     (when-let [hakukohde (.get-hakukohde this hakukohde-oid)]
       (parse-multi-lang-text (:hakukohteenNimet hakukohde))))
-
-  (get-hakukohde-and-tarjoaja-name [this hakukohde-oid]
-    (when-let [hakukohde (.get-hakukohde this hakukohde-oid)]
-      {:name          (parse-multi-lang-text (:hakukohteenNimet hakukohde))
-       :tarjoaja-name (parse-multi-lang-text (:tarjoajaNimet hakukohde))}))
 
   (hakukohde-search [this haku-oid organization-oid]
     (some->> (client/hakukohde-search haku-oid organization-oid)

@@ -2,16 +2,20 @@
   (:require
    [ataru.virkailija.user.session-organizations :as session-orgs]
    [ataru.applications.application-store :as application-store]
-   [ataru.forms.form-store :as form-store]))
+   [ataru.forms.form-store :as form-store]
+   [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]))
 
 (defn- raw-haku-row->hakukohde
-  [tarjonta-service {:keys [hakukohde application-count processed processing] :as raw-haku-row}]
+  [tarjonta-service {hakukohde-oid :hakukohde
+                     :keys         [application-count processed processing]
+                     :as           raw-haku-row}]
   (merge (select-keys raw-haku-row [:application-count :processed :haku])
-         {:oid         hakukohde
+         {:oid         hakukohde-oid
           :unprocessed (- application-count processed processing)}
-         (or (.get-hakukohde-and-tarjoaja-name tarjonta-service hakukohde)
-             {:name {:fi hakukohde}
-              :tarjoaja-name {:fi "Tarjoajaa ei löytynyt"}})))
+         (if-let [hakukohde (.get-hakukohde tarjonta-service hakukohde-oid)]
+           (tarjonta-service/get-hakukohde-and-tarjoaja-name hakukohde)
+           {:name          {:fi hakukohde-oid}
+            :tarjoaja-name {:fi "Tarjoajaa ei löytynyt"}})))
 
 (defn- haku-processed-counts
   [hakukohteet]
