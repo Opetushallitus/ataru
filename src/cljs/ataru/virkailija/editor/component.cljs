@@ -339,7 +339,7 @@
   (let [decimal-places (subscribe [:editor/get-component-value path :params :decimals])]
     (fn [path]
       [:div.editor-form__additional-params-container
-       [:header.editor-form__component-item-header "Desimaaleja (tyhjä kokonaisluvulle):"]
+       [:header.editor-form__component-item-header "Desimaaleja:"]
        [:select.editor-form__decimal-places-selector
         {:value     (or @decimal-places "")
          :on-change (fn [e]
@@ -347,8 +347,7 @@
                             value   (when (not-empty new-val)
                                       (js/parseInt new-val))]
                         (dispatch [:editor/set-component-value value path :params :decimals])))}
-        [:option {:value "" :key 0} ""]
-
+        [:option {:value "" :key 0} "kokonaisluku"]
         (for [i (range 1 11)]
           [:option {:value i :key i} i])]])))
 
@@ -372,7 +371,7 @@
                            (dispatch [:editor/set-component-value nil path :params :decimals]))))}]
         [:label.editor-form__checkbox-label
          {:for id}
-         "Kenttään voi täyttää vain numeerisia arvoja."]]
+         "Kenttään voi täyttää vain numeroita"]]
        (when @checked?
          [decimal-places-selector path])])))
 
