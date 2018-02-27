@@ -50,7 +50,7 @@
                                 (get field :belongs-to-hakukohteet [])))]
       (filter #(not (empty? (clojure.set/intersection
                              (set ids)
-                             (set (concat [(:oid %)] (get % :hakukohderyhmat []))))))
+                             (set (cons (:oid %) (:hakukohderyhmat %))))))
               (selected-hakukohteet-from-tarjonta db)))))
 
 (re-frame/reg-sub
