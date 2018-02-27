@@ -66,9 +66,7 @@
   (create-or-find-person [this person] fake-person-from-creation)
 
   (get-persons [this oids]
-    (map #(merge fake-onr-person
-                  {:oidHenkilo %})
-         oids))
+    (map #(.get-person this %) oids))
 
   (get-person [this oid]
     (condp = oid
