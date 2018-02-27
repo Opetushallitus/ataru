@@ -345,7 +345,7 @@
                :on-click (fn []
                            (select-application (:key application))
                            (dispatch [:state-update #(assoc-in % [:application :selected-review-hakukohde] hakukohde-oid)]))}
-              (from-multi-lang (:name hakukohde))]
+              (from-multi-lang (:name hakukohde)) " - " (from-multi-lang (:tarjoaja-name hakukohde))]
              [:span.application-handling__application-hl
               {:class (when direct-form-application? "application-handling__application-hl--direct-form")}]
              [:span.application-handling__hakukohde-state-cell
