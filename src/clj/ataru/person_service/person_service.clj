@@ -71,7 +71,8 @@
   (get-person [this oid]
     (condp = oid
       "2.2.2" (merge fake-onr-person
-                     {:turvakielto true
+                     {:oidHenkilo "2.2.2"
+                      :turvakielto true
                       :yksiloity   true
                       :etunimet    "Ari"
                       :kutsumanimi "Ari"
