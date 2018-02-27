@@ -505,8 +505,8 @@
        [:span.application-handling__list-row--identification
         {:on-click #(dispatch [:application/update-identification])}
         (if @only-identified?
-          [:i.zmdi.zmdi-check-square]
-          [:i.zmdi.zmdi-square-o])
+          [:i.application-handling__list-row--identification.zmdi.zmdi-check-square]
+          [:i.application-handling__list-row--identification.zmdi.zmdi-square-o])
         "Vain yksilöimättömät"]]
       [:span.application-handling__list-row--time
        [application-list-basic-column-header
