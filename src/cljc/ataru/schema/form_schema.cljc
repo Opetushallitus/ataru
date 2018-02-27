@@ -377,6 +377,7 @@
 
 (s/defschema ApplicationCountsHakukohde {:oid               s/Str
                                          :name              LocalizedStringOptional
+                                         :tarjoaja-name     LocalizedStringOptional
                                          :application-count s/Int
                                          :processed         s/Int
                                          :unprocessed       s/Int
