@@ -315,7 +315,9 @@
   (fn [db [_ event-id]]
     (let [event-index    (util/event-index db event-id)
           change-history (-> db :application :selected-application-and-form :application-change-history)]
-      (nth change-history event-index))))
+      (when (and event-index
+                 (< event-index (count change-history)))
+        (nth change-history event-index)))))
 
 (re-frame.core/reg-sub
   :application/field-highlighted?
