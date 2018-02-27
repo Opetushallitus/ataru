@@ -65,8 +65,8 @@
                     (when (contains? answers-to-validate-as-vector (-> field-descriptor :id (keyword))) [answers])
                     answers))))
 
-(defn- field-belongs-to-hakukohde? [field]
-  (not-empty (:belongs-to-hakukohteet field)))
+(defn- field-belongs-to-hakukohde-or-hakukohderyhma? [field]
+  (not-empty (concat (:belongs-to-hakukohderyhma field) (:belongs-to-hakukohteet field))))
 
 (defn- not-dropdown-or-multiple-choice [field]
   (empty? (some #{(:fieldType field)} '("dropdown" "multipleChoice"))))
@@ -98,8 +98,12 @@
 (defn- belongs-to-correct-hakukohde? [field hakukohteet]
   (not-empty (clojure.set/intersection (-> field :belongs-to-hakukohteet set) hakukohteet)))
 
-(defn- belongs-to-existing-hakukohde? [field hakukohteet]
-  (and (belongs-to-correct-hakukohde? field hakukohteet)
+(defn- belongs-to-correct-hakukohderyhma? [field hakukohderyhmat]
+  (not-empty (clojure.set/intersection (-> field :belongs-to-hakukohderyhma set) (set hakukohderyhmat))))
+
+(defn- belongs-to-existing-hakukohde-or-hakukohderyma? [field hakukohteet hakukohderyhmat]
+  (and (or (belongs-to-correct-hakukohde? field hakukohteet)
+           (belongs-to-correct-hakukohderyhma? field hakukohderyhmat))
        (not-empty hakukohteet)))
 
 (defn- every-followup-nil? [answers-by-key followups]
@@ -110,7 +114,7 @@
        (every-followup-nil? answers-by-key followups)))
 
 (defn build-results
-  [has-applied answers-by-key results [{:keys [id] :as field} & rest-form-fields]]
+  [has-applied answers-by-key results [{:keys [id] :as field} & rest-form-fields] hakukohderyhmat]
   (let [id          (keyword id)
         answers     (wrap-coll (:value (get answers-by-key id)))
         ; Hakukohdes selected by user
@@ -129,11 +133,11 @@
                               (concat results
                                       {id {:passed?
                                            ((validator-keyword->fn validation-keyword) answers-by-key
-                                             (build-results has-applied answers-by-key [] children))}})
+                                             (build-results has-applied answers-by-key [] children hakukohderyhmat))}})
 
                               {:fieldClass "wrapperElement"
                                :children   children}
-                              (concat results (build-results has-applied answers-by-key [] children))
+                              (concat results (build-results has-applied answers-by-key [] children hakukohderyhmat))
 
                               {:fieldClass "formField"
                                :fieldType  (:or "dropdown" "multipleChoice")
@@ -144,8 +148,8 @@
                                     non-empty-answers (get-non-empty-answers field answers)
                                     followups         (get-followup-questions options non-empty-answers)]
                                 (concat results
-                                        {id {:passed? (if (or (not (field-belongs-to-hakukohde? field))
-                                                              (belongs-to-existing-hakukohde? field hakukohteet))
+                                        {id {:passed? (if (or (not (field-belongs-to-hakukohde-or-hakukohderyhma? field))
+                                                              (belongs-to-existing-hakukohde-or-hakukohderyma? field hakukohteet hakukohderyhmat))
                                                         (and (all-answers-allowed? non-empty-answers allowed-values)
                                                              (passes-all? has-applied validators non-empty-answers answers-by-key field))
                                                         (all-answers-nil? non-empty-answers answers-by-key followups))}}
@@ -154,18 +158,18 @@
                                             has-applied
                                             answers-by-key
                                             results
-                                            followups))))
+                                            followups hakukohderyhmat))))
 
                               {:fieldClass "formField"
                                :validators validators}
                               (concat results
-                                      {id {:passed? (if (or (not (field-belongs-to-hakukohde? field))
-                                                            (belongs-to-existing-hakukohde? field hakukohteet))
+                                      {id {:passed? (if (or (not (field-belongs-to-hakukohde-or-hakukohderyhma? field))
+                                                            (belongs-to-existing-hakukohde-or-hakukohderyma? field hakukohteet hakukohderyhmat))
                                                       (passes-all? has-applied validators answers answers-by-key field)
                                                       (every? nil? answers))}})
 
                               :else nil)]
-            (build-results has-applied answers-by-key ret rest-form-fields)
+            (build-results has-applied answers-by-key ret rest-form-fields hakukohderyhmat)
             results))))
 
 (defn build-failed-results [answers-by-key failed-results]
@@ -189,13 +193,13 @@
 (defn valid-application?
   "Verifies that given application is valid by validating each answer
    against their associated validators."
-  [has-applied application form]
+  [has-applied application form applied-hakukohderyhmat]
   {:pre [(not-empty form)]}
   (let [answers-by-key     (util/answers-by-key (:answers application))
         extra-answers      (extra-answers-not-in-original-form
                              (map (comp keyword :id) (util/flatten-form-fields (:content form)))
                              (keys answers-by-key))
-        results            (build-results has-applied answers-by-key [] (:content form))
+        results            (build-results has-applied answers-by-key [] (:content form) applied-hakukohderyhmat)
         failed-results     (some->>
                              (into {} (filter #(not (:passed? (second %))) results))
                              (build-failed-results answers-by-key))

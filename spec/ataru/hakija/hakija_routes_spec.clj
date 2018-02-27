@@ -5,6 +5,7 @@
             [ataru.fixtures.db.unit-test-db :as db]
             [ataru.hakija.application-email-confirmation :as application-email]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
+            [ataru.virkailija.user.organization-service :as organization-service]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.hakija.hakija-routes :as routes]
             [ataru.hakija.hakija-application-service :as application-service]
@@ -40,6 +41,7 @@
 
 (def handler (-> (routes/new-handler)
                  (assoc :tarjonta-service (tarjonta-service/new-tarjonta-service))
+                 (assoc :organization-service (organization-service/new-organization-service))
                  (assoc :ohjausparametrit-service (ohjausparametrit-service/new-ohjausparametrit-service))
                  (assoc :person-service (person-service/new-person-service))
                  .start

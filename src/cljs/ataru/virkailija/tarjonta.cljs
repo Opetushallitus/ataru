@@ -53,15 +53,15 @@
              (vec (distinct (asyncm/<? (try-reduce concat [] hakukohteet-c))))))
      c)))
 
-(defn- fetch-haut-with-hakukohteet
+(defn fetch-haut-with-hakukohteet
   [haku-oids organization-oids]
   (let [haku-oids-c (async/chan (count haku-oids))
-        haut-c (async/chan (count haku-oids))]
+        haut-c      (async/chan (count haku-oids))]
     (async/onto-chan haku-oids-c haku-oids)
     (async/pipeline-async 1
                           haut-c
                           (partial fetch-haku-with-hakukohteet organization-oids)
                           haku-oids-c)
     (try-reduce (fn [m haku] (assoc m (:oid haku) haku))
-                {}
-                haut-c)))
+      {}
+      haut-c)))

@@ -68,8 +68,8 @@
               (with-redefs [cas-client/cas-authenticated-get fake-cas-auth-groups]
               (should= [{:name {:fi "Yhteiskäyttöryhmä"}
                          :oid "1.2.246.562.28.1.2"
-                         :type :group}
+                         :type :group :hakukohderyhma? false}
                         {:name {:fi "Toinen ryhmä"}
                          :oid "1.2.246.562.28.1.3"
-                         :type :group}]
+                         :type :group :hakukohderyhma? false}]
                        (org-client/get-groups nil)))))

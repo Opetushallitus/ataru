@@ -54,7 +54,8 @@
                      (s/optional-key :label)                  LocalizedString
                      (s/optional-key :params)                 s/Any
                      :fieldType                               s/Keyword
-                     (s/optional-key :belongs-to-hakukohteet) [s/Str]})
+                     (s/optional-key :belongs-to-hakukohteet) [s/Str]
+                     (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
 
 (s/defschema FormField {:fieldClass                                      (s/eq "formField")
                         :id                                              s/Str
@@ -81,7 +82,8 @@
                                                                            (s/optional-key :default-value) (s/maybe s/Bool)
                                                                            (s/optional-key :followups)     [(s/if (comp some? :children) (s/recursive #'WrapperElement) (s/recursive #'BasicElement))]}]
                         :fieldType                                       (apply s/enum form-fields)
-                        (s/optional-key :belongs-to-hakukohteet)         [s/Str]})
+                        (s/optional-key :belongs-to-hakukohteet)         [s/Str]
+                        (s/optional-key :belongs-to-hakukohderyhma)      [s/Str]})
 
 (s/defschema InfoElement {:fieldClass                              (s/eq "infoElement")
                           :id                                      s/Str
@@ -95,7 +97,8 @@
                           (s/optional-key :params)                 s/Any
                           (s/optional-key :label)                  LocalizedString
                           (s/optional-key :text)                   LocalizedString
-                          (s/optional-key :belongs-to-hakukohteet) [s/Str]})
+                          (s/optional-key :belongs-to-hakukohteet) [s/Str]
+                          (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
 
 (s/defschema BasicElement (s/conditional
                             #(= "formField" (:fieldClass %)) FormField
@@ -115,7 +118,8 @@
                              (s/optional-key :label)                  LocalizedString
                              (s/optional-key :label-amendment)        LocalizedString ; Additional info which can be displayed next to the label
                              (s/optional-key :module)                 Module
-                             (s/optional-key :belongs-to-hakukohteet) [s/Str]})
+                             (s/optional-key :belongs-to-hakukohteet) [s/Str]
+                             (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
 
 (s/defschema FormWithContent
   (merge Form
@@ -127,6 +131,7 @@
    :name                         LocalizedStringOptional
    :tarjoaja-name                LocalizedStringOptional
    (s/optional-key :form-key)    (s/maybe s/Str)
+   :hakukohderyhmat              [s/Str]
    :hakuaika                     {:start                               s/Int
                                   :end                                 (s/maybe s/Int)
                                   :on                                  s/Bool
@@ -153,11 +158,16 @@
    :hakuajat [{:start java.time.ZonedDateTime
                (s/optional-key :end) java.time.ZonedDateTime}]})
 
+(s/defschema Hakukohderyhma
+  {:oid s/Str
+   :name LocalizedStringOptional})
+
 (s/defschema Hakukohde
   {:oid s/Str
    :haku-oid s/Str
    :name LocalizedStringOptional
-   :tarjoaja-name LocalizedStringOptional})
+   :tarjoaja-name LocalizedStringOptional
+   :ryhmaliitokset [s/Str]})
 
 (s/defschema File
   {:key                      s/Str

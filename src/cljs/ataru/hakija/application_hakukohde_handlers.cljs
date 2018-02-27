@@ -1,7 +1,7 @@
 (ns ataru.hakija.application-hakukohde-handlers
   (:require
     [clojure.string :as string]
-    [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch]]
+    [re-frame.core :refer [subscribe reg-event-db reg-fx reg-event-fx dispatch]]
     [ataru.util :as util]
     [ataru.hakija.application-validators :as validator]))
 
@@ -10,19 +10,34 @@
        (filter #(= "hakukohteet" (:id %)))
        first))
 
+(defn- selected-hakukohteet [db]
+  (map :value (get-in db [:application :answers :hakukohteet :values] [])))
+
+(defn- selected-hakukohteet-and-ryhmat [db]
+  (let [selected-hakukohteet     (set (selected-hakukohteet db))
+        selected-hakukohderyhmat (->> (get-in db [:form :tarjonta :hakukohteet])
+                                      (filter #(contains? selected-hakukohteet (:oid %)))
+                                      (mapcat :hakukohderyhmat))]
+    (set (concat selected-hakukohteet selected-hakukohderyhmat))))
+
+(defn- field-intersection-with-selected-hakukohteet-and-ryhmat [db field]
+  (when-let [ids (seq (concat (:belongs-to-hakukohderyhma field)
+                              (:belongs-to-hakukohteet field)))]
+    (let [selected-hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat db)]
+      (clojure.set/intersection
+       (set ids)
+       selected-hakukohteet-and-ryhmat))))
+
 (defn- set-visibility-of-belongs-to-hakukohteet-questions
   [db]
-  (let [selected-hakukohteet (set (map :value (get-in db [:application :answers :hakukohteet :values] [])))]
-    (util/reduce-form-fields
-     (fn [db field]
-       (if (empty? (:belongs-to-hakukohteet field))
-         db
-         (assoc-in db [:application :ui (keyword (:id field)) :visible?]
-                   (not (empty? (clojure.set/intersection
-                                 (set (:belongs-to-hakukohteet field))
-                                 selected-hakukohteet))))))
-     db
-     (get-in db [:form :content]))))
+  (util/reduce-form-fields
+    (fn [db field]
+      (if-let [intersection (field-intersection-with-selected-hakukohteet-and-ryhmat db field)]
+        (assoc-in db [:application :ui (keyword (:id field)) :visible?] (not (empty? intersection)))
+        db)
+      )
+    db
+    (get-in db [:form :content])))
 
 (defn- set-values-changed
   [db]

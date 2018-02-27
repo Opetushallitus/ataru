@@ -117,6 +117,12 @@
                                          :id         "kaikki-hakuajat-voimassa",
                                          :params     {},
                                          :belongs-to-hakukohteet ["1.2.246.562.20.49028100002" "1.2.246.562.20.49028100003"]
+                                         :fieldType  "textField"}
+                                        {:label      {:fi "Assosiaatio hakukohderyhmän kautta"},
+                                         :fieldClass "formField",
+                                         :id         "assosiaatio-hakukohderyhman-kautta",
+                                         :params     {},
+                                         :belongs-to-hakukohderyhma ["1.2.246.562.28.00000000001"]
                                          :fieldType  "textField"}]})
 
 (def application1 {:form       1

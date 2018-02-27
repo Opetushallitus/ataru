@@ -24,7 +24,9 @@
     "Gets this user's direct organizations (as in get-direct-organization-oids
      but gets organization name as well)")
   (get-all-organizations [this direct-organizations-for-user]
-    "Gets a flattened organization hierarhy based on direct organizations"))
+    "Gets a flattened organization hierarhy based on direct organizations")
+  (get-hakukohde-groups [this]
+    "Gets all hakukohde groups"))
 
 (defn get-orgs-from-client [cas-client direct-oids]
   (flatten (map #(org-client/get-organizations cas-client %) direct-oids)))
@@ -77,10 +79,20 @@
                                           group-oids)]
       (concat normal-orgs groups)))
 
+(defn- hakukohderyhmat-from-groups [groups]
+  (let [hakukohde-groups (filter :hakukohderyhma? groups)]
+    (map #(select-keys % [:oid :name]) hakukohde-groups)))
+
 ;; The real implementation for Organization service
 (defrecord IntegratedOrganizationService []
   component/Lifecycle
   OrganizationService
+
+  (get-hakukohde-groups [this]
+    (let [groups (vals (get-groups-from-cache-or-client
+                         (:group-cache this)
+                         (:cas-client this)))]
+    (hakukohderyhmat-from-groups groups)))
 
   (get-direct-organizations-for-rights [this user-name rights]
     (let [direct-right-oids (ldap-client/get-right-organization-oids (:ldap-connection this) user-name rights)]
@@ -113,6 +125,14 @@
 ;; Test double for UI tests
 (defrecord FakeOrganizationService []
   OrganizationService
+
+  (get-hakukohde-groups [this]
+    (hakukohderyhmat-from-groups
+    [(org-client/fake-hakukohderyhma 1)
+     (org-client/fake-hakukohderyhma 2)
+     (org-client/fake-hakukohderyhma 3)
+     (org-client/fake-hakukohderyhma 4)]))
+
   (get-direct-organizations-for-rights [this user-name rights]
     {:form-edit         fake-orgs
      :view-applications fake-orgs

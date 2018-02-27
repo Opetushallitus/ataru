@@ -11,6 +11,7 @@
             [ataru.config.core :refer [config]]
             [ataru.cache.hazelcast :refer [map->HazelcastInstance]]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
+            [ataru.virkailija.user.organization-service :as organization-service]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]))
 
 (defn new-system
@@ -31,6 +32,10 @@
                          (tarjonta-service/new-tarjonta-service)
                          [:cache-service])
 
+     :organization-service (component/using
+                             (organization-service/new-organization-service)
+                             [:cache-service])
+
      :ohjausparametrit-service (component/using
                                  (ohjausparametrit-service/new-ohjausparametrit-service)
                                  [:cache-service])
@@ -39,7 +44,7 @@
 
      :handler              (component/using
                              (handler/new-handler)
-                             [:tarjonta-service :ohjausparametrit-service :person-service])
+                             [:tarjonta-service :organization-service :ohjausparametrit-service :person-service])
 
      :server-setup         {:port      http-port
                             :repl-port repl-port}

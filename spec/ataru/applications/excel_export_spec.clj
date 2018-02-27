@@ -5,7 +5,8 @@
             [ataru.forms.form-store :as form-store]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [speclj.core :refer :all]
-            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service])
+            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
+            [ataru.virkailija.user.organization-service :as organization-service])
   (:import [java.io FileOutputStream File]
            [java.util UUID]
            [org.apache.poi.ss.usermodel WorkbookFactory]))
@@ -40,6 +41,7 @@
                                         nil
                                         false
                                         (tarjonta-service/new-tarjonta-service)
+                                        (organization-service/new-organization-service)
                                         (ohjausparametrit-service/new-ohjausparametrit-service))
               (.write output#)))
        ~@body

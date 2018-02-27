@@ -104,16 +104,18 @@
       (:has-applied (application-store/has-ssn-applied haku-oid (:ssn identifier)))
       (:has-applied (application-store/has-email-applied haku-oid (:email identifier))))))
 
-(defn- validate-and-store [tarjonta-service ohjausparametrit-service application store-fn is-modify?]
+(defn- validate-and-store [tarjonta-service organization-service ohjausparametrit-service application store-fn is-modify?]
   (let [tarjonta-info                 (when (:haku application)
                                         (tarjonta-parser/parse-tarjonta-info-by-haku
                                          tarjonta-service
+                                         organization-service
                                          ohjausparametrit-service
                                          (:haku application)))
         haku-oid                      (get-in tarjonta-info [:tarjonta :haku-oid])
         hakukohteet                   (get-in tarjonta-info [:tarjonta :hakukohteet])
         applied-hakukohteet           (filter #(contains? (set (:hakukohde application)) (:oid %))
                                               hakukohteet)
+        applied-hakukohderyhmat       (mapcat :hakukohderyhmat applied-hakukohteet)
         virkailija-secret             (valid-virkailija-secret application)
         latest-application            (application-store/get-latest-version-of-application-for-edit application)
         form-roles                    (cond-> []
@@ -145,7 +147,8 @@
         validation-result             (validator/valid-application?
                                        has-applied
                                        (set-original-values latest-application final-application)
-                                       form)]
+                                       form
+                                       applied-hakukohderyhmat)]
     (cond
       (and (not (nil? virkailija-secret))
            (not (virkailija-secret-valid? virkailija-secret)))
@@ -206,20 +209,20 @@
                                                        application-id)
   (start-attachment-finalizer-job application-id))
 
-(defn handle-application-submit [tarjonta-service ohjausparametrit-service application]
+(defn handle-application-submit [tarjonta-service organization-service ohjausparametrit-service application]
   (log/info "Application submitted:" application)
   (let [{:keys [passed? id]
          :as   result}
-        (validate-and-store tarjonta-service ohjausparametrit-service application application-store/add-application false)]
+        (validate-and-store tarjonta-service organization-service ohjausparametrit-service application application-store/add-application false)]
     (when passed?
       (start-submit-jobs tarjonta-service id))
     result))
 
-(defn handle-application-edit [tarjonta-service ohjausparametrit-service application]
+(defn handle-application-edit [tarjonta-service organization-service ohjausparametrit-service application]
   (log/info "Application edited:" application)
   (let [{:keys [passed? id application]
          :as   result}
-        (validate-and-store tarjonta-service ohjausparametrit-service application application-store/update-application true)
+        (validate-and-store tarjonta-service organization-service ohjausparametrit-service application application-store/update-application true)
         virkailija-secret (:virkailija-secret application)]
     (when passed?
       (if virkailija-secret
@@ -248,7 +251,7 @@
   (update application :answers (partial map attachment-metadata->answer)))
 
 (defn get-latest-application-by-secret
-  [secret tarjonta-service ohjausparametrit-service person-client]
+  [secret tarjonta-service organization-service ohjausparametrit-service person-client]
   (let [[actor-role secret] (match [secret]
                                    [{:virkailija s}]
                                    [:virkailija s]
@@ -272,6 +275,7 @@
         lang-override    (when secret-expired? (application-store/get-application-language-by-secret secret))
         form             (cond (some? (:haku application)) (hakija-form-service/fetch-form-by-haku-oid
                                                              tarjonta-service
+                                                             organization-service
                                                              ohjausparametrit-service
                                                              (:haku application)
                                                              form-roles)

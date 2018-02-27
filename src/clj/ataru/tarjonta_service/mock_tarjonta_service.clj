@@ -164,6 +164,7 @@
                                   :hakuaikaLoppuPvm (- (System/currentTimeMillis)
                                                        16400000)
                                   :koulutukset      [{:oid "1.2.246.562.17.74335799465"}]
+                                  :ryhmaliitokset [{:ryhmaOid "1.2.246.562.28.00000000001"}]
                                   :hakukohteenNimet
                                                     {:kieli_fi "Aikaloppu 1"
                                                      :kieli_sv "sv Aikaloppu 1"}})
@@ -187,6 +188,8 @@
                                   :oid              "1.2.246.562.20.49028100003"
                                   :hakuOid          "1.2.246.562.29.65950024187"
                                   :koulutukset      [{:oid "1.2.246.562.17.74335799465"}]
+                                  :ryhmaliitokset [{:ryhmaOid "1.2.246.562.28.00000000001"}
+                                                   {:ryhmaOid "1.2.246.562.28.00000000002"}]
                                   :hakukohteenNimet
                                                     {:kieli_fi "Aikaa loputtomasti 3"
                                                      :kieli_sv "sv Aikaa loputtomasti 3"}})})
@@ -234,7 +237,8 @@
   {:oid (:oid hakukohde)
    :haku-oid (:hakuOid hakukohde)
    :name (parse-multi-lang-text (:nimi hakukohde))
-   :tarjoaja-name (:tarjoajaNimet hakukohde)})
+   :tarjoaja-name (:tarjoajaNimet hakukohde)
+   :ryhmaliitokset (map :ryhmaOid (:ryhmaliitokset hakukohde))})
 
 (defrecord MockTarjontaService []
   component/Lifecycle

@@ -388,6 +388,15 @@
                                        (let [koodi-options (koodisto/get-koodisto-options koodisto-uri version)]
                                          (ok koodi-options))))
 
+                 (api/context "/organization" []
+                   :tags ["organization-api"]
+                   (api/GET "/hakukohderyhmat" []
+                     :return [ataru-schema/Hakukohderyhma]
+                     (->
+                       (.get-hakukohde-groups organization-service)
+                       ok
+                       (header "Cache-Control" "public, max-age=300"))))
+
                  (api/context "/tarjonta" []
                               :tags ["tarjonta-api"]
                               (api/GET "/haku/:oid" []

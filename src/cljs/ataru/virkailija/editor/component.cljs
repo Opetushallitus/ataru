@@ -22,12 +22,12 @@
 
 (defn- required-checkbox
   [path initial-content]
-  (let [id           (util/new-uuid)
-        required?    (true? (some? ((set (map keyword (:validators initial-content))) :required)))]
+  (let [id        (util/new-uuid)
+        required? (true? (some? ((set (map keyword (:validators initial-content))) :required)))]
     [:div.editor-form__checkbox-container
-     [:input.editor-form__checkbox {:type "checkbox"
-                                    :id id
-                                    :checked required?
+     [:input.editor-form__checkbox {:type      "checkbox"
+                                    :id        id
+                                    :checked   required?
                                     :on-change (fn [event]
                                                  (dispatch [(if (-> event .-target .-checked)
                                                               :editor/add-validator
@@ -46,61 +46,79 @@
                                                  (dispatch [:editor/set-component-value (-> event .-target .-checked) path :params :repeatable]))}]
      [:label.editor-form__checkbox-label {:for id} "Vastaaja voi lisätä useita vastauksia"]]))
 
-(defn- hakukohde-list-item
-  [path id hakukohde selected-hakukohteet]
-  (let [on-click-add (fn [_] (dispatch [:editor/add-to-belongs-to-hakukohteet
-                                        path
-                                        (:oid hakukohde)]))
-        on-click-remove (fn [_] (dispatch [:editor/remove-from-belongs-to-hakukohteet
-                                           path (:oid hakukohde)]))
-        name (subscribe [:editor/hakukohde-name-parts id hakukohde])]
+(defn- selectable-list-item
+  [path id hakukohde selected-hakukohteet get-name on-click-add on-click-remove]
+  (let [
+        parts (subscribe [:editor/name-parts id (get-name hakukohde)])]
     (fn [path id hakukohde selected-hakukohteet]
       (let [selected? (contains? (set selected-hakukohteet) (:oid hakukohde))]
         [(keyword
-          (str "li"
-               ".belongs-to-hakukohteet-modal__hakukohde-list-item"
-               (when selected?
-                 ".belongs-to-hakukohteet-modal__hakukohde-list-item--selected")))
-         {:on-click (if selected? on-click-remove on-click-add)}
+           (str "li"
+             ".belongs-to-hakukohteet-modal__hakukohde-list-item"
+             (when selected?
+               ".belongs-to-hakukohteet-modal__hakukohde-list-item--selected")))
+         {:on-click (if selected? (partial on-click-remove hakukohde) (partial on-click-add hakukohde))}
          (map-indexed (fn [i [part highlight?]]
                         ^{:key (str i)}
                         [(keyword
-                          (str "span"
-                               ".belongs-to-hakukohteet-modal__hakukohde-label"
-                               (when selected?
-                                 ".belongs-to-hakukohteet-modal__hakukohde-label--selected")
-                               (when highlight?
-                                 ".belongs-to-hakukohteet-modal__hakukohde-label--highlighted")))
+                           (str "span"
+                             ".belongs-to-hakukohteet-modal__hakukohde-label"
+                             (when selected?
+                               ".belongs-to-hakukohteet-modal__hakukohde-label--selected")
+                             (when highlight?
+                               ".belongs-to-hakukohteet-modal__hakukohde-label--highlighted")))
                          part])
-                      @name)]))))
+           @parts)]))))
+
+(defn- hakukohderyhma-list-item
+  [path id hakukohderyhmat selected-hakukohderyhmat]
+  [:li.belongs-to-hakukohteet-modal__haku-list-item
+   [:ul.belongs-to-hakukohteet-modal__hakukohde-list
+    (let [on-click-add    (fn [hakukohderyhma _] (dispatch [:editor/add-to-belongs-to-hakukohderyhma
+                                                       path
+                                                       (:oid hakukohderyhma)]))
+          on-click-remove (fn [hakukohderyhma _] (dispatch [:editor/remove-from-belongs-to-hakukohderyhma
+                                                       path (:oid hakukohderyhma)]))
+          get-name (fn [hakukohderyhma] @(subscribe [:editor/get-some-name hakukohderyhma]))]
+    (for [hakukohderyhma @hakukohderyhmat]
+      ^{:key (:oid hakukohderyhma)}
+      [selectable-list-item path id hakukohderyhma selected-hakukohderyhmat get-name on-click-add on-click-remove]))]])
 
 (defn- haku-list-item
   [path id haku selected-hakukohteet]
-  (let [name         @(subscribe [:editor/haku-name haku])
+  (let [name (subscribe [:editor/get-some-name haku])
+        on-click-add    (fn [hakukohde _] (dispatch [:editor/add-to-belongs-to-hakukohteet
+                                           path
+                                           (:oid hakukohde)]))
+        on-click-remove (fn [hakukohde _] (dispatch [:editor/remove-from-belongs-to-hakukohteet
+                                           path (:oid hakukohde)]))
+        get-name (fn [hakukohde] @(subscribe [:editor/get-hakukohde-name hakukohde]))
         show-at-most @(subscribe [:editor/belongs-to-hakukohteet-modal-show-more-value id (:oid haku)])]
-    [:li.belongs-to-hakukohteet-modal__haku-list-item
-     [:span.belongs-to-hakukohteet-modal__haku-label
-      name]
-     [:ul.belongs-to-hakukohteet-modal__hakukohde-list
-      (for [hakukohde (first (split-at show-at-most (:hakukohteet haku)))]
-        ^{:key (:oid hakukohde)}
-        [hakukohde-list-item path id hakukohde selected-hakukohteet])
-      (when (< show-at-most (count (:hakukohteet haku)))
-        [:li.belongs-to-hakukohteet-modal__hakukohde-list-item--show-more
-         {:on-click #(dispatch [:editor/belongs-to-hakukohteet-modal-show-more id (:oid haku)])}
-         [:span.belongs-to-hakukohteet-modal__hakukohde-label
-          "Näytä lisää.."]])]]))
+    (fn [path id haku selected-hakukohteet]
+      [:li.belongs-to-hakukohteet-modal__haku-list-item
+       [:span.belongs-to-hakukohteet-modal__haku-label
+        @name]
+       [:ul.belongs-to-hakukohteet-modal__hakukohde-list
+        (for [hakukohde (first (split-at show-at-most (:hakukohteet haku)))]
+          ^{:key (:oid hakukohde)}
+          [selectable-list-item path id hakukohde selected-hakukohteet get-name on-click-add on-click-remove])
+        (when (< show-at-most (count (:hakukohteet haku)))
+          [:li.belongs-to-hakukohteet-modal__hakukohde-list-item--show-more
+           {:on-click #(dispatch [:editor/belongs-to-hakukohteet-modal-show-more id (:oid haku)])}
+           [:span.belongs-to-hakukohteet-modal__hakukohde-label
+            "Näytä lisää.."]])]])))
 
 (defn- belongs-to-hakukohteet-modal
-  [path id selected-hakukohteet]
-  (let [search-term (subscribe [:editor/belongs-to-hakukohteet-modal-search-term-value id])
-        fetching?   (subscribe [:editor/fetching-haut?])
-        used-by-haku? (subscribe [:editor/used-by-haku?])
-        haut (subscribe [:editor/filtered-haut id])
-        on-click (fn [_] (dispatch [:editor/hide-belongs-to-hakukohteet-modal id]))
-        on-change (fn [e] (dispatch [:editor/on-belongs-to-hakukohteet-modal-search-term-change
-                                     id (.-value (.-target e))]))]
-    (fn [path id selected-hakukohteet]
+  [path id selected-hakukohteet selected-hakukohderyhmat]
+  (let [search-term     (subscribe [:editor/belongs-to-hakukohteet-modal-search-term-value id])
+        fetching?       (subscribe [:editor/fetching-haut?])
+        used-by-haku?   (subscribe [:editor/used-by-haku?])
+        haut            (subscribe [:editor/filtered-haut id])
+        hakukohderyhmat (subscribe [:editor/filtered-hakukohderyhmat id])
+        on-click        (fn [_] (dispatch [:editor/hide-belongs-to-hakukohteet-modal id]))
+        on-change       (fn [e] (dispatch [:editor/on-belongs-to-hakukohteet-modal-search-term-change
+                                           id (.-value (.-target e))]))]
+    (fn [path id selected-hakukohteet selected-hakukohderyhmat]
       [:div.belongs-to-hakukohteet-modal
        [:div.belongs-to-hakukohteet-modal__arrow-up]
        (if @used-by-haku?
@@ -108,7 +126,7 @@
           [:div.belongs-to-hakukohteet-modal__input-row
            [:div.belongs-to-hakukohteet-modal__search-container
             [:input.belongs-to-hakukohteet-modal__search
-             {:value @search-term
+             {:value     @search-term
               :on-change on-change}]]
            [:button.belongs-to-hakukohteet-modal__hide
             {:on-click on-click}
@@ -117,6 +135,7 @@
             [:div.belongs-to-hakukohteet-modal__spinner
              [:i.zmdi.zmdi-spinner.spin]]
             [:ul.belongs-to-hakukohteet-modal__haku-list
+             [hakukohderyhma-list-item path id hakukohderyhmat selected-hakukohderyhmat]
              (for [[_ haku] @haut]
                ^{:key (:oid haku)}
                  [haku-list-item path id haku selected-hakukohteet])])]
@@ -128,12 +147,28 @@
             {:on-click on-click}
             [:i.zmdi.zmdi-close.zmdi-hc-lg]]]])])))
 
+(defn- belongs-to-hakukohderyhma
+  [path oid]
+  (let [name      (subscribe [:editor/belongs-to-hakukohderyhma-name oid])
+        fetching? (subscribe [:editor/fetching-haut?])
+        on-click  (fn [_] (dispatch [:editor/remove-from-belongs-to-hakukohderyhma
+                                     path oid]))]
+    (fn [_ _]
+      [:li.belongs-to-hakukohteet__hakukohde-list-item.animated.fadeIn
+       [:span.belongs-to-hakukohteet__hakukohde-label
+        (if @fetching?
+          [:i.zmdi.zmdi-spinner.spin]
+          @name)]
+       [:button.belongs-to-hakukohteet__hakukohde-remove
+        {:on-click on-click}
+        [:i.zmdi.zmdi-close.zmdi-hc-lg]]])))
+
 (defn- belongs-to-hakukohde
   [path oid]
-  (let [name (subscribe [:editor/belongs-to-hakukohde-name oid])
+  (let [name      (subscribe [:editor/belongs-to-hakukohde-name oid])
         fetching? (subscribe [:editor/fetching-haut?])
-        on-click (fn [_] (dispatch [:editor/remove-from-belongs-to-hakukohteet
-                                    path oid]))]
+        on-click  (fn [_] (dispatch [:editor/remove-from-belongs-to-hakukohteet
+                                     path oid]))]
     (fn [_ _]
       [:li.belongs-to-hakukohteet__hakukohde-list-item.animated.fadeIn
        [:span.belongs-to-hakukohteet__hakukohde-label
@@ -146,31 +181,35 @@
 
 (defn- belongs-to-hakukohteet
   [path initial-content]
-  (let [id (:id initial-content)
-        on-click-show (fn [_]
-                        (dispatch [:editor/show-belongs-to-hakukohteet-modal id]))
-        on-click-hide (fn [_]
-                        (dispatch [:editor/hide-belongs-to-hakukohteet-modal id]))
-        show-modal? (subscribe [:editor/show-belongs-to-hakukohteet-modal id])
+  (let [id              (:id initial-content)
+        on-click-show   (fn [_]
+                          (dispatch [:editor/show-belongs-to-hakukohteet-modal id]))
+        on-click-hide   (fn [_]
+                          (dispatch [:editor/hide-belongs-to-hakukohteet-modal id]))
+        show-modal?     (subscribe [:editor/show-belongs-to-hakukohteet-modal id])
         modal-toggle-id (util/new-uuid)]
     (fn [path initial-content]
-      (let [visible-to (:belongs-to-hakukohteet initial-content)]
+      (let [visible-to (:belongs-to-hakukohteet initial-content)
+            visible-to-hakukohderyhmat (:belongs-to-hakukohderyhma initial-content)]
         [:div.belongs-to-hakukohteet
          [:label.belongs-to-hakukohteet__modal-toggle-label
           {:for modal-toggle-id}
           "Näkyvyys lomakkeella: "]
          [:button.belongs-to-hakukohteet__modal-toggle
-          {:id modal-toggle-id
+          {:id       modal-toggle-id
            :on-click (if @show-modal? on-click-hide on-click-show)}
           (if (empty? visible-to)
             "näkyy kaikille"
             "vain valituille hakukohteille")]
          (when @show-modal?
-           [belongs-to-hakukohteet-modal path (:id initial-content) visible-to])
+           [belongs-to-hakukohteet-modal path (:id initial-content) visible-to visible-to-hakukohderyhmat])
          [:ul.belongs-to-hakukohteet__hakukohde-list
           (for [oid visible-to]
             ^{:key oid}
-            [belongs-to-hakukohde path oid])]]))))
+            [belongs-to-hakukohde path oid])
+          (for [oid visible-to-hakukohderyhmat]
+            ^{:key oid}
+            [belongs-to-hakukohderyhma path oid])]]))))
 
 (defn- on-drag-start
   [path]
@@ -185,7 +224,7 @@
   [path]
   (reaction (case @(subscribe [:state-query [:editor :forms-meta path]])
               :fade-out "fade-out"
-              :fade-in  "animated fadeInUp"
+              :fade-in "animated fadeInUp"
               nil)))
 
 (defn- remove-component-button [component-wrapped? path]
@@ -198,11 +237,11 @@
     [:button.editor-form__remove-component-button--confirm.editor-form__remove-component-button
      {:on-click (fn [event]
                   (let [target (-> event
-                                   .-target
-                                   (gdom/getAncestorByClass
-                                    (if component-wrapped?
-                                      "editor-form__section_wrapper"
-                                      "editor-form__component-wrapper")))]
+                                 .-target
+                                 (gdom/getAncestorByClass
+                                   (if component-wrapped?
+                                     "editor-form__section_wrapper"
+                                     "editor-form__component-wrapper")))]
                     (set! (.-height (.-style target)) (str (.-offsetHeight target) "px"))
                     (dispatch [:editor/confirm-remove-component path])))}
      "Vahvista poisto"]
@@ -216,9 +255,9 @@
                         draggable
                         sub-header
                         show-sub-header?]
-                 :or {draggable true
-                      sub-header nil
-                      show-sub-header? false}}]
+                 :or   {draggable        true
+                        sub-header       nil
+                        show-sub-header? false}}]
   [:div.editor-form__header-wrapper
    {:draggable     draggable
     :on-drag-start (on-drag-start path)
@@ -231,9 +270,9 @@
                "editor-form__component-sub-header-visible"
                "editor-form__component-sub-header-hidden")}
      (->> [:fi :sv :en]
-          (map (partial get sub-header))
-          (remove clojure.string/blank?)
-          (clojure.string/join " - "))]]
+       (map (partial get sub-header))
+       (remove clojure.string/blank?)
+       (clojure.string/join " - "))]]
    [remove-component-button component-wrapped? path]])
 
 (defn markdown-help []
@@ -297,7 +336,7 @@
                         multiple-languages? add-multi-lang-class)
                       (when multiple-languages?
                         [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])]))
-                 languages)))
+      languages)))
 
 (defn info-addon
   "Info text which is added to an existing component"
@@ -328,9 +367,9 @@
                                      path :params :info-text :label lang])
                     {:tag :textarea}])
                  @languages)
-               (map (fn [field]
-                      (into field [[:div.editor-form__info-addon-markdown-anchor
-                                    (markdown-help)]]))))])])))
+            (map (fn [field]
+                   (into field [[:div.editor-form__info-addon-markdown-anchor
+                                 (markdown-help)]]))))])])))
 
 (defn- get-val [event]
   (-> event .-target .-value))
@@ -370,10 +409,10 @@
                      {:type      "radio"
                       :value     btn-name
                       :checked   (or
-                                  (= @size btn-name)
-                                  (and
-                                    (nil? @size)
-                                    (= "M" btn-name)))
+                                   (= @size btn-name)
+                                   (and
+                                     (nil? @size)
+                                     (= "M" btn-name)))
                       :name      radio-group-id
                       :id        btn-id
                       :on-change (fn [] (size-change btn-name))}]
@@ -388,7 +427,7 @@
            [:div.editor-form__max-length-container
             [:header.editor-form__component-item-header "Max. merkkimäärä"]
             [:input.editor-form__text-field.editor-form__text-field-auto-width
-             {:value @max-length
+             {:value     @max-length
               :on-change #(max-length-change (get-val %))}]])]
         [:div.editor-form__checkbox-wrapper
          [required-checkbox path initial-content]
@@ -405,8 +444,8 @@
 
 (defn- remove-dropdown-option-button [path option-index]
   [:a.editor-form__multi-options-remove--cross {:on-click (fn [evt]
-                   (.preventDefault evt)
-                   (dispatch [:editor/remove-dropdown-option path :options option-index]))}
+                                                            (.preventDefault evt)
+                                                            (dispatch [:editor/remove-dropdown-option path :options option-index]))}
    [:i.zmdi.zmdi-close.zmdi-hc-lg]])
 
 (defn- dropdown-option [option-index path languages & {:keys [header? include-followup?] :or {header? false include-followup? true} :as opts}]
@@ -497,8 +536,8 @@
         [:div.editor-form__component-wrapper
          {:class @animation-effect}
          (let [header (case field-type
-                        "dropdown"       "Pudotusvalikko"
-                        "singleChoice"   "Painikkeet, yksi valittavissa"
+                        "dropdown" "Pudotusvalikko"
+                        "singleChoice" "Painikkeet, yksi valittavissa"
                         "multipleChoice" "Lista, monta valittavissa")]
            [text-header header path])
          [:div.editor-form__component-row-wrapper
@@ -506,10 +545,10 @@
            [:div.editor-form__text-field-wrapper
             [:header.editor-form__component-item-header "Kysymys"]
             (input-fields-with-lang
-             (fn [lang]
-               [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
-             languages
-             :header? true)]
+              (fn [lang]
+                [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+              languages
+              :header? true)]
            [:div.editor-form__checkbox-wrapper
             [required-checkbox path initial-content]]
            [belongs-to-hakukohteet path initial-content]]]
@@ -526,8 +565,8 @@
                    [:div.editor-form__multi-options-container
                     (map-indexed (fn [idx _]
                                    (dropdown-option idx path languages :include-followup? (and (not question-group-element?)
-                                                                                               (some #{field-type} ["dropdown" "multipleChoice" "singleChoice"]))))
-                                 (:options @value))]
+                                                                                            (some #{field-type} ["dropdown" "multipleChoice" "singleChoice"]))))
+                      (:options @value))]
                    ^{:key "options-input-add"}
                    [:div.editor-form__add-dropdown-item
                     [:a
@@ -540,25 +579,25 @@
   (let [expanded? (r/atom false)]
     (fn [path content]
       [:div
-       {:on-drop (fn [event]
-                   (.preventDefault event)
-                   (reset! expanded? false)
-                   (let [source-path (-> event .-dataTransfer (.getData ie-compatible-drag-data-attribute-name) util/str->cljs)]
-                     (dispatch [:editor/move-component source-path path])))
+       {:on-drop       (fn [event]
+                         (.preventDefault event)
+                         (reset! expanded? false)
+                         (let [source-path (-> event .-dataTransfer (.getData ie-compatible-drag-data-attribute-name) util/str->cljs)]
+                           (dispatch [:editor/move-component source-path path])))
         :on-drag-enter (fn [event] (.preventDefault event)) ;; IE needs this, otherwise on-drag-over doesn't occur
-        :on-drag-over (fn [event]
-                        (.preventDefault event)
-                        (reset! expanded? true)
-                        nil)
+        :on-drag-over  (fn [event]
+                         (.preventDefault event)
+                         (reset! expanded? true)
+                         nil)
         :on-drag-leave (fn [event]
                          (.preventDefault event)
                          (reset! expanded? false)
                          nil)
-        :class (if (and
-                     (= 1 (count path))
-                     (contains? content :children))
-                   "editor-form__drag_n_drop_spacer_container_for_component_group"
-                   "editor-form__drag_n_drop_spacer_container_for_component")}
+        :class         (if (and
+                             (= 1 (count path))
+                             (contains? content :children))
+                         "editor-form__drag_n_drop_spacer_container_for_component_group"
+                         "editor-form__drag_n_drop_spacer_container_for_component")}
        [:div
         {:class (if @expanded?
                   "editor-form__drag_n_drop_spacer--dashbox-visible"
@@ -598,13 +637,13 @@
             [:div.editor-form__text-field-wrapper.editor-form__text-field--section
              [:header.editor-form__component-item-header header-label-text]
              (input-fields-with-lang
-              (fn [lang]
-                [input-field path lang #(dispatch-sync [:editor/set-component-value
-                                                        (-> % .-target .-value)
-                                                        path
-                                                        :label lang])])
-              languages
-              :header? true)]]
+               (fn [lang]
+                 [input-field path lang #(dispatch-sync [:editor/set-component-value
+                                                         (-> % .-target .-value)
+                                                         path
+                                                         :label lang])])
+               languages
+               :header? true)]]
            children
            [drag-n-drop-spacer (conj path :children (count children))]
            (case (:fieldClass content)
@@ -616,8 +655,8 @@
 (defn get-leaf-component-labels [component lang]
   (letfn [(recursively-get-labels [component]
             (match (:fieldClass component)
-                   "wrapperElement" (map #(recursively-get-labels %) (:children component))
-                   :else (-> component :label lang)))]
+              "wrapperElement" (map #(recursively-get-labels %) (:children component))
+              :else (-> component :label lang)))]
     (flatten (recursively-get-labels component))))
 
 (defn module [path]
@@ -647,22 +686,22 @@
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Otsikko"]
          (input-fields-with-lang
-          (fn [lang]
-            [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
-          @languages
-          :header? true)
+           (fn [lang]
+             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+           @languages
+           :header? true)
          [:div.infoelement
           [:header.editor-form__component-item-header "Teksti"]
           (->> (input-fields-with-lang
-                (fn [lang]
-                  [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :text lang])
-                   {:value-fn (fn [component] (get-in component [:text lang]))
-                    :tag :textarea}])
-                @languages
-                :header? true)
-               (map (fn [field]
-                      (into field [[:div.editor-form__markdown-anchor
-                                    (markdown-help)]]))))]]
+                 (fn [lang]
+                   [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :text lang])
+                    {:value-fn (fn [component] (get-in component [:text lang]))
+                     :tag      :textarea}])
+                 @languages
+                 :header? true)
+            (map (fn [field]
+                   (into field [[:div.editor-form__markdown-anchor
+                                 (markdown-help)]]))))]]
         [:div.editor-form__checkbox-wrapper]
         [belongs-to-hakukohteet path initial-content]]])))
 
@@ -677,10 +716,10 @@
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Otsikko"]
          (input-fields-with-lang
-          (fn [lang]
-            [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
-          @languages
-          :header? true)]
+           (fn [lang]
+             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+           @languages
+           :header? true)]
         [:div.editor-form__checkbox-wrapper
          [repeater-checkbox path content]]
         [belongs-to-hakukohteet path content]]
@@ -704,10 +743,10 @@
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Kysymys"]
          (input-fields-with-lang
-          (fn [lang]
-            [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
-          @languages
-          :header? true)]
+           (fn [lang]
+             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+           @languages
+           :header? true)]
         [:div.editor-form__checkbox-wrapper
          [required-checkbox path content]]
         [belongs-to-hakukohteet path content]]])))
@@ -737,9 +776,9 @@
                     :tag      :textarea}])
                 @languages
                 :header? true)
-              (map (fn [field]
-                     (into field [[:div.editor-form__markdown-anchor
-                                   (markdown-help)]])))))])))
+           (map (fn [field]
+                  (into field [[:div.editor-form__markdown-anchor
+                                (markdown-help)]])))))])))
 
 (defn attachment [content path]
   (let [languages        (subscribe [:editor/languages])
@@ -752,10 +791,10 @@
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Liitteen nimi"]
          (input-fields-with-lang
-          (fn attachment-file-name-input [lang]
-            [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
-          @languages
-          :header? true)]
+           (fn attachment-file-name-input [lang]
+             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+           @languages
+           :header? true)]
         [:div.editor-form__single-checkbox-wrapper
          [required-checkbox path content]]
         [belongs-to-hakukohteet path content]]
