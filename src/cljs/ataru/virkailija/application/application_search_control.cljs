@@ -41,7 +41,7 @@
 
 (defn search-term-tab [tab-id selected-tab link-url label-text title-text]
   (let [tab-selected (= tab-id selected-tab)]
-    [:div.application__search-control-tab-selector-wrapper
+    [:div.application__search-control-tab-selector-wrapper.application__search-control-tab-selector-wrapper--search
      (if tab-selected
        [:div.application__search-control-tab-selector.application__search-control-selected-tab-with-input
         [search-term-field label-text title-text]]
