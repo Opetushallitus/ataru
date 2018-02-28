@@ -1,4 +1,4 @@
-(ns ataru.hakija.application-email-confirmation
+(ns ataru.application-email-confirmation
   "Application-specific email confirmation init logic"
   (:require
     [taoensso.timbre :as log]
@@ -50,12 +50,12 @@
                              :value)
         application-url (modify-link (:secret application))
         body            (selmer/render-file
-                         (template-name lang)
-                         {:hakukohteet (hakukohde-names tarjonta-service
-                                                        lang
-                                                        application)
-                          :application-url application-url
-                          :application-oid (:key application)})]
+                          (template-name lang)
+                          {:hakukohteet (hakukohde-names tarjonta-service
+                                                         lang
+                                                         application)
+                           :application-url application-url
+                           :application-oid (:key application)})]
     {:from       from-address
      :recipients [recipient]
      :subject    subject
@@ -95,19 +95,19 @@
                 application-id))
 
 (defn start-email-job [email]
-  (let [job-type (:type email-job/job-definition)
-        job-id   (job/start-job
-                  hakija-jobs/job-definitions
-                  job-type
-                  email)]
-    (log/info "Started application confirmation email job (to viestintäpalvelu) with job id" job-id ":")
-    (log/info email)))
+                      (let [job-type (:type email-job/job-definition)
+                            job-id   (job/start-job
+                                       hakija-jobs/job-definitions
+                                       job-type
+                                       email)]
+                        (log/info "Started application confirmation email job (to viestintäpalvelu) with job id" job-id ":")
+                        (log/info email)))
 
 (defn start-email-submit-confirmation-job [tarjonta-service application-id]
-  (start-email-job (create-submit-email tarjonta-service application-id)))
+                                          (start-email-job (create-submit-email tarjonta-service application-id)))
 
 (defn start-email-edit-confirmation-job [tarjonta-service application-id]
-  (start-email-job (create-edit-email tarjonta-service application-id)))
+                                        (start-email-job (create-edit-email tarjonta-service application-id)))
 
 (defn start-email-refresh-secret-confirmation-job
   [tarjonta-service application-id]

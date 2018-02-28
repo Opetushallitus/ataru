@@ -3,7 +3,7 @@
             [ataru.applications.application-store :as store]
             [ataru.fixtures.application :as application-fixtures]
             [ataru.fixtures.db.unit-test-db :as db]
-            [ataru.hakija.application-email-confirmation :as application-email]
+            [ataru.application-email-confirmation :as application-email]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
