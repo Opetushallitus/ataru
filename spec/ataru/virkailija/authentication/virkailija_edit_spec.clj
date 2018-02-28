@@ -3,7 +3,7 @@
               [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]))
 
 (defmacro with-fake-ldap [& body]
-    `(with-redefs [ataru.virkailija.user.ldap-client/get-virkailija-by-username
+    `(with-redefs [ataru.organization-service.ldap-client/get-virkailija-by-username
                    (fn [~'username] {:employeeNumber "1213" :givenName "Hemuli" :sn "Hemuli?"})]
         ~@body))
 

@@ -1,6 +1,6 @@
-(ns ataru.virkailija.user.ldap-client-spec
+(ns ataru.organization-service.ldap-client-spec
   (:require
-   [ataru.virkailija.user.ldap-client :as ldap]
+   [ataru.organization-service.ldap-client :as ldap]
    [speclj.core :refer [describe it should= tags]]))
 
 ;; Below data has a duplicate APP_ATARU_EDITORI_CRUD_1.2.246.562.6.214933 on purpose

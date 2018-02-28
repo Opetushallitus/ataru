@@ -7,7 +7,7 @@
             [taoensso.timbre :refer [info spy error]]
             [ataru.config.core :refer [config]]
             [ataru.log.audit-log :as audit-log]
-            [ataru.virkailija.user.user-rights :as rights]
+            [ataru.organization-service.user-rights :as rights]
             [ataru.config.url-helper :refer [resolve-url]])
   (:import (fi.vm.sade.utils.cas CasLogout)))
 

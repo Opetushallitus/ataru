@@ -3,7 +3,7 @@
    [clojure.string :refer [join]]
    [com.stuartsierra.component :as component]
    [ataru.config.core :refer [config]]
-   [ataru.virkailija.user.ldap-client :as ldap-client]
+   [ataru.organization-service.ldap-client :as ldap-client]
    [ataru.cas.client :as cas-client]
    [clojure.core.cache :as cache]
    [medley.core :refer [map-kv]]

@@ -1,10 +1,10 @@
-(ns ataru.virkailija.user.ldap-client
+(ns ataru.organization-service.ldap-client
   (:require
    [clojure.string :as str]
    [clj-ldap.client :as ldap]
    [ataru.config.core :refer [config]]
    [cheshire.core :as json]
-   [ataru.virkailija.user.user-rights :as user-rights])
+   [ataru.organization-service.user-rights :as user-rights])
   (:import (java.net InetAddress)))
 
 (def people-path-base "ou=People,dc=opintopolku,dc=fi")

@@ -11,7 +11,7 @@
    [ataru.hakija.hakija-form-service :as hakija-form-service]
    [taoensso.timbre :refer [spy debug]]
    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
-   [ataru.virkailija.user.ldap-client :as ldap]
+   [ataru.organization-service.ldap-client :as ldap]
    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
    [ataru.information-request.information-request-store :as information-request-store]
    [ataru.hakija.application-email-confirmation :as email]

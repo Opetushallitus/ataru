@@ -1,4 +1,4 @@
-(ns ataru.virkailija.user.user-rights
+(ns ataru.organization-service.user-rights
   (:require [schema.core :as s]
             [ataru.config.core :refer [config]]))
 
