@@ -51,7 +51,7 @@
 
 (s/defschema InfoText {(s/optional-key :enabled?) s/Bool
                        (s/optional-key :value)    LocalizedStringOptional
-                       (s/optional-key :label)    LocalizedStringOptional})
+                       (s/optional-key :label)    (s/maybe LocalizedStringOptional)})
 
 (s/defschema Params {(s/optional-key :adjacent)                         s/Bool
                      (s/optional-key :can-submit-multiple-applications) s/Bool
