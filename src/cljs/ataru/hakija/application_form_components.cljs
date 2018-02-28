@@ -107,12 +107,7 @@
   (let [show-hakukohde-list? (r/atom false)]
     (fn [field-descriptor]
       (let [lang                           @(subscribe [:application/form-language])
-            tarjonta-hakukohtet            @(subscribe [:application/tarjonta-hakukohteet])
-            selected-hakukohteet           @(subscribe [:application/selected-hakukohteet])
-            field-hakukohteet              (:belongs-to-hakukohteet field-descriptor)
-            selected-hakukohde-oids        (clojure.set/intersection (set field-hakukohteet)
-                                                                     (set selected-hakukohteet))
-            selected-hakukohteet-for-field (filter #(contains? selected-hakukohde-oids (:oid %)) tarjonta-hakukohtet)]
+            selected-hakukohteet-for-field @(subscribe [:application/selected-hakukohteet-for-field field-descriptor])]
         [:div.application__question_hakukohde_names_container
          [:a.application__question_hakukohde_names_info
           {:on-click #(swap! show-hakukohde-list? not)}
