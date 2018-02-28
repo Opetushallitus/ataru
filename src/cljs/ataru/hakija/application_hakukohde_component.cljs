@@ -259,18 +259,20 @@
     [:div
      [:div.application__hakukohde-row--search-toggle
       {:on-click hakukohde-search-toggle-event-handler
-       :role "button"
+       :role     "button"
        :class    (clojure.string/join " " [(when (not @(subscribe [:application/show-hakukohde-search]))
                                              "application__hakukohde-row--search-toggle--closed")
                                            (when @(subscribe [:application/prioritize-hakukohteet?])
                                              "application__hakukohde-row--search-toggle--prioritized")])}
       [:div.application__hakukohde-row-icon-container
        [:i.zmdi.zmdi-graduation-cap.zmdi-hc-3x]]
-      [:a.application__hakukohde-selection-open-search
-       (get-translation :add-application-option)
-       (when-let [max-hakukohteet @(subscribe [:application/max-hakukohteet])]
-         [:span.application__hakukohde-selection-max-label
-          (get-translation :applications_at_most max-hakukohteet)])]]
+      (let [hakukohteet-full? @(subscribe [:application/hakukohteet-full?])]
+        [:a.application__hakukohde-selection-open-search
+         {:class (when hakukohteet-full? "application__hakukohde-selection-open-search--inactive")}
+         (get-translation :add-application-option)
+         (when-let [max-hakukohteet @(subscribe [:application/max-hakukohteet])]
+           [:span.application__hakukohde-selection-max-label
+            (get-translation :applications_at_most max-hakukohteet)])])]
      (when @(subscribe [:application/show-hakukohde-search])
        [hakukohde-selection-search])]))
 
