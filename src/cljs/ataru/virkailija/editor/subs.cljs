@@ -1,7 +1,8 @@
 (ns ataru.virkailija.editor.subs
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :as re-frame]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [taoensso.timbre :refer-macros [spy debug]]
+            [markdown.core :as md]))
 
 (re-frame/reg-sub
   :editor/selected-form
@@ -149,3 +150,8 @@
   :editor/remove-component-button-state
   (fn [db [_ path]]
     (get-in db [:editor :ui :remove-component-button-state path] :active)))
+
+(re-frame/reg-sub
+  :editor/email-template-preview-html
+  (fn [db _]
+    (md/md->html (get-in db [:editor :email-template :content]))))

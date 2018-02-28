@@ -11,6 +11,13 @@
           <span style="font-size: 24px;">Hakemuksesi on vastaanotettu</span>
         </td>
       </tr>
+      {% if customMessage|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          {{customMessage|safe}}
+        </td>
+      </tr>
+      {% endif %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
           Hakemusnumero: {{application-oid}}

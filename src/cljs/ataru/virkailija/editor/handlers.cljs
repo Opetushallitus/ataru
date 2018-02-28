@@ -628,3 +628,8 @@
   :editor/toggle-email-template-editor
   (fn [db _]
     (update-in db [:editor :ui :template-editor-visible?] not)))
+
+(reg-event-db
+  :editor/update-email-template
+  (fn [db [_ content]]
+    (assoc-in db [:editor :email-template :content] content)))
