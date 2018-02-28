@@ -8,7 +8,11 @@
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
     [ataru.background-job.email-job :as email-job]
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
-    [ataru.config.core :refer [config]]))
+    [ataru.config.core :refer [config]]
+    [markdown.core :as md]
+    [clojure.string :as string])
+  (:import
+    [org.owasp.html HtmlPolicyBuilder]))
 
 (def submit-email-subjects
   {:fi "Opintopolku: hakemuksesi on vastaanotettu"
@@ -26,6 +30,21 @@
    :en "Studyinfo: your new application link"})
 
 (def from-address "no-reply@opintopolku.fi")
+
+(defn- ->string-array
+  [& elements]
+  (into-array String elements))
+
+(def html-policy
+  (as-> (HtmlPolicyBuilder.) hpb
+        (.allowElements hpb (->string-array "a" "p" "div" "h1" "h2" "h3" "h4" "h5" "ul" "ol" "li"))
+        (.allowUrlProtocols hpb (->string-array "http" "https"))
+        (.onElements (.allowAttributes hpb (->string-array "href" "target")) (->string-array "a"))
+        (.toFactory hpb)))
+
+(defn- add-link-target-prop
+  [text state]
+  [(string/replace text #"<a href=([^>]+)>" "<a target=\"_blank\" href=$1>") state])
 
 (defn- submit-email-template-filename
   [lang]
@@ -71,15 +90,23 @@
                 submit-email-template-filename
                 application-id))
 
+(defn- sanitize-content
+  [content]
+  (.sanitize
+    html-policy
+    (md/md-to-html-string content :custom-transformers [add-link-target-prop])))
+
 (defn preview-submit-email
-  [lang]
+  [lang content]
   {:from    from-address
    :subject (lang submit-email-subjects)
    :body    (selmer/render-file
               (submit-email-template-filename lang)
-              {:hakukohteet     ["Hakukohde 1" "Hakukohde 2" "Hakukohde 3"]
+              {:lang            lang
+               :hakukohteet     ["Hakukohde 1" "Hakukohde 2" "Hakukohde 3"]
                :application-url "https://example.com/muokkaus-linkki-esimerkki"
-               :application-oid "1.2.246.562.11.00000000000000000000"})})
+               :application-oid "1.2.246.562.11.00000000000000000000"
+               :content         (sanitize-content content)})})
 
 (defn- create-edit-email [tarjonta-service application-id]
   (create-email tarjonta-service

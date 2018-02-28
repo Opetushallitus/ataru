@@ -11,6 +11,13 @@
           <span style="font-size: 24px;">Din ansökan har mottagits</span>
         </td>
       </tr>
+      {% if content|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          {{content|safe}}
+        </td>
+      </tr>
+      {% endif %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
           Ansökans nummer: {{application-oid}}

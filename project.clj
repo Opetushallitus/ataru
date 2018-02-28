@@ -73,7 +73,8 @@
                  [pandect "0.6.1"]
                  [hikari-cp "2.0.0" :exclusions [prismatic/schema]]
                  [ring/ring-mock "0.3.2"]
-                 [speclj "3.3.2"]]
+                 [speclj "3.3.2"]
+                 [com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer "20180219.1" :exclusions [com.google.guava/guava]]]
 
   :min-lein-version "2.5.3"
 

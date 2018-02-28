@@ -624,12 +624,31 @@
   (fn [db _]
     (assoc-in db [:editor :ui :all-folded] false)))
 
-(reg-event-db
+(reg-event-fx
   :editor/toggle-email-template-editor
-  (fn [db _]
-    (update-in db [:editor :ui :template-editor-visible?] not)))
+  (fn [{db :db} _]
+    (let [now-visible? (-> db
+                           (get-in [:editor :ui :template-editor-visible?])
+                           (not))
+          content      (get-in db [:editor :email-template :content])]
+      (cond-> {:db (assoc-in db [:editor :ui :template-editor-visible?] now-visible?)}
+              now-visible? (merge {:dispatch [:editor/update-email-template content]})))))
+
+(reg-event-fx
+  :editor/update-email-template
+  (fn [{db :db} [_ content]]
+    (let [form-key "x"
+          lang     "fi"]
+      {:db   (assoc-in db [:editor :email-template :content] content)
+       :http {:method              :post
+              :params              {:content content}
+              :path                (str "/lomake-editori/api/email-template/" form-key "/preview/" lang)
+              :handler-or-dispatch :editor/update-email-template-preview}})))
 
 (reg-event-db
-  :editor/update-email-template
-  (fn [db [_ content]]
-    (assoc-in db [:editor :email-template :content] content)))
+  :editor/update-email-template-preview
+  (fn [db [_ {:keys [body from subject lang]}]]
+    (update-in db [:editor :email-template] merge {:body    body
+                                                   :from    from
+                                                   :subject subject
+                                                   :lang    lang})))

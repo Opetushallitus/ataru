@@ -17,5 +17,5 @@
           :on-change #(dispatch [:editor/update-email-template (.-value (.-target %))])}]]
        [:div.virkailija-modal__preview-panel
         [:h3 "Esikatselu"]
-        [:div.virkailija-modal__preview
-         {:dangerouslySetInnerHTML {:__html @(subscribe [:editor/email-template-preview-html])}}]]]]]))
+        [:iframe.virkailija-modal__preview
+         {:srcDoc @(subscribe [:state-query [:editor :email-template :body]])}]]]]]))

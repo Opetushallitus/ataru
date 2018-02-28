@@ -11,10 +11,10 @@
           <span style="font-size: 24px;">Hakemuksesi on vastaanotettu</span>
         </td>
       </tr>
-      {% if customMessage|not-empty %}
+      {% if content|not-empty %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
-          {{customMessage|safe}}
+          {{content|safe}}
         </td>
       </tr>
       {% endif %}

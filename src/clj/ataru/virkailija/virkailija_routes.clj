@@ -153,6 +153,7 @@
       :summary "Return forms for editor view. Also used by external services.
                              In practice this is Tarjonta system only for now.
                              Return forms authorized with editor right (:form-edit)"
+<<<<<<< HEAD
       :return {:forms [ataru-schema/Form]}
       (ok (access-controlled-form/get-forms-for-editor session virkailija-tarjonta-service organization-service)))
 
@@ -189,10 +190,11 @@
         (person-integration/upsert-and-log-person person-service application-id))
       (ok (str "Updated persons for applications")))
 
-    (api/GET "/email-template/:form-key/preview/:lang" []
+    (api/POST "/email-template/:form-key/preview/:lang" []
       :path-params [form-key :- s/Str
                     lang :- (s/enum "fi" "sv" "en")]
-      (ok (email/preview-submit-email (keyword lang))))
+      :body [body {:content (s/maybe s/Str)}]
+      (ok (email/preview-submit-email (keyword lang) (:content body))))
 
     (api/context "/applications" []
       :tags ["applications-api"]
