@@ -5,7 +5,7 @@
             [ataru.fixtures.db.unit-test-db :as db]
             [ataru.hakija.application-email-confirmation :as application-email]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
-            [ataru.virkailija.user.organization-service :as organization-service]
+            [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.hakija.hakija-routes :as routes]
             [ataru.hakija.hakija-application-service :as application-service]

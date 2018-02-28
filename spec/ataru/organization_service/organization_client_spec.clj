@@ -1,9 +1,9 @@
-(ns ataru.virkailija.user.organization-client-spec
+(ns ataru.organization-service.organization-client-spec
   (:require
    [clojure.java.io :as io]
    [cheshire.core :as json]
    [speclj.core :refer [describe it should= tags around]]
-   [ataru.virkailija.user.organization-client :as org-client]
+   [ataru.organization-service.organization-client :as org-client]
    [ataru.cas.client :as cas-client]
    [ataru.config.core :refer [config]]
    [clojure.java.io :as io]))

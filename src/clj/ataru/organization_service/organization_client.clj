@@ -1,4 +1,4 @@
-(ns ataru.virkailija.user.organization-client
+(ns ataru.organization-service.organization-client
   (:require [ataru.cas.client :as cas-client]
             [ataru.config.core :refer [config]]
             [ataru.config.url-helper :refer [resolve-url]]

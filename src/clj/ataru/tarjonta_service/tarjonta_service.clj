@@ -1,7 +1,7 @@
 (ns ataru.tarjonta-service.tarjonta-service
   (:require
     [ataru.tarjonta-service.tarjonta-client :as client]
-    [ataru.virkailija.user.organization-client :refer [oph-organization]]
+    [ataru.organization-service.organization-client :refer [oph-organization]]
     [com.stuartsierra.component :as component]
     [ataru.config.core :refer [config]]
     [ataru.cache.cache-service :as cache]

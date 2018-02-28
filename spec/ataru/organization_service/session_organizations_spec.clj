@@ -1,7 +1,7 @@
-(ns ataru.virkailija.user.session-organizations-spec
+(ns ataru.organization-service.session-organizations-spec
   (:require
    [speclj.core :refer [describe it should= tags around]]
-   [ataru.virkailija.user.session-organizations :refer [select-organizations-for-rights]]))
+   [ataru.organization-service.session-organizations :refer [select-organizations-for-rights]]))
 
 (def dummy-session {:identity
                     {:user-right-organizations

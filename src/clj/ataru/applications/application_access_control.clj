@@ -1,6 +1,6 @@
 (ns ataru.applications.application-access-control
   (:require
-   [ataru.virkailija.user.session-organizations :as session-orgs]
+   [ataru.organization-service.session-organizations :as session-orgs]
    [ataru.forms.form-access-control :as form-access-control]
    [ataru.applications.application-store :as application-store]
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]

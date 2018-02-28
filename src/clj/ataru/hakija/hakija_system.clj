@@ -11,7 +11,7 @@
             [ataru.config.core :refer [config]]
             [ataru.cache.hazelcast :refer [map->HazelcastInstance]]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
-            [ataru.virkailija.user.organization-service :as organization-service]
+            [ataru.organization-service.organization-service :as organization-service]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]))
 
 (defn new-system

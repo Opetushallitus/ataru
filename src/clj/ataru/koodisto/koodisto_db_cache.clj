@@ -2,7 +2,7 @@
   (:require [ataru.config.url-helper :refer [resolve-url]]
             [ataru.db.db :as db]
             [ataru.koodisto.koodisto-codes :refer [institution-type-codes]]
-            [ataru.virkailija.user.organization-client :as organization-client]
+            [ataru.organization-service.organization-client :as organization-client]
             [cheshire.core :as cheshire]
             [clojure.string :as str]
             [clojure.tools.logging :as log]

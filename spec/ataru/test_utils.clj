@@ -1,6 +1,6 @@
 (ns ataru.test-utils
   (:require [ataru.virkailija.virkailija-routes :as v]
-            [ataru.virkailija.user.organization-service :as org-service]
+            [ataru.organization-service.organization-service :as org-service]
             [ring.mock.request :as mock]
             [speclj.core :refer :all]
             [ataru.db.db :as db]
