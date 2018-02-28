@@ -6,7 +6,7 @@
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [speclj.core :refer :all]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
-            [ataru.virkailija.user.organization-service :as organization-service])
+            [ataru.organization-service.organization-service :as organization-service])
   (:import [java.io FileOutputStream File]
            [java.util UUID]
            [org.apache.poi.ss.usermodel WorkbookFactory]))

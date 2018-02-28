@@ -1,7 +1,7 @@
 (ns ataru.virkailija.virkailija-system
   (:require [com.stuartsierra.component :as component]
             [ataru.http.server :as server]
-            [ataru.virkailija.user.organization-service :as organization-service]
+            [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.virkailija.virkailija-routes :as virkailija-routes]
             [ataru.cache.caches :refer [hazelcast-caches redis-caches]]

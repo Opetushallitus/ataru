@@ -1,7 +1,7 @@
-(ns ataru.virkailija.user.organization-service-spec
-  (:require [ataru.virkailija.user.organization-service :as org-service]
+(ns ataru.organization-service.organization-service-spec
+  (:require [ataru.organization-service.organization-service :as org-service]
             [ataru.virkailija.user.ldap-client-spec :refer [test-user1 test-user1-organization-oid]]
-            [ataru.virkailija.user.organization-client-spec :refer [expected-flat-organizations]]
+            [ataru.organization-service.organization-client-spec :refer [expected-flat-organizations]]
             [speclj.core :refer [describe it should= tags around]]
             [clj-ldap.client :as ldap]
             [ataru.virkailija.user.ldap-client :as ataru-ldap]

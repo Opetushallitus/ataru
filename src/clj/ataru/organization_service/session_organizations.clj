@@ -1,7 +1,7 @@
 (ns ataru.virkailija.user.session-organizations
   (:require
    [schema.core :as s]
-   [ataru.virkailija.user.organization-client :as organization-client]
+   [ataru.organization-service.organization-client :as organization-client]
    [ataru.virkailija.user.user-rights :refer [Right]]))
 
 (defn- right-organizations [session] (-> session :identity :user-right-organizations))

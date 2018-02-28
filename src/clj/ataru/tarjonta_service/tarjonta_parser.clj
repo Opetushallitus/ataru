@@ -2,7 +2,7 @@
   (:require [taoensso.timbre :as log]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.koodisto.koodisto :refer [get-koodisto-options]]
-            [ataru.virkailija.user.organization-service :as organization-service]
+            [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
             [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit-protocol]))
 

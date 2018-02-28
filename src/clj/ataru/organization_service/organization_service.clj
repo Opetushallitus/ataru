@@ -1,4 +1,4 @@
-(ns ataru.virkailija.user.organization-service
+(ns ataru.organization-service.organization-service
   (:require
    [clojure.string :refer [join]]
    [com.stuartsierra.component :as component]
@@ -7,7 +7,7 @@
    [ataru.cas.client :as cas-client]
    [clojure.core.cache :as cache]
    [medley.core :refer [map-kv]]
-   [ataru.virkailija.user.organization-client :as org-client]))
+   [ataru.organization-service.organization-client :as org-client]))
 
 (def all-orgs-cache-time-to-live (* 2 60 1000))
 (def group-cache-time-to-live (* 5 60 1000))
