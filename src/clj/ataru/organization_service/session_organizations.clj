@@ -1,4 +1,4 @@
-(ns ataru.virkailija.user.session-organizations
+(ns ataru.organization-service.session-organizations
   (:require
    [schema.core :as s]
    [ataru.organization-service.organization-client :as organization-client]

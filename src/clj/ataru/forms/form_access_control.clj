@@ -2,7 +2,7 @@
   (:require
    [ataru.applications.application-store :as application-store]
    [ataru.forms.form-store :as form-store]
-   [ataru.virkailija.user.session-organizations :as session-orgs]
+   [ataru.organization-service.session-organizations :as session-orgs]
    [ataru.organization-service.organization-client :refer [oph-organization]]
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
    [taoensso.timbre :refer [warn]]))

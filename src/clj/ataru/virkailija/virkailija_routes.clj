@@ -31,7 +31,7 @@
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
             [ataru.virkailija.authentication.auth-utils :as auth-utils]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
-            [ataru.virkailija.user.session-organizations :refer [organization-list]]
+            [ataru.organization-service.session-organizations :refer [organization-list]]
             [cheshire.core :as json]
             [cheshire.generate :refer [add-encoder]]
             [clojure.core.match :refer [match]]

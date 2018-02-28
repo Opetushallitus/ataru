@@ -1,6 +1,6 @@
 (ns ataru.haku.haku-service
   (:require
-   [ataru.virkailija.user.session-organizations :as session-orgs]
+   [ataru.organization-service.session-organizations :as session-orgs]
    [ataru.applications.application-store :as application-store]
    [ataru.forms.form-store :as form-store]
    [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]))
