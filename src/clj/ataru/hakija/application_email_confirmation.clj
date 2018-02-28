@@ -10,6 +10,23 @@
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
     [ataru.config.core :refer [config]]))
 
+(def submit-email-subjects
+  {:fi "Opintopolku: hakemuksesi on vastaanotettu"
+   :sv "Studieinfo: Din ansökan har mottagits"
+   :en "Studyinfo: Your application has been received"})
+
+(def edit-email-subjects
+  {:fi "Opintopolku: Muutokset hakemukseesi on tallennettu"
+   :sv "Studieinfo: Dina ändringar har lagrats i din ansökan"
+   :en "Studyinfo: The changes to your application have been saved"})
+
+(def refresh-secret-email-subjects
+  {:fi "Opintopolku: uusi hakemuslinkkisi"
+   :sv "Studieinfo: ny länk till din ansökan"
+   :en "Studyinfo: your new application link"})
+
+(def from-address "no-reply@opintopolku.fi")
+
 (defn- modify-link [secret]
   (-> config
       (get-in [:public-config :applicant :service_url])
@@ -39,26 +56,32 @@
                                                         application)
                           :application-url application-url
                           :application-oid (:key application)})]
-    {:from       "no-reply@opintopolku.fi"
+    {:from       from-address
      :recipients [recipient]
      :subject    subject
      :body       body}))
 
 (defn- create-submit-email [tarjonta-service application-id]
   (create-email tarjonta-service
-                {:fi "Opintopolku: hakemuksesi on vastaanotettu"
-                 :sv "Studieinfo: Din ansökan har mottagits"
-                 :en "Studyinfo: Your application has been received"}
+                submit-email-subjects
                 #(str "templates/email_submit_confirmation_template_"
                       (name %)
                       ".html")
                 application-id))
 
+(defn submit-email-preview
+  [tarjonta-service lang]
+  {:from    from-address
+   :subject (subject lang)
+   :body    (selmer/render-file
+              (template-name lang)
+              {:hakukohteet     ["Hakukohde 1" "Hakukohde 2" "Hakukohde 3"]
+               :application-url "https://example.com/muokkaus-linkki-esimerkki"
+               :application-oid "1.2.246.562.11.00000000000000000000"})})
+
 (defn- create-edit-email [tarjonta-service application-id]
   (create-email tarjonta-service
-                {:fi "Opintopolku: Muutokset hakemukseesi on tallennettu"
-                 :sv "Studieinfo: Dina ändringar har lagrats i din ansökan"
-                 :en "Studyinfo: The changes to your application have been saved"}
+                edit-email-subjects
                 #(str "templates/email_edit_confirmation_template_"
                       (name %)
                       ".html")
@@ -67,9 +90,7 @@
 (defn- create-refresh-secret-email
   [tarjonta-service application-id]
   (create-email tarjonta-service
-                {:fi "Opintopolku: uusi hakemuslinkkisi"
-                 :sv "Studieinfo: ny länk till din ansökan"
-                 :en "Studyinfo: your new application link"}
+                refresh-secret-email-subjects
                 #(str "templates/email_refresh_secret_template_" (name %) ".html")
                 application-id))
 
