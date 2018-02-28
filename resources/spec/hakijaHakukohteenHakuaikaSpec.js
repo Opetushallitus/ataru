@@ -55,6 +55,14 @@
                 expect(testFrame().find("#kaikki-hakuajat-voimassa").prop('disabled')).to.equal(false)
                 expect(testFrame().find("#assosiaatio-hakukohderyhman-kautta").prop('disabled')).to.equal(true)
 
+                var kysymysKoskeeHakukohteitaFinder = function(id) {
+                    return testFrame().find(id).parent().siblings(".application__question_hakukohde_names_container").text()
+                };
+
+                expect(kysymysKoskeeHakukohteitaFinder("#hakuajat-ohi")).to.equal("Kysymys koskee hakukohteita (1)")
+                expect(kysymysKoskeeHakukohteitaFinder("#osa-hakuajoista-ohi")).to.equal("Kysymys koskee hakukohteita (2)")
+                expect(kysymysKoskeeHakukohteitaFinder("#kaikki-hakuajat-voimassa")).to.equal("Kysymys koskee hakukohteita (1)")
+                expect(kysymysKoskeeHakukohteitaFinder("#assosiaatio-hakukohderyhman-kautta")).to.equal("Kysymys koskee hakukohteita (1)")
             })
         })
 
