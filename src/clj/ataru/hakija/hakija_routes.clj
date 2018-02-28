@@ -80,21 +80,21 @@
         (get-latest-application-secret)
         (response/not-found "Not found")))
     (api/GET "/alter-application-to-hakuaikaloppu-for-secret/:secret" [secret]
-             (if (is-dev-env?)
-               (alter-application-to-hakuaikaloppu-for-secret secret)
-               (response/not-found "Not found")))
+      (if (is-dev-env?)
+        (alter-application-to-hakuaikaloppu-for-secret secret)
+        (response/not-found "Not found")))
     (api/GET "/virkailija-hakemus-edit-test.html" []
-             (if (is-dev-env?)
-               (render-file-in-dev "templates/virkailija-hakemus-edit-test.html")
-               (response/not-found "Not found")))
+      (if (is-dev-env?)
+        (render-file-in-dev "templates/virkailija-hakemus-edit-test.html")
+        (response/not-found "Not found")))
     (api/GET "/spec/:filename.js" [filename]
       ;; Test vars params is a hack to get form ids from fixtures to the test file
       ;; without having to pass them as url params. Also enables tests to be run
       ;; individually when navigating to any test file.
       (if (is-dev-env?)
         (render-file-in-dev (str "spec/" filename ".js")
-                            (when (= "hakijaCommon" filename)
-                              (get-test-vars-params)))
+          (when (= "hakijaCommon" filename)
+            (get-test-vars-params)))
         (response/not-found "Not found")))))
 
 (api/defroutes james-routes
@@ -157,11 +157,11 @@
               organization-service
               ohjausparametrit-service
               application)
-        {:passed? false :failures failures}
-        (response/bad-request {:failures failures})
+             {:passed? false :failures failures}
+             (response/bad-request {:failures failures})
 
-        {:passed? true :id application-id}
-        (response/ok {:id application-id})))
+             {:passed? true :id application-id}
+             (response/ok {:id application-id})))
     (api/PUT "/application" []
       :summary "Edit application"
       :body [application ataru-schema/Application]
@@ -170,11 +170,11 @@
               organization-service
               ohjausparametrit-service
               application)
-        {:passed? false :failures failures}
-        (response/bad-request {:failures failures})
+             {:passed? false :failures failures}
+             (response/bad-request {:failures failures})
 
-        {:passed? true :id application-id}
-        (response/ok {:id application-id})))
+             {:passed? true :id application-id}
+             (response/ok {:id application-id})))
     (api/GET "/application" []
       :summary "Get submitted application by secret"
       :query-params [{secret :- s/Str nil}
@@ -227,21 +227,21 @@
       (handle-client-error error-details))
     (api/GET "/postal-codes/:postal-code" [postal-code]
       :summary "Get name of postal office by postal code"
-             (let [code (koodisto/get-postal-office-by-postal-code postal-code)]
-               (if-let [labels (:label code)]
-                 (response/ok labels)
-                 (response/not-found))))
+      (let [code (koodisto/get-postal-office-by-postal-code postal-code)]
+        (if-let [labels (:label code)]
+          (response/ok labels)
+          (response/not-found))))
     (api/GET "/has-applied" []
-             :summary "Check if a person has already applied"
-             :query-params [hakuOid :- (api/describe s/Str "Haku OID")
-                            {ssn :- (api/describe s/Str "SSN") nil}
-                            {email :- (api/describe s/Str "Email address") nil}]
-             (cond (some? ssn)
-                   (response/ok (application-store/has-ssn-applied hakuOid ssn))
-                   (some? email)
-                   (response/ok (application-store/has-email-applied hakuOid email))
-                   :else
-                   (response/bad-request {:error "Either ssn or email is required"})))))
+      :summary "Check if a person has already applied"
+      :query-params [hakuOid :- (api/describe s/Str "Haku OID")
+                     {ssn :- (api/describe s/Str "SSN") nil}
+                     {email :- (api/describe s/Str "Email address") nil}]
+      (cond (some? ssn)
+            (response/ok (application-store/has-ssn-applied hakuOid ssn))
+            (some? email)
+            (response/ok (application-store/has-email-applied hakuOid email))
+            :else
+            (response/bad-request {:error "Either ssn or email is required"})))))
 
 (defn- render-application []
   (let [config (json/generate-string (or (:public-config config) {}))]
