@@ -549,6 +549,16 @@
                                                                                                 session
                                                                                                 hakuOid)]
           (response/ok applications)
+          (response/unauthorized {:error "Unauthorized"})))
+
+      (api/GET "/valintalaskenta" {session :session}
+        :summary "Get application answers for valintalaskenta"
+        :query-params [hakukohdeOid :- s/Str]
+        :return s/Any ; TODO: schema
+        (if-let [applications (access-controlled-application/get-applications-for-valintalaskenta organization-service
+                                                                                                  session
+                                                                                                  hakukohdeOid)]
+          (response/ok applications)
           (response/unauthorized {:error "Unauthorized"}))))))
 
 (api/defroutes resource-routes

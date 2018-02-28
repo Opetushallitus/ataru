@@ -721,6 +721,29 @@
 (defn get-application-info-for-tilastokeskus [haku-oid]
   (exec-db :db yesql-tilastokeskus-applications {:haku_oid haku-oid}))
 
+(defn- get-application-eligibilities-by-hakutoive [application]
+  (let [eligibilities-by-hakukohde (reduce #(assoc %1 (-> %2 :hakukohde) (:state %2))
+                                           {}
+                                           (:application_hakukohde_reviews application))
+        eligibilities              (map-indexed (fn [index hakukohde-oid]
+                                                  (let [preference  (keyword (format "preference%d-Koulutus-id-eligibility" (inc index)))
+                                                        eligibility (get eligibilities-by-hakukohde hakukohde-oid "unreviewed")]
+                                                    {preference eligibility}))
+                                                (:hakutoiveet application))]
+    (into {} eligibilities)))
+
+(defn- unwrap-valintalaskenta-application [application]
+  (let [keyword-values             (reduce #(assoc %1 (-> %2 :key keyword) (:value %2)) {} (-> application :content :answers))
+        eligibilities-by-hakutoive (get-application-eligibilities-by-hakutoive application)]
+    (-> application
+        (dissoc :content :application_hakukohde_reviews)
+        (assoc :key-values (merge keyword-values eligibilities-by-hakutoive)))))
+
+(defn get-applications-for-valintalaskenta [hakukohde-oid]
+  (->> (exec-db :db yesql-valintalaskenta-applications {:hakukohde_oid hakukohde-oid})
+       (map unwrap-valintalaskenta-application)))
+
+
 (defn remove-review-note [note-id]
   (when-not (= (exec-db :db yesql-remove-review-note! {:id note-id}) 0)
     note-id))
