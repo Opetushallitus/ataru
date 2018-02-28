@@ -27,6 +27,10 @@
 
 (def from-address "no-reply@opintopolku.fi")
 
+(defn- submit-email-template-filename
+  [lang]
+  (str "templates/email_submit_confirmation_template_" (name lang) ".html"))
+
 (defn- modify-link [secret]
   (-> config
       (get-in [:public-config :applicant :service_url])
@@ -64,17 +68,15 @@
 (defn- create-submit-email [tarjonta-service application-id]
   (create-email tarjonta-service
                 submit-email-subjects
-                #(str "templates/email_submit_confirmation_template_"
-                      (name %)
-                      ".html")
+                submit-email-template-filename
                 application-id))
 
-(defn submit-email-preview
-  [tarjonta-service lang]
+(defn preview-submit-email
+  [lang]
   {:from    from-address
-   :subject (subject lang)
+   :subject (lang submit-email-subjects)
    :body    (selmer/render-file
-              (template-name lang)
+              (submit-email-template-filename lang)
               {:hakukohteet     ["Hakukohde 1" "Hakukohde 2" "Hakukohde 3"]
                :application-url "https://example.com/muokkaus-linkki-esimerkki"
                :application-oid "1.2.246.562.11.00000000000000000000"})})

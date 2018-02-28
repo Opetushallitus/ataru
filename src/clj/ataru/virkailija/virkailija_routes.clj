@@ -5,6 +5,7 @@
             [ataru.applications.application-store :as application-store]
             [ataru.applications.excel-export :as excel]
             [ataru.applications.permission-check :as permission-check]
+            [ataru.application-email-confirmation :as email]
             [ataru.cache.cache-service :as cache]
             [ataru.config.core :refer [config]]
             [ataru.config.url-helper :as url-helper]
@@ -187,6 +188,11 @@
       (doseq [application-id (map :id (application-store/get-application-keys))]
         (person-integration/upsert-and-log-person person-service application-id))
       (ok (str "Updated persons for applications")))
+
+    (api/GET "/email-template/:form-key/preview/:lang" []
+      :path-params [form-key :- s/Str
+                    lang :- (s/enum "fi" "sv" "en")]
+      (ok (email/preview-submit-email (keyword lang))))
 
     (api/context "/applications" []
       :tags ["applications-api"]
