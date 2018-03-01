@@ -104,7 +104,7 @@
                                          :fieldClass "formField",
                                          :id         "hakuajat-ohi",
                                          :params     {},
-                                         :belongs-to-hakukohteet ["1.2.246.562.20.49028100001" "1.2.246.562.20.49028100003"]
+                                         :belongs-to-hakukohteet ["1.2.246.562.20.49028100001"]
                                          :fieldType  "textField"}
                                         {:label      {:fi "Osa hakuajoista voimassa!"},
                                          :fieldClass "formField",
