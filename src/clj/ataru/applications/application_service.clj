@@ -21,10 +21,6 @@
    [medley.core :refer [filter-vals]])
   (:import [java.io ByteArrayInputStream]))
 
-(defn get-application-list-by-form [form-key session organization-service]
-  (aac/check-form-access form-key session organization-service [:view-applications :edit-applications])
-  {:applications (application-store/get-application-list-by-form form-key)})
-
 (defn- extract-koodisto-fields [field-descriptor-list]
   (reduce
     (fn [result {:keys [children id koodisto-source options followups]}]

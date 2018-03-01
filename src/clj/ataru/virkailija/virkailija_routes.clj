@@ -246,10 +246,11 @@
                                         (some? personOid) [:person-oid personOid]
                                         (some? applicationOid) [:application-oid applicationOid])
               applications (when query-key
-                             (:applications
-                              (if (= query-key :form)
-                                (application-service/get-application-list-by-form query-value session organization-service)
-                                (access-controlled-application/get-application-list-by-query query-key query-value session organization-service))))
+                             (access-controlled-application/get-application-list-by-query
+                              query-key
+                              query-value
+                              session
+                              organization-service))
               persons      (person-service/get-persons person-service (distinct (keep :person-oid applications)))]
           (if applications
             (response/ok {:applications (for [application applications
