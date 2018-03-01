@@ -9,7 +9,7 @@
             [ataru.virkailija.virkailija-system :as virkailija-system]
             [ataru.hakija.hakija-system :as hakija-system]
             [ataru.forms.form-store :as form-store]
-            [ataru.application-email-confirmation :as application-email])
+            [ataru.email.application-email-confirmation :as application-email])
   (:import (java.util.concurrent TimeUnit)))
 
 (defn- run-specs-with-virkailija-and-hakija-systems [specs]

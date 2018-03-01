@@ -14,7 +14,7 @@
    [ataru.organization-service.ldap-client :as ldap]
    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
    [ataru.information-request.information-request-store :as information-request-store]
-   [ataru.application-email-confirmation :as email]
+   [ataru.email.application-email-confirmation :as email]
    [ataru.person-service.person-service :as person-service]
    [ataru.util :as util]
    [ataru.person-service.birth-date-converter :as bd-converter]

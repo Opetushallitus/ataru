@@ -1,4 +1,4 @@
-(ns ataru.application-email-confirmation
+(ns ataru.email.application-email-confirmation
   "Application-specific email confirmation init logic"
   (:require
     [taoensso.timbre :as log]

@@ -5,7 +5,7 @@
             [ataru.applications.application-store :as application-store]
             [ataru.applications.excel-export :as excel]
             [ataru.applications.permission-check :as permission-check]
-            [ataru.application-email-confirmation :as email]
+            [ataru.email.application-email-confirmation :as email]
             [ataru.cache.cache-service :as cache]
             [ataru.config.core :refer [config]]
             [ataru.config.url-helper :as url-helper]

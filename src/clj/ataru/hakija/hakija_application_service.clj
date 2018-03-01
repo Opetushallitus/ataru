@@ -5,7 +5,7 @@
     [clojure.core.match :refer [match]]
     [ataru.background-job.job :as job]
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
-    [ataru.application-email-confirmation :as application-email]
+    [ataru.email.application-email-confirmation :as application-email]
     [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
     [ataru.hakija.hakija-form-service :as hakija-form-service]
     [ataru.person-service.person-integration :as person-integration]
