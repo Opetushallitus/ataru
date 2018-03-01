@@ -387,7 +387,7 @@
                                       (js/parseInt new-val))]
                         (dispatch [:editor/set-component-value value path :params :decimals])))}
         [:option {:value "" :key 0} "kokonaisluku"]
-        (for [i (range 1 10)]
+        (for [i (range 1 5)]
           [:option {:value i :key i} (str i " desimaalia")])]])))
 
 (defn- text-component-type-selector [path radio-group-id]
