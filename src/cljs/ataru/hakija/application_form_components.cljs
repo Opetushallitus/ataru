@@ -422,8 +422,11 @@
      [:div.application__form-text-input-info-text
       [info-text field-descriptor]]
      [:div.application__form-select-wrapper
-      (when (not disabled?)
-        [:span.application__form-select-arrow])
+      (if disabled?
+        [:span.application__form-select-arrow.application__form-select-arrow__disabled
+         [:i.zmdi.zmdi-chevron-down]]
+        [:span.application__form-select-arrow
+         [:i.zmdi.zmdi-chevron-down]])
       [(keyword (str "select.application__form-select" (when (not disabled?) ".application__form-select--enabled")))
        {:id           (:id field-descriptor)
         :value        (or @value "")
