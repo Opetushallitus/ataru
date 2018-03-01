@@ -25,9 +25,7 @@
            {:srcDoc body}]
           [:div.virkailija-modal__buttons-container
            [:button.virkailija-modal__button
-            {:on-click (fn [_]
-                         (dispatch [:editor/toggle-email-template-editor])
-                         (dispatch [:editor/update-email-template nil]))}
+            {:on-click #(dispatch [:editor/load-email-template])}
             "Peruuta"]
            [:button.virkailija-modal__button
             {:on-click #(dispatch [:editor/save-email-template])}
