@@ -5,7 +5,7 @@ CREATE TABLE email_templates (
   haku_oid       VARCHAR(40),
   virkailija_oid VARCHAR(40)              NOT NULL REFERENCES virkailija (oid),
   lang           VARCHAR(40)              NOT NULL,
-  template       TEXT,
+  content        TEXT,
   UNIQUE (form_key, haku_oid, lang)
 );
 
