@@ -337,11 +337,11 @@
    :hakukohde_oids [s/Str]})
 
 (s/defschema ValintaApplication
-  {:key         s/Str
-   :person_oid  s/Str
-   :haku        s/Str
+  {:hakemusOid  s/Str
+   :personOid   s/Str
+   :hakuOid     s/Str
    :hakutoiveet [s/Str]
-   :key-values  {s/Str Value}})
+   :keyValues   {s/Str Value}})
 
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"

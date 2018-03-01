@@ -769,8 +769,9 @@
         eligibilities-by-hakutoive (get-application-eligibilities-by-hakutoive application)]
     (-> application
         (dissoc :content :application_hakukohde_reviews)
-        (assoc :key-values (merge (dissoc keyword-values :hakukohteet)
-                                  eligibilities-by-hakutoive)))))
+        (assoc :keyValues (merge (dissoc keyword-values :hakukohteet)
+                                  eligibilities-by-hakutoive))
+        (clojure.set/rename-keys {:key :hakemusOid :person_oid :personOid :haku :hakuOid}))))
 
 (defn get-applications-for-valintalaskenta [hakukohde-oid]
   (->> (exec-db :db yesql-valintalaskenta-applications {:hakukohde_oid hakukohde-oid})
