@@ -201,12 +201,15 @@
 (s/defschema FormWithContentAndTarjontaMetadata
   (merge FormWithContent {:tarjonta FormTarjontaMetadata}))
 
+(s/defschema Value
+  (s/cond-pre s/Str
+              s/Int
+              [(s/cond-pre s/Str
+                           File
+                           [(s/cond-pre s/Str s/Int File)])]))
+
 (s/defschema Answer {:key                          s/Str,
-                     :value                        (s/cond-pre s/Str
-                                                               s/Int
-                                                               [(s/cond-pre s/Str
-                                                                            File
-                                                                            [(s/cond-pre s/Str s/Int File)])])
+                     :value                        Value
                      :fieldType                    (apply s/enum form-fields)
                      (s/optional-key :cannot-view) s/Bool
                      (s/optional-key :label)       (s/maybe (s/cond-pre
@@ -332,6 +335,13 @@
    :haku_oid       s/Str
    :henkilo_oid    s/Str
    :hakukohde_oids [s/Str]})
+
+(s/defschema ValintaApplication
+  {:key         s/Str
+   :person_oid  s/Str
+   :haku        s/Str
+   :hakutoiveet [s/Str]
+   :key-values  {s/Str Value}})
 
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"

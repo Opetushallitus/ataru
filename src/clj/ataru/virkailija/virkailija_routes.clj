@@ -554,7 +554,7 @@
       (api/GET "/valintalaskenta" {session :session}
         :summary "Get application answers for valintalaskenta"
         :query-params [hakukohdeOid :- s/Str]
-        :return s/Any ; TODO: schema
+        :return [ataru-schema/ValintaApplication]
         (if-let [applications (access-controlled-application/get-applications-for-valintalaskenta organization-service
                                                                                                   session
                                                                                                   hakukohdeOid)]
