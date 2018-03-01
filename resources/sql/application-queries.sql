@@ -59,50 +59,6 @@ INSERT INTO applications (
 -- name: yesql-add-application-secret!
 INSERT INTO application_secrets (application_key, secret) VALUES (:application_key, :secret);
 
--- name: yesql-get-application-list-by-form
-WITH latest_information_request_event AS (
-    SELECT DISTINCT ON (application_key) * FROM application_events WHERE new_review_state = 'information-request' ORDER BY application_key, time DESC
-), latest_modification_by_applicant AS (
-    SELECT * FROM application_events WHERE event_type = 'updated-by-applicant' ORDER BY application_key, time DESC
-), new_application_modifications AS (
-    SELECT up.application_key
-    FROM latest_information_request_event ir
-      JOIN latest_modification_by_applicant up ON ir.application_key = up.application_key
-    WHERE ir.time < up.time
-)
-SELECT
-  a.id,
-  a.person_oid,
-  a.key,
-  a.lang,
-  a.preferred_name,
-  a.last_name,
-  a.created_time,
-  a.haku,
-  a.hakukohde,
-  ar.state                               AS state,
-  ar.score                               AS score,
-  (SELECT json_agg(json_build_object('requirement', requirement,
-                                     'state', state,
-                                     'hakukohde', hakukohde))
-   FROM application_hakukohde_reviews ahr
-   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
-  (SELECT json_agg(json_build_object('attachment_key', attachment_key,
-                                     'state', state,
-                                     'hakukohde', hakukohde))
-   FROM application_hakukohde_attachment_reviews aar
-   WHERE aar.application_key = a.key
-     AND (aar.hakukohde = 'form' OR aar.hakukohde = ANY (a.hakukohde))) AS application_attachment_reviews,
-  (SELECT COUNT(*)
-   FROM new_application_modifications am
-   WHERE am.application_key = a.key) AS new_application_modifications
-FROM latest_applications AS a
-JOIN application_reviews ar ON a.key = ar.application_key
-JOIN forms AS f ON f.id = a.form_id
-WHERE a.haku IS NULL
-  AND f.key = :form_key
-ORDER BY a.created_time DESC;
-
 -- name: yesql-get-application-list-for-virkailija
 WITH latest_information_request_event AS (
     SELECT DISTINCT ON (application_key) * FROM application_events WHERE new_review_state = 'information-request' ORDER BY application_key, time DESC
@@ -147,6 +103,8 @@ FROM latest_applications AS a
   JOIN latest_forms AS lf ON lf.key = f.key
 WHERE
   CASE
+  WHEN :query_key = 'form'
+    THEN (lf.key = :query_value AND a.haku IS NULL)
   WHEN :query_key = 'application-oid'
     THEN a.key = :query_value
   WHEN :query_key = 'person-oid'

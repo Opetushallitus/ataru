@@ -60,11 +60,11 @@
     (insert-test-form form-name)))
 
 (defn get-latest-application-id-for-form [form-name]
-  (-> (get-latest-form form-name)
-      :key
-      application-store/get-application-list-by-form
-      first
-      :id))
+  (->> (get-latest-form form-name)
+       :key
+       (application-store/get-application-heading-list "form")
+       first
+       :id))
 
 (defn get-latest-application-secret []
       (application-store/get-latest-application-secret))

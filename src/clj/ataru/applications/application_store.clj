@@ -223,12 +223,6 @@
                                    virkailija-oid)})
       id)))
 
-(defn get-application-list-by-form
-  "Only list with header-level info, not answers. Does NOT include applications associated with any hakukohde."
-  [form-key]
-  (->> (exec-db :db yesql-get-application-list-by-form {:form_key form-key})
-       (map ->kebab-case-kw)))
-
 (defn- name-search-query [name]
   (->> (clojure.string/split name #"\s+")
        (remove clojure.string/blank?)

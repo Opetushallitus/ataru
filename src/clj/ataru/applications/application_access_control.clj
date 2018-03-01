@@ -6,11 +6,6 @@
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
    [ataru.odw.odw-service :as odw-service]))
 
-(defn check-form-access [form-key session organization-service rights]
-  (when-not
-    (form-access-control/form-allowed-by-key? form-key session organization-service rights)
-    (throw (user-feedback-exception (str "Lomake " form-key " ei ole sallittu")))))
-
 (defn check-application-access [application-key session organization-service rights]
   (when-not
     (session-orgs/organization-allowed?
@@ -31,8 +26,8 @@
     organization-service
     [:view-applications :edit-applications]
     empty-applications-result-fn
-    #(hash-map :applications (application-store/get-application-heading-list query-key query-value %))
-    #(hash-map :applications (application-store/get-application-heading-list query-key query-value))))
+    #(application-store/get-application-heading-list query-key query-value %)
+    #(application-store/get-application-heading-list query-key query-value)))
 
 (defn get-latest-application-by-key [application-key session organization-service]
   (-> (session-orgs/run-org-authorized
