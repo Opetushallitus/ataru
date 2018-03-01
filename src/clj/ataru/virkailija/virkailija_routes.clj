@@ -149,7 +149,7 @@
                              In practice this is Tarjonta system only for now.
                              Return forms authorized with editor right (:form-edit)"
       :return {:forms [ataru-schema/Form]}
-      (ok (access-controlled-form/get-forms-for-editor session organization-service)))
+      (ok (access-controlled-form/get-forms-for-editor session virkailija-tarjonta-service organization-service)))
 
     (api/GET "/forms-in-use" {session :session}
       :summary "Return a map of form->hakus-currently-in-use-in-tarjonta-service"
