@@ -6,6 +6,7 @@
             [ataru.applications.excel-export :as excel]
             [ataru.applications.permission-check :as permission-check]
             [ataru.email.application-email-confirmation :as email]
+            [ataru.email.email-store :as email-store]
             [ataru.cache.cache-service :as cache]
             [ataru.config.core :refer [config]]
             [ataru.config.url-helper :as url-helper]
@@ -194,6 +195,12 @@
                     lang :- (s/enum "fi" "sv" "en")]
       :body [body {:content (s/maybe s/Str)}]
       (ok (email/preview-submit-email (keyword lang) (:content body))))
+
+    (api/POST "/email-template/:form-key/:lang" {session :session}
+      :path-params [form-key :- s/Str
+                    lang :- (s/enum "fi" "sv" "en")]
+      :body [body {:content s/Str}]
+      (ok (email-store/create-or-update-email-template form-key lang session (:content body))))
 
     (api/context "/applications" []
       :tags ["applications-api"]

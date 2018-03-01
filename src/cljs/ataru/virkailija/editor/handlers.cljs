@@ -652,3 +652,20 @@
                                                    :from    from
                                                    :subject subject
                                                    :lang    lang})))
+
+(reg-event-db
+  :editor/handle-saved-email-template
+  (fn [db [_ response]]
+    (println "response" response)
+    db))
+
+(reg-event-fx
+  :editor/save-email-template
+  (fn [{db :db} [_]]
+    (let [content  (get-in db [:editor :email-template :content])
+          form-key (get-in db [:editor :selected-form-key])
+          lang     "fi"]
+      {:http {:method :post
+              :params {:content content}
+              :path   (str "/lomake-editori/api/email-template/" form-key "/" lang)
+              :handler-or-dispatch :editor/handle-saved-email-template}})))
