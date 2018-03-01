@@ -99,13 +99,20 @@
         (form-store/create-form-or-increment-version!
          (assoc form :deleted true))))))
 
-(defn get-forms-for-editor [session organization-service]
+(defn- get-forms-as-ordinary-user [session virkailija-tarjonta-service organization-oids]
+  (let [forms-with-organization-oids                              (form-store/get-forms organization-oids)
+        forms-using-tarjonta-keys                                 (set (keys (.get-forms-in-use virkailija-tarjonta-service (-> session :identity :username))))
+        missing-tarjonta-form-keys                                (clojure.set/difference forms-using-tarjonta-keys (set (map :key forms-with-organization-oids)))
+        tarjonta-forms-with-some-hakukohde-from-user-organization (form-store/get-forms-by-keys (vec missing-tarjonta-form-keys))]
+    (concat forms-with-organization-oids tarjonta-forms-with-some-hakukohde-from-user-organization)))
+
+(defn get-forms-for-editor [session virkailija-tarjonta-service organization-service]
   {:forms (session-orgs/run-org-authorized
            session
            organization-service
            [:form-edit]
            vector
-           #(form-store/get-forms %)
+           #(get-forms-as-ordinary-user session virkailija-tarjonta-service %)
            #(form-store/get-all-forms))})
 
 
