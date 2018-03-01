@@ -25,7 +25,7 @@
     session
     organization-service
     [:view-applications :edit-applications]
-    empty-applications-result-fn
+    (constantly [])
     #(application-store/get-application-heading-list query-key query-value %)
     #(application-store/get-application-heading-list query-key query-value)))
 

@@ -23,7 +23,6 @@
             [ataru.middleware.session-timeout :as session-timeout]
             [ataru.middleware.user-feedback :as user-feedback]
             [ataru.person-service.person-integration :as person-integration]
-            [ataru.person-service.person-service :as person-service]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.statistics.statistics-service :as statistics-service]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
@@ -244,29 +243,14 @@
                                         (some? email) [:email email]
                                         (some? name) [:name name]
                                         (some? personOid) [:person-oid personOid]
-                                        (some? applicationOid) [:application-oid applicationOid])
-              applications (when query-key
-                             (access-controlled-application/get-application-list-by-query
-                              query-key
-                              query-value
-                              session
-                              organization-service))
-              persons      (person-service/get-persons person-service (distinct (keep :person-oid applications)))]
-          (if applications
-            (response/ok {:applications (for [application applications
-                                              :let [person      (get persons (keyword (:person-oid application)))
-                                                    person-info (if (or (-> person :yksiloity)
-                                                                        (-> person :yksiloityVTJ))
-                                                                  {:preferred-name (:kutsumanimi person)
-                                                                   :last-name      (:sukunimi person)
-                                                                   :yksiloity      true}
-                                                                  {:preferred-name (:preferred-name application)
-                                                                   :last-name      (:last-name application)
-                                                                   :yksiloity      false})]]
-                                          (-> application
-                                              (assoc :person person-info)
-                                              (dissoc :person-oid :preferred-name :last-name)))})
-            (response/bad-request))))
+                                        (some? applicationOid) [:application-oid applicationOid])]
+          (response/ok
+           {:applications (application-service/get-application-list-by-query
+                           session
+                           person-service
+                           organization-service
+                           query-key
+                           query-value)})))
       (api/GET "/virkailija-settings" {session :session}
         :return ataru-schema/VirkailijaSettings
         (ok (virkailija-edit/get-review-settings session)))

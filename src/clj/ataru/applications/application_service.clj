@@ -166,6 +166,31 @@
      :review-notes         (application-store/get-application-review-notes application-key)
      :information-requests (information-request-store/get-information-requests application-key)}))
 
+(defn get-application-list-by-query
+  [session person-service organization-service query-key query-value]
+  (let [applications (aac/get-application-list-by-query
+                      query-key
+                      query-value
+                      session
+                      organization-service)
+        persons      (person-service/get-persons
+                      person-service
+                      (distinct (keep :person-oid applications)))]
+    (map (fn [application]
+           (let [onr-person (get persons (keyword (:person-oid application)))
+                 person     (if (or (:yksiloity onr-person)
+                                    (:yksiloityVTJ onr-person))
+                              {:preferred-name (:kutsumanimi onr-person)
+                               :last-name      (:sukunimi onr-person)
+                               :yksiloity      true}
+                              {:preferred-name (:preferred-name application)
+                               :last-name      (:last-name application)
+                               :yksiloity      false})]
+             (-> application
+                 (assoc :person person)
+                 (dissoc :person-oid :preferred-name :last-name))))
+         applications)))
+
 (defn get-excel-report-of-applications-by-key
   [application-keys selected-hakukohde skip-answers? session organization-service tarjonta-service ohjausparametrit-service person-service]
   (let [applications              (application-store/get-applications-by-keys application-keys)
