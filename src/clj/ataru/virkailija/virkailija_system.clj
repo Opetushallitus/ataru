@@ -22,9 +22,7 @@
   ([http-port repl-port]
    (apply component/system-map
 
-     :organization-service (component/using
-                             (organization-service/new-organization-service)
-                             [:cache-service])
+     :organization-service (organization-service/new-organization-service)
 
      :cache-service (component/using
                      {}
@@ -35,7 +33,7 @@
 
      :virkailija-tarjonta-service (component/using
                                     (tarjonta-service/new-virkailija-tarjonta-service)
-                                    [:organization-service :cache-service])
+                                    [:organization-service])
 
      :tarjonta-service (component/using
                          (tarjonta-service/new-tarjonta-service)

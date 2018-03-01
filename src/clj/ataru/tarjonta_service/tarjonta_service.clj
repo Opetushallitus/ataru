@@ -31,19 +31,14 @@
       (assoc hakus avain haku-info)
       hakus)))
 
-(defn- forms-in-use
-  [cache-service organization-service username]
-  (let [direct-organizations    (.get-direct-organizations-for-rights organization-service username [:form-edit])
-        all-organization-oids   (map :oid (.get-all-organizations organization-service (:form-edit direct-organizations)))
-        in-oph-organization?    (some #{oph-organization} all-organization-oids)
-        query-organization-oids (sort (if in-oph-organization? nil all-organization-oids))
-        hakus                   (map (fn [oid] cache/cache-get-or-fetch cache-service
-                                         :forms-in-use
-                                         oid
-                                         #(client/get-forms-in-use query-organization-oids)) query-organization-oids)]
+(defn forms-in-use
+  [organization-service username]
+  (let [direct-organizations  (.get-direct-organizations-for-rights organization-service username [:form-edit])
+        all-organization-oids (map :oid (.get-all-organizations organization-service (:form-edit direct-organizations)))
+        in-oph-organization?  (some #{oph-organization} all-organization-oids)]
     (reduce hakus-by-form-key
             {}
-            hakus)))
+            (client/get-forms-in-use (if in-oph-organization? nil all-organization-oids)))))
 
 (defn- epoch-millis->zoned-date-time
   [millis]
@@ -118,7 +113,7 @@
   (get-koulutus [this koulutus-oid]
     (cache/cache-get-or-fetch cache-service :koulutus koulutus-oid #(client/get-koulutus koulutus-oid))))
 
-(defrecord VirkailijaTarjontaFormsService [cache-service]
+(defrecord VirkailijaTarjontaFormsService []
   component/Lifecycle
   VirkailijaTarjontaService
 
@@ -126,7 +121,7 @@
   (stop [this] this)
 
   (get-forms-in-use [this username]
-    (forms-in-use cache-service (:organization-service this) username)))
+    (forms-in-use (:organization-service this) username)))
 
 (defn new-tarjonta-service
   []
@@ -138,4 +133,4 @@
   []
   (if (-> config :dev :fake-dependencies)
     (->MockVirkailijaTarjontaService)
-    (->VirkailijaTarjontaFormsService nil)))
+    (->VirkailijaTarjontaFormsService)))
