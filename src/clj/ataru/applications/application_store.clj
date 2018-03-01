@@ -724,20 +724,53 @@
 (defn- get-application-eligibilities-by-hakutoive [application]
   (let [eligibilities-by-hakukohde (reduce #(assoc %1 (-> %2 :hakukohde) (:state %2))
                                            {}
-                                           (:application_hakukohde_reviews application))
-        eligibilities              (map-indexed (fn [index hakukohde-oid]
-                                                  (let [preference  (keyword (format "preference%d-Koulutus-id-eligibility" (inc index)))
-                                                        eligibility (get eligibilities-by-hakukohde hakukohde-oid "unreviewed")]
-                                                    {preference eligibility}))
-                                                (:hakutoiveet application))]
-    (into {} eligibilities)))
+                                           (:application_hakukohde_reviews application))]
+    (->> (:hakutoiveet application)
+         (map-indexed
+          (fn [index hakukohde-oid]
+            (let [preference  (format "preference%d-Koulutus-id-eligibility" (inc index))
+                  eligibility (get eligibilities-by-hakukohde hakukohde-oid "unreviewed")]
+              {preference eligibility})))
+         (into {}))))
+
+(defn- flatten-question-group-answers [key group-values]
+  (->> group-values
+       (map-indexed
+        (fn [group-index values]
+          (map-indexed
+           (fn [index value]
+             {(format "%s_group%d_%d" key (inc group-index) (inc index)) value})
+           values)))
+       flatten
+       (into {})))
+
+(defn- flatten-sequential-answers [key values]
+  (->> values
+       (map-indexed
+        (fn [index value]
+          {(format "%s_%d" key (inc index)) value}))
+       (into {})))
+
+(defn- flatten-application-answers [answers]
+  (reduce
+   (fn [acc answer]
+     (let [key             (:key answer)
+           value-or-values (:value answer)]
+       (if (sequential? value-or-values)
+         (if (every? sequential? value-or-values)
+           (merge acc (flatten-question-group-answers key value-or-values))
+           (merge acc (flatten-sequential-answers key value-or-values)))
+         (assoc acc key value-or-values))))
+   {}
+   answers))
 
 (defn- unwrap-valintalaskenta-application [application]
-  (let [keyword-values             (reduce #(assoc %1 (-> %2 :key keyword) (:value %2)) {} (-> application :content :answers))
+  (let [keyword-values             (flatten-application-answers (-> application :content :answers))
         eligibilities-by-hakutoive (get-application-eligibilities-by-hakutoive application)]
     (-> application
         (dissoc :content :application_hakukohde_reviews)
-        (assoc :key-values (merge keyword-values eligibilities-by-hakutoive)))))
+        (assoc :key-values (merge (dissoc keyword-values :hakukohteet)
+                                  eligibilities-by-hakutoive)))))
 
 (defn get-applications-for-valintalaskenta [hakukohde-oid]
   (->> (exec-db :db yesql-valintalaskenta-applications {:hakukohde_oid hakukohde-oid})
