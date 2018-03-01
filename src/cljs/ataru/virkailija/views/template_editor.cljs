@@ -16,7 +16,7 @@
           [:h3 "Sisältö"]
           [:textarea.virkailija-modal__editor
            {:value     content
-            :on-change #(dispatch [:editor/update-email-template (.-value (.-target %))])}]]
+            :on-change #(dispatch [:editor/update-email-preview (.-value (.-target %))])}]]
          [:div.virkailija-modal__preview-panel
           [:h3 "Esikatselu"]
           [:div "Lähettäjä:" [:span from]]

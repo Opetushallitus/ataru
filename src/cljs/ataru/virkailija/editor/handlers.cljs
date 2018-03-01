@@ -629,35 +629,36 @@
   (fn [{db :db} _]
     (let [now-visible? (-> db
                            (get-in [:editor :ui :template-editor-visible?])
-                           (not))
-          content      (get-in db [:editor :email-template :content])]
+                           (not))]
       (cond-> {:db (assoc-in db [:editor :ui :template-editor-visible?] now-visible?)}
-              now-visible? (merge {:dispatch [:editor/update-email-template content]})))))
+              now-visible? (merge {:dispatch [:editor/load-email-template]})))))
 
 (reg-event-fx
-  :editor/update-email-template
+  :editor/update-email-preview-immediately
   (fn [{db :db} [_ content]]
-    (let [form-key "x"
+    (let [form-key (get-in db [:editor :selected-form-key])
           lang     "fi"]
-      {:db   (assoc-in db [:editor :email-template :content] content)
-       :http {:method              :post
+      {:http {:method              :post
               :params              {:content content}
               :path                (str "/lomake-editori/api/email-template/" form-key "/preview/" lang)
               :handler-or-dispatch :editor/update-email-template-preview}})))
 
+(reg-event-fx
+  :editor/update-email-preview
+  (fn [{db :db} [_ content]]
+    {:db                 (assoc-in db [:editor :email-template :content] content)
+     :dispatch-debounced {:timeout  500
+                          :id       :email-template-preview
+                          :dispatch [:editor/update-email-preview-immediately content]}}))
+
 (reg-event-db
   :editor/update-email-template-preview
-  (fn [db [_ {:keys [body from subject lang]}]]
-    (update-in db [:editor :email-template] merge {:body    body
+  (fn [db [_ {:keys [body from subject lang content]}]]
+    (update-in db [:editor :email-template] merge {:content content
+                                                   :body    body
                                                    :from    from
                                                    :subject subject
                                                    :lang    lang})))
-
-(reg-event-db
-  :editor/handle-saved-email-template
-  (fn [db [_ response]]
-    (println "response" response)
-    db))
 
 (reg-event-fx
   :editor/save-email-template
@@ -665,7 +666,16 @@
     (let [content  (get-in db [:editor :email-template :content])
           form-key (get-in db [:editor :selected-form-key])
           lang     "fi"]
-      {:http {:method :post
-              :params {:content content}
-              :path   (str "/lomake-editori/api/email-template/" form-key "/" lang)
-              :handler-or-dispatch :editor/handle-saved-email-template}})))
+      {:http {:method              :post
+              :params              {:content content}
+              :path                (str "/lomake-editori/api/email-template/" form-key "/" lang)
+              :handler-or-dispatch :editor/update-email-template-preview}})))
+
+(reg-event-fx
+  :editor/load-email-template
+  (fn [{db :db} [_]]
+    (let [form-key (get-in db [:editor :selected-form-key])
+          lang     "fi"]
+      {:http {:method              :get
+              :path                (str "/lomake-editori/api/email-template/" form-key "/" lang)
+              :handler-or-dispatch :editor/update-email-template-preview}})))

@@ -200,7 +200,13 @@
       :path-params [form-key :- s/Str
                     lang :- (s/enum "fi" "sv" "en")]
       :body [body {:content s/Str}]
-      (ok (email-store/create-or-update-email-template form-key lang session (:content body))))
+      (ok (email/store-email-template form-key lang session (:content body))))
+
+    (api/GET "/email-template/:form-key/:lang" []
+      :path-params [form-key :- s/Str
+                    lang :- (s/enum "fi" "sv" "en")]
+      :query-params [{haku-oid :- s/Str nil}]
+      (ok (email/get-email-template form-key lang)))
 
     (api/context "/applications" []
       :tags ["applications-api"]

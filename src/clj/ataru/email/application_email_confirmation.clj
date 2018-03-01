@@ -4,13 +4,15 @@
     [taoensso.timbre :as log]
     [selmer.parser :as selmer]
     [ataru.applications.application-store :as application-store]
+    [ataru.email.email-store :as email-store]
     [ataru.background-job.job :as job]
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
     [ataru.background-job.email-job :as email-job]
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
     [ataru.config.core :refer [config]]
     [markdown.core :as md]
-    [clojure.string :as string])
+    [clojure.string :as string]
+    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit])
   (:import
     [org.owasp.html HtmlPolicyBuilder]))
 
@@ -99,7 +101,8 @@
 (defn preview-submit-email
   [lang content]
   {:from    from-address
-   :subject (lang submit-email-subjects)
+   :subject ((keyword lang) submit-email-subjects)
+   :content content
    :body    (selmer/render-file
               (submit-email-template-filename lang)
               {:lang            lang
@@ -141,3 +144,18 @@
 (defn start-email-refresh-secret-confirmation-job
   [tarjonta-service application-id]
   (start-email-job (create-refresh-secret-email tarjonta-service application-id)))
+
+(defn get-email-template
+  [form-key lang]
+  (let [stored-template (email-store/get-email-template form-key lang)]
+    (preview-submit-email lang (:content stored-template))))
+
+(defn store-email-template
+  [form-key lang session content]
+  (let [virkailija      (virkailija-edit/upsert-virkailija session)
+        stored-template (email-store/create-or-update-email-template
+                          form-key
+                          lang
+                          (:oid virkailija)
+                          content)]
+    (preview-submit-email lang (:content stored-template))))
