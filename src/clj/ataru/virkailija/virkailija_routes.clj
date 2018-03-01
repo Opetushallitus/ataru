@@ -153,7 +153,6 @@
       :summary "Return forms for editor view. Also used by external services.
                              In practice this is Tarjonta system only for now.
                              Return forms authorized with editor right (:form-edit)"
-<<<<<<< HEAD
       :return {:forms [ataru-schema/Form]}
       (ok (access-controlled-form/get-forms-for-editor session virkailija-tarjonta-service organization-service)))
 
