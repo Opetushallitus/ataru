@@ -94,6 +94,13 @@
         (update hakukohde
                 :kaytetaanHakukohdekohtaistaHakuaikaa #(.booleanValue %)))))
 
+  (get-hakukohteet [this hakukohde-oids]
+    (remove #(or (nil? %) (= "PERUTTU" (:tila %)))
+            (cache/cache-get-many
+             cache-service
+             :hakukohde
+             hakukohde-oids)))
+
   (get-hakukohde-name [this hakukohde-oid]
     (when-let [hakukohde (.get-hakukohde this hakukohde-oid)]
       (parse-multi-lang-text (:hakukohteenNimet hakukohde))))
