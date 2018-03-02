@@ -95,6 +95,9 @@
         (update hakukohde
                 :kaytetaanHakukohdekohtaistaHakuaikaa #(.booleanValue %)))))
 
+  (get-hakukohteet [this hakukohde-oids]
+    (keep #(.get-hakukohde this %) hakukohde-oids))
+
   (get-hakukohde-name [this hakukohde-oid]
     (when-let [hakukohde (.get-hakukohde this hakukohde-oid)]
       (parse-multi-lang-text (:hakukohteenNimet hakukohde))))

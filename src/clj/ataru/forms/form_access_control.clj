@@ -120,7 +120,5 @@
            organization-service
            [:form-edit]
            vector
-           #(get-forms-as-ordinary-user session virkailija-tarjonta-service %)
+           #(get-forms-as-ordinary-user session virkailija-tarjonta-service (vec %))
            #(form-store/get-all-forms))})
-
-

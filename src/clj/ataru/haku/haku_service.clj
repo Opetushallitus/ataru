@@ -3,7 +3,8 @@
    [ataru.organization-service.session-organizations :as session-orgs]
    [ataru.applications.application-store :as application-store]
    [ataru.forms.form-store :as form-store]
-   [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]))
+   [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
+   [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]))
 
 (defn- raw-haku-row->hakukohde
   [tarjonta-service {hakukohde-oid :hakukohde
@@ -45,15 +46,48 @@
        :processed              processed
        :unprocessed            unprocessed})))
 
+(defn- authorized-by-tarjoajat?
+  [authorized-organization-oids tarjoajat haku]
+  {:pre [(set? authorized-organization-oids)
+         (some? (:haku haku))
+         (some? (:hakukohde haku))]}
+  (not-empty
+   (clojure.set/intersection
+    authorized-organization-oids
+    (get tarjoajat (:hakukohde haku)))))
+
+(defn- authorized-by-form?
+  [authorized-organization-oids haku]
+  {:pre [(set? authorized-organization-oids)
+         (some? (:organization-oid haku))]}
+  (contains? authorized-organization-oids
+             (:organization-oid haku)))
+
+(defn- hakujen-tarjoajat [tarjonta-service haut]
+  (->> haut
+       (map :hakukohde)
+       distinct
+       (tarjonta-protocol/get-hakukohteet tarjonta-service)
+       (reduce #(assoc %1 (:oid %2) (set (:tarjoajaOids %2)))
+               {})))
+
+(defn- remove-organization-oid [haku]
+  (dissoc haku :organization-oid))
+
 (defn get-haut
   [session organization-service tarjonta-service]
   (session-orgs/run-org-authorized
-    session
-    organization-service
-    [:view-applications :edit-applications]
-    vector
-    #(handle-hakukohteet tarjonta-service (application-store/get-haut %))
-    #(handle-hakukohteet tarjonta-service (application-store/get-all-haut))))
+   session
+   organization-service
+   [:view-applications :edit-applications]
+   vector
+   #(let [haut (application-store/get-haut)]
+      (->> haut
+           (filter (partial authorized-by-tarjoajat? % (hakujen-tarjoajat
+                                                        tarjonta-service
+                                                        haut)))
+           (handle-hakukohteet tarjonta-service)))
+   #(handle-hakukohteet tarjonta-service (application-store/get-haut))))
 
 (defn get-direct-form-haut [session organization-service]
   (session-orgs/run-org-authorized
@@ -61,5 +95,7 @@
    organization-service
    [:view-applications :edit-applications]
    vector
-   #(application-store/get-direct-form-haut %)
-   #(application-store/get-all-direct-form-haut)))
+   #(->>(application-store/get-direct-form-haut)
+        (filter (partial authorized-by-form? %))
+        (map remove-organization-oid))
+   #(map remove-organization-oid (application-store/get-direct-form-haut))))
