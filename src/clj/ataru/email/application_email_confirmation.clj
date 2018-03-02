@@ -57,6 +57,12 @@
       (get-in [:public-config :applicant :service_url])
       (str "/hakemus?modify=" secret)))
 
+(defn- ->safe-html
+  [content]
+  (.sanitize
+    html-policy
+    (md/md-to-html-string content :custom-transformers [add-link-target-prop])))
+
 (defn- hakukohde-names [tarjonta-service lang application]
   (when-let [haku-oid (:haku application)]
     (let [priority? (:usePriority (tarjonta-service/get-haku tarjonta-service haku-oid))]
@@ -67,8 +73,15 @@
 
 (defn- create-email [tarjonta-service subject template-name application-id]
   (let [application     (application-store/get-application application-id)
+        form-key        (-> [(:key application)]
+                            (application-store/get-applications-by-keys)
+                            (first)
+                            (:form-key))
         lang            (keyword (:lang application))
         subject         (subject lang)
+        content         (-> (email-store/get-email-template form-key lang)
+                            :content
+                            (->safe-html))
         recipient       (->> (:answers application)
                              (filter #(= "email" (:key %)))
                              first
@@ -76,11 +89,12 @@
         application-url (modify-link (:secret application))
         body            (selmer/render-file
                           (template-name lang)
-                          {:hakukohteet (hakukohde-names tarjonta-service
-                                                         lang
-                                                         application)
+                          {:hakukohteet     (hakukohde-names tarjonta-service
+                                                             lang
+                                                             application)
                            :application-url application-url
-                           :application-oid (:key application)})]
+                           :application-oid (:key application)
+                           :content         content})]
     {:from       from-address
      :recipients [recipient]
      :subject    subject
@@ -91,12 +105,6 @@
                 submit-email-subjects
                 submit-email-template-filename
                 application-id))
-
-(defn- sanitize-content
-  [content]
-  (.sanitize
-    html-policy
-    (md/md-to-html-string content :custom-transformers [add-link-target-prop])))
 
 (defn preview-submit-email
   [lang content]
@@ -109,7 +117,7 @@
                :hakukohteet     ["Hakukohde 1" "Hakukohde 2" "Hakukohde 3"]
                :application-url "https://example.com/muokkaus-linkki-esimerkki"
                :application-oid "1.2.246.562.11.00000000000000000000"
-               :content         (sanitize-content content)})})
+               :content         (->safe-html content)})})
 
 (defn- create-edit-email [tarjonta-service application-id]
   (create-email tarjonta-service
