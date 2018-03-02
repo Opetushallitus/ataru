@@ -637,7 +637,7 @@
   :editor/update-email-preview-immediately
   (fn [{db :db} [_ content]]
     (let [form-key (get-in db [:editor :selected-form-key])
-          lang     "fi"]
+          lang     (get-in db [:editor :email-template :lang])]
       {:http {:method              :post
               :params              {:content content}
               :path                (str "/lomake-editori/api/email-template/" form-key "/preview/" lang)
@@ -653,19 +653,17 @@
 
 (reg-event-db
   :editor/update-email-template-preview
-  (fn [db [_ {:keys [body from subject lang content]}]]
+  (fn [db [_ {:keys [body from subject content]}]]
     (update-in db [:editor :email-template] merge {:content content
                                                    :body    body
                                                    :from    from
-                                                   :subject subject
-                                                   :lang    lang})))
+                                                   :subject subject})))
 
 (reg-event-fx
   :editor/save-email-template
   (fn [{db :db} [_]]
-    (let [content  (get-in db [:editor :email-template :content])
-          form-key (get-in db [:editor :selected-form-key])
-          lang     "fi"]
+    (let [{:keys [lang content]} (get-in db [:editor :email-template])
+          form-key (get-in db [:editor :selected-form-key])]
       {:http {:method              :post
               :params              {:content content}
               :path                (str "/lomake-editori/api/email-template/" form-key "/" lang)
@@ -675,7 +673,13 @@
   :editor/load-email-template
   (fn [{db :db} [_]]
     (let [form-key (get-in db [:editor :selected-form-key])
-          lang     "fi"]
+          lang     (get-in db [:editor :email-template :lang])]
       {:http {:method              :get
               :path                (str "/lomake-editori/api/email-template/" form-key "/" lang)
               :handler-or-dispatch :editor/update-email-template-preview}})))
+
+(reg-event-fx
+  :editor/set-email-template-language
+  (fn [{db :db} [_ lang]]
+    {:db       (assoc-in db [:editor :email-template :lang] lang)
+     :dispatch [:editor/load-email-template]}))

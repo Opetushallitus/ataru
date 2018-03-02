@@ -8,7 +8,8 @@
                   :autosave          nil                    ; autosave stop function, see autosave.cljs
                   :selected-form-key nil
                   :used-by-haut      {:fetching? false
-                                      :error?    false}}
+                                      :error?    false}
+                  :email-template    {:lang "fi"}}
    ; Initial active panel on page load.
    :active-panel :editor
    :application  {:review                     {}
