@@ -340,12 +340,13 @@
                                                             (= (:state %) "information-request")))
                                               (seq)))]
             [:div.application-handling__list-row-hakukohde
-             [:span.application-handling__application-hakukohde-cell
-              {:class    (when (= selected-hakukohde hakukohde-oid) "application-handling__application-hakukohde-cell--selected")
-               :on-click (fn []
-                           (select-application (:key application))
-                           (dispatch [:state-update #(assoc-in % [:application :selected-review-hakukohde] hakukohde-oid)]))}
-              (from-multi-lang (:name hakukohde)) " - " (from-multi-lang (:tarjoaja-name hakukohde))]
+             (when (not direct-form-application?)
+               [:span.application-handling__application-hakukohde-cell
+                {:class    (when (= selected-hakukohde hakukohde-oid) "application-handling__application-hakukohde-cell--selected")
+                 :on-click (fn []
+                             (select-application (:key application))
+                             (dispatch [:state-update #(assoc-in % [:application :selected-review-hakukohde] hakukohde-oid)]))}
+                (from-multi-lang (:name hakukohde)) " - " (from-multi-lang (:tarjoaja-name hakukohde))])
              [:span.application-handling__application-hl
               {:class (when direct-form-application? "application-handling__application-hl--direct-form")}]
              [:span.application-handling__hakukohde-state-cell

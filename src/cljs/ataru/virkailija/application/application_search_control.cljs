@@ -83,7 +83,7 @@
     [:a.application__search-control-haku-link
      {:href link-href}
      [:span.application__search-control-haku-title
-      (some #(get name %) [:fi :sv :en]) " - " (some #(get tarjoaja-name %) [:fi :sv :en])]
+      (some #(get name %) [:fi :sv :en]) (when-let [name (some #(get tarjoaja-name %) [:fi :sv :en])] (str " - " name))]
      [:span.application__search-control-haku-hl]
      (when haku-application-count
        [:span.application__search-control-haku-count (str haku-application-count " hakemus" (when (< 1 haku-application-count) "ta"))])
