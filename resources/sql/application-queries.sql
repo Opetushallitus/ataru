@@ -121,6 +121,8 @@ WHERE
     THEN a.haku = :query_value
   WHEN :query_key = 'hakukohde-oid'
     THEN :query_value = ANY (a.hakukohde)
+  WHEN :query_key = 'ensisijainen-hakukohde-oid'
+    THEN :query_value = a.hakukohde[1]
   END
   AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;

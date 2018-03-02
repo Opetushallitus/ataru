@@ -235,6 +235,7 @@
         :query-params [{formKey :- s/Str nil}
                        {hakukohdeOid :- s/Str nil}
                        {hakuOid :- s/Str nil}
+                       {ensisijainenHakukohdeOid :- s/Str nil}
                        {ssn :- s/Str nil}
                        {dob :- s/Str nil}
                        {email :- s/Str nil}
@@ -243,23 +244,27 @@
                        {applicationOid :- s/Str nil}]
         :summary "Return applications header-level info for form"
         :return {:applications [ataru-schema/ApplicationInfo]}
-        (let [[query-key query-value] (cond
-                                        (some? formKey) [:form formKey]
-                                        (some? hakukohdeOid) [:hakukohde-oid hakukohdeOid]
-                                        (some? hakuOid) [:haku-oid hakuOid]
-                                        (some? ssn) [:ssn ssn]
-                                        (some? dob) [:dob (when (dob/dob? dob) dob)]
-                                        (some? email) [:email email]
-                                        (some? name) [:name name]
-                                        (some? personOid) [:person-oid personOid]
-                                        (some? applicationOid) [:application-oid applicationOid])]
-          (response/ok
-           {:applications (application-service/get-application-list-by-query
-                           session
-                           person-service
-                           organization-service
-                           query-key
-                           query-value)})))
+        (let [[query-key query-value]
+              (cond
+                (some? formKey) [:form formKey]
+                (some? hakukohdeOid) [:hakukohde-oid hakukohdeOid]
+                (some? ensisijainenHakukohdeOid) [:ensisijainen-hakukohde-oid ensisijainenHakukohdeOid]
+                (some? hakuOid) [:haku-oid hakuOid]
+                (some? ssn) [:ssn ssn]
+                (some? dob) [:dob (when (dob/dob? dob) dob)]
+                (some? email) [:email email]
+                (some? name) [:name name]
+                (some? personOid) [:person-oid personOid]
+                (some? applicationOid) [:application-oid applicationOid])]
+          (if (nil? query-key)
+            (response/bad-request)
+            (response/ok
+             {:applications (application-service/get-application-list-by-query
+                             session
+                             person-service
+                             organization-service
+                             query-key
+                             query-value)}))))
       (api/GET "/virkailija-settings" {session :session}
         :return ataru-schema/VirkailijaSettings
         (ok (virkailija-edit/get-review-settings session)))
