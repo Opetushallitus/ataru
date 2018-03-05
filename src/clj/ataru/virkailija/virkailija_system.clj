@@ -4,8 +4,7 @@
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.virkailija.virkailija-routes :as virkailija-routes]
-            [ataru.cache.caches :refer [hazelcast-caches redis-caches]]
-            [ataru.cache.hazelcast :refer [map->HazelcastInstance]]
+            [ataru.cache.caches :refer [caches]]
             [ataru.redis :as redis]
             [environ.core :refer [env]]
             [ataru.config.core :refer [config]]
@@ -26,12 +25,7 @@
                              (organization-service/new-organization-service)
                              [:cache-service])
 
-     :cache-service (component/using
-                     {}
-                     (mapv (comp keyword :name)
-                           (if (= :redis (-> config :cache :type))
-                             redis-caches
-                             hazelcast-caches)))
+     :cache-service (component/using {} (mapv (comp keyword :name) caches))
 
      :virkailija-tarjonta-service (component/using
                                     (tarjonta-service/new-virkailija-tarjonta-service)
@@ -65,12 +59,8 @@
 
      :job-runner (job/new-job-runner virkailija-jobs/job-definitions)
 
-     (if (= :redis (-> config :cache :type))
-       (concat [:redis (redis/map->Redis {})]
-               (mapcat (fn [cache]
-                         [(keyword (:name cache)) (component/using cache [:redis])])
-                       redis-caches))
-       (concat [:hazelcast (map->HazelcastInstance {:configurators hazelcast-caches})]
-               (mapcat (fn [cache]
-                         [(keyword (:name cache)) (component/using cache [:hazelcast])])
-                       hazelcast-caches))))))
+     :redis (redis/map->Redis {})
+
+     (mapcat (fn [cache]
+               [(keyword (:name cache)) (component/using cache [:redis])])
+             caches))))

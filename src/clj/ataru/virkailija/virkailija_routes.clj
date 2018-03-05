@@ -401,7 +401,7 @@
         :summary "Clear all caches"
         {:status 200
          :body   (do
-                   (doseq [cache caches/redis-caches]
+                   (doseq [cache caches/caches]
                      (cache/cache-clear cache-service (keyword (:name cache))))
                    {})})
       (api/POST "/clear/:cache" {session :session}

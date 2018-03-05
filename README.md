@@ -28,13 +28,9 @@ Just use the postgres Docker (9.5) image:
 docker run -d --name ataru-dev-db -p 5432:5432 -e POSTGRES_DB=ataru-dev -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph postgres:9.5
 ```
 
-### Redis caches
+### Create Redis for caches
 
-If you want to use Redis caches locally:
-
-* Change cache type to redis in config
-* Set Redis url in config to `redis://localhost:6379` in config
-* Run Redis using docker: `docker run --name ataru-dev-redis -p 6379:6379 -d redis`
+`docker run --name ataru-dev-redis -p 6379:6379 -d redis`
 
 ### Run application:
 
@@ -102,11 +98,12 @@ Browse to [http://localhost:8351/hakemus/<uuid>](http://localhost:8351/hakemus/<
 
 ### Backend & browser tests
 
-Tests require a special database. Here is an example of running it
+Tests require a special database and a special Redis. Here is an example of running those
 with Docker:
 
 ```
 docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph postgres:9.5
+`docker run --name ataru-test-redis -p 6380:6379 -d redis`
 ```
 
 To build and run all the tests in the system:
