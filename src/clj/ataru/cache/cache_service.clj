@@ -2,6 +2,7 @@
 
 (defprotocol Cache
   (get-from [this key])
+  (get-many-from [this keys])
   (put-to [this key value])
   (remove-from [this key])
   (clear-all [this]))
@@ -18,6 +19,10 @@
    e.g. (cache-get :hakukohde objectid-of-hakukohde"
   [caches cache key]
   (get-from (get-cache caches cache) key))
+
+(defn cache-get-many
+  [caches cache keys]
+  (get-many-from (get-cache caches cache) keys))
 
 (defn cache-put
   "Store item in cache, returns old value.

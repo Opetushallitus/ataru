@@ -82,6 +82,13 @@
            (when-let [new-value (fetch key)]
              (cache/put-to this key new-value)
              new-value))))))
+  (get-many-from [this keys]
+    (if (empty? keys)
+      []
+      (map (fn [key value] (if (some? value) value (cache/get-from this key)))
+           keys
+           (wcar (:connection-opts redis)
+                 (apply car/mget (map #(str name "_" %) keys))))))
   (put-to [_ key value]
     (let [[ttl timeunit] ttl]
       (wcar (:connection-opts redis)
@@ -134,6 +141,7 @@
 
   cache/Cache
   (get-from [_ key] (cache/get-from cache key))
+  (get-many-from [_ keys] (cache/get-many-from cache keys))
   (put-to [_ key value] (cache/put-to cache key value))
   (remove-from [_ key] (cache/remove-from cache key))
   (clear-all [_] (cache/clear-all cache)))
