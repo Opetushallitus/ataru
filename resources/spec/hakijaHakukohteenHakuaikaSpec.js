@@ -53,7 +53,7 @@
                 expect(testFrame().find("#hakuajat-ohi").prop('disabled')).to.equal(true)
                 expect(testFrame().find("#osa-hakuajoista-ohi").prop('disabled')).to.equal(false)
                 expect(testFrame().find("#kaikki-hakuajat-voimassa").prop('disabled')).to.equal(false)
-                expect(testFrame().find("#assosiaatio-hakukohderyhman-kautta").prop('disabled')).to.equal(true)
+                expect(testFrame().find("#assosiaatio-hakukohderyhman-kautta").prop('disabled')).to.equal(false)
 
                 var kysymysKoskeeHakukohteitaFinder = function(id) {
                     return testFrame().find(id).parent().siblings(".application__question_hakukohde_names_container").text()

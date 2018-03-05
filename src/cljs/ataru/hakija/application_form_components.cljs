@@ -422,8 +422,11 @@
      [:div.application__form-text-input-info-text
       [info-text field-descriptor]]
      [:div.application__form-select-wrapper
-      (when (not disabled?)
-        [:span.application__form-select-arrow])
+      (if disabled?
+        [:span.application__form-select-arrow.application__form-select-arrow__disabled
+         [:i.zmdi.zmdi-chevron-down]]
+        [:span.application__form-select-arrow
+         [:i.zmdi.zmdi-chevron-down]])
       [(keyword (str "select.application__form-select" (when (not disabled?) ".application__form-select--enabled")))
        {:id           (:id field-descriptor)
         :value        (or @value "")
@@ -624,10 +627,12 @@
     [:div.application__form-filename-container
      [:span.application__form-attachment-text
       (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values question-group-idx attachment-idx :value]]))
-      [:a.application__form-upload-remove-attachment-link
-       {:href     "#"
-        :on-click on-click}
-       [:i.zmdi.zmdi-close]]]]))
+      (when-not @(subscribe [:application/cannot-edit?
+                             (keyword (:id field-descriptor))])
+        [:a.application__form-upload-remove-attachment-link
+         {:href     "#"
+          :on-click on-click}
+         [:i.zmdi.zmdi-close]])]]))
 
 (defn attachment-view-file-error [field-descriptor component-id attachment-idx question-group-idx]
   (let [attachment @(subscribe [:state-query [:application :answers (keyword component-id) :values question-group-idx attachment-idx]])
@@ -683,7 +688,8 @@
                  (map (fn [attachment-idx]
                         ^{:key (str "attachment-" (when question-group-idx (str question-group-idx "-")) id "-" attachment-idx)}
                         [attachment-row field-descriptor id attachment-idx question-group-idx])))])
-         [attachment-upload field-descriptor id @attachment-count question-group-idx]]))))
+         (when-not @(subscribe [:application/cannot-edit? (keyword id)])
+           [attachment-upload field-descriptor id @attachment-count question-group-idx])]))))
 
 (defn info-element [field-descriptor]
   (let [language (subscribe [:application/form-language])
