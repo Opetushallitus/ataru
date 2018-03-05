@@ -810,6 +810,24 @@ WHERE person_oid IS NOT NULL
   AND state <> 'inactivated'
 ORDER BY created_time DESC;
 
+--name: yesql-valintalaskenta-applications
+SELECT
+  key,
+  person_oid,
+  haku,
+  hakukohde AS hakutoiveet,
+  content,
+  (SELECT json_object_agg(hakukohde, state)
+   FROM application_hakukohde_reviews AS ahr
+   WHERE ahr.application_key = key
+         AND ahr.requirement = 'eligibility-state') AS application_hakukohde_reviews
+FROM latest_applications
+  JOIN application_reviews ON application_key = key
+WHERE person_oid IS NOT NULL
+  AND haku IS NOT NULL
+  AND :hakukohde_oid = ANY (hakukohde)
+  AND state <> 'inactivated';
+
 --name: yesql-get-latest-application-ids-distinct-by-person-oid
 SELECT DISTINCT ON (person_oid) id FROM latest_applications ORDER BY person_oid, id DESC;
 

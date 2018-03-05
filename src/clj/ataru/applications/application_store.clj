@@ -721,6 +721,59 @@
 (defn get-application-info-for-tilastokeskus [haku-oid]
   (exec-db :db yesql-tilastokeskus-applications {:haku_oid haku-oid}))
 
+(defn- get-application-eligibilities-by-hakutoive [application]
+  (let [eligibilities-by-hakukohde (:application_hakukohde_reviews application)]
+    (->> (:hakutoiveet application)
+         (map-indexed
+          (fn [index hakukohde-oid]
+            (let [preference  (format "preference%d-Koulutus-id-eligibility" (inc index))
+                  eligibility (get eligibilities-by-hakukohde hakukohde-oid "unreviewed")]
+              {preference eligibility})))
+         (into {}))))
+
+(defn- flatten-question-group-answers [key group-values]
+  (->> group-values
+       (map-indexed
+        (fn [group-index values]
+          (map-indexed
+           (fn [index value]
+             [(format "%s_group%d_%d" key (inc group-index) (inc index)) value])
+           values)))
+       (apply concat))) ; Flatten only 1 level
+
+(defn- flatten-sequential-answers [key values]
+  (->> values
+       (map-indexed
+        (fn [index value]
+          [(format "%s_%d" key (inc index)) value]))))
+
+(defn- flatten-application-answers [answers]
+  (reduce
+   (fn [acc answer]
+     (let [key             (:key answer)
+           value-or-values (:value answer)]
+       (if (sequential? value-or-values)
+         (if (every? sequential? value-or-values)
+           (into acc (flatten-question-group-answers key value-or-values))
+           (into acc (flatten-sequential-answers key value-or-values)))
+         (assoc acc key value-or-values))))
+   {}
+   answers))
+
+(defn- unwrap-valintalaskenta-application [application]
+  (let [keyword-values             (flatten-application-answers (-> application :content :answers))
+        eligibilities-by-hakutoive (get-application-eligibilities-by-hakutoive application)]
+    (-> application
+        (dissoc :content :application_hakukohde_reviews)
+        (assoc :keyValues (merge (dissoc keyword-values :hakukohteet)
+                                  eligibilities-by-hakutoive))
+        (clojure.set/rename-keys {:key :hakemusOid :person_oid :personOid :haku :hakuOid}))))
+
+(defn get-applications-for-valintalaskenta [hakukohde-oid]
+  (->> (exec-db :db yesql-valintalaskenta-applications {:hakukohde_oid hakukohde-oid})
+       (map unwrap-valintalaskenta-application)))
+
+
 (defn remove-review-note [note-id]
   (when-not (= (exec-db :db yesql-remove-review-note! {:id note-id}) 0)
     note-id))
