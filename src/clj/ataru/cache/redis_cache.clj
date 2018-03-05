@@ -86,8 +86,6 @@
     (let [[ttl timeunit] ttl]
       (wcar (:connection-opts redis)
             (car/set (str name "_" key) value :px (.toMillis timeunit ttl)))))
-  (get-from [this key _]
-    (cache/get-from this key))
   (remove-from [_ key]
     (wcar (:connection-opts redis)
           (car/del (str name "_" key))))
@@ -137,6 +135,5 @@
   cache/Cache
   (get-from [_ key] (cache/get-from cache key))
   (put-to [_ key value] (cache/put-to cache key value))
-  (get-from [_ key _] (cache/get-from cache key))
   (remove-from [_ key] (cache/remove-from cache key))
   (clear-all [_] (cache/clear-all cache)))

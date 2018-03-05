@@ -68,7 +68,6 @@
                  [org.clojars.pntblnk/clj-ldap "0.0.15"]
                  [org.clojure/core.cache "0.6.5"]
                  [org.clojure/tools.nrepl "0.2.13"]
-                 [com.hazelcast/hazelcast "3.9.1"]
                  [com.taoensso/carmine "2.16.0"]
                  [pandect "0.6.1"]
                  [hikari-cp "2.0.0" :exclusions [prismatic/schema]]

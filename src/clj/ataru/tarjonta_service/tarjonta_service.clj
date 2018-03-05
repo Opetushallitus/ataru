@@ -39,11 +39,10 @@
                                   (map :oid (organization-protocol/get-all-organizations
                                              organization-service
                                              direct-organizations)))
-        hakus                   (mapcat (fn [oid] (cache/cache-get-or-fetch
+        hakus                   (mapcat (fn [oid] (cache/cache-get
                                                    cache-service
                                                    :forms-in-use
-                                                   oid
-                                                   #(client/get-forms-in-use oid)))
+                                                   oid))
                                         query-organization-oids)]
     (reduce hakus-by-form-key
             {}
@@ -88,7 +87,7 @@
 (defrecord CachedTarjontaService [cache-service]
   TarjontaService
   (get-hakukohde [this hakukohde-oid]
-    (when-let [hakukohde (cache/cache-get-or-fetch cache-service :hakukohde hakukohde-oid #(client/get-hakukohde hakukohde-oid))]
+    (when-let [hakukohde (cache/cache-get cache-service :hakukohde hakukohde-oid)]
       (when-not (= (:tila hakukohde) "PERUTTU")
         ;; Serialization breaks boxed booleans, as it doesn't return the
         ;; canonical instance
@@ -109,9 +108,7 @@
   (get-haku [this haku-oid]
     ;; Serialization breaks boxed booleans, as it doesn't return the
     ;; canonical instance
-    (some-> (cache/cache-get-or-fetch cache-service
-                                      :haku haku-oid
-                                      #(client/get-haku haku-oid))
+    (some-> (cache/cache-get cache-service :haku haku-oid)
             (update :canSubmitMultipleApplications #(.booleanValue %))
             (update :usePriority #(.booleanValue %))))
 
@@ -120,7 +117,7 @@
       (parse-multi-lang-text (:nimi haku))))
 
   (get-koulutus [this koulutus-oid]
-    (cache/cache-get-or-fetch cache-service :koulutus koulutus-oid #(client/get-koulutus koulutus-oid))))
+    (cache/cache-get cache-service :koulutus koulutus-oid)))
 
 (defrecord VirkailijaTarjontaFormsService [cache-service]
   component/Lifecycle

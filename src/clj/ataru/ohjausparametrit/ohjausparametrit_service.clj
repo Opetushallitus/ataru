@@ -9,7 +9,7 @@
   OhjausparametritService
 
   (get-parametri [_ haku-oid]
-    (cache/cache-get-or-fetch cache-service :ohjausparametrit haku-oid #(client/get-ohjausparametrit haku-oid))))
+    (cache/cache-get cache-service :ohjausparametrit haku-oid)))
 
 (defn new-ohjausparametrit-service []
   (if (-> config :dev :fake-dependencies)

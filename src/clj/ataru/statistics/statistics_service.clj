@@ -46,4 +46,4 @@
 (defn get-application-stats
   [cache-service time-period]
   (let [cache-key (keyword (str "statistics-" (name time-period)))]
-    (cache/cache-get-or-fetch cache-service cache-key time-period #(get-and-parse-application-stats time-period))))
+    (cache/cache-get cache-service cache-key time-period)))

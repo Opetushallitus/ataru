@@ -6,10 +6,9 @@
             [ataru.http.server :as server]
             [ataru.person-service.person-service :as person-service]
             [environ.core :refer [env]]
-            [ataru.cache.caches :refer [hazelcast-caches redis-caches]]
+            [ataru.cache.caches :refer [caches]]
             [ataru.redis :as redis]
             [ataru.config.core :refer [config]]
-            [ataru.cache.hazelcast :refer [map->HazelcastInstance]]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]))
@@ -21,12 +20,7 @@
      (Integer/parseInt (get env :ataru-repl-port "3335"))))
   ([http-port repl-port]
    (apply component/system-map
-     :cache-service (component/using
-                     {}
-                     (mapv (comp keyword :name)
-                           (if (= :redis (-> config :cache :type))
-                             redis-caches
-                             hazelcast-caches)))
+     :cache-service (component/using {} (mapv (comp keyword :name) caches))
 
      :tarjonta-service (component/using
                          (tarjonta-service/new-tarjonta-service)
@@ -57,12 +51,8 @@
                              (job/new-job-runner hakija-jobs/job-definitions)
                              [:person-service])
 
-     (if (= :redis (-> config :cache :type))
-       (concat [:redis (redis/map->Redis {})]
-               (mapcat (fn [cache]
-                         [(keyword (:name cache)) (component/using cache [:redis])])
-                       redis-caches))
-       (concat [:hazelcast (map->HazelcastInstance {:configurators hazelcast-caches})]
-               (mapcat (fn [cache]
-                         [(keyword (:name cache)) (component/using cache [:hazelcast])])
-                       hazelcast-caches))))))
+     :redis (redis/map->Redis {})
+
+     (mapcat (fn [cache]
+               [(keyword (:name cache)) (component/using cache [:redis])])
+             caches))))
