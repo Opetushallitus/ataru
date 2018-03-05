@@ -817,8 +817,7 @@ SELECT
   haku,
   hakukohde AS hakutoiveet,
   content,
-  (SELECT json_agg(json_build_object('state', state,
-                                     'hakukohde', hakukohde))
+  (SELECT json_object_agg(hakukohde, state)
    FROM application_hakukohde_reviews AS ahr
    WHERE ahr.application_key = key
          AND ahr.requirement = 'eligibility-state') AS application_hakukohde_reviews

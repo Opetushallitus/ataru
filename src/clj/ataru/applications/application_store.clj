@@ -722,9 +722,7 @@
   (exec-db :db yesql-tilastokeskus-applications {:haku_oid haku-oid}))
 
 (defn- get-application-eligibilities-by-hakutoive [application]
-  (let [eligibilities-by-hakukohde (reduce #(assoc %1 (-> %2 :hakukohde) (:state %2))
-                                           {}
-                                           (:application_hakukohde_reviews application))]
+  (let [eligibilities-by-hakukohde (:application_hakukohde_reviews application)]
     (->> (:hakutoiveet application)
          (map-indexed
           (fn [index hakukohde-oid]
@@ -739,17 +737,15 @@
         (fn [group-index values]
           (map-indexed
            (fn [index value]
-             {(format "%s_group%d_%d" key (inc group-index) (inc index)) value})
+             [(format "%s_group%d_%d" key (inc group-index) (inc index)) value])
            values)))
-       flatten
-       (into {})))
+       (apply concat))) ; Flatten only 1 level
 
 (defn- flatten-sequential-answers [key values]
   (->> values
        (map-indexed
         (fn [index value]
-          {(format "%s_%d" key (inc index)) value}))
-       (into {})))
+          [(format "%s_%d" key (inc index)) value]))))
 
 (defn- flatten-application-answers [answers]
   (reduce
@@ -758,8 +754,8 @@
            value-or-values (:value answer)]
        (if (sequential? value-or-values)
          (if (every? sequential? value-or-values)
-           (merge acc (flatten-question-group-answers key value-or-values))
-           (merge acc (flatten-sequential-answers key value-or-values)))
+           (into acc (flatten-question-group-answers key value-or-values))
+           (into acc (flatten-sequential-answers key value-or-values)))
          (assoc acc key value-or-values))))
    {}
    answers))
