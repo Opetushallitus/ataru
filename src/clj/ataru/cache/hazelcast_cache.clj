@@ -11,14 +11,14 @@
   (.lock m key)
   (try (f) (finally (.unlock m key))))
 
-(defrecord BasicCache [hazelcast map name max-size ttl]
+(defrecord BasicCache [hazelcast hmap name max-size ttl]
   component/Lifecycle
   (start [this]
-    (if (nil? map)
-      (assoc this :map (.getMap (:instance hazelcast) name))
+    (if (nil? hmap)
+      (assoc this :hmap (.getMap (:instance hazelcast) name))
       this))
   (stop [this]
-    (assoc this :map nil))
+    (assoc this :hmap nil))
 
   Configurator
   (configure [_ configuration]
@@ -30,13 +30,15 @@
 
   Cache
   (get-from [_ key]
-    (.get map key))
+    (.get hmap key))
+  (get-many-from [_ keys]
+    (map #(.get hmap %) keys))
   (put-to [_ key value]
-    (.put map key value))
+    (.put hmap key value))
   (get-from [this key get-fn]
     (if-let [value (get-from this key)]
       value
-      (with-lock map key
+      (with-lock hmap key
         (fn []
           (if-let [value (get-from this key)]
             value
@@ -44,10 +46,12 @@
               (do (put-to this key new-value)
                   new-value)
               (warn "Could not fetch value for cache" name key)))))))
+  (get-many-from [this keys get-fn]
+    (map #(get-from this % get-fn) keys))
   (remove-from [_ key]
-    (.evict map key))
+    (.evict hmap key))
   (clear-all [_]
-    (.evictAll map)))
+    (.evictAll hmap)))
 
 (deftype EvictionSynchonizer [other]
   EntryEvictedListener
@@ -118,6 +122,8 @@
   (get-from [_ key]
     (when (.containsKey stable-map key)
       (.get updated-map key)))
+  (get-many-from [this keys]
+    (map #(get-from this %) keys))
   (put-to [_ key value]
     (.put updated-map key value)
     (.put stable-map key key))
@@ -133,6 +139,8 @@
                   (put-to this key new-value)
                   new-value)
               (warn "Could not fetch value for cache" name key)))))))
+  (get-many-from [this keys get-fn]
+    (map #(get-from this % get-fn) keys))
   (remove-from [_ key]
     (.evict stable-map key))
   (clear-all [_]

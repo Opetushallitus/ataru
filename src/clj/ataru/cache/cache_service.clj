@@ -2,6 +2,7 @@
 
 (defprotocol Cache
   (get-from [this key] [this key get-fn])
+  (get-many-from [this keys] [this keys get-fn])
   (put-to [this key value])
   (remove-from [this key])
   (clear-all [this]))
@@ -19,6 +20,10 @@
   [caches cache key]
   (get-from (get-cache caches cache) key))
 
+(defn cache-get-many
+  [caches cache keys]
+  (get-many-from (get-cache caches cache) keys))
+
 (defn cache-put
   "Store item in cache, returns old value.
    e.g. (cache-put :hakukohde objectid-of-hakukohde {...}"
@@ -32,6 +37,10 @@
           #(hakukohde-client/get-hakukohde objectid-of-hakukohde)"
   [caches cache key fetch-fn]
   (get-from (get-cache caches cache) key fetch-fn))
+
+(defn cache-get-or-fetch-many
+  [caches cache keys fetch-fn]
+  (get-many-from (get-cache caches cache) keys fetch-fn))
 
 (defn cache-remove
   "Clears given entry in given cache"
