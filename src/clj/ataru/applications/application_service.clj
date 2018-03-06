@@ -11,6 +11,7 @@
    [ataru.hakija.hakija-form-service :as hakija-form-service]
    [taoensso.timbre :refer [spy debug]]
    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
+   [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
    [ataru.organization-service.ldap-client :as ldap]
    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
    [ataru.information-request.information-request-store :as information-request-store]
@@ -169,14 +170,48 @@
        :review-notes         (application-store/get-application-review-notes application-key)
        :information-requests (information-request-store/get-information-requests application-key)})))
 
-(defn get-application-list-by-query
-  [organization-service person-service tarjonta-service session query-key query-value]
+(defn- belongs-to-hakukohderyhma?
+  [hakukohderyhma-oid hakukohde]
+  (->> (:ryhmaliitokset hakukohde)
+       (map :ryhmaOid)
+       (some #(= hakukohderyhma-oid %))))
+
+(defn- applied-to-hakukohderyhma?
+  [hakukohteet hakukohderyhma-oid application]
+  (->> (:hakukohde application)
+       (map hakukohteet)
+       (some #(belongs-to-hakukohderyhma? hakukohderyhma-oid %))))
+
+(defn- get-application-list-by-hakukohderyhma
+  [organization-service tarjonta-service session {:keys [haku-oid hakukohderyhma-oid]}]
   (let [applications (aac/get-application-list-by-query
                       organization-service
                       tarjonta-service
                       session
-                      query-key
-                      query-value)
+                      :haku-oid
+                      haku-oid)
+        hakukohteet  (->> applications
+                          (mapcat :hakukohde)
+                          distinct
+                          (tarjonta-service/get-hakukohteet tarjonta-service)
+                          (reduce #(assoc %1 (:oid %2) %2) {}))]
+    (filter #(applied-to-hakukohderyhma? hakukohteet hakukohderyhma-oid %)
+            applications)))
+
+(defn get-application-list-by-query
+  [organization-service person-service tarjonta-service session query-key query-value]
+  (let [applications (if (= :hakukohderyhma query-key)
+                       (get-application-list-by-hakukohderyhma
+                        organization-service
+                        tarjonta-service
+                        session
+                        query-value)
+                       (aac/get-application-list-by-query
+                        organization-service
+                        tarjonta-service
+                        session
+                        query-key
+                        query-value))
         persons      (person-service/get-persons
                       person-service
                       (distinct (keep :person-oid applications)))]
