@@ -240,6 +240,7 @@
       (api/GET "/list" {session :session}
         :query-params [{formKey :- s/Str nil}
                        {hakukohdeOid :- s/Str nil}
+                       {hakukohderyhmaOid :- s/Str nil}
                        {hakuOid :- s/Str nil}
                        {ensisijainenHakukohdeOid :- s/Str nil}
                        {ssn :- s/Str nil}
@@ -255,6 +256,10 @@
                 (some? formKey) [:form formKey]
                 (some? hakukohdeOid) [:hakukohde-oid hakukohdeOid]
                 (some? ensisijainenHakukohdeOid) [:ensisijainen-hakukohde-oid ensisijainenHakukohdeOid]
+                (and (some? hakukohderyhmaOid) (some? hakuOid))
+                [:hakukohderyhma
+                 {:haku-oid hakuOid
+                  :hakukohderyhma-oid hakukohderyhmaOid}]
                 (some? hakuOid) [:haku-oid hakuOid]
                 (some? ssn) [:ssn ssn]
                 (some? dob) [:dob (when (dob/dob? dob) dob)]
