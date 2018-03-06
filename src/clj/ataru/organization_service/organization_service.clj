@@ -119,8 +119,23 @@
     (.close (:ldap-connection this))
     (assoc this :all-orgs-cache nil)))
 
-(def fake-orgs [{:name {:fi "Test org"}, :oid "1.2.246.562.10.0439845" :type :organization}
-                {:name {:fi "Test group"}, :oid "1.2.246.562.28.1" :type :group}])
+(def fake-org-by-oid
+  {"1.2.246.562.10.0439845" {:name {:fi "Test org"}, :oid "1.2.246.562.10.0439845" :type :organization}
+   "1.2.246.562.28.1"       {:name {:fi "Test group"}, :oid "1.2.246.562.28.1" :type :group}
+   "1.2.246.562.10.0439846" {:name {:fi "Test org 2"}, :oid "1.2.246.562.10.0439846" :type :organization}
+   "1.2.246.562.28.2"       {:name {:fi "Test group 2"}, :oid "1.2.246.562.28.2" :type :group}})
+
+(def fake-orgs
+  {"DEVELOPER"                        [(get fake-org-by-oid "1.2.246.562.10.0439845")
+                                       (get fake-org-by-oid "1.2.246.562.28.1")]
+   "USER-WITH-HAKUKOHDE-ORGANIZATION" [(get fake-org-by-oid "1.2.246.562.10.0439846")
+                                       (get fake-org-by-oid "1.2.246.562.28.2")]})
+
+(defn fake-orgs-by-root-orgs [root-orgs]
+  (some->> root-orgs
+           (map :oid)
+           (map name)
+           (map #(get fake-org-by-oid %))))
 
 ;; Test double for UI tests
 (defrecord FakeOrganizationService []
@@ -128,16 +143,18 @@
 
   (get-hakukohde-groups [this]
     (hakukohderyhmat-from-groups
-    [(org-client/fake-hakukohderyhma 1)
-     (org-client/fake-hakukohderyhma 2)
-     (org-client/fake-hakukohderyhma 3)
-     (org-client/fake-hakukohderyhma 4)]))
+      [(org-client/fake-hakukohderyhma 1)
+       (org-client/fake-hakukohderyhma 2)
+       (org-client/fake-hakukohderyhma 3)
+       (org-client/fake-hakukohderyhma 4)]))
 
   (get-direct-organizations-for-rights [this user-name rights]
-    {:form-edit         fake-orgs
-     :view-applications fake-orgs
-     :edit-applications fake-orgs})
-  (get-all-organizations [this root-orgs] fake-orgs))
+    (let [orgs (get fake-orgs user-name)]
+      {:form-edit         orgs
+       :view-applications orgs
+       :edit-applications orgs}))
+  (get-all-organizations [this root-orgs]
+    (fake-orgs-by-root-orgs root-orgs)))
 
 (defn new-organization-service []
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode

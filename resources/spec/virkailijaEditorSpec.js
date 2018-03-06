@@ -84,15 +84,30 @@
     }
   }
 
-  before(function () {
-    loadInFrame('http://localhost:8350/lomake-editori/')
-  })
+
 
   afterEach(function() {
     expect(window.uiError || null).to.be.null
   })
+  describe('Editor when user associated by hakukohteen organization', function() {
+      before(function () {
+          loadInFrame('http://localhost:8350/lomake-editori/auth/cas?ticket=USER-WITH-HAKUKOHDE-ORGANIZATION')
+      })
+
+      describe('with one form associated by hakukohteen organisaatio', function () {
+          before(
+              wait.until(editorPageIsLoaded, 10000)
+          )
+          it('has 1 fixture forms', function () {
+              expect(formListItems()).to.have.length(1)
+          })
+      })
+  })
 
   describe('Editor', function() {
+    before(function () {
+        loadInFrame('http://localhost:8350/lomake-editori/auth/cas?ticket=DEVELOPER')
+    })
 
     describe('with fixture forms', function() {
       before(

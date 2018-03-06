@@ -18,9 +18,9 @@
 
 (defn- fake-login-provider [ticket]
   (fn []
-      (let [username      (if (string/starts-with? ticket "ST-")
-                            "DEVELOPER"
-                            ticket)
+      (let [username      (if (= ticket "USER-WITH-HAKUKOHDE-ORGANIZATION")
+                            "USER-WITH-HAKUKOHDE-ORGANIZATION"
+                            "DEVELOPER")
             unique-ticket (str (System/currentTimeMillis))]
         [username unique-ticket])))
 

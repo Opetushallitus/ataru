@@ -117,7 +117,14 @@
                                  :ataruLomakeAvain "hakija-hakukohteen-hakuaika-test-form"
                                  :hakukohdeOids    ["1.2.246.562.20.49028100001"
                                                     "1.2.246.562.20.49028100002"
-                                                    "1.2.246.562.20.49028100003"]})})
+                                                    "1.2.246.562.20.49028100003"]})
+   :1.2.246.562.29.65950024188 (merge
+                                 base-haku
+                                 {:oid              "1.2.246.562.29.65950024188"
+                                  :nimi  {:kieli_fi "hakukohteen-organisaatiosta"}
+                                  :usePriority      true
+                                  :ataruLomakeAvain "hakukohteen-organisaatiosta-form"
+                                  :hakukohdeOids    ["1.2.246.562.20.49028100004"]})})
 
 (def hakukohde
   {:1.2.246.562.20.49028196522 base-hakukohde
@@ -192,7 +199,16 @@
                                                    {:ryhmaOid "1.2.246.562.28.00000000002"}]
                                   :hakukohteenNimet
                                                     {:kieli_fi "Aikaa loputtomasti 3"
-                                                     :kieli_sv "sv Aikaa loputtomasti 3"}})})
+                                                     :kieli_sv "sv Aikaa loputtomasti 3"}})
+   :1.2.246.562.20.49028100004 (merge
+                                 base-hakukohde
+                                 {:ataruLomakeAvain "hakukohteen-organisaatiosta-form"
+                                  :oid              "1.2.246.562.20.49028100004"
+                                  :hakuOid          "1.2.246.562.29.65950024188"
+                                  :koulutukset      [{:oid "1.2.246.562.17.74335799465"}]
+                                  :hakukohteenNimet
+                                                    {:kieli_fi "Hakukohde johon käyttäjällä on organisaatio"
+                                                     :kieli_sv "sv Hakukohde johon käyttäjällä on organisaatio"}})})
 
 (def koulutus
   {:1.2.246.562.17.74335799461 {:oid             "1.2.246.562.17.74335799461"
@@ -263,6 +279,7 @@
                "1.2.246.562.29.65950024187" (to-hakukohteet [:1.2.246.562.20.49028100001
                                                              :1.2.246.562.20.49028100002
                                                              :1.2.246.562.20.49028100003])
+               "1.2.246.562.29.65950024188" (to-hakukohteet [:1.2.246.562.20.49028100004])
                (to-hakukohteet [:1.2.246.562.20.49028196523
                                 :1.2.246.562.20.49028196524
                                 :1.2.246.562.20.49028196525]))))
@@ -279,12 +296,17 @@
 
 (defrecord MockVirkailijaTarjontaService []
   VirkailijaTarjontaService
-  (get-forms-in-use [_ _]
-    {"belongs-to-hakukohteet-test-form"
-     {(:oid base-haku)
-      {:haku-oid (:oid base-haku)
-       :haku-name {:fi (:kieli_fi (:nimi base-haku))}}}
-     "hakija-hakukohteen-hakuaika-test-form"
-     {"1.2.246.562.29.65950024187"
-      {:haku-oid "1.2.246.562.29.65950024187"
-       :haku-name {:fi "hakija-hakukohteen-hakuaika-haku"}}}}))
+  (get-forms-in-use [_ username]
+    (if (= username "USER-WITH-HAKUKOHDE-ORGANIZATION")
+      {"hakukohteen-organisaatiosta-form"
+       {"1.2.246.562.29.65950024188"
+        {:haku-oid  "1.2.246.562.29.65950024188"
+         :haku-name {:fi "hakukohteen-organisaatiosta"}}}}
+      {"belongs-to-hakukohteet-test-form"
+       {(:oid base-haku)
+        {:haku-oid  (:oid base-haku)
+         :haku-name {:fi (:kieli_fi (:nimi base-haku))}}}
+       "hakija-hakukohteen-hakuaika-test-form"
+       {"1.2.246.562.29.65950024187"
+        {:haku-oid  "1.2.246.562.29.65950024187"
+         :haku-name {:fi "hakija-hakukohteen-hakuaika-haku"}}}})))

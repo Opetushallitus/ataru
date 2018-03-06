@@ -125,6 +125,16 @@
                                          :belongs-to-hakukohderyhma ["1.2.246.562.28.00000000001"]
                                          :fieldType  "textField"}]})
 
+(def assosiaatio-hakukohteen-organisaatiosta-form {:id 7
+                                                   :key "hakukohteen-organisaatiosta-form"
+                                                   :name {:fi "hakukohteen-organisaatiosta"}
+                                                   :created-by "DEVELOPER"
+                                                   :organization-oid "1.2.246.562.10.0439846"
+                                                   :languages ["fi"]
+                                                   :content
+                                                   [(component/hakukohteet)
+                                                    (person-info-module/person-info-module)]})
+
 (def application1 {:form       1
                    :lang       "fi"
                    :key        "application-key1"
@@ -226,6 +236,8 @@
   (form-store/create-new-form! form2 (:key form2))
   (form-store/create-new-form! form3 (:key form3))
   (form-store/create-new-form! form3 "41101b4f-1762-49af-9db0-e3603adae3ae")
+  (form-store/create-new-form! assosiaatio-hakukohteen-organisaatiosta-form
+                               (:key assosiaatio-hakukohteen-organisaatiosta-form))
   (form-store/create-new-form! belongs-to-hakukohteet-test-form
                                (:key belongs-to-hakukohteet-test-form))
   (form-store/create-new-form! hakija-hakukohteen-hakuaika-test-form
