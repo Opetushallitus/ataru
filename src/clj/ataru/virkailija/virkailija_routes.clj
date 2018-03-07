@@ -252,7 +252,8 @@
                 (and (some? hakukohderyhmaOid) (some? hakuOid))
                 [:hakukohderyhma
                  {:haku-oid hakuOid
-                  :hakukohderyhma-oid hakukohderyhmaOid}]
+                  :hakukohderyhma-oid hakukohderyhmaOid
+                  :ensisijaisesti ensisijaisesti}]
                 (some? hakuOid) [:haku-oid hakuOid]
                 (some? ssn) [:ssn ssn]
                 (some? dob) [:dob (when (dob/dob? dob) dob)]

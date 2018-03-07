@@ -181,6 +181,27 @@
   (some #(belongs-to-hakukohderyhma? hakukohderyhma-oid %)
         (:hakukohde application)))
 
+(defn- first-hakukohde-in-hakukohderyhma
+  [hakukohderyhma-oid application]
+  (->> (:hakukohde application)
+       (filter #(belongs-to-hakukohderyhma? hakukohderyhma-oid %))
+       first))
+
+(defn- belongs-to-some-organization?
+  [authorized-organization-oids hakukohde]
+  (not-empty
+   (clojure.set/intersection
+    authorized-organization-oids
+    (set (:tarjoajaOids hakukohde)))))
+
+(defn- applied-ensisijaisesti-hakukohderyhmassa?
+  [hakukohderyhma-oid authorized-organization-oids application]
+  (and (some? authorized-organization-oids)
+       (belongs-to-some-organization? authorized-organization-oids
+                                      (first-hakukohde-in-hakukohderyhma
+                                       hakukohderyhma-oid
+                                       application))))
+
 (defn get-application-list-by-query
   [organization-service person-service tarjonta-service session query-key query-value]
   (let [[query-key query-value predicates]
@@ -193,7 +214,9 @@
               (= :hakukohderyhma query-key)
               [:haku-oid
                (:haku-oid query-value)
-               [(partial applied-to-hakukohderyhma?
+               [(partial (if (:ensisijaisesti query-value)
+                           applied-ensisijaisesti-hakukohderyhmassa?
+                           applied-to-hakukohderyhma?)
                          (:hakukohderyhma-oid query-value))]]
               :else
               [query-key
