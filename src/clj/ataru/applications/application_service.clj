@@ -183,22 +183,22 @@
 
 (defn get-application-list-by-query
   [organization-service person-service tarjonta-service session query-key query-value]
-  (let [applications (if (= :hakukohderyhma query-key)
-                       (aac/get-application-list-by-query
-                        organization-service
-                        tarjonta-service
-                        session
-                        :haku-oid
-                        (:haku-oid query-value)
-                        [(partial applied-to-hakukohderyhma?
-                                  (:hakukohderyhma-oid query-value))])
-                       (aac/get-application-list-by-query
-                        organization-service
-                        tarjonta-service
-                        session
-                        query-key
-                        query-value
-                        []))
+  (let [[query-key query-value predicates]
+        (if (= :hakukohderyhma query-key)
+          [:haku-oid
+           (:haku-oid query-value)
+           [(partial applied-to-hakukohderyhma?
+                     (:hakukohderyhma-oid query-value))]]
+          [query-key
+           query-value
+           []])
+        applications (aac/get-application-list-by-query
+                      organization-service
+                      tarjonta-service
+                      session
+                      query-key
+                      query-value
+                      predicates)
         persons      (person-service/get-persons
                       person-service
                       (distinct (keep :person-oid applications)))]
