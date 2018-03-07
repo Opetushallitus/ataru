@@ -38,11 +38,12 @@
   (let [direct-organizations    (select-organizations-for-rights session [:form-edit])
         all-organization-oids   (map :oid (organization-protocol/get-all-organizations organization-service (:form-edit direct-organizations)))
         in-oph-organization?    (some #{oph-organization} all-organization-oids)
-        query-organization-oids (sort (if in-oph-organization? nil all-organization-oids))
-        hakus                   (map (fn [oid] cache/cache-get-or-fetch cache-service
-                                         :forms-in-use
-                                         oid
-                                         #(client/get-forms-in-use query-organization-oids)) query-organization-oids)]
+        query-organization-oids (if in-oph-organization? [oph-organization] all-organization-oids)
+        hakus                   (map (fn [oid] (cache/cache-get-or-fetch cache-service
+                                                                         :forms-in-use
+                                                                         oid
+                                                                         #(client/get-forms-in-use oid)))
+                                     query-organization-oids)]
     (reduce hakus-by-form-key
             {}
             hakus)))
