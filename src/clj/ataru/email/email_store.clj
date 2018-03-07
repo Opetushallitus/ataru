@@ -16,8 +16,7 @@
                                                      :haku_oid       ""
                                                      :content        content})))
 
-(defn get-email-template
-  [form-key lang]
-  (first (exec-db :db yesql-get-email-template {:form_key form-key
-                                                :lang     lang
-                                                :haku_oid ""})))
+(defn get-email-templates
+  [form-key]
+  (exec-db :db yesql-get-email-templates {:form_key form-key
+                                          :haku_oid ""}))

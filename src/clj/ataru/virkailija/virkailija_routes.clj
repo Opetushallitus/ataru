@@ -190,23 +190,23 @@
         (person-integration/upsert-and-log-person person-service application-id))
       (ok (str "Updated persons for applications")))
 
-    (api/POST "/email-template/:form-key/preview/:lang" []
-      :path-params [form-key :- s/Str
-                    lang :- (s/enum "fi" "sv" "en")]
-      :body [body {:content (s/maybe s/Str)}]
-      (ok (email/preview-submit-email (keyword lang) (:content body))))
+    (api/POST "/email-template/:form-key/previews" []
+      :path-params [form-key :- s/Str]
+      :body [body {:contents [{:lang    (s/enum "fi" "sv" "en")
+                               :content s/Str}]}]
+      (ok (email/preview-submit-emails (:contents body))))
 
-    (api/POST "/email-template/:form-key/:lang" {session :session}
-      :path-params [form-key :- s/Str
-                    lang :- (s/enum "fi" "sv" "en")]
-      :body [body {:content s/Str}]
-      (ok (email/store-email-template form-key lang session (:content body))))
+    (api/POST "/email-templates/:form-key" {session :session}
+      :path-params [form-key :- s/Str]
+      :body [body {:contents [{:lang    (s/enum "fi" "sv" "en")
+                               :content s/Str}]}]
+      (do
+        (println "foo" (:contents body))
+        (ok (email/store-email-templates form-key session (:contents body)))))
 
-    (api/GET "/email-template/:form-key/:lang" []
-      :path-params [form-key :- s/Str
-                    lang :- (s/enum "fi" "sv" "en")]
-      :query-params [{haku-oid :- s/Str nil}]
-      (ok (email/get-email-template form-key lang)))
+    (api/GET "/email-templates/:form-key" []
+      :path-params [form-key :- s/Str]
+      (ok (email/get-email-templates form-key)))
 
     (api/context "/applications" []
       :tags ["applications-api"]

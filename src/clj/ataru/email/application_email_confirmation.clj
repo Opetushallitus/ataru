@@ -16,6 +16,11 @@
   (:import
     [org.owasp.html HtmlPolicyBuilder]))
 
+(def languages #{:fi :sv :en})
+
+(def languages-map
+  (into {} (zipmap (seq languages) (repeat (count languages) nil))))
+
 (def submit-email-subjects
   {:fi "Opintopolku: hakemuksesi on vastaanotettu"
    :sv "Studieinfo: Din ansökan har mottagits"
@@ -79,7 +84,8 @@
                             (:form-key))
         lang            (keyword (:lang application))
         subject         (subject lang)
-        content         (-> (email-store/get-email-template form-key lang)
+        content         (-> (email-store/get-email-templates form-key)
+                            (keyword lang)
                             :content
                             (->safe-html))
         recipient       (->> (:answers application)
@@ -111,6 +117,7 @@
   {:from    from-address
    :subject ((keyword lang) submit-email-subjects)
    :content content
+   :lang    lang
    :body    (selmer/render-file
               (submit-email-template-filename lang)
               {:lang            lang
@@ -118,6 +125,12 @@
                :application-url "https://example.com/muokkaus-linkki-esimerkki"
                :application-oid "1.2.246.562.11.00000000000000000000"
                :content         (->safe-html content)})})
+
+(defn preview-submit-emails
+  [previews]
+  (map
+    #(preview-submit-email (key %) (-> % (val) (first) :content))
+    (merge languages-map (clojure.walk/keywordize-keys (group-by :lang previews)))))
 
 (defn- create-edit-email [tarjonta-service application-id]
   (create-email tarjonta-service
@@ -153,17 +166,20 @@
   [tarjonta-service application-id]
   (start-email-job (create-refresh-secret-email tarjonta-service application-id)))
 
-(defn get-email-template
-  [form-key lang]
-  (let [stored-template (email-store/get-email-template form-key lang)]
-    (preview-submit-email lang (:content stored-template))))
+(defn get-email-templates
+  [form-key]
+  (as-> (email-store/get-email-templates form-key) x
+        (map #(preview-submit-email (:lang %) (:content %)) x)))
 
-(defn store-email-template
-  [form-key lang session content]
-  (let [virkailija      (virkailija-edit/upsert-virkailija session)
-        stored-template (email-store/create-or-update-email-template
-                          form-key
-                          lang
-                          (:oid virkailija)
-                          content)]
-    (preview-submit-email lang (:content stored-template))))
+(defn store-email-templates
+  [form-key session templates]
+  (let [virkailija       (virkailija-edit/upsert-virkailija session)
+        stored-templates (mapv #(email-store/create-or-update-email-template
+                                  form-key
+                                  (:lang %)
+                                  (:oid virkailija)
+                                  (:content %))
+                               templates)]
+    (map
+      #(preview-submit-email (:lang %) (:content %))
+      stored-templates)))
