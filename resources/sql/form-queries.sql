@@ -39,9 +39,8 @@ SELECT
   f.created_by,
   f.created_time,
   f.languages
-FROM forms f
-  JOIN latest_forms lf ON f.id = lf.max_id
-WHERE (f.deleted IS NULL OR f.deleted = FALSE)
+FROM latest_forms f
+WHERE (f.deleted IS NULL OR NOT f.deleted)
 ORDER BY created_time DESC;
 
 -- name: yesql-add-form<!
