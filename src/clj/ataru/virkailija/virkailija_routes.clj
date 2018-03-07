@@ -242,7 +242,7 @@
                        {hakukohdeOid :- s/Str nil}
                        {hakukohderyhmaOid :- s/Str nil}
                        {hakuOid :- s/Str nil}
-                       {ensisijainenHakukohdeOid :- s/Str nil}
+                       {ensisijaisesti :- s/Bool false}
                        {ssn :- s/Str nil}
                        {dob :- s/Str nil}
                        {email :- s/Str nil}
@@ -254,8 +254,10 @@
         (let [[query-key query-value]
               (cond
                 (some? formKey) [:form formKey]
-                (some? hakukohdeOid) [:hakukohde-oid hakukohdeOid]
-                (some? ensisijainenHakukohdeOid) [:ensisijainen-hakukohde-oid ensisijainenHakukohdeOid]
+                (some? hakukohdeOid)
+                [:hakukohde
+                 {:hakukohde-oid hakukohdeOid
+                  :ensisijaisesti ensisijaisesti}]
                 (and (some? hakukohderyhmaOid) (some? hakuOid))
                 [:hakukohderyhma
                  {:haku-oid hakuOid
