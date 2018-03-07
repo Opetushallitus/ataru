@@ -392,8 +392,8 @@
        [render-field followup])]))
 
 (defn- non-blank-option-label [option lang]
-  (non-blank-val (get-in option [:label lang])
-                 (some #(-> option :label %) [lang :fi :sv :en])))
+  (some #(non-blank-val (get-in option [:label %]) nil)
+        [lang :fi :sv :en]))
 
 (defn dropdown [field-descriptor & {:keys [div-kwd editing idx] :or {div-kwd :div.application__form-field editing false}}]
   (let [application  (subscribe [:state-query [:application]])
