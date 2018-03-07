@@ -199,7 +199,8 @@
                       tarjonta-service
                       session
                       :haku-oid
-                      haku-oid)
+                      haku-oid
+                      [])
         hakukohteet  (->> applications
                           (mapcat :hakukohde)
                           distinct
@@ -221,7 +222,8 @@
                         tarjonta-service
                         session
                         query-key
-                        query-value))
+                        query-value
+                        []))
         persons      (person-service/get-persons
                       person-service
                       (distinct (keep :person-oid applications)))]

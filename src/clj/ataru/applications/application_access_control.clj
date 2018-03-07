@@ -9,13 +9,15 @@
 
 (defn- authorized-by-form?
   [authorized-organization-oids application]
-  (or (some? (:haku application))
+  (or (nil? authorized-organization-oids)
+      (some? (:haku application))
       (contains? authorized-organization-oids
                  (:organization-oid application))))
 
 (defn- authorized-by-tarjoajat?
   [authorized-organization-oids application]
-  (or (nil? (:haku application))
+  (or (nil? authorized-organization-oids)
+      (nil? (:haku application))
       (not-empty
        (clojure.set/intersection
         authorized-organization-oids
@@ -40,15 +42,22 @@
   (dissoc application :organization-oid))
 
 (defn filter-authorized
-  [tarjonta-service authorized-organization-oids applications]
-  (->> applications
-       (populate-applications-hakukohteet tarjonta-service)
-       (filter (every-pred (partial authorized-by-form?
-                                    authorized-organization-oids)
-                           (partial authorized-by-tarjoajat?
-                                    authorized-organization-oids)))
-       (map depopulate-application-hakukohteet)
-       (map remove-organization-oid)))
+  ([tarjonta-service authorized-organization-oids applications]
+   (filter-authorized tarjonta-service
+                      authorized-organization-oids
+                      [authorized-by-form?
+                       authorized-by-tarjoajat?]
+                      applications))
+  ([tarjonta-service authorized-organization-oids predicates applications]
+   (->> applications
+        (populate-applications-hakukohteet tarjonta-service)
+        (filter (if (empty? predicates)
+                  (constantly true)
+                  (apply every-pred
+                         (map #(partial % authorized-organization-oids)
+                              predicates))))
+        (map depopulate-application-hakukohteet)
+        (map remove-organization-oid))))
 
 (defn applications-access-authorized?
   [organization-service tarjonta-service session application-keys rights]
@@ -64,20 +73,22 @@
    (constantly true)))
 
 (defn get-application-list-by-query
-  [organization-service tarjonta-service session query-key query-value]
+  [organization-service tarjonta-service session query-key query-value predicates]
   (session-orgs/run-org-authorized
    session
    organization-service
    [:view-applications :edit-applications]
    (constantly [])
-   #(filter-authorized tarjonta-service %
+   #(filter-authorized tarjonta-service % (conj predicates
+                                                authorized-by-form?
+                                                authorized-by-tarjoajat?)
                        (application-store/get-application-heading-list
                         query-key
                         query-value))
-   #(map remove-organization-oid
-         (application-store/get-application-heading-list
-          query-key
-          query-value))))
+   #(filter-authorized tarjonta-service nil predicates
+                       (application-store/get-application-heading-list
+                        query-key
+                        query-value))))
 
 (defn get-latest-application-by-key
   [organization-service tarjonta-service session application-key]
