@@ -109,8 +109,6 @@
                   setTextFieldValue(function() { return formComponents().eq(0).find('.editor-form__text-field') }, 'Ensimmäinen kysymys'),
                   clickElement(function() { return formComponents().eq(0).find('.editor-form__info-addon-checkbox label') }),
                   setTextFieldValue(function() { return formComponents().eq(0).find('.editor-form__info-addon-inputs textarea') }, 'Ensimmäisen kysymyksen ohjeteksti'),
-                  wait.forMilliseconds(2500), // waiting for autosave to trigger (this is the only way)
-                  clickElement(function() { return formListItems(0)})
               )
               it('has expected contents', function() {
                   expect(formComponents()).to.have.length(1)
