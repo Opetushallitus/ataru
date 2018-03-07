@@ -2,6 +2,7 @@
   (:require
    [ataru.applications.application-store :as application-store]
    [ataru.forms.form-store :as form-store]
+   [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
    [ataru.organization-service.session-organizations :as session-orgs]
    [ataru.organization-service.organization-client :refer [oph-organization]]
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
@@ -101,7 +102,7 @@
 
 (defn- get-forms-as-ordinary-user [session virkailija-tarjonta-service organization-oids]
   (let [forms-with-organization-oids                              (form-store/get-forms organization-oids)
-        forms-using-tarjonta-keys                                 (set (keys (.get-forms-in-use virkailija-tarjonta-service (-> session :identity :username))))
+        forms-using-tarjonta-keys                                 (set (keys (tarjonta-protocol/get-forms-in-use virkailija-tarjonta-service session)))
         missing-tarjonta-form-keys                                (clojure.set/difference forms-using-tarjonta-keys (set (map :key forms-with-organization-oids)))
         tarjonta-forms-with-some-hakukohde-from-user-organization (form-store/get-forms-by-keys (vec missing-tarjonta-form-keys))]
     (concat forms-with-organization-oids tarjonta-forms-with-some-hakukohde-from-user-organization)))

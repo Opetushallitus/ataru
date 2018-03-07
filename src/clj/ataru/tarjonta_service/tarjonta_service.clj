@@ -125,8 +125,8 @@
   (start [this] this)
   (stop [this] this)
 
-  (get-forms-in-use [this username]
-    (forms-in-use cache-service (:organization-service this) username)))
+  (get-forms-in-use [this session]
+    (forms-in-use cache-service (:organization-service this) (-> session :identity :username))))
 
 (defn new-tarjonta-service
   []

@@ -9,4 +9,4 @@
   (get-koulutus [this haku-oid]))
 
 (defprotocol VirkailijaTarjontaService
-  (get-forms-in-use [this username]))
+  (get-forms-in-use [this session]))
