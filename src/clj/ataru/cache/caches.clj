@@ -14,6 +14,9 @@
       :max-idle [3 TimeUnit/DAYS]
       :period   [15 TimeUnit/MINUTES]})
    (map->BasicCache
+     {:name     "forms-in-use"
+      :max-size 1000 :ttl 300})
+   (map->BasicCache
      {:name "haku" :max-size 10000 :ttl 3600})
    (map->BasicCache
      {:name "ohjausparametrit" :max-size 10000 :ttl 3600})
