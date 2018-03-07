@@ -40,6 +40,10 @@
       :fetch tarjonta-client/get-haku
       :ttl   [1 TimeUnit/HOURS]})
    (redis/map->BasicCache
+     {:name  "forms-in-use"
+      :fetch tarjonta-client/get-forms-in-use
+      :ttl   [5 TimeUnit/MINUTES]})
+   (redis/map->BasicCache
      {:name  "ohjausparametrit"
       :fetch ohjausparametrit-client/get-ohjausparametrit
       :ttl   [1 TimeUnit/HOURS]})
