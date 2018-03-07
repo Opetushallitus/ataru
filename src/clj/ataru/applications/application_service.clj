@@ -187,36 +187,21 @@
        (some #(= hakukohderyhma-oid %))))
 
 (defn- applied-to-hakukohderyhma?
-  [hakukohteet hakukohderyhma-oid application]
-  (->> (:hakukohde application)
-       (map hakukohteet)
-       (some #(belongs-to-hakukohderyhma? hakukohderyhma-oid %))))
-
-(defn- get-application-list-by-hakukohderyhma
-  [organization-service tarjonta-service session {:keys [haku-oid hakukohderyhma-oid]}]
-  (let [applications (aac/get-application-list-by-query
-                      organization-service
-                      tarjonta-service
-                      session
-                      :haku-oid
-                      haku-oid
-                      [])
-        hakukohteet  (->> applications
-                          (mapcat :hakukohde)
-                          distinct
-                          (tarjonta-service/get-hakukohteet tarjonta-service)
-                          (reduce #(assoc %1 (:oid %2) %2) {}))]
-    (filter #(applied-to-hakukohderyhma? hakukohteet hakukohderyhma-oid %)
-            applications)))
+  [hakukohderyhma-oid _ application]
+  (some #(belongs-to-hakukohderyhma? hakukohderyhma-oid %)
+        (:hakukohde application)))
 
 (defn get-application-list-by-query
   [organization-service person-service tarjonta-service session query-key query-value]
   (let [applications (if (= :hakukohderyhma query-key)
-                       (get-application-list-by-hakukohderyhma
+                       (aac/get-application-list-by-query
                         organization-service
                         tarjonta-service
                         session
-                        query-value)
+                        :haku-oid
+                        (:haku-oid query-value)
+                        [(partial applied-to-hakukohderyhma?
+                                  (:hakukohderyhma-oid query-value))])
                        (aac/get-application-list-by-query
                         organization-service
                         tarjonta-service
