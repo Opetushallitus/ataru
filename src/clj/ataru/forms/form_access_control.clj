@@ -29,8 +29,6 @@
   [form-key session virkailija-tarjonta-service]
   (let [form-keys-from-tarjonta (set (keys (tarjonta-protocol/get-forms-in-use virkailija-tarjonta-service session)))
         tf (contains? form-keys-from-tarjonta form-key)]
-    (prn "???????" form-key ": " tf)
-    (prn form-keys-from-tarjonta)
     tf))
 
 (defn get-organizations-with-edit-rights [session]
