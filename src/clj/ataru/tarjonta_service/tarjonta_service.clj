@@ -1,6 +1,7 @@
 (ns ataru.tarjonta-service.tarjonta-service
   (:require
     [ataru.tarjonta-service.tarjonta-client :as client]
+    [ataru.organization-service.organization-service :as organization-protocol]
     [ataru.organization-service.organization-client :refer [oph-organization]]
     [com.stuartsierra.component :as component]
     [ataru.config.core :refer [config]]
@@ -33,8 +34,8 @@
 
 (defn- forms-in-use
   [cache-service organization-service username]
-  (let [direct-organizations    (.get-direct-organizations-for-rights organization-service username [:form-edit])
-        all-organization-oids   (map :oid (.get-all-organizations organization-service (:form-edit direct-organizations)))
+  (let [direct-organizations    (organization-protocol/get-direct-organizations-for-rights organization-service username [:form-edit])
+        all-organization-oids   (map :oid (organization-protocol/get-all-organizations organization-service (:form-edit direct-organizations)))
         in-oph-organization?    (some #{oph-organization} all-organization-oids)
         query-organization-oids (sort (if in-oph-organization? nil all-organization-oids))
         hakus                   (map (fn [oid] cache/cache-get-or-fetch cache-service
