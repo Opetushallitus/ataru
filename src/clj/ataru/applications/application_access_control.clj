@@ -9,47 +9,46 @@
 
 (defn- authorized-by-form?
   [authorized-organization-oids application]
-  {:pre [(set? authorized-organization-oids)
-         (some? (:organization-oid application))]}
-  (contains? authorized-organization-oids
-             (:organization-oid application)))
+  (or (some? (:haku application))
+      (contains? authorized-organization-oids
+                 (:organization-oid application))))
 
 (defn- authorized-by-tarjoajat?
-  [authorized-organization-oids tarjoajat application]
-  {:pre [(set? authorized-organization-oids)
-         (some? (:haku application))
-         (some? (:hakukohde application))]}
-  (not-empty
-   (clojure.set/intersection
-    authorized-organization-oids
-    (->> (:hakukohde application)
-         (map tarjoajat)
-         (apply clojure.set/union)))))
+  [authorized-organization-oids application]
+  (or (nil? (:haku application))
+      (not-empty
+       (clojure.set/intersection
+        authorized-organization-oids
+        (apply clojure.set/union
+               (map (comp set :tarjoajaOids) (:hakukohde application)))))))
 
-(defn authorized? [authorized-organization-oids tarjoajat application]
-  (if (some? (:haku application))
-    (authorized-by-tarjoajat? authorized-organization-oids
-                              tarjoajat
-                              application)
-    (authorized-by-form? authorized-organization-oids
-                         application)))
+(defn- populate-applications-hakukohteet
+  [tarjonta-service applications]
+  (let [hakukohteet (->> applications
+                         (mapcat :hakukohde)
+                         distinct
+                         (tarjonta-service/get-hakukohteet tarjonta-service)
+                         (reduce #(assoc %1 (:oid %2) %2) {}))]
+    (map #(update % :hakukohde (partial mapv (fn [oid] (get hakukohteet oid {:oid oid}))))
+         applications)))
 
-(defn applications-tarjoajat [tarjonta-service applications]
-  (->> applications
-       (mapcat :hakukohde)
-       distinct
-       (tarjonta-service/get-hakukohteet tarjonta-service)
-       (reduce #(assoc %1 (:oid %2) (set (:tarjoajaOids %2)))
-               {})))
-
-(defn- filter-authorized-applications
-  [tarjonta-service authorized-organization-oids applications]
-  (let [tarjoajat (applications-tarjoajat tarjonta-service applications)]
-    (filter (partial authorized? authorized-organization-oids tarjoajat)
-            applications)))
+(defn- depopulate-application-hakukohteet
+  [application]
+  (update application :hakukohde (partial mapv :oid)))
 
 (defn- remove-organization-oid [application]
   (dissoc application :organization-oid))
+
+(defn filter-authorized
+  [tarjonta-service authorized-organization-oids applications]
+  (->> applications
+       (populate-applications-hakukohteet tarjonta-service)
+       (filter (every-pred (partial authorized-by-form?
+                                    authorized-organization-oids)
+                           (partial authorized-by-tarjoajat?
+                                    authorized-organization-oids)))
+       (map depopulate-application-hakukohteet)
+       (map remove-organization-oid)))
 
 (defn applications-access-authorized?
   [organization-service tarjonta-service session application-keys rights]
@@ -58,11 +57,10 @@
    organization-service
    rights
    (constantly false)
-   #(let [affected-applications (application-store/applications-authorization-data application-keys)]
-      (every? (partial authorized? % (applications-tarjoajat
-                                      tarjonta-service
-                                      affected-applications))
-              affected-applications))
+   #(->> (application-store/applications-authorization-data application-keys)
+         (populate-applications-hakukohteet tarjonta-service)
+         (every? (every-pred (partial authorized-by-form? %)
+                             (partial authorized-by-tarjoajat? %))))
    (constantly true)))
 
 (defn get-application-list-by-query
@@ -72,10 +70,14 @@
    organization-service
    [:view-applications :edit-applications]
    (constantly [])
-   #(->> (application-store/get-application-heading-list query-key query-value)
-         (filter-authorized-applications tarjonta-service %)
-         (map remove-organization-oid))
-   #(map remove-organization-oid (application-store/get-application-heading-list query-key query-value))))
+   #(filter-authorized tarjonta-service %
+                       (application-store/get-application-heading-list
+                        query-key
+                        query-value))
+   #(map remove-organization-oid
+         (application-store/get-application-heading-list
+          query-key
+          query-value))))
 
 (defn get-latest-application-by-key
   [organization-service tarjonta-service session application-key]
@@ -84,10 +86,12 @@
    organization-service
    [:view-applications :edit-applications]
    (constantly nil)
-   #(when-let [application (application-store/get-latest-application-by-key application-key)]
-      (when (authorized? % (applications-tarjoajat tarjonta-service [application]) application)
-        (remove-organization-oid application)))
-   #(remove-organization-oid (application-store/get-latest-application-by-key application-key))))
+   #(some->> (application-store/get-latest-application-by-key application-key)
+             vector
+             (filter-authorized tarjonta-service %)
+             first)
+   #(remove-organization-oid
+     (application-store/get-latest-application-by-key application-key))))
 
 (defn external-applications
   [organization-service tarjonta-service session haku-oid hakukohde-oid hakemus-oids]
@@ -96,12 +100,11 @@
     organization-service
     [:view-applications :edit-applications]
     (constantly nil)
-    #(->> (application-store/get-external-applications
-           haku-oid
-           hakukohde-oid
-           hakemus-oids)
-          (filter-authorized-applications tarjonta-service %)
-          (map remove-organization-oid))
+    #(filter-authorized tarjonta-service %
+                        (application-store/get-external-applications
+                         haku-oid
+                         hakukohde-oid
+                         hakemus-oids))
     #(map remove-organization-oid (application-store/get-external-applications
                                    haku-oid
                                    hakukohde-oid
