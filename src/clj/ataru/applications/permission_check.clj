@@ -6,14 +6,11 @@
 (defn check [tarjonta-service check-dto]
   (try
     {:accessAllowed
-     (let [applications                 (application-store/persons-applications-authorization-data
-                                         (:personOidsForSamePerson check-dto))
-           tarjoajat                    (aac/applications-tarjoajat tarjonta-service
-                                                                    applications)
-           authorized-organization-oids (set (:organisationOids check-dto))]
-       (boolean
-        (some #(aac/authorized? authorized-organization-oids tarjoajat %)
-              applications)))}
+     (->> (application-store/persons-applications-authorization-data
+           (:personOidsForSamePerson check-dto))
+          (aac/filter-authorized tarjonta-service
+                                 (set (:organisationOids check-dto)))
+          not-empty)}
     (catch Exception e
       (let [msg "Error while checking permission"]
         (error e msg)
