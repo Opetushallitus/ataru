@@ -129,7 +129,7 @@
                                                    :key "hakukohteen-organisaatiosta-form"
                                                    :name {:fi "hakukohteen-organisaatiosta"}
                                                    :created-by "DEVELOPER"
-                                                   :organization-oid "1.2.246.562.10.0439846"
+                                                   :organization-oid "1.2.246.562.10.01010101"
                                                    :languages ["fi"]
                                                    :content
                                                    [(component/hakukohteet)

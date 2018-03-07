@@ -23,14 +23,6 @@ ORDER BY created_time DESC;
 
 --name: yesql-get-forms-by-keys
 -- Get stored forms, without content, filtered by what's allowed for the viewing user. Use the latest version.
-WITH latest_forms AS (
-    SELECT
-      key,
-      MAX(id) AS max_id
-    FROM forms f
-    WHERE (f.key IN (:keys))
-    GROUP BY key
-)
 SELECT
   f.id,
   f.key,
@@ -40,7 +32,7 @@ SELECT
   f.created_time,
   f.languages
 FROM latest_forms f
-WHERE (f.deleted IS NULL OR NOT f.deleted)
+WHERE (f.key IN (:keys)) AND (f.deleted IS NULL OR NOT f.deleted)
 ORDER BY created_time DESC;
 
 -- name: yesql-add-form<!

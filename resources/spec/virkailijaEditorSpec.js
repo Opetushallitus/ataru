@@ -101,7 +101,25 @@
           it('has 1 fixture forms', function () {
               expect(formListItems()).to.have.length(1)
           })
+
+          describe('can edit', function() {
+              before(
+                  clickElement(function() { return formListItems(0)}),
+                  clickComponentMenuItem('Tekstikenttä'),
+                  setTextFieldValue(function() { return formComponents().eq(0).find('.editor-form__text-field') }, 'Ensimmäinen kysymys'),
+                  clickElement(function() { return formComponents().eq(0).find('.editor-form__info-addon-checkbox label') }),
+                  setTextFieldValue(function() { return formComponents().eq(0).find('.editor-form__info-addon-inputs textarea') }, 'Ensimmäisen kysymyksen ohjeteksti'),
+                  wait.until(function() {
+                      var flasher = testFrame().find('.top-banner .flasher')
+                      return flasher.css('opacity') !== "0" && flasher.find('span:visible').text() === 'Kaikki muutokset tallennettu'
+                  }, 10000)
+              )
+              it('has expected contents', function() {
+                  expect(formComponents()).to.have.length(1)
+              })
+          })
       })
+
   })
 
   describe('Editor', function() {

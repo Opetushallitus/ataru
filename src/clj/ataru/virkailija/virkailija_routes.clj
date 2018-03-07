@@ -165,12 +165,12 @@
     (api/DELETE "/forms/:id" {session :session}
       :path-params [id :- Long]
       :summary "Mark form as deleted"
-      (ok (access-controlled-form/delete-form id session organization-service)))
+      (ok (access-controlled-form/delete-form id session virkailija-tarjonta-service organization-service)))
 
     (api/POST "/forms" {session :session}
       :summary "Persist changed form."
       :body [form ataru-schema/FormWithContent]
-      (ok (access-controlled-form/post-form form session organization-service)))
+      (ok (access-controlled-form/post-form form session virkailija-tarjonta-service organization-service)))
 
     (api/POST "/client-error" []
       :summary "Log client-side errors to server log"
