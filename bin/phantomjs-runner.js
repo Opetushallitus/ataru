@@ -24,9 +24,9 @@ switch (app) {
     url = 'http://localhost:8350/lomake-editori/virkailija-question-group-test.html'
     break;
   case 'virkailija-with-hakukohde-organization':
-      addPhantomCookie();
-      url = 'http://localhost:8350/lomake-editori/virkailija-with-hakukohde-organization-test.html'
-      break;
+    addPhantomCookie();
+    url = 'http://localhost:8350/lomake-editori/virkailija-with-hakukohde-organization-test.html'
+    break;
   case 'hakija-form':
     url = 'http://localhost:8351/hakemus/hakija-form-test.html'
     break;
