@@ -787,20 +787,19 @@
                                       {:application_key application-key})
         all-versions-paired  (map vector all-versions (rest all-versions))
         get-koodisto-options (memoize koodisto/get-koodisto-options)]
-    (when (not-empty all-versions-paired)
-      (map (fn [[older-application newer-application]]
-             (let [older-version-answers (util/application-answers-by-key older-application)
-                   newer-version-answers (util/application-answers-by-key newer-application)
-                   answer-keys           (set (concat (keys older-version-answers) (keys newer-version-answers)))
-                   lang                  (or (-> newer-application :lang keyword) :fi)
-                   form-fields           (util/form-fields-by-id (forms/get-form-by-application newer-application))]
-               (into {}
-                     (for [key answer-keys
-                           :let [old-value (-> older-version-answers key :value)
-                                 new-value (-> newer-version-answers key :value)
-                                 field     (key form-fields)]
-                           :when (not= old-value new-value)]
-                       {key {:label (-> field :label lang)
-                             :old   (util/populate-answer-koodisto-values old-value field get-koodisto-options)
-                             :new   (util/populate-answer-koodisto-values new-value field get-koodisto-options)}}))))
-           all-versions-paired))))
+    (map (fn [[older-application newer-application]]
+           (let [older-version-answers (util/application-answers-by-key older-application)
+                 newer-version-answers (util/application-answers-by-key newer-application)
+                 answer-keys           (set (concat (keys older-version-answers) (keys newer-version-answers)))
+                 lang                  (or (-> newer-application :lang keyword) :fi)
+                 form-fields           (util/form-fields-by-id (forms/get-form-by-application newer-application))]
+             (into {}
+                   (for [key answer-keys
+                         :let [old-value (-> older-version-answers key :value)
+                               new-value (-> newer-version-answers key :value)
+                               field     (key form-fields)]
+                         :when (not= old-value new-value)]
+                     {key {:label (-> field :label lang)
+                           :old   (util/populate-answer-koodisto-values old-value field get-koodisto-options)
+                           :new   (util/populate-answer-koodisto-values new-value field get-koodisto-options)}}))))
+         all-versions-paired)))
