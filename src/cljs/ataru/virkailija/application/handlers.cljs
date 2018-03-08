@@ -703,17 +703,12 @@
 (reg-event-db
   :application/open-application-version-history
   (fn [db [_ event]]
-    (let [event-index    (cljs-util/event-index db (:id event))
-          change-history (-> db :application :selected-application-and-form :application-change-history)]
-      (-> db
-          (assoc-in [:application :selected-application-and-form :current-history-items]
-                    (nth change-history event-index))
-          (assoc-in [:application :selected-application-and-form :selected-event] event)))))
+    (assoc-in db [:application :selected-application-and-form :selected-event] event)))
 
 (reg-event-db
   :application/close-application-version-history
   (fn [db _]
-    (update-in db [:application :selected-application-and-form] dissoc :current-history-items :selected-event)))
+    (update-in db [:application :selected-application-and-form] dissoc :selected-event)))
 
 (reg-event-db
   :application/remove-field-highlight

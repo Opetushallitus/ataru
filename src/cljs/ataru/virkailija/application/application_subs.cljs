@@ -307,10 +307,19 @@
   (fn [db _]
     (-> db :application :selected-application-and-form :application :key)))
 
+(defn- modify-event-changes
+  [db event-id]
+  (let [modify-events  (filter util/modify-event? (-> db :application :events))
+        change-history (-> db :application :selected-application-and-form :application-change-history)]
+    (some (fn [[event changes]]
+            (when (= event-id (:id event))
+              changes))
+          (map vector modify-events change-history))))
+
 (re-frame.core/reg-sub
   :application/current-history-items
   (fn [db _]
-    (-> db :application :selected-application-and-form :current-history-items)))
+    (modify-event-changes (-> db :application :selected-application-and-form :selected-event :id))))
 
 (re-frame.core/reg-sub
   :application/selected-event
@@ -320,11 +329,7 @@
 (re-frame.core/reg-sub
   :application/changes-made-for-event
   (fn [db [_ event-id]]
-    (let [event-index    (util/event-index db event-id)
-          change-history (-> db :application :selected-application-and-form :application-change-history)]
-      (when (and event-index
-                 (< event-index (count change-history)))
-        (nth change-history event-index)))))
+    (modify-event-changes event-id)))
 
 (re-frame.core/reg-sub
   :application/field-highlighted?
