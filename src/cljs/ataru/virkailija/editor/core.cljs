@@ -88,13 +88,11 @@
          component]))))
 
 (defn editor []
-  (let [form    (subscribe [:editor/selected-form])
-        content (reaction (:content @form))]
-    (fn []
-      (-> (into [:section.editor-form]
-            (for [[index json-blob] (map vector (range) @content)
-                  :when             (not-empty @content)]
-              [soresu->reagent json-blob [index]]))
-        (conj [ec/drag-n-drop-spacer [(count @content)]])
-        (conj [toolbar/add-component (count @content)])))))
+  (let [content (:content @(subscribe [:editor/selected-form]))]
+    [:section.editor-form
+     (doall
+      (map-indexed (fn [index element] [soresu->reagent element [index]])
+                   content))
+     [ec/drag-n-drop-spacer [(count content)]]
+     [toolbar/add-component (count content)]]))
 
