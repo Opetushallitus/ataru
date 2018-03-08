@@ -152,6 +152,12 @@
     (get-in db [:editor :ui :remove-component-button-state path] :active)))
 
 (re-frame/reg-sub
-  :editor/email-template-preview-html
+  :editor/email-templates-altered
   (fn [db _]
-    (md/md->html (get-in db [:editor :email-template :content]))))
+    (let [templates (get-in db [:editor :email-template])]
+      (into
+        {}
+        (map
+          (fn [[lang {:keys [content stored-content]}]]
+            [lang (not= content stored-content)])
+          templates)))))
