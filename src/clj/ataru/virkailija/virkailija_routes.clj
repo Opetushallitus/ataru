@@ -122,6 +122,10 @@
      (if (:dev? env)
        (render-file-in-dev "templates/virkailija-question-group-test.html" {})
        (route/not-found "Not found")))
+   (api/GET "/virkailija-with-hakukohde-organization-test.html" []
+     (if (:dev? env)
+       (render-file-in-dev "templates/virkailija-with-hakukohde-organization-test.html" {})
+       (route/not-found "Not found")))
    (api/GET "/virkailija-question-group-application-handling-test.html" []
      (if (:dev? env)
        (render-file-in-dev "templates/virkailija-question-group-application-handling-test.html" {:form-key (form-store/get-latest-form-by-name "Kysymysryhmä: testilomake")})
