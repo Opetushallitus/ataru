@@ -14,28 +14,27 @@
 (defn- redirect-to-logged-out-page []
   (resp/redirect (resolve-url :cas.login)))
 
-(defn- cas-login [ticket virkailija-login-url]
-  (let [cas-client (cas/cas-client (resolve-url :cas-client))
-        username (if (-> config :dev :fake-dependencies)
-                   "DEVELOPER"
-                   (.run (.validateServiceTicket cas-client virkailija-login-url ticket)))]
-    (cas-store/login ticket)
-    username))
+(defn cas-login [ticket]
+  (fn []
+      (when ticket
+        (let [cas-client (cas/cas-client (resolve-url :cas-client))
+              username   (.run (.validateServiceTicket cas-client (resolve-url :ataru.login-success) ticket))]
+          [username ticket]))))
 
-(defn login [ticket organization-service redirect-url]
+(defn login [login-provider organization-service redirect-url]
   (try
-    (if ticket
-      (if-let [username (cas-login ticket (resolve-url :ataru.login-success))]
+    (if-let [[username ticket] (login-provider)]
+      (do
+        (cas-store/login ticket)
         (let [user-right-organizations (.get-direct-organizations-for-rights organization-service username rights/right-names)]
           (info "username" username "logged in, redirect to" redirect-url)
           (audit-log/log {:new       ticket
                           :id        username
                           :operation audit-log/operation-login})
           (-> (resp/redirect redirect-url)
-              (assoc :session {:identity {:username username
-                                          :ticket ticket
-                                          :user-right-organizations user-right-organizations}})))
-        (redirect-to-logged-out-page))
+            (assoc :session {:identity {:username                 username
+                                        :ticket                   ticket
+                                        :user-right-organizations user-right-organizations}}))))
       (redirect-to-logged-out-page))
     (catch Exception e
       (error e "Error in login ticket handling")

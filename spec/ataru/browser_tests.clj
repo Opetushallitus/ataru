@@ -54,7 +54,9 @@
     (it "is created successfully"
       (run-phantom-test "virkailija" (last (split (utils/login) #"="))))
     (it "is created with a question group successfully"
-      (run-phantom-test "virkailija-question-group" (last (split (utils/login) #"=")))))
+      (run-phantom-test "virkailija-question-group" (last (split (utils/login) #"="))))
+    (it "is able to use lomake with hakukohde organization connection"
+        (run-phantom-test "virkailija-with-hakukohde-organization" (last (split (utils/login) #"=")))))
 
   (describe "applying using a form /"
     (it "is possible to apply using a plain form"

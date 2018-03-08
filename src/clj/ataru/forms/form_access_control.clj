@@ -2,6 +2,7 @@
   (:require
    [ataru.applications.application-store :as application-store]
    [ataru.forms.form-store :as form-store]
+   [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
    [ataru.organization-service.session-organizations :as session-orgs]
    [ataru.organization-service.organization-client :refer [oph-organization]]
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
@@ -23,36 +24,42 @@
    (fn [] (form-store/get-organization-oid-by-id form-id))
    [right]))
 
+(defn form-allowed-by-haku?
+  "True when user has organization in haku or in some hakukohde"
+  [form-key session virkailija-tarjonta-service]
+  (let [form-keys-from-tarjonta (set (keys (tarjonta-protocol/get-forms-in-use virkailija-tarjonta-service session)))]
+    (contains? form-keys-from-tarjonta form-key)))
+
 (defn get-organizations-with-edit-rights [session]
   (-> session
       :identity
       :user-right-organizations
       :form-edit))
 
-(defn- check-edit-authorization [form session organization-service do-fn]
-  (let [user-name     (-> session :identity :username)
-        organizations (get-organizations-with-edit-rights session)]
+(defn- check-edit-authorization [form session virkailija-tarjonta-service organization-service do-fn]
+  (let [organizations (get-organizations-with-edit-rights session)]
+    (when (not (:organization-oid form))
+      (throw (user-feedback-exception (str "Lomaketta ei ole kytketty organisaatioon"
+                                        (when-not (empty? organizations)
+                                          (str " " (vec organizations)))))))
     (cond
       (and
        (:id form) ; Updating, since form already has id
-       (not (form-allowed-by-id? (:id form) session organization-service :form-edit)))
+       (not (or (form-allowed-by-id? (:id form) session organization-service :form-edit)
+                (form-allowed-by-haku? (:key form) session virkailija-tarjonta-service))))
       (throw (user-feedback-exception
                (str "Ei oikeutta lomakkeeseen "
                     (:id form)
                     " organisaatioilla "
                     (vec organizations))))
 
-      (not (:organization-oid form))
-      (throw (user-feedback-exception (str "Lomaketta ei ole kytketty organisaatioon"
-                                           (when-not (empty? organizations)
-                                             (str " " (vec organizations))))))
-
       ;The potentially new organization for form is not allowed for user
-      (not (session-orgs/organization-allowed?
-            session
-            organization-service
-            (:organization-oid form)
-            [:form-edit]))
+      (and (not (:id form))
+           (not (session-orgs/organization-allowed?
+                  session
+                  organization-service
+                  (:organization-oid form)
+                  [:form-edit])))
       (throw (user-feedback-exception
               (str "Ei oikeutta organisaatioon "
                    (:organization-oid form)
@@ -77,7 +84,7 @@
             (not (apply distinct? @form-element-ids)))
       (throw (Exception. (str "Duplicate element id in form: " @form-element-ids))))))
 
-(defn post-form [form session organization-service]
+(defn post-form [form session virkailija-tarjonta-service organization-service]
   (let [organization-oids (map :oid (get-organizations-with-edit-rights session))
         first-org-oid     (first organization-oids)
         form-with-org     (assoc form :organization-oid (or (:organization-oid form) first-org-oid))]
@@ -85,6 +92,7 @@
     (check-edit-authorization
      form-with-org
      session
+     virkailija-tarjonta-service
      organization-service
      (fn []
        (form-store/create-form-or-increment-version!
@@ -92,20 +100,27 @@
          form-with-org
          :created-by (-> session :identity :username)))))))
 
-(defn delete-form [form-id session organization-service]
+(defn delete-form [form-id session virkailija-tarjonta-service organization-service]
   (let [form (form-store/fetch-latest-version form-id)]
-    (check-edit-authorization form session organization-service
+    (check-edit-authorization form session virkailija-tarjonta-service organization-service
       (fn []
         (form-store/create-form-or-increment-version!
          (assoc form :deleted true))))))
 
-(defn get-forms-for-editor [session organization-service]
+(defn- get-forms-as-ordinary-user [session virkailija-tarjonta-service organization-oids]
+  (let [forms-with-organization-oids                              (form-store/get-forms organization-oids)
+        forms-using-tarjonta-keys                                 (set (keys (tarjonta-protocol/get-forms-in-use virkailija-tarjonta-service session)))
+        missing-tarjonta-form-keys                                (clojure.set/difference forms-using-tarjonta-keys (set (map :key forms-with-organization-oids)))
+        tarjonta-forms-with-some-hakukohde-from-user-organization (form-store/get-forms-by-keys (vec missing-tarjonta-form-keys))]
+    (concat forms-with-organization-oids tarjonta-forms-with-some-hakukohde-from-user-organization)))
+
+(defn get-forms-for-editor [session virkailija-tarjonta-service organization-service]
   {:forms (session-orgs/run-org-authorized
            session
            organization-service
            [:form-edit]
            vector
-           #(form-store/get-forms %)
+           #(get-forms-as-ordinary-user session virkailija-tarjonta-service %)
            #(form-store/get-all-forms))})
 
 

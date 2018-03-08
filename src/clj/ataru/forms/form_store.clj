@@ -63,6 +63,10 @@
     (execute-with-connection conn yesql-query-fn params)
     (execute-with-db :db yesql-query-fn params)))
 
+(defn get-forms-by-keys [keys]
+  (if (seq keys)
+    (execute-with-db :db yesql-get-forms-by-keys {:keys keys})))
+
 (defn get-forms [organization-oids]
   (execute-with-db :db yesql-get-forms-query {:authorized_organization_oids organization-oids
                                               :query-type "ORGS"}))

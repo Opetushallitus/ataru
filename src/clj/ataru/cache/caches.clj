@@ -14,6 +14,9 @@
       :max-idle [3 TimeUnit/DAYS]
       :period   [15 TimeUnit/MINUTES]})
    (map->BasicCache
+     {:name     "forms-in-use"
+      :max-size 1000 :ttl 300})
+   (map->BasicCache
      {:name "haku" :max-size 10000 :ttl 3600})
    (map->BasicCache
      {:name "ohjausparametrit" :max-size 10000 :ttl 3600})
@@ -39,6 +42,10 @@
      {:name  "haku"
       :fetch tarjonta-client/get-haku
       :ttl   [1 TimeUnit/HOURS]})
+   (redis/map->BasicCache
+     {:name  "forms-in-use"
+      :fetch tarjonta-client/get-forms-in-use
+      :ttl   [5 TimeUnit/MINUTES]})
    (redis/map->BasicCache
      {:name  "ohjausparametrit"
       :fetch ohjausparametrit-client/get-ohjausparametrit

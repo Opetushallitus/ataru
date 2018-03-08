@@ -1,6 +1,8 @@
 (ns ataru.tarjonta-service.tarjonta-service
   (:require
     [ataru.tarjonta-service.tarjonta-client :as client]
+    [ataru.organization-service.session-organizations :refer [select-organizations-for-rights]]
+    [ataru.organization-service.organization-service :as organization-protocol]
     [ataru.organization-service.organization-client :refer [oph-organization]]
     [com.stuartsierra.component :as component]
     [ataru.config.core :refer [config]]
@@ -31,14 +33,20 @@
       (assoc hakus avain haku-info)
       hakus)))
 
-(defn forms-in-use
-  [organization-service username]
-  (let [direct-organizations  (.get-direct-organizations-for-rights organization-service username [:form-edit])
-        all-organization-oids (map :oid (.get-all-organizations organization-service (:form-edit direct-organizations)))
-        in-oph-organization?  (some #{oph-organization} all-organization-oids)]
+(defn- forms-in-use
+  [cache-service organization-service session]
+  (let [direct-organizations    (select-organizations-for-rights session [:form-edit])
+        all-organization-oids   (map :oid (organization-protocol/get-all-organizations organization-service (:form-edit direct-organizations)))
+        in-oph-organization?    (some #{oph-organization} all-organization-oids)
+        query-organization-oids (if in-oph-organization? [oph-organization] all-organization-oids)
+        hakus                   (map (fn [oid] (cache/cache-get-or-fetch cache-service
+                                                                         :forms-in-use
+                                                                         oid
+                                                                         #(client/get-forms-in-use oid)))
+                                     query-organization-oids)]
     (reduce hakus-by-form-key
             {}
-            (client/get-forms-in-use (if in-oph-organization? nil all-organization-oids)))))
+            hakus)))
 
 (defn- epoch-millis->zoned-date-time
   [millis]
@@ -113,15 +121,15 @@
   (get-koulutus [this koulutus-oid]
     (cache/cache-get-or-fetch cache-service :koulutus koulutus-oid #(client/get-koulutus koulutus-oid))))
 
-(defrecord VirkailijaTarjontaFormsService []
+(defrecord VirkailijaTarjontaFormsService [cache-service]
   component/Lifecycle
   VirkailijaTarjontaService
 
   (start [this] this)
   (stop [this] this)
 
-  (get-forms-in-use [this username]
-    (forms-in-use (:organization-service this) username)))
+  (get-forms-in-use [this session]
+    (forms-in-use cache-service (:organization-service this) session)))
 
 (defn new-tarjonta-service
   []
@@ -133,4 +141,4 @@
   []
   (if (-> config :dev :fake-dependencies)
     (->MockVirkailijaTarjontaService)
-    (->VirkailijaTarjontaFormsService)))
+    (->VirkailijaTarjontaFormsService nil)))

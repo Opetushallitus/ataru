@@ -122,6 +122,10 @@
      (if (:dev? env)
        (render-file-in-dev "templates/virkailija-question-group-test.html" {})
        (route/not-found "Not found")))
+   (api/GET "/virkailija-with-hakukohde-organization-test.html" []
+     (if (:dev? env)
+       (render-file-in-dev "templates/virkailija-with-hakukohde-organization-test.html" {})
+       (route/not-found "Not found")))
    (api/GET "/virkailija-question-group-application-handling-test.html" []
      (if (:dev? env)
        (render-file-in-dev "templates/virkailija-question-group-application-handling-test.html" {:form-key (form-store/get-latest-form-by-name "Kysymysryhmä: testilomake")})
@@ -149,12 +153,12 @@
                              In practice this is Tarjonta system only for now.
                              Return forms authorized with editor right (:form-edit)"
       :return {:forms [ataru-schema/Form]}
-      (ok (access-controlled-form/get-forms-for-editor session organization-service)))
+      (ok (access-controlled-form/get-forms-for-editor session virkailija-tarjonta-service organization-service)))
 
     (api/GET "/forms-in-use" {session :session}
       :summary "Return a map of form->hakus-currently-in-use-in-tarjonta-service"
       :return {s/Str {s/Str {:haku-oid s/Str :haku-name ataru-schema/LocalizedStringOptional}}}
-      (ok (.get-forms-in-use virkailija-tarjonta-service (-> session :identity :username))))
+      (ok (tarjonta/get-forms-in-use virkailija-tarjonta-service session)))
 
     (api/GET "/forms/:id" []
       :path-params [id :- Long]
@@ -165,12 +169,12 @@
     (api/DELETE "/forms/:id" {session :session}
       :path-params [id :- Long]
       :summary "Mark form as deleted"
-      (ok (access-controlled-form/delete-form id session organization-service)))
+      (ok (access-controlled-form/delete-form id session virkailija-tarjonta-service organization-service)))
 
     (api/POST "/forms" {session :session}
       :summary "Persist changed form."
       :body [form ataru-schema/FormWithContent]
-      (ok (access-controlled-form/post-form form session organization-service)))
+      (ok (access-controlled-form/post-form form session virkailija-tarjonta-service organization-service)))
 
     (api/POST "/client-error" []
       :summary "Log client-side errors to server log"
