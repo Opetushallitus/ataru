@@ -27,9 +27,8 @@
 (defn form-allowed-by-haku?
   "True when user has organization in haku or in some hakukohde"
   [form-key session virkailija-tarjonta-service]
-  (let [form-keys-from-tarjonta (set (keys (tarjonta-protocol/get-forms-in-use virkailija-tarjonta-service session)))
-        tf (contains? form-keys-from-tarjonta form-key)]
-    tf))
+  (let [form-keys-from-tarjonta (set (keys (tarjonta-protocol/get-forms-in-use virkailija-tarjonta-service session)))]
+    (contains? form-keys-from-tarjonta form-key)))
 
 (defn get-organizations-with-edit-rights [session]
   (-> session
