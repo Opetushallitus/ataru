@@ -38,8 +38,7 @@
       :form-edit))
 
 (defn- check-edit-authorization [form session virkailija-tarjonta-service organization-service do-fn]
-  (let [user-name     (-> session :identity :username)
-        organizations (get-organizations-with-edit-rights session)]
+  (let [organizations (get-organizations-with-edit-rights session)]
     (when (not (:organization-oid form))
       (throw (user-feedback-exception (str "Lomaketta ei ole kytketty organisaatioon"
                                         (when-not (empty? organizations)
