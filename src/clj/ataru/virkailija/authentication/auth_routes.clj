@@ -16,12 +16,14 @@
     url-from-session
     (string/replace url-from-session #"^http://" "https://")))
 
+
+
 (defn- fake-login-provider [ticket]
   (fn []
       (let [username      (if (= ticket "USER-WITH-HAKUKOHDE-ORGANIZATION")
                             "USER-WITH-HAKUKOHDE-ORGANIZATION"
                             "DEVELOPER")
-            unique-ticket (str (System/currentTimeMillis))]
+            unique-ticket (str (System/currentTimeMillis) "-" (rand-int (Integer/MAX_VALUE)))]
         [username unique-ticket])))
 
 (defn auth-routes [organization-service]
