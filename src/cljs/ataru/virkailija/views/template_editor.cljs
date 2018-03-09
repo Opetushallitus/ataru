@@ -42,9 +42,8 @@
                   {:key   (str "email-preview-lang-radio-label-" lang)
                    :for   (str "email-template-language-selection-" button-lang)
                    :class (when (= button-lang lang) "virkailija-email-preview__tab-label--selected")}
-                  (str
-                    (get language-names (keyword button-lang))
-                    (when ((keyword button-lang) contents-changed) " *"))]))
+                  (get language-names (keyword button-lang))
+                  (when ((keyword button-lang) contents-changed) [:span.virkailija-email-preview__tab-edited "*"])]))
              ["fi" "sv" "en"])]
           [:div.virkailija-email-preview__tab-border]
           [:div.virkailija-email-preview__tab-content
