@@ -206,6 +206,15 @@
   [form]
   (assoc form :created-time (temporal/str->googdate (:created-time form))))
 
+(defn- include-selected-form-content []
+  (if-let [selected-form @(subscribe [:editor/selected-form])]
+    (fn [form]
+      (if (= (:key selected-form) (:key form))
+        (assoc form :content
+            (-> selected-form :content))
+        form))
+    identity))
+
 (defn refresh-forms-for-editor []
   (http
    :get
@@ -214,6 +223,7 @@
      (assoc-in db [:editor :forms] (->> forms
                                         (mapv parse-form-created-times)
                                         (mapv languages->kwd)
+                                        (mapv (include-selected-form-content))
                                         (util/group-by-first :key)
                                         (sort-by-time-and-deletedness))))
    :skip-parse-times? true))
