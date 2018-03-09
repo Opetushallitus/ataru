@@ -7,7 +7,13 @@
    :sv "Ruotsi"
    :en "Englanti"})
 
-(defn email-template-editor
+(defn- get-body-class-list
+  []
+  (-> js/document
+      (.-body)
+      (.-classList)))
+
+(defn- render-template-editor
   []
   (let [visible?         @(subscribe [:state-query [:editor :ui :template-editor-visible?]])
         lang             @(subscribe [:state-query [:editor :email-template-lang]])
@@ -64,3 +70,10 @@
               {:class    (if any-changed? "editor-form__control-button--enabled" "editor-form__control-button--disabled")
                :on-click #(when any-changed? (dispatch [:editor/save-email-template]))}
               "Tallenna muutokset"]]]]]]]])))
+
+(defn email-template-editor
+  []
+  (reagent/create-class
+    {:component-did-mount    #(.add (get-body-class-list) "virkailija-modal-enabled")
+     :component-will-unmount #(.remove (get-body-class-list) "virkailija-modal-enabled")
+     :reagent-render         render-template-editor}))
