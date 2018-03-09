@@ -3,6 +3,7 @@
             [ataru.application.field-types :refer [form-fields]]
             [ataru.hakija.application-validators :as validator]
             [schema.core :as s]
+            [schema.experimental.abstract-map :as abstract-map]
             [schema-tools.core :as st]))
 
 ;        __.,,------.._
@@ -154,6 +155,30 @@
   (merge Form
          {:content                           [(s/if (comp some? :children) WrapperElement BasicElement)]
           (s/optional-key :organization-oid) (s/maybe s/Str)}))
+
+(s/defschema PathToElement
+  {})
+(s/defschema CreateElementOperation
+  {:type (s/eq "create")
+   :element BasicElement})
+(s/defschema UpdateElementOperation
+  {:type (s/eq "update")
+   :element BasicElement})
+(s/defschema RelocateElementOperation
+  {:type (s/eq "relocate")
+   :new-path PathToElement
+   :element BasicElement})
+(s/defschema RemoveElementOperation
+  {:type (s/eq "remove")
+   :element BasicElement})
+
+(s/defschema FormEditOperation
+    {:path PathToElement
+     :operation (s/conditional
+                  #(= "create" (:type %)) CreateElementOperation
+                  #(= "update" (:type %)) UpdateElementOperation
+                  #(= "relocate" (:type %)) RelocateElementOperation
+                  #(= "remove" (:type %)) RemoveElementOperation)})
 
 (s/defschema FormTarjontaHakukohde
   {:oid                          s/Str
