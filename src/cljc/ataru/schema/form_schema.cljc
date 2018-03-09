@@ -429,14 +429,17 @@
 (defn- length-at-most-78 [s]
   (<= (count s) 78))
 
-(s/defschema InformationRequest {:subject                         (s/constrained s/Str length-at-most-78)
-                                 :message                         s/Str
-                                 :application-key                 s/Str
-                                 (s/optional-key :id)             s/Int
-                                 (s/optional-key :created-time)   #?(:clj  org.joda.time.DateTime
-                                                                     :cljs s/Str)
-                                 (s/optional-key :first-name)     s/Str
-                                 (s/optional-key :last-name)      s/Str})
+(s/defschema NewInformationRequest {:subject         (s/constrained s/Str length-at-most-78)
+                                    :message         s/Str
+                                    :application-key s/Str})
+
+(s/defschema InformationRequest {:subject         s/Str
+                                 :message         s/Str
+                                 :application-key s/Str
+                                 :created-time    #?(:clj  org.joda.time.DateTime
+                                                     :cljs s/Str)
+                                 :first-name      s/Str
+                                 :last-name       s/Str})
 
 (s/defschema ReviewSetting {:setting-kwd s/Str
                             :enabled     s/Bool})

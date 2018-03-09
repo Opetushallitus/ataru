@@ -329,7 +329,7 @@
             organization-service)))
 
       (api/POST "/information-request" {session :session}
-        :body [information-request ataru-schema/InformationRequest]
+        :body [information-request ataru-schema/NewInformationRequest]
         :summary "Send an information request to an applicant"
         :return ataru-schema/InformationRequest
         (ok (information-request/store information-request
