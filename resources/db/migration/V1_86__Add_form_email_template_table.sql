@@ -8,3 +8,5 @@ CREATE TABLE email_templates (
   content        TEXT,
   UNIQUE (form_key, haku_oid, lang)
 );
+
+CREATE INDEX ON email_templates (form_key);
