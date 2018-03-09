@@ -28,10 +28,7 @@
           :haku-name (parse-multi-lang-text (:nimi haku))}))
 
 (defn- hakus-by-form-key [hakus {:keys [avain haut]}]
-  (let [haku-info (reduce haku-name-and-oid {} haut)]
-    (if (not-empty haku-info)
-      (assoc hakus avain haku-info)
-      hakus)))
+  (update hakus avain merge (reduce haku-name-and-oid {} haut)))
 
 (defn- forms-in-use
   [cache-service organization-service session]
@@ -42,11 +39,12 @@
                                   (map :oid (organization-protocol/get-all-organizations
                                              organization-service
                                              direct-organizations)))
-        hakus                   (map (fn [oid] (cache/cache-get-or-fetch cache-service
-                                                                         :forms-in-use
-                                                                         oid
-                                                                         #(client/get-forms-in-use oid)))
-                                     query-organization-oids)]
+        hakus                   (mapcat (fn [oid] (cache/cache-get-or-fetch
+                                                   cache-service
+                                                   :forms-in-use
+                                                   oid
+                                                   #(client/get-forms-in-use oid)))
+                                        query-organization-oids)]
     (reduce hakus-by-form-key
             {}
             hakus)))
