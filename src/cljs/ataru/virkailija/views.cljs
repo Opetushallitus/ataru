@@ -32,11 +32,13 @@
 (defmethod panels :default [])
 
 (defn main-panel []
-  (let [active-panel (re-frame/subscribe [:active-panel])]
+  (let [active-panel             (re-frame/subscribe [:active-panel])
+        template-editor-visible? (re-frame/subscribe [:state-query [:editor :ui :template-editor-visible?]])]
     (fn []
       [:div.main-container
        [:div.modal-container
         [application-version-changes]
-        [email-template-editor]]
+        (when @template-editor-visible?
+          [email-template-editor])]
        [top-banner]
         [:div (panels @active-panel)]])))
