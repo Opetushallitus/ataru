@@ -20,7 +20,8 @@
         contents         @(subscribe [:state-query [:editor :email-template]])
         contents-changed @(subscribe [:editor/email-templates-altered])
         any-changed?     (some true? (vals contents-changed))
-        lang-kw          (keyword lang)]
+        lang-kw          (keyword lang)
+        lang-content     (-> contents lang-kw)]
     (when visible?
       [:div.virkailija-modal__container
        [:div.virkailija-modal__content.virkailija-email-preview__modal
@@ -30,7 +31,10 @@
         [:div.virkailija-email-preview
          [:h3.virkailija-email-preview__heading "Sähköpostiviestin sisältö"]
          [:div.virkailija-email-preview__info-text
-          (str "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä '" (get-in contents [lang-kw :from]) "'")]
+          (str
+            "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä '"
+            (get-in contents [lang-kw :from])
+            "'")]
          [:div.virkailija-email-preview__tabs
           [:div.virkailija-email-preview__tab-panel
            (map
@@ -49,25 +53,28 @@
                    :for   (str "email-template-language-selection-" button-lang)
                    :class (when (= button-lang lang) "virkailija-email-preview__tab-label--selected")}
                   (get language-names (keyword button-lang))
-                  (when ((keyword button-lang) contents-changed) [:span.virkailija-email-preview__tab-edited "*"])]))
+                  (when ((keyword button-lang) contents-changed)
+                    [:span.virkailija-email-preview__tab-edited "*"])]))
              ["fi" "sv" "en"])]
           [:div.virkailija-email-preview__tab-border]
           [:div.virkailija-email-preview__tab-content
            [:h4.virkailija-email-preview__sub-heading "Muokattava osuus"]
            [:textarea.virkailija-email-preview__text-input
-            {:value     (get-in contents [lang-kw :content])
+            {:value     (:content lang-content)
              :on-change #(dispatch [:editor/update-email-preview lang-kw (.-value (.-target %))])}]
            [:div.virkailija-email-preview__preview-container
-            [:h4.virkailija-email-preview__sub-heading "Esikatselu"]
+            [:h4.virkailija-email-preview__sub-heading "Viestin esikatselu"]
             [:div.virkailija-email-preview__preview-header
              "Otsikko:"
              [:span.virkailija-email-preview__preview-header-value
-              (get-in contents [lang-kw :subject])]]
+              (:subject lang-content)]]
             [:iframe.virkailija-email-preview__preview-iframe
-             {:srcDoc (get-in contents [lang-kw :body])}]
+             {:srcDoc (:body lang-content)}]
             [:div.virkailija-email-preview__buttons
              [:button.virkailija-email-preview__buttons-save.editor-form__control-button
-              {:class    (if any-changed? "editor-form__control-button--enabled" "editor-form__control-button--disabled")
+              {:class    (if any-changed?
+                           "editor-form__control-button--enabled"
+                           "editor-form__control-button--disabled")
                :on-click #(when any-changed? (dispatch [:editor/save-email-template]))}
               "Tallenna muutokset"]]]]]]]])))
 
