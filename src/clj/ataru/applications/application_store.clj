@@ -727,7 +727,7 @@
          (map-indexed
           (fn [index hakukohde-oid]
             (let [preference  (format "preference%d-Koulutus-id-eligibility" (inc index))
-                  eligibility (get eligibilities-by-hakukohde hakukohde-oid "unreviewed")]
+                  eligibility (get eligibilities-by-hakukohde (keyword hakukohde-oid) "unreviewed")]
               {preference eligibility})))
          (into {}))))
 
@@ -761,12 +761,14 @@
    answers))
 
 (defn- unwrap-valintalaskenta-application [application]
-  (let [keyword-values             (flatten-application-answers (-> application :content :answers))
+  (let [keyword-values             (flatten-application-answers (->> application
+                                                                     :content
+                                                                     :answers
+                                                                     (filter #(not= "hakukohteet" (:key %)))))
         eligibilities-by-hakutoive (get-application-eligibilities-by-hakutoive application)]
     (-> application
         (dissoc :content :application_hakukohde_reviews)
-        (assoc :keyValues (merge (dissoc keyword-values :hakukohteet)
-                                  eligibilities-by-hakutoive))
+        (assoc :keyValues (merge keyword-values eligibilities-by-hakutoive))
         (clojure.set/rename-keys {:key :hakemusOid :person_oid :personOid :haku :hakuOid}))))
 
 (defn get-applications-for-valintalaskenta [hakukohde-oid]
