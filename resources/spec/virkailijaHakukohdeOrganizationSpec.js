@@ -96,6 +96,7 @@
         before(
             wait.until(editorPageIsLoaded, 10000),
             clickElement(function() { return formListItems(0)}),
+            wait.forMilliseconds(1000), // TODO: fix form refresh in frontend so that this isn't required (or check that no AJAX requests are ongoing)
             clickComponentMenuItem('Tekstikenttä'),
             setTextFieldValue(function() { return formComponents().eq(0).find('.editor-form__text-field') }, 'Ensimmäinen kysymys'),
             clickElement(function() { return formComponents().eq(0).find('.editor-form__info-addon-checkbox label') }),
