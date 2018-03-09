@@ -726,9 +726,11 @@
     (->> (:hakutoiveet application)
          (map-indexed
           (fn [index hakukohde-oid]
-            (let [preference  (format "preference%d-Koulutus-id-eligibility" (inc index))
-                  eligibility (get eligibilities-by-hakukohde (keyword hakukohde-oid) "unreviewed")]
-              {preference eligibility})))
+            (let [preference             (format "preference%d-Koulutus-id" (inc index))
+                  preference-eligibility (str preference "-eligibility")
+                  eligibility            (get eligibilities-by-hakukohde (keyword hakukohde-oid) "unreviewed")]
+              {preference             hakukohde-oid
+               preference-eligibility eligibility})))
          (into {}))))
 
 (defn- flatten-question-group-answers [key group-values]
