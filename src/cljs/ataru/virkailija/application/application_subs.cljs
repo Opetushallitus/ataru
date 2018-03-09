@@ -319,7 +319,7 @@
 (re-frame.core/reg-sub
   :application/current-history-items
   (fn [db _]
-    (modify-event-changes (-> db :application :selected-application-and-form :selected-event :id))))
+    (modify-event-changes db (-> db :application :selected-application-and-form :selected-event :id))))
 
 (re-frame.core/reg-sub
   :application/selected-event
@@ -329,7 +329,7 @@
 (re-frame.core/reg-sub
   :application/changes-made-for-event
   (fn [db [_ event-id]]
-    (modify-event-changes event-id)))
+    (modify-event-changes db event-id)))
 
 (re-frame.core/reg-sub
   :application/field-highlighted?
