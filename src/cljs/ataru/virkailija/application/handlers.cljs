@@ -331,14 +331,17 @@
 
 (defn- parse-application-times
   [response]
-  (let [answers                    (-> response :application :answers)
-        form-content               (-> response :form :content)
-        without-answers-or-content (-> response
-                                       (update-in [:application] dissoc :answers)
-                                       (update-in [:form] dissoc :content))
-        with-times                 (ataru.virkailija.temporal/parse-times without-answers-or-content)]
+  (let [answers           (-> response :application :answers)
+        tarjonta          (-> response :application :tarjonta)
+        form-content      (-> response :form :content)
+        without-huge-data (-> response
+                              (update-in [:application] dissoc :answers)
+                              (update-in [:application] dissoc :tarjonta)
+                              (update-in [:form] dissoc :content))
+        with-times        (time (ataru.virkailija.temporal/parse-times without-huge-data))]
     (-> with-times
         (assoc-in [:application :answers] answers)
+        (assoc-in [:application :tarjonta] tarjonta)
         (assoc-in [:form :content] form-content))))
 
 (reg-event-fx
