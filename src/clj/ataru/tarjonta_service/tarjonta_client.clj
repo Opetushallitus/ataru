@@ -38,11 +38,9 @@
       :result))
 
 (defn get-forms-in-use
-  [organization-oids]
+  [organization-oid]
   (let [url      (resolve-url :tarjonta-service.forms-in-use)
-        query    (when (< 0 (count organization-oids))
-                   (str "?" (string/join "&" (map #(str "oid=" %) organization-oids))))
-        response @(http/get (str url query))]
+        response @(http/get (str url "?oid=" organization-oid))]
     (-> response :body (json/parse-string true) :result)))
 
 (defn get-form-key-for-hakukohde
