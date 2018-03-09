@@ -100,6 +100,10 @@
          form-with-org
          :created-by (-> session :identity :username)))))))
 
+(defn edit-form-with-operation
+  [operation]
+  (throw (RuntimeException. "Not allowed!")))
+
 (defn delete-form [form-id session virkailija-tarjonta-service organization-service]
   (let [form (form-store/fetch-latest-version form-id)]
     (check-edit-authorization form session virkailija-tarjonta-service organization-service

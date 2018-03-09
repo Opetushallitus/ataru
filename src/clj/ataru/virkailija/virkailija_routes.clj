@@ -169,6 +169,11 @@
       :summary "Get content for form"
       (ok (form-store/fetch-form id)))
 
+    (api/PUT "/form-edit-operation" []
+      :body [operation ataru-schema/FormEditOperation]
+      :summary "Get content for form"
+      (ok (access-controlled-form/edit-form-with-operation operation)))
+
     (api/DELETE "/forms/:id" {session :session}
       :path-params [id :- Long]
       :summary "Mark form as deleted"
