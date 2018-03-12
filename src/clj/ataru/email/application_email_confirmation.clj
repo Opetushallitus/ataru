@@ -19,7 +19,6 @@
 
 (def languages #{:fi :sv :en})
 (def languages-map {:fi nil :sv nil :en nil})
-(def blank-language-list (map (fn [lang] {:lang (name lang) :content ""}) languages))
 
 (def submit-email-subjects
   {:fi "Opintopolku: hakemuksesi on vastaanotettu"
@@ -44,14 +43,14 @@
 
 (def html-policy
   (as-> (HtmlPolicyBuilder.) hpb
-        (.allowElements hpb (->string-array "a" "p" "div" "h1" "h2" "h3" "h4" "h5" "ul" "ol" "li"))
+        (.allowElements hpb (->string-array "a" "p" "span" "div" "h1" "h2" "h3" "h4" "h5" "ul" "ol" "li"))
         (.allowUrlProtocols hpb (->string-array "http" "https"))
         (.onElements (.allowAttributes hpb (->string-array "href" "target")) (->string-array "a"))
         (.toFactory hpb)))
 
-(defn- add-link-target-prop
-  [text state]
-  [(string/replace text #"<a href=([^>]+)>" "<a target=\"_blank\" href=$1>") state])
+(defn- disable-links
+  [text]
+  (string/replace text #"<a(.*)(href=\".*\")(.*)>" "<a $1 $3>"))
 
 (defn- submit-email-template-filename
   [lang]
@@ -64,9 +63,7 @@
 
 (defn- ->safe-html
   [content]
-  (.sanitize
-    html-policy
-    (md/md-to-html-string content :custom-transformers [add-link-target-prop])))
+  (.sanitize html-policy (md/md-to-html-string content)))
 
 (defn- hakukohde-names [tarjonta-service lang application]
   (when-let [haku-oid (:haku application)]
@@ -118,13 +115,13 @@
    :subject ((keyword lang) submit-email-subjects)
    :content content
    :lang    lang
-   :body    (selmer/render-file
-              (submit-email-template-filename lang)
-              {:lang            lang
-               :hakukohteet     ["Hakukohde 1" "Hakukohde 2" "Hakukohde 3"]
-               :application-url "https://example.com/muokkaus-linkki-esimerkki"
-               :application-oid "1.2.246.562.11.00000000000000000000"
-               :content         (->safe-html content)})})
+   :body    (-> (submit-email-template-filename lang)
+                (selmer/render-file {:lang            lang
+                                     :hakukohteet     ["Hakukohde 1" "Hakukohde 2" "Hakukohde 3"]
+                                     :application-url "https://opintopolku.fi/hakemus/01234567890abcdefghijklmn"
+                                     :application-oid "1.2.246.562.11.00000000000000000000"
+                                     :content         (->safe-html content)})
+                (disable-links))})
 
 (defn preview-submit-emails
   [previews]
