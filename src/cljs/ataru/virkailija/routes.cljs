@@ -29,7 +29,7 @@
     (dispatch [:editor/select-form (:key form)])))
 
 (defn common-actions-for-applications-route []
-  (dispatch [:application/refresh-haut])
+  (dispatch [:application/refresh-haut-and-hakukohteet])
   (dispatch [:application/clear-applications-haku-and-form-selections])
   (dispatch [:set-active-panel :application])
   (dispatch [:application/get-virkailija-settings]))
@@ -84,36 +84,19 @@
   (defroute #"^/lomake-editori/applications/hakukohde/(.*)" [hakukohde-oid]
     (common-actions-for-applications-route)
     (dispatch [:application/close-search-control])
-    (dispatch-after-state
-     :predicate
-     (fn [db]
-       (get-in db [:application :hakukohteet (keyword hakukohde-oid)]))
-     :handler
-     (fn [hakukohde]
-       (dispatch [:application/select-hakukohde hakukohde])
-       (dispatch [:application/fetch-applications-by-hakukohde hakukohde-oid]))))
+    (dispatch [:application/select-hakukohde hakukohde-oid])
+    (dispatch [:application/fetch-applications-by-hakukohde hakukohde-oid]))
 
   (defroute #"^/lomake-editori/applications/haku/(.*)" [haku-oid query-params]
     (common-actions-for-applications-route)
     (dispatch [:application/close-search-control])
-    (dispatch-after-state
-      :predicate
-      (fn [db]
-        (get-in db [:application :haut :tarjonta-haut haku-oid]))
-      :handler
-      (fn [haku]
-        (dispatch [:application/select-haku haku])
-        (dispatch [:application/fetch-applications-by-haku haku-oid]))))
+    (dispatch [:application/select-haku haku-oid])
+    (dispatch [:application/fetch-applications-by-haku haku-oid]))
 
   (defroute #"^/lomake-editori/applications/(.*)" [key]
     (common-actions-for-applications-route)
     (dispatch [:application/close-search-control])
-    (dispatch-after-state
-     :predicate
-     (fn [db] (not-empty (get-in db [:application :forms key])))
-     :handler
-     (fn [form]
-       (dispatch [:application/select-form (:key form)])
-       (dispatch [:application/fetch-applications (:key form)]))))
+    (dispatch [:application/select-form key])
+    (dispatch [:application/fetch-applications key]))
 
   (accountant/dispatch-current!))

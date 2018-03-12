@@ -5,12 +5,12 @@
 
 (def default-db
   {:editor       {:forms               nil
-                  :autosave            nil                  ; autosave stop function, see autosave.cljs
+                  :autosave            nil ; autosave stop function, see autosave.cljs
                   :selected-form-key   nil
                   :used-by-haut        {:fetching? false
                                         :error?    false}
                   :email-template-lang "fi"}
-   ; Initial active panel on page load.
+                                        ; Initial active panel on page load.
    :active-panel :editor
    :application  {:review                     {}
                   :processing-state-filter    (mapv first review-states/application-hakukohde-processing-states)

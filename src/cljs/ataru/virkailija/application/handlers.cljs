@@ -196,7 +196,7 @@
              (assoc-in [:application :selection-state-filter] (extract-unselected-review-states-from-query
                                                                 :selection-state-filter
                                                                 review-states/application-hakukohde-selection-states)))
-   :dispatch [:application/refresh-haut]
+   :dispatch [:application/refresh-haut-and-hakukohteet]
    :http {:method              :get
           :path                path
           :skip-parse-times?   true
@@ -393,53 +393,41 @@
 (reg-event-db
  :application/select-form
  (fn [db [_ form-key]]
-   (-> db
-       (assoc-in [:application :selected-form-key] form-key))))
+   (assoc-in db [:application :selected-form-key] form-key)))
 
 (reg-event-db
   :application/select-hakukohde
-  (fn [db [_ hakukohde]]
+  (fn [db [_ hakukohde-oid]]
     (-> db
         (update-in [:application] dissoc :selected-form-key :selected-haku)
-        (assoc-in [:application :selected-hakukohde] hakukohde))))
+        (assoc-in [:application :selected-hakukohde] hakukohde-oid))))
 
 (reg-event-db
   :application/select-haku
-  (fn [db [_ haku]]
+  (fn [db [_ haku-oid]]
     (-> db
         (update :application dissoc :selected-form-key :selected-hakukohde)
-        (assoc-in [:application :selected-haku] haku))))
+        (assoc-in [:application :selected-haku] haku-oid))))
 
-(defn get-hakukohteet-from-haut [haut]
-  (->> (:tarjonta-haut haut)
-       (map :hakukohteet)
-       (flatten)
-       (map (fn [hakukohde] [(keyword (:oid hakukohde)) hakukohde]))
-       (into {})))
-
-(defn get-forms-from-haut [haut]
-  (into {} (map (fn [form-haku] [(:key form-haku) form-haku]) (:direct-form-haut haut))))
-
-(defn- haut->map
-  [haut]
-  {:tarjonta-haut    (util/group-by-first :oid (:tarjonta-haut haut))
-   :direct-form-haut (util/group-by-first :key (:direct-form-haut haut))})
+(defn- keys-to-names [m] (reduce-kv #(assoc %1 (name %2) %3) {} m))
 
 (reg-event-db
-  :editor/handle-refresh-haut
-  (fn [db [_ haut]]
+  :editor/handle-refresh-haut-and-hakukohteet
+  (fn [db [_ {:keys [tarjonta-haut direct-form-haut haut hakukohteet]}]]
     (-> db
-        (assoc-in [:application :haut] (haut->map haut))
-        (assoc-in [:application :hakukohteet] (get-hakukohteet-from-haut haut))
-        (assoc-in [:application :forms] (get-forms-from-haut haut)))))
+        (assoc-in [:application :haut :tarjonta-haut] (keys-to-names tarjonta-haut))
+        (assoc-in [:application :haut :direct-form-haut] (keys-to-names direct-form-haut))
+        (assoc-in [:application :forms] (keys-to-names direct-form-haut))
+        (update :haut merge (keys-to-names haut))
+        (update :hakukohteet merge (keys-to-names hakukohteet)))))
 
 (reg-event-fx
-  :application/refresh-haut
+  :application/refresh-haut-and-hakukohteet
   (fn [{:keys [db]}]
     {:db   db
      :http {:method              :get
             :path                "/lomake-editori/api/haut"
-            :handler-or-dispatch :editor/handle-refresh-haut
+            :handler-or-dispatch :editor/handle-refresh-haut-and-hakukohteet
             :skip-parse-times?   true}}))
 
 (reg-event-fx
@@ -515,7 +503,7 @@
           selected-type  @(subscribe [:application/application-list-selected-by])
           selected-id    (if (= :selected-form-key selected-type)
                            (:selected-form-key db-application)
-                           (-> db-application selected-type :oid))
+                           (-> db-application selected-type))
           dispatch-kw    (case selected-type
                            :selected-form-key :application/fetch-applications
                            :selected-haku :application/fetch-applications-by-haku
@@ -533,7 +521,7 @@
             :params              {:application-keys application-keys
                                   :from-state       from-state
                                   :to-state         to-state
-                                  :hakukohde-oid    (-> db :application :selected-hakukohde :oid)}
+                                  :hakukohde-oid    (-> db :application :selected-hakukohde)}
             :path                "/lomake-editori/api/applications/mass-update"
             :handler-or-dispatch :application/handle-mass-update-application-reviews}}))
 

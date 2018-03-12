@@ -5,35 +5,39 @@
             [ataru.application.review-states :as review-states]
             [ataru.cljs-util :as util]))
 
-(defn- from-multi-lang [text]
-  (some #(get text %) [:fi :sv :en]))
+(defn- from-multi-lang [text lang]
+  (some #(get text %) [lang :fi :sv :en]))
 
 (re-frame/reg-sub
  :application/list-heading
  (fn [db]
-   (let [selected-haku       (get-in db [:application :selected-haku])
-         selected-hakukohde  (get-in db [:application :selected-hakukohde])
-         selected-form-key   (get-in db [:application :selected-form-key])
-         forms               (get-in db [:application :forms])
-         applications        (get-in db [:application :applications])]
-     (or (from-multi-lang (:name (get forms selected-form-key)))
-         (from-multi-lang (:name selected-hakukohde))
-         (from-multi-lang (:name selected-haku))
-         (if (sequential? applications) (str "Löytyi " (count applications) " hakemusta"))))))
+   (let [selected-haku      (get-in db [:haut (get-in db [:application :selected-haku])])
+         selected-hakukohde (get-in db [:hakukohteet (get-in db [:application :selected-hakukohde])])
+         selected-form-key  (get-in db [:application :selected-form-key])
+         forms              (get-in db [:application :forms])
+         applications       (get-in db [:application :applications])]
+     (or (from-multi-lang (:name (get forms selected-form-key)) :fi)
+         (from-multi-lang (:name selected-hakukohde) :fi)
+         (from-multi-lang (:name selected-haku) :fi)
+         (when (sequential? applications)
+           (str "Löytyi " (count applications) " hakemusta"))))))
 
 (re-frame/reg-sub
   :application/list-heading-data-for-haku
   (fn [db]
-    (let [selected-haku      (get-in db [:application :selected-haku])
-          selected-hakukohde (get-in db [:application :selected-hakukohde])]
-      (cond
-        selected-haku [selected-haku
-                       nil
-                       (:hakukohteet selected-haku)]
-        selected-hakukohde (let [selected-haku (get-in db [:application :haut :tarjonta-haut (:haku selected-hakukohde)])]
-                             [selected-haku
-                              selected-hakukohde
-                              (:hakukohteet selected-haku)])))))
+    (let [selected-hakukohde-oid (get-in db [:application :selected-hakukohde])
+          selected-haku-oid      (if selected-hakukohde-oid
+                                   (->> (get-in db [:application :haut :tarjonta-haut])
+                                        (filter (fn [[_ {:keys [hakukohteet]}]]
+                                                  (some (fn [{:keys [oid]}]
+                                                          (= selected-hakukohde-oid oid))
+                                                        hakukohteet)))
+                                        ffirst)
+                                   (get-in db [:application :selected-haku]))]
+      (when selected-haku-oid
+        [selected-haku-oid
+         selected-hakukohde-oid
+         (map :oid (get-in db [:application :haut :tarjonta-haut selected-haku-oid :hakukohteet]))]))))
 
 (re-frame/reg-sub
   :application/application-list-selected-by
@@ -72,7 +76,7 @@
   (sort-by (fn [haku]
              (if (string? (:name haku))
                (:name haku)
-               (from-multi-lang (:name haku))))
+               (from-multi-lang (:name haku) :fi)))
            #(compare (clojure.string/lower-case %1) (clojure.string/lower-case %2))
            haku-seq))
 
@@ -154,6 +158,28 @@
          (into {}))))
 
 (re-frame/reg-sub
+  :application/hakukohde-name
+  (fn [db [_ hakukohde-oid]]
+    (when-let [hakukohde (get-in db [:hakukohteet hakukohde-oid])]
+      (or (from-multi-lang (:name hakukohde) :fi) hakukohde-oid))))
+
+(re-frame/reg-sub
+  :application/hakukohde-and-tarjoaja-name
+  (fn [db [_ hakukohde-oid]]
+    (when-let [hakukohde (get-in db [:hakukohteet hakukohde-oid])]
+      (str (or (from-multi-lang (:name hakukohde) :fi) hakukohde-oid)
+           (when-let [tarjoaja-name (from-multi-lang (:tarjoaja-name hakukohde) :fi)]
+             (str " - " tarjoaja-name))))))
+
+(defn- haku-name [db haku-oid lang]
+  (when-let [haku (get-in db [:haut haku-oid])]
+    (or (from-multi-lang (:name haku) lang) haku-oid)))
+
+(re-frame/reg-sub
+  :application/haku-name
+  (fn [db [_ haku-oid]] (haku-name db haku-oid :fi)))
+
+(re-frame/reg-sub
   :application/hakukohteet-header
   (fn [db _]
     @(re-frame/subscribe [:application/get-i18n-text
@@ -185,10 +211,10 @@
 (re-frame/reg-sub
   :application/selected-application-haku-name
   (fn [db _]
-    (let [application       (get-in db [:application :selected-application-and-form :application])
-          application-lang  (keyword (:lang application "fi"))]
+    (let [application      (get-in db [:application :selected-application-and-form :application])
+          application-lang (keyword (:lang application "fi"))]
       (when-let [haku-oid (:haku application)]
-        (get-in db [:application :haut :tarjonta-haut haku-oid :name application-lang])))))
+        (haku-name db haku-oid application-lang)))))
 
 (re-frame/reg-sub
   :application/information-request-submit-enabled?

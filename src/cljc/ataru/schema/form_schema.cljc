@@ -448,15 +448,11 @@
    (s/optional-key :hakukohde-reviews) HakukohdeReviews})
 
 (s/defschema ApplicationCountsHakukohde {:oid               s/Str
-                                         :name              LocalizedStringOptional
-                                         :tarjoaja-name     LocalizedStringOptional
                                          :application-count s/Int
                                          :processed         s/Int
-                                         :unprocessed       s/Int
-                                         :haku              s/Str})
+                                         :unprocessed       s/Int})
 
 (s/defschema TarjontaHaku {:oid                    s/Str
-                           :name                   LocalizedStringOptional
                            :haku-application-count s/Int
                            :application-count      s/Int
                            :processed              s/Int
@@ -470,8 +466,10 @@
                              :processed              s/Int
                              :unprocessed            s/Int})
 
-(s/defschema Haut {:tarjonta-haut    [TarjontaHaku]
-                   :direct-form-haut [DirectFormHaku]})
+(s/defschema Haut {:tarjonta-haut    {s/Str TarjontaHaku}
+                   :direct-form-haut {s/Str DirectFormHaku}
+                   :haut             {s/Str Haku}
+                   :hakukohteet      {s/Str Hakukohde}})
 
 (s/defschema ApplicationFeedback {:form-key   s/Str
                                   :form-id    s/Int
