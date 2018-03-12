@@ -773,8 +773,9 @@
         (assoc :keyValues (merge keyword-values eligibilities-by-hakutoive))
         (clojure.set/rename-keys {:key :hakemusOid :person_oid :personOid :haku :hakuOid}))))
 
-(defn get-applications-for-valintalaskenta [hakukohde-oid]
-  (->> (exec-db :db yesql-valintalaskenta-applications {:hakukohde_oid hakukohde-oid})
+(defn get-applications-for-valintalaskenta [hakukohde-oid application-keys]
+  (->> (exec-db :db yesql-valintalaskenta-applications {:hakukohde_oid hakukohde-oid
+                                                        :application_keys (cons "" application-keys)})
        (map unwrap-valintalaskenta-application)))
 
 

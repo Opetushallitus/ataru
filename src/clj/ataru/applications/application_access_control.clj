@@ -122,11 +122,11 @@
     (constantly nil)
     #(application-store/get-application-info-for-tilastokeskus haku-oid)))
 
-(defn get-applications-for-valintalaskenta [organization-service session hakukohde-oid]
+(defn get-applications-for-valintalaskenta [organization-service session hakukohde-oid application-keys]
   (session-orgs/run-org-authorized
     session
     organization-service
     [:view-applications :edit-applications]
     (constantly nil)
     (constantly nil)
-    #(application-store/get-applications-for-valintalaskenta hakukohde-oid)))
+    #(application-store/get-applications-for-valintalaskenta hakukohde-oid application-keys)))

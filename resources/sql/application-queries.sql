@@ -825,7 +825,8 @@ FROM latest_applications
   JOIN application_reviews ON application_key = key
 WHERE person_oid IS NOT NULL
   AND haku IS NOT NULL
-  AND :hakukohde_oid = ANY (hakukohde)
+  AND (:hakukohde_oid::TEXT IS NULL OR :hakukohde_oid = ANY (hakukohde))
+  AND (array_length(ARRAY[:application_keys], 1) < 2 OR key IN (:application_keys))
   AND state <> 'inactivated';
 
 --name: yesql-get-latest-application-ids-distinct-by-person-oid
