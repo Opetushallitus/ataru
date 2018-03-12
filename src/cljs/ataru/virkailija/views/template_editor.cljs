@@ -74,7 +74,17 @@
                          "editor-form__control-button--enabled"
                          "editor-form__control-button--disabled")
              :on-click #(when any-changed? (dispatch [:editor/save-email-template]))}
-            "Tallenna muutokset"]]]]]]]]))
+            (str "Tallenna muutokset"
+                 (when any-changed?
+                   (str
+                     " ("
+                     (->> contents-changed
+                          (filter second)
+                          (map first)
+                          (map name)
+                          (clojure.string/join ", ")
+                          (clojure.string/upper-case))
+                     ")")))]]]]]]]]))
 
 (defn email-template-editor
   []
