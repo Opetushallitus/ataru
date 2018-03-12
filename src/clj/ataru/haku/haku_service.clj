@@ -3,20 +3,14 @@
    [ataru.organization-service.session-organizations :as session-orgs]
    [ataru.applications.application-store :as application-store]
    [ataru.forms.form-store :as form-store]
-   [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]))
 
 (defn- raw-haku-row->hakukohde
-  [tarjonta-service {hakukohde-oid :hakukohde
-                     :keys         [application-count processed processing]
-                     :as           raw-haku-row}]
-  (merge (select-keys raw-haku-row [:application-count :processed :haku])
-         {:oid         hakukohde-oid
-          :unprocessed (- application-count processed processing)}
-         (if-let [hakukohde (.get-hakukohde tarjonta-service hakukohde-oid)]
-           (tarjonta-service/get-hakukohde-and-tarjoaja-name hakukohde)
-           {:name          {:fi hakukohde-oid}
-            :tarjoaja-name {:fi "Tarjoajaa ei löytynyt"}})))
+  [{:keys [hakukohde application-count processed processing]}]
+  {:oid               hakukohde
+   :application-count application-count
+   :processed         processed
+   :unprocessed       (- application-count processed processing)})
 
 (defn- haku-processed-counts
   [hakukohteet]
@@ -31,16 +25,13 @@
     hakukohteet))
 
 (defn- handle-hakukohteet
-  [tarjonta-service raw-hakukohde-rows]
+  [raw-hakukohde-rows]
   (for [[haku-oid rows] (group-by :haku raw-hakukohde-rows)]
     (let [haku-application-count (:haku-application-count (first rows))
           {:keys [processed processing total]} (haku-processed-counts rows)
           unprocessed            (- total processed processing)]
       {:oid                    haku-oid
-       :name                   (or
-                                 (.get-haku-name tarjonta-service haku-oid)
-                                 {:fi haku-oid})
-       :hakukohteet            (map (partial raw-haku-row->hakukohde tarjonta-service) rows)
+       :hakukohteet            (map raw-haku-row->hakukohde rows)
        :haku-application-count haku-application-count
        :application-count      total
        :processed              processed
@@ -86,8 +77,8 @@
            (filter (partial authorized-by-tarjoajat? % (hakujen-tarjoajat
                                                         tarjonta-service
                                                         haut)))
-           (handle-hakukohteet tarjonta-service)))
-   #(handle-hakukohteet tarjonta-service (application-store/get-haut))))
+           handle-hakukohteet))
+   #(handle-hakukohteet (application-store/get-haut))))
 
 (defn get-direct-form-haut [session organization-service]
   (session-orgs/run-org-authorized
