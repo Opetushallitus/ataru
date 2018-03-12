@@ -466,7 +466,7 @@
               (header "Cache-Control" "public, max-age=300"))
           (internal-server-error {:error "Internal server error"})))
       (api/GET "/hakukohde" []
-        :query-params [organizationOid :- (api/describe s/Str "Organization OID")
+        :query-params [{organizationOid :- (api/describe s/Str "Organization OID") nil}
                        hakuOid :- (api/describe s/Str "Haku OID")]
         :return [ataru-schema/Hakukohde]
         (if-let [hakukohteet (tarjonta/hakukohde-search

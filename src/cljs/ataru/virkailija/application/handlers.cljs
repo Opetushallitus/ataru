@@ -1,5 +1,6 @@
 (ns ataru.virkailija.application.handlers
-  (:require [ataru.virkailija.virkailija-ajax :as ajax]
+  (:require [cljs.core.async :as async]
+            [ataru.virkailija.virkailija-ajax :as ajax]
             [re-frame.core :refer [subscribe dispatch dispatch-sync reg-event-db reg-event-fx]]
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.application-sorting :as application-sorting]
@@ -196,7 +197,7 @@
              (assoc-in [:application :selection-state-filter] (extract-unselected-review-states-from-query
                                                                 :selection-state-filter
                                                                 review-states/application-hakukohde-selection-states)))
-   :dispatch [:application/refresh-haut]
+   :dispatch [:application/refresh-haut-and-hakukohteet]
    :http {:method              :get
           :path                path
           :skip-parse-times?   true
@@ -410,31 +411,59 @@
         (update :application dissoc :selected-form-key :selected-hakukohde)
         (assoc-in [:application :selected-haku] haku))))
 
-(defn get-hakukohteet-from-haut [haut]
-  (->> (:tarjonta-haut haut)
-       (map :hakukohteet)
-       (flatten)
-       (map (fn [hakukohde] [(keyword (:oid hakukohde)) hakukohde]))
-       (into {})))
-
 (defn get-forms-from-haut [haut]
   (into {} (map (fn [form-haku] [(:key form-haku) form-haku]) (:direct-form-haut haut))))
 
 (reg-event-db
-  :editor/handle-refresh-haut
-  (fn [db [_ haut]]
-    (-> db
-        (assoc-in [:application :haut] haut)
-        (assoc-in [:application :hakukohteet] (get-hakukohteet-from-haut haut))
-        (assoc-in [:application :forms] (get-forms-from-haut haut)))))
+  :editor/handle-refresh-hakukohteet
+  (fn [db [_ hakukohteet]]
+    (reduce #(assoc-in %1 [:hakukohteet (:oid %2)] %2)
+            db
+            hakukohteet)))
 
 (reg-event-fx
-  :application/refresh-haut
+  :editor/refresh-hakukohteet
+  (fn [_ [_ haku-oid]]
+    (let [c (async/chan 1)]
+      (async/take! c (fn [r]
+                       (if (instance? js/Error r)
+                         (.log js/console r)
+                         (dispatch [:editor/handle-refresh-hakukohteet r]))))
+      {:fetch-hakukohteet [c haku-oid]})))
+
+(reg-event-db
+  :editor/handle-refresh-haku
+  (fn [db [_ haku]]
+    (assoc-in db [:haut (:oid haku)] haku)))
+
+(reg-event-fx
+  :editor/refresh-haku
+  (fn [_ [_ haku-oid]]
+    (let [c (async/chan 1)]
+      (async/take! c (fn [r]
+                       (if (instance? js/Error r)
+                         (.log js/console r)
+                         (dispatch [:editor/handle-refresh-haku r]))))
+      {:fetch-haku [c haku-oid]})))
+
+(reg-event-fx
+  :editor/handle-refresh-haut-and-hakukohteet
+  (fn [{db :db} [_ haut]]
+    {:db (-> db
+             (assoc-in [:application :haut] haut)
+             (assoc-in [:application :forms] (get-forms-from-haut haut)))
+     :dispatch-n (vec (concat (map #(vector :editor/refresh-hakukohteet (:oid %))
+                                   (:tarjonta-haut haut))
+                              (map #(vector :editor/refresh-haku (:oid %))
+                                   (:tarjonta-haut haut))))}))
+
+(reg-event-fx
+  :application/refresh-haut-and-hakukohteet
   (fn [{:keys [db]}]
     {:db   db
      :http {:method              :get
             :path                "/lomake-editori/api/haut"
-            :handler-or-dispatch :editor/handle-refresh-haut
+            :handler-or-dispatch :editor/handle-refresh-haut-and-hakukohteet
             :skip-parse-times?   true}}))
 
 (reg-event-fx

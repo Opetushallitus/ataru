@@ -19,24 +19,21 @@
      (or (from-multi-lang (:name (get forms selected-form-key)))
          (from-multi-lang (:name selected-hakukohde))
          (from-multi-lang (:name selected-haku))
-         (if (sequential? applications) (str "Löytyi " (count applications) " hakemusta"))))))
+         (when (sequential? applications)
+           (str "Löytyi " (count applications) " hakemusta"))))))
 
 (re-frame/reg-sub
   :application/list-heading-data-for-haku
   (fn [db]
-    (let [selected-haku      (get-in db [:application :selected-haku])
-          selected-hakukohde (get-in db [:application :selected-hakukohde])]
-      (cond
-        selected-haku [selected-haku
-                       nil
-                       (:hakukohteet selected-haku)]
-        selected-hakukohde (let [selected-haku (->> db
-                                                    :application :haut :tarjonta-haut
-                                                    (filter #(= (:oid %) (:haku selected-hakukohde)))
-                                                    (first))]
-                             [selected-haku
-                              selected-hakukohde
-                              (:hakukohteet selected-haku)])))))
+    (let [selected-hakukohde (get-in db [:application :selected-hakukohde])
+          selected-haku      (if selected-hakukohde
+                               (get-in db [:haut (:haku-oid selected-hakukohde)])
+                               (get-in db [:application :selected-haku]))]
+      (when selected-haku
+        [selected-haku
+         selected-hakukohde
+         (filter #(= (:oid selected-haku) (:haku-oid %))
+                 (vals (get db :hakukohteet)))]))))
 
 (re-frame/reg-sub
   :application/application-list-selected-by
@@ -166,6 +163,29 @@
          :options
          (map (juxt :value identity))
          (into {}))))
+
+;; TODO tekee saman kuin :application/hakukohde-label, yhdistä, ratkaise miten
+;; kieli valitaan
+(re-frame/reg-sub
+  :application/hakukohde-name
+  (fn [db [_ hakukohde-oid]]
+    (or (from-multi-lang
+         (get-in db [:hakukohteet hakukohde-oid :name]))
+        "Hakukohteen nimeä ei löytynyt")))
+
+(re-frame/reg-sub
+  :application/hakukohde-tarjoaja-name
+  (fn [db [_ hakukohde-oid]]
+    (or (from-multi-lang
+         (get-in db [:hakukohteet hakukohde-oid :tarjoaja-name]))
+        "Hakukohteen tarjoajan nimeä ei löytynyt")))
+
+(re-frame/reg-sub
+  :application/haku-name
+  (fn [db [_ haku-oid]]
+    (or (from-multi-lang
+         (get-in db [:haut haku-oid :name]))
+        "Haun nimeä ei löytynyt")))
 
 (re-frame/reg-sub
   :application/hakukohteet-header

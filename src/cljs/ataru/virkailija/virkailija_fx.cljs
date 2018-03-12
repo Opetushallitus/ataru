@@ -42,6 +42,16 @@
    (async/pipe (tarjonta/fetch-haut-with-hakukohteet haku-oids organization-oids) c)))
 
 (re-frame/reg-fx
+ :fetch-haku
+ (fn fetch-haku [[c haku-oid]]
+   (tarjonta/fetch-haku haku-oid c)))
+
+(re-frame/reg-fx
+ :fetch-hakukohteet
+ (fn fetch-hakukohteet [[c haku-oid]]
+   (tarjonta/fetch-hakukohteet haku-oid c)))
+
+(re-frame/reg-fx
   :fetch-hakukohde-groups
   (fn fetch-hakukohde-groups [[c]]
     (organization/fetch-hakukohderyhmat c)))
