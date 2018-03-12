@@ -12,14 +12,14 @@
     [ataru.config.core :refer [config]]
     [markdown.core :as md]
     [clojure.string :as string]
-    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit])
+    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
+    [ataru.util :as util])
   (:import
     [org.owasp.html HtmlPolicyBuilder]))
 
 (def languages #{:fi :sv :en})
-
-(def languages-map
-  (into {} (zipmap (seq languages) (repeat (count languages) nil))))
+(def languages-map {:fi nil :sv nil :en nil})
+(def blank-language-list (map (fn [lang] {:lang (name lang) :content ""}) languages))
 
 (def submit-email-subjects
   {:fi "Opintopolku: hakemuksesi on vastaanotettu"
@@ -166,9 +166,19 @@
   [tarjonta-service application-id]
   (start-email-job (create-refresh-secret-email tarjonta-service application-id)))
 
+(defn- add-blank-templates
+  [templates]
+  (as-> templates x
+        (util/group-by-first (comp keyword :lang) x)
+        (merge languages-map x)
+        (map (fn [el]
+               {:lang (-> el (key) (name)) :content (-> el (val) :content)})
+             x)))
+
 (defn get-email-templates
   [form-key]
   (as-> (email-store/get-email-templates form-key) x
+        (add-blank-templates x)
         (map #(preview-submit-email (:lang %) (:content %)) x)))
 
 (defn store-email-templates

@@ -639,7 +639,10 @@
 
 (defn- preview-map-to-list
   [previews]
-  (map #(select-keys % [:lang :content]) (vals previews)))
+  (->> previews
+       (vals)
+       (map #(select-keys % [:lang :content]))
+       (remove #(clojure.string/blank? (:content %)))))
 
 (defn- preview-list-to-map
   [previews]
