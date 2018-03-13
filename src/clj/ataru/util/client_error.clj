@@ -11,9 +11,9 @@
 
 
 (defn log-client-error [error-details]
-  (error "Error from client browser:")
-  (error (:error-message error-details))
-  (error (:url error-details))
-  (error "line:" (:line error-details) "column:" (:col error-details))
-  (error "user-agent:" (:user-agent error-details))
-  (error "stack trace:" (:stack error-details)))
+  (error (str "Error from client browser:\n"
+              (:error-message error-details) "\n"
+              (:url error-details) "\n"
+              "line: " (:line error-details) " column: " (:col error-details) "\n"
+              "user-agent: " (:user-agent error-details) "\n"
+              "stack trace: " (:stack error-details))))
