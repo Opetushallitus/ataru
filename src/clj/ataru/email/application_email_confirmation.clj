@@ -15,7 +15,7 @@
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
     [ataru.util :as util])
   (:import
-    [org.owasp.html HtmlPolicyBuilder]))
+    [org.owasp.html HtmlPolicyBuilder ElementPolicy]))
 
 (def languages #{:fi :sv :en})
 (def languages-map {:fi nil :sv nil :en nil})
@@ -41,16 +41,23 @@
   [& elements]
   (into-array String elements))
 
+(def add-style-to-links
+  (proxy [ElementPolicy] []
+    (apply [element-name attrs]
+      (doto attrs
+        (.add "target")
+        (.add "_blank")
+        (.add "style")
+        (.add "color: #0093C4;"))
+      element-name)))
+
 (def html-policy
   (as-> (HtmlPolicyBuilder.) hpb
-        (.allowElements hpb (->string-array "a" "p" "span" "div" "h1" "h2" "h3" "h4" "h5" "ul" "ol" "li"))
+        (.allowElements hpb (->string-array "p" "span" "div" "h1" "h2" "h3" "h4" "h5" "ul" "ol" "li"))
+        (.allowElements hpb add-style-to-links (->string-array "a"))
         (.allowUrlProtocols hpb (->string-array "http" "https"))
         (.onElements (.allowAttributes hpb (->string-array "href" "target")) (->string-array "a"))
         (.toFactory hpb)))
-
-(defn- disable-links
-  [text]
-  (string/replace text #"<a(.*)(href=\".*\")(.*)>" "<a $1 $3>"))
 
 (defn- submit-email-template-filename
   [lang]
@@ -120,8 +127,7 @@
                                      :hakukohteet     ["Hakukohde 1" "Hakukohde 2" "Hakukohde 3"]
                                      :application-url "https://opintopolku.fi/hakemus/01234567890abcdefghijklmn"
                                      :application-oid "1.2.246.562.11.00000000000000000000"
-                                     :content         (->safe-html content)})
-                (disable-links))})
+                                     :content         (->safe-html content)}))})
 
 (defn preview-submit-emails
   [previews]
