@@ -19,7 +19,8 @@
     [ataru.person-service.person-integration :as person-integration]
     [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
     [ataru.background-job.job :as job]
-    [ataru.application.review-states :as review-states]))
+    [ataru.application.review-states :as review-states]
+    [ataru.koodisto.koodisto :as koodisto]))
 
 (def default-fetch-size 50)
 
@@ -307,6 +308,60 @@
                    (:type attachment-finalizer-job/job-definition)
                    {:application-id application-id})))
 
+(defn- update-home-town
+  [new-home-town-component form]
+  (clojure.walk/prewalk
+   (fn [e]
+     (if (= "home-town" (:id e))
+       new-home-town-component
+       e))
+   form))
+
+(defn- update-kotikunta-answer
+  [kunnat application]
+  (update-in application [:content :answers]
+             (partial map (fn [a]
+                            (if (and (= "home-town" (:key a))
+                                     (not (clojure.string/blank? (:value a))))
+                              (if-let [match (kunnat (clojure.string/lower-case (:value a)))]
+                                (assoc a :value match)
+                                a)
+                              a)))))
+
+(defn- migrate-kotikunta-from-text-to-code
+  [connection]
+  (let [new-home-town {:fieldClass "formField"
+                       :fieldType "dropdown"
+                       :id "home-town"
+                       :label {:fi "Kotikunta" :sv "Hemkommun" :en "Home town"}
+                       :params {}
+                       :options [{:value "" :label {:fi "" :sv "" :en ""}}]
+                       :validators ["home-town"]
+                       :koodisto-source {:uri "kunta" :version 1}
+                       :exclude-from-answers-if-hidden true}
+        kunnat        (reduce #(assoc %1
+                                      (clojure.string/lower-case (:fi (:label %2)))
+                                      (:value %2)
+                                      (clojure.string/lower-case (:sv (:label %2)))
+                                      (:value %2))
+                              {}
+                              (koodisto/get-koodisto-options "kunta" 1))]
+    (doseq [form (migration-app-store/get-1.86-forms connection)
+            :let [new-form (update-home-town new-home-town form)]]
+      (if (= (:content new-form) (:content form))
+        (info "Not updating form" (:key form))
+        (let [{:keys [id key]} (migration-app-store/insert-1.86-form connection new-form)]
+          (info "Updating form" (:key form))
+          (doseq [application (migration-app-store/get-1.86-applications connection key)
+                  :let [new-application (update-kotikunta-answer kunnat application)]]
+            (if (or (= (:content new-application) (:content application))
+                    (not= (:form_id application) (:id form)))
+              (info "Not updating application" (:key application))
+              (do (info "Updating application" (:key application))
+                  (migration-app-store/insert-1.86-application
+                   connection
+                   (assoc new-application :form_id id))))))))))
+
 (migrations/defmigration
   migrate-person-info-module "1.13"
   "Update person info module structure in existing forms"
@@ -386,6 +441,11 @@
   migrate-start-attachment-finalizer-jobs "1.82"
   "Start attachment finalizer job for all applications"
   (start-attachment-finalizer-job-for-all-applications))
+
+(migrations/defmigration
+  migrate-kotikunta-from-text-to-a-code "1.86"
+  "Migrate kotikunta from text to a code"
+  (migrate-kotikunta-from-text-to-code connection))
 
 (defn migrate
   []

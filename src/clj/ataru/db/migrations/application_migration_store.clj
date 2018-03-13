@@ -11,6 +11,7 @@
 (sql/defqueries "sql/migration-1.75-queries.sql")
 (sql/defqueries "sql/migration-1.80-queries.sql")
 (sql/defqueries "sql/migration-1.82-queries.sql")
+(sql/defqueries "sql/migration-1.86-queries.sql")
 
 (defn get-ids-of-latest-applications
   []
@@ -93,3 +94,22 @@
 (defn set-application-state
   [application-key state]
   (db/exec :db yesql-update-application-state! {:key application-key :state state}))
+
+(defn get-1.86-forms [connection]
+  (yesql-get-1_86-forms {} {:connection {:connection connection}}))
+
+(defn insert-1.86-form [connection form]
+  (yesql-insert-1_86-form<! form {:connection {:connection connection}}))
+
+(defn get-1.86-applications [connection form-key]
+  (yesql-get-1_86-applications {:form_key form-key} {:connection {:connection connection}}))
+
+(defn insert-1.86-application [connection application]
+  (yesql-insert-1_86-application! application {:connection {:connection connection}})
+  (yesql-insert-1_86-application-event<! {:application_key  (:key application)
+                                          :event_type       "updated-by-virkailija"
+                                          :new_review_state nil
+                                          :virkailija_oid   "1.2.246.562.24.56933707220"
+                                          :hakukohde        nil
+                                          :review_key       nil}
+                                         {:connection {:connection connection}}))
