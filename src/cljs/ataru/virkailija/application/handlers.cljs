@@ -427,7 +427,7 @@
     (let [c (async/chan 1)]
       (async/take! c (fn [r]
                        (if (instance? js/Error r)
-                         (.log js/console r)
+                         (throw r)
                          (dispatch [:editor/handle-refresh-hakukohteet r]))))
       {:fetch-hakukohteet [c haku-oid]})))
 
@@ -442,7 +442,7 @@
     (let [c (async/chan 1)]
       (async/take! c (fn [r]
                        (if (instance? js/Error r)
-                         (.log js/console r)
+                         (throw r)
                          (dispatch [:editor/handle-refresh-haku r]))))
       {:fetch-haku [c haku-oid]})))
 
