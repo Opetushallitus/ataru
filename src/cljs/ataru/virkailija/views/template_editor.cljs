@@ -19,8 +19,7 @@
         contents         @(subscribe [:state-query [:editor :email-template]])
         contents-changed @(subscribe [:editor/email-templates-altered])
         any-changed?     (some true? (vals contents-changed))
-        lang-kw          (keyword lang)
-        lang-content     (-> contents lang-kw)]
+        lang-content     (get contents lang)]
     [:div.virkailija-modal__container
      [:div.virkailija-modal__content.virkailija-email-preview__modal
       [:a.virkailija-modal__close-link
@@ -31,7 +30,7 @@
        [:div.virkailija-email-preview__info-text
         (str
           "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä '"
-          (get-in contents [lang-kw :from])
+          (get-in contents [lang :from])
           "'")]
        [:div.virkailija-email-preview__tabs
         [:div.virkailija-email-preview__tab-panel
@@ -51,7 +50,7 @@
                  :for   (str "email-template-language-selection-" button-lang)
                  :class (when (= button-lang lang) "virkailija-email-preview__tab-label--selected")}
                 (get language-names (keyword button-lang))
-                (when ((keyword button-lang) contents-changed)
+                (when (get contents-changed button-lang)
                   [:span.virkailija-email-preview__tab-edited "*"])]))
            ["fi" "sv" "en"])]
         [:div.virkailija-email-preview__tab-border]
@@ -59,7 +58,7 @@
          [:h4.virkailija-email-preview__sub-heading "Muokattava osuus"]
          [:textarea.virkailija-email-preview__text-input
           {:value     (:content lang-content)
-           :on-change #(dispatch [:editor/update-email-preview lang-kw (.-value (.-target %))])}]
+           :on-change #(dispatch [:editor/update-email-preview lang (.-value (.-target %))])}]
          [:div.virkailija-email-preview__preview-container
           [:h4.virkailija-email-preview__sub-heading "Viestin esikatselu"]
           [:div.virkailija-email-preview__preview-header
