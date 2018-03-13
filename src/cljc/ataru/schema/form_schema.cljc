@@ -437,7 +437,8 @@
                                     :message         s/Str
                                     :application-key s/Str})
 
-(s/defschema InformationRequest {:subject         s/Str
+(s/defschema InformationRequest {:id              s/Int
+                                 :subject         s/Str
                                  :message         s/Str
                                  :application-key s/Str
                                  :created-time    #?(:clj  org.joda.time.DateTime

@@ -15,6 +15,7 @@ INSERT INTO information_requests (
 -- name: yesql-get-information-requests
 -- Get all information requests belonging to an application
 SELECT
+  ir.id,
   ir.application_key,
   ir.subject,
   ir.message,
