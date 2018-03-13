@@ -13,7 +13,8 @@
     [markdown.core :as md]
     [clojure.string :as string]
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
-    [ataru.util :as util])
+    [ataru.util :as util]
+    [medley.core :refer [find-first]])
   (:import
     [org.owasp.html HtmlPolicyBuilder ElementPolicy]))
 
@@ -88,8 +89,7 @@
                             (:form-key))
         lang            (keyword (:lang application))
         subject         (subject lang)
-        content         (-> (email-store/get-email-templates form-key)
-                            (keyword lang)
+        content         (-> (find-first #(= (:lang application) (:lang %)) (email-store/get-email-templates form-key))
                             :content
                             (->safe-html))
         recipient       (->> (:answers application)
