@@ -152,10 +152,3 @@
               (not (contains? #{"unprocessed" "information-request"}
                               (:state %))))
         application-hakukohde-reviews))
-
-(defn- seq-to-map
-  [s key]
-  (into
-    {}
-    (map (fn [x] [(keyword (key x)) x]))
-    s))

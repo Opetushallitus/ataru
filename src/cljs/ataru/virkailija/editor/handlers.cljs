@@ -646,13 +646,13 @@
 
 (defn- preview-list-to-map
   [previews]
-  (util/seq-to-map previews :lang))
+  (util/group-by-first :lang previews))
 
 (defn- stored-preview-list-to-map
   [previews]
-  (-> previews
+  (->> previews
       (add-stored-content-to-templates)
-      (util/seq-to-map :lang)))
+      (util/group-by-first :lang)))
 
 (reg-event-fx
   :editor/update-email-preview-immediately
