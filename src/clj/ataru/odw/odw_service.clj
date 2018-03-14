@@ -6,10 +6,7 @@
 
 (defn get-applications-for-odw [person-service date]
   (let [applications (application-store/get-applications-newer-than date)
-        persons      (->> (person-service/get-persons person-service (distinct (keep :person_oid applications)))
-                          (reduce (fn [res person]
-                                    (assoc res (:oidHenkilo person) person))
-                                  {}))]
+        persons      (person-service/get-persons person-service (distinct (keep :person_oid applications)))]
     (map (fn [application]
            (let [answers     (-> application :content :answers util/answers-by-key)
                  hakukohteet (:hakukohde application)

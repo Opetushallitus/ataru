@@ -44,7 +44,7 @@
       {:status 200 :body body}
       (json/parse-string body true)
 
-      :else (throw-error (str "Could not get persons by oid, status: "
+      :else (throw-error (str "Could not get persons by oids, status: "
                               (:status result)
                               "response body: "
                               (:body result))))))

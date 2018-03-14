@@ -66,7 +66,9 @@
   (create-or-find-person [this person] fake-person-from-creation)
 
   (get-persons [this oids]
-    (map #(.get-person this %) oids))
+    (reduce #(assoc %1 %2 (.get-person this %2))
+            {}
+            oids))
 
   (get-person [this oid]
     (condp = oid
