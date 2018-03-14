@@ -199,7 +199,7 @@
 (defn- prefill-preferred-first-name
   [db _]
   (let [answers        (-> db :application :answers)
-        first-name     (-> answers :first-name :value (clojure.string/split #" ") first)
+        first-name     (-> answers :first-name :value (clojure.string/trim) (clojure.string/split #" ") first)
         preferred-name (-> answers :preferred-name :value)]
     (cond
       (and first-name (clojure.string/blank? preferred-name))
