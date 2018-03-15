@@ -445,7 +445,8 @@
 (migrations/defmigration
   migrate-kotikunta-from-text-to-a-code "1.86"
   "Migrate kotikunta from text to a code"
-  (migrate-kotikunta-from-text-to-code connection))
+  (with-db-transaction [conn {:connection connection}]
+    (migrate-kotikunta-from-text-to-code conn)))
 
 (defn migrate
   []
