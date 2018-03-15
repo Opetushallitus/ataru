@@ -89,15 +89,6 @@ FROM latest_forms
 WHERE key = :key;
 
 -- name: yesql-fetch-latest-version-by-id-lock-for-update
-WITH the_key AS (
-    SELECT key
-    FROM forms
-    WHERE id = :id
-), latest_version AS (
-    SELECT max(created_time) AS latest_time
-    FROM forms f
-      JOIN the_key tk ON f.key = tk.key
-)
 SELECT
   id,
   key,
@@ -108,8 +99,10 @@ SELECT
   organization_oid,
   languages,
   deleted
-FROM forms f
-  JOIN latest_version lv ON f.created_time = lv.latest_time
+FROM forms
+WHERE id = (SELECT max(id)
+            FROM forms
+            WHERE key = (SELECT key FROM forms WHERE id = :id))
 FOR UPDATE;
 
 -- name: yesql-get-latest-version-organization-by-key
