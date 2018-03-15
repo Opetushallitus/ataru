@@ -46,8 +46,8 @@
                (mapcat (fn [{:keys [children] :as followup}]
                          (map #(assoc % :followup? true)
                            (cons followup
-                             (flatten-form-fields children)))))))
-
+                             (flatten-form-fields children)))))
+               flatten-form-fields))
         :else field))))
 
 (defn form-fields-by-id [form]
