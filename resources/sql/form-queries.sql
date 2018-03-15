@@ -55,15 +55,6 @@ FROM forms
 WHERE id = :id;
 
 -- name: yesql-fetch-latest-version-by-id
-WITH the_key AS (
-    SELECT key
-    FROM forms
-    WHERE id = :id
-), latest_version AS (
-    SELECT max(created_time) AS latest_time
-    FROM forms f
-      JOIN the_key tk ON f.key = tk.key
-)
 SELECT
   f.id,
   f.key,
@@ -74,13 +65,14 @@ SELECT
   f.languages,
   f.deleted,
   f.organization_oid,
-  count(a.id) AS application_count
-FROM forms f
-  JOIN latest_version lv ON f.created_time = lv.latest_time
-  LEFT JOIN applications a ON (a.form_id IN (SELECT id
-                                             FROM forms
-                                             WHERE key = f.key) AND a.hakukohde IS NULL AND a.haku IS NULL)
-GROUP BY f.id, f.key, f.name, f.content, f.created_by, f.created_time, f.languages, f.deleted, f.organization_oid;
+  (SELECT count(*)
+   FROM latest_applications
+   WHERE haku IS NULL
+     AND form_id IN (SELECT id
+                     FROM forms
+                     WHERE key = f.key)) AS application_count
+FROM latest_forms f
+WHERE f.key = (SELECT key FROM forms WHERE id = :id);
 
 -- name: yesql-fetch-latest-version-by-key
 WITH latest_version AS (
