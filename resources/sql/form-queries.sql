@@ -1,24 +1,16 @@
 --name: yesql-get-forms-query
 -- Get stored forms, without content, filtered by what's allowed for the viewing user. Use the latest version.
-WITH latest_forms AS (
-    SELECT
-      key,
-      MAX(id) AS max_id
-    FROM forms
-    WHERE (:query_type = 'ALL' OR organization_oid IN (:authorized_organization_oids))
-    GROUP BY key
-)
 SELECT
-  f.id,
-  f.key,
-  f.name,
-  f.deleted,
-  f.created_by,
-  f.created_time,
-  f.languages
-FROM forms f
-  JOIN latest_forms lf ON f.id = lf.max_id
-WHERE (f.deleted IS NULL OR f.deleted = FALSE)
+  id,
+  key,
+  name,
+  deleted,
+  created_by,
+  created_time,
+  languages
+FROM latest_forms
+WHERE (deleted IS NULL OR deleted = FALSE)
+  AND (:query_type = 'ALL' OR organization_oid IN (:authorized_organization_oids))
 ORDER BY created_time DESC;
 
 --name: yesql-get-forms-by-keys
