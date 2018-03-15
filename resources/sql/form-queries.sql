@@ -106,14 +106,9 @@ WHERE id = (SELECT max(id)
 FOR UPDATE;
 
 -- name: yesql-get-latest-version-organization-by-key
-WITH latest_version AS (
-    SELECT max(created_time) AS latest_time
-    FROM forms f
-    WHERE f.key = :key
-)
 SELECT organization_oid
-FROM forms f
-  JOIN latest_version lv ON f.created_time = lv.latest_time;
+FROM latest_forms
+WHERE key = :key;
 
 -- name: yesql-get-latest-version-organization-by-id
 SELECT organization_oid
