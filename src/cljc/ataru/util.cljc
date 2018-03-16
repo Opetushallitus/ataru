@@ -33,22 +33,19 @@
     (for [field fields
           :when (not= "infoElement" (:fieldClass field))]
       (match
-        field
-        {:fieldClass (:or "wrapperElement" "questionGroup")
-         :children   children}
-        (flatten-form-fields children)
+       field
+       {:fieldClass (:or "wrapperElement" "questionGroup")
+        :children   children}
+       (flatten-form-fields children)
 
-        {:fieldType (:or "dropdown" "multipleChoice" "singleChoice")
-         :options options}
-        (cons field
-          (->> options
-               (mapcat :followups)
-               (mapcat (fn [{:keys [children] :as followup}]
-                         (map #(assoc % :followup? true)
-                           (cons followup
-                             (flatten-form-fields children)))))
-               flatten-form-fields))
-        :else field))))
+       {:fieldType (:or "dropdown" "multipleChoice" "singleChoice")
+        :options   options}
+       (cons field
+         (->> options
+              (mapcat :followups)
+              flatten-form-fields
+              (map #(assoc % :followup? true))))
+       :else field))))
 
 (defn form-fields-by-id [form]
   (->> form
