@@ -556,13 +556,15 @@
           (response/ok applications)
           (response/unauthorized {:error "Unauthorized"})))
 
-      (api/GET "/valintalaskenta" {session :session}
+      (api/POST "/valintalaskenta" {session :session}
         :summary "Get application answers for valintalaskenta"
-        :query-params [hakukohdeOid :- s/Str]
+        :query-params [{hakukohdeOid :- s/Str nil}]
+        :body         [applicationOids [s/Str]]
         :return [ataru-schema/ValintaApplication]
         (if-let [applications (access-controlled-application/get-applications-for-valintalaskenta organization-service
                                                                                                   session
-                                                                                                  hakukohdeOid)]
+                                                                                                  hakukohdeOid
+                                                                                                  (not-empty applicationOids))]
           (response/ok applications)
           (response/unauthorized {:error "Unauthorized"}))))))
 
