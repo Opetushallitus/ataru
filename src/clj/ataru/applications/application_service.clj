@@ -66,8 +66,11 @@
                                    version (get-in koodisto-fields [key :version])
                                    koodisto (koodisto/get-koodisto-options koodisto-uri version)
                                    get-label (fn [koodi-uri]
-                                               (let [koodi (get-koodi koodisto koodi-uri)]
-                                                 (get-in koodi [:label lang] "")))]
+                                               (let [labels (:label (get-koodi koodisto koodi-uri))]
+                                                 (or (some #(when (not (clojure.string/blank? (get labels %)))
+                                                              (get labels %))
+                                                           [lang :fi :sv :en])
+                                                     "")))]
                                (cond (string? koodi-value)
                                      (let [values (clojure.string/split koodi-value #"\s*,\s*")]
                                        (if (< 1 (count values))
