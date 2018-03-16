@@ -250,6 +250,18 @@
      {:disabled true}
      "Vahvista poisto"]))
 
+(defn copy [id]
+  (let [copy-container (.getElementById js/document "editor-form__copy-question-id-container")]
+    (set! (.-value copy-container) id)
+    (.select copy-container)
+    (.execCommand js/document "copy")))
+
+(defn- copy-link [id]
+  [:a.editor-form__copy-question-id
+   {:data-tooltip "Kopioi kysymyksen tunniste leikepöydälle"
+    :on-mouse-down #(copy id)}
+   "id"])
+
 (defn- text-header
   [label path & {:keys [component-wrapped?
                         draggable
@@ -433,7 +445,8 @@
        [text-header header-label path]
        [:div.editor-form__component-row-wrapper
         [:div.editor-form__text-field-wrapper
-         [:header.editor-form__component-item-header "Kysymys"]
+         [:header.editor-form__component-item-header "Kysymys"
+          [copy-link (:id initial-content)]]
          (input-fields-with-lang
            (fn [lang]
              [input-field path lang #(dispatch-sync [:editor/set-component-value (get-val %) path :label lang])])
@@ -585,7 +598,8 @@
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__multi-question-wrapper
            [:div.editor-form__text-field-wrapper
-            [:header.editor-form__component-item-header "Kysymys"]
+            [:header.editor-form__component-item-header "Kysymys"
+             [copy-link (:id initial-content)]]
             (input-fields-with-lang
               (fn [lang]
                 [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
@@ -781,7 +795,8 @@
        [text-header "Tekstikenttä" path :draggable false]
        [:div.editor-form__component-row-wrapper
         [:div.editor-form__text-field-wrapper
-         [:header.editor-form__component-item-header "Kysymys"]
+         [:header.editor-form__component-item-header "Kysymys"
+          [copy-link (:id content)]]
          (input-fields-with-lang
            (fn [lang]
              [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
@@ -829,7 +844,8 @@
        [text-header "Liitepyyntö" path]
        [:div.editor-form__component-row-wrapper
         [:div.editor-form__text-field-wrapper
-         [:header.editor-form__component-item-header "Liitteen nimi"]
+         [:header.editor-form__component-item-header "Liitteen nimi"
+          [copy-link (:id content)]]
          (input-fields-with-lang
            (fn attachment-file-name-input [lang]
              [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])

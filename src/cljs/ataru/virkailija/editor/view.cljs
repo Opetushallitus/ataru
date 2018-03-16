@@ -249,6 +249,8 @@
   [:div.editor-form__panel-container
    [close-form]
    [:div
+    [:input#editor-form__copy-question-id-container
+     {:value ""}]
     [editor-name]
     [form-in-use-warning form]]
    [c/editor]])
