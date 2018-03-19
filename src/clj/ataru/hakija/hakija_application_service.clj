@@ -39,8 +39,8 @@
 
 (defn in-processing-state-in-jatkuva-haku?
   [application-hakukohde-reviews applied-hakukohteet]
-  (and (some #(get-in % [:hakuaika :jatkuva-haku?]) applied-hakukohteet)
-       (util/application-in-processing? application-hakukohde-reviews)))
+  (boolean (and (some #(get-in % [:hakuaika :jatkuva-haku?]) applied-hakukohteet)
+                (util/application-in-processing? application-hakukohde-reviews))))
 
 (defn remove-unviewable-answers
   [application form]
@@ -291,9 +291,14 @@
         full-application (some-> application
                                  (remove-unviewable-answers form)
                                  attachments-metadata->answers
-                                 (assoc :person person)
-                                 (dissoc :person-oid))]
-    [full-application secret-expired? lang-override]))
+                                 (dissoc :person-oid :application-hakukohde-reviews)
+                                 (assoc :in-processing-state-in-jatkuva-haku
+                                        (in-processing-state-in-jatkuva-haku? (:application-hakukohde-reviews application)
+                                                                              (filter #(contains? (set (:hakukohde application)) (:oid %))
+                                                                                (-> form :tarjonta :hakukohteet)))))]
+    [{:application full-application
+      :person      person
+      :form        form} secret-expired? lang-override]))
 
 (defn create-new-secret-and-send-link
   [tarjonta-service old-secret]

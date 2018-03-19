@@ -20,47 +20,6 @@
   (some (partial = "required")
         (:validators field-descriptor)))
 
-(defn- handle-get-application [{:keys [db]}
-                               [_
-                                {:keys [secret virkailija-secret]}
-                                {:keys [answers
-                                        person
-                                        form-key
-                                        lang
-                                        haku
-                                        hakukohde
-                                        hakukohde-name
-                                        state]}]]
-  (let [[secret-kwd secret-val] (if-not (clojure.string/blank? secret)
-                                  [:secret secret]
-                                  [:virkailija-secret virkailija-secret])
-        actor-role              (if (= :virkailija-secret secret-kwd)
-                                  :virkailija
-                                  :hakija)
-        form-roles              (cond-> [actor-role]
-                                  (some? (:oid person)) (conj :with-henkilo))]
-    {:db       (-> db
-                   (assoc-in [:application :editing?] true)
-                   (assoc-in [:application secret-kwd] secret-val)
-                   (assoc-in [:application :state] state)
-                   (assoc-in [:application :hakukohde] hakukohde)
-                   (assoc-in [:application :person] person)
-                   (assoc-in [:form :selected-language] (or (keyword lang) :fi))
-                   (assoc-in [:form :hakukohde-name] hakukohde-name))
-     :dispatch (if haku
-                 [:application/get-latest-form-by-haku
-                  haku
-                  answers
-                  form-roles]
-                 [:application/get-latest-form-by-key
-                  form-key
-                  answers
-                  form-roles])}))
-
-(reg-event-fx
-  :application/handle-get-application
-  handle-get-application)
-
 (reg-event-db
   :application/set-secret-delivery-status
   (fn [db [_ status]]
@@ -118,7 +77,7 @@
 
 (reg-event-fx
   :application/get-latest-form-by-key
-  (fn [{:keys [db]} [_ form-key answers roles]]
+  (fn [{:keys [db]} [_ form-key roles]]
     {:db   db
      :http {:method  :get
             :url     (str "/hakemus/api/form/"
@@ -127,9 +86,9 @@
                             (str "?role=" (clojure.string/join
                                            "&role="
                                            (map name roles)))))
-            :handler [:application/handle-form answers]}}))
+            :handler [:application/handle-form]}}))
 
-(defn- get-latest-form-by-hakukohde [{:keys [db]} [_ hakukohde-oid answers roles]]
+(defn- get-latest-form-by-hakukohde [{:keys [db]} [_ hakukohde-oid roles]]
   {:db   (assoc-in db [:application :preselected-hakukohde] hakukohde-oid)
    :http {:method  :get
           :url     (str "/hakemus/api/hakukohde/"
@@ -138,7 +97,7 @@
                             (str "?role=" (clojure.string/join
                                            "&role="
                                            (map name roles)))))
-          :handler [:application/handle-form answers]}})
+          :handler [:application/handle-form]}})
 
 (reg-event-fx
   :application/get-latest-form-by-hakukohde
@@ -146,7 +105,7 @@
 
 (reg-event-fx
   :application/get-latest-form-by-haku
-  (fn [{:keys [db]} [_ haku-oid answers roles]]
+  (fn [{:keys [db]} [_ haku-oid roles]]
     {:db db
      :http {:method  :get
             :url     (str "/hakemus/api/haku/"
@@ -155,7 +114,7 @@
                             (str "?role=" (clojure.string/join
                                            "&role="
                                            (map name roles)))))
-            :handler [:application/handle-form answers]}}))
+            :handler [:application/handle-form]}}))
 
 (defn handle-submit [db _]
   (assoc-in db [:application :submit-status] :submitted))
@@ -471,27 +430,51 @@
        (contains? field :options)
        (update :options (partial map update-followups))))))
 
-(defn handle-form [{:keys [db]} [_ answers form]]
-  (let [form (-> (languages->kwd form)
-                 (set-form-language)
-                 (update :content (partial map set-question-group-id)))
+(defn- handle-form [db answers form]
+  (let [form                  (-> (languages->kwd form)
+                                  (set-form-language)
+                                  (update :content (partial map set-question-group-id)))
         preselected-hakukohde (-> db :application :preselected-hakukohde)]
-    {:db         (-> db
-                     (update :form (fn [{:keys [selected-language]}]
-                                     (cond-> form
-                                             (some? selected-language)
-                                             (assoc :selected-language selected-language))))
-                     (assoc :flat-form-content (autil/flatten-form-fields (:content form)))
-                     (assoc-in [:application :answers] (create-initial-answers form preselected-hakukohde))
-                     (assoc-in [:application :show-hakukohde-search] false)
-                     (assoc :wrapper-sections (extract-wrapper-sections form))
-                     (merge-submitted-answers answers)
-                     (original-values->answers)
-                     (set-followup-visibility))
+    (-> db
+        (update :form (fn [{:keys [selected-language]}]
+                        (cond-> form
+                                (some? selected-language)
+                                (assoc :selected-language selected-language))))
+        (assoc :flat-form-content (autil/flatten-form-fields (:content form)))
+        (assoc-in [:application :answers] (create-initial-answers form preselected-hakukohde))
+        (assoc-in [:application :show-hakukohde-search] false)
+        (assoc :wrapper-sections (extract-wrapper-sections form))
+        (merge-submitted-answers answers)
+        (original-values->answers)
+        (set-followup-visibility))))
+
+
+(defn- handle-get-application [{:keys [db]}
+                               [_
+                                {:keys [secret virkailija-secret]}
+                                {:keys [application
+                                        person
+                                        form]}]]
+  (let [[secret-kwd secret-val] (if-not (clojure.string/blank? secret)
+                                  [:secret secret]
+                                  [:virkailija-secret virkailija-secret])]
+    {:db       (-> db
+                   (assoc-in [:application :editing?] true)
+                   (assoc-in [:application secret-kwd] secret-val)
+                   (assoc-in [:application :state] (:state application))
+                   (assoc-in [:application :hakukohde] (:hakukohde application))
+                   (assoc-in [:application :person] person)
+                   (assoc-in [:application :in-processing-state-in-jatkuva-haku] (:in-processing-state-in-jatkuva-haku application))
+                   (assoc-in [:form :selected-language] (or (keyword (:lang application)) :fi))
+                   (handle-form (:answers application) form))
      :dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
                   [:application/show-answers-belonging-to-hakukohteet]
                   [:application/hakukohde-query-change "" 0]
                   [:application/set-page-title]]}))
+
+(reg-event-fx
+  :application/handle-get-application
+  handle-get-application)
 
 (reg-event-db
   :flasher
@@ -500,7 +483,12 @@
 
 (reg-event-fx
   :application/handle-form
-  handle-form)
+  (fn [{:keys [db]} [_ form]]
+    {:db         (handle-form db nil form)
+     :dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
+                  [:application/show-answers-belonging-to-hakukohteet]
+                  [:application/hakukohde-query-change "" 0]
+                  [:application/set-page-title]]}))
 
 (reg-event-db
   :application/initialize-db

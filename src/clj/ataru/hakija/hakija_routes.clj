@@ -37,19 +37,21 @@
 
 (defn- get-application
   [secret tarjonta-service organization-service ohjausparametrit-service person-client]
-  (let [[application secret-expired? lang-override]
+  (let [[application-form-and-person secret-expired? lang-override]
         (hakija-application-service/get-latest-application-by-secret secret
                                                                      tarjonta-service
                                                                      organization-service
                                                                      ohjausparametrit-service
                                                                      person-client)]
-    (cond (some? application)
-          (response/ok application)
+    (cond (some? application-form-and-person)
+          (response/ok application-form-and-person)
+
           secret-expired?
           (response/unauthorized {:secret-expired true
                                   :lang           lang-override})
           (:virkailija secret)
           (response/bad-request {:error "Invalid virkailija secret"})
+
           :else
           (response/not-found {:error "No application found"}))))
 
@@ -179,7 +181,7 @@
       :summary "Get submitted application by secret"
       :query-params [{secret :- s/Str nil}
                      {virkailija-secret :- s/Str nil}]
-      :return ataru-schema/ApplicationWithPerson
+      :return ataru-schema/ApplicationWithPersonAndForm
       (cond (not-blank? secret)
             (get-application {:hakija secret}
                              tarjonta-service
