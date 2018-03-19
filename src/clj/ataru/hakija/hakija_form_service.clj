@@ -71,7 +71,7 @@
      (map :hakuaika relevant-hakukohteet))))
 
 (defn- editing-allowed-by-hakuaika?
-  [field hakukohteet]
+  [field hakukohteet application-in-processing-state?]
   (let [hakuaika            (select-hakuaika-for-field field hakukohteet)
         hakuaika-start      (some-> hakuaika :start t/from-long)
         hakuaika-end        (some-> hakuaika :end t/from-long)
@@ -82,26 +82,28 @@
         before?             (fn [t] (and (some? t)
                                          (time/before? (time/now) t)))]
     (or (nil? hakuaika)
-        (and (after? hakuaika-start)
-          (or (before? hakuaika-end)
-              (and (before? attachment-edit-end)
-                (= "attachment" (:fieldType field)))
-              (and (before? hakukierros-end)
-                (contains? editing-allowed-person-info-field-ids
-                  (keyword (:id field)))))))))
+        (and (not (and application-in-processing-state? (:jatkuva-haku? hakuaika)))
+             (after? hakuaika-start)
+             (or (before? hakuaika-end)
+                 (and (before? attachment-edit-end)
+                      (= "attachment" (:fieldType field)))
+                 (and (before? hakukierros-end)
+                      (contains? editing-allowed-person-info-field-ids
+                        (keyword (:id field)))))))))
 
 (defn- uneditable?
-  [field hakukohteet roles]
+  [field hakukohteet roles application-in-processing-state?]
   (not (and (or (and (form-role/virkailija? roles)
                      (not (form-role/with-henkilo? roles)))
                 (not (contains? editing-forbidden-person-info-field-ids (keyword (:id field)))))
             (or (form-role/virkailija? roles)
-                (editing-allowed-by-hakuaika? field hakukohteet)))))
+                (editing-allowed-by-hakuaika? field hakukohteet application-in-processing-state?)))))
 
 (s/defn ^:always-validate flag-uneditable-and-unviewable-fields :- s/Any
   [form :- s/Any
    hakukohteet :- s/Any
-   roles :- [form-role/FormRole]]
+   roles :- [form-role/FormRole]
+   application-in-processing-state? :- s/Bool]
   (update form :content
           (fn [content]
             (clojure.walk/prewalk
@@ -110,7 +112,7 @@
                  (let [cannot-view? (contains? viewing-forbidden-person-info-field-ids
                                                (keyword (:id field)))
                        cannot-edit? (or cannot-view?
-                                        (uneditable? field hakukohteet roles))]
+                                        (uneditable? field hakukohteet roles application-in-processing-state?))]
                    (assoc field
                           :cannot-view cannot-view?
                           :cannot-edit cannot-edit?))
@@ -124,13 +126,14 @@
     (when (not (:deleted form))
       (-> form
           koodisto/populate-form-koodisto-fields
-          (flag-uneditable-and-unviewable-fields nil roles)))))
+          (flag-uneditable-and-unviewable-fields nil roles false)))))
 
 (s/defn ^:always-validate fetch-form-by-haku-oid :- s/Any
   [tarjonta-service :- s/Any
    organization-service :- s/Any
    ohjausparametrit-service :- s/Any
    haku-oid :- s/Any
+   application-in-processing-state? :- s/Bool
    roles :- [form-role/FormRole]]
   (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service organization-service ohjausparametrit-service haku-oid)
         form-keys     (->> (-> tarjonta-info :tarjonta :hakukohteet)
@@ -146,7 +149,7 @@
       (-> form
           (merge tarjonta-info)
           (inject-hakukohde-component-if-missing)
-          (flag-uneditable-and-unviewable-fields hakukohteet roles)
+          (flag-uneditable-and-unviewable-fields hakukohteet roles application-in-processing-state?)
           (populate-hakukohde-answer-options tarjonta-info)
           (populate-can-submit-multiple-applications tarjonta-info))
       (warn "could not find local form for haku" haku-oid "with keys" (pr-str form-keys)))))
@@ -156,12 +159,14 @@
    organization-service :- s/Any
    ohjausparametrit-service :- s/Any
    hakukohde-oid :- s/Any
+   application-in-processing-state? :- s/Bool
    roles :- [form-role/FormRole]]
   (let [hakukohde (.get-hakukohde tarjonta-service hakukohde-oid)
         form      (fetch-form-by-haku-oid tarjonta-service
                                           organization-service
                                           ohjausparametrit-service
                                           (:hakuOid hakukohde)
+                                          false
                                           roles)]
     (when form
       (assoc-in form [:tarjonta :default-hakukohde]

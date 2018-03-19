@@ -336,10 +336,7 @@
   (when-let [application (->> (exec-db :db yesql-get-latest-application-by-virkailija-secret {:virkailija_secret virkailija-secret})
                               (first)
                               (unwrap-application))]
-
-    (-> application
-        (assoc :state (-> (:key application) get-application-review :state))
-        (assoc :application-hakukohde-reviews (get-application-hakukohde-reviews (:key application))))))
+    (assoc application :state (-> (:key application) get-application-review :state))))
 
 (defn get-latest-version-of-application-for-edit
   [{:keys [secret virkailija-secret]}]

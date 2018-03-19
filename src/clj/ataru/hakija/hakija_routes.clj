@@ -120,6 +120,7 @@
                                    organization-service
                                    ohjausparametrit-service
                                    haku-oid
+                                   false
                                    role)]
         (response/ok form-with-tarjonta)
         (response/not-found)))
@@ -133,6 +134,7 @@
                                    organization-service
                                    ohjausparametrit-service
                                    hakukohde-oid
+                                   false
                                    role)]
         (response/ok form-with-tarjonta)
         (response/not-found)))
