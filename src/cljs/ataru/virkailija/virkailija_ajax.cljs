@@ -75,14 +75,14 @@
                   {:headers {"CSRF" csrf-token}}))
               override-args))))
 
-(defn http-call [method path params handler-or-dispatch & {:keys [override-args handler-args skip-parse-times?]}]
-  (http method path handler-or-dispatch
+(defn post [path params handler-or-dispatch & {:keys [override-args handler-args skip-parse-times?]}]
+  (http :post path handler-or-dispatch
     :override-args (merge override-args {:params params})
     :handler-args handler-args
     :skip-parse-times? skip-parse-times?))
 
-(defn post [path params handler-or-dispatch & args]
-  (http-call :post path params handler-or-dispatch args))
-
-(defn put [path params handler-or-dispatch & args]
-  (http-call :put path params handler-or-dispatch args))
+(defn put [path params handler-or-dispatch & {:keys [override-args handler-args skip-parse-times?]}]
+  (http :put path handler-or-dispatch
+    :override-args (merge override-args {:params params})
+    :handler-args handler-args
+    :skip-parse-times? skip-parse-times?))
