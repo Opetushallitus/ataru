@@ -200,9 +200,7 @@
       :path-params [form-key :- s/Str]
       :body [body {:contents [{:lang    (s/enum "fi" "sv" "en")
                                :content s/Str}]}]
-      (do
-        (println "foo" (:contents body))
-        (ok (email/store-email-templates form-key session (:contents body)))))
+      (ok (email/store-email-templates form-key session (:contents body))))
 
     (api/GET "/email-templates/:form-key" []
       :path-params [form-key :- s/Str]
