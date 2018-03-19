@@ -3,6 +3,7 @@
               [reagent.core :as r]
               [ataru.virkailija.views.banner :refer [top-banner]]
               [ataru.virkailija.application.view :refer [application application-version-changes]]
+              [ataru.virkailija.views.template-editor :refer [email-template-editor]]
               [ataru.virkailija.dev.lomake :as l]
               [ataru.virkailija.editor.view :refer [editor]]
               [taoensso.timbre :refer-macros [spy]]))
@@ -31,9 +32,13 @@
 (defmethod panels :default [])
 
 (defn main-panel []
-  (let [active-panel (re-frame/subscribe [:active-panel])]
+  (let [active-panel             (re-frame/subscribe [:active-panel])
+        template-editor-visible? (re-frame/subscribe [:state-query [:editor :ui :template-editor-visible?]])]
     (fn []
       [:div.main-container
-       [application-version-changes]
+       [:div.modal-container
+        [application-version-changes]
+        (when @template-editor-visible?
+          [email-template-editor])]
        [top-banner]
         [:div (panels @active-panel)]])))

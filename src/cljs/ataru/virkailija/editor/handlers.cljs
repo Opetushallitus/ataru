@@ -623,3 +623,89 @@
   :editor/unfold-all
   (fn [db _]
     (assoc-in db [:editor :ui :all-folded] false)))
+
+(reg-event-fx
+  :editor/toggle-email-template-editor
+  (fn [{db :db} _]
+    (let [now-visible? (-> db
+                           (get-in [:editor :ui :template-editor-visible?])
+                           (not))]
+      (cond-> {:db (assoc-in db [:editor :ui :template-editor-visible?] now-visible?)}
+              now-visible? (merge {:dispatch [:editor/load-email-template]})))))
+
+(defn- add-stored-content-to-templates
+  [previews]
+  (map #(assoc % :stored-content (:content %)) previews))
+
+(defn- preview-map-to-list
+  [previews]
+  (->> previews
+       (vals)
+       (map #(select-keys % [:lang :content]))
+       (remove #(clojure.string/blank? (:content %)))))
+
+(defn- preview-list-to-map
+  [previews]
+  (util/group-by-first :lang previews))
+
+(defn- stored-preview-list-to-map
+  [previews]
+  (->> previews
+      (add-stored-content-to-templates)
+      (util/group-by-first :lang)))
+
+(reg-event-fx
+  :editor/update-email-preview-immediately
+  (fn [{db :db} [_]]
+    (let [form-key (get-in db [:editor :selected-form-key])
+          contents (get-in db [:editor :email-template])]
+      {:http {:method              :post
+              :params              {:contents (preview-map-to-list contents)}
+              :path                (str "/lomake-editori/api/email-template/" form-key "/previews")
+              :handler-or-dispatch :editor/update-email-template-preview}})))
+
+(reg-event-fx
+  :editor/update-email-preview
+  (fn [{db :db} [_ lang content]]
+    {:db                 (assoc-in db [:editor :email-template lang :content] content)
+     :dispatch-debounced {:timeout  500
+                          :id       :email-template-preview
+                          :dispatch [:editor/update-email-preview-immediately]}}))
+
+(reg-event-db
+  :editor/update-email-template-preview
+  (fn [db [_ contents]]
+    (update-in db
+               [:editor :email-template]
+               (partial merge-with merge)
+               (preview-list-to-map contents))))
+
+(reg-event-db
+  :editor/update-saved-email-template-preview
+  (fn [db [_ contents]]
+    (assoc-in db
+              [:editor :email-template]
+              (stored-preview-list-to-map contents))))
+
+(reg-event-fx
+  :editor/save-email-template
+  (fn [{db :db} [_]]
+    (let [contents (preview-map-to-list (get-in db [:editor :email-template]))
+          form-key (get-in db [:editor :selected-form-key])]
+      {:http {:method              :post
+              :params              {:contents contents}
+              :path                (str "/lomake-editori/api/email-templates/" form-key)
+              :handler-or-dispatch :editor/update-saved-email-template-preview}})))
+
+(reg-event-fx
+  :editor/load-email-template
+  (fn [{db :db} [_]]
+    (let [form-key (get-in db [:editor :selected-form-key])]
+      {:http {:method              :get
+              :path                (str "/lomake-editori/api/email-templates/" form-key)
+              :handler-or-dispatch :editor/update-saved-email-template-preview}})))
+
+(reg-event-db
+  :editor/set-email-template-language
+  (fn [db [_ lang]]
+    (assoc-in db [:editor :email-template-lang] lang)))

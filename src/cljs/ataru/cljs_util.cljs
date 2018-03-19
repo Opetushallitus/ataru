@@ -116,22 +116,6 @@
 (defn get-path []
   (.. js/window -location -pathname))
 
-(defn- classnames-map [m]
-  (reduce-kv (fn [acc k v]
-               (if v
-                 (conj acc (name k))
-                 acc))
-             [] m))
-
-(defn classnames [& args]
-  "Works more or less like https://github.com/JedWatson/classnames
-  (classnames :a :b \"c\" {:d (true? true) :e false} :f) => \"a b c d f\""
-  (join " " (reduce (fn [acc e]
-                      (if (map? e)
-                        (into acc (classnames-map e))
-                        (conj acc (name e))))
-                    [] args)))
-
 (def ^:private ->kebab-case-kw (partial transform-keys ->kebab-case-keyword))
 
 (defn extract-query-params

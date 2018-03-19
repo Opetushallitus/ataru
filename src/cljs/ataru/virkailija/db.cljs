@@ -4,11 +4,12 @@
    [ataru.virkailija.application-sorting :as application-sorting]))
 
 (def default-db
-  {:editor       {:forms             nil
-                  :autosave          nil                    ; autosave stop function, see autosave.cljs
-                  :selected-form-key nil
-                  :used-by-haut      {:fetching? false
-                                      :error?    false}}
+  {:editor       {:forms               nil
+                  :autosave            nil                  ; autosave stop function, see autosave.cljs
+                  :selected-form-key   nil
+                  :used-by-haut        {:fetching? false
+                                        :error?    false}
+                  :email-template-lang "fi"}
    ; Initial active panel on page load.
    :active-panel :editor
    :application  {:review                     {}

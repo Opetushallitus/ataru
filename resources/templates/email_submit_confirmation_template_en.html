@@ -11,6 +11,13 @@
           <span style="font-size: 24px;">Your application has been received</span>
         </td>
       </tr>
+      {% if content|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          {{content|safe}}
+        </td>
+      </tr>
+      {% endif %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
           Application number: {{application-oid}}
@@ -32,7 +39,7 @@
       {% endif %}
       <tr>
         <td style="padding-left: 20px; padding-top: 40px;">
-          <a style="color: #0093C4;" href="{{application-url|safe}}">{{application-url|safe}}</a>
+          <a style="color: #0093C4;" href="{{application-url|safe}}" target="_blank">{{application-url|safe}}</a>
         </td>
       </tr>
       <tr>
@@ -48,7 +55,7 @@
         <td style="padding-left: 20px; padding-top: 20px;">
           If you have Finnish online banking credentials, an electronic
           ID-card or mobile certificate, you can also log in
-          at <a href="https://www.studyinfo.fi">Studyinfo.fi</a> and make the
+          at <a style="color: #0093C4;" href="https://www.studyinfo.fi" target="_blank">Studyinfo.fi</a> and make the
           changes in the My Studyinfo -service within the application period.
           In addition to making changes to your study programmes, if you have
           access to the My Studyinfo -service you can also view the admission
