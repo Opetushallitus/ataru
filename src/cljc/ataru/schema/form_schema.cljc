@@ -144,29 +144,34 @@
          {:content                           [(s/if (comp some? :children) WrapperElement BasicElement)]
           (s/optional-key :organization-oid) (s/maybe s/Str)}))
 
-(s/defschema PathToElement
-  {})
-(s/defschema CreateElementOperation
-  {:type (s/eq "create")
-   :element BasicElement})
 (s/defschema UpdateElementOperation
   {:type (s/eq "update")
-   :element BasicElement})
-(s/defschema RelocateElementOperation
-  {:type (s/eq "relocate")
-   :new-path PathToElement
-   :element BasicElement})
-(s/defschema RemoveElementOperation
-  {:type (s/eq "remove")
-   :element BasicElement})
+   :old-element (s/if (comp some? :children) WrapperElement BasicElement)
+   :new-element (s/if (comp some? :children) WrapperElement BasicElement)})
 
-(s/defschema FormEditOperation
-    {:path PathToElement
-     :operation (s/conditional
-                  #(= "create" (:type %)) CreateElementOperation
+(s/defschema DeleteElementOperation
+  {:type (s/eq "delete")
+   :element (s/if (comp some? :children) WrapperElement BasicElement)})
+
+(s/defschema CreateMoveElement
+  {:sibling-above (s/maybe s/Str)
+   :sibling-below (s/maybe s/Str)
+   :element (s/if (comp some? :children) WrapperElement BasicElement)})
+
+(s/defschema CreateMoveGroupOperation
+  {:type (s/eq "create-move-group")
+   :group [CreateMoveElement]})
+
+(s/defschema RenameFormOperation
+  {:type (s/eq "rename-form")
+   :old-name LocalizedStringOptional
+   :new-name LocalizedStringOptional})
+
+(def Operation (s/conditional
+                  #(= "rename-form" (:type %)) RenameFormOperation
+                  #(= "create-move-group" (:type %)) CreateMoveGroupOperation
                   #(= "update" (:type %)) UpdateElementOperation
-                  #(= "relocate" (:type %)) RelocateElementOperation
-                  #(= "remove" (:type %)) RemoveElementOperation)})
+                  #(= "delete" (:type %)) DeleteElementOperation))
 
 (s/defschema FormTarjontaHakukohde
   {:oid                          s/Str
