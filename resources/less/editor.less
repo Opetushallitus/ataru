@@ -245,62 +245,15 @@
   margin-left: 15px;
 }
 
-.editor-form__folded {
-  display: none;
-}
-
-.editor-form__fold-all {
-  width: 140px;
-  height: 26px;
-  border-radius: 13px;
-  overflow: hidden;
-}
-
-.editor-form__fold-all-slider {
-  display: flex;
-  width: 280px;
-  height: 26px;
-  border-radius: 13px;
-  align-items: center;
-  transition: transform 0.1s, background-color 0.1s;
+.editor-form__fold-clickable-text {
+  color: @link-color;
   cursor: pointer;
+  .unselectable
 }
 
-.editor-form__fold-all-slider-left {
-  transform: translateX(-114px);
-  background-color: @disabled-list-item-color;
-}
-
-.editor-form__fold-all-slider-right {
-  transform: translateX(0px);
-  background-color: @pale-blue;
-}
-
-.editor-form__fold-all-hidden-input {
-  display: none;
-}
-
-.editor-form__fold-all-label-left {
-  margin-left: 37px;
-  min-width: 67px;
-  color: white;
-  cursor: pointer;
-}
-
-.editor-form__fold-all-label-right {
-  min-width: 76px;
-  color: @sg-color-gray;
-  cursor: pointer;
-}
-
-.editor-form__fold-all-divider {
-  min-width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background-color: white;
-  margin-left: 12px;
-  margin-right: 12px;
-  cursor: pointer;
+.editor-form__fold-description-text {
+  color: @blue-text-color;
+  .unselectable
 }
 
 .editor-form__checkbox-with-label {
@@ -742,6 +695,26 @@ form > div > .editor-form__component-wrapper {
 .editor-form__component-header {
   margin: 0px;
   padding: 10px 11px 8px 11px;
+}
+
+.editor-form__component-fold-button {
+  margin: 0px;
+  padding: 0px 8px 0px 0px;
+  border: 0;
+  font-size: 18px;
+  color: @blue-text-color;
+  background: none;
+  cursor: pointer;
+  &:focus {
+    outline: none;
+  }
+  &::-moz-focus-inner {
+    border: 0;
+  }
+  &:hover {
+    border: 0;
+    background: none;
+  }
 }
 
 .editor-form__component-main-header {

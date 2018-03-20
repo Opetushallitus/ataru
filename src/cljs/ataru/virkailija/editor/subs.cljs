@@ -152,9 +152,9 @@
                                              my-hakukohderyhmat))))))
 
 (re-frame/reg-sub
-  :editor/all-folded
-  (fn [db _]
-    (get-in db [:editor :ui :all-folded] false)))
+  :editor/folded?
+  (fn [db [_ id]]
+    (get-in db [:editor :ui id :folded?] false)))
 
 (re-frame/reg-sub
   :editor/remove-form-button-state

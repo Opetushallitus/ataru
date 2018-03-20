@@ -614,15 +614,31 @@
                  :belongs-to-hakukohderyhma)]
       (update-in db path (fnil (comp vec #(disj % oid) set) [])))))
 
+(defn- fold [db id]
+  (assoc-in db [:editor :ui id :folded?] true))
+
+(defn- unfold [db id]
+  (assoc-in db [:editor :ui id :folded?] false))
+
+(reg-event-db
+  :editor/fold
+  (fn [db [_ id]]
+    (fold db id)))
+
+(reg-event-db
+  :editor/unfold
+  (fn [db [_ id]]
+    (unfold db id)))
+
 (reg-event-db
   :editor/fold-all
   (fn [db _]
-    (assoc-in db [:editor :ui :all-folded] true)))
+    (reduce fold db (keys (get-in db [:editor :ui])))))
 
 (reg-event-db
   :editor/unfold-all
   (fn [db _]
-    (assoc-in db [:editor :ui :all-folded] false)))
+    (reduce unfold db (keys (get-in db [:editor :ui])))))
 
 (reg-event-fx
   :editor/toggle-email-template-editor
