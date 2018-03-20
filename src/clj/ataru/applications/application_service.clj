@@ -188,13 +188,16 @@
                                        application-store/get-application-reviews-by-keys
                                        (reduce #(assoc %1 (:application-key %2) %2) {}))
         onr-persons               (->> (map :person-oid allowed-applications)
-                                       (filter some?)
                                        distinct
+                                       (filter some?)
                                        (person-service/get-persons person-service))
-        applications-with-persons (for [application allowed-applications
-                                        :let [person-oid (:person-oid application)]]
-                                    (update application :person (->> (get onr-persons person-oid)
-                                                                     (parse-person application))))]
+        applications-with-persons (map (fn [application]
+                                         (assoc application
+                                                :person (->> (:person-oid application)
+                                                             keyword
+                                                             (get onr-persons)
+                                                             (parse-person application))))
+                                       allowed-applications)]
     (ByteArrayInputStream. (excel/export-applications applications-with-persons
                                                       application-reviews
                                                       selected-hakukohde

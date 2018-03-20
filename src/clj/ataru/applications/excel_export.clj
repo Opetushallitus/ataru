@@ -257,11 +257,6 @@
   (and (sequential? value-or-values)
        (all-answers-sec-or-vec? value-or-values)))
 
-(defn- get-answer-from-person-record
-  [answer-key person]
-  (when (contains? answers-from-person-record answer-key)
-    (get person answer-key)))
-
 (defn- write-application! [writer application application-review person headers application-meta-fields form-fields-by-key get-koodisto-options]
   (doseq [meta-field application-meta-fields]
     (let [meta-value ((or
@@ -276,7 +271,7 @@
     (let [answer-key                (:key answer)
           field-descriptor          (get form-fields-by-key answer-key)
           column                    (:column (first (filter #(= answer-key (:id %)) headers)))
-          answer-from-person-record (get-answer-from-person-record (keyword answer-key) person)
+          answer-from-person-record (get person (keyword answer-key))
           value-or-values           (:value answer)
           ->human-readable-value    (partial raw-values->human-readable-value field-descriptor application get-koodisto-options)
           value                     (cond
