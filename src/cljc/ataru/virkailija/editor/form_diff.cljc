@@ -23,7 +23,7 @@
 (defn find-updated-elements [old-form form]
   (filter #(is-updated-in (find-element (:id %) old-form) %) (:content form)))
 
-(defn insert-adjecent-elements-between [adjecent-elements siblings form]
+(defn insert-adjacent-elements-between [adjacent-elements siblings form]
   (let [content (:content form)
         [above below] (doall (map #(index-of-id % form) siblings))]
     (if (or
@@ -32,16 +32,16 @@
       (throw (ex-info "Sibling with index not found! Mismatching forms!" {})))
     (cond
      (and above
-          (not below)) (assoc form :content (concat content adjecent-elements))
+          (not below)) (assoc form :content (concat content adjacent-elements))
      (and (not above)
-          below) (assoc form :content (concat adjecent-elements content))
+          below) (assoc form :content (concat adjacent-elements content))
      (and (not above)
-          (not below)) (assoc form :content adjecent-elements)
+          (not below)) (assoc form :content adjacent-elements)
      (and above
-          below) (let [adjecent? (= 1 (- above below))]
-                   (if adjecent?
+          below) (let [adjacent? (= 1 (- above below))]
+                   (if adjacent?
                      (let [[elements-above elements-below] (split-at above content)]
-                       (assoc form :content (concat elements-above adjecent-elements elements-below)))
+                       (assoc form :content (concat elements-above adjacent-elements elements-below)))
                      (throw (ex-info "Mismatching forms! User should update view." {})))))))
 
 (defn find-element-siblings [form element]
@@ -71,47 +71,47 @@
   {:type "delete"
    :element element})
 
-(defn- connect-new-adjecent
-  [adjecent]
+(defn- connect-new-adjacent
+  [adjacent]
   (fn
     ([]
-     adjecent)
-    ([new-adjecent]
-     (let [first-id (get-in (first adjecent) [:element :id])
-           last-id  (get-in (last adjecent) [:element :id])
-           below-id (:sibling-below new-adjecent)
-           above-id (:sibling-above new-adjecent)]
+     adjacent)
+    ([new-adjacent]
+     (let [first-id (get-in (first adjacent) [:element :id])
+           last-id  (get-in (last adjacent) [:element :id])
+           below-id (:sibling-below new-adjacent)
+           above-id (:sibling-above new-adjacent)]
        (cond
-        (= first-id below-id) (concat  [new-adjecent] adjecent)
-        (= last-id above-id) (concat adjecent [new-adjecent] ))))
-    ([first-new-adjecent second-new-adjecent]
-     (-> (connect-new-adjecent (-> (connect-new-adjecent adjecent)
-                                   first-new-adjecent)) second-new-adjecent))))
+        (= first-id below-id) (concat  [new-adjacent] adjacent)
+        (= last-id above-id) (concat adjacent [new-adjacent] ))))
+    ([first-new-adjacent second-new-adjacent]
+     (-> (connect-new-adjacent (-> (connect-new-adjacent adjacent)
+                                   first-new-adjacent)) second-new-adjacent))))
 
-(defn adjecent-for-create-move-element [cm-element cm-elements]
-  (loop [adjecent     [cm-element]
-         not-adjecent cm-elements]
-    (let [ids          (set (map #(get-in % [:element :id]) adjecent))
-          adjecent?    (fn [e]
+(defn adjacent-for-create-move-element [cm-element cm-elements]
+  (loop [adjacent     [cm-element]
+         not-adjacent cm-elements]
+    (let [ids          (set (map #(get-in % [:element :id]) adjacent))
+          adjacent?    (fn [e]
                          (if (seq (clojure.set/intersection ids #{(:sibling-above e) (:sibling-below e)}))
-                           :adjecent
-                           :not-adjecent))
-          {some-new-adjecent :adjecent
-           new-not-adjecent :not-adjecent} (group-by adjecent? not-adjecent)
-          new-adjecent (apply (connect-new-adjecent adjecent) some-new-adjecent)]
-      (if (and (seq some-new-adjecent)
-               (seq new-not-adjecent))
-        (recur new-adjecent new-not-adjecent)
-        [new-adjecent new-not-adjecent]))))
+                           :adjacent
+                           :not-adjacent))
+          {some-new-adjacent :adjacent
+           new-not-adjacent :not-adjacent} (group-by adjacent? not-adjacent)
+          new-adjacent (apply (connect-new-adjacent adjacent) some-new-adjacent)]
+      (if (and (seq some-new-adjacent)
+               (seq new-not-adjacent))
+        (recur new-adjacent new-not-adjacent)
+        [new-adjacent new-not-adjacent]))))
 
-(defn partition-by-adjecent-elements
+(defn partition-by-adjacent-elements
   ([create-move-elements]
-   (partition-by-adjecent-elements create-move-elements []))
+   (partition-by-adjacent-elements create-move-elements []))
   ([create-move-elements partitioned]
    (let [[head & tail] create-move-elements]
      (if-let [cm-element head]
-       (let [[adjecent not-adjecent] (adjecent-for-create-move-element cm-element tail)]
-         (partition-by-adjecent-elements not-adjecent (cons adjecent partitioned)))
+       (let [[adjacent not-adjacent] (adjacent-for-create-move-element cm-element tail)]
+         (partition-by-adjacent-elements not-adjacent (cons adjacent partitioned)))
        partitioned))))
 
 (defn- as-create-move-element [old-form form element]
@@ -174,13 +174,13 @@
     (assoc create-move-element :element existing-element)
     create-move-element))
 
-(defn- apply-adjecent-create-move-elements [detached-form adjecent-create-move-elements]
-  (let [[head & tail] adjecent-create-move-elements]
+(defn- apply-adjacent-create-move-elements [detached-form adjacent-create-move-elements]
+  (let [[head & tail] adjacent-create-move-elements]
     (if head
-      (let [adjecent-elements (map :element head)
+      (let [adjacent-elements (map :element head)
             sibling-above (:sibling-above (first head))
             sibling-below (:sibling-below (last head))]
-        (apply-adjecent-create-move-elements (insert-adjecent-elements-between adjecent-elements
+        (apply-adjacent-create-move-elements (insert-adjacent-elements-between adjacent-elements
                                                [sibling-above sibling-below] detached-form) tail))
       detached-form)))
 
@@ -188,9 +188,9 @@
   (let [element-ids (set (map #(get-in % [:element :id]) (:group create-move-group)))
         existing-elements (find-elements element-ids latest-form)
         create-moves-with-existing-elements (map #(replace-with-existing-element % existing-elements) (:group create-move-group))
-        adjecent-create-move-elements (partition-by-adjecent-elements create-moves-with-existing-elements)
+        adjacent-create-move-elements (partition-by-adjacent-elements create-moves-with-existing-elements)
         detached-form (remove-elements latest-form existing-elements)]
-    (apply-adjecent-create-move-elements detached-form adjecent-create-move-elements)))
+    (apply-adjacent-create-move-elements detached-form adjacent-create-move-elements)))
 
 (defn- apply-delete [latest-form delete]
   (let [id (get-in delete [:element :id])
