@@ -75,12 +75,14 @@
                      (s/optional-key :belongs-to-hakukohteet) [s/Str]
                      (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
 
+(def Validator (apply s/enum (concat (keys validator/pure-validators)
+                                     (keys validator/async-validators))))
+
 (s/defschema FormField {:fieldClass                                      (s/eq "formField")
                         :id                                              s/Str
                         (s/optional-key :cannot-view)                    s/Bool
                         (s/optional-key :cannot-edit)                    s/Bool
-                        (s/optional-key :validators)                     [(apply s/enum (concat (keys validator/pure-validators)
-                                                                                                (keys validator/async-validators)))]
+                        (s/optional-key :validators)                     [Validator]
                         (s/optional-key :rules)                          {s/Keyword s/Any}
                         (s/optional-key :blur-rules)                     {s/Keyword s/Any}
                         (s/optional-key :label)                          LocalizedString
@@ -123,6 +125,8 @@
                             #(= "button" (:fieldClass %)) Button
                             :else InfoElement))
 
+(def ChildValidator (s/enum :one-of :birthdate-and-gender-component))
+
 (s/defschema WrapperElement {:fieldClass                              (apply s/enum ["wrapperElement" "questionGroup"])
                              :id                                      s/Str
                              :fieldType                               (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
@@ -131,7 +135,7 @@
                                                                                       (s/recursive #'WrapperElement)
                                                                                       :else
                                                                                       BasicElement)]
-                             (s/optional-key :child-validator)        (s/enum :one-of :birthdate-and-gender-component)
+                             (s/optional-key :child-validator)        ChildValidator
                              (s/optional-key :params)                 Params
                              (s/optional-key :label)                  LocalizedString
                              (s/optional-key :label-amendment)        LocalizedString ; Additional info which can be displayed next to the label
@@ -139,9 +143,11 @@
                              (s/optional-key :belongs-to-hakukohteet) [s/Str]
                              (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
 
+(def Content (s/if (comp some? :children) WrapperElement BasicElement))
+
 (s/defschema FormWithContent
   (merge Form
-         {:content                           [(s/if (comp some? :children) WrapperElement BasicElement)]
+         {:content                           [Content]
           (s/optional-key :organization-oid) (s/maybe s/Str)}))
 
 (s/defschema UpdateElementOperation
@@ -153,14 +159,23 @@
   {:type (s/eq "delete")
    :element (s/if (comp some? :children) WrapperElement BasicElement)})
 
-(s/defschema CreateMoveElement
-  {:sibling-above (s/maybe s/Str)
+(s/defschema CreateElement
+  {:type (s/eq "create")
+   :sibling-above (s/maybe s/Str)
+   :sibling-below (s/maybe s/Str)
+   :element (s/if (comp some? :children) WrapperElement BasicElement)})
+
+(s/defschema MoveElement
+  {:type (s/eq "move")
+   :sibling-above (s/maybe s/Str)
    :sibling-below (s/maybe s/Str)
    :element (s/if (comp some? :children) WrapperElement BasicElement)})
 
 (s/defschema CreateMoveGroupOperation
   {:type (s/eq "create-move-group")
-   :group [CreateMoveElement]})
+   :group [(s/conditional
+             #(= "create" (:type %)) CreateElement
+             #(= "move" (:type %)) MoveElement)]})
 
 (s/defschema RenameFormOperation
   {:type (s/eq "rename-form")

@@ -114,15 +114,17 @@
          (partition-by-adjecent-elements not-adjecent (cons adjecent partitioned)))
        partitioned))))
 
-(defn- as-create-move-element [form element]
-  (let [[above below] (find-element-siblings form element)]
-    {:sibling-above (some-> above :id)
+(defn- as-create-move-element [old-form form element]
+  (let [[above below] (find-element-siblings form element)
+        existing-element? (find-element (:id element) old-form)]
+    {:type (if existing-element? "move" "create")
+     :sibling-above (some-> above :id)
      :sibling-below (some-> below :id)
      :element       element}))
 
-(defn as-create-move-group-operation [new-form elements]
+(defn as-create-move-group-operation [old-form new-form elements]
   {:type  "create-move-group"
-   :group (map #(as-create-move-element new-form %) elements)})
+   :group (map #(as-create-move-element old-form new-form %) elements)})
 
 (defn as-update-operation [old-form element]
   {:type        "update"
@@ -140,7 +142,7 @@
               (map #(as-update-operation old-form %) (find-updated-elements old-form form))
               (map #(as-delete-operation %) (find-missing-elements old-form form))
               (if-let [elements-with-new-siblings (seq (find-elements-with-new-siblings old-form form))]
-                (as-create-move-group-operation form elements-with-new-siblings))])))
+                (as-create-move-group-operation old-form form elements-with-new-siblings))])))
 
 (defn replace-element [element form]
   (let [index (index-of-element element form)]
