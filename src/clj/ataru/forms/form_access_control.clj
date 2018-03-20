@@ -2,8 +2,7 @@
   (:require
    [ataru.applications.application-store :as application-store]
    [ataru.forms.form-store :as form-store]
-   [schema.coerce :as c]
-   [schema.core :as s]
+   [ataru.schema.form-schema :as form-schema]
    [ataru.virkailija.editor.form-diff :as form-diff]
    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
    [ataru.organization-service.session-organizations :as session-orgs]
@@ -109,9 +108,7 @@
     (throw (Exception. (str "Batching form " id " with no operations!"))))
   (let [latest-version (-> (form-store/fetch-form id)
                            (dissoc :created-time))
-        coerced-form ((c/coercer! ataru.schema.form-schema/FormWithContent {ataru.schema.form-schema/Module keyword
-                                                                         ataru.schema.form-schema/ChildValidator keyword
-                                                                         ataru.schema.form-schema/Validator keyword}) latest-version)
+        coerced-form (form-schema/FormCoercer latest-version)
         updated-form   (form-diff/apply-operations coerced-form operations)]
     (post-form updated-form session virkailija-tarjonta-service organization-service)))
 

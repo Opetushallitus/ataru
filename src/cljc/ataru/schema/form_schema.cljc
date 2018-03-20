@@ -2,6 +2,7 @@
   (:require [ataru.application.review-states :as review-states]
             [ataru.application.field-types :refer [form-fields]]
             [ataru.hakija.application-validators :as validator]
+            [schema.coerce :as c]
             [schema.core :as s]
             [schema.experimental.abstract-map :as abstract-map]
             [schema-tools.core :as st]))
@@ -490,3 +491,9 @@
                             :enabled     s/Bool})
 
 (s/defschema VirkailijaSettings {:review {s/Keyword s/Bool}})
+
+(def FormCoercionMatchers {Module keyword
+                           ChildValidator keyword
+                           Validator keyword})
+
+(def FormCoercer (c/coercer! FormWithContent FormCoercionMatchers))
