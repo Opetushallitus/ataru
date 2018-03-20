@@ -85,7 +85,7 @@
                      (s/optional-key :belongs-to-hakukohteet) [s/Str]
                      (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
 
-(def Validator (apply s/enum (concat (keys validator/pure-validators)
+(s/defschema Validator (apply s/enum (concat (keys validator/pure-validators)
                                      (keys validator/async-validators))))
 
 (s/defschema FormField {:fieldClass                                      (s/eq "formField")
@@ -137,7 +137,7 @@
                             #(= "button" (:fieldClass %)) Button
                             :else InfoElement))
 
-(def ChildValidator (s/enum :one-of :birthdate-and-gender-component))
+(s/defschema ChildValidator (s/enum :one-of :birthdate-and-gender-component))
 
 (s/defschema WrapperElement {:fieldClass                              (apply s/enum ["wrapperElement" "questionGroup"])
                              :id                                      s/Str
@@ -513,7 +513,7 @@
 
 (s/defschema VirkailijaSettings {:review {s/Keyword s/Bool}})
 
-(def FormCoercionMatchers {Module keyword
+(s/defschema FormCoercionMatchers {Module keyword
                            ChildValidator keyword
                            Validator keyword})
 
