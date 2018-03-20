@@ -29,7 +29,7 @@
     (if (or
          (and (not above) (first siblings))
          (and (not below) (second siblings)))
-      (throw (Exception. "Sibling with index not found! Mismatching forms!")))
+      (throw (ex-info "Sibling with index not found! Mismatching forms!" {})))
     (cond
      (and above
           (not below)) (assoc form :content (concat content adjecent-elements))
@@ -42,7 +42,7 @@
                    (if adjecent?
                      (let [[elements-above elements-below] (split-at above content)]
                        (assoc form :content (concat elements-above adjecent-elements elements-below)))
-                     (throw (Exception. "Mismatching forms! User should update view.")))))))
+                     (throw (ex-info "Mismatching forms! User should update view." {})))))))
 
 (defn find-element-siblings [form element]
   (let [content (:content form)
@@ -167,7 +167,7 @@
         latest-element (find-element id latest-form)]
     (if (= old-element latest-element)
       (replace-element new-element latest-form)
-      (throw (Exception. (str "Update on modified element " id " is disallowed!"))))))
+      (throw (ex-info (str "Update on modified element " id " is disallowed!") {})))))
 
 (defn- replace-with-existing-element [create-move-element existing-elements]
   (if-let [existing-element (first (filter #(= (:id %) (get-in create-move-element [:element :id])) existing-elements))]
@@ -198,7 +198,7 @@
         latest-element (find-element id latest-form)]
     (if (= removed-element latest-element)
       (remove-element latest-form latest-element)
-      (throw (Exception. (str "Deleting modified element " id " is disallowed!"))))))
+      (throw (ex-info (str "Deleting modified element " id " is disallowed!") {})))))
 
 (defn- apply-rename-form [latest-form rename]
   (let [old-name (:old-name rename)
@@ -206,7 +206,7 @@
         current-name (:name latest-form)]
     (if (= old-name current-name)
       (assoc latest-form :name new-name)
-      (throw (Exception. "Renaming modified name is disallowed!")))))
+      (throw (ex-info "Renaming modified name is disallowed!" {})))))
 
 (defn- apply-operation [latest-form operation]
   (condp = (:type operation)
