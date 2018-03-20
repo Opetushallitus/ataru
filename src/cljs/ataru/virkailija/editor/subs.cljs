@@ -134,6 +134,24 @@
     (get-in db [:editor :ui id :belongs-to-hakukohteet :modal haku-oid :show-more-value] 15)))
 
 (re-frame/reg-sub
+  :editor/belongs-to-other-organization?
+  (fn [db [_ {:keys [belongs-to-hakukohteet belongs-to-hakukohderyhma]}]]
+    (let [my-hakukohteet     (->> (get-in db [:editor :used-by-haut :haut])
+                                  vals
+                                  (mapcat :hakukohteet)
+                                  (map :oid)
+                                  set)
+          my-hakukohderyhmat (->> (get-in db [:editor :used-by-haut :hakukohderyhmat])
+                                  (map :oid)
+                                  set)]
+      (and (or (not-empty belongs-to-hakukohteet)
+               (not-empty belongs-to-hakukohderyhma))
+           (empty? (clojure.set/intersection (set belongs-to-hakukohteet)
+                                             my-hakukohteet))
+           (empty? (clojure.set/intersection (set belongs-to-hakukohderyhma)
+                                             my-hakukohderyhmat))))))
+
+(re-frame/reg-sub
   :editor/all-folded
   (fn [db _]
     (get-in db [:editor :ui :all-folded] false)))
