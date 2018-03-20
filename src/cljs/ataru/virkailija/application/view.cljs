@@ -768,14 +768,14 @@
               [:a (:label field)]])])]])))
 
 (defn application-review-events []
-  (let [events (subscribe [:application/events-and-information-requests])]
-    (fn []
-      (into
-       [:div.application-handling__event-list
-         [:div.application-handling__review-header "Tapahtumat"]]
-       (for [event @events]
-         ^{:key (str "event-row-for-" (:id event))}
-          [event-row event])))))
+  [:div.application-handling__event-list
+   [:div.application-handling__review-header "Tapahtumat"]
+   (doall
+    (map-indexed
+     (fn [i event]
+       ^{:key (str "event-row-for-" i)}
+       [event-row event])
+     @(subscribe [:application/events-and-information-requests])))])
 
 (defn update-review-field [field convert-fn evt]
   (let [new-value (-> evt .-target .-value)]
