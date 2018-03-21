@@ -173,23 +173,14 @@
   {:type (s/eq "delete")
    :element (s/if (comp some? :children) WrapperElement BasicElement)})
 
-(s/defschema CreateElement
-  {:type (s/eq "create")
-   :sibling-above (s/maybe s/Str)
-   :sibling-below (s/maybe s/Str)
-   :element (s/if (comp some? :children) WrapperElement BasicElement)})
-
-(s/defschema MoveElement
-  {:type (s/eq "move")
-   :sibling-above (s/maybe s/Str)
+(s/defschema CreateMoveElement
+  {:sibling-above (s/maybe s/Str)
    :sibling-below (s/maybe s/Str)
    :element (s/if (comp some? :children) WrapperElement BasicElement)})
 
 (s/defschema CreateMoveGroupOperation
   {:type (s/eq "create-move-group")
-   :group [(s/conditional
-             #(= "create" (:type %)) CreateElement
-             #(= "move" (:type %)) MoveElement)]})
+   :group [CreateMoveElement]})
 
 (s/defschema RenameFormOperation
   {:type (s/eq "rename-form")

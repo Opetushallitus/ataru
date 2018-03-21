@@ -9,11 +9,6 @@
   (fn [db]
     (get-in db [:editor :forms (get-in db [:editor :selected-form-key])])))
 
-(re-frame/reg-event-db
-  :editor/set-save-snapshot
-  (fn [db [_ form]]
-    (assoc-in db [:editor :save-snapshot] form)))
-
 (re-frame/reg-sub
   :editor/last-save-snapshot
   (fn [db]
