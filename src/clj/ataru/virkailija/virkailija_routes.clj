@@ -8,6 +8,7 @@
             [ataru.email.application-email-confirmation :as email]
             [ataru.email.email-store :as email-store]
             [ataru.cache.cache-service :as cache]
+            [ataru.cache.caches :as caches]
             [ataru.config.core :refer [config]]
             [ataru.config.url-helper :as url-helper]
             [ataru.dob :as dob]
@@ -386,7 +387,7 @@
         :summary "Clear all caches"
         {:status 200
          :body   (do
-                   (doseq [cache ataru.cache.caches/redis-caches]
+                   (doseq [cache caches/redis-caches]
                      (cache/cache-clear cache-service (keyword (:name cache))))
                    {})})
       (api/POST "/clear/:cache" {session :session}
