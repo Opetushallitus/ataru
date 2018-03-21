@@ -86,7 +86,7 @@
                      (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
 
 (s/defschema Validator (apply s/enum (concat (keys validator/pure-validators)
-                                     (keys validator/async-validators))))
+                                             (keys validator/async-validators))))
 
 (s/defschema FormField {:fieldClass                                      (s/eq "formField")
                         :id                                              s/Str
