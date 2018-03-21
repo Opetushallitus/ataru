@@ -32,6 +32,11 @@
 
 (reg-event-db :editor/get-user-info get-user-info)
 
+(reg-event-db
+  :editor/set-save-snapshot
+  (fn [db [_ form]]
+    (assoc-in db [:editor :save-snapshot] form)))
+
 (defn- current-form-content-path
   [db & further-path]
   (-> [:editor :forms (-> db :editor :selected-form-key) :content]

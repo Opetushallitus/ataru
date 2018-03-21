@@ -45,20 +45,23 @@
                      (throw (ex-info "Mismatching forms! User should update view." {})))))))
 
 (defn find-element-siblings [form element]
-  (let [content (:content form)
-        index (index-of-element element form)
-        sibling-above (get content (dec index))
-        sibling-below (get content (inc index))]
-    [sibling-above sibling-below]))
+  (loop [content       (:content form)
+         sibling-above nil]
+    (cond (empty? content)
+          nil
+          (= (:id element) (:id (first content)))
+          [sibling-above (first content) (second content)]
+          :else
+          (recur (rest content) (first content)))))
 
-(defn- element-with-new-siblings? [element old-form form]
+(defn- element-with-new-siblings [element old-form form]
   (let [old-siblings (find-element-siblings old-form element)
         new-siblings (find-element-siblings form element)]
-    (not (= (map :id old-siblings) (map :id new-siblings)))))
+    (when-not (= (map :id old-siblings) (map :id new-siblings)) new-siblings)))
 
 (defn find-elements-with-new-siblings
   [old-form form]
-  (filter #(element-with-new-siblings? % old-form form) (:content form)))
+  (keep #(element-with-new-siblings % old-form form) (:content form)))
 
 (defn find-missing-elements
   [old-form form]
@@ -114,17 +117,14 @@
          (partition-by-adjacent-elements not-adjacent (cons adjacent partitioned)))
        partitioned))))
 
-(defn- as-create-move-element [old-form form element]
-  (let [[above below] (find-element-siblings form element)
-        existing-element? (find-element (:id element) old-form)]
-    {:type (if existing-element? "move" "create")
-     :sibling-above (some-> above :id)
-     :sibling-below (some-> below :id)
-     :element       element}))
+(defn- as-create-move-element [old-form form [above element below]]
+  {:sibling-above (some-> above :id)
+   :sibling-below (some-> below :id)
+   :element       element})
 
-(defn as-create-move-group-operation [old-form new-form elements]
+(defn as-create-move-group-operation [old-form new-form elements-with-new-siblings]
   {:type  "create-move-group"
-   :group (map #(as-create-move-element old-form new-form %) elements)})
+   :group (map (partial as-create-move-element old-form new-form) elements-with-new-siblings)})
 
 (defn as-update-operation [old-form element]
   {:type        "update"
@@ -145,20 +145,14 @@
                 (as-create-move-group-operation old-form form elements-with-new-siblings))])))
 
 (defn replace-element [element form]
-  (let [index (index-of-element element form)]
-    (-> form
-        (update-in [:content index] (fn [_] element)))))
-
-(defn drop-nth [n coll]
-  (keep-indexed #(if (not= %1 n) %2) coll))
+  (update form :content (partial map #(if (= (:id element) (:id %)) element %))))
 
 (defn remove-element [form element]
-  (let [index (index-of-element element form)]
-    (assoc form :content (drop-nth index (:content form)))))
+  (update form :content (partial remove #(= (:id element) (:id %)))))
 
 (defn remove-elements [form elements]
   (let [ids (set (map :id elements))]
-    (assoc form :content (filter #(not (contains? ids (:id %))) (:content form)))))
+    (assoc form :content (remove #(contains? ids (:id %)) (:content form)))))
 
 (defn- apply-update [latest-form update]
   (let [id (get-in update [:new-element :id])
