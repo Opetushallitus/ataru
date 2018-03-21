@@ -250,22 +250,18 @@
                               (if (= query-key :form)
                                 (application-service/get-application-list-by-form query-value session organization-service)
                                 (access-controlled-application/get-application-list-by-query query-key query-value session organization-service))))
-              persons      (->> (person-service/get-persons person-service (distinct (keep :person-oid applications)))
-                                (reduce (fn [res person]
-                                          (assoc res (:oidHenkilo person) person))
-                                        {}))]
+              persons      (person-service/get-persons person-service (distinct (keep :person-oid applications)))]
           (if applications
             (response/ok {:applications (for [application applications
-                                              :let [person      (get persons (:person-oid application))
-                                                    yksiloity   (or (-> person :yksiloity)
-                                                                    (-> person :yksiloityVTJ))
-                                                    person-info (if yksiloity
+                                              :let [person      (get persons (keyword (:person-oid application)))
+                                                    person-info (if (or (-> person :yksiloity)
+                                                                        (-> person :yksiloityVTJ))
                                                                   {:preferred-name (:kutsumanimi person)
                                                                    :last-name      (:sukunimi person)
                                                                    :yksiloity      true}
-                                                                  (-> application
-                                                                      (select-keys [:preferred-name :last-name])
-                                                                      (assoc :yksiloity false)))]]
+                                                                  {:preferred-name (:preferred-name application)
+                                                                   :last-name      (:last-name application)
+                                                                   :yksiloity      false})]]
                                           (-> application
                                               (assoc :person person-info)
                                               (dissoc :person-oid :preferred-name :last-name)))})
