@@ -20,7 +20,9 @@
     [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
     [ataru.background-job.job :as job]
     [ataru.application.review-states :as review-states]
-    [ataru.koodisto.koodisto :as koodisto]))
+    [ataru.koodisto.koodisto :as koodisto]
+    [ataru.organization-service.ldap-client :as ldap])
+  (:import (java.time ZonedDateTime ZoneId)))
 
 (def default-fetch-size 50)
 
@@ -362,6 +364,24 @@
                    connection
                    (assoc new-application :form_id id))))))))))
 
+(defn- migrate-element-metadata-to-forms
+  [connection]
+  (doseq [form (migration-app-store/get-1.88-forms connection)
+          :let [virkailija (ldap/get-virkailija-by-username (:created_by form))
+                metadata   {:name (format "%s %s" (:givenName virkailija) (:sn virkailija))
+                            :oid  (:employeeNumber virkailija)
+                            :date (ZonedDateTime/now (ZoneId/of "Europe/Helsinki"))}]]
+    (->> form
+         :content
+         (clojure.walk/prewalk
+           (fn [x]
+             (if (and (map? x) (contains? x :fieldType))
+               (assoc x :metadata {:created-by  metadata
+                                   :modified-by metadata})
+               x)))
+         (assoc form :content)
+         (migration-app-store/insert-1.88-form connection))))
+
 (migrations/defmigration
   migrate-person-info-module "1.13"
   "Update person info module structure in existing forms"
@@ -447,6 +467,12 @@
   "Migrate kotikunta from text to a code"
   (with-db-transaction [conn {:connection connection}]
     (migrate-kotikunta-from-text-to-code conn)))
+
+(migrations/defmigration
+  migrate-kotikunta-from-text-to-a-code "1.88"
+  "Migrate creator to form elements"
+  (with-db-transaction [conn {:connection connection}]
+    (migrate-element-metadata-to-forms conn)))
 
 (defn migrate
   []

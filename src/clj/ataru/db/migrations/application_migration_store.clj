@@ -12,6 +12,7 @@
 (sql/defqueries "sql/migration-1.80-queries.sql")
 (sql/defqueries "sql/migration-1.82-queries.sql")
 (sql/defqueries "sql/migration-1.86-queries.sql")
+(sql/defqueries "sql/migration-1.88-queries.sql")
 
 (defn get-ids-of-latest-applications
   []
@@ -113,3 +114,9 @@
                                           :hakukohde        nil
                                           :review_key       nil}
                                          {:connection connection}))
+
+(defn get-1.88-forms [connection]
+  (yesql-get-1_88-forms {} {:connection connection}))
+
+(defn insert-1.88-form [connection form]
+  (yesql-insert-1_88-form<! form {:connection connection}))

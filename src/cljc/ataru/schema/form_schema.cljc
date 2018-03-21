@@ -66,16 +66,27 @@
                      (s/optional-key :placeholder)                      LocalizedString
                      (s/optional-key :info-text)                        (s/maybe InfoText)})
 
+(s/defschema ElementMetadata
+  {:created-by  {:name s/Str
+                 :oid  s/Str
+                 :date s/Str} ; java.time.ZonedDateTime
+   :modified-by {:name s/Str
+                 :oid  s/Str
+                 :date s/Str}})
+
 (s/defschema Button {:fieldClass                              (s/eq "button")
                      :id                                      s/Str
+                     :fieldType                               s/Keyword
+                     :metadata                                ElementMetadata
                      (s/optional-key :label)                  LocalizedString
                      (s/optional-key :params)                 Params
-                     :fieldType                               s/Keyword
                      (s/optional-key :belongs-to-hakukohteet) [s/Str]
                      (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
 
 (s/defschema FormField {:fieldClass                                      (s/eq "formField")
                         :id                                              s/Str
+                        :fieldType                                       (apply s/enum form-fields)
+                        :metadata                                        ElementMetadata
                         (s/optional-key :cannot-view)                    s/Bool
                         (s/optional-key :cannot-edit)                    s/Bool
                         (s/optional-key :validators)                     [(apply s/enum (concat (keys validator/pure-validators)
@@ -98,7 +109,6 @@
                                                                            (s/optional-key :description)   LocalizedString
                                                                            (s/optional-key :default-value) (s/maybe s/Bool)
                                                                            (s/optional-key :followups)     [(s/if (comp some? :children) (s/recursive #'WrapperElement) (s/recursive #'BasicElement))]}]
-                        :fieldType                                       (apply s/enum form-fields)
                         (s/optional-key :belongs-to-hakukohteet)         [s/Str]
                         (s/optional-key :belongs-to-hakukohderyhma)      [s/Str]})
 
@@ -111,6 +121,7 @@
                                                                                   "bulletList"
                                                                                   "dateRange"
                                                                                   "endOfDateRange"])
+                          :metadata                                ElementMetadata
                           (s/optional-key :params)                 Params
                           (s/optional-key :label)                  LocalizedString
                           (s/optional-key :text)                   LocalizedString
@@ -130,6 +141,7 @@
                                                                                       (s/recursive #'WrapperElement)
                                                                                       :else
                                                                                       BasicElement)]
+                             :metadata                                ElementMetadata
                              (s/optional-key :child-validator)        (s/enum :one-of :birthdate-and-gender-component)
                              (s/optional-key :params)                 Params
                              (s/optional-key :label)                  LocalizedString
