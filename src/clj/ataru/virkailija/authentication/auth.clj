@@ -46,9 +46,11 @@
                           :operation audit-log/operation-login})
           (-> (resp/redirect redirect-url)
               (assoc :session {:identity {:username                 username
+                                          :first-name               (:givenName virkailija)
+                                          :last-name                (:sn virkailija)
+                                          :oid                      (:employeeNumber virkailija)
                                           :ticket                   ticket
-                                          :user-right-organizations user-right-organizations
-                                          :oid                      (:employeeNumber virkailija)}}))))
+                                          :user-right-organizations user-right-organizations}}))))
       (redirect-to-logged-out-page))
     (catch Exception e
       (error e "Error in login ticket handling")

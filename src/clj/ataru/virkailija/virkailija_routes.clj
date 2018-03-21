@@ -149,7 +149,8 @@
 
     (api/GET "/user-info" {session :session}
       (ok {:username      (-> session :identity :username)
-           :organizations (organization-list session)}))
+           :organizations (organization-list session)
+           :oid           (-> session :identity :oid)}))
 
     (api/GET "/forms" {session :session}
       :summary "Return forms for editor view. Also used by external services.
