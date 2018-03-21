@@ -104,42 +104,89 @@
 (defn- swap [v i1 i2]
   (assoc v i2 (v i1) i1 (v i2)))
 
+(defn- get-names [content]
+  (map #(get-in % [:label :fi]) content))
+
+(defn- get-structure-as-names [content]
+  (map (fn [element] (if (= "questionGroup" (:fieldClass element ))
+                       (get-names (:children element))
+                       (get-in element [:label :fi]))) content))
+
+(defn- create-element [name]
+  {:id name,
+   :label {:fi name},
+   :fieldType "textField",
+   :fieldClass "formField"})
+
+(defn- create-form [& elements]
+  {:name        {:fi (clojure.string/join "" (get-names elements))}
+   :created-by "DEVELOPER"
+   :content elements})
+
+(defn- create-wrapper [& elements]
+  (let [name (str "W" (clojure.string/join "" (get-names elements)))]
+    {:id         name,
+     :label      {:fi name},
+     :children elements
+     :fieldType  "fieldset",
+     :fieldClass "questionGroup"}))
+
+(defn- get-content-from-response [response]
+  (get-in response [:body :content]))
+
 (describe "Storing a fragment"
           (tags :unit :route-store-fragment)
 
   (it "Should handle delete"
-      (let [resp (post-form fixtures/form-with-content)
+      (let [resp (post-form (create-form (create-element "A")
+                                         (create-element "B")
+                                         (create-element "C")))
             form (:body resp)
             with-update (-> form
-                            (update :content (fn [v] [(first v)])))
+                            (update :content (fn [v] [(first v) (last v)])))
             operations (form-diff/as-operations form with-update)
-            batch-response (batch-form (:id form) operations)]
-        (should= 2 (count operations))))
+            new-content (get-content-from-response (batch-form (:id form) operations))]
+        (should= (get-names new-content) ["A" "C"])))
 
   (it "Should handle updates"
-      (let [resp (post-form fixtures/form-with-content)
+      (let [resp (post-form (create-form (create-element "A")
+                                         (create-element "B")
+                                         (create-element "C")))
             form (:body resp)
             with-updates (-> form
-                             (update-in [:content 0 :label :sv] (fn [e] "Some-sv"))
-                             (update-in [:content 1 :label :sv] (fn [e] "Other-sv")))
+                             (update-in [:content 0 :label :fi] (fn [e] "AA"))
+                             (update-in [:content 1 :label :fi] (fn [e] "BB")))
             operations (form-diff/as-operations form with-updates)
-            batch-response (batch-form (:id form) operations)
-            latest-form-response (get-form (:id form))]
-        (should= 2 (count operations))
-        (should= 200 (:status batch-response))
-        (should= 200 (:status latest-form-response))
-        (should= (:content (:body latest-form-response)) (:content with-updates))))
+            new-content (get-content-from-response (batch-form (:id form) operations))]
+        (should= (get-names new-content) ["AA" "BB" "C"])))
 
   (it "Should handle relocation"
-      (let [resp (post-form fixtures/form-with-content)
+      (let [resp (post-form (create-form (create-element "A")
+                                         (create-element "B")
+                                         (create-element "C")))
             form (:body resp)
             with-update (-> form
                             (update :content (fn [v] (swap v 0 1))))
             operations (form-diff/as-operations form with-update)
-            batch-response (batch-form (:id form) operations)
-            latest-form-response (get-form (:id form))]
-        (should= (:content (:body latest-form-response)) (:content with-update))))
+            new-content (get-content-from-response (batch-form (:id form) operations))]
+        (should= (get-names new-content) ["B" "A" "C"])))
 
+  (it "Should handle move out of wrapper element"
+      (let [resp        (post-form (create-form (create-wrapper (create-element "A1") (create-element "A2"))
+                                                (create-element "B")
+                                                (create-element "C")))
+            form        (:body resp)
+            with-update (-> form
+                            (update :content (fn [content]
+                                                 (let [[wrapper & rest] content
+                                                       a1    (get-in content [0 :children 0])
+                                                       a2    (get-in content [0 :children 1])
+                                                       wa2   (assoc wrapper :children [a2])
+                                                       new-c (concat [a1 wa2] rest)]
+                                                   new-c))))
+            operations (form-diff/as-operations form with-update)
+            new-content (get-content-from-response (batch-form (:id form) (form-diff/as-operations form with-update)))]
+        (should= (get-structure-as-names new-content) ["A1" ["A2"] "B" "C"])))
 
   )
 
