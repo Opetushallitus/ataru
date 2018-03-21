@@ -382,6 +382,13 @@
                                                                  organization-service))))
 
     (api/context "/cache" []
+      (api/GET "/clear" {session :session}
+        :summary "Clear all caches"
+        {:status 200
+         :body   (do
+                   (doseq [cache ataru.cache.caches/redis-caches]
+                     (cache/cache-clear cache-service (keyword (:name cache))))
+                   {})})
       (api/POST "/clear/:cache" {session :session}
         :path-params [cache :- s/Str]
         :summary "Clear an entire cache map of its entries"
