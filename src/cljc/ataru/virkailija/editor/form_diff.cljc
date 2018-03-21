@@ -217,7 +217,4 @@
          latest-form))
 
 (defn apply-operations [latest-form operations]
-  (let [[head & tail] operations]
-    (if head
-      (apply-operations (apply-operation latest-form head) tail)
-      latest-form)))
+  (reduce apply-operation latest-form operations))
