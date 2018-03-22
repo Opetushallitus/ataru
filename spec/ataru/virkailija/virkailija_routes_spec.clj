@@ -146,7 +146,7 @@
                             (update :content (fn [v] [(first v) (last v)])))
             operations (form-diff/as-operations form with-update)
             new-content (get-content-from-response (update-form (:id form) operations))]
-        (should= (get-names new-content) ["A" "C"])))
+        (should= ["A" "C"] (get-names new-content))))
 
   (it "Should handle updates"
       (let [resp (post-form (create-form (create-element "A")
@@ -158,7 +158,7 @@
                              (update-in [:content 1 :label :fi] (fn [e] "BB")))
             operations (form-diff/as-operations form with-updates)
             new-content (get-content-from-response (update-form (:id form) operations))]
-        (should= (get-names new-content) ["AA" "BB" "C"])))
+        (should= ["AA" "BB" "C"] (get-names new-content))))
 
   (it "Should handle relocation"
       (let [resp (post-form (create-form (create-element "A")
@@ -169,7 +169,7 @@
                             (update :content (fn [v] (swap v 0 1))))
             operations (form-diff/as-operations form with-update)
             new-content (get-content-from-response (update-form (:id form) operations))]
-        (should= (get-names new-content) ["B" "A" "C"])))
+        (should= ["B" "A" "C"] (get-names new-content))))
 
   (it "Should handle move out of wrapper element"
       (let [resp        (post-form (create-form (create-wrapper (create-element "A1") (create-element "A2"))
@@ -186,7 +186,7 @@
                                                    new-c))))
             operations (form-diff/as-operations form with-update)
             new-content (get-content-from-response (update-form (:id form) (form-diff/as-operations form with-update)))]
-        (should= (get-structure-as-names new-content) ["A1" ["A2"] "B" "C"])))
+        (should= ["A1" ["A2"] "B" "C"] (get-structure-as-names new-content))))
 
   (it "Shouldn't allow conflicting updates"
       (let [resp (post-form (create-form (create-element "A")
