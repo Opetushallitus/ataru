@@ -698,8 +698,10 @@ form > div > .editor-form__component-wrapper {
 }
 
 .editor-form__component-header {
-  margin: 0px;
+  margin: 0;
   padding: 10px 11px 8px 11px;
+  display: flex;
+  align-items: center;
 }
 
 .editor-form__component-fold-button {
@@ -727,6 +729,13 @@ form > div > .editor-form__component-wrapper {
   font-size: 16px;
   font-weight: normal;
   text-transform: uppercase;
+}
+
+.editor-form__component-main-header-metadata {
+  color: @disabled-font-gray;
+  font-size: 13px;
+  text-transform: none;
+  margin-left: 10px;
 }
 
 .editor-form__component-sub-header {

@@ -8,6 +8,8 @@
 
 (def ^:private time-formatter (f/formatter "dd.MM.yyyy HH:mm"))
 
+(def ^:private date-formatter (f/formatter "dd.MM.yyyy"))
+
 (def days-finnish
   ["Su" "Ma" "Ti" "Ke" "To" "Pe" "La"])
 
@@ -28,6 +30,11 @@
   (->> google-date
        c/to-default-time-zone
        (f/unparse time-formatter)))
+
+(defn time->date [google-date]
+  (->> google-date
+       c/to-default-time-zone
+       (f/unparse date-formatter)))
 
 (defn time->str [google-date]
   (str (with-dow google-date)

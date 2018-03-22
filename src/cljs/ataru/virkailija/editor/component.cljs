@@ -2,6 +2,7 @@
   (:require [ataru.component-data.component :as component]
             [ataru.virkailija.editor.components.toolbar :as toolbar]
             [ataru.virkailija.editor.components.followup-question :refer [followup-question followup-question-overlay]]
+            [ataru.virkailija.temporal :as temporal]
             [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid]]
             [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
             [goog.dom :as gdom]
@@ -262,8 +263,17 @@
     :on-mouse-down #(copy id)}
    "id"])
 
+(defn- header-metadata
+  [metadata]
+  [:span.editor-form__component-main-header-metadata
+   "Luonut " (-> metadata :created-by :name)
+   ", viimeksi muokannut " (when-not (= (-> metadata :created-by :oid)
+                                       (-> metadata :modified-by :oid))
+                             (-> metadata :modified-by :name))
+   " " (-> metadata :modified-by :date temporal/str->googdate temporal/time->date)])
+
 (defn- text-header
-  [label path & {:keys [component-wrapped?
+  [label path metadata & {:keys [component-wrapped?
                         draggable
                         sub-header
                         on-fold-click]
@@ -281,6 +291,7 @@
          [:i.zmdi.zmdi-chevron-up])])
     [:span.editor-form__component-main-header
      label]
+    (when metadata (header-metadata metadata))
     [:span.editor-form__component-sub-header
      {:class (if (some? sub-header)
                "editor-form__component-sub-header-visible"
@@ -447,7 +458,7 @@
     (fn [initial-content path & {:keys [header-label size-label]}]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header header-label path]
+       [text-header header-label path (:metadata initial-content)]
        [:div.editor-form__component-row-wrapper
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Kysymys"
@@ -599,7 +610,7 @@
                         "dropdown" "Pudotusvalikko"
                         "singleChoice" "Painikkeet, yksi valittavissa"
                         "multipleChoice" "Lista, monta valittavissa")]
-           [text-header header path])
+           [text-header header path (:metadata initial-content)])
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__multi-question-wrapper
            [:div.editor-form__text-field-wrapper
@@ -682,14 +693,14 @@
           [:div.editor-form__section_wrapper
            {:class @animation-effect}
            [:div.editor-form__component-wrapper
-            [text-header group-header-text path
+            [text-header group-header-text path (:metadata content)
              :component-wrapped? true
              :sub-header (:label value)
              :on-fold-click #(dispatch [:editor/unfold (:id content)])]]]
           [:div.editor-form__section_wrapper
            {:class @animation-effect}
            [:div.editor-form__component-wrapper
-            [text-header group-header-text path
+            [text-header group-header-text path (:metadata content)
              :component-wrapped? true
              :on-fold-click #(dispatch [:editor/fold (:id content)])]
             [:div.editor-form__text-field-wrapper.editor-form__text-field--section
@@ -739,7 +750,7 @@
     (fn [initial-content path]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header "Infoteksti" path]
+       [text-header "Infoteksti" path (:metadata initial-content)]
        [:div.editor-form__component-row-wrapper
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Otsikko"]
@@ -769,7 +780,7 @@
     (fn [content path children]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header "Vierekkäiset tekstikentät" path]
+       [text-header "Vierekkäiset tekstikentät" path (:metadata content)]
        [:div.editor-form__component-row-wrapper
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Otsikko"]
@@ -796,7 +807,7 @@
     (fn [content path]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header "Tekstikenttä" path :draggable false]
+       [text-header "Tekstikenttä" path (:metadata content) :draggable false]
        [:div.editor-form__component-row-wrapper
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Kysymys"
@@ -845,7 +856,7 @@
     (fn [content path]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header "Liitepyyntö" path]
+       [text-header "Liitepyyntö" path (:metadata content)]
        [:div.editor-form__component-row-wrapper
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Liitteen nimi"
