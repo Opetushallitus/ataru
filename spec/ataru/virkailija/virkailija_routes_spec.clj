@@ -29,7 +29,7 @@
       virkailija-routes
       (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
-(defn- batch-form [id fragments]
+(defn- update-form [id fragments]
   (-> (mock/request :put (str "/lomake-editori/api/forms/" id)
         (json/generate-string fragments))
       (update-in [:headers] assoc "cookie" (login))
@@ -145,7 +145,7 @@
             with-update (-> form
                             (update :content (fn [v] [(first v) (last v)])))
             operations (form-diff/as-operations form with-update)
-            new-content (get-content-from-response (batch-form (:id form) operations))]
+            new-content (get-content-from-response (update-form (:id form) operations))]
         (should= (get-names new-content) ["A" "C"])))
 
   (it "Should handle updates"
@@ -157,7 +157,7 @@
                              (update-in [:content 0 :label :fi] (fn [e] "AA"))
                              (update-in [:content 1 :label :fi] (fn [e] "BB")))
             operations (form-diff/as-operations form with-updates)
-            new-content (get-content-from-response (batch-form (:id form) operations))]
+            new-content (get-content-from-response (update-form (:id form) operations))]
         (should= (get-names new-content) ["AA" "BB" "C"])))
 
   (it "Should handle relocation"
@@ -168,7 +168,7 @@
             with-update (-> form
                             (update :content (fn [v] (swap v 0 1))))
             operations (form-diff/as-operations form with-update)
-            new-content (get-content-from-response (batch-form (:id form) operations))]
+            new-content (get-content-from-response (update-form (:id form) operations))]
         (should= (get-names new-content) ["B" "A" "C"])))
 
   (it "Should handle move out of wrapper element"
@@ -185,7 +185,7 @@
                                                        new-c (concat [a1 wa2] rest)]
                                                    new-c))))
             operations (form-diff/as-operations form with-update)
-            new-content (get-content-from-response (batch-form (:id form) (form-diff/as-operations form with-update)))]
+            new-content (get-content-from-response (update-form (:id form) (form-diff/as-operations form with-update)))]
         (should= (get-structure-as-names new-content) ["A1" ["A2"] "B" "C"])))
 
   (it "Shouldn't allow conflicting updates"
@@ -197,8 +197,8 @@
                              (update-in [:content 0 :label :fi] (fn [e] "AA")))
             with-conflicting-updates (-> form
                              (update-in [:content 0 :label :fi] (fn [e] "ABC")))
-            success-response (batch-form (:id form) (form-diff/as-operations form with-updates))
-            failure-response (batch-form (:id form) (form-diff/as-operations form with-conflicting-updates))]
+            success-response (update-form (:id form) (form-diff/as-operations form with-updates))
+            failure-response (update-form (:id form) (form-diff/as-operations form with-conflicting-updates))]
         (should= 200 (:status success-response))
         (should= 400 (:status failure-response))))
 
