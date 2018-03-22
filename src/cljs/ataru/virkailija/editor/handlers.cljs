@@ -326,7 +326,7 @@
   (let [prev-form @(subscribe [:editor/last-save-snapshot])]
     (seq (form-diff/as-operations prev-form form))))
 
-(defn batch-form-with-fragment [form fragments]
+(defn update-form-with-fragment [form fragments]
   (let [response-promise (async/promise-chan)]
     (put (str "/lomake-editori/api/forms/" (:id form)) fragments
       (fn [db response] (do (async/put! response-promise response)
@@ -343,7 +343,7 @@
         (try
           (if-let [fragments (fragment-updates-from-difference form)]
             (do
-              (asyncm/<? (batch-form-with-fragment form fragments))
+              (asyncm/<? (update-form-with-fragment form fragments))
               (dispatch [:editor/set-save-snapshot form])))
           (catch js/Error error
             (do
