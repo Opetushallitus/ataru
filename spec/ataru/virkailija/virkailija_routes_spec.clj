@@ -188,6 +188,20 @@
             new-content (get-content-from-response (batch-form (:id form) (form-diff/as-operations form with-update)))]
         (should= (get-structure-as-names new-content) ["A1" ["A2"] "B" "C"])))
 
+  (it "Shouldn't allow conflicting updates"
+      (let [resp (post-form (create-form (create-element "A")
+                                         (create-element "B")
+                                         (create-element "C")))
+            form (:body resp)
+            with-updates (-> form
+                             (update-in [:content 0 :label :fi] (fn [e] "AA")))
+            with-conflicting-updates (-> form
+                             (update-in [:content 0 :label :fi] (fn [e] "ABC")))
+            success-response (batch-form (:id form) (form-diff/as-operations form with-updates))
+            failure-response (batch-form (:id form) (form-diff/as-operations form with-conflicting-updates))]
+        (should= 200 (:status success-response))
+        (should= 400 (:status failure-response))))
+
   )
 
 (run-specs)
