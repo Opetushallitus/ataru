@@ -1,10 +1,8 @@
 (ns ataru.virkailija.editor.form-diff)
 
 (defn- index-of-id [id form]
-  (if-let [some-id id]
-    (if-let [some-match (ffirst (filter #(= id (:id (second %))) (map-indexed vector (:content form))))]
-      some-match
-      nil)))
+  (when id
+    (ffirst (filter #(= id (:id (second %))) (map-indexed vector (:content form))))))
 
 (defn- index-of-element [element form]
   (index-of-id (:id element) form))
