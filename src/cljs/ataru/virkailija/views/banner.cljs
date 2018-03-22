@@ -97,6 +97,15 @@
   [:div.local-dev-logout
    [:a {:href "/lomake-editori/auth/logout"} "Kirjaudu ulos"]])
 
+(defn snackbar []
+  (if-let [snackbar-messages @(subscribe [:snackbar-message])]
+    [:div.snackbar
+      (let [status (first snackbar-messages)
+            message (second snackbar-messages)]
+        [:span.snackbar-content
+         [:span status]
+         [:span message]])]))
+
 (defn top-banner []
   (let [banner-type (subscribe [:state-query [:banner :type]])]
     [:div

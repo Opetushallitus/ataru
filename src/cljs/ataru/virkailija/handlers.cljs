@@ -46,3 +46,8 @@
                                             (update db :flash assoc :expired? true)))]
            :timeout      16})
         (assoc-in [:db :flash] (assoc flash :expired? false)))))
+
+(reg-event-db
+  :snackbar-message
+  (fn [db [_ message]]
+    (assoc db :snackbar-message message)))

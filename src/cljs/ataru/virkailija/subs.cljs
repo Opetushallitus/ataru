@@ -12,3 +12,7 @@
   (fn [db [_ path]]
     (get-in db path)))
 
+(re-frame/reg-sub
+  :snackbar-message
+  (fn [db]
+    (get-in db [:snackbar-message])))

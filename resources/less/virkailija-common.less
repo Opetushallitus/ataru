@@ -5,6 +5,46 @@ body {
   background-color: @very-light-gray;
 }
 
+.snackbar {
+  position: fixed;
+  display: block;
+  width: 100%;
+  height: 50px;
+  top: 0;
+  background-color: #F5A623;
+  z-index: 110;
+  cursor: pointer;
+  animation-name: snackbar-appear;
+  animation-duration: 1s;
+}
+@keyframes snackbar-appear {
+  from {height: 0px;}
+  to {height: 50px;}
+}
+.snackbar-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  text-align: center;
+  color: white;
+  padding-bottom: 5px;
+  span {
+    display: block;
+    font-size: 13px;
+    font-weight: bold;
+    line-height: 1.2em;
+  }
+  span:first-child {
+    display: block;
+    font-size: 14px;
+    font-style: italic;
+    font-weight: normal;
+    line-height: 1.2em;
+  }
+  transform: translate(-50%,-50%);
+  -ms-transform: translate(-50%,-50%);
+}
+
 .close-details-button {
   align-items: center;
   background-color: #DFEBEF;
