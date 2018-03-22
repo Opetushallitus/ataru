@@ -104,8 +104,6 @@
 
 (defn edit-form-with-operations
   [id operations session virkailija-tarjonta-service organization-service]
-  (if (empty? operations)
-    (throw (Exception. (str "Batching form " id " with no operations!"))))
   (let [latest-version (-> (form-store/fetch-form id)
                            (dissoc :created-time))
         coerced-form (form-schema/FormCoercer latest-version)
