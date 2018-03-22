@@ -2,7 +2,11 @@
 
 (defn- index-of-id [id form]
   (when id
-    (ffirst (filter #(= id (:id (second %))) (map-indexed vector (:content form))))))
+    (->> (:content form)
+         (keep-indexed (fn [index e]
+                         (when (= id (:id e))
+                           index)))
+         first)))
 
 (defn- index-of-element [element form]
   (index-of-id (:id element) form))
