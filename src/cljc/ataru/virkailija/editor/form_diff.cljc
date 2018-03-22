@@ -46,14 +46,10 @@
                      (throw (ex-info "Mismatching forms! User should update view." {})))))))
 
 (defn find-element-siblings [form element]
-  (loop [content       (:content form)
-         sibling-above nil]
-    (cond (empty? content)
-          nil
-          (= (:id element) (:id (first content)))
-          [sibling-above (first content) (second content)]
-          :else
-          (recur (rest content) (first content)))))
+  (let [[before starting-with] (slit-with #(not= (:id element) (:id %))
+                                          (:content form))]
+    (when (not-empty starting-with)
+      [(last before) (first starting-with) (second starting-with)])))
 
 (defn- element-with-new-siblings [element old-form form]
   (let [old-siblings (find-element-siblings old-form element)
