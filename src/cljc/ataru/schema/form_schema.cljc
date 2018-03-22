@@ -163,11 +163,11 @@
 (s/defschema CreateMoveElement
   {:sibling-above (s/maybe s/Str)
    :sibling-below (s/maybe s/Str)
-   :element (s/if (comp some? :children) WrapperElement BasicElement)})
+   :elements      [(s/if (comp some? :children) WrapperElement BasicElement)]})
 
 (s/defschema CreateMoveGroupOperation
-  {:type (s/eq "create-move-group")
-   :group [CreateMoveElement]})
+  {:type   (s/eq "create-move-group")
+   :groups [CreateMoveElement]})
 
 (s/defschema RenameFormOperation
   {:type (s/eq "rename-form")
