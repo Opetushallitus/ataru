@@ -149,11 +149,9 @@
             (remove-elements latest-form (set (keys existing-elements)))
             groups-with-existing-elements)))
 
-(defn- apply-delete [latest-form delete]
-  (let [id (get-in delete [:element :id])
-        removed-element (:element delete)
-        latest-element (find-element id latest-form)]
-    (if (= removed-element latest-element)
+(defn- apply-delete [latest-form {:keys [element]}]
+  (let [latest-element (find-element (:id element) latest-form)]
+    (if (= element latest-element)
       (remove-element latest-form latest-element)
       (throw (user-feedback-exception "Poistettavasta osiosta oli uudempi versio.")))))
 
