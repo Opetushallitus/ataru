@@ -182,13 +182,13 @@
   {:type   (s/eq "create-move-group")
    :groups [CreateMoveElement]})
 
-(s/defschema RenameFormOperation
-  {:type (s/eq "rename-form")
-   :old-name LocalizedStringOptional
-   :new-name LocalizedStringOptional})
+(s/defschema UpdateFormDetailsOperation
+  {:type (s/eq "update-form-details")
+   :old-form Form
+   :new-form Form})
 
 (def Operation (s/conditional
-                  #(= "rename-form" (:type %)) RenameFormOperation
+                  #(= "update-form-details" (:type %)) UpdateFormDetailsOperation
                   #(= "create-move-group" (:type %)) CreateMoveGroupOperation
                   #(= "update" (:type %)) UpdateElementOperation
                   #(= "delete" (:type %)) DeleteElementOperation))
