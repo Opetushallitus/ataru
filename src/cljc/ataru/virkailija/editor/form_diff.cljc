@@ -35,22 +35,23 @@
 
 (defn- find-groups-of-elements-with-new-siblings
   [old-form form]
-  (let [{:keys [groups latest-group]}
-        (reduce (fn [{:keys [groups latest-group]} element]
-                  (if-let [e (element-with-new-siblings element old-form form)]
-                    {:groups       groups
-                     :latest-group (conj latest-group e)}
-                    (if (empty? latest-group)
-                      {:groups       groups
-                       :latest-group latest-group}
-                      {:groups       (conj groups latest-group)
-                       :latest-group []})))
-                {:groups       []
-                 :latest-group []}
-                (:content form))]
-    (if (empty? latest-group)
-      groups
-      (conj groups latest-group))))
+  (let [add-to-latest-group (fn [{:keys [groups latest-group]} e]
+                              {:groups       groups
+                               :latest-group (conj latest-group e)})
+        start-new-group     (fn [{:keys [groups latest-group]}]
+                              {:groups       (if (empty? latest-group)
+                                               groups
+                                               (conj groups latest-group))
+                               :latest-group []})]
+    (->> (:content form)
+         (reduce (fn [state element]
+                   (if-let [e (element-with-new-siblings element old-form form)]
+                     (add-to-latest-group state e)
+                     (start-new-group state)))
+                 {:groups       []
+                  :latest-group []})
+         start-new-group
+         :groups)))
 
 (defn find-missing-elements
   [old-form form]
