@@ -173,7 +173,8 @@
       :summary "Get content for form"
       :path-params [id :- Long]
       :body [operations [ataru-schema/Operation]]
-      (ok (access-controlled-form/edit-form-with-operations id operations session virkailija-tarjonta-service organization-service)))
+      (access-controlled-form/edit-form-with-operations id operations session virkailija-tarjonta-service organization-service)
+      (ok {}))
 
     (api/DELETE "/forms/:id" {session :session}
       :path-params [id :- Long]
