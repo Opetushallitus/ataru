@@ -106,11 +106,8 @@
 (defn- remove-elements [form elements]
   (assoc form :content (remove #(contains? elements (:id %)) (:content form))))
 
-(defn- apply-update [latest-form update]
-  (let [id (get-in update [:new-element :id])
-        old-element (:old-element update)
-        new-element (:new-element update)
-        latest-element (find-element id latest-form)]
+(defn- apply-update [latest-form {:keys [old-element new-element]}]
+  (let [latest-element (find-element (:id new-element) latest-form)]
     (if (= old-element latest-element)
       (replace-element new-element latest-form)
       (throw (user-feedback-exception "Muokatusta osiosta oli uudempi versio.")))))
