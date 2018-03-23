@@ -31,9 +31,8 @@
           metadata  {:oid  (:oid user-info)
                      :name (:name user-info)
                      :date (temporal/datetime-now)}
-          component (-> (generate-fn)
-                        (assoc-in [:metadata :created-by] metadata)
-                        (assoc-in [:metadata :modified-by] metadata))]
+          component (generate-fn {:created-by  metadata
+                                  :modified-by metadata})]
       (update-in db (util/flatten-path db option-path :followups) (fnil conj []) component))))
 
 (defn followup-question-overlay [option-path]

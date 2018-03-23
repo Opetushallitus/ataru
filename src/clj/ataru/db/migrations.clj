@@ -289,7 +289,6 @@
           (doseq [hakukohde-oid-or-form (or (not-empty hakukohde) ["form"])]
             (println "Creating new hakukohde-review" (:key application) (:id application) "->" hakukohde-oid-or-form state)
             (application-store/save-application-hakukohde-review
-              nil
               key
               hakukohde-oid-or-form
               "processing-state"
