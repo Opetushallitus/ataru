@@ -4,7 +4,6 @@
             [ataru.hakija.application-form-components :refer [editable-fields]]
             [ataru.hakija.hakija-readonly :as readonly-view]
             [ataru.cljs-util :as util :refer [get-translation]]
-            [ataru.hakija.application :refer [application-processing-jatkuva-haku?]]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
             [cljs-time.core :refer [to-default-time-zone now after?]]
@@ -87,9 +86,7 @@
          (when (not-empty apply-dates)
            [:div.application__sub-header-container
             [:span.application__sub-header-dates apply-dates]])
-         (when (and (application-processing-jatkuva-haku?
-                     @application
-                     applied-hakukohteet)
+         (when (and (:in-processing-state-in-jatkuva-haku @application)
                     (not @virkailija-secret))
            [:div.application__sub-header-container
             [:span.application__sub-header-modifying-prevented

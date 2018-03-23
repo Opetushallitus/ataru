@@ -165,7 +165,3 @@
                      (not= (:fieldType %) "adjacentfieldset")))
        (map #(select-keys % [:id :label :children]))))
 
-(defn application-processing-jatkuva-haku? [application applied-hakukohteet]
-  (when-let [application-hakukohde-reviews (:application-hakukohde-reviews application)]
-    (and (some #(get-in % [:hakuaika :jatkuva-haku?]) applied-hakukohteet)
-         (util/application-in-processing? application-hakukohde-reviews))))

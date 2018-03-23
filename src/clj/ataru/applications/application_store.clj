@@ -320,11 +320,17 @@
       (first)
       (unwrap-application)))
 
+(defn get-application-hakukohde-reviews
+  [application-key]
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-application-hakukohde-reviews {:application_key application-key})))
+
 (defn get-latest-application-by-secret [secret]
   (when-let [application (->> (exec-db :db yesql-get-latest-application-by-secret {:secret secret})
                               (first)
                               (unwrap-application))]
-    (assoc application :state (-> (:key application) get-application-review :state))))
+    (-> application
+        (assoc :state (-> (:key application) get-application-review :state))
+        (assoc :application-hakukohde-reviews (get-application-hakukohde-reviews (:key application))))))
 
 (defn get-latest-application-for-virkailija-edit [virkailija-secret]
   (when-let [application (->> (exec-db :db yesql-get-latest-application-by-virkailija-secret {:virkailija_secret virkailija-secret})
@@ -410,10 +416,6 @@
                           :id               username
                           :operation        audit-log/operation-new
                           :organization-oid organization-oid}))))))
-
-(defn get-application-hakukohde-reviews
-  [application-key]
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-application-hakukohde-reviews {:application_key application-key})))
 
 (defn save-application-hakukohde-review
   [virkailija application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state session]

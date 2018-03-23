@@ -278,6 +278,14 @@
       (st/dissoc :person-oid)
       (st/assoc :person Person)))
 
+(s/defschema ApplicationWithPersonAndForm
+  {:application (-> Application
+                    (st/dissoc :person-oid)
+                    (st/assoc :in-processing-state-in-jatkuva-haku s/Bool))
+   :person      Person
+   :form        (s/conditional #(contains? % :tarjonta) FormWithContentAndTarjontaMetadata
+                               :else FormWithContent)})
+
 (s/defschema OmatsivutApplication
   {:oid s/Str
    :key s/Str

@@ -39,8 +39,8 @@
 
 (defn in-processing-state-in-jatkuva-haku?
   [application-hakukohde-reviews applied-hakukohteet]
-  (and (some #(get-in % [:hakuaika :jatkuva-haku?]) applied-hakukohteet)
-       (util/application-in-processing? application-hakukohde-reviews)))
+  (boolean (and (some #(get-in % [:hakuaika :jatkuva-haku?]) applied-hakukohteet)
+                (util/application-in-processing? application-hakukohde-reviews))))
 
 (defn remove-unviewable-answers
   [application form]
@@ -125,6 +125,9 @@
                                         (conj :hakija)
                                         (some? (:person-oid latest-application))
                                         (conj :with-henkilo))
+        application-hakukohde-reviews (some-> latest-application
+                                              :key
+                                              application-store/get-application-hakukohde-reviews)
         form                          (-> application
                                           (:form)
                                           (form-store/fetch-by-id)
@@ -133,10 +136,8 @@
                                           (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)
                                           (hakija-form-service/flag-uneditable-and-unviewable-fields
                                            hakukohteet
-                                           form-roles))
-        application-hakukohde-reviews (some-> latest-application
-                                              :key
-                                              application-store/get-application-hakukohde-reviews)
+                                           form-roles
+                                           (util/application-in-processing? application-hakukohde-reviews)))
         final-application             (if is-modify?
                                         (-> application
                                             (merge-uneditable-answers-from-previous
@@ -165,12 +166,6 @@
       (and (not is-modify?)
            (some #(not (:on (:hakuaika %))) applied-hakukohteet))
       {:passed? false :failures ["Application period is not open."]}
-
-      (and is-modify?
-           (not virkailija-secret)
-           (in-processing-state-in-jatkuva-haku? application-hakukohde-reviews
-                                                 applied-hakukohteet))
-      {:passed false :failures ["Application is in review state and cannot be modified."]}
 
       (not (:passed? validation-result))
       validation-result
@@ -278,6 +273,7 @@
                                                              organization-service
                                                              ohjausparametrit-service
                                                              (:haku application)
+                                                             (util/application-in-processing? (:application-hakukohde-reviews application))
                                                              form-roles)
                                (some? (:form application)) (hakija-form-service/fetch-form-by-key
                                                              (->> application
@@ -291,9 +287,17 @@
         full-application (some-> application
                                  (remove-unviewable-answers form)
                                  attachments-metadata->answers
-                                 (assoc :person person)
-                                 (dissoc :person-oid))]
-    [full-application secret-expired? lang-override]))
+                                 (dissoc :person-oid :application-hakukohde-reviews)
+                                 (assoc :in-processing-state-in-jatkuva-haku
+                                        (in-processing-state-in-jatkuva-haku? (:application-hakukohde-reviews application)
+                                                                              (filter #(contains? (set (:hakukohde application)) (:oid %))
+                                                                                (-> form :tarjonta :hakukohteet)))))]
+    [(when full-application
+       {:application full-application
+        :person      person
+        :form        form})
+     secret-expired?
+     lang-override]))
 
 (defn create-new-secret-and-send-link
   [tarjonta-service old-secret]
