@@ -104,13 +104,11 @@
 
 (defn edit-form-with-operations
   [id operations session virkailija-tarjonta-service organization-service]
-  (try
     (let [latest-version (-> (form-store/fetch-form id)
                              (dissoc :created-time))
           coerced-form   (form-schema/form-coercer latest-version)
           updated-form   (form-diff/apply-operations coerced-form operations)]
-      (post-form updated-form session virkailija-tarjonta-service organization-service))
-    (catch Exception e (throw (user-feedback-exception (.getMessage e))))))
+      (post-form updated-form session virkailija-tarjonta-service organization-service)))
 
 (defn delete-form [form-id session virkailija-tarjonta-service organization-service]
   (let [form (form-store/fetch-latest-version form-id)]

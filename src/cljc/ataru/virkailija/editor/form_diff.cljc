@@ -1,5 +1,9 @@
 (ns ataru.virkailija.editor.form-diff)
 
+(defn- user-feedback-exception
+  [message]
+  (ex-info message {:type :user-feedback-exception}))
+
 (defn is-updated-in [old-element element]
   (and old-element
        (not (= old-element element))))
@@ -108,7 +112,7 @@
         latest-element (find-element id latest-form)]
     (if (= old-element latest-element)
       (replace-element new-element latest-form)
-      (throw (ex-info (str "Update on modified element " id " is disallowed!") {})))))
+      (throw (user-feedback-exception "Muokatusta osiosta oli uudempi versio.")))))
 
 (defn- replace-if-existing-element [existing-elements element]
   (if-let [existing (get existing-elements (:id element))]
@@ -132,7 +136,7 @@
                        (or (and (nil? sibling-below) (empty? after))
                            (= sibling-below (:id (first after)))))
                 (concat before elements after)
-                (throw (ex-info "Cannot move between non-existing elements!" {})))))))
+                (throw (user-feedback-exception "Lomakkeen rakenteesta oli uudempi versio.")))))))
 
 (defn- apply-create-move-group [latest-form create-move-group]
   (let [element-ids                   (->> (:groups create-move-group)
@@ -153,7 +157,7 @@
         latest-element (find-element id latest-form)]
     (if (= removed-element latest-element)
       (remove-element latest-form latest-element)
-      (throw (ex-info (str "Deleting modified element " id " is disallowed!") {})))))
+      (throw (user-feedback-exception "Poistettavasta osiosta oli uudempi versio.")))))
 
 (defn- apply-update-form-details [latest-form update-form-details]
   (let [old-form (:old-form update-form-details)
@@ -161,7 +165,7 @@
         current-form (form-details latest-form)]
     (if (= old-form current-form)
       (merge latest-form new-form)
-      (throw (ex-info "Updating modified form details is not permitted!" {})))))
+      (throw (user-feedback-exception "Lomakkeen tiedoista oli uudempi versio.")))))
 
 (defn- apply-operation [latest-form operation]
   (condp = (:type operation)
