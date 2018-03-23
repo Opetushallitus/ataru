@@ -136,7 +136,7 @@
                                         ; use :key set in db just to be sure it never is nil
                                       (assoc :key (:key latest-version))
                                       (update :deleted identity))
-                                   conn)
+                                  conn)
                 log-id           (:created-by new-form)]
             (audit-log/log {:new              new-form
                             :old              latest-version

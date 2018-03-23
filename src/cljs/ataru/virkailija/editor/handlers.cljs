@@ -190,8 +190,7 @@
                (assoc-in [:editor :used-by-haut :fetching?] true)
                (assoc-in [:editor :used-by-haut :error?] false))
          :fetch-haut-with-hakukohteet [hakukohteet-promise organization-oids haku-oids]
-         :fetch-hakukohde-groups [hakukohderyhmat-promise]
-         }))))
+         :fetch-hakukohde-groups [hakukohderyhmat-promise]}))))
 
 (reg-event-db
   :editor/handle-user-info
@@ -484,9 +483,8 @@
     ; moving component from root-level into a component-group
     [[a] [b :children xb]]
     (if (-> b (< a))
-      [b :children xb]       ; topwards
-      [(dec b) :children xb] ; bottomwards
-      )
+      [b :children xb]        ; topwards
+      [(dec b) :children xb]) ; bottomwards
 
     :else target-path))
 

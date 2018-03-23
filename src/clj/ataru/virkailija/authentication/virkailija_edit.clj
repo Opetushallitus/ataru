@@ -14,7 +14,7 @@
 
 (defn create-virkailija-credentials [session application-key]
   (let [secret (str (UUID/randomUUID))]
-    (db/exec :db yesql-upsert-virkailija-credentials<! {:oid             (:oid session)
+    (db/exec :db yesql-upsert-virkailija-credentials<! {:oid             (-> session :identity :oid)
                                                         :secret          secret
                                                         :application_key application-key})))
 
@@ -36,17 +36,17 @@
   {:pre [(-> review-setting :setting-kwd u/not-blank?)
          (-> review-setting :enabled some?)]}
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [virkailija (get-virkailija-for-update (:oid session) conn)
+    (let [virkailija (get-virkailija-for-update (-> session :identity :oid) conn)
           settings   (-> virkailija
                          :settings
                          (assoc-in [:review (:setting-kwd review-setting)] (:enabled review-setting)))]
-      (yesql-update-virkailija-settings! {:oid      (:oid session)
+      (yesql-update-virkailija-settings! {:oid      (-> session :identity :oid)
                                           :settings settings}
         {:connection conn})
       review-setting)))
 
 (defn get-review-settings [session]
-  (or (->> (db/exec :db yesql-get-virkailija {:oid (:oid session)})
+  (or (->> (db/exec :db yesql-get-virkailija {:oid (-> session :identity :oid)})
            (eduction (map (partial te/transform-keys t/->kebab-case-keyword))
              (map :settings))
            (first))

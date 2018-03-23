@@ -47,14 +47,12 @@
                                      initial-state)]
     (log/info (str "Started information request email job with job id " job-id ", initial state: " initial-state))))
 
-(defn store [information-request
-             session]
+(defn store [information-request session]
   {:pre [(-> information-request :subject u/not-blank?)
          (-> information-request :message u/not-blank?)
          (-> information-request :application-key u/not-blank?)]}
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [virkailija          (virkailija-edit/upsert-virkailija session)
-          information-request (information-request-store/add-information-request information-request virkailija conn)]
+    (let [information-request (information-request-store/add-information-request information-request session conn)]
       (audit-log/log {:new       information-request
                       :operation audit-log/operation-new
                       :id        (-> session :identity :username)})
