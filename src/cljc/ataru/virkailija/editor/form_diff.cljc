@@ -78,9 +78,25 @@
    :old-name (:name old-form)
    :new-name (:name form)})
 
+(defn- form-without-content [form]
+  (-> form
+      (assoc :content [])
+      (dissoc :application-count)
+      (dissoc :created-by)
+      (dissoc :organization-oid)
+      (dissoc :created-time)))
+
+(defn as-update-form-details-operation [old-form form]
+  (let [old-form-details (form-without-content old-form)
+        new-form-details (form-without-content form)]
+    (when-not (= old-form-details new-form-details)
+      {:type        "update-form-details"
+       :old-form old-form-details
+       :new-form new-form-details})))
+
 (defn as-operations [old-form form]
   (remove nil?
-    (flatten [(if (= (:name old-form) (:name form)) nil (as-rename-operation old-form form))
+    (flatten [(as-update-form-details-operation old-form form)
               (map #(as-update-operation old-form %) (find-updated-elements old-form form))
               (map #(as-delete-operation %) (find-missing-elements old-form form))
               (when-let [elements-with-new-siblings (seq (find-groups-of-elements-with-new-siblings old-form form))]
@@ -149,20 +165,20 @@
       (remove-element latest-form latest-element)
       (throw (ex-info (str "Deleting modified element " id " is disallowed!") {})))))
 
-(defn- apply-rename-form [latest-form rename]
-  (let [old-name (:old-name rename)
-        new-name (:new-name rename)
-        current-name (:name latest-form)]
-    (if (= old-name current-name)
-      (assoc latest-form :name new-name)
-      (throw (ex-info "Renaming modified name is disallowed!" {})))))
+(defn- apply-update-form-details [latest-form update-form-details]
+  (let [old-form (:old-form update-form-details)
+        new-form (:new-form update-form-details)
+        current-form (form-without-content latest-form)]
+    (if (= old-form current-form)
+      (merge latest-form (-> new-form (dissoc :content)))
+      (throw (ex-info "Updating modified form details is not permitted!" {})))))
 
 (defn- apply-operation [latest-form operation]
   (condp = (:type operation)
          "update" (apply-update latest-form operation)
          "create-move-group" (apply-create-move-group latest-form operation)
          "delete" (apply-delete latest-form operation)
-         "rename-form" (apply-rename-form latest-form operation)
+         "update-form-details" (apply-update-form-details latest-form operation)
          latest-form))
 
 (defn apply-operations [latest-form operations]

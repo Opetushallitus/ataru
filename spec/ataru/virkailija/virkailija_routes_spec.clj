@@ -202,6 +202,20 @@
         (should= 200 (:status success-response))
         (should= 400 (:status failure-response))))
 
+  (it "Should allow updating form details"
+      (let [resp (post-form (create-form (create-element "A")
+                                         (create-element "B")
+                                         (create-element "C")))
+            form (:body resp)
+            with-updates (-> form (assoc :name {:fi "A" :en "B"}))
+            operations (form-diff/as-operations form with-updates)
+            success-response (update-form (:id form) operations)
+            new-content (get-content-from-response success-response)
+            ]
+        (should= 200 (:status success-response))
+        (should= ["A" "B" "C"] (get-names new-content))
+        (should= {:fi "A" :en "B"} (get-in success-response [:body :name]))))
+  
   )
 
 (run-specs)
