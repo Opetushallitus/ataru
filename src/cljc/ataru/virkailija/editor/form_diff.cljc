@@ -73,22 +73,12 @@
    :old-element (find-element (:id element) old-form)
    :new-element element})
 
-(defn as-rename-operation [old-form form]
-  {:type        "rename-form"
-   :old-name (:name old-form)
-   :new-name (:name form)})
-
-(defn- form-without-content [form]
-  (-> form
-      (assoc :content [])
-      (dissoc :application-count)
-      (dissoc :created-by)
-      (dissoc :organization-oid)
-      (dissoc :created-time)))
+(defn- form-details [form]
+  (select-keys form [:name :languages]))
 
 (defn as-update-form-details-operation [old-form form]
-  (let [old-form-details (form-without-content old-form)
-        new-form-details (form-without-content form)]
+  (let [old-form-details (form-details old-form)
+        new-form-details (form-details form)]
     (when-not (= old-form-details new-form-details)
       {:type        "update-form-details"
        :old-form old-form-details
@@ -168,9 +158,9 @@
 (defn- apply-update-form-details [latest-form update-form-details]
   (let [old-form (:old-form update-form-details)
         new-form (:new-form update-form-details)
-        current-form (form-without-content latest-form)]
+        current-form (form-details latest-form)]
     (if (= old-form current-form)
-      (merge latest-form (-> new-form (dissoc :content)))
+      (merge latest-form new-form)
       (throw (ex-info "Updating modified form details is not permitted!" {})))))
 
 (defn- apply-operation [latest-form operation]

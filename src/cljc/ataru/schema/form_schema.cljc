@@ -182,10 +182,14 @@
   {:type   (s/eq "create-move-group")
    :groups [CreateMoveElement]})
 
+(s/defschema FormDetails {
+                   :name                               LocalizedStringOptional
+                   (s/optional-key :languages)         [s/Str]})
+
 (s/defschema UpdateFormDetailsOperation
   {:type (s/eq "update-form-details")
-   :old-form Form
-   :new-form Form})
+   :old-form FormDetails
+   :new-form FormDetails})
 
 (def Operation (s/conditional
                   #(= "update-form-details" (:type %)) UpdateFormDetailsOperation
