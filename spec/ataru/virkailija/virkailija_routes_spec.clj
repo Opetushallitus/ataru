@@ -134,6 +134,10 @@
 (defn- get-content-from-response [response]
   (get-in response [:body :content]))
 
+(defn- update-and-get-form [id operations]
+  (update-form id operations)
+  (get-form id))
+
 (describe "Storing a fragment"
           (tags :unit :route-store-fragment)
 
@@ -145,7 +149,7 @@
             with-update (-> form
                             (update :content (fn [v] [(first v) (last v)])))
             operations (form-diff/as-operations form with-update)
-            new-content (get-content-from-response (update-form (:id form) operations))]
+            new-content (get-content-from-response (update-and-get-form (:id form) operations))]
         (should= ["A" "C"] (get-names new-content))))
 
   (it "Should handle updates"
@@ -157,7 +161,7 @@
                              (update-in [:content 0 :label :fi] (fn [e] "AA"))
                              (update-in [:content 1 :label :fi] (fn [e] "BB")))
             operations (form-diff/as-operations form with-updates)
-            new-content (get-content-from-response (update-form (:id form) operations))]
+            new-content (get-content-from-response (update-and-get-form (:id form) operations))]
         (should= ["AA" "BB" "C"] (get-names new-content))))
 
   (it "Should handle relocation"
@@ -168,7 +172,7 @@
             with-update (-> form
                             (update :content (fn [v] (swap v 0 1))))
             operations (form-diff/as-operations form with-update)
-            new-content (get-content-from-response (update-form (:id form) operations))]
+            new-content (get-content-from-response (update-and-get-form (:id form) operations))]
         (should= ["B" "A" "C"] (get-names new-content))))
 
   (it "Should handle move out of wrapper element"
@@ -185,7 +189,7 @@
                                                        new-c (concat [a1 wa2] rest)]
                                                    new-c))))
             operations (form-diff/as-operations form with-update)
-            new-content (get-content-from-response (update-form (:id form) (form-diff/as-operations form with-update)))]
+            new-content (get-content-from-response (update-and-get-form (:id form) (form-diff/as-operations form with-update)))]
         (should= ["A1" ["A2"] "B" "C"] (get-structure-as-names new-content))))
 
   (it "Shouldn't allow conflicting updates"
@@ -209,10 +213,8 @@
             form (:body resp)
             with-updates (-> form (assoc :name {:fi "A" :en "B"}))
             operations (form-diff/as-operations form with-updates)
-            success-response (update-form (:id form) operations)
-            new-content (get-content-from-response success-response)
-            ]
-        (should= 200 (:status success-response))
+            success-response (update-and-get-form (:id form) operations)
+            new-content (get-content-from-response success-response)]
         (should= ["A" "B" "C"] (get-names new-content))
         (should= {:fi "A" :en "B"} (get-in success-response [:body :name]))))
   
