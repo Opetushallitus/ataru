@@ -44,6 +44,9 @@
 (defn time->long [google-date]
   (coerce/to-long google-date))
 
+(defn datetime-now []
+  (f/unparse (f/formatters :date-time-no-ms) (c/now)))
+
 (defn parse-times [expr]
   (let [f (fn [[k v]]
             (if-let [date (str->googdate v)]
