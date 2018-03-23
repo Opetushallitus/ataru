@@ -7,7 +7,10 @@
             [ataru.db.migrations :as migrations]
             [ataru.fixtures.db.browser-test-db :refer [insert-test-form]]
             [ataru.forms.form-store :as form-store]
-            [ataru.applications.application-store :as application-store]))
+            [ataru.applications.application-store :as application-store]
+            [yesql.core :as sql]))
+
+(sql/defqueries "sql/virkailija-queries.sql")
 
 (def virkailija-routes (->
                         (v/new-handler)
@@ -40,8 +43,13 @@
     (should-not-contain header headers)))
 
 (defn create-fake-virkailija-credentials [application-key]
-  (with-redefs [ataru.organization-service.ldap-client/get-virkailija-by-username (fn [username] {:employeeNumber "1213" :givenName "testi" :sn "tunkki"})]
-    (ataru.virkailija.authentication.virkailija-edit/create-virkailija-credentials {:identity {:username "tsers"}} application-key)))
+  (db/exec :db yesql-upsert-virkailija<! {:oid        "1213"
+                                          :first_name "Hemuli"
+                                          :last_name  "Hemuli?"})
+  (ataru.virkailija.authentication.virkailija-edit/create-virkailija-credentials {:identity {:oid        "1213"
+                                                                                             :username   "tsers"
+                                                                                             :first-name "Hemuli"
+                                                                                             :last-name  "Hemuli?"}} application-key))
 
 (defn get-latest-form
   [form-name]

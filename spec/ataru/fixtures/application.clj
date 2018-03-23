@@ -1,8 +1,14 @@
 (ns ataru.fixtures.application
   (:require [clj-time.core :as c]))
 
-(def form {
-           :id 703,
+(def metadata {:created-by  {:oid  "1.2.246.562.24.1000000"
+                             :date "2018-03-21T15:45:29.23+02:00"
+                             :name "Teppo Testinen"}
+               :modified-by {:oid  "1.2.246.562.24.1000000"
+                             :date "2018-03-22T07:55:08Z"
+                             :name "Teppo Testinen"}})
+
+(def form {:id 703,
            :name {:fi "Test fixture what is this"},
            :key "abcdefghjkl"
            :created-by "DEVELOPER"
@@ -14,34 +20,41 @@
              [{:id "G__19",
                :label {:fi "Eka kysymys", :sv ""},
                :fieldType "textField",
-               :fieldClass "formField"}
+               :fieldClass "formField"
+               :metadata metadata}
               {:id "G__17",
                :label {:fi "Toka kysymys", :sv ""},
                :params {},
                :fieldType "textField",
-               :fieldClass "formField"}
+               :fieldClass "formField"
+               :metadata metadata}
               {:id "G__24",
                :label {:fi "Kolmas kysymys", :sv ""},
                :params {},
                :fieldType "textField",
-               :fieldClass "formField"}
+               :fieldClass "formField"
+               :metadata metadata}
               {:id "G__36",
                :label {:fi "Neljas kysymys", :sv ""},
                :params {},
                :fieldType "textField",
-               :fieldClass "formField"}],
+               :fieldClass "formField"
+               :metadata metadata}],
              :fieldType "fieldset",
-             :fieldClass "wrapperElement"}
+             :fieldClass "wrapperElement"
+             :metadata metadata}
             {:id "G__14",
              :label {:fi "Viides kysymys", :sv ""},
              :params {},
              :fieldType "textField",
-             :fieldClass "formField"}
+             :fieldClass "formField"
+             :metadata metadata}
             {:id "G__47",
              :label {:fi "Kuudes kysymys", :sv ""},
              :params {},
              :fieldType "textField",
-             :fieldClass "formField"}]})
+             :fieldClass "formField"
+             :metadata metadata}]})
 
 ;; NOTE: Unlike above, these are in database format, lowercase keys. This is converted in application-store to
 ;; the format used in REST callls
@@ -255,13 +268,13 @@
 
 (def dropdown-followups
   [{:key      "dropdown-followup-1"
-   :value     "followup-attachment"
-   :fieldType "attachment"
-   :label     {:fi "Dropdown liite" :sv ""}}
-  {:key       "dropdown-followup-2"
-   :value     "toka"
-   :fieldType "singleChoice"
-   :label     {:fi "Dropdown painikkeet required" :sv ""}}])
+    :value     "followup-attachment"
+    :fieldType "attachment"
+    :label     {:fi "Dropdown liite" :sv ""}}
+   {:key       "dropdown-followup-2"
+    :value     "toka"
+    :fieldType "singleChoice"
+    :label     {:fi "Dropdown painikkeet required" :sv ""}}])
 
 (def person-info-form-application-with-more-modified-answers
   (update person-info-form-application-with-modified-answers :answers (comp vec concat) dropdown-followups))

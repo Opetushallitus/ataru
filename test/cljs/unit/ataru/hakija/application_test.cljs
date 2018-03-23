@@ -5,6 +5,12 @@
                                               create-application-to-submit
                                               extract-wrapper-sections]]
             [ataru.util :as util]))
+(def metadata {:created-by  {:oid  "1.2.246.562.24.1000000"
+                             :date "2018-03-21T15:45:29.23+02:00"
+                             :name "Teppo Testinen"}
+               :modified-by {:oid  "1.2.246.562.24.1000000"
+                             :date "2018-03-22T07:55:08Z"
+                             :name "Teppo Testinen"}})
 
 (def form1
   {:id 37,
@@ -18,20 +24,24 @@
                           :params {:size "S"},
                           :validators ["required"]
                           :fieldType "textField",
-                          :fieldClass "formField"}
+                          :fieldClass "formField"
+                          :metadata metadata}
                          {:id "G__14",
                           :label {:fi "kenttä2", :sv ""},
                           :params {:size "M"},
                           :validators ["some-validator"]
                           :fieldType "textField",
-                          :fieldClass "formField"}],
+                          :fieldClass "formField"
+                          :metadata metadata}],
               :fieldType "fieldset",
-              :fieldClass "wrapperElement"}
+              :fieldClass "wrapperElement"
+              :metadata metadata}
              {:id "G__25",
               :label {:fi "ulkokenttä", :sv ""},
               :params {:size "L"},
               :fieldType "textField",
-              :fieldClass "formField"}]})
+              :fieldClass "formField"
+              :metadata metadata}]})
 
 (def person-info-form
   {:id 22,
@@ -39,29 +49,34 @@
    :created-by "DEVELOPER",
    :created-time "2016-07-15T13:48:17.815+03:00",
    :content
-   [{:fieldClass "wrapperElement",
+   [{:fieldClass "wrapperElement"
+                 :metadata metadata,
      :id "5febd7b0-75f0-462c-b9a4-6cac6a4bec88",
      :fieldType "fieldset",
      :children
-                 [{:fieldClass "wrapperElement",
+                 [{:fieldClass "wrapperElement"
+                               :metadata metadata,
                    :id "399d9123-f15f-402a-9ce9-2749d0578399",
                    :fieldType "rowcontainer",
                    :children
                                [{:label {:fi "Etunimet", :sv "Förnamn"},
-                                 :fieldClass "formField",
+                                 :fieldClass "formField"
+                                        :metadata metadata,
                                  :id "380913e2-8c93-494c-bd86-57000ed50ae8",
                                  :params {},
                                  :validators ["required"]
                                  :fieldType "textField"}
                                 {:label {:fi "Kutsumanimi", :sv "Smeknamn"},
-                                 :fieldClass "formField",
+                                 :fieldClass "formField"
+                                        :metadata metadata,
                                  :id "7c8388f0-7ccb-4706-8630-15405b141552",
                                  :params {:size "S"},
                                  :validators ["required"]
                                  :fieldType "textField"}],
                    :params {}}
                   {:label {:fi "Sukunimi", :sv "Efternamn"},
-                   :fieldClass "formField",
+                   :fieldClass "formField"
+                          :metadata metadata,
                    :id "d2dc3e2e-c130-4fd4-8509-7c8fbf4d1c9e",
                    :params {},
                    :validators ["required"]
@@ -69,11 +84,13 @@
      :params {},
      :label {:fi "Henkilötiedot", :sv "Personlig information"},
      :module "person-info"}
-    {:fieldClass "wrapperElement",
+    {:fieldClass "wrapperElement"
+                 :metadata metadata,
      :fieldType "fieldset",
      :id "036a71bb-01dc-440e-8c05-80eea0ca9640",
      :label {:fi "Osion nimi", :sv "Avsnitt namn"},
-     :children [{:fieldClass "formField",
+     :children [{:fieldClass "formField"
+                             :metadata metadata,
                    :fieldType "textField",
                    :label {:fi "Random question", :sv ""},
                    :id "839cb685-749a-46da-b215-842bc13ed542",
@@ -86,41 +103,48 @@
                       :params {:size "S"},
                       :validators ["required"]
                       :fieldType "textField",
-                      :fieldClass "formField"}
-                     {:id "G__14",
-                      :label {:fi "kenttä2", :sv ""},
-                      :params {:size "M"},
-                      :validators ["some-validator"]
-                      :fieldType "textField",
-                      :fieldClass "formField"}
-                     {:id "G__25",
-                      :label {:fi "ulkokenttä", :sv ""},
-                      :params {:size "L"},
-                      :fieldType "textField",
-                      :fieldClass "formField"}]
+                      :fieldClass "formField"
+                     :metadata metadata}
+                    {:id "G__14",
+                     :label {:fi "kenttä2", :sv ""},
+                     :params {:size "M"},
+                     :validators ["some-validator"]
+                     :fieldType "textField",
+                     :fieldClass "formField"
+                     :metadata metadata}
+                    {:id "G__25",
+                     :label {:fi "ulkokenttä", :sv ""},
+                     :params {:size "L"},
+                     :fieldType "textField",
+                     :fieldClass "formField"
+                     :metadata metadata}]
         actual (util/flatten-form-fields (:content form1))]
     (is (= expected actual))))
 
 (deftest flattens-row-container-answers
   (let [expected [{:label {:fi "Etunimet", :sv "Förnamn"},
-                   :fieldClass "formField",
+                   :fieldClass "formField"
+                          :metadata metadata,
                    :id "380913e2-8c93-494c-bd86-57000ed50ae8",
                    :params {},
                    :validators ["required"]
                    :fieldType "textField"}
                   {:label {:fi "Kutsumanimi", :sv "Smeknamn"},
-                   :fieldClass "formField",
+                   :fieldClass "formField"
+                          :metadata metadata,
                    :id "7c8388f0-7ccb-4706-8630-15405b141552",
                    :params {:size "S"},
                    :validators ["required"]
                    :fieldType "textField"}
                   {:label {:fi "Sukunimi", :sv "Efternamn"},
-                   :fieldClass "formField",
+                   :fieldClass "formField"
+                          :metadata metadata,
                    :id "d2dc3e2e-c130-4fd4-8509-7c8fbf4d1c9e",
                    :params {},
                    :validators ["required"]
                    :fieldType "textField"}
-                  {:fieldClass "formField",
+                  {:fieldClass "formField"
+                               :metadata metadata,
                    :fieldType "textField",
                    :label {:fi "Random question", :sv ""},
                    :id "839cb685-749a-46da-b215-842bc13ed542",
@@ -191,14 +215,17 @@
                           :params {:size "S"},
                           :validators ["required"]
                           :fieldType "textField",
-                          :fieldClass "formField"}
+                          :fieldClass "formField"
+                          :metadata metadata}
                          {:id "f2",
                           :label {:fi "kenttä2", :sv ""},
                           :params {:size "M"},
                           :fieldType "textField",
-                          :fieldClass "formField"}],
+                          :fieldClass "formField"
+                          :metadata metadata}],
               :fieldType "fieldset",
-              :fieldClass "wrapperElement"}
+              :fieldClass "wrapperElement"
+              :metadata metadata}
              {:id "w2",
               :label {:fi "osio2", :sv ""},
               :children [{:id "f3",
@@ -206,14 +233,17 @@
                           :params {:size "S"},
                           :validators ["required"]
                           :fieldType "textField",
-                          :fieldClass "formField"}],
+                          :fieldClass "formField"
+                          :metadata metadata}],
               :fieldType "fieldset",
-              :fieldClass "wrapperElement"}
+              :fieldClass "wrapperElement"
+              :metadata metadata}
              {:id "f4",
               :label {:fi "ulkokenttä", :sv ""},
               :params {:size "L"},
               :fieldType "textField",
-              :fieldClass "formField"}]})
+              :fieldClass "formField"
+              :metadata metadata}]})
 
 (deftest wrappers-are-extracted-correctly
   (let [result (extract-wrapper-sections form2)
@@ -225,12 +255,14 @@
                       :params     {:size "S"},
                       :validators ["required"],
                       :fieldType  "textField",
-                      :fieldClass "formField"}
+                      :fieldClass "formField"
+                      :metadata metadata}
                      {:id         "f2",
                       :label      {:fi "kenttä2", :sv ""},
                       :params     {:size "M"},
                       :fieldType  "textField",
-                      :fieldClass "formField"}]}
+                      :fieldClass "formField"
+                      :metadata metadata}]}
                    {:id "w2",
                     :label {:fi "osio2", :sv ""},
                     :children
@@ -239,7 +271,8 @@
                       :params {:size "S"},
                       :validators ["required"],
                       :fieldType "textField",
-                      :fieldClass "formField"}]})]
+                      :fieldClass "formField"
+                      :metadata metadata}]})]
     (is (= expected result))))
 
 (def

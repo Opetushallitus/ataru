@@ -26,7 +26,8 @@
   (get-all-organizations [this direct-organizations-for-user]
     "Gets a flattened organization hierarhy based on direct organizations")
   (get-hakukohde-groups [this]
-    "Gets all hakukohde groups"))
+    "Gets all hakukohde groups")
+  (get-organizations-for-oids [this organization-oids]))
 
 (defn get-orgs-from-client [cas-client direct-oids]
   (flatten (map #(org-client/get-organizations cas-client %) direct-oids)))
@@ -67,18 +68,6 @@
   (let [groups (get-groups-from-cache-or-client group-cache cas-client)]
     (get groups group-oid (unknown-group group-oid))))
 
-(defn get-organizations-for-oids [organization-service organization-oids]
-  (let [[group-oids normal-org-oids] ((juxt filter remove) group-oid? organization-oids)
-        ;; OPH org doesn't exist in organization service, hence we'll have to filter out nil values
-        normal-orgs                  (remove nil? (map #(org-client/get-organization (:cas-client organization-service) %)
-                                                       normal-org-oids))
-        groups                       (map (partial
-                                           get-group
-                                           (:group-cache organization-service)
-                                           (:cas-client organization-service))
-                                          group-oids)]
-      (concat normal-orgs groups)))
-
 (defn- hakukohderyhmat-from-groups [groups]
   (let [hakukohde-groups (filter :hakukohderyhma? groups)]
     (map #(select-keys % [:oid :name]) hakukohde-groups)))
@@ -108,6 +97,18 @@
       ;; Include groups as-is in the result:
       (concat groups flattened-hierarchy)))
 
+  (get-organizations-for-oids [this organization-oids]
+    (let [[group-oids normal-org-oids] ((juxt filter remove) group-oid? organization-oids)
+          ;; OPH org doesn't exist in organization service, hence we'll have to filter out nil values
+          normal-orgs (remove nil? (map #(org-client/get-organization (:cas-client this) %)
+                                        normal-org-oids))
+          groups      (map (partial
+                             get-group
+                             (:group-cache this)
+                             (:cas-client this))
+                           group-oids)]
+      (concat normal-orgs groups)))
+
   (start [this]
     (-> this
         (assoc :cas-client (cas-client/new-client "/organisaatio-service"))
@@ -119,23 +120,11 @@
     (.close (:ldap-connection this))
     (assoc this :all-orgs-cache nil)))
 
-(def fake-org-by-oid
-  {"1.2.246.562.10.0439845" {:name {:fi "Test org"}, :oid "1.2.246.562.10.0439845" :type :organization}
-   "1.2.246.562.28.1"       {:name {:fi "Test group"}, :oid "1.2.246.562.28.1" :type :group}
-   "1.2.246.562.10.0439846" {:name {:fi "Test org 2"}, :oid "1.2.246.562.10.0439846" :type :organization}
-   "1.2.246.562.28.2"       {:name {:fi "Test group 2"}, :oid "1.2.246.562.28.2" :type :group}})
-
-(def fake-orgs
-  {"DEVELOPER"                        [(get fake-org-by-oid "1.2.246.562.10.0439845")
-                                       (get fake-org-by-oid "1.2.246.562.28.1")]
-   "USER-WITH-HAKUKOHDE-ORGANIZATION" [(get fake-org-by-oid "1.2.246.562.10.0439846")
-                                       (get fake-org-by-oid "1.2.246.562.28.2")]})
-
 (defn fake-orgs-by-root-orgs [root-orgs]
   (some->> root-orgs
            (map :oid)
            (map name)
-           (map #(get fake-org-by-oid %))))
+           (map #(get ldap-client/fake-org-by-oid %))))
 
 ;; Test double for UI tests
 (defrecord FakeOrganizationService []
@@ -149,12 +138,15 @@
        (org-client/fake-hakukohderyhma 4)]))
 
   (get-direct-organizations-for-rights [this user-name rights]
-    (let [orgs (get fake-orgs user-name)]
+    (let [orgs (get ldap-client/fake-orgs user-name)]
       {:form-edit         orgs
        :view-applications orgs
        :edit-applications orgs}))
   (get-all-organizations [this root-orgs]
-    (fake-orgs-by-root-orgs root-orgs)))
+    (fake-orgs-by-root-orgs root-orgs))
+
+  (get-organizations-for-oids [this organization-oids]
+    (map ldap-client/fake-org-by-oid organization-oids)))
 
 (defn new-organization-service []
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode
