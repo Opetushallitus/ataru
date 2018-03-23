@@ -164,6 +164,20 @@
             new-content (get-content-from-response (update-and-get-form (:id form) operations))]
         (should= ["AA" "BB" "C"] (get-names new-content))))
 
+  (it "Should handle (different users) update and relocate"
+      (let [resp (post-form (create-form (create-element "A")
+                                         (create-element "B")
+                                         (create-element "C")))
+            form (:body resp)
+            with-updates (-> form
+                             (update-in [:content 0 :label :fi] (fn [e] "AA")))
+            with-relocate (-> form
+                              (update :content (fn [v] (swap v 0 1))))
+            after-update (update-form (:id form) (form-diff/as-operations form with-updates))
+            after-relocate (update-form (:id form) (form-diff/as-operations form with-relocate))
+            new-content (get-content-from-response (get-form (:id form)))]
+        (should= ["B" "AA" "C"] (get-names new-content))))
+
   (it "Should handle relocation"
       (let [resp (post-form (create-form (create-element "A")
                                          (create-element "B")
