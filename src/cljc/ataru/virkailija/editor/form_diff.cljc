@@ -155,10 +155,8 @@
       (remove-element latest-form latest-element)
       (throw (user-feedback-exception "Poistettavasta osiosta oli uudempi versio.")))))
 
-(defn- apply-update-form-details [latest-form update-form-details]
-  (let [old-form (:old-form update-form-details)
-        new-form (:new-form update-form-details)
-        current-form (form-details latest-form)]
+(defn- apply-update-form-details [latest-form {:keys [old-form new-form]}]
+  (let [current-form (form-details latest-form)]
     (if (= old-form current-form)
       (merge latest-form new-form)
       (throw (user-feedback-exception "Lomakkeen tiedoista oli uudempi versio.")))))
