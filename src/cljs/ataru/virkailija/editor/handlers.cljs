@@ -350,7 +350,8 @@
     (put (str "/lomake-editori/api/forms/" (:id form)) fragments
       (fn [db response] (do (async/put! response-promise response)
                             db))
-      :override-args {:error-handler (fn [error]
+      :override-args {:skip-parse-times? true
+                      :error-handler (fn [error]
                                        (async/put! response-promise (js/Error. error)))})
     response-promise))
 
