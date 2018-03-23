@@ -487,8 +487,8 @@
 
 (s/defschema VirkailijaSettings {:review {s/Keyword s/Bool}})
 
-(s/defschema FormCoercionMatchers {Module keyword
-                           ChildValidator keyword
-                           Validator keyword})
+(def form-coercion-matchers {Module         keyword
+                             ChildValidator keyword
+                             Validator      keyword})
 
-(def FormCoercer (c/coercer! FormWithContent FormCoercionMatchers))
+(def form-coercer (c/coercer! FormWithContent form-coercion-matchers))
