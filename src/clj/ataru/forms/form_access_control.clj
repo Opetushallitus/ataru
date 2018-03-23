@@ -107,7 +107,7 @@
   (try
     (let [latest-version (-> (form-store/fetch-form id)
                              (dissoc :created-time))
-          coerced-form   (form-schema/FormCoercer latest-version)
+          coerced-form   (form-schema/form-coercer latest-version)
           updated-form   (form-diff/apply-operations coerced-form operations)]
       (post-form updated-form session virkailija-tarjonta-service organization-service))
     (catch Exception e (throw (user-feedback-exception (.getMessage e))))))
