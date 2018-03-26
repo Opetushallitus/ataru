@@ -362,22 +362,42 @@
                    connection
                    (assoc new-application :form_id id))))))))))
 
+(def system-metadata
+  {:created-by  {:name "system"
+                 :oid  "system"
+                 :date "1970-01-01T00:00:00Z"}
+   :modified-by {:name "system"
+                 :oid  "system"
+                 :date "1970-01-01T00:00:00Z"}})
+
+(defn- get-field-metadata
+  [virkailija]
+  {:created-by  {:name (format "%s %s" (:givenName virkailija) (:sn virkailija))
+                 :oid  (:employeeNumber virkailija)
+                 :date (ZonedDateTime/now (ZoneId/of "Europe/Helsinki"))}
+   :modified-by {:name (format "%s %s" (:givenName virkailija) (:sn virkailija))
+                 :oid  (:employeeNumber virkailija)
+                 :date (ZonedDateTime/now (ZoneId/of "Europe/Helsinki"))}})
+
+(def get-virkailija (memoize ldap/get-virkailija-by-username))
+
 (defn- migrate-element-metadata-to-forms
   [connection]
   (doseq [form (migration-app-store/get-1.88-forms connection)
-          :let [virkailija (ldap/get-virkailija-by-username (:created_by form))
-                metadata   {:name (format "%s %s" (:givenName virkailija) (:sn virkailija))
-                            :oid  (:employeeNumber virkailija)
-                            :date (ZonedDateTime/now (ZoneId/of "Europe/Helsinki"))}]]
-    (->> form
-         :content
-         (clojure.walk/prewalk
-           (fn [x]
-             (if (and (map? x) (contains? x :fieldType))
-               (assoc x :metadata {:created-by  metadata
-                                   :modified-by metadata})
-               x)))
-         (assoc form :content)
+          :let [virkailija     (get-virkailija (:created_by form))
+                field-metadata (get-field-metadata virkailija)]]
+    (->> (update-in form
+                    [:content :content]
+                    (fn [content]
+                      (for [field content
+                            :let [metadata (if (or (= "hakukohteet" (:id field)) (= "person-info" (:module field)))
+                                             system-metadata
+                                             field-metadata)]]
+                        (clojure.walk/prewalk (fn [x]
+                                                (if (and (map? x) (contains? x :fieldType))
+                                                  (assoc x :metadata metadata)
+                                                  x))
+                                              field))))
          (migration-app-store/insert-1.88-form connection))))
 
 (migrations/defmigration
@@ -467,7 +487,7 @@
     (migrate-kotikunta-from-text-to-code conn)))
 
 (migrations/defmigration
-  migrate-kotikunta-from-text-to-a-code "1.88"
+  update-forms-metadata "1.88"
   "Migrate creator to form elements"
   (with-db-transaction [conn {:connection connection}]
     (migrate-element-metadata-to-forms conn)))
