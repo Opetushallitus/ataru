@@ -266,25 +266,30 @@
   [label path & {:keys [component-wrapped?
                         draggable
                         sub-header
-                        show-sub-header?]
-                 :or   {draggable        true
-                        sub-header       nil
-                        show-sub-header? false}}]
+                        on-fold-click]
+                 :or   {draggable true}}]
   [:div.editor-form__header-wrapper
    {:draggable     draggable
     :on-drag-start (on-drag-start path)
     :on-drag-over  prevent-default}
    [:header.editor-form__component-header
+    (when (some? on-fold-click)
+      [:button.editor-form__component-fold-button
+       {:on-click on-fold-click}
+       (if (some? sub-header)
+         [:i.zmdi.zmdi-chevron-down]
+         [:i.zmdi.zmdi-chevron-up])])
     [:span.editor-form__component-main-header
      label]
     [:span.editor-form__component-sub-header
-     {:class (if show-sub-header?
+     {:class (if (some? sub-header)
                "editor-form__component-sub-header-visible"
                "editor-form__component-sub-header-hidden")}
-     (->> [:fi :sv :en]
-       (map (partial get sub-header))
-       (remove clojure.string/blank?)
-       (clojure.string/join " - "))]]
+     (when (some? sub-header)
+       (->> [:fi :sv :en]
+            (map (partial get sub-header))
+            (remove clojure.string/blank?)
+            (clojure.string/join " - ")))]]
    [remove-component-button component-wrapped? path]])
 
 (defn markdown-help []
@@ -662,7 +667,7 @@
 (defn component-group [content path children]
   (let [languages         (subscribe [:editor/languages])
         value             (subscribe [:editor/get-component-value path])
-        all-folded        (subscribe [:editor/all-folded])
+        folded?           (subscribe [:editor/folded? (:id content)])
         animation-effect  (fade-out-effect path)
         group-header-text (case (:fieldClass content)
                             "wrapperElement" "Lomakeosio"
@@ -673,21 +678,20 @@
     (fn [content path children]
       (let [languages @languages
             value     @value]
-        (if @all-folded
+        (if @folded?
           [:div.editor-form__section_wrapper
            {:class @animation-effect}
            [:div.editor-form__component-wrapper
             [text-header group-header-text path
              :component-wrapped? true
              :sub-header (:label value)
-             :show-sub-header? true]]]
+             :on-fold-click #(dispatch [:editor/unfold (:id content)])]]]
           [:div.editor-form__section_wrapper
            {:class @animation-effect}
            [:div.editor-form__component-wrapper
             [text-header group-header-text path
              :component-wrapped? true
-             :sub-header (:label value)
-             :show-sub-header? @all-folded]
+             :on-fold-click #(dispatch [:editor/fold (:id content)])]
             [:div.editor-form__text-field-wrapper.editor-form__text-field--section
              [:header.editor-form__component-item-header header-label-text]
              (input-fields-with-lang

@@ -177,19 +177,15 @@
                          @organizations))])])))))
 
 (defn- fold-all []
-  (let [all-folded? @(subscribe [:editor/all-folded])]
-    [:div.editor-form__fold-all
-     [:div.editor-form__fold-all-slider
-      (if all-folded?
-        {:class "editor-form__fold-all-slider-left"
-         :on-click #(dispatch [:editor/unfold-all])}
-        {:class "editor-form__fold-all-slider-right"
-         :on-click #(dispatch [:editor/fold-all])})
-      [:div.editor-form__fold-all-label-left
-       "Osiot auki"]
-      [:div.editor-form__fold-all-divider]
-      [:div.editor-form__fold-all-label-right
-       "Osiot kiinni"]]]))
+  [:div
+   [:span.editor-form__fold-clickable-text
+    {:on-click #(dispatch [:editor/fold-all])}
+    "sulje"]
+   [:span.editor-form__fold-description-text " / "]
+   [:span.editor-form__fold-clickable-text
+    {:on-click #(dispatch [:editor/unfold-all])}
+    "avaa"]
+   [:span.editor-form__fold-description-text " osiot"]])
 
 (defn- preview-link [form lang-kwd & [text]]
   (let [text (if (nil? text)
