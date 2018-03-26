@@ -78,15 +78,16 @@
       "/lomake-editori/applications/complete"
       (str "Käsitellyt haut" (haku-count-str @complete-count))]]))
 
-(defn haku-info-link [link-href {:keys [name tarjoaja-name haku-application-count application-count unprocessed processed]}]
+(defn- hakemus-list-link
+  [href title {:keys [haku-application-count application-count unprocessed processed]}]
   (let [processing (- application-count unprocessed processed)]
     [:a.application__search-control-haku-link
-     {:href link-href}
-     [:span.application__search-control-haku-title
-      (some #(get name %) [:fi :sv :en]) (when-let [name (some #(get tarjoaja-name %) [:fi :sv :en])] (str " - " name))]
+     {:href href}
+     [:span.application__search-control-haku-title title]
      [:span.application__search-control-haku-hl]
      (when haku-application-count
-       [:span.application__search-control-haku-count (str haku-application-count " hakemus" (when (< 1 haku-application-count) "ta"))])
+       [:span.application__search-control-haku-count
+        (str haku-application-count " hakemus" (when (< 1 haku-application-count) "ta"))])
      [:span.application-handling__count-tag.application-handling__count-tag--haku-list
       [:span.application-handling__state-label.application-handling__state-label--unprocessed]
       unprocessed]
@@ -96,6 +97,26 @@
      [:span.application-handling__count-tag.application-handling__count-tag--haku-list
       [:span.application-handling__state-label.application-handling__state-label--processed]
       processed]]))
+
+(defn form-info-link
+  [{:keys [key name] :as form}]
+  (hakemus-list-link (str "/lomake-editori/applications/" key)
+                     (some #(get name %) [:fi :sv :en])
+                     form))
+
+(defn haku-info-link
+  [{:keys [oid] :as haku}]
+  (hakemus-list-link (str "/lomake-editori/applications/haku/" oid)
+                     @(subscribe [:application/haku-name oid])
+                     haku))
+
+(defn hakukohde-info-link
+  [{:keys [oid] :as hakukohde}]
+  (hakemus-list-link (str "/lomake-editori/applications/hakukohde/" oid)
+                     (str @(subscribe [:application/hakukohde-name oid])
+                          (when-let [tarjoaja-name @(subscribe [:application/hakukohde-tarjoaja-name oid])]
+                            (str " - " tarjoaja-name)))
+                     hakukohde))
 
 (defn hakukohde-list [hakukohteet-opened hakukohteet]
   [:div.application__search-control-hakukohde-container
@@ -108,9 +129,7 @@
          (fn [hakukohde]
            ^{:key (:oid hakukohde)}
            [:div.application__search-control-hakukohde
-            [haku-info-link
-             (str "/lomake-editori/applications/hakukohde/" (:oid hakukohde))
-             hakukohde]])
+            [hakukohde-info-link hakukohde]])
          hakukohteet)]]
      [:div.application__search-control-hakukohteet
       [:div.application__search-control-hakukohde-count
@@ -132,17 +151,13 @@
                        "application__search-control-open-hakukohteet--up"
                        "application__search-control-open-hakukohteet--down")
                      (when (= 1 hakukohde-count) "application__search-control-open-hakukohteet--disabled")])}]]
-        [haku-info-link
-         (str "/lomake-editori/applications/haku/" (:oid haku))
-         haku]]
+        [haku-info-link haku]]
        (when (seq (:hakukohteet haku))
          [hakukohde-list hakukohteet-opened (:hakukohteet haku)])])))
 
 (defn direct-form-haku [haku]
   [:div.application__search-control-haku.application__search-control-direct-form-haku
-   [haku-info-link
-    (str "/lomake-editori/applications/" (:key haku))
-    haku]])
+   [form-info-link haku]])
 
 (defn loading-indicator []
   [:div.application__search-control-loading-indicator

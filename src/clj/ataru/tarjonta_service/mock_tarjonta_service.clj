@@ -266,6 +266,9 @@
   (get-hakukohde [this hakukohde-oid]
     ((keyword hakukohde-oid) hakukohde))
 
+  (get-hakukohteet [this hakukohde-oids]
+    (keep #(.get-hakukohde this %) hakukohde-oids))
+
   (get-hakukohde-name [this hakukohde-oid]
     (if (= hakukohde-oid "hakukohde.oid")
       {:fi "Ajoneuvonosturinkuljettajan ammattitutkinto"}

@@ -2,6 +2,7 @@
 
 (defprotocol TarjontaService
   (get-hakukohde [this hakukohde-oid])
+  (get-hakukohteet [this hakukohde-oids])
   (get-hakukohde-name [this hakukohde-oid])
   (hakukohde-search [this haku-oid organization-oid])
   (get-haku [this haku-oid])

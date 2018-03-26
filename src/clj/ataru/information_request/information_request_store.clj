@@ -18,7 +18,7 @@
                                        {:connection conn})
       (merge (select-keys virkailija [:first_name :last_name]))
       (->kebab-case-kw)
-      (dissoc :virkailija-oid :id)))
+      (dissoc :virkailija-oid)))
 
 (defn get-information-requests [application-key]
   (->> (exec-db :db yesql-get-information-requests {:application_key application-key})

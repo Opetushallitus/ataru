@@ -12,5 +12,5 @@
       this))
   (stop [this]
     (when (some? connection-opts)
-      (.close (:connection-pool connection-opts)))
+      (.close (:pool connection-opts)))
     (assoc this :connection-opts nil)))

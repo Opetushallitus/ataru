@@ -11,20 +11,23 @@
        (recur (f acc x))
        acc))))
 
-(defn- fetch-hakukohteet
-  [haku-oid organization-oid c]
-  (GET (str "/lomake-editori/api/tarjonta/hakukohde"
-            "?hakuOid=" haku-oid
-            "&organizationOid=" organization-oid)
-       {:handler #(async/put! c %
-                              (fn [_] (async/close! c)))
-        :error-handler #(async/put! c (new js/Error %)
-                                    (fn [_] (async/close! c)))
-        :response-format :json
-        :keywords? true
-        :timeout 15000}))
+(defn fetch-hakukohteet
+  ([haku-oid c]
+   (fetch-hakukohteet haku-oid nil c))
+  ([haku-oid organization-oid c]
+   (GET (str "/lomake-editori/api/tarjonta/hakukohde"
+             "?hakuOid=" haku-oid
+             (when (some? organization-oid)
+               (str "&organizationOid=" organization-oid)))
+        {:handler #(async/put! c %
+                               (fn [_] (async/close! c)))
+         :error-handler #(async/put! c (new js/Error %)
+                                     (fn [_] (async/close! c)))
+         :response-format :json
+         :keywords? true
+         :timeout 15000})))
 
-(defn- fetch-haku
+(defn fetch-haku
   [haku-oid c]
   (GET (str "/lomake-editori/api/tarjonta/haku/" haku-oid)
        {:handler #(async/put! c %

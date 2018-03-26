@@ -59,44 +59,6 @@ INSERT INTO applications (
 -- name: yesql-add-application-secret!
 INSERT INTO application_secrets (application_key, secret) VALUES (:application_key, :secret);
 
--- name: yesql-get-application-list-by-form
-WITH latest_information_request_event AS (
-    SELECT DISTINCT ON (application_key) * FROM application_events WHERE new_review_state = 'information-request' ORDER BY application_key, time DESC
-), latest_modification_by_applicant AS (
-    SELECT * FROM application_events WHERE event_type = 'updated-by-applicant' ORDER BY application_key, time DESC
-), new_application_modifications AS (
-    SELECT up.application_key
-    FROM latest_information_request_event ir
-      JOIN latest_modification_by_applicant up ON ir.application_key = up.application_key
-    WHERE ir.time < up.time
-)
-SELECT
-  a.id,
-  a.person_oid,
-  a.key,
-  a.lang,
-  a.preferred_name,
-  a.last_name,
-  a.created_time,
-  a.haku,
-  a.hakukohde,
-  ar.state                               AS state,
-  ar.score                               AS score,
-  (SELECT json_agg(json_build_object('requirement', requirement,
-                                     'state', state,
-                                     'hakukohde', hakukohde))
-   FROM application_hakukohde_reviews ahr
-   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
-  (SELECT COUNT(*)
-   FROM new_application_modifications am
-   WHERE am.application_key = a.key) AS new_application_modifications
-FROM latest_applications AS a
-JOIN application_reviews ar ON a.key = ar.application_key
-JOIN forms AS f ON f.id = a.form_id
-WHERE a.haku IS NULL
-  AND f.key = :form_key
-ORDER BY a.created_time DESC;
-
 -- name: yesql-get-application-list-for-virkailija
 WITH latest_information_request_event AS (
     SELECT DISTINCT ON (application_key) * FROM application_events WHERE new_review_state = 'information-request' ORDER BY application_key, time DESC
@@ -121,6 +83,7 @@ SELECT
   ar.state                            AS state,
   ar.score                            AS score,
   a.form_id                           AS form,
+  lf.organization_oid,
   (SELECT json_agg(json_build_object('requirement', requirement,
                                      'state', state,
                                      'hakukohde', hakukohde))
@@ -135,6 +98,8 @@ FROM latest_applications AS a
   JOIN latest_forms AS lf ON lf.key = f.key
 WHERE
   CASE
+  WHEN :query_key = 'form'
+    THEN (lf.key = :query_value AND a.haku IS NULL)
   WHEN :query_key = 'application-oid'
     THEN a.key = :query_value
   WHEN :query_key = 'person-oid'
@@ -151,8 +116,9 @@ WHERE
     THEN a.haku = :query_value
   WHEN :query_key = 'hakukohde-oid'
     THEN :query_value = ANY (a.hakukohde)
+  WHEN :query_key = 'ensisijainen-hakukohde-oid'
+    THEN :query_value = a.hakukohde[1]
   END
-  AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-list-by-person-oid-for-omatsivut
@@ -345,26 +311,41 @@ SELECT
   a.hakukohde,
   a.haku,
   a.person_oid,
-  las.secret,
+  lf.organization_oid,
   CASE
-  WHEN ssn IS NOT NULL
+  WHEN a.ssn IS NOT NULL
     THEN (SELECT count(*)
           FROM latest_applications AS aa
-            JOIN forms AS f ON f.id = aa.form_id
-            JOIN latest_forms AS lf ON lf.key = f.key
-          WHERE aa.ssn = a.ssn
-                AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids)))
-  WHEN email IS NOT NULL
+          WHERE aa.ssn = a.ssn)
+  WHEN a.email IS NOT NULL
     THEN (SELECT count(*)
           FROM latest_applications AS aa
-            JOIN forms AS f ON f.id = aa.form_id
-            JOIN latest_forms AS lf ON lf.key = f.key
-          WHERE aa.email = a.email
-                AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids)))
-  END       AS applications_count
+          WHERE aa.email = a.email)
+  END AS applications_count
 FROM latest_applications AS a
-  JOIN latest_application_secrets las ON a.key = las.application_key
+JOIN forms AS f ON f.id = a.form_id
+JOIN latest_forms AS lf ON lf.key = f.key
 WHERE a.key = :application_key;
+
+-- name: yesql-applications-authorization-data
+SELECT
+  a.haku,
+  a.hakukohde,
+  lf.organization_oid
+FROM latest_applications as a
+JOIN forms AS f ON f.id = a.form_id
+JOIN latest_forms AS lf on lf.key = f.key
+WHERE a.key IN (:application_keys);
+
+-- name: yesql-persons-applications-authorization-data
+SELECT
+  a.haku,
+  a.hakukohde,
+  lf.organization_oid
+FROM latest_applications as a
+JOIN forms AS f ON f.id = a.form_id
+JOIN latest_forms AS lf on lf.key = f.key
+WHERE a.person_oid IN (:person_oids);
 
 -- name: yesql-get-latest-application-by-key-with-hakukohde-reviews
 SELECT
@@ -382,17 +363,11 @@ SELECT
   WHEN ssn IS NOT NULL
     THEN (SELECT count(*)
           FROM latest_applications AS aa
-            JOIN forms AS f ON f.id = aa.form_id
-            JOIN latest_forms AS lf ON lf.key = f.key
-          WHERE aa.ssn = a.ssn
-                AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids)))
+          WHERE aa.ssn = a.ssn)
   WHEN email IS NOT NULL
     THEN (SELECT count(*)
           FROM latest_applications AS aa
-            JOIN forms AS f ON f.id = aa.form_id
-            JOIN latest_forms AS lf ON lf.key = f.key
-          WHERE aa.email = a.email
-                AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids)))
+          WHERE aa.email = a.email)
   END                                 AS applications_count,
   (SELECT json_agg(json_build_object('requirement', requirement,
                                      'state', state,
@@ -517,34 +492,6 @@ FROM applications a
   JOIN latest_secret_version las ON las.application_key = a.key
 FOR UPDATE;
 
--- name: yesql-get-application-organization-by-key
--- Get the related form's organization oid for access checks
-
-SELECT lf.organization_oid
-FROM latest_forms AS lf
-JOIN forms AS f ON f.key = lf.key
-JOIN latest_applications AS a ON a.form_id = f.id
-WHERE a.key = :application_key;
-
--- name: yesql-organization-oids-of-applications-of-persons
--- Get the organization oids of the related forms
-
-SELECT lf.organization_oid
-FROM latest_forms AS lf
-JOIN forms AS f ON f.key = lf.key
-JOIN latest_applications AS a ON a.form_id = f.id
-WHERE a.person_oid IN (:person_oids);
-
--- name: yesql-get-application-review-organization-by-id
--- Get the related form's organization oid for access checks
-
-SELECT lf.organization_oid
-FROM latest_forms AS lf
-JOIN forms AS f ON f.key = lf.key
-JOIN latest_applications AS a ON a.form_id = f.id
-JOIN application_reviews AS ar ON ar.application_key = a.key
-WHERE ar.id = :review_id;
-
 -- name: yesql-add-application-event<!
 -- Add application event
 INSERT INTO application_events (application_key, event_type, new_review_state, virkailija_oid, hakukohde, review_key)
@@ -579,11 +526,8 @@ WITH filtered_applications AS (
       a.hakukohde AS hakukohde,
       ar.state    AS state
     FROM latest_applications AS a
-      JOIN forms AS f ON f.id = a.form_id
-      JOIN latest_forms AS lf ON lf.key = f.key
       JOIN application_reviews AS ar ON a.key = ar.application_key
     WHERE a.haku IS NOT NULL
-          AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ), unnested_hakukohde AS (
     SELECT
       key,
@@ -647,6 +591,7 @@ GROUP BY unnested_hakukohde.haku, unnested_hakukohde.hakukohde;
 SELECT
   lf.name,
   lf.key,
+  lf.organization_oid,
   count(a.key)    AS haku_application_count,
   count(a.key)    AS application_count,
   sum(CASE WHEN ar.state = 'inactivated' OR ahr.state = 'processed'
@@ -664,8 +609,7 @@ FROM latest_applications AS a
        AND ahr.hakukohde = 'form'
        AND ahr.requirement = 'processing-state'
 WHERE a.haku IS NULL
-      AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
-GROUP BY lf.name, lf.key;
+GROUP BY lf.name, lf.key, lf.organization_oid;
 
 -- name: yesql-add-application-feedback<!
 INSERT INTO application_feedback (created_time, form_key, form_id, form_name, stars, feedback, user_agent)
@@ -729,6 +673,7 @@ SELECT
   email,
   ssn,
   hakukohde,
+  lf.organization_oid,
   (SELECT json_agg(json_build_object('requirement', requirement,
                                      'state', state,
                                      'hakukohde', hakukohde))
@@ -738,8 +683,8 @@ FROM latest_applications AS la
 JOIN application_reviews as ar ON ar.application_key = la.key
 JOIN forms AS f ON la.form_id = f.id
 JOIN latest_forms AS lf ON lf.key = f.key
-WHERE (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
-  AND person_oid IS NOT NULL
+WHERE
+  person_oid IS NOT NULL
   AND haku IS NOT NULL
   AND (:haku_oid::text IS NULL OR haku = :haku_oid)
   -- Parameter list contains empty string to avoid empty lists
@@ -784,9 +729,7 @@ SELECT a.key AS key,
        a.content AS content
 FROM latest_applications AS a
 JOIN forms AS f ON f.id = a.form_id
-JOIN latest_forms AS lf ON lf.key = f.key
 WHERE a.person_oid = :person_oid
-  AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
 
 --name: yesql-add-review-note<!

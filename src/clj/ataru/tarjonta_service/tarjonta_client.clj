@@ -17,9 +17,10 @@
 (defn hakukohde-search
   [haku-oid organization-oid]
   (-> :tarjonta-service.hakukohde.search
-      (resolve-url {"hakuOid"         haku-oid
-                    "defaultTarjoaja" organization-oid
-                    "organisationOid" organization-oid})
+      (resolve-url (cond-> {"hakuOid"         haku-oid
+                            "defaultTarjoaja" organization-oid}
+                           (some? organization-oid)
+                           (assoc "organisationOid" organization-oid)))
       (h/do-request)
       :result))
 

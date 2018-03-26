@@ -395,15 +395,11 @@
    (s/optional-key :hakukohde-reviews) HakukohdeReviews})
 
 (s/defschema ApplicationCountsHakukohde {:oid               s/Str
-                                         :name              LocalizedStringOptional
-                                         :tarjoaja-name     LocalizedStringOptional
                                          :application-count s/Int
                                          :processed         s/Int
-                                         :unprocessed       s/Int
-                                         :haku              s/Str})
+                                         :unprocessed       s/Int})
 
 (s/defschema TarjontaHaku {:oid                    s/Str
-                           :name                   LocalizedStringOptional
                            :haku-application-count s/Int
                            :application-count      s/Int
                            :processed              s/Int
@@ -441,7 +437,8 @@
                                     :message         s/Str
                                     :application-key s/Str})
 
-(s/defschema InformationRequest {:subject         s/Str
+(s/defschema InformationRequest {:id              s/Int
+                                 :subject         s/Str
                                  :message         s/Str
                                  :application-key s/Str
                                  :created-time    #?(:clj  org.joda.time.DateTime

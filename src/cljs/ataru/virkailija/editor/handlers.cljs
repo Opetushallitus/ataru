@@ -174,8 +174,9 @@
         (dispatch [:editor/set-used-by-haut
                    haut
                    (filter #(contains? haun-ryhmaliitokset (:oid %)) hakukohderyhmat)]))
-      (catch js/Error e #(do (dispatch [:editor/unset-used-by-haut])
-                             (.log js/console e))))))
+      (catch js/Error e
+        (dispatch [:editor/unset-used-by-haut])
+        (throw e)))))
 
 (reg-event-fx
   :editor/refresh-used-by-haut

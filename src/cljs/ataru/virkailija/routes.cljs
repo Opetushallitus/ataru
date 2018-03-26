@@ -29,7 +29,7 @@
     (dispatch [:editor/select-form (:key form)])))
 
 (defn common-actions-for-applications-route []
-  (dispatch [:application/refresh-haut])
+  (dispatch [:application/refresh-haut-and-hakukohteet])
   (dispatch [:application/clear-applications-haku-and-form-selections])
   (dispatch [:set-active-panel :application])
   (dispatch [:application/get-virkailija-settings]))
@@ -87,7 +87,7 @@
     (dispatch-after-state
      :predicate
      (fn [db]
-       (get-in db [:application :hakukohteet (keyword hakukohde-oid)]))
+       (get-in db [:hakukohteet hakukohde-oid]))
      :handler
      (fn [hakukohde]
        (dispatch [:application/select-hakukohde hakukohde])
@@ -99,8 +99,7 @@
     (dispatch-after-state
       :predicate
       (fn [db]
-        (some #(when (= haku-oid (:oid %)) %)
-          (get-in db [:application :haut :tarjonta-haut])))
+        (get-in db [:haut haku-oid]))
       :handler
       (fn [haku]
         (dispatch [:application/select-haku haku])
