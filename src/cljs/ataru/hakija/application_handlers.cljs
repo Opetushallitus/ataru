@@ -898,18 +898,24 @@
                               [:application :answers (keyword component-id) :values attachment-idx])
                             merge
                             {:value {:filename filename} :valid false :status :error :error current-error})
-                 (assoc-in [:applicatin :answers (keyword component-id) :valid] false))}))))
+                 (assoc-in [:application :answers (keyword component-id) :valid] false))}))))
 
 (reg-event-fx
   :application/handle-attachment-delete
   (fn [{db :db} [_ field-descriptor component-id question-group-idx attachment-key _]]
-    {:db (-> db
-             (update-in (if (some? question-group-idx)
-                          [:application :answers (keyword component-id) :values question-group-idx]
-                          [:application :answers (keyword component-id) :values])
-                        (comp vec
-                              (partial remove (comp (partial = attachment-key) :key :value))))
-             (set-multi-value-changed (keyword component-id) :values))
+    {:db       (if (some? question-group-idx)
+                 (-> db
+                     (update-in [:application :answers (keyword component-id) :values] (util/vector-of-length question-group-idx))
+                     (update-in [:application :answers (keyword component-id) :values] (partial mapv (fnil identity [])))
+                     (update-in [:application :answers (keyword component-id) :values question-group-idx]
+                                (comp vec
+                                      (partial remove (comp (partial = attachment-key) :key :value))))
+                     (set-multi-value-changed (keyword component-id) :values))
+                 (-> db
+                     (update-in [:application :answers (keyword component-id) :values]
+                                (comp vec
+                                      (partial remove (comp (partial = attachment-key) :key :value))))
+                     (set-multi-value-changed (keyword component-id) :values)))
      :dispatch [:application/set-attachment-valid
                 (keyword component-id)
                 (required? field-descriptor)
@@ -1028,7 +1034,9 @@
               [:application/set-adjacent-field-answer child 0 "" group-idx])
             (:children field-descriptor))
       {:fieldType "attachment"}
-      []
+           ; Use handle attachment delete here since when calling with nil it 'initializes' an emptry answer.
+           ; Hacky solution but others would require much rework on the codebase.
+      [[:application/handle-attachment-delete field-descriptor id group-idx nil]]
       {:fieldClass "infoElement"}
       [])))
 
