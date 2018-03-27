@@ -482,7 +482,7 @@
                                :else nil)}
                      btn-name]]))]
          (when text-area?
-           [:div.editor-form__additional-params-container
+           [:div.editor-form__max-length-container
             [:header.editor-form__component-item-header "Max. merkkimäärä"]
             [:input.editor-form__text-field.editor-form__text-field-auto-width
              {:value     @max-length
