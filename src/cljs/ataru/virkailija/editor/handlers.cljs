@@ -633,7 +633,10 @@
 (reg-event-db
   :editor/fold-all
   (fn [db _]
-    (reduce fold db (keys (get-in db [:editor :ui])))))
+    (->> (get-in db (vec (current-form-content-path db)))
+         (filter #(= "fieldset" (:fieldType %)))
+         (map :id)
+         (reduce fold db))))
 
 (reg-event-db
   :editor/unfold-all
