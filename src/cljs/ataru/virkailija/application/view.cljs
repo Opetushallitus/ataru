@@ -1,27 +1,27 @@
 (ns ataru.virkailija.application.view
-  (:require [cljs.core.match :refer-macros [match]]
-            [clojure.string :as string]
-            [re-frame.core :refer [subscribe dispatch dispatch-sync]]
-            [reagent.ratom :refer-macros [reaction]]
-            [reagent.core :as r]
-            [cljs-time.format :as f]
-            [taoensso.timbre :refer-macros [spy debug]]
-            [ataru.virkailija.application.handlers]
+  (:require [ataru.application.application-states :as application-states]
+            [ataru.application.review-states :as application-review-states]
+            [ataru.application.review-states :as review-states]
+            [ataru.cljs-util :as util]
+            [ataru.util :refer [koulutus->str]]
+            [ataru.virkailija.application.application-search-control :refer [application-search-control]]
             [ataru.virkailija.application.application-subs]
+            [ataru.virkailija.application.handlers]
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :as t]
-            [ataru.application.review-states :as application-review-states]
-            [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
-            [ataru.cljs-util :as util]
-            [ataru.virkailija.application.application-search-control :refer [application-search-control]]
-            [goog.string.format]
-            [goog.string :as gstring]
-            [ataru.application.review-states :as review-states]
-            [ataru.application.application-states :as application-states]
-            [ataru.cljs-util :as cljs-util]
-            [medley.core :refer [find-first]]
             [ataru.virkailija.temporal :as temporal]
-            [ataru.virkailija.virkailija-ajax :as ajax]))
+            [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
+            [ataru.virkailija.virkailija-ajax :as ajax]
+            [cljs-time.format :as f]
+            [cljs.core.match :refer-macros [match]]
+            [clojure.string :as string]
+            [goog.string :as gstring]
+            [goog.string.format]
+            [medley.core :refer [find-first]]
+            [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+            [reagent.core :as r]
+            [reagent.ratom :refer-macros [reaction]]
+            [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn- icon-check []
   [:img.application-handling__review-state-selected-icon
@@ -43,7 +43,7 @@
       [:input {:type  "hidden"
                :name  "skip-answers"
                :value "false"}]
-      (when-let [csrf-token (cljs-util/csrf-token)]
+      (when-let [csrf-token (util/csrf-token)]
         [:input {:type  "hidden"
                  :name  "CSRF"
                  :value csrf-token}])
@@ -1027,15 +1027,6 @@
        [application-deactivate-toggle]
        [application-review-events]]]]))
 
-(defn- koulutus->str
-  [koulutus]
-  (->> [(-> koulutus :koulutuskoodi-name :fi)
-        (-> koulutus :tutkintonimike-name :fi)
-        (:tarkenne koulutus)]
-       (remove #(or (nil? %) (clojure.string/blank? %)))
-       (distinct)
-       (clojure.string/join ", ")))
-
 (defn- hakukohteet-list-row [hakukohde]
   ^{:key (str "hakukohteet-list-row-" (:oid hakukohde))}
   [:li.application-handling__hakukohteet-list-row
@@ -1045,7 +1036,7 @@
     (for [koulutus (:koulutukset hakukohde)]
       ^{:key (str "koulutus-" (:oid koulutus))}
       [:div.application-handling__review-area-koulutus-heading
-       (koulutus->str koulutus)]))])
+       (koulutus->str koulutus :fi)]))])
 
 (defn- hakukohteet-list [hakukohteet]
   (into [:ul.application-handling__hakukohteet-list]

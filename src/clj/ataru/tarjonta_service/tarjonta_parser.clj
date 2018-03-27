@@ -25,25 +25,20 @@
       (clojure.set/rename-keys lang-key-renames)
       (localized-names :nimi)))
 
-(defn- parse-tutkintonimike
+(defn- parse-tutkintonimikes
   [koulutus]
-  (if-let [ms (-> koulutus :tutkintonimikes :meta)]
-    (do (when (< 1 (count ms))
-          (log/warn (format "Koulutuksella %s useita tutkintonimikekoodistoja"
-                            (:oid koulutus))))
-        (-> ms
-            first
-            val
-            :meta
-            (clojure.set/rename-keys lang-key-renames)
-            (localized-names :nimi)))
-    {}))
+  (mapv (fn [[_ name]]
+          (-> name
+              :meta
+              (clojure.set/rename-keys lang-key-renames)
+              (localized-names :nimi)))
+        (-> koulutus :tutkintonimikes :meta)))
 
 (defn- parse-koulutus
   [response]
   {:oid                  (:oid response)
    :koulutuskoodi-name   (parse-koulutuskoodi response)
-   :tutkintonimike-name  (parse-tutkintonimike response)
+   :tutkintonimike-names (parse-tutkintonimikes response)
    :tarkenne             (:tarkenne response)})
 
 (defn- parse-hakukohde
