@@ -4,6 +4,10 @@
 @form-select-width: 305px;
 @total-banner-height: 97px;
 
+body {
+  overflow-y: scroll;
+}
+
 .application__banner-container {
   z-index: 10;
   display: inline-block;
@@ -1535,6 +1539,11 @@ and (max-width: @desktop-content-width) {
   font-size: 14px;
 }
 
+.application__status-controls {
+  border-left: 1px solid fade(@white, 33%);
+  padding-left: 20px;
+}
+
 .application__status-controls-container {
   display: flex;
   flex-flow: row nowrap;
@@ -1542,42 +1551,45 @@ and (max-width: @desktop-content-width) {
 }
 
 .application__preview-control {
-  padding: 20px 20px 20px 10px;
-  margin-top: -20px;
+  padding: 20px;
 }
 
+@toggle-switch-height: 18px;
+@toggle-switch-width: 120px;
+
 .toggle-switch {
-  width: 140px;
-  height: 26px;
-  border-radius: 13px;
+  width: @toggle-switch-width;
+  height: @toggle-switch-height;
+  border-radius: @toggle-switch-height / 2;
   overflow: hidden;
   display: inline-block;
-  background-color: @light-gray;
+  background-color: @white;
 }
 
 .toggle-switch__slider {
   display: flex;
-  width: 280px;
-  height: 26px;
-  border-radius: 13px;
+  width: @toggle-switch-width * 2;
+  height: @toggle-switch-height;
+  border-radius: @toggle-switch-height / 2;
   align-items: center;
   transition: transform 0.1s, background-color 0.1s;
   cursor: pointer;
+  font-size: 13px;
+  .light;
 }
 
 .toggle-switch__slider--left {
-  transform: translateX(-114px);
-  background-color: @disabled-list-item-color;
+  transform: translateX(-102px);
 }
 
 .toggle-switch__slider--right {
   transform: translateX(0px);
-  background-color: @button-green;
+  background-color: @button-blue;
 }
 
 .toggle-switch__label-left {
-  margin-left: 37px;
-  min-width: 67px;
+  margin-left: 28px;
+  min-width: 28px;
   color: white;
   cursor: pointer;
 }
@@ -1589,13 +1601,21 @@ and (max-width: @desktop-content-width) {
 }
 
 .toggle-switch__label-divider {
-  min-width: 22px;
-  height: 22px;
+  min-width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background-color: white;
-  margin-left: 12px;
-  margin-right: 12px;
+  background-color: @sg-color-gray;
+  margin-left: 16px;
+  margin-right: 15px;
   cursor: pointer;
+}
+
+.toggle-switch__slider.toggle-switch__slider--left .toggle-switch__label-divider {
+  background-color: @sg-color-gray;
+}
+
+.toggle-switch__slider.toggle-switch__slider--right .toggle-switch__label-divider {
+  background-color: @white;
 }
 
 .toggle-switch__row {
