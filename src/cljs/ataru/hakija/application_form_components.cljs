@@ -806,5 +806,6 @@
 
 (defn editable-fields [form-data]
   (when form-data
-    (into [:div] (for [content (:content form-data)]
-                   [render-field content]))))
+    (into [:div.animated.fadeIn]
+          (for [content (:content form-data)]
+            [render-field content]))))

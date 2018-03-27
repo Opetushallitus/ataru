@@ -236,7 +236,7 @@
                    (application-language application)       ; language is set to application when in officer side
                    :fi)
           ui   (subscribe [:state-query [:application :ui]])]
-      (into [:div.application__readonly-container]
+      (into [:div.application__readonly-container.animated.fadeIn]
         (for [content (:content form)
               :when (visible? ui content)]
           [field content application lang])))))
