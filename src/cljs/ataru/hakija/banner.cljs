@@ -92,9 +92,9 @@
       [:div.toggle-switch__slider
        {:on-click (fn [_] (dispatch [:state-update #(update-in % [:application :preview-enabled] not)]))
         :class    (if enabled? "toggle-switch__slider--right" "toggle-switch__slider--left")}
-       [:div.toggle-switch__label-left "Esikatselu"]
+       [:div.toggle-switch__label-left (get-translation :preview)]
        [:div.toggle-switch__label-divider]
-       [:div.toggle-switch__label-right "Esikatselu"]]]]))
+       [:div.toggle-switch__label-right (get-translation :preview)]]]]))
 
 (defn status-controls []
   (let [valid-status  (subscribe [:application/valid-status])
