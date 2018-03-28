@@ -115,8 +115,11 @@
                                           :review_key       nil}
                                          {:connection connection}))
 
-(defn get-1.88-forms [connection]
-  (yesql-get-1_88-forms {} {:connection connection}))
+(defn get-1.88-form [connection id]
+  (first (yesql-get-1_88-form {:id id} {:connection connection})))
+
+(defn get-1.88-form-ids [connection]
+  (map :id (yesql-get-1_88-form-ids {} {:connection connection})))
 
 (defn update-1.88-form-content [content id connection]
   (yesql-update-1_88-form<! {:id      id

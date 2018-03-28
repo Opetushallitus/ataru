@@ -1,5 +1,10 @@
--- name: yesql-get-1_88-forms
+-- name: yesql-get-1_88-form
 SELECT *
+FROM forms
+WHERE id = :id;
+
+-- name: yesql-get-1_88-form-ids
+SELECT id
 FROM forms
 ORDER BY created_time ASC;
 

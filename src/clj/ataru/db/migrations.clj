@@ -383,16 +383,18 @@
 
 (defn- migrate-element-metadata-to-forms
   [connection]
-  (doseq [form (migration-app-store/get-1.88-forms connection)
-          :let [virkailija     (get-virkailija (:created_by form))
+  (doseq [id   (migration-app-store/get-1.88-form-ids connection)
+          :let [form           (migration-app-store/get-1.88-form connection id)
+                virkailija     (get-virkailija (:created_by form))
                 field-metadata (get-field-metadata virkailija)]]
     (-> (:content form)
         (update :content
                 (fn [content]
                   (for [field content
-                        :let [metadata (if (or (= "hakukohteet" (:id field)) (= "person-info" (:module field)))
-                                         system-metadata
-                                         field-metadata)]]
+                        :let  [metadata (if (or (= "hakukohteet" (:id field))
+                                                (= "person-info" (:module field)))
+                                          system-metadata
+                                          field-metadata)]]
                     (clojure.walk/prewalk (fn [x]
                                             (if (and (map? x) (contains? x :fieldType))
                                               (assoc x :metadata metadata)
