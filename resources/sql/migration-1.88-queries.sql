@@ -3,6 +3,6 @@ SELECT *
 FROM forms
 ORDER BY created_time ASC;
 
--- name: yesql-insert-1_88-form<!
-INSERT INTO forms (name, content, created_by, key, languages, organization_oid, deleted)
-VALUES (:name, :content, :created_by, :key, :languages, :organization_oid, :deleted);
+-- name: yesql-update-1_88-form<!
+UPDATE forms SET content = :content
+WHERE id = :id;

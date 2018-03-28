@@ -118,5 +118,7 @@
 (defn get-1.88-forms [connection]
   (yesql-get-1_88-forms {} {:connection connection}))
 
-(defn insert-1.88-form [connection form]
-  (yesql-insert-1_88-form<! form {:connection connection}))
+(defn update-1.88-form-content [content id connection]
+  (yesql-update-1_88-form<! {:id      id
+                             :content content}
+                            {:connection connection}))

@@ -386,19 +386,19 @@
   (doseq [form (migration-app-store/get-1.88-forms connection)
           :let [virkailija     (get-virkailija (:created_by form))
                 field-metadata (get-field-metadata virkailija)]]
-    (->> (update-in form
-                    [:content :content]
-                    (fn [content]
-                      (for [field content
-                            :let [metadata (if (or (= "hakukohteet" (:id field)) (= "person-info" (:module field)))
-                                             system-metadata
-                                             field-metadata)]]
-                        (clojure.walk/prewalk (fn [x]
-                                                (if (and (map? x) (contains? x :fieldType))
-                                                  (assoc x :metadata metadata)
-                                                  x))
-                                              field))))
-         (migration-app-store/insert-1.88-form connection))))
+    (-> (:content form)
+        (update :content
+                (fn [content]
+                  (for [field content
+                        :let [metadata (if (or (= "hakukohteet" (:id field)) (= "person-info" (:module field)))
+                                         system-metadata
+                                         field-metadata)]]
+                    (clojure.walk/prewalk (fn [x]
+                                            (if (and (map? x) (contains? x :fieldType))
+                                              (assoc x :metadata metadata)
+                                              x))
+                                          field))))
+        (migration-app-store/update-1.88-form-content (:id form) connection))))
 
 (migrations/defmigration
   migrate-person-info-module "1.13"
