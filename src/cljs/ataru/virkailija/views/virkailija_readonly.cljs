@@ -182,6 +182,12 @@
        [:div
         [field followup application lang]]))])
 
+(defn- haku-row [haku-name]
+  [:div.application__form-field
+   [:div.application-handling__hakukohde-wrapper
+    [:div.application-handling__review-area-hakukohde-heading
+     haku-name]]])
+
 (defn- hakukohteet-list-row [hakukohde-oid]
   [:div.application__form-field
    [:div.application-handling__hakukohde-wrapper
@@ -204,6 +210,7 @@
       {:class (when @(subscribe [:application/field-highlighted? :hakukohteet])
                 "highlighted")
        :id    "hakukohteet"}
+      [haku-row @(subscribe [:application/selected-haku-name])]
       (for [hakukohde-oid hakukohteet]
         ^{:key (str "hakukohteet-list-row-" hakukohde-oid)}
         [hakukohteet-list-row hakukohde-oid])]]))

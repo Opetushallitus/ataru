@@ -197,6 +197,15 @@
                 :value])))
 
 (re-frame/reg-sub
+  :application/selected-haku-name
+  (fn [db _]
+    (get-in db [:application :selected-haku :name (keyword (get-in db [:application
+                                                                       :selected-application-and-form
+                                                                       :application
+                                                                       :lang]
+                                                                   "fi"))])))
+
+(re-frame/reg-sub
   :application/information-request-submit-enabled?
   (fn [db _]
     (let [request-state (-> db :application :information-request :state)]
