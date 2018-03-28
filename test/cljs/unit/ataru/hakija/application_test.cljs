@@ -247,32 +247,32 @@
 
 (deftest wrappers-are-extracted-correctly
   (let [result (extract-wrapper-sections form2)
-        expected '({:id    "w1",
-                    :label {:fi "osio1", :sv ""},
-                    :children
-                    [{:id         "f1",
-                      :label      {:fi "kenttä1", :sv ""},
-                      :params     {:size "S"},
-                      :validators ["required"],
-                      :fieldType  "textField",
-                      :fieldClass "formField"
-                      :metadata metadata}
-                     {:id         "f2",
-                      :label      {:fi "kenttä2", :sv ""},
-                      :params     {:size "M"},
-                      :fieldType  "textField",
-                      :fieldClass "formField"
-                      :metadata metadata}]}
-                   {:id "w2",
-                    :label {:fi "osio2", :sv ""},
-                    :children
-                    [{:id "f3",
-                      :label {:fi "kenttä3", :sv ""},
-                      :params {:size "S"},
-                      :validators ["required"],
-                      :fieldType "textField",
-                      :fieldClass "formField"
-                      :metadata metadata}]})]
+        expected (list {:id    "w1",
+                        :label {:fi "osio1", :sv ""},
+                        :children
+                        [{:id         "f1",
+                          :label      {:fi "kenttä1", :sv ""},
+                          :params     {:size "S"},
+                          :validators ["required"],
+                          :fieldType  "textField",
+                          :fieldClass "formField"
+                          :metadata   metadata}
+                         {:id         "f2",
+                          :label      {:fi "kenttä2", :sv ""},
+                          :params     {:size "M"},
+                          :fieldType  "textField",
+                          :fieldClass "formField"
+                          :metadata   metadata}]}
+                       {:id    "w2",
+                        :label {:fi "osio2", :sv ""},
+                        :children
+                        [{:id         "f3",
+                          :label      {:fi "kenttä3", :sv ""},
+                          :params     {:size "S"},
+                          :validators ["required"],
+                          :fieldType  "textField",
+                          :fieldClass "formField"
+                          :metadata   metadata}]})]
     (is (= expected result))))
 
 (def
