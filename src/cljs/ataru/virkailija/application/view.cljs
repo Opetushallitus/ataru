@@ -407,8 +407,10 @@
        (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
       [:span.application-handling__list-row--application-time
        [:span.application-handling__list-row--time-day day]
-       [:span date-time]]]
-     [applications-hakukohde-rows @review-settings application @selected-hakukohde]]))
+       [:span date-time]]
+      [:span.application-handling__list-row--attachment-states
+       "asd"]]
+     [applications-hakukohde-rows @review-settings application @hakukohteet @selected-hakukohde]]))
 
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
@@ -525,6 +527,12 @@
        [application-list-basic-column-header
         :created-time
         "Viimeksi muokattu"]]
+      [:span.application-handling__list-row--attachment-state
+       [hakukohde-state-filter-controls
+        :attachment-state-filter
+        "Liitepyynnöt"
+        application-review-states/attachment-hakukohde-review-types
+        (subscribe [:state-query [:application :attachment-state-counts]])]]
       [:span.application-handling__list-row--state
        [hakukohde-state-filter-controls
         :processing-state-filter

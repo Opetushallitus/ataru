@@ -188,19 +188,22 @@
       (cljs-util/get-unselected-review-states states)))
 
 (defn fetch-applications-fx [db path]
-  {:db   (-> db
-             (assoc-in [:application :fetching-applications] true)
-             (assoc-in [:application :processing-state-filter] (extract-unselected-review-states-from-query
-                                                                 :processing-state-filter
-                                                                 review-states/application-hakukohde-processing-states))
-             (assoc-in [:application :selection-state-filter] (extract-unselected-review-states-from-query
-                                                                :selection-state-filter
-                                                                review-states/application-hakukohde-selection-states)))
+  {:db       (-> db
+                 (assoc-in [:application :fetching-applications] true)
+                 (assoc-in [:application :attachment-state-filter] (extract-unselected-review-states-from-query
+                                                                     :attachment-state-filter
+                                                                     review-states/attachment-hakukohde-review-types))
+                 (assoc-in [:application :processing-state-filter] (extract-unselected-review-states-from-query
+                                                                     :processing-state-filter
+                                                                     review-states/application-hakukohde-processing-states))
+                 (assoc-in [:application :selection-state-filter] (extract-unselected-review-states-from-query
+                                                                    :selection-state-filter
+                                                                    review-states/application-hakukohde-selection-states)))
    :dispatch [:application/refresh-haut-and-hakukohteet]
-   :http {:method              :get
-          :path                path
-          :skip-parse-times?   true
-          :handler-or-dispatch :application/handle-fetch-applications-response}})
+   :http     {:method              :get
+              :path                path
+              :skip-parse-times?   true
+              :handler-or-dispatch :application/handle-fetch-applications-response}})
 
 (reg-event-fx
   :application/fetch-applications

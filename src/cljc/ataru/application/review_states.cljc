@@ -59,3 +59,7 @@
 
 (def complete-hakukohde-process-states ["processed"])
 
+(def attachment-hakukohde-review-types
+  [["not-checked" "Tarkastamatta"]
+   ["checked" "Tarkistettu"]
+   ["incomplete" "Puutteellinen"]])

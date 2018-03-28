@@ -343,16 +343,22 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row--time {
-  flex: 2 3 288px;
+  flex: 0 0 180px;
   display: inline-block;
   color: @sg-color-gray-2;
 }
 
 .application-handling__list-row--application-time {
-  flex: 0 3 550px;
+  flex: 0 0 212px;
   display: inline-block;
   color: @sg-color-gray;
   .light;
+}
+
+.application-handling__list-row--attachment-states {
+  flex: 0 0 350px;
+  display: inline-block;
+  color: @sg-color-gray;
 }
 
 .application-handling__list-row--time-day {
@@ -361,7 +367,12 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row--state {
-  flex: 0 0 160px;
+  flex: 0 0 140px;
+  display: inline-block;
+}
+
+.application-handling__list-row--attachment-state {
+  flex: 0 0 140px;
   display: inline-block;
 }
 
@@ -1742,7 +1753,7 @@ th.application__readonly-adjacent--header {
 }
 
 .application-handling__application-hl {
-  flex: 1 0 0;
+  flex: 1 0 150px;
   border-bottom: 1px dashed @light-gray;
   height: 12px;
   margin: 0 10px;
@@ -1761,7 +1772,7 @@ th.application__readonly-adjacent--header {
 }
 
 .application-handling__hakukohde-state-cell {
-  flex: 0 0 150px;
+  flex: 0 0 135px;
 }
 
 .application-handling__hakukohde-selection-cell {
