@@ -143,8 +143,7 @@
    :end                                 (- (System/currentTimeMillis) (* 2 24 3600 1000))
    :hakukierros-end                     nil
    :jatkuva-haku?                       false
-   :attachment-modify-grace-period-days nil
-   })
+   :attachment-modify-grace-period-days nil})
 
 (defn- hakuaika-ended-within-grace-period
   [_ _ _]

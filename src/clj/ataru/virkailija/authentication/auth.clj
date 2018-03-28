@@ -1,18 +1,25 @@
 (ns ataru.virkailija.authentication.auth
-  (:require [ataru.virkailija.authentication.cas-ticketstore :as cas-store]
+  (:require [ataru.config.core :refer [config]]
+            [ataru.config.url-helper :refer [resolve-url]]
+            [ataru.db.db :as db]
+            [ataru.log.audit-log :as audit-log]
+            [ataru.organization-service.ldap-client :as ldap]
+            [ataru.organization-service.organization-service :as organization-service]
+            [ataru.organization-service.user-rights :as rights]
+            [ataru.virkailija.authentication.cas-ticketstore :as cas-store]
             [clj-util.cas :as cas]
             [environ.core :refer [env]]
+            [medley.core :refer [map-kv]]
             [ring.util.http-response :refer [ok]]
             [ring.util.response :as resp]
             [taoensso.timbre :refer [info spy error]]
-            [ataru.config.core :refer [config]]
-            [ataru.log.audit-log :as audit-log]
-            [ataru.organization-service.user-rights :as rights]
-            [ataru.config.url-helper :refer [resolve-url]])
+            [yesql.core :as sql])
   (:import (fi.vm.sade.utils.cas CasLogout)))
 
 (defn- redirect-to-logged-out-page []
   (resp/redirect (resolve-url :cas.login)))
+
+(sql/defqueries "sql/virkailija-queries.sql")
 
 (defn cas-login [ticket]
   (fn []
@@ -26,15 +33,24 @@
     (if-let [[username ticket] (login-provider)]
       (do
         (cas-store/login ticket)
-        (let [user-right-organizations (.get-direct-organizations-for-rights organization-service username rights/right-names)]
+        (let [virkailija               (ldap/get-virkailija-by-username username)
+              user-right-organizations (map-kv (fn [right org-oids]
+                                                 [right (organization-service/get-organizations-for-oids organization-service org-oids)])
+                                               (ldap/user->right-organization-oids virkailija rights/right-names))]
           (info "username" username "logged in, redirect to" redirect-url)
+          (db/exec :db yesql-upsert-virkailija<! {:oid        (:employeeNumber virkailija)
+                                                  :first_name (:givenName virkailija)
+                                                  :last_name  (:sn virkailija)})
           (audit-log/log {:new       ticket
                           :id        username
                           :operation audit-log/operation-login})
           (-> (resp/redirect redirect-url)
-            (assoc :session {:identity {:username                 username
-                                        :ticket                   ticket
-                                        :user-right-organizations user-right-organizations}}))))
+              (assoc :session {:identity {:username                 username
+                                          :first-name               (:givenName virkailija)
+                                          :last-name                (:sn virkailija)
+                                          :oid                      (:employeeNumber virkailija)
+                                          :ticket                   ticket
+                                          :user-right-organizations user-right-organizations}}))))
       (redirect-to-logged-out-page))
     (catch Exception e
       (error e "Error in login ticket handling")

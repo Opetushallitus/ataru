@@ -76,22 +76,34 @@
     (let [dropdown-path (current-form-content-path db [path])]
       (update-in db dropdown-path assoc :koodisto-source {:uri uri :version version :title title}))))
 
+(defn- update-modified-by
+  [db path]
+  (let [metadata-path (current-form-content-path db (conj (first path) :metadata :modified-by))
+        user-info     (-> db :editor :user-info)]
+    (assoc-in db metadata-path {:oid  (:oid user-info)
+                                :name (:name user-info)
+                                :date (temporal/datetime-now)})))
+
 (defn add-validator
   [db [_ validator & path]]
-  (let [path (current-form-content-path db [path :validators])]
-    (update-in db path (fn [validators]
-                         (when-not (some #(= % validator) validators)
-                           (conj validators validator))))))
+  (let [content-path (current-form-content-path db [path :validators])]
+    (-> db
+        (update-in content-path (fn [validators]
+                                  (when-not (some #(= % validator) validators)
+                                    (conj validators validator))))
+        (update-modified-by path))))
 
 (reg-event-db :editor/add-validator add-validator)
 
 (defn remove-validator
   [db [_ validator & path]]
-  (let [path       (current-form-content-path db [path :validators])
-        validators (get-in db path)]
+  (let [content-path (current-form-content-path db [path :validators])
+        validators   (get-in db content-path)]
     (if-not (nil? validators)
-      (update-in db path (fn [validators]
-                           (remove #(= % validator) validators)))
+      (-> db
+          (update-in content-path (fn [validators]
+                                    (remove #(= % validator) validators)))
+          (update-modified-by path))
       db)))
 
 (reg-event-db :editor/remove-validator remove-validator)
@@ -99,27 +111,35 @@
 (reg-event-db
   :editor/set-component-value
   (fn [db [_ value & path]]
-    (assoc-in db (current-form-content-path db [path]) value)))
+    (-> db
+        (assoc-in (current-form-content-path db [path]) value)
+        (update-modified-by path))))
 
 (defn generate-component
   [db [_ generate-fn sub-path]]
   (let [parent-component-path (cond-> (current-form-content-path db)
-                                (not (number? sub-path))
-                                (concat (butlast sub-path)))
+                                      (not (number? sub-path))
+                                      (concat (butlast sub-path)))
+        user-info             (-> db :editor :user-info)
+        metadata-element      {:oid  (:oid user-info)
+                               :name (:name user-info)
+                               :date (temporal/datetime-now)}
+        metadata              {:created-by  metadata-element
+                               :modified-by metadata-element}
         components            (if (vector? generate-fn)
-                                (map #(apply % []) generate-fn)
-                                [(generate-fn)])
+                                (map #(apply % [metadata]) generate-fn)
+                                [(generate-fn metadata)])
         first-component-idx   (cond-> sub-path
-                                (not (number? sub-path))
-                                (last))]
+                                      (not (number? sub-path))
+                                      (last))]
     (as-> db db'
-          (update-in db' parent-component-path (cu/vector-of-length (count components)))
-          (reduce (fn [db' [idx component]]
-                    (let [path (flatten [parent-component-path (+ first-component-idx idx)])]
-                      (assoc-in db' path component)))
-                  db'
-                  (map vector (range) components))
-          (assoc-in db' [:editor :ui (-> components first :id) :focus?] true))))
+      (update-in db' parent-component-path (cu/vector-of-length (count components)))
+      (reduce (fn [db' [idx component]]
+                (let [path (flatten [parent-component-path (+ first-component-idx idx)])]
+                  (assoc-in db' path component)))
+              db'
+              (map vector (range) components))
+      (assoc-in db' [:editor :ui (-> components first :id) :focus?] true))))
 
 (reg-event-db :generate-component generate-component)
 
@@ -190,8 +210,7 @@
                (assoc-in [:editor :used-by-haut :fetching?] true)
                (assoc-in [:editor :used-by-haut :error?] false))
          :fetch-haut-with-hakukohteet [hakukohteet-promise organization-oids haku-oids]
-         :fetch-hakukohde-groups [hakukohderyhmat-promise]
-         }))))
+         :fetch-hakukohde-groups [hakukohderyhmat-promise]}))))
 
 (reg-event-db
   :editor/handle-user-info
@@ -484,9 +503,8 @@
     ; moving component from root-level into a component-group
     [[a] [b :children xb]]
     (if (-> b (< a))
-      [b :children xb]       ; topwards
-      [(dec b) :children xb] ; bottomwards
-      )
+      [b :children xb]        ; topwards
+      [(dec b) :children xb]) ; bottomwards
 
     :else target-path))
 
@@ -589,30 +607,38 @@
 (reg-event-db
   :editor/add-to-belongs-to-hakukohteet
   (fn [db [_ path oid]]
-    (let [path (conj (vec (current-form-content-path db path))
-                     :belongs-to-hakukohteet)]
-      (update-in db path (fnil (comp vec #(conj % oid) set) [])))))
+    (let [content-path (conj (vec (current-form-content-path db path))
+                        :belongs-to-hakukohteet)]
+      (-> db
+          (update-in content-path (fnil (comp vec #(conj % oid) set) []))
+          (update-modified-by [path])))))
 
 (reg-event-db
   :editor/remove-from-belongs-to-hakukohteet
   (fn [db [_ path oid]]
-    (let [path (conj (vec (current-form-content-path db path))
-                     :belongs-to-hakukohteet)]
-      (update-in db path (fnil (comp vec #(disj % oid) set) [])))))
+    (let [content-path (conj (vec (current-form-content-path db path))
+                        :belongs-to-hakukohteet)]
+      (-> db
+          (update-in content-path (fnil (comp vec #(disj % oid) set) []))
+          (update-modified-by [path])))))
 
 (reg-event-db
   :editor/add-to-belongs-to-hakukohderyhma
   (fn [db [_ path oid]]
-    (let [path (conj (vec (current-form-content-path db path))
-                 :belongs-to-hakukohderyhma)]
-      (update-in db path (fnil (comp vec #(conj % oid) set) [])))))
+    (let [content-path (conj (vec (current-form-content-path db path))
+                        :belongs-to-hakukohderyhma)]
+      (-> db
+          (update-in content-path (fnil (comp vec #(conj % oid) set) []))
+          (update-modified-by [path])))))
 
 (reg-event-db
   :editor/remove-from-belongs-to-hakukohderyhma
   (fn [db [_ path oid]]
-    (let [path (conj (vec (current-form-content-path db path))
-                 :belongs-to-hakukohderyhma)]
-      (update-in db path (fnil (comp vec #(disj % oid) set) [])))))
+    (let [content-path (conj (vec (current-form-content-path db path))
+                        :belongs-to-hakukohderyhma)]
+      (-> db
+          (update-in content-path (fnil (comp vec #(disj % oid) set) []))
+          (update-modified-by [path])))))
 
 (defn- fold [db id]
   (assoc-in db [:editor :ui id :folded?] true))

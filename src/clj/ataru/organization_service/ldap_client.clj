@@ -48,15 +48,33 @@
 (defn get-right-organization-oids [connection user-name rights]
   (user->right-organization-oids (get-user connection user-name) rights))
 
-(def fake-virkailija-value {:employeeNumber "1.2.246.562.11.11111111012"
-                            :givenName      "Veijo"
-                            :sn             "Virkailija"})
+(def fake-org-by-oid
+  {"1.2.246.562.10.0439845" {:name {:fi "Test org"}, :oid "1.2.246.562.10.0439845" :type :organization}
+   "1.2.246.562.28.1"       {:name {:fi "Test group"}, :oid "1.2.246.562.28.1" :type :group}
+   "1.2.246.562.10.0439846" {:name {:fi "Test org 2"}, :oid "1.2.246.562.10.0439846" :type :organization}
+   "1.2.246.562.28.2"       {:name {:fi "Test group 2"}, :oid "1.2.246.562.28.2" :type :group}})
+
+(def fake-orgs
+  {"DEVELOPER"                        [(get fake-org-by-oid "1.2.246.562.10.0439845")
+                                       (get fake-org-by-oid "1.2.246.562.28.1")]
+   "USER-WITH-HAKUKOHDE-ORGANIZATION" [(get fake-org-by-oid "1.2.246.562.10.0439846")
+                                       (get fake-org-by-oid "1.2.246.562.28.2")]})
+
+(def fake-virkailija-value
+  {"DEVELOPER"                        {:employeeNumber "1.2.246.562.11.11111111012"
+                                       :givenName      "Veijo"
+                                       :sn             "Virkailija"
+                                       :description    "[\"APP_ATARU_EDITORI_CRUD_1.2.246.562.10.0439845\",\"APP_ATARU_HAKEMUS_CRUD_1.2.246.562.10.0439845\",\"APP_ATARU_EDITORI_CRUD_1.2.246.562.28.1\",\"APP_ATARU_HAKEMUS_CRUD_1.2.246.562.28.1\"]"}
+   "USER-WITH-HAKUKOHDE-ORGANIZATION" {:employeeNumber "1.2.246.562.11.11111111000"
+                                       :givenName      "Keijo"
+                                       :sn             "Esimies"
+                                       :description    "[\"APP_ATARU_EDITORI_CRUD_1.2.246.562.10.0439846\",\"APP_ATARU_HAKEMUS_CRUD_1.2.246.562.10.0439846\",\"APP_ATARU_EDITORI_CRUD_1.2.246.562.28.2\",\"APP_ATARU_HAKEMUS_CRUD_1.2.246.562.28.2\"]"}})
 
 (defn get-virkailija-by-username
   [user-name]
   ; TODO this function should probably be in a service with a proper mock version
   (if (-> config :dev :fake-dependencies)
-    fake-virkailija-value
+    (get fake-virkailija-value user-name (get fake-virkailija-value "DEVELOPER"))
     (let [connection (create-ldap-connection)
           user (get-user connection user-name)]
       (ldap/close connection)

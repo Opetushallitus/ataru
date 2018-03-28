@@ -149,7 +149,9 @@
 
     (api/GET "/user-info" {session :session}
       (ok {:username      (-> session :identity :username)
-           :organizations (organization-list session)}))
+           :organizations (organization-list session)
+           :oid           (-> session :identity :oid)
+           :name          (format "%s %s" (-> session :identity :first-name ) (-> session :identity :last-name))}))
 
     (api/GET "/forms" {session :session}
       :summary "Return forms for editor view. Also used by external services.
@@ -347,8 +349,7 @@
         :body [information-request ataru-schema/NewInformationRequest]
         :summary "Send an information request to an applicant"
         :return ataru-schema/InformationRequest
-        (ok (information-request/store information-request
-              session)))
+        (ok (information-request/store information-request session)))
 
       (api/POST "/excel" {session :session}
         :form-params [application-keys :- s/Str

@@ -186,11 +186,10 @@
 
 (defn store-email-templates
   [form-key session templates]
-  (let [virkailija       (virkailija-edit/upsert-virkailija session)
-        stored-templates (mapv #(email-store/create-or-update-email-template
+  (let [stored-templates (mapv #(email-store/create-or-update-email-template
                                   form-key
                                   (:lang %)
-                                  (:oid virkailija)
+                                  (-> session :identity :oid)
                                   (:content %))
                                templates)]
     (map

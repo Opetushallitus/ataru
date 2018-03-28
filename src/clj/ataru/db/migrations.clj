@@ -20,7 +20,9 @@
     [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
     [ataru.background-job.job :as job]
     [ataru.application.review-states :as review-states]
-    [ataru.koodisto.koodisto :as koodisto]))
+    [ataru.koodisto.koodisto :as koodisto]
+    [ataru.organization-service.ldap-client :as ldap])
+  (:import (java.time ZonedDateTime ZoneId)))
 
 (def default-fetch-size 50)
 
@@ -194,11 +196,10 @@
     (info "Creating new review state for application" application-key "in state" old-state)
     (when (not= old-state application-state)
       (info "Updating application state:" old-state "->" application-state)
-      (application-store/save-application-review (merge old-review {:state application-state}) fake-session {:oid nil}))
+      (application-store/save-application-review (merge old-review {:state application-state}) fake-session))
     (when (= 1 (count hakukohteet))
       (info "Updating hakukohde" (first hakukohteet) "to state" selection-state)
       (application-store/save-application-hakukohde-review
-        nil
         (:key application)
         (first hakukohteet)
         "selection-state"
@@ -288,7 +289,6 @@
           (doseq [hakukohde-oid-or-form (or (not-empty hakukohde) ["form"])]
             (println "Creating new hakukohde-review" (:key application) (:id application) "->" hakukohde-oid-or-form state)
             (application-store/save-application-hakukohde-review
-              nil
               key
               hakukohde-oid-or-form
               "processing-state"
@@ -361,6 +361,44 @@
                   (migration-app-store/insert-1.86-application
                    connection
                    (assoc new-application :form_id id))))))))))
+
+(def system-metadata
+  {:created-by  {:name "system"
+                 :oid  "system"
+                 :date "1970-01-01T00:00:00Z"}
+   :modified-by {:name "system"
+                 :oid  "system"
+                 :date "1970-01-01T00:00:00Z"}})
+
+(defn- get-field-metadata
+  [virkailija]
+  {:created-by  {:name (format "%s %s" (:givenName virkailija) (:sn virkailija))
+                 :oid  (:employeeNumber virkailija)
+                 :date (ZonedDateTime/now (ZoneId/of "Europe/Helsinki"))}
+   :modified-by {:name (format "%s %s" (:givenName virkailija) (:sn virkailija))
+                 :oid  (:employeeNumber virkailija)
+                 :date (ZonedDateTime/now (ZoneId/of "Europe/Helsinki"))}})
+
+(def get-virkailija (memoize ldap/get-virkailija-by-username))
+
+(defn- migrate-element-metadata-to-forms
+  [connection]
+  (doseq [form (migration-app-store/get-1.88-forms connection)
+          :let [virkailija     (get-virkailija (:created_by form))
+                field-metadata (get-field-metadata virkailija)]]
+    (-> (:content form)
+        (update :content
+                (fn [content]
+                  (for [field content
+                        :let [metadata (if (or (= "hakukohteet" (:id field)) (= "person-info" (:module field)))
+                                         system-metadata
+                                         field-metadata)]]
+                    (clojure.walk/prewalk (fn [x]
+                                            (if (and (map? x) (contains? x :fieldType))
+                                              (assoc x :metadata metadata)
+                                              x))
+                                          field))))
+        (migration-app-store/update-1.88-form-content (:id form) connection))))
 
 (migrations/defmigration
   migrate-person-info-module "1.13"
@@ -447,6 +485,12 @@
   "Migrate kotikunta from text to a code"
   (with-db-transaction [conn {:connection connection}]
     (migrate-kotikunta-from-text-to-code conn)))
+
+(migrations/defmigration
+  update-forms-metadata "1.88"
+  "Migrate creator to form elements"
+  (with-db-transaction [conn {:connection connection}]
+    (migrate-element-metadata-to-forms conn)))
 
 (defn migrate
   []

@@ -13,10 +13,10 @@
   [ds-key query params]
   (db/exec ds-key query params))
 
-(defn add-information-request [information-request virkailija conn]
-  (-> (yesql-add-information-request<! (->snake-case-kw (assoc information-request :virkailija_oid (:oid virkailija)))
+(defn add-information-request [information-request session conn]
+  (-> (yesql-add-information-request<! (->snake-case-kw (assoc information-request :virkailija_oid (-> session :identity :oid)))
                                        {:connection conn})
-      (merge (select-keys virkailija [:first_name :last_name]))
+      (merge (select-keys (:identity session) [:first-name :last-name]))
       (->kebab-case-kw)
       (dissoc :virkailija-oid :id)))
 

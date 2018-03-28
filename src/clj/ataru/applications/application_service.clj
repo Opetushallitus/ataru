@@ -207,11 +207,10 @@
                                                       ohjausparametrit-service))))
 
 (defn- save-application-hakukohde-reviews
-  [virkailija application-key hakukohde-reviews session]
+  [application-key hakukohde-reviews session]
   (doseq [[hakukohde review] hakukohde-reviews]
     (doseq [[review-requirement review-state] review]
       (application-store/save-application-hakukohde-review
-        virkailija
         application-key
         (name hakukohde)
         (name review-requirement)
@@ -220,15 +219,14 @@
 
 (defn save-application-review
   [review session organization-service]
-  (let [application-key (:application-key review)
-        virkailija (virkailija-edit/upsert-virkailija session)]
+  (let [application-key (:application-key review)]
     (aac/check-application-access
       application-key
       session
       organization-service
       [:edit-applications])
-    (application-store/save-application-review review session virkailija)
-    (save-application-hakukohde-reviews virkailija application-key (:hakukohde-reviews review) session)
+    (application-store/save-application-review review session)
+    (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session)
     {:review (application-store/get-application-review application-key)
      :events (application-store/get-application-events application-key)
      :hakukohde-reviews (parse-application-hakukohde-reviews application-key)}))

@@ -12,118 +12,127 @@
 
 (defqueries "sql/form-queries.sql")
 
-(def form1 {:id               1,
-            :key              "foobar1",
-            :name             {:fi "Selaintestilomake1"},
-            :created-by       "DEVELOPER"
-            :organization-oid "1.2.246.562.10.0439845"
-            :content
-                              [{:fieldClass "wrapperElement",
-                                :id         "G__31",
-                                :fieldType  "fieldset",
-                                :children
-                                            [{:label      {:fi "Kengännumero", :sv ""},
-                                              :fieldClass "formField",
-                                              :id         "c2e4536c-1cdb-4450-b019-1b38856296ae",
-                                              :params     {},
-                                              :fieldType  "textField"}],
-                                :label      {:fi "Jalat", :sv "Avsnitt namn"}}]})
+(def metadata {:created-by  {:oid  "1.2.246.562.24.1000000"
+                             :date "2018-03-21T15:45:29.23+02:00"
+                             :name "Teppo Testinen"}
+               :modified-by {:oid  "1.2.246.562.24.1000000"
+                             :date "2018-03-22T07:55:08Z"
+                             :name "Teppo Testinen"}})
 
-(def form2 {:id               2,
-            :key              "foobar2",
-            :name             {:fi "Selaintestilomake2"},
+(def form1 {:id               1
+            :key              "foobar1"
+            :name             {:fi "Selaintestilomake1"}
             :created-by       "DEVELOPER"
             :organization-oid "1.2.246.562.10.0439845"
-            :content
-                              [{:fieldClass "wrapperElement",
-                                :id         "d5cd3c63-02a3-4c19-a61e-35d85e46602f",
-                                :fieldType  "fieldset",
-                                :children
-                                            [{:label      {:fi "Pään ympärys", :sv ""},
-                                              :fieldClass "formField",
-                                              :id         "e257afce-ff30-40e1-ad6f-c224a1537d01",
-                                              :params     {},
-                                              :fieldType  "textField"}],
-                                :label      {:fi "Pää", :sv "Avsnitt namn"}}]})
+            :content          [{:fieldClass "wrapperElement"
+                                :id         "G__31"
+                                :metadata   metadata
+                                :fieldType  "fieldset"
+                                :children   [{:label       {:fi "Kengännumero" :sv ""}
+                                              :fieldClass  "formField"
+                                              :id "c2e4536c-1cdb-4450-b019-1b38856296ae"
+                                              :metadata    metadata
+                                              :params      {}
+                                              :fieldType   "textField"}]
+                                :label      {:fi "Jalat" :sv "Avsnitt namn"}}]})
 
-(def form3 {:id               3,
-            :key              "41101b4f-1762-49af-9db0-e3603adae3ad",
-            :name             {:fi "Selaintestilomake3"},
+(def form2 {:id               2
+            :key              "foobar2"
+            :name             {:fi "Selaintestilomake2"}
             :created-by       "DEVELOPER"
             :organization-oid "1.2.246.562.10.0439845"
-            :languages        ["fi", "en"]
-            :content
-                              [(component/hakukohteet)
+            :content          [{:fieldClass "wrapperElement"
+                                :metadata   metadata
+                                :id         "d5cd3c63-02a3-4c19-a61e-35d85e46602f"
+                                :fieldType  "fieldset"
+                                :children   [{:label      {:fi "Pään ympärys" :sv ""}
+                                              :fieldClass "formField"
+                                              :metadata   metadata
+                                              :id         "e257afce-ff30-40e1-ad6f-c224a1537d01"
+                                              :params     {}
+                                              :fieldType  "textField"}]
+                                :label      {:fi "Pää" :sv "Avsnitt namn"}}]})
+
+(def form3 {:id               3
+            :key              "41101b4f-1762-49af-9db0-e3603adae3ad"
+            :name             {:fi "Selaintestilomake3"}
+            :created-by       "DEVELOPER"
+            :organization-oid "1.2.246.562.10.0439845"
+            :languages        ["fi" "en"]
+            :content          [(component/hakukohteet)
                                (person-info-module/person-info-module)
-                               {:fieldClass "wrapperElement",
-                                :id         "d5cd3c63-02a3-4c19-a61e-35d85e46602f",
-                                :fieldType  "fieldset",
-                                :children
-                                            [{:label      {:fi "Pään ympärys", :sv ""},
-                                              :fieldClass "formField",
-                                              :id         "e257afce-ff30-40e1-ad6f-c224a1537d01",
-                                              :params     {},
-                                              :fieldType  "textField"}],
-                                :label      {:fi "Pää", :sv "Avsnitt namn"}}]})
+                               {:fieldClass "wrapperElement"
+                                :metadata   metadata
+                                :id         "d5cd3c63-02a3-4c19-a61e-35d85e46602f"
+                                :fieldType  "fieldset"
+                                :children   [{:label      {:fi "Pään ympärys" :sv ""}
+                                              :fieldClass "formField"
+                                              :metadata   metadata
+                                              :id         "e257afce-ff30-40e1-ad6f-c224a1537d01"
+                                              :params     {}
+                                              :fieldType  "textField"}]
+                                :label      {:fi "Pää" :sv "Avsnitt namn"}}]})
 
-(def ssn-testform {:id               4,
-                   :key              "41101b4f-1762-49af-9db0-e3603adae656",
-                   :name             {:fi "SSN_testilomake"},
+(def ssn-testform {:id               4
+                   :key              "41101b4f-1762-49af-9db0-e3603adae656"
+                   :name             {:fi "SSN_testilomake"}
                    :created-by       "DEVELOPER"
                    :organization-oid "1.2.246.562.10.0439845"
                    :languages        ["fi"]
-                   :content
-                                     [(component/hakukohteet)
+                   :content          [(component/hakukohteet)
                                       (person-info-module/person-info-module)]})
 
-(def belongs-to-hakukohteet-test-form {:id 5
-                                       :key "belongs-to-hakukohteet-test-form"
-                                       :name {:fi "belongs-to-hakukohteet-test-form"}
-                                       :created-by "DEVELOPER"
+(def belongs-to-hakukohteet-test-form {:id               5
+                                       :key              "belongs-to-hakukohteet-test-form"
+                                       :name             {:fi "belongs-to-hakukohteet-test-form"}
+                                       :created-by       "DEVELOPER"
                                        :organization-oid "1.2.246.562.10.0439845"
-                                       :languages ["fi"]
-                                       :content
-                                       [(component/hakukohteet)
-                                        (person-info-module/person-info-module)
-                                        {:label      {:fi "Hakukohdekohtainen"},
-                                         :fieldClass "formField",
-                                         :id         "c2e4536c-1cdb-4450-b019-1b38856296ae",
-                                         :params     {},
-                                         :fieldType  "textField"}]})
+                                       :languages        ["fi"]
+                                       :content          [(component/hakukohteet)
+                                                          (person-info-module/person-info-module)
+                                                          {:label      {:fi "Hakukohdekohtainen"}
+                                                           :fieldClass "formField"
+                                                           :metadata   metadata
+                                                           :id         "c2e4536c-1cdb-4450-b019-1b38856296ae"
+                                                           :params     {}
+                                                           :fieldType  "textField"}]})
 
-(def hakija-hakukohteen-hakuaika-test-form {:id 6
-                                       :key "hakija-hakukohteen-hakuaika-test-form"
-                                       :name {:fi "hakija-hakukohteen-hakuaika-test-form"}
-                                       :created-by "DEVELOPER"
-                                       :organization-oid "1.2.246.562.10.0439845"
-                                       :languages ["fi"]
-                                       :content
-                                       [(component/hakukohteet)
-                                        (person-info-module/person-info-module)
-                                        {:label      {:fi "Hakukohteiden hakuajat ohi!"},
-                                         :fieldClass "formField",
-                                         :id         "hakuajat-ohi",
-                                         :params     {},
-                                         :belongs-to-hakukohteet ["1.2.246.562.20.49028100001"]
-                                         :fieldType  "textField"}
-                                        {:label      {:fi "Osa hakuajoista voimassa!"},
-                                         :fieldClass "formField",
-                                         :id         "osa-hakuajoista-ohi",
-                                         :params     {},
-                                         :belongs-to-hakukohteet ["1.2.246.562.20.49028100002" "1.2.246.562.20.49028100001"]
-                                         :fieldType  "textField"}
-                                        {:label      {:fi "Kaikki hakuajat voimassa!"},
-                                         :fieldClass "formField",
-                                         :id         "kaikki-hakuajat-voimassa",
-                                         :params     {},
-                                         :belongs-to-hakukohteet ["1.2.246.562.20.49028100002" "1.2.246.562.20.49028100003"]
-                                         :fieldType  "textField"}
-                                        {:label      {:fi "Assosiaatio hakukohderyhmän kautta"},
-                                         :fieldClass "formField",
-                                         :id         "assosiaatio-hakukohderyhman-kautta",
-                                         :params     {},
-                                         :belongs-to-hakukohderyhma ["1.2.246.562.28.00000000001"]
-                                         :fieldType  "textField"}]})
+(def hakija-hakukohteen-hakuaika-test-form {:id               6
+                                            :key              "hakija-hakukohteen-hakuaika-test-form"
+                                            :name             {:fi "hakija-hakukohteen-hakuaika-test-form"}
+                                            :created-by       "DEVELOPER"
+                                            :organization-oid "1.2.246.562.10.0439845"
+                                            :languages        ["fi"]
+                                            :content          [(component/hakukohteet)
+                                                               (person-info-module/person-info-module)
+                                                               {:label                  {:fi "Hakukohteiden hakuajat ohi!"}
+                                                                :fieldClass             "formField"
+                                                                :metadata               metadata
+                                                                :id                     "hakuajat-ohi"
+                                                                :params                 {}
+                                                                :belongs-to-hakukohteet ["1.2.246.562.20.49028100001"]
+                                                                :fieldType              "textField"}
+                                                               {:label                  {:fi "Osa hakuajoista voimassa!"}
+                                                                :fieldClass             "formField"
+                                                                :metadata               metadata
+                                                                :id                     "osa-hakuajoista-ohi"
+                                                                :params                 {}
+                                                                :belongs-to-hakukohteet ["1.2.246.562.20.49028100002" "1.2.246.562.20.49028100001"]
+                                                                :fieldType              "textField"}
+                                                               {:label                  {:fi "Kaikki hakuajat voimassa!"}
+                                                                :fieldClass             "formField"
+                                                                :metadata               metadata
+                                                                :id                     "kaikki-hakuajat-voimassa"
+                                                                :params                 {}
+                                                                :belongs-to-hakukohteet ["1.2.246.562.20.49028100002" "1.2.246.562.20.49028100003"]
+                                                                :fieldType              "textField"}
+                                                               {:label                     {:fi "Assosiaatio hakukohderyhmän kautta"}
+                                                                :fieldClass                "formField"
+                                                                :metadata                  metadata
+                                                                :id                        "assosiaatio-hakukohderyhman-kautta"
+                                                                :params                    {}
+                                                                :belongs-to-hakukohderyhma ["1.2.246.562.28.00000000001"]
+                                                                :fieldType                 "textField"}]})
 
 (def assosiaatio-hakukohteen-organisaatiosta-form {:id 7
                                                    :key "hakukohteen-organisaatiosta-form"

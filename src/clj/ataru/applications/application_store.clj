@@ -131,11 +131,11 @@
                       :operation audit-log/operation-new
                       :id        (extract-email new-application)})
       (yesql-add-application-event<! {:application_key  key
-                                     :event_type       "received-from-applicant"
-                                     :new_review_state nil
-                                     :virkailija_oid   nil
-                                     :hakukohde        nil
-                                     :review_key       nil}
+                                      :event_type       "received-from-applicant"
+                                      :new_review_state nil
+                                      :virkailija_oid   nil
+                                      :hakukohde        nil
+                                      :review_key       nil}
                                     connection)
       (yesql-add-application-review! {:application_key key
                                       :state           application-review-states/initial-application-review-state}
@@ -388,7 +388,7 @@
                        yesql-organization-oids-of-applications-of-persons
                        {:person_oids person-oids})))))
 
-(defn save-application-review [review session virkailija]
+(defn save-application-review [review session]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection       {:connection conn}
           app-key          (:application-key review)
@@ -406,7 +406,7 @@
         (let [application-event {:application_key  app-key
                                  :event_type       "review-state-change"
                                  :new_review_state (:state review-to-store)
-                                 :virkailija_oid   (:oid virkailija)
+                                 :virkailija_oid   (-> session :identity :oid)
                                  :hakukohde        nil
                                  :review_key       nil}]
           (yesql-add-application-event<!
@@ -418,7 +418,7 @@
                           :organization-oid organization-oid}))))))
 
 (defn save-application-hakukohde-review
-  [virkailija application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state session]
+  [application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state session]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (let [connection                  {:connection conn}
                                   review-to-store             {:application_key application-key
@@ -441,7 +441,7 @@
                                                        :new_review_state (:state review-to-store)
                                                        :review_key       hakukohde-review-requirement
                                                        :hakukohde        (:hakukohde review-to-store)
-                                                       :virkailija_oid   (:oid virkailija)}]
+                                                       :virkailija_oid   (-> session :identity :oid)}]
                                   (yesql-add-application-event<!
                                     hakukohde-event
                                     connection)
@@ -602,7 +602,7 @@
          (->> hakutoiveet
               (filter #(= hakukohde-oid (:hakukohdeOid %)))
               first))
-         hakukohteet-in-priority-order))
+       hakukohteet-in-priority-order))
 
 (defn- unwrap-external-application
   [{:keys [key haku person_oid lang email hakukohde] :as application}]
@@ -650,7 +650,7 @@
        (into {})))
 
 (defn- update-hakukohde-process-state!
-  [connection username organization-oid virkailija hakukohde-oid from-state to-state application-key]
+  [connection username organization-oid session hakukohde-oid from-state to-state application-key]
   (let [application      (get-latest-application-by-key-with-hakukohde-reviews application-key)
         existing-reviews (filter
                            #(= (:state %) from-state)
@@ -663,9 +663,9 @@
         new-event        {:application_key  application-key
                           :event_type       "hakukohde-review-state-change"
                           :new_review_state to-state
-                          :virkailija_oid   (:oid virkailija)
-                          :first_name       (:first_name virkailija)
-                          :last_name        (:last_name virkailija)
+                          :virkailija_oid   (-> session :identity :oid)
+                          :first_name       (:first-name session)
+                          :last_name        (:last-name session)
                           :review_key       "processing-state"}]
     (when (seq new-reviews)
       (info "Updating" (count new-reviews) "application-hakukohde-reviews"))
@@ -683,27 +683,25 @@
   (let [audit-log-entries (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (let [connection       {:connection conn}
                                   username         (get-in session [:identity :username])
-                                  organization-oid (get-in session [:identity :organizations 0 :oid])
-                                  virkailija (virkailija-edit/upsert-virkailija session)]
+                                  organization-oid (get-in session [:identity :organizations 0 :oid])]
                               (mapv
-                                (partial update-hakukohde-process-state! connection username organization-oid virkailija hakukohde-oid from-state to-state)
+                                (partial update-hakukohde-process-state! connection username organization-oid session hakukohde-oid from-state to-state)
                                 application-keys)))]
     (doseq [audit-log-entry audit-log-entries]
       (audit-log/log audit-log-entry))))
 
 (defn add-application-event [event session]
   (jdbc/with-db-transaction [db {:datasource (db/get-datasource :db)}]
-    (let [conn       {:connection db}
-          virkailija (virkailija-edit/upsert-virkailija session)]
+    (let [conn       {:connection db}]
       (-> {:event_type       nil
            :new_review_state nil
-           :virkailija_oid   (:oid virkailija)
+           :virkailija_oid   (-> session :identity :oid)
            :hakukohde        nil
            :review_key       nil}
           (merge (transform-keys ->snake_case event))
           (yesql-add-application-event<! conn)
           (dissoc :virkailija_oid)
-          (merge (select-keys virkailija [:first_name :last_name]))
+          (merge (select-keys (:identity session) [:first-name :last-name]))
           (->kebab-case-kw)))))
 
 (defn get-applications-newer-than [date]
@@ -712,13 +710,12 @@
 (defn add-review-note [note session]
   {:pre [(-> note :application-key clojure.string/blank? not)
          (-> note :notes clojure.string/blank? not)]}
-  (let [virkailija (-> session virkailija-edit/upsert-virkailija)]
-    (-> (exec-db :db yesql-add-review-note<! {:application_key (:application-key note)
-                                              :notes           (:notes note)
-                                              :virkailija_oid  (:oid virkailija)})
-        (merge (select-keys virkailija [:first_name :last_name]))
-        (dissoc :virkailija_oid :removed)
-        (->kebab-case-kw))))
+  (-> (exec-db :db yesql-add-review-note<! {:application_key (:application-key note)
+                                            :notes           (:notes note)
+                                            :virkailija_oid  (-> session :identity :oid)})
+      (merge (select-keys (:identity session) [:first-name :last-name]))
+      (dissoc :virkailija_oid :removed)
+      (->kebab-case-kw)))
 
 (defn get-application-info-for-tilastokeskus [haku-oid]
   (exec-db :db yesql-tilastokeskus-applications {:haku_oid haku-oid}))

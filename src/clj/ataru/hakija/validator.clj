@@ -6,8 +6,7 @@
             [clojure.core.match :refer [match]]
             [clojure.core.async :as async]
             [taoensso.timbre :refer [spy debug warn]]
-            [ataru.koodisto.koodisto :as koodisto]
-            [clojure.pprint :as pprint]))
+            [ataru.koodisto.koodisto :as koodisto]))
 
 (defn allowed-values [options]
   (set
