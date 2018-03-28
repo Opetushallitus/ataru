@@ -98,9 +98,11 @@
       [readonly-view/readonly-fields form @application])))
 
 (defn- render-fields [form]
-  (let [submit-status (subscribe [:state-query [:application :submit-status]])]
+  (let [submit-status    (subscribe [:state-query [:application :submit-status]])
+        preview-enabled? (subscribe [:state-query [:application :preview-enabled]])]
     (fn [form]
-      (if (= :submitted @submit-status)
+      (if (or (= :submitted @submit-status)
+              @preview-enabled?)
         [readonly-fields form]
         (do
           (dispatch [:application/run-rule])                ; wtf

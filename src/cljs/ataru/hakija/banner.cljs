@@ -84,16 +84,32 @@
                                   (dispatch [:application/submit]))}
                     (edit-text @secret @virkailija-secret)]))))
 
+(defn- preview-toggle
+  [submit-status enabled?]
+  (when (not submit-status)
+    [:div.toggle-switch__row
+     [:div.toggle-switch
+      [:div.toggle-switch__slider
+       {:on-click (fn [_] (dispatch [:state-update #(update-in % [:application :preview-enabled] not)]))
+        :class    (if enabled? "toggle-switch__slider--right" "toggle-switch__slider--left")}
+       [:div.toggle-switch__label-left (get-translation :preview)]
+       [:div.toggle-switch__label-divider]
+       [:div.toggle-switch__label-right (get-translation :preview)]]]]))
+
 (defn status-controls []
   (let [valid-status  (subscribe [:application/valid-status])
         submit-status (subscribe [:state-query [:application :submit-status]])
         can-apply?    (subscribe [:application/can-apply?])
-        editing?      (subscribe [:state-query [:application :editing?]])]
+        editing?      (subscribe [:state-query [:application :editing?]])
+        preview-enabled? (subscribe [:state-query [:application :preview-enabled]])]
     (when (or @can-apply? @editing?)
-      [:div.application__status-controls
-       [send-button-or-placeholder @valid-status @submit-status]
-       [invalid-field-status @valid-status]
-       [sent-indicator @submit-status]])))
+      [:div.application__status-controls-container
+       [:div.application__preview-control
+        [preview-toggle @submit-status @preview-enabled?]]
+       [:div.application__status-controls
+        [send-button-or-placeholder @valid-status @submit-status]
+        [invalid-field-status @valid-status]
+        [sent-indicator @submit-status]]])))
 
 (defn banner [] [:div.application__banner-container
                  [:div.application__top-banner-container
