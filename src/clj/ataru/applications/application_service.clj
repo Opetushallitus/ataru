@@ -90,6 +90,14 @@
     {}
     (application-store/get-application-hakukohde-reviews application-key)))
 
+(defn- parse-application-attachment-reviews
+  [application-key]
+  (reduce
+   (fn [acc {:keys [attachment_key state hakukohde]}]
+     (update-in acc [(or hakukohde :form)] assoc (keyword attachment_key) state))
+   {}
+   (application-store/get-application-attachment-reviews application-key)))
+
 (defn- person-info-from-application [application]
   (let [answers (util/answers-by-key (:answers application))]
     {:first-name     (-> answers :first-name :value)
@@ -166,6 +174,7 @@
                                (merge tarjonta-info))
      :form                 form
      :hakukohde-reviews    (parse-application-hakukohde-reviews application-key)
+     :attachment-reviews   (parse-application-attachment-reviews application-key)
      :events               (application-store/get-application-events application-key)
      :review               (application-store/get-application-review application-key)
      :review-notes         (application-store/get-application-review-notes application-key)

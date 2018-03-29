@@ -431,6 +431,15 @@
 (s/defschema HakukohdeReviews
   {s/Keyword hakukohde-review-types-schema})
 
+(def attachment-review-types-schema
+  (reduce (fn [acc [kw _ states]]
+            (assoc acc (s/optional-key kw) (apply s/enum (map first states))))
+          {}
+          review-states/attachment-hakukohde-review-types))
+
+(s/defschema AttachmentReviews
+  {s/Keyword attachment-review-types-schema})
+
 (s/defschema ReviewNote
   {:id                            s/Int
    :application-key               s/Str

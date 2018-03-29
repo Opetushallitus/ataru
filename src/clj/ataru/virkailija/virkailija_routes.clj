@@ -291,6 +291,7 @@
                  :events               [ataru-schema/Event]
                  :review               ataru-schema/Review
                  :review-notes         [ataru-schema/ReviewNote]
+                 :attachment-reviews   ataru-schema/AttachmentReviews
                  :hakukohde-reviews    ataru-schema/HakukohdeReviews
                  :form                 ataru-schema/FormWithContent
                  :information-requests [ataru-schema/InformationRequest]}

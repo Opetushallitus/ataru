@@ -689,6 +689,14 @@ SELECT
 FROM application_hakukohde_reviews
 WHERE application_key = :application_key;
 
+-- name: yesql-get-application-attachment-reviews
+SELECT
+  attachment_key,
+  state,
+  hakukohde
+FROM application_hakukohde_attachment_reviews
+WHERE application_key = :application_key;
+
 -- name: yesql-get-payment-obligation-for-applications
 SELECT DISTINCT ON (application_key, hakukohde) application_key, hakukohde, state
 FROM application_hakukohde_reviews
