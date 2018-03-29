@@ -62,6 +62,23 @@
     {}
     applications))
 
+(defn- attachment-processing-state-counts-for-application
+  [{:keys [application_hakukohde_attachment_reviews]}]
+  (frequencies
+    (map
+      :state
+      (or
+       (not-empty application_hakukohde_attachment_reviews)
+       [{:state "not-checked"}]))))
+
+(defn attachment-state-counts
+  [applications]
+  (reduce
+   (fn [acc application]
+     (merge-with + acc (attachment-processing-state-counts-for-application application)))
+   {}
+   applications))
+
 (defn- update-review-field-of-selected-application-in-list
   [application selected-application-key field value]
   (if (= selected-application-key (:key application))
@@ -168,6 +185,7 @@
                  (assoc-in [:application :applications] applications-with-times)
                  (assoc-in [:application :fetching-applications] false)
                  (assoc-in [:application :review-state-counts] (review-state-counts applications-with-times))
+                 (assoc-in [:application :attachment-state-counts] (attachment-state-counts applications-with-times))
                  (assoc-in [:application :sort] application-sorting/initial-sort)
                  (assoc-in [:application :information-request] nil)
                  (update-sort (:column application-sorting/initial-sort) false))
