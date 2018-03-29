@@ -375,3 +375,23 @@
                                            :hakukohde-reviews
                                            (keyword selected-hakukohde)
                                            :processing-state])))))
+
+(re-frame.core/reg-sub
+  :application/application-attachment-states
+  (fn [db _]
+    (let [attachment-keys       (->> db :application :selected-application-and-form :application :answers
+                                     (filter (fn [[_ answer]]
+                                               (= "attachment" (:fieldType answer))))
+                                     (map (comp :value val))
+                                     flatten)
+          attachment-reviews    (-> db :application :review :attachment-reviews)
+          hakukohteet           (->> db :application :selected-application-and-form :application :hakukohde)
+          unchecked-attachments (cond
+                                  (and (= 0 (count hakukohteet))
+                                       (= 0 (count attachment-reviews))) (count attachment-keys)
+
+                                  (= 0 (count attachment-reviews)) (count hakukohteet)
+
+                                  :else (count (filter #(not= "checked" (:state %)) attachment-reviews)))]
+      {:checked   (- (count attachment-keys) unchecked-attachments)
+       :uncheched unchecked-attachments})))

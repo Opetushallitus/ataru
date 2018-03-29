@@ -250,6 +250,7 @@
                                              events
                                              review
                                              hakukohde-reviews
+                                             attachment-reviews
                                              information-requests
                                              review-notes]}]
   (-> db
@@ -260,6 +261,7 @@
       (assoc-in [:application :review] review)
       (assoc-in [:application :review-notes] review-notes)
       (assoc-in [:application :review :hakukohde-reviews] hakukohde-reviews)
+      (assoc-in [:application :review :attachment-reviews] attachment-reviews)
       (update-in [:application :selected-review-hakukohde] (fn [current-hakukohde]
                                                              (or
                                                                (when (contains? (set (:hakukohde application)) current-hakukohde) current-hakukohde)

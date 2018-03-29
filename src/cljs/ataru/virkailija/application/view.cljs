@@ -395,7 +395,9 @@
         date-time          (->> day-date-time (rest) (clojure.string/join " "))
         applicant          (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
         review-settings    (subscribe [:state-query [:application :review-settings :config]])
-        selected-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde]])]
+        hakukohteet        (subscribe [:state-query [:application :hakukohteet]])
+        selected-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde]])
+        attachment-states  (subscribe [:application/application-attachment-states])]
     [:div.application-handling__list-row
      {:on-click #(select-application (:key application))
       :class    (clojure.string/join " " [(when selected?
@@ -409,7 +411,9 @@
        [:span.application-handling__list-row--time-day day]
        [:span date-time]]
       [:span.application-handling__list-row--attachment-states
-       "asd"]]
+       [:i.application-handling_list-row-checked-attachments (:checked @attachment-states) "v"]
+       " "
+       [:i.application-handling_list-row-checked-attachments (:uncheched @attachment-states) "!"]]]
      [applications-hakukohde-rows @review-settings application @hakukohteet @selected-hakukohde]]))
 
 (defn application-list-contents [applications]
