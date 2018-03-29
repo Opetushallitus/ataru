@@ -1,14 +1,6 @@
 (ns ataru.tarjonta-service.hakukohde
-  (:require [clojure.string :refer [join blank?]]))
-
-(defn- koulutus->str
-  [koulutus lang]
-  (->> [(-> koulutus :koulutuskoodi-name lang)
-        (-> koulutus :tutkintonimike-name lang)
-        (:tarkenne koulutus)]
-       (remove #(or (nil? %) (blank? %)))
-       (distinct)
-       (join ", ")))
+  (:require [ataru.util :refer [koulutus->str]]
+            [clojure.string :refer [join blank?]]))
 
 (defn- koulutus->str-map
   [koulutus]

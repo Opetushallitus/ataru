@@ -152,3 +152,12 @@
                        (not (contains? #{"unprocessed" "information-request"}
                               (:state %))))
              application-hakukohde-reviews)))
+
+(defn koulutus->str
+  [koulutus lang]
+  (->> [(-> koulutus :koulutuskoodi-name lang)
+        (->> koulutus :tutkintonimike-names (mapv lang) (clojure.string/join ", "))
+        (:tarkenne koulutus)]
+       (remove clojure.string/blank?)
+       (distinct)
+       (clojure.string/join " | ")))

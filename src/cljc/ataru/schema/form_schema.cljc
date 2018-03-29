@@ -169,7 +169,7 @@
                                   :hakukierros-end                     (s/maybe s/Int)}
    (s/optional-key :koulutukset) [{:oid                  s/Str
                                    :koulutuskoodi-name   LocalizedStringOptional
-                                   :tutkintonimike-name  LocalizedStringOptional
+                                   :tutkintonimike-names [LocalizedStringOptional]
                                    :tarkenne             (s/maybe s/Str)}]})
 
 (s/defschema FormTarjontaMetadata
