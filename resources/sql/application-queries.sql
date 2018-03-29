@@ -87,6 +87,11 @@ SELECT
                                      'hakukohde', hakukohde))
    FROM application_hakukohde_reviews ahr
    WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+  (SELECT json_agg(json_build_object('attachment_key', attachment_key,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_attachment_reviews aar
+   WHERE aar.application_key = a.key) AS application_attachment_reviews,
   (SELECT COUNT(*)
    FROM new_application_modifications am
    WHERE am.application_key = a.key) AS new_application_modifications
@@ -126,6 +131,11 @@ SELECT
                                      'hakukohde', hakukohde))
    FROM application_hakukohde_reviews ahr
    WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+  (SELECT json_agg(json_build_object('attachment_key', attachment_key,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_attachment_reviews aar
+   WHERE aar.application_key = a.key) AS application_attachment_reviews,
   (SELECT COUNT(*)
    FROM new_application_modifications am
    WHERE am.application_key = a.key)  AS new_application_modifications

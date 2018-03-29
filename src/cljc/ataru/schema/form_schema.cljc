@@ -277,23 +277,26 @@
 
 ;; Header-level info about application, doesn't contain the actual answers
 (s/defschema ApplicationInfo
-  {:id                                             s/Int
-   :key                                            s/Str
-   :lang                                           s/Str
-   :state                                          s/Str
-   :score                                          (s/maybe s/Int)
-   :new-application-modifications                  s/Int
-   :person                                         {:preferred-name s/Str
-                                                    :last-name      s/Str
-                                                    :yksiloity      s/Bool}
-   (s/optional-key :form)                          s/Int
-   (s/optional-key :created-time)                  org.joda.time.DateTime
-   (s/optional-key :haku)                          (s/maybe s/Str)
-   (s/optional-key :hakukohde)                     (s/maybe [s/Str])
-   (s/optional-key :secret)                        s/Str
-   (s/optional-key :application-hakukohde-reviews) [{:requirement (apply s/enum review-states/hakukohde-review-type-names)
-                                                     :state       (apply s/enum review-requirement-values)
-                                                     :hakukohde   s/Str}]}) ; "form" or oid
+  {:id                                              s/Int
+   :key                                             s/Str
+   :lang                                            s/Str
+   :state                                           s/Str
+   :score                                           (s/maybe s/Int)
+   :new-application-modifications                   s/Int
+   :person                                          {:preferred-name s/Str
+                                                     :last-name      s/Str
+                                                     :yksiloity      s/Bool}
+   (s/optional-key :form)                           s/Int
+   (s/optional-key :created-time)                   org.joda.time.DateTime
+   (s/optional-key :haku)                           (s/maybe s/Str)
+   (s/optional-key :hakukohde)                      (s/maybe [s/Str])
+   (s/optional-key :secret)                         s/Str
+   (s/optional-key :application-hakukohde-reviews)  [{:requirement (apply s/enum review-states/hakukohde-review-type-names)
+                                                      :state       (apply s/enum review-requirement-values)
+                                                      :hakukohde   s/Str}] ; "form" or oid
+   (s/optional-key :application-attachment-reviews) [{:attachment_key (apply s/enum review-states/hakukohde-review-type-names)
+                                                      :state          (apply s/enum review-requirement-values)
+                                                      :hakukohde      s/Str}]})
 
 (s/defschema Application
   {(s/optional-key :key)                s/Str
