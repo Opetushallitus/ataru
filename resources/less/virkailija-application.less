@@ -505,8 +505,21 @@ and (max-width: 1000px) {
   visibility: visible;
 }
 
+.application-handling__attachment-review-container {
+  position: absolute;
+  width: 400px;
+  height: 800px;
+  background-color: @very-light-gray;
+  left: 25px;
+  transform: translateX(-100%);
+  border-left: 3px solid @link-color;
+}
+
+.application-handling__attachment-review-container-floating {
+  position: fixed;
+}
+
 .application-handling__review-outer-container {
-  padding-right: 5px;
   position: relative;
   border-top: solid @review-separator-color 1px;
   padding-top: 15px;

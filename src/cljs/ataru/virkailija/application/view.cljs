@@ -1012,38 +1012,47 @@
 
 (defn application-review []
   (let [review-positioning      (subscribe [:state-query [:application :review-positioning]])
-        settings-visible        (subscribe [:state-query [:application :review-settings :visible?]])]
-    [:div.application-handling__review-outer
-     {:class (when (= :fixed @review-positioning)
-               "application-handling__review-outer-floating")}
-     [:a.application-handling__review-area-settings-link
-      {:on-click (fn [event]
-                   (.preventDefault event)
-                   (dispatch [:application/toggle-review-area-settings-visibility]))}
-      [:i.application-handling__review-area-settings-button.zmdi.zmdi-settings]]
-     [:div.application-handling__review-settings
-      {:style (when-not @settings-visible
-                {:visibility "hidden"})
-       :class (when (= :fixed @review-positioning)
-                "application-handling__review-settings-floating")}
-      [:div.application-handling__review-settings-indicator-outer
-       [:div.application-handling__review-settings-indicator-inner]]
-      (when (not= :fixed @review-positioning)
-        [:div.application-handling__review-settings-header
-         [:i.zmdi.zmdi-account.application-handling__review-settings-header-icon]
-         [:span.application-handling__review-settings-header-text "Asetukset"]])]
-     [:div.application-handling__review
-      [:div.application-handling__review-outer-container
-       [application-hakukohde-selection]
-       [application-hakukohde-review-inputs review-states/hakukohde-review-types]
-       (when @(subscribe [:application/show-info-request-ui?])
-         [application-information-request])
-       [application-review-inputs]
-       [application-modify-link]
-       [application-resend-modify-link]
-       [application-resend-modify-link-confirmation]
-       [application-deactivate-toggle]
-       [application-review-events]]]]))
+        settings-visible        (subscribe [:state-query [:application :review-settings :visible?]])
+        show-attachment-review? (r/atom false)]
+    (fn []
+      [:div.application-handling__review-outer
+       {:class (when (= :fixed @review-positioning)
+                 "application-handling__review-outer-floating")}
+       [:a.application-handling__review-area-settings-link
+        {:on-click (fn [event]
+                     (.preventDefault event)
+                     (dispatch [:application/toggle-review-area-settings-visibility]))}
+        [:i.application-handling__review-area-settings-button.zmdi.zmdi-settings]]
+       [:div.application-handling__review-settings
+        {:style (when-not @settings-visible
+                  {:visibility "hidden"})
+         :class (when (= :fixed @review-positioning)
+                  "application-handling__review-settings-floating")}
+        [:div.application-handling__review-settings-indicator-outer
+         [:div.application-handling__review-settings-indicator-inner]]
+        (when (not= :fixed @review-positioning)
+          [:div.application-handling__review-settings-header
+           [:i.zmdi.zmdi-account.application-handling__review-settings-header-icon]
+           [:span.application-handling__review-settings-header-text "Asetukset"]])]
+       [:div.application-handling__review
+        (when @show-attachment-review?
+          [:div.application-handling__attachment-review-container
+           {:class (when (= :fixed @review-positioning)
+                     "application-handling__attachment-review-container-floating")}])
+        [:div.application-handling__review-outer-container
+         [application-hakukohde-selection]
+         [:a
+          {:on-click #(swap! show-attachment-review? not)}
+          (if @show-attachment-review? ">>" "<<") " Liitepyynnöt"]
+         [application-hakukohde-review-inputs review-states/hakukohde-review-types]
+         (when @(subscribe [:application/show-info-request-ui?])
+           [application-information-request])
+         [application-review-inputs]
+         [application-modify-link]
+         [application-resend-modify-link]
+         [application-resend-modify-link-confirmation]
+         [application-deactivate-toggle]
+         [application-review-events]]]])))
 
 (defn application-heading [application]
   (let [answers            (:answers application)
