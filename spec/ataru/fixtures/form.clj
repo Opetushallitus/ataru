@@ -7,6 +7,30 @@
                              :date "2018-03-22T07:55:08Z"
                              :name "Teppo Testinen"}})
 
+(defn get-names [content]
+  (map #(get-in % [:label :fi]) content))
+
+(defn create-element [name]
+  {:id name,
+   :label {:fi name},
+   :metadata metadata,
+   :fieldType "textField",
+   :fieldClass "formField"})
+
+(defn create-form [& elements]
+  {:name        {:fi (clojure.string/join "" (get-names elements))}
+   :created-by "DEVELOPER"
+   :content elements})
+
+(defn create-wrapper-element [& elements]
+  (let [name (str "W" (clojure.string/join "" (get-names elements)))]
+    {:id         name,
+     :label      {:fi name},
+     :metadata metadata,
+     :children elements
+     :fieldType  "fieldset",
+     :fieldClass "questionGroup"}))
+
 (def form-with-content
   {:name        {:fi "Test fixture!"}
    :created-by "DEVELOPER"
