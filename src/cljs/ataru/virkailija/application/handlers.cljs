@@ -136,6 +136,15 @@
            (assoc-in [:application :applications] updated-applications)
            (assoc-in [:application :review-state-counts] (review-state-counts updated-applications)))))))
 
+(reg-event-db
+  :application/update-attachment-review
+  (fn [db [_ attachment-key state]]
+    (let [selected-key           (get-in db [:application :selected-key])
+          application-list       (get-in db [:application :applications])
+          selected-hakukohde-oid (get-in db [:application :selected-review-hakukohde])]
+      (-> db
+          (assoc-in [:application :review :attachment-reviews (keyword selected-hakukohde-oid) attachment-key] state)))))
+
 (defn- update-sort
   [db column-id swap-order?]
   (let [current-applications (get-in db [:application :applications])

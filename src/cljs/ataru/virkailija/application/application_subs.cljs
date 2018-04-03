@@ -289,7 +289,6 @@
 (defn- filter-by-attachment-review
   [application default-state-name states-to-include]
   (let [states (->> (:attachment-reviews application)
-                    (filter #(= requirement-name (:requirement %)))
                     (map :state))]
     (state-filter states states-to-include default-state-name (:hakukohde application))))
 
@@ -408,3 +407,12 @@
                                   :else (count (filter #(not= "checked" (:state %)) attachment-reviews)))]
       {:checked   (- (count attachment-keys) unchecked-attachments)
        :uncheched unchecked-attachments})))
+
+(re-frame.core/reg-sub
+  :application/get-attachment-answer-by-key
+  (fn [db [_ key]]
+    (let [answers (-> db :application :selected-application-and-form :application :answers)]
+      (->> (-> db :application :selected-application-and-form :application :answers)
+           (filter #(contains? (-> % val :value flatten set) (name key)))
+           first
+           val))))
