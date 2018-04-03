@@ -69,7 +69,7 @@
 
 (defn- review-state-label
   [state-name]
-  (second (first (filter #(= (first %) state-name) review-states/application-hakukohde-processing-states))))
+  (second (first (filter #(= (first %) state-name) application-review-states/application-hakukohde-processing-states))))
 
 (defn- review-label-with-count
   [label count]
@@ -133,7 +133,7 @@
         all-states                 (reduce (fn [acc [state _]]
                                              (assoc acc state 0))
                                            {}
-                                           review-states/application-hakukohde-processing-states)]
+                                           application-review-states/application-hakukohde-processing-states)]
     (fn []
       (when-not (empty? @filtered-applications)
         (let [from-states (reduce
@@ -1044,7 +1044,7 @@
          [:a
           {:on-click #(swap! show-attachment-review? not)}
           (if @show-attachment-review? ">>" "<<") " Liitepyynnöt"]
-         [application-hakukohde-review-inputs review-states/hakukohde-review-types]
+         [application-hakukohde-review-inputs application-review-states/hakukohde-review-types]
          (when @(subscribe [:application/show-info-request-ui?])
            [application-information-request])
          [application-review-inputs]
