@@ -185,7 +185,7 @@
 (defn- haku-row [haku-name]
   [:div.application__form-field
    [:div.application-handling__hakukohde-wrapper
-    [:div.application-handling__review-area-hakukohde-heading
+    [:div.application-handling__review-area-haku-heading
      haku-name]]])
 
 (defn- hakukohteet-list-row [hakukohde-oid]
