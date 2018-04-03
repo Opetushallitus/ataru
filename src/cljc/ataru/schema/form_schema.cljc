@@ -148,7 +148,6 @@
                                                                                       :else
                                                                                       BasicElement)]
                              :metadata                                ElementMetadata
-                             (s/optional-key :child-validator)        (s/enum :one-of :birthdate-and-gender-component)
                              (s/optional-key :child-validator)        ChildValidator
                              (s/optional-key :params)                 Params
                              (s/optional-key :label)                  LocalizedString
