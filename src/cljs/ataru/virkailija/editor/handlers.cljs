@@ -368,6 +368,10 @@
           (catch js/Error error
             (do
               (prn error)
+              (dispatch [:snackbar-message
+                         [(str "Toinen käyttäjä teki muutoksen lomakkeeseen \"" (some #(get-in form [:name %])
+                                                                                  [:fi :sv :en]) "\"")
+                          "Lataa sivu uudelleen ja tarkista omat muutokset"]])
               (dispatch-flasher-error-msg :post error))))))
     (recur (async/<! save-chan))))
 

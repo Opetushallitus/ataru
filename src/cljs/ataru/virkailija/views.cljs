@@ -1,7 +1,7 @@
 (ns ataru.virkailija.views
     (:require [re-frame.core :as re-frame]
               [reagent.core :as r]
-              [ataru.virkailija.views.banner :refer [top-banner]]
+              [ataru.virkailija.views.banner :refer [snackbar top-banner]]
               [ataru.virkailija.application.view :refer [application application-version-changes]]
               [ataru.virkailija.views.template-editor :refer [email-template-editor]]
               [ataru.virkailija.dev.lomake :as l]
@@ -37,6 +37,7 @@
     (fn []
       [:div.main-container
        [:div.modal-container
+        [snackbar]
         [application-version-changes]
         (when @template-editor-visible?
           [email-template-editor])]
