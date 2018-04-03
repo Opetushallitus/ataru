@@ -338,7 +338,7 @@
                               (update-in [:application] dissoc :answers)
                               (update-in [:application] dissoc :tarjonta)
                               (update-in [:form] dissoc :content))
-        with-times        (time (ataru.virkailija.temporal/parse-times without-huge-data))]
+        with-times        (ataru.virkailija.temporal/parse-times without-huge-data)]
     (-> with-times
         (assoc-in [:application :answers] answers)
         (assoc-in [:application :tarjonta] tarjonta)
@@ -420,11 +420,16 @@
 (defn get-forms-from-haut [haut]
   (into {} (map (fn [form-haku] [(:key form-haku) form-haku]) (:direct-form-haut haut))))
 
+(defn- haut->map
+  [haut]
+  {:tarjonta-haut    (util/group-by-first :oid (:tarjonta-haut haut))
+   :direct-form-haut (util/group-by-first :key (:direct-form-haut haut))})
+
 (reg-event-db
   :editor/handle-refresh-haut
   (fn [db [_ haut]]
     (-> db
-        (assoc-in [:application :haut] haut)
+        (assoc-in [:application :haut] (haut->map haut))
         (assoc-in [:application :hakukohteet] (get-hakukohteet-from-haut haut))
         (assoc-in [:application :forms] (get-forms-from-haut haut)))))
 
