@@ -294,8 +294,8 @@
    (s/optional-key :application-hakukohde-reviews)  [{:requirement (apply s/enum review-states/hakukohde-review-type-names)
                                                       :state       (apply s/enum review-requirement-values)
                                                       :hakukohde   s/Str}] ; "form" or oid
-   (s/optional-key :application-attachment-reviews) [{:attachment_key (apply s/enum review-states/hakukohde-review-type-names)
-                                                      :state          (apply s/enum review-requirement-values)
+   (s/optional-key :application-attachment-reviews) [{:attachment-key s/Str
+                                                      :state          (apply s/enum review-states/attachment-review-type-names)
                                                       :hakukohde      s/Str}]})
 
 (s/defschema Application
@@ -434,14 +434,8 @@
 (s/defschema HakukohdeReviews
   {s/Keyword hakukohde-review-types-schema})
 
-(def attachment-review-types-schema
-  (reduce (fn [acc [kw _ states]]
-            (assoc acc (s/optional-key kw) (apply s/enum (map first states))))
-          {}
-          review-states/attachment-hakukohde-review-types))
-
 (s/defschema AttachmentReviews
-  {s/Keyword attachment-review-types-schema})
+  {s/Str {s/Str (apply s/enum review-states/attachment-review-type-names)}})
 
 (s/defschema ReviewNote
   {:id                            s/Int
