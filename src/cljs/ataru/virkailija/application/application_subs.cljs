@@ -183,13 +183,12 @@
                 :value])))
 
 (re-frame/reg-sub
-  :application/selected-haku-name
+  :application/selected-application-haku-name
   (fn [db _]
-    (get-in db [:application :selected-haku :name (keyword (get-in db [:application
-                                                                       :selected-application-and-form
-                                                                       :application
-                                                                       :lang]
-                                                                   "fi"))])))
+    (let [application       (get-in db [:application :selected-application-and-form :application])
+          application-lang  (keyword (:lang application "fi"))]
+      (when-let [haku-oid (:haku application)]
+        (get-in db [:application :haut :tarjonta-haut haku-oid :name application-lang])))))
 
 (re-frame/reg-sub
   :application/information-request-submit-enabled?

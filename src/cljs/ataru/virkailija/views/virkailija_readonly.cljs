@@ -210,7 +210,7 @@
       {:class (when @(subscribe [:application/field-highlighted? :hakukohteet])
                 "highlighted")
        :id    "hakukohteet"}
-      [haku-row @(subscribe [:application/selected-haku-name])]
+      [haku-row @(subscribe [:application/selected-application-haku-name])]
       (for [hakukohde-oid hakukohteet]
         ^{:key (str "hakukohteet-list-row-" hakukohde-oid)}
         [hakukohteet-list-row hakukohde-oid])]]))
