@@ -1022,7 +1022,6 @@
 (defn- attachment-review-row [attachment selected-hakukohde]
   (let [list-opened (r/atom false)]
     (fn [attachment selected-hakukohde]
-      (cljs.pprint/pprint attachment)
       (let [attachment-key (-> attachment :key keyword)
             selected-state (or @(subscribe [:state-query [:application :review :attachment-reviews selected-hakukohde attachment-key]])
                                "not-checked")]
