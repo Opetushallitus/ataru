@@ -149,7 +149,7 @@
           new-review                    {:attachment-key attachment-key
                                          :state          state
                                          :hakukohde      hakukohde}]
-      (assoc application :application-hakukohde-reviews (conj reviews-with-existing-removed new-review)))
+      (assoc application :application-attachment-reviews (conj reviews-with-existing-removed new-review)))
     application))
 
 (reg-event-db
