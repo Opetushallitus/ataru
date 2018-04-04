@@ -2,6 +2,8 @@
   (:require
    [ataru.applications.application-store :as application-store]
    [ataru.forms.form-store :as form-store]
+   [ataru.schema.form-schema :as form-schema]
+   [ataru.virkailija.editor.form-diff :as form-diff]
    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
    [ataru.organization-service.session-organizations :as session-orgs]
    [ataru.organization-service.organization-client :refer [oph-organization]]
@@ -99,6 +101,14 @@
         (assoc
          form-with-org
          :created-by (-> session :identity :username)))))))
+
+(defn edit-form-with-operations
+  [id operations session virkailija-tarjonta-service organization-service]
+    (let [latest-version (-> (form-store/fetch-form id)
+                             (dissoc :created-time))
+          coerced-form   (form-schema/form-coercer latest-version)
+          updated-form   (form-diff/apply-operations coerced-form operations)]
+      (post-form updated-form session virkailija-tarjonta-service organization-service)))
 
 (defn delete-form [form-id session virkailija-tarjonta-service organization-service]
   (let [form (form-store/fetch-latest-version form-id)]

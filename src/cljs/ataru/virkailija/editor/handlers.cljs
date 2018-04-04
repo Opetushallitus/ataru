@@ -14,11 +14,12 @@
             [ataru.virkailija.editor.editor-macros :refer-macros [with-form-key]]
             [ataru.virkailija.editor.handlers-macros :refer-macros [with-path-and-index]]
             [ataru.virkailija.routes :refer [set-history!]]
-            [ataru.virkailija.virkailija-ajax :refer [http post dispatch-flasher-error-msg]]
+            [ataru.virkailija.virkailija-ajax :refer [http post put dispatch-flasher-error-msg]]
             [ataru.util :as util]
             [ataru.cljs-util :as cu]
             [taoensso.timbre :refer-macros [spy debug]]
-            [ataru.virkailija.temporal :as temporal])
+            [ataru.virkailija.temporal :as temporal]
+            [ataru.virkailija.editor.form-diff :as form-diff])
   (:require-macros [ataru.async-macros :as asyncm]
                    [cljs.core.async.macros :refer [go-loop]]))
 
@@ -30,6 +31,11 @@
   db)
 
 (reg-event-db :editor/get-user-info get-user-info)
+
+(reg-event-db
+  :editor/set-save-snapshot
+  (fn [db [_ form]]
+    (assoc-in db [:editor :save-snapshot] form)))
 
 (defn- current-form-content-path
   [db & further-path]
@@ -298,16 +304,18 @@
   (fn [db [_ {:keys [key deleted] :as response} _]]
     (if deleted
       db
+      (let [new-form (-> response
+                       (languages->kwd)
+                       (update :created-time temporal/str->googdate))]
       (-> db
           (update :editor dissoc :ui)
-          (assoc-in [:editor :forms key] (-> response
-                                             (languages->kwd)
-                                             (update :created-time temporal/str->googdate)))
+          (assoc-in [:editor :forms key] new-form)
+          (assoc-in [:editor :save-snapshot] new-form)
           (assoc-in [:editor :autosave]
                     (autosave/interval-loop {:subscribe-path    [:editor :forms key]
                                              :changed-predicate editor-autosave-predicate
                                              :handler           (fn [form previous-autosave-form-at-time-of-dispatch]
-                                                                  (dispatch [:editor/save-form]))}))))))
+                                                                  (dispatch [:editor/save-form]))})))))))
 
 (defn- fetch-form-content-fx
   [form-id]
@@ -333,31 +341,34 @@
 
 (def save-chan (async/chan (async/sliding-buffer 1)))
 
+(defn fragment-updates-from-difference [form]
+  (let [prev-form @(subscribe [:editor/last-save-snapshot])]
+    (seq (form-diff/as-operations prev-form form))))
+
+(defn update-form-with-fragment [form fragments]
+  (let [response-promise (async/promise-chan)]
+    (put (str "/lomake-editori/api/forms/" (:id form)) fragments
+      (fn [db response] (do (async/put! response-promise response)
+                            db))
+      :override-args {:skip-parse-times? true
+                      :error-handler (fn [error]
+                                       (async/put! response-promise (js/Error. error)))})
+    response-promise))
+
 (defn save-loop [save-chan]
   (go-loop [_ (async/<! save-chan)]
     (let [form (-> @(subscribe [:editor/selected-form])
-                   (dissoc :created-time))
-          response-chan (async/chan)]
+                   (dissoc :created-time))]
       (when (not-empty (:content form))
-        (do
-          (post "/lomake-editori/api/forms" form
-            (fn [db response] (do (async/put! response-chan response)
-                                  db))
-            :override-args {:error-handler (fn [error]
-                                             (async/close! response-chan)
-                                             (dispatch-flasher-error-msg :post error))})
-          (when-let [updated-form (some->
-                                    (async/<! response-chan)
-                                    (languages->kwd))]
-            (dispatch-sync
-              [:state-update
-               (fn [db]
-                 ; Merge updated form without content, because
-                 ; user might have typed something between requests and
-                 ; updated-form would replace the newer content
-                 (do (async/close! response-chan)
-                     (update-in db [:editor :forms (:key updated-form)]
-                       merge (dissoc updated-form :content :name))))])))))
+        (try
+          (if-let [fragments (fragment-updates-from-difference form)]
+            (do
+              (asyncm/<? (update-form-with-fragment form fragments))
+              (dispatch [:editor/set-save-snapshot form])))
+          (catch js/Error error
+            (do
+              (prn error)
+              (dispatch-flasher-error-msg :post error))))))
     (recur (async/<! save-chan))))
 
 (save-loop save-chan)

@@ -77,6 +77,12 @@
 
 (defn post [path params handler-or-dispatch & {:keys [override-args handler-args skip-parse-times?]}]
   (http :post path handler-or-dispatch
-        :override-args (merge override-args {:params params})
-        :handler-args handler-args
-        :skip-parse-times? skip-parse-times?))
+    :override-args (merge override-args {:params params})
+    :handler-args handler-args
+    :skip-parse-times? skip-parse-times?))
+
+(defn put [path params handler-or-dispatch & {:keys [override-args handler-args skip-parse-times?]}]
+  (http :put path handler-or-dispatch
+    :override-args (merge override-args {:params params})
+    :handler-args handler-args
+    :skip-parse-times? skip-parse-times?))

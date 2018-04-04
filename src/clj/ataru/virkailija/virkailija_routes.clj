@@ -171,6 +171,13 @@
       :summary "Get content for form"
       (ok (form-store/fetch-form id)))
 
+    (api/PUT "/forms/:id" {session :session}
+      :summary "Get content for form"
+      :path-params [id :- Long]
+      :body [operations [ataru-schema/Operation]]
+      (access-controlled-form/edit-form-with-operations id operations session virkailija-tarjonta-service organization-service)
+      (ok {}))
+
     (api/DELETE "/forms/:id" {session :session}
       :path-params [id :- Long]
       :summary "Mark form as deleted"

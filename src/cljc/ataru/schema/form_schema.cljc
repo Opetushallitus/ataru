@@ -2,7 +2,9 @@
   (:require [ataru.application.review-states :as review-states]
             [ataru.application.field-types :refer [form-fields]]
             [ataru.hakija.application-validators :as validator]
+            [schema.coerce :as c]
             [schema.core :as s]
+            [schema.experimental.abstract-map :as abstract-map]
             [schema-tools.core :as st]))
 
 ;        __.,,------.._
@@ -83,14 +85,16 @@
                      (s/optional-key :belongs-to-hakukohteet) [s/Str]
                      (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
 
+(s/defschema Validator (apply s/enum (concat (keys validator/pure-validators)
+                                             (keys validator/async-validators))))
+
 (s/defschema FormField {:fieldClass                                      (s/eq "formField")
                         :id                                              s/Str
                         :fieldType                                       (apply s/enum form-fields)
                         :metadata                                        ElementMetadata
                         (s/optional-key :cannot-view)                    s/Bool
                         (s/optional-key :cannot-edit)                    s/Bool
-                        (s/optional-key :validators)                     [(apply s/enum (concat (keys validator/pure-validators)
-                                                                                                (keys validator/async-validators)))]
+                        (s/optional-key :validators)                     [Validator]
                         (s/optional-key :rules)                          {s/Keyword s/Any}
                         (s/optional-key :blur-rules)                     {s/Keyword s/Any}
                         (s/optional-key :label)                          LocalizedString
@@ -133,6 +137,8 @@
                             #(= "button" (:fieldClass %)) Button
                             :else InfoElement))
 
+(s/defschema ChildValidator (s/enum :one-of :birthdate-and-gender-component))
+
 (s/defschema WrapperElement {:fieldClass                              (apply s/enum ["wrapperElement" "questionGroup"])
                              :id                                      s/Str
                              :fieldType                               (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
@@ -142,7 +148,7 @@
                                                                                       :else
                                                                                       BasicElement)]
                              :metadata                                ElementMetadata
-                             (s/optional-key :child-validator)        (s/enum :one-of :birthdate-and-gender-component)
+                             (s/optional-key :child-validator)        ChildValidator
                              (s/optional-key :params)                 Params
                              (s/optional-key :label)                  LocalizedString
                              (s/optional-key :label-amendment)        LocalizedString ; Additional info which can be displayed next to the label
@@ -150,10 +156,45 @@
                              (s/optional-key :belongs-to-hakukohteet) [s/Str]
                              (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
 
+(def Content (s/if (comp some? :children) WrapperElement BasicElement))
+
 (s/defschema FormWithContent
   (merge Form
-         {:content                           [(s/if (comp some? :children) WrapperElement BasicElement)]
+         {:content                           [Content]
           (s/optional-key :organization-oid) (s/maybe s/Str)}))
+
+(s/defschema UpdateElementOperation
+  {:type (s/eq "update")
+   :old-element (s/if (comp some? :children) WrapperElement BasicElement)
+   :new-element (s/if (comp some? :children) WrapperElement BasicElement)})
+
+(s/defschema DeleteElementOperation
+  {:type (s/eq "delete")
+   :element (s/if (comp some? :children) WrapperElement BasicElement)})
+
+(s/defschema CreateMoveElement
+  {:sibling-above (s/maybe s/Str)
+   :sibling-below (s/maybe s/Str)
+   :elements      [(s/if (comp some? :children) WrapperElement BasicElement)]})
+
+(s/defschema CreateMoveGroupOperation
+  {:type   (s/eq "create-move-group")
+   :groups [CreateMoveElement]})
+
+(s/defschema FormDetails {
+                   :name                               LocalizedStringOptional
+                   (s/optional-key :languages)         [s/Str]})
+
+(s/defschema UpdateFormDetailsOperation
+  {:type (s/eq "update-form-details")
+   :old-form FormDetails
+   :new-form FormDetails})
+
+(def Operation (s/conditional
+                  #(= "update-form-details" (:type %)) UpdateFormDetailsOperation
+                  #(= "create-move-group" (:type %)) CreateMoveGroupOperation
+                  #(= "update" (:type %)) UpdateElementOperation
+                  #(= "delete" (:type %)) DeleteElementOperation))
 
 (s/defschema FormTarjontaHakukohde
   {:oid                          s/Str
@@ -465,3 +506,9 @@
                             :enabled     s/Bool})
 
 (s/defschema VirkailijaSettings {:review {s/Keyword s/Bool}})
+
+(def form-coercion-matchers {Module         keyword
+                             ChildValidator keyword
+                             Validator      keyword})
+
+(def form-coercer (c/coercer! FormWithContent form-coercion-matchers))
