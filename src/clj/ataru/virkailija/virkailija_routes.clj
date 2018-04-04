@@ -344,9 +344,7 @@
       (api/PUT "/review" {session :session}
         :summary "Update existing application review"
         :body [review ataru-schema/Review]
-        :return {:review            ataru-schema/Review
-                 :events            [ataru-schema/Event]
-                 :hakukohde-reviews ataru-schema/HakukohdeReviews}
+        :return {:events [ataru-schema/Event]}
         (ok
           (application-service/save-application-review
             review

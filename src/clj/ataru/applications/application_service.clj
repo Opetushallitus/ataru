@@ -252,9 +252,7 @@
     (application-store/save-application-review review session)
     (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session)
     (save-attachment-hakukohde-reviews application-key (:attachment-reviews review) session)
-    {:review (application-store/get-application-review application-key)
-     :events (application-store/get-application-events application-key)
-     :hakukohde-reviews (parse-application-hakukohde-reviews application-key)}))
+    {:events (application-store/get-application-events application-key)}))
 
 (defn mass-update-application-states
   [session organization-service application-keys hakukohde-oid from-state to-state]
