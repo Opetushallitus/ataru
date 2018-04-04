@@ -717,7 +717,7 @@ SELECT
   hakukohde,
   application_key
 FROM application_hakukohde_reviews
-WHERE application_key = :application_key AND state = :state AND hakukohde = :hakukohde;
+WHERE application_key = :application_key AND requirement = :requirement AND hakukohde = :hakukohde;
 
 -- name: yesql-applications-by-haku-and-hakukohde-oids
 SELECT
