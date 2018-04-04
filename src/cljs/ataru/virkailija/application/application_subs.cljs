@@ -30,10 +30,7 @@
         selected-haku [selected-haku
                        nil
                        (:hakukohteet selected-haku)]
-        selected-hakukohde (let [selected-haku (->> db
-                                                    :application :haut :tarjonta-haut
-                                                    (filter #(= (:oid %) (:haku selected-hakukohde)))
-                                                    (first))]
+        selected-hakukohde (let [selected-haku (get-in db [:application :haut :tarjonta-haut (:haku selected-hakukohde)])]
                              [selected-haku
                               selected-hakukohde
                               (:hakukohteet selected-haku)])))))
@@ -61,12 +58,12 @@
   (= (:processed haku) (:application-count haku)))
 
 (defn- filter-haut-all-not-processed [haut]
-  {:direct-form-haut (remove haku-completely-processed? (:direct-form-haut haut))
-   :tarjonta-haut (remove haku-completely-processed? (:tarjonta-haut haut))})
+  {:direct-form-haut (remove haku-completely-processed? (-> haut :direct-form-haut (vals)))
+   :tarjonta-haut    (remove haku-completely-processed? (-> haut :tarjonta-haut (vals)))})
 
 (defn- filter-haut-all-processed [haut]
-  {:direct-form-haut (filter haku-completely-processed? (:direct-form-haut haut))
-   :tarjonta-haut (filter haku-completely-processed? (:tarjonta-haut haut))})
+  {:direct-form-haut (filter haku-completely-processed? (-> haut :direct-form-haut (vals)))
+   :tarjonta-haut    (filter haku-completely-processed? (-> haut :tarjonta-haut (vals)))})
 
 (defn sort-haku-seq-by-unprocessed [haku-seq]
   (->> haku-seq (sort-by :application-count >) (sort-by :unprocessed >)))
@@ -94,9 +91,6 @@
   (when-let [haut (get-in db [:application :haut])]
      (handle-haut-fn haut)))
 
-(defn count-haut [haut]
-  (+ (count (:tarjonta-haut haut)) (count (:direct-form-haut haut))))
-
 (re-frame/reg-sub
  :application/incomplete-haut
  (fn [db]
@@ -108,12 +102,8 @@
 
 (re-frame/reg-sub
  :application/incomplete-haku-count
- (fn [db]
-   (when-haut
-       db
-       #(-> %
-            (filter-haut-all-not-processed)
-            count-haut))))
+ (fn [_]
+   (count @(re-frame/subscribe [:application/incomplete-haut]))))
 
 (re-frame/reg-sub
  :application/complete-haut
@@ -127,12 +117,8 @@
 
 (re-frame/reg-sub
  :application/complete-haku-count
- (fn [db]
-   (when-haut
-       db
-       #(-> %
-            (filter-haut-all-processed)
-            count-haut))))
+ (fn [_]
+   (count @(re-frame/subscribe [:application/complete-haut]))))
 
 (re-frame/reg-sub
  :application/search-control-all-page-view?
@@ -195,6 +181,14 @@
                 :answers
                 :hakukohteet
                 :value])))
+
+(re-frame/reg-sub
+  :application/selected-application-haku-name
+  (fn [db _]
+    (let [application       (get-in db [:application :selected-application-and-form :application])
+          application-lang  (keyword (:lang application "fi"))]
+      (when-let [haku-oid (:haku application)]
+        (get-in db [:application :haut :tarjonta-haut haku-oid :name application-lang])))))
 
 (re-frame/reg-sub
   :application/information-request-submit-enabled?

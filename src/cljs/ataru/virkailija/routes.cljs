@@ -99,8 +99,7 @@
     (dispatch-after-state
       :predicate
       (fn [db]
-        (some #(when (= haku-oid (:oid %)) %)
-          (get-in db [:application :haut :tarjonta-haut])))
+        (get-in db [:application :haut :tarjonta-haut haku-oid]))
       :handler
       (fn [haku]
         (dispatch [:application/select-haku haku])
