@@ -1010,16 +1010,15 @@
        [:div.application-handling__resend-modify-link-confirmation-indicator]
        "Muokkauslinkki lähetetty hakijalle sähköpostilla"])))
 
-(defn- attachment-review-row [[attachment-key state] selected-hakukohde]
-  (let [answer      (subscribe [:application/get-attachment-answer-by-key attachment-key])
-        list-opened (r/atom false)]
-    (fn [[attachment-key state] selected-hakukohde]
-      (let [selected-state (or @(subscribe [:state-query [:application :review :attachment-reviews selected-hakukohde attachment-key]])
-                               "not-checked")
-            ]
-        ;(println @answer)
+(defn- attachment-review-row [attachment selected-hakukohde]
+  (let [list-opened (r/atom false)]
+    (fn [attachment selected-hakukohde]
+      (cljs.pprint/pprint attachment)
+      (let [attachment-key (-> attachment :key keyword)
+            selected-state (or @(subscribe [:state-query [:application :review :attachment-reviews selected-hakukohde attachment-key]])
+                               "not-checked")]
         [:div.application__attachment-review-row
-         [:p (:label @answer)]
+         [:p (:label attachment)]
          (if @list-opened
            [:div.application-handling__review-state-list-opened
             (for [[state label] application-review-states/attachment-hakukohde-review-types]
@@ -1037,22 +1036,22 @@
 
 (defn- attachment-review-area [review-positioning]
   (let [selected-review-hakukohde    (subscribe [:state-query [:application :selected-review-hakukohde]])
-        hakukohde-attachment-reviews (when-not (= "form" @selected-review-hakukohde)
-                                       (subscribe [:state-query [:application :review :attachment-reviews
-                                                                 (keyword @selected-review-hakukohde)]]))
-        form-attachment-reviews      (subscribe [:state-query [:application :review :attachment-reviews :form]])]
+        application-attachments      (subscribe [:application/get-attachments])
+        hakukohde-attachments        (filter #(contains? (-> % :belongs-to-hakukohteet set) @selected-review-hakukohde) @application-attachments)
+        form-attachments             (filter #(empty? (:belongs-to-hakukohteet %)) @application-attachments)
+        attachment-reviews           (subscribe [:state-query [:application :review :attachment-reviews]])]
     [:div.application-handling__attachment-review-container
      {:class (when (= :fixed review-positioning)
                "application-handling__attachment-review-container-floating")}
-     (when hakukohde-attachment-reviews
-       [:p.application-handling__attachment-review-header "Hakukohteen liitepyynnöt (" (count @hakukohde-attachment-reviews) ")"])
-     (when (not-empty @form-attachment-reviews)
+     (when (not-empty hakukohde-attachments)
+       [:p.application-handling__attachment-review-header "Hakukohteen liitepyynnöt (" (count hakukohde-attachments) ")"])
+     (when (not-empty form-attachments)
        [:div
-        [:p.application-handling__attachment-review-header "Muut liitepyynnöt (" (count @form-attachment-reviews) ")"]
+        [:p.application-handling__attachment-review-header "Muut liitepyynnöt (" (count form-attachments) ")"]
         (doall
-          (for [attachment-review @form-attachment-reviews]
-            ^{:key (str "attachment-handling-for" (first attachment-review) "-" selected-review-hakukohde)}
-            [attachment-review-row attachment-review (keyword @selected-review-hakukohde)]))])]))
+          (for [attachment form-attachments]
+              ^{:key (str "attachment-handling-for" (:key attachment) "-" selected-review-hakukohde)}
+              [attachment-review-row attachment (keyword @selected-review-hakukohde)]))])]))
 
 (defn application-review []
   (let [review-positioning      (subscribe [:state-query [:application :review-positioning]])
