@@ -102,9 +102,9 @@
     [:div.snackbar
       (let [status (first snackbar-messages)
             message (second snackbar-messages)]
-        [:span.snackbar-content
-         [:span status]
-         [:span message]])]))
+        [:span.snackbar__content
+         [:div.snackbar__content-status status]
+         [:div.snackbar__content-paragraph message]])]))
 
 (defn top-banner []
   (let [banner-type (subscribe [:state-query [:banner :type]])]
