@@ -738,6 +738,15 @@
           " "
           (virkailija-initials-span event)]
 
+         {:event-type "attachment-review-state-change"}
+         [:span.application-handling__event-caption--inner
+          (str "Liitepyyntö: "
+               (application-states/get-review-state-label-by-name
+                 application-review-states/attachment-hakukohde-review-types
+                 (:new-review-state event)))
+          " "
+          (virkailija-initials-span event)]
+
          {:event-type "modification-link-sent"}
          "Hakemuksen muokkauslinkki lähetetty hakijalle"
 
