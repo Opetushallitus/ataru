@@ -412,6 +412,7 @@
                          "received-from-applicant"
                          "review-state-change"
                          "hakukohde-review-state-change"
+                         "attachment-review-state-change"
                          "modification-link-sent"))
 
 (s/defschema Event
@@ -435,7 +436,7 @@
   {s/Keyword hakukohde-review-types-schema})
 
 (s/defschema AttachmentReviews
-  {s/Str {s/Str (apply s/enum review-states/attachment-review-type-names)}})
+  {s/Keyword {s/Keyword (apply s/enum review-states/attachment-review-type-names)}})
 
 (s/defschema ReviewNote
   {:id                            s/Int
@@ -446,12 +447,13 @@
    (s/optional-key :created-time) org.joda.time.DateTime})
 
 (s/defschema Review
-  {:id                                 s/Int
-   :application-key                    s/Str
-   (s/optional-key :modified-time)     org.joda.time.DateTime
-   :state                              s/Str
-   (s/optional-key :score)             (s/maybe s/Int)
-   (s/optional-key :hakukohde-reviews) HakukohdeReviews})
+  {:id                                  s/Int
+   :application-key                     s/Str
+   (s/optional-key :modified-time)      org.joda.time.DateTime
+   :state                               s/Str
+   (s/optional-key :score)              (s/maybe s/Int)
+   (s/optional-key :hakukohde-reviews)  HakukohdeReviews
+   (s/optional-key :attachment-reviews) AttachmentReviews})
 
 (s/defschema ApplicationCountsHakukohde {:oid               s/Str
                                          :application-count s/Int

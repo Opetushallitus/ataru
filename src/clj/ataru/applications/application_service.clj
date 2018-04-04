@@ -230,6 +230,17 @@
         (name review-state)
         session))))
 
+(defn- save-attachment-hakukohde-reviews
+  [application-key attachment-reviews session]
+  (doseq [[hakukohde review] attachment-reviews
+          [attachment-key review-state] review]
+    (application-store/save-attachment-hakukohde-review
+      application-key
+      (name hakukohde)
+      (name attachment-key)
+      review-state
+      session)))
+
 (defn save-application-review
   [review session organization-service]
   (let [application-key (:application-key review)]
@@ -240,6 +251,7 @@
       [:edit-applications])
     (application-store/save-application-review review session)
     (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session)
+    (save-attachment-hakukohde-reviews application-key (:attachment-reviews review) session)
     {:review (application-store/get-application-review application-key)
      :events (application-store/get-application-events application-key)
      :hakukohde-reviews (parse-application-hakukohde-reviews application-key)}))

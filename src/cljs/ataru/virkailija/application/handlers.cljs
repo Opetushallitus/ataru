@@ -136,14 +136,35 @@
            (assoc-in [:application :applications] updated-applications)
            (assoc-in [:application :review-state-counts] (review-state-counts updated-applications)))))))
 
+(defn- update-attachment-hakukohde-review-field-of-selected-application-in-list
+  [application selected-application-key hakukohde attachment-key state]
+  (if (= selected-application-key (:key application))
+    (let [attachment-reviews            (or (:application-attachment-reviews application) [])
+          reviews-with-existing-removed (remove
+                                          (fn [review]
+                                            (and
+                                             (= (:attachment-key review) attachment-key)
+                                             (= (:hakukohde review) hakukohde)))
+                                          attachment-reviews)
+          new-review                    {:attachment-key attachment-key
+                                         :state          state
+                                         :hakukohde      hakukohde}]
+      (assoc application :application-hakukohde-reviews (conj reviews-with-existing-removed new-review)))
+    application))
+
 (reg-event-db
   :application/update-attachment-review
   (fn [db [_ attachment-key state]]
     (let [selected-key           (get-in db [:application :selected-key])
           application-list       (get-in db [:application :applications])
-          selected-hakukohde-oid (get-in db [:application :selected-review-hakukohde])]
+          selected-hakukohde-oid (get-in db [:application :selected-review-hakukohde])
+          updated-applications   (mapv
+                                   #(update-attachment-hakukohde-review-field-of-selected-application-in-list
+                                     % selected-key selected-hakukohde-oid (name attachment-key) state)
+                                   application-list)]
       (-> db
-          (assoc-in [:application :review :attachment-reviews (keyword selected-hakukohde-oid) attachment-key] state)))))
+          (assoc-in [:application :review :attachment-reviews (keyword selected-hakukohde-oid) attachment-key] state)
+          (assoc-in [:application :applications] updated-applications)))))
 
 (defn- update-sort
   [db column-id swap-order?]
@@ -317,7 +338,8 @@
                                                                                         :application-key
                                                                                         :score
                                                                                         :state
-                                                                                        :hakukohde-reviews])}))})))
+                                                                                        :hakukohde-reviews
+                                                                                        :attachment-reviews])}))})))
 
 (reg-event-fx
   :application/handle-fetch-application-attachment-metadata
