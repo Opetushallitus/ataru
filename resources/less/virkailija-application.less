@@ -506,20 +506,21 @@ and (max-width: 1000px) {
 }
 
 .application-handling__attachment-review-container {
-  position: absolute;
-  width: 448px;
   background-color: @very-light-gray;
-  left: 25px;
-  transform: translateX(-100%);
+  border-bottom: solid @review-separator-color 1px;
   border-left: 3px solid @link-color;
-  padding: 10px 10px 0 10px;
   border-top: solid @review-separator-color 1px;
+  left: 25px;
+  padding: 10px 10px 0 10px;
+  position: absolute;
+  transform: translateX(-100%);
+  width: 448px;
 }
 
 .application-handling__attachment-review-container-floating {
+  left: unset;
   position: fixed;
   right: 60px;
-  left: unset;
 }
 
 .application-handling__attachment-review-header {
@@ -531,6 +532,7 @@ and (max-width: 1000px) {
 .application__attachment-review-row {
   display: flex;
   justify-content: space-between;
+  
   &:not(:last-child) {
     margin: 10px 0;
     border-bottom: dashed @review-separator-color 1px;
