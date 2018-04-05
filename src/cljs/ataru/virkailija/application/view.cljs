@@ -420,7 +420,10 @@
       [:span.application-handling__list-row--attachment-states
        [:i.application-handling_list-row-checked-attachments (:checked form-attachment-states) "v"]
        " "
-       [:i.application-handling_list-row-checked-attachments (:unchecked form-attachment-states) "!"]]]
+       [:i.application-handling_list-row-checked-attachments (:unchecked form-attachment-states) "!"]]
+      [:span.application-handling__list-row--state]
+      (when (:selection-state @review-settings true)
+        [:span.application-handling__hakukohde-selection-cell])]
      [applications-hakukohde-rows @review-settings application @selected-hakukohde @attachment-states]]))
 
 (defn application-list-contents [applications]

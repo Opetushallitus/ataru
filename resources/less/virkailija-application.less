@@ -231,7 +231,7 @@ and (max-width: 1000px) {
 .application-handling__list {
   cursor: pointer;
   overflow-x: visible;
-  overflow-y: auto;
+  overflow-y: scroll;
   max-height: 120px;
   padding: 0 1px;
 }
@@ -274,7 +274,7 @@ and (max-width: 1000px) {
   display: flex;
   overflow: visible;
   border-bottom: none;
-  padding: 20px 0 10px 12px;
+  padding: 20px 16px 10px 12px;
   margin: 1px;
   box-shadow: none;
   background: transparent;
@@ -320,20 +320,46 @@ and (max-width: 1000px) {
   margin-right: 1px;
 }
 
-.application-handling__list-row-person-info {
-  display: flex;
-}
+/* List header row */
 
 .application-handling__list-row--applicant {
-  flex: 0 3 450px;
   display: inline-block;
+  flex-grow: 2;
+}
+
+.application-handling__list-row--time {
+  display: inline-block;
+  color: @sg-color-gray-2;
+  flex: 0 0 166px;
 }
 
 .application-handling__list-row--identification {
   cursor: pointer;
   display: inline-block;
   padding-left: 12px;
-  padding-right: 5px
+  padding-right: 5px;
+  flex: 0 0 165px;
+}
+
+.application-handling__list-row--attachment-state {
+  display: inline-block;
+  flex: 0 0 129px;
+}
+
+.application-handling__list-row--state {
+  display: inline-block;
+  flex: 0 0 137px;
+}
+
+.application-handling__list-row--selection {
+  display: inline-block;
+  flex: 0 0 105px;
+}
+
+/* List row */
+
+.application-handling__list-row-person-info {
+  display: flex;
 }
 
 .application-handling__list-row--application-applicant {
@@ -342,23 +368,11 @@ and (max-width: 1000px) {
   color: @pale-blue;
 }
 
-.application-handling__list-row--time {
-  flex: 0 0 180px;
-  display: inline-block;
-  color: @sg-color-gray-2;
-}
-
 .application-handling__list-row--application-time {
-  flex: 0 0 212px;
   display: inline-block;
   color: @sg-color-gray;
+  flex: 0 0 160px;
   .light;
-}
-
-.application-handling__list-row--attachment-states {
-  flex: 0 0 350px;
-  display: inline-block;
-  color: @sg-color-gray;
 }
 
 .application-handling__list-row--time-day {
@@ -366,20 +380,13 @@ and (max-width: 1000px) {
   display: inline-block;
 }
 
-.application-handling__list-row--state {
-  flex: 0 0 140px;
+.application-handling__list-row--attachment-states {
   display: inline-block;
+  color: @sg-color-gray;
+  flex: 0 0 127px;
 }
 
-.application-handling__list-row--attachment-state {
-  flex: 0 0 140px;
-  display: inline-block;
-}
-
-.application-handling__list-row--selection {
-  flex: 0 0 120px;
-  display: inline-block;
-}
+/* List styles end */
 
 .application-handling__list-row-email-icon {
   margin-left: 10px;
@@ -1819,11 +1826,11 @@ th.application__readonly-adjacent--header {
 }
 
 .application-handling__hakukohde-state-cell {
-  flex: 0 0 135px;
+  flex: 0 0 137px;
 }
 
 .application-handling__hakukohde-selection-cell {
-  flex: 0 0 110px;
+  flex: 0 0 105px;
 }
 
 .application-handling__count-tag {
