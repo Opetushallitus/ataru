@@ -154,16 +154,15 @@
 
 (reg-event-db
   :application/update-attachment-review
-  (fn [db [_ attachment-key state]]
+  (fn [db [_ attachment-key hakukohde-oid state]]
     (let [selected-key           (get-in db [:application :selected-key])
           application-list       (get-in db [:application :applications])
-          selected-hakukohde-oid (get-in db [:application :selected-review-hakukohde])
           updated-applications   (mapv
                                    #(update-attachment-hakukohde-review-field-of-selected-application-in-list
-                                     % selected-key selected-hakukohde-oid (name attachment-key) state)
+                                     % selected-key hakukohde-oid (name attachment-key) state)
                                    application-list)]
       (-> db
-          (assoc-in [:application :review :attachment-reviews (keyword selected-hakukohde-oid) attachment-key] state)
+          (assoc-in [:application :review :attachment-reviews (keyword hakukohde-oid) attachment-key] state)
           (assoc-in [:application :applications] updated-applications)))))
 
 (defn- update-sort

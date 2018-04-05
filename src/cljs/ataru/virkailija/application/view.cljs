@@ -1042,7 +1042,7 @@
                {:class    (when (= state selected-state) "application-handling__review-state-selected-row application-handling__review-state-row--enabled")
                 :on-click (fn []
                             (swap! list-opened not)
-                            (dispatch [:application/update-attachment-review attachment-key state]))
+                            (dispatch [:application/update-attachment-review attachment-key selected-hakukohde state]))
                 :key      (str attachment-key label)}
                (when (= state selected-state) (icon-check)) label])]
            [:div.application-handling__review-state-row.application-handling__review-state-row--small
@@ -1065,7 +1065,7 @@
         [:p.application-handling__attachment-review-header "Hakukohteen liitepyynnöt (" (count hakukohde-attachments) ")"]
         (doall
           (for [attachment hakukohde-attachments]
-            [attachment-review-row attachment @selected-review-hakukohde]))])
+            [attachment-review-row attachment (keyword @selected-review-hakukohde)]))])
      (when (not-empty form-attachments)
        [:div
         [:p.application-handling__attachment-review-header "Muut liitepyynnöt (" (count form-attachments) ")"]
