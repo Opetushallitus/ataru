@@ -69,60 +69,74 @@
   {:direct-form-haut (filter haku-completely-processed? (-> haut :direct-form-haut (vals)))
    :tarjonta-haut    (filter haku-completely-processed? (-> haut :tarjonta-haut (vals)))})
 
-(defn sort-haku-seq-by-unprocessed [haku-seq]
-  (->> haku-seq (sort-by :application-count >) (sort-by :unprocessed >)))
+(defn sort-by-unprocessed [xs]
+  (->> xs (sort-by :application-count >) (sort-by :unprocessed >)))
 
-(defn sort-haku-seq-by-name [haku-seq]
-  (sort-by (fn [haku]
-             (if (string? (:name haku))
-               (:name haku)
-               (from-multi-lang (:name haku) :fi)))
-           #(compare (clojure.string/lower-case %1) (clojure.string/lower-case %2))
-           haku-seq))
+(defn sort-hakukohteet [tarjonta-haut sort]
+  (map #(update % :hakukohteet sort) tarjonta-haut))
 
-(defn sort-hakukohteet [tarjonta-haut sort-haku-seq-fn]
-  (map #(update % :hakukohteet sort-haku-seq-fn) tarjonta-haut))
+(defn- haku-name [db haku-oid lang]
+  (if-let [haku (get-in db [:haut haku-oid])]
+    (or (from-multi-lang (:name haku) lang) haku-oid)
+    (when (zero? (:fetching-haut db))
+      haku-oid)))
 
-(defn sort-haut [haut sort-haku-seq-fn]
-  (-> haut
-      (assoc :direct-form-haut (sort-haku-seq-fn (:direct-form-haut haut)))
-      (assoc :tarjonta-haut (->
-                             (:tarjonta-haut haut)
-                             sort-haku-seq-fn
-                             (sort-hakukohteet sort-haku-seq-fn)))))
+(defn- hakukohde-name [db hakukohde-oid lang]
+  (if-let [hakukohde (get-in db [:hakukohteet hakukohde-oid])]
+    (or (from-multi-lang (:name hakukohde) lang) hakukohde-oid)
+    (when (zero? (:fetching-hakukohteet db))
+      hakukohde-oid)))
 
-(defn when-haut [db handle-haut-fn]
+(defn- sort-by-haku-name [haut db]
+  (sort-by (comp clojure.string/lower-case
+                 #(or (haku-name db (:oid %) :fi) ""))
+           haut))
+
+(defn- sort-by-hakukohde-name [hakukohteet db]
+  (sort-by (comp clojure.string/lower-case
+                 #(or (hakukohde-name db (:oid %) :fi) ""))
+           hakukohteet))
+
+(defn- sort-by-form-name [direct-form-haut]
+  (sort-by (comp clojure.string/lower-case
+                 #(or (from-multi-lang (:name %) :fi) ""))
+           direct-form-haut))
+
+(defn- incomplete-haut [db]
   (when-let [haut (get-in db [:application :haut])]
-     (handle-haut-fn haut)))
+    (-> (filter-haut-all-not-processed haut)
+        (update :tarjonta-haut sort-by-unprocessed)
+        (update :tarjonta-haut sort-hakukohteet sort-by-unprocessed)
+        (update :direct-form-haut sort-by-unprocessed))))
+
+(defn- complete-haut [db]
+  (when-let [haut (get-in db [:application :haut])]
+    (-> (filter-haut-all-processed haut)
+        (update :tarjonta-haut sort-by-haku-name db)
+        (update :tarjonta-haut sort-hakukohteet sort-by-hakukohde-name)
+        (update :direct-form-haut sort-by-form-name))))
 
 (re-frame/reg-sub
- :application/incomplete-haut
- (fn [db]
-   (when-haut
-       db
-       #(-> %
-            (filter-haut-all-not-processed)
-            (sort-haut sort-haku-seq-by-unprocessed)))))
+  :application/incomplete-haut
+  incomplete-haut)
 
 (re-frame/reg-sub
- :application/incomplete-haku-count
- (fn [_]
-   (count @(re-frame/subscribe [:application/incomplete-haut]))))
+  :application/incomplete-haku-count
+  (fn [db]
+    (let [{:keys [tarjonta-haut direct-form-haut]} (incomplete-haut db)]
+      (+ (count tarjonta-haut)
+         (count direct-form-haut)))))
 
 (re-frame/reg-sub
- :application/complete-haut
- (fn [db]
-   (when-haut
-       db
-       #(->
-         %
-         (filter-haut-all-processed)
-         (sort-haut sort-haku-seq-by-name)))))
+  :application/complete-haut
+  complete-haut)
 
 (re-frame/reg-sub
- :application/complete-haku-count
- (fn [_]
-   (count @(re-frame/subscribe [:application/complete-haut]))))
+  :application/complete-haku-count
+  (fn [db]
+    (let [{:keys [tarjonta-haut direct-form-haut]} (complete-haut db)]
+      (+ (count tarjonta-haut)
+         (count direct-form-haut)))))
 
 (re-frame/reg-sub
  :application/search-control-all-page-view?
@@ -159,11 +173,7 @@
 
 (re-frame/reg-sub
   :application/hakukohde-name
-  (fn [db [_ hakukohde-oid]]
-    (if-let [hakukohde (get-in db [:hakukohteet hakukohde-oid])]
-      (or (from-multi-lang (:name hakukohde) :fi) hakukohde-oid)
-      (when (zero? (:fetching-hakukohteet db))
-        hakukohde-oid))))
+  (fn [db [_ hakukohde-oid]] (hakukohde-name db hakukohde-oid :fi)))
 
 (re-frame/reg-sub
   :application/hakukohde-and-tarjoaja-name
@@ -174,12 +184,6 @@
              (str " - " tarjoaja-name)))
       (when (zero? (:fetching-hakukohteet db))
         hakukohde-oid))))
-
-(defn- haku-name [db haku-oid lang]
-  (if-let [haku (get-in db [:haut haku-oid])]
-    (or (from-multi-lang (:name haku) lang) haku-oid)
-    (when (zero? (:fetching-haut db))
-      haku-oid)))
 
 (re-frame/reg-sub
   :application/haku-name
