@@ -70,7 +70,7 @@
                                                  (or (some #(when (not (clojure.string/blank? (get labels %)))
                                                               (get labels %))
                                                            [lang :fi :sv :en])
-                                                     "")))]
+                                                     (str "Tuntematon koodi " koodi-uri))))]
                                (cond (string? koodi-value)
                                      (let [values (clojure.string/split koodi-value #"\s*,\s*")]
                                        (if (< 1 (count values))
@@ -101,11 +101,12 @@
      :nationality    (-> answers :nationality :value)}))
 
 (defn get-country-by-code [code]
-  (->> (koodisto/get-koodisto-options "maatjavaltiot2" 1)
-       (filter #(= code (:value %)))
-       first
-       :label
-       :fi))
+  (or (->> (koodisto/get-koodisto-options "maatjavaltiot2" 1)
+           (filter #(= code (:value %)))
+           first
+           :label
+           :fi)
+      (str "Tuntematon maakoodi " code)))
 
 (defn populate-person-koodisto-fields [person]
   (-> person
