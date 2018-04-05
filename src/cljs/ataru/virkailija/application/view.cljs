@@ -1,8 +1,8 @@
 (ns ataru.virkailija.application.view
   (:require [ataru.application.application-states :as application-states]
-            [ataru.application.review-states :as application-review-states]
             [ataru.application.review-states :as review-states]
-            [ataru.cljs-util :as util]
+            [ataru.cljs-util :as cljs-util]
+            [ataru.util :as util]
             [ataru.virkailija.application.application-search-control :refer [application-search-control]]
             [ataru.virkailija.application.application-subs]
             [ataru.virkailija.application.handlers]
@@ -42,7 +42,7 @@
       [:input {:type  "hidden"
                :name  "skip-answers"
                :value "false"}]
-      (when-let [csrf-token (util/csrf-token)]
+      (when-let [csrf-token (cljs-util/csrf-token)]
         [:input {:type  "hidden"
                  :name  "CSRF"
                  :value csrf-token}])
@@ -69,7 +69,7 @@
 
 (defn- review-state-label
   [state-name]
-  (second (first (filter #(= (first %) state-name) application-review-states/application-hakukohde-processing-states))))
+  (second (first (filter #(= (first %) state-name) review-states/application-hakukohde-processing-states))))
 
 (defn- review-label-with-count
   [label count]
@@ -133,7 +133,7 @@
         all-states                 (reduce (fn [acc [state _]]
                                              (assoc acc state 0))
                                            {}
-                                           application-review-states/application-hakukohde-processing-states)]
+                                           review-states/application-hakukohde-processing-states)]
     (fn []
       (when-not (empty? @filtered-applications)
         (let [from-states (reduce
@@ -309,7 +309,7 @@
 
 (defn- select-application
   [application-key]
-  (util/update-url-with-query-params {:application-key application-key})
+  (cljs-util/update-url-with-query-params {:application-key application-key})
   (dispatch [:application/select-application application-key]))
 
 (defn hakukohde-review-state
@@ -369,7 +369,7 @@
                (or
                  (review-label-for-hakukohde
                    application-hakukohde-reviews
-                   application-review-states/application-hakukohde-processing-states
+                   review-states/application-hakukohde-processing-states
                    hakukohde-oid
                    "processing-state")
                  "Käsittelemättä")
@@ -383,7 +383,7 @@
                  (or
                    (review-label-for-hakukohde
                      application-hakukohde-reviews
-                     application-review-states/application-hakukohde-selection-states
+                     review-states/application-hakukohde-selection-states
                      hakukohde-oid
                      "selection-state")
                    "Kesken")]])]))
@@ -426,7 +426,7 @@
             (for [application applications
                   :let        [selected? (= @selected-key (:key application))]]
               (if selected?
-                [util/wrap-scroll-to [application-list-row application selected?]]
+                [cljs-util/wrap-scroll-to [application-list-row application selected?]]
                 [application-list-row application selected?]))))))
 
 (defn- toggle-state-filter!
@@ -434,9 +434,9 @@
   (let [new-filter (if selected?
                      (remove #(= filter-id %) hakukohde-filters)
                      (conj hakukohde-filters filter-id))]
-    (util/update-url-with-query-params
+    (cljs-util/update-url-with-query-params
       {filter-kw (clojure.string/join ","
-                                      (util/get-unselected-review-states
+                                      (cljs-util/get-unselected-review-states
                                         new-filter
                                         states))})
     (dispatch [:state-update #(assoc-in % [:application filter-kw] new-filter)])))
@@ -465,7 +465,7 @@
                              :type      "checkbox"
                              :checked   all-filters-selected?
                              :on-change (fn [_]
-                                          (util/update-url-with-query-params
+                                          (cljs-util/update-url-with-query-params
                                             {filter-kw (if all-filters-selected?
                                                          (clojure.string/join "," (map first states))
                                                          nil)})
@@ -535,20 +535,20 @@
        [hakukohde-state-filter-controls
         :attachment-state-filter
         "Liitepyynnöt"
-        application-review-states/attachment-hakukohde-review-types
+        review-states/attachment-hakukohde-review-types
         (subscribe [:state-query [:application :attachment-state-counts]])]]
       [:span.application-handling__list-row--state
        [hakukohde-state-filter-controls
         :processing-state-filter
         "Käsittelyvaihe"
-        application-review-states/application-hakukohde-processing-states
+        review-states/application-hakukohde-processing-states
         (subscribe [:state-query [:application :review-state-counts]])]]
       (when (:selection-state @review-settings true)
         [:span.application-handling__list-row--selection
          [hakukohde-state-filter-controls
           :selection-state-filter
           "Valinta"
-          application-review-states/application-hakukohde-selection-states]])]
+          review-states/application-hakukohde-selection-states]])]
      (when-not @fetching
        [application-list-contents applications])]))
 
@@ -702,7 +702,7 @@
   (match event
          {:event-type "review-state-change"}
          (let [label (application-states/get-review-state-label-by-name
-                       application-review-states/application-review-states
+                       review-states/application-review-states
                        (:new-review-state event))]
            (if (= (:new-review-state event) "information-request")
              [:span.application-handling__event-caption--inner label (virkailija-initials-span event)]
@@ -725,12 +725,12 @@
 
          {:event-type "hakukohde-review-state-change"}
          [:span.application-handling__event-caption--inner
-          (str (->> application-review-states/hakukohde-review-types
+          (str (->> review-states/hakukohde-review-types
                     (filter #(= (keyword (:review-key event)) (first %)))
                     (first)
                     (second)) ": "
                (application-states/get-review-state-label-by-name
-                 (->> application-review-states/hakukohde-review-types
+                 (->> review-states/hakukohde-review-types
                       (map last)
                       (apply concat)
                       (distinct))
@@ -742,7 +742,7 @@
          [:span.application-handling__event-caption--inner
           (str "Liitepyyntö: "
                (application-states/get-review-state-label-by-name
-                 application-review-states/attachment-hakukohde-review-types
+                 review-states/attachment-hakukohde-review-types
                  (:new-review-state event)))
           " "
           (virkailija-initials-span event)]
@@ -759,7 +759,7 @@
 
 (defn event-row
   [event]
-  (let [modify-event? (util/modify-event? event)
+  (let [modify-event? (cljs-util/modify-event? event)
         modifications (when modify-event?
                         (subscribe [:application/changes-made-for-event (:id event)]))
         show-details? (r/atom (if (:last-modify-event? event) true false))
@@ -1026,22 +1026,30 @@
             selected-state (or @(subscribe [:state-query [:application :review :attachment-reviews selected-hakukohde attachment-key]])
                                "not-checked")]
         [:div.application__attachment-review-row
-         [:p.application__attachment-review-row-label (:label attachment)]
+         [:div.application__attachment-review-row-answer-information
+          [:p.application__attachment-review-row-label (:label attachment)]
+          (for [attachment-file (:values attachment)
+                :let [text (str (:filename attachment-file) " (" (util/size-bytes->str (:size attachment-file)) ")")]]
+            [:div
+             (if (= (:virus-scan-status attachment-file) "done")
+               [:a {:href (str "/lomake-editori/api/files/content/" (:key attachment-file))}
+                text]
+               text)])]
          (if @list-opened
            [:div.application-handling__review-state-list-opened
-            (for [[state label] application-review-states/attachment-hakukohde-review-types]
+            (for [[state label] review-states/attachment-hakukohde-review-types]
               [:div.application-handling__review-state-row.application-handling__review-state-row--small
                {:class    (when (= state selected-state) "application-handling__review-state-selected-row application-handling__review-state-row--enabled")
                 :on-click (fn []
                             (swap! list-opened not)
                             (dispatch [:application/update-attachment-review attachment-key state]))
-                :key (str attachment-key label)}
+                :key      (str attachment-key label)}
                (when (= state selected-state) (icon-check)) label])]
            [:div.application-handling__review-state-row.application-handling__review-state-row--small
-            {:class "application-handling__review-state-selected-row application-handling__review-state-row--enabled"
+            {:class    "application-handling__review-state-selected-row application-handling__review-state-row--enabled"
              :on-click #(swap! list-opened not)}
             (icon-check)
-            (application-states/get-review-state-label-by-name application-review-states/attachment-hakukohde-review-types selected-state)])]))))
+            (application-states/get-review-state-label-by-name review-states/attachment-hakukohde-review-types selected-state)])]))))
 
 (defn- attachment-review-area [review-positioning]
   (let [selected-review-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde]])
@@ -1097,7 +1105,7 @@
          [:a
           {:on-click #(swap! show-attachment-review? not)}
           (if @show-attachment-review? ">>" "<<") " Liitepyynnöt"]
-         [application-hakukohde-review-inputs application-review-states/hakukohde-review-types]
+         [application-hakukohde-review-inputs review-states/hakukohde-review-types]
          (when @(subscribe [:application/show-info-request-ui?])
            [application-information-request])
          [application-review-inputs]
@@ -1107,7 +1115,22 @@
          [application-deactivate-toggle]
          [application-review-events]]]])))
 
-(defn application-heading [application]
+(defn- hakukohteet-list-row [hakukohde]
+  ^{:key (str "hakukohteet-list-row-" (:oid hakukohde))}
+  [:li.application-handling__hakukohteet-list-row
+   [:div.application-handling__review-area-hakukohde-heading
+    (str (-> hakukohde :name :fi) " - " (-> hakukohde :tarjoaja-name :fi))]
+   (doall
+    (for [koulutus (:koulutukset hakukohde)]
+      ^{:key (str "koulutus-" (:oid koulutus))}
+      [:div.application-handling__review-area-koulutus-heading
+       (util/koulutus->str koulutus :fi)]))])
+
+(defn- hakukohteet-list [hakukohteet]
+  (into [:ul.application-handling__hakukohteet-list]
+        (map hakukohteet-list-row hakukohteet)))
+
+(defn application-heading [application hakukohteet-by-oid]
   (let [answers            (:answers application)
         pref-name          (-> application :person :preferred-name)
         last-name          (-> application :person :last-name)

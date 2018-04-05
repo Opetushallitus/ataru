@@ -532,15 +532,19 @@ and (max-width: 1000px) {
 .application__attachment-review-row {
   display: flex;
   justify-content: space-between;
-  
+
   &:not(:last-child) {
     margin: 10px 0;
     border-bottom: dashed @review-separator-color 1px;
   }
 }
 
+.application__attachment-review-row-answer-information {
+  font-weight: lighter;
+}
+
 .application__attachment-review-row-label {
-  margin: 0 10px 0 0;
+  margin: 0 10px 5px 0;
 }
 
 .application-handling__review-outer-container {
