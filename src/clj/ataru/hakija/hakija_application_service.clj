@@ -131,7 +131,6 @@
         form                          (-> application
                                           (:form)
                                           (form-store/fetch-by-id)
-                                          (hakija-form-service/inject-hakukohde-component-if-missing)
                                           (hakukohde/populate-hakukohde-answer-options tarjonta-info)
                                           (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)
                                           (hakija-form-service/flag-uneditable-and-unviewable-fields

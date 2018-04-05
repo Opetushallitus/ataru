@@ -14,16 +14,6 @@
             [ataru.hakija.form-role :as form-role]
             [ataru.component-data.component :as component]))
 
-(defn inject-hakukohde-component-if-missing
-  "Add hakukohde component to legacy forms (new ones have one added on creation)"
-  [form]
-  (let [has-hakukohde-component? (-> (filter #(= (keyword (:id %)) :hakukohteet) (:content form))
-                                   (first)
-                                   (not-empty))]
-    (if has-hakukohde-component?
-      form
-      (update-in form [:content] #(into [(component/hakukohteet)] %)))))
-
 (defn- set-can-submit-multiple-applications
   [multiple? haku-oid field]
   (cond-> (assoc-in field [:params :can-submit-multiple-applications] multiple?)
@@ -148,7 +138,6 @@
     (if form
       (-> form
           (merge tarjonta-info)
-          (inject-hakukohde-component-if-missing)
           (flag-uneditable-and-unviewable-fields hakukohteet roles application-in-processing-state?)
           (populate-hakukohde-answer-options tarjonta-info)
           (populate-can-submit-multiple-applications tarjonta-info))

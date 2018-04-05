@@ -21,7 +21,8 @@
     [ataru.background-job.job :as job]
     [ataru.application.review-states :as review-states]
     [ataru.koodisto.koodisto :as koodisto]
-    [ataru.organization-service.ldap-client :as ldap])
+    [ataru.organization-service.ldap-client :as ldap]
+    [ataru.component-data.component :as component])
   (:import (java.time ZonedDateTime ZoneId)))
 
 (def default-fetch-size 50)
@@ -67,6 +68,28 @@
                       (sort-by :created-time))]
       (store/create-form-or-increment-version!
        (update-person-info-module new-person-module form)))))
+
+(defn inject-hakukohde-component-if-missing
+  "Add hakukohde component to legacy forms (new ones have one added on creation)"
+  [form]
+  (let [has-hakukohde-component? (-> (filter #(= (keyword (:id %)) :hakukohteet) (:content form))
+                                     (first)
+                                     (not-empty))]
+    (if has-hakukohde-component?
+      nil
+      (update-in form [:content] #(into [(component/hakukohteet)] %)))))
+
+(defn migrate-legacy-form-content-to-contain-hakukohteet-module [connection]
+  (let [update (fn [form conn]
+                   (info "Updating followups of form-id:" (:id form))
+                   (jdbc/execute! conn ["update forms set content = ? where id = ?" (:content form) (:id form)]))]
+    (doseq [form (->> (migration-app-store/get-all-forms connection)
+                      (map #(store/fetch-by-id (:id %)))
+                      (sort-by :created-time))]
+      (some->
+        form
+        inject-hakukohde-component-if-missing
+        (update connection)))))
 
 (defn application-id->application-key
   "Make application_events to refer to applications using
@@ -493,6 +516,12 @@
   "Migrate creator to form elements"
   (with-db-transaction [conn {:connection connection}]
     (migrate-element-metadata-to-forms conn)))
+
+(migrations/defmigration
+  migrate-legacy-forms-to-include-hakukohteet-module "1.90"
+  "Migrate legacy form content to contain hakukohteet module"
+  (with-db-transaction [conn {:connection connection}]
+    (migrate-legacy-form-content-to-contain-hakukohteet-module conn)))
 
 (defn migrate
   []

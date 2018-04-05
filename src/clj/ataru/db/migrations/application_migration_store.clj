@@ -13,6 +13,7 @@
 (sql/defqueries "sql/migration-1.82-queries.sql")
 (sql/defqueries "sql/migration-1.86-queries.sql")
 (sql/defqueries "sql/migration-1.88-queries.sql")
+(sql/defqueries "sql/migration-1.90-queries.sql")
 
 (defn get-ids-of-latest-applications
   []
@@ -125,3 +126,6 @@
   (yesql-update-1_88-form<! {:id      id
                              :content content}
                             {:connection connection}))
+
+(defn get-all-forms [connection]
+  (yesql-get-forms-1_90-query {} {:connection connection}))
