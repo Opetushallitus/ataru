@@ -728,7 +728,7 @@
               :else (-> component :label lang)))]
     (flatten (recursively-get-labels component))))
 
-(defn module [path]
+(defn hakukohteet-module [path]
   (let [languages (subscribe [:editor/languages])
         value     (subscribe [:editor/get-component-value path])]
     (fn [path]
@@ -737,6 +737,16 @@
         [:span.editor-form__module-header-label (get-in @value [:label :fi])]
         " "
         [:span (get-in @value [:label-amendment :fi])]]
+       [:div.editor-form__module-fields
+        "Tässä hakija voi valita hakukohteet. Hakukohteiden määrä ja priorisointi määritetään haun asetuksissa."]])))
+
+(defn module [path]
+  (let [languages (subscribe [:editor/languages])
+        value     (subscribe [:editor/get-component-value path])]
+    (fn [path]
+      [:div.editor-form__module-wrapper
+       [:header.editor-form__module-header
+        [:span.editor-form__module-header-label (get-in @value [:label :fi])]]
        [:div.editor-form__module-fields
         [:span.editor-form__module-fields-label "Sisältää kentät:"]
         " "
