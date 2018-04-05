@@ -63,18 +63,19 @@
     applications))
 
 (defn- attachment-processing-state-counts-for-application
-  [{:keys [application_hakukohde_attachment_reviews]}]
+  [{:keys [application-attachment-reviews]}]
   (frequencies
     (map
       :state
       (or
-       (not-empty application_hakukohde_attachment_reviews)
+       (not-empty application-attachment-reviews)
        [{:state "not-checked"}]))))
 
 (defn attachment-state-counts
   [applications]
   (reduce
    (fn [acc application]
+     (cljs.pprint/pprint application)
      (merge-with + acc (attachment-processing-state-counts-for-application application)))
    {}
    applications))
@@ -163,7 +164,8 @@
                                    application-list)]
       (-> db
           (assoc-in [:application :review :attachment-reviews (keyword hakukohde-oid) attachment-key] state)
-          (assoc-in [:application :applications] updated-applications)))))
+          (assoc-in [:application :applications] updated-applications)
+          (assoc-in [:application :attachment-state-counts] (attachment-state-counts updated-applications))))))
 
 (defn- update-sort
   [db column-id swap-order?]

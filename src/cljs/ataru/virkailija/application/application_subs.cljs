@@ -288,7 +288,7 @@
 
 (defn- filter-by-attachment-review
   [application default-state-name states-to-include]
-  (let [states (->> (:attachment-reviews application)
+  (let [states (->> (:application-attachment-reviews application)
                     (map :state))]
     (state-filter states states-to-include default-state-name (:hakukohde application))))
 
