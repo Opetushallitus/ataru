@@ -424,7 +424,8 @@
                                             (when (= "attachment" (:fieldType answer)) answer))))
           form-fields          (u/form-fields-by-id (-> db :application :selected-application-and-form :form))]
       (for [attachment answered-attachments
-            :let [belongs-to-hakukohteet (->> (:key attachment)
-                                              (get form-fields)
-                                              :belongs-to-hakukohteet)]]
+            :let [belongs-to-hakukohteet (-> (:key attachment)
+                                             keyword
+                                             (form-fields)
+                                             :belongs-to-hakukohteet)]]
         (assoc attachment :belongs-to-hakukohteet belongs-to-hakukohteet)))))

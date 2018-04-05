@@ -1053,13 +1053,17 @@
      {:class (when (= :fixed review-positioning)
                "application-handling__attachment-review-container-floating")}
      (when (not-empty hakukohde-attachments)
-       [:p.application-handling__attachment-review-header "Hakukohteen liitepyynnöt (" (count hakukohde-attachments) ")"])
+       [:div
+        [:p.application-handling__attachment-review-header "Hakukohteen liitepyynnöt (" (count hakukohde-attachments) ")"]
+        (doall
+          (for [attachment hakukohde-attachments]
+            [attachment-review-row attachment @selected-review-hakukohde]))])
      (when (not-empty form-attachments)
        [:div
         [:p.application-handling__attachment-review-header "Muut liitepyynnöt (" (count form-attachments) ")"]
         (doall
           (for [attachment form-attachments]
-            [attachment-review-row attachment (keyword @selected-review-hakukohde)]))])]))
+            [attachment-review-row attachment :form]))])]))
 
 (defn application-review []
   (let [review-positioning      (subscribe [:state-query [:application :review-positioning]])
