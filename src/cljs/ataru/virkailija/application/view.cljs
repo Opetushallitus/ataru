@@ -331,7 +331,7 @@
     [:i.zmdi.zmdi-spinner.spin]))
 
 (defn applications-hakukohde-rows
-  [review-settings application selected-hakukohde]
+  [review-settings application selected-hakukohde attachment-states]
   (let [direct-form-application?      (empty? (:hakukohde application))
         application-hakukohde-oids    (if direct-form-application?
                                         ["form"]
@@ -350,7 +350,8 @@
                                               :application-hakukohde-reviews
                                               (filter #(and (= (:requirement %) "processing-state")
                                                             (= (:state %) "information-request")))
-                                              (seq)))]
+                                              (seq)))
+                hakukohde-attachment-states (get attachment-states hakukohde-oid)]
             [:div.application-handling__list-row-hakukohde
              (when (not direct-form-application?)
                [:span.application-handling__application-hakukohde-cell
@@ -362,6 +363,11 @@
                 [hakukohde-and-tarjoaja-name hakukohde-oid]])
              [:span.application-handling__application-hl
               {:class (when direct-form-application? "application-handling__application-hl--direct-form")}]
+             (when-not (= "form" hakukohde-oid)
+               [:span.application-handling__list-row--attachment-states
+                [:i.application-handling_list-row-checked-attachments (:checked hakukohde-attachment-states) "v"]
+                " "
+                [:i.application-handling_list-row-checked-attachments (:unchecked hakukohde-attachment-states) "!"]])
              [:span.application-handling__hakukohde-state-cell
               [:span.application-handling__hakukohde-state.application-handling__count-tag
                [:span.application-handling__state-label
@@ -390,14 +396,15 @@
         application-hakukohde-oids))))
 
 (defn application-list-row [application selected?]
-  (let [day-date-time      (clojure.string/split (t/time->str (:created-time application)) #"\s")
-        day                (first day-date-time)
-        date-time          (->> day-date-time (rest) (clojure.string/join " "))
-        applicant          (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
-        review-settings    (subscribe [:state-query [:application :review-settings :config]])
-        hakukohteet        (subscribe [:state-query [:application :hakukohteet]])
-        selected-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde]])
-        attachment-states  (subscribe [:application/application-attachment-states])]
+  (let [day-date-time          (clojure.string/split (t/time->str (:created-time application)) #"\s")
+        day                    (first day-date-time)
+        date-time              (->> day-date-time (rest) (clojure.string/join " "))
+        applicant              (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
+        review-settings        (subscribe [:state-query [:application :review-settings :config]])
+        hakukohteet            (subscribe [:state-query [:application :hakukohteet]])
+        selected-hakukohde     (subscribe [:state-query [:application :selected-review-hakukohde]])
+        attachment-states      (subscribe [:application/attachment-states])
+        form-attachment-states (get @attachment-states "form")]
     [:div.application-handling__list-row
      {:on-click #(select-application (:key application))
       :class    (clojure.string/join " " [(when selected?
@@ -411,10 +418,10 @@
        [:span.application-handling__list-row--time-day day]
        [:span date-time]]
       [:span.application-handling__list-row--attachment-states
-       [:i.application-handling_list-row-checked-attachments (:checked @attachment-states) "v"]
+       [:i.application-handling_list-row-checked-attachments (:checked form-attachment-states) "v"]
        " "
-       [:i.application-handling_list-row-checked-attachments (:uncheched @attachment-states) "!"]]]
-     [applications-hakukohde-rows @review-settings application @hakukohteet @selected-hakukohde]]))
+       [:i.application-handling_list-row-checked-attachments (:unchecked form-attachment-states) "!"]]]
+     [applications-hakukohde-rows @review-settings application @selected-hakukohde @attachment-states]]))
 
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
@@ -1030,6 +1037,7 @@
           [:p.application__attachment-review-row-label (:label attachment)]
           (for [attachment-file (:values attachment)
                 :let [text (str (:filename attachment-file) " (" (util/size-bytes->str (:size attachment-file)) ")")]]
+            ^{:key (:key attachment-file)}
             [:div
              (if (= (:virus-scan-status attachment-file) "done")
                [:a {:href (str "/lomake-editori/api/files/content/" (:key attachment-file))}
