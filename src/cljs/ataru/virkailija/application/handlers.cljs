@@ -419,12 +419,16 @@
         (assoc-in [:application :haut :direct-form-haut] (keys-to-names direct-form-haut))
         (assoc-in [:application :forms] (keys-to-names direct-form-haut))
         (update :haut merge (keys-to-names haut))
-        (update :hakukohteet merge (keys-to-names hakukohteet)))))
+        (update :hakukohteet merge (keys-to-names hakukohteet))
+        (update :fetching-haut dec)
+        (update :fetching-hakukohteet dec))))
 
 (reg-event-fx
   :application/refresh-haut-and-hakukohteet
   (fn [{:keys [db]}]
-    {:db   db
+    {:db   (-> db
+               (update :fetching-haut inc)
+               (update :fetching-hakukohteet inc))
      :http {:method              :get
             :path                "/lomake-editori/api/haut"
             :handler-or-dispatch :editor/handle-refresh-haut-and-hakukohteet

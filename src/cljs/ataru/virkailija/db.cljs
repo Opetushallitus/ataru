@@ -4,17 +4,21 @@
    [ataru.virkailija.application-sorting :as application-sorting]))
 
 (def default-db
-  {:editor       {:forms               nil
-                  :autosave            nil ; autosave stop function, see autosave.cljs
-                  :selected-form-key   nil
-                  :used-by-haut        {:fetching? false
-                                        :error?    false}
-                  :email-template-lang "fi"}
+  {:editor               {:forms               nil
+                          :autosave            nil ; autosave stop function, see autosave.cljs
+                          :selected-form-key   nil
+                          :used-by-haut        {:fetching? false
+                                                :error?    false}
+                          :email-template-lang "fi"}
                                         ; Initial active panel on page load.
-   :active-panel :editor
-   :application  {:review                     {}
-                  :processing-state-filter    (mapv first review-states/application-hakukohde-processing-states)
-                  :selection-state-filter     (mapv first review-states/application-hakukohde-selection-states)
-                  :sort                       application-sorting/initial-sort
-                  :application-list-expanded? true}
-   :banner       {:type :in-flow}})
+   :active-panel         :editor
+   :application          {:review                     {}
+                          :processing-state-filter    (mapv first review-states/application-hakukohde-processing-states)
+                          :selection-state-filter     (mapv first review-states/application-hakukohde-selection-states)
+                          :sort                       application-sorting/initial-sort
+                          :application-list-expanded? true}
+   :haut                 {}
+   :hakukohteet          {}
+   :fetching-haut        0
+   :fetching-hakukohteet 0
+   :banner               {:type :in-flow}})

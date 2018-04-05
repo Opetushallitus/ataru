@@ -160,20 +160,26 @@
 (re-frame/reg-sub
   :application/hakukohde-name
   (fn [db [_ hakukohde-oid]]
-    (when-let [hakukohde (get-in db [:hakukohteet hakukohde-oid])]
-      (or (from-multi-lang (:name hakukohde) :fi) hakukohde-oid))))
+    (if-let [hakukohde (get-in db [:hakukohteet hakukohde-oid])]
+      (or (from-multi-lang (:name hakukohde) :fi) hakukohde-oid)
+      (when (zero? (:fetching-hakukohteet db))
+        hakukohde-oid))))
 
 (re-frame/reg-sub
   :application/hakukohde-and-tarjoaja-name
   (fn [db [_ hakukohde-oid]]
-    (when-let [hakukohde (get-in db [:hakukohteet hakukohde-oid])]
+    (if-let [hakukohde (get-in db [:hakukohteet hakukohde-oid])]
       (str (or (from-multi-lang (:name hakukohde) :fi) hakukohde-oid)
            (when-let [tarjoaja-name (from-multi-lang (:tarjoaja-name hakukohde) :fi)]
-             (str " - " tarjoaja-name))))))
+             (str " - " tarjoaja-name)))
+      (when (zero? (:fetching-hakukohteet db))
+        hakukohde-oid))))
 
 (defn- haku-name [db haku-oid lang]
-  (when-let [haku (get-in db [:haut haku-oid])]
-    (or (from-multi-lang (:name haku) lang) haku-oid)))
+  (if-let [haku (get-in db [:haut haku-oid])]
+    (or (from-multi-lang (:name haku) lang) haku-oid)
+    (when (zero? (:fetching-haut db))
+      haku-oid)))
 
 (re-frame/reg-sub
   :application/haku-name
