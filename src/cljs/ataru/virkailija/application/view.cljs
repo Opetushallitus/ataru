@@ -363,7 +363,8 @@
                 [hakukohde-and-tarjoaja-name hakukohde-oid]])
              [:span.application-handling__application-hl
               {:class (when direct-form-application? "application-handling__application-hl--direct-form")}]
-             (when-not (= "form" hakukohde-oid)
+             (when (and (not= "form" hakukohde-oid)
+                        (:attachment-handling review-settings true))
                [:span.application-handling__list-row--attachment-states
                 [:i.application-handling_list-row-checked-attachments (:checked hakukohde-attachment-states) "v"]
                 " "
@@ -417,10 +418,11 @@
       [:span.application-handling__list-row--application-time
        [:span.application-handling__list-row--time-day day]
        [:span date-time]]
-      [:span.application-handling__list-row--attachment-states
-       [:i.application-handling_list-row-checked-attachments (:checked form-attachment-states) "v"]
-       " "
-       [:i.application-handling_list-row-checked-attachments (:unchecked form-attachment-states) "!"]]
+      (when (:attachment-handling @review-settings true)
+        [:span.application-handling__list-row--attachment-states
+         [:i.application-handling_list-row-checked-attachments (:checked form-attachment-states) "v"]
+         " "
+         [:i.application-handling_list-row-checked-attachments (:unchecked form-attachment-states) "!"]])
       [:span.application-handling__list-row--state]
       (when (:selection-state @review-settings true)
         [:span.application-handling__hakukohde-selection-cell])]
@@ -541,12 +543,13 @@
        [application-list-basic-column-header
         :created-time
         "Viimeksi muokattu"]]
-      [:span.application-handling__list-row--attachment-state
-       [hakukohde-state-filter-controls
-        :attachment-state-filter
-        "Liitepyynnöt"
-        review-states/attachment-hakukohde-review-types
-        (subscribe [:state-query [:application :attachment-state-counts]])]]
+      (when (:attachment-handling @review-settings true)
+        [:span.application-handling__list-row--attachment-state
+         [hakukohde-state-filter-controls
+          :attachment-state-filter
+          "Liitepyynnöt"
+          review-states/attachment-hakukohde-review-types
+          (subscribe [:state-query [:application :attachment-state-counts]])]])
       [:span.application-handling__list-row--state
        [hakukohde-state-filter-controls
         :processing-state-filter
@@ -1113,8 +1116,12 @@
           [attachment-review-area @review-positioning])
         [:div.application-handling__review-outer-container
          [application-hakukohde-selection]
-         [:a
-          {:on-click #(swap! show-attachment-review? not)}
+         [:div.application-handling__attachment-review-toggle-container
+          {:on-click (fn []
+                       (when-not @settings-visible
+                         (swap! show-attachment-review? not)))}
+          (when @settings-visible
+            [review-settings-checkbox :attachment-handling])
           [:span.application-handling__attachment-review-toggle
            (if @show-attachment-review? ">>" "<<")] " Liitepyynnöt"]
          [application-hakukohde-review-inputs review-states/hakukohde-review-types]
