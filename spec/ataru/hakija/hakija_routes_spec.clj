@@ -87,7 +87,7 @@
         (+ (count (ataru-db/exec
                     :db
                     yesql-get-application-list-for-virkailija
-                    {:query_key   "hakukohde-oid"
+                    {:query_key   "hakukohde"
                      :query_value (:hakukohde @form)}))
            (count (ataru-db/exec
                    :db

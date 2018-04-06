@@ -60,9 +60,9 @@
     (insert-test-form form-name)))
 
 (defn get-latest-application-id-for-form [form-name]
-  (->> (get-latest-form form-name)
-       :key
-       (application-store/get-application-heading-list "form")
+  (->> {:query_key   "form"
+        :query_value (:key (get-latest-form form-name))}
+       application-store/get-application-heading-list
        first
        :id))
 
