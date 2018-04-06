@@ -3,7 +3,6 @@
             [ataru.application.review-states :as application-review-states]
             [ataru.application.review-states :as review-states]
             [ataru.cljs-util :as util]
-            [ataru.util :refer [koulutus->str]]
             [ataru.virkailija.application.application-search-control :refer [application-search-control]]
             [ataru.virkailija.application.application-subs]
             [ataru.virkailija.application.handlers]
@@ -131,7 +130,6 @@
         selected-to-review-state   (r/atom nil)
         filtered-applications      (subscribe [:application/filtered-applications])
         haku-header                (subscribe [:application/list-heading-data-for-haku])
-        selected-hakukohde-oid     (subscribe [:state-query [:application :selected-hakukohde :oid]])
         all-states                 (reduce (fn [acc [state _]]
                                              (assoc acc state 0))
                                            {}
@@ -147,7 +145,9 @@
                                   (map :state
                                        (filter
                                          #(= "processing-state" (:requirement %))
-                                         (application-states/get-all-reviews-for-all-requirements application @selected-hakukohde-oid))))))
+                                         (application-states/get-all-reviews-for-all-requirements
+                                          application
+                                          (second @haku-header)))))))
                             all-states
                             @filtered-applications)]
           [:span.application-handling__mass-edit-review-states-container
@@ -160,13 +160,11 @@
                {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state false)}
                [:i.zmdi.zmdi-close]]
               [:h4.application-handling__mass-edit-review-states-heading.application-handling__mass-edit-review-states-heading--title "Massamuutos"]
-              (when-let [[haku hakukohde] @haku-header]
+              (when-let [[haku-oid hakukohde-oid _] @haku-header]
                 [:p
-                 (from-multi-lang (:name haku))
-                 (when (:name hakukohde)
-                   (str
-                     ", "
-                     (from-multi-lang (:name hakukohde))))])
+                 @(subscribe [:application/haku-name haku-oid])
+                 (when hakukohde-oid
+                   (str ", " @(subscribe [:application/hakukohde-name hakukohde-oid])))])
               [:h4.application-handling__mass-edit-review-states-heading "Tilasta"]
 
               (if @from-list-open?
@@ -223,63 +221,72 @@
 
 (def all-hakukohteet-label "Kaikki hakukohteet")
 
-(defn closed-hakukohde-row
+(defn- closed-row
   [on-click label]
   [:div.application-handling__dropdown-box-closed
-   {:key "closed-selected-hakukohde-row"
-    :on-click on-click}
+   {:on-click on-click}
    [:i.zmdi.zmdi-chevron-down]
    [:p.application-handling__dropdown-box-closed-label
-    (if (clojure.string/blank? label)
-      all-hakukohteet-label
-      label)]])
+    (or label [:i.zmdi.zmdi-spinner.spin])]])
 
-(defn selected-hakukohde-row
+(defn- selected-row
   [on-click label]
-  [:a.application-handling__dropdown-box-item.application-handling__dropdown-box-item--selected
-   {:key "selected-hakukohde-row"
-    :on-click on-click}
-   [icon-check]
-   (or label all-hakukohteet-label)])
+  [:span.application-handling__dropdown-box-item.application-handling__dropdown-box-item--selected
+   {:on-click on-click}
+   (icon-check)
+   (or label [:i.zmdi.zmdi-spinner.spin])])
 
-(defn hakukohde->label
-  [hakukohde]
-  (str
-    (from-multi-lang (:name hakukohde))
-    (when-let [application-count (:application-count hakukohde)]
-      (str " (" application-count ")"))))
+(defn- unselected-row
+  [close-list href label]
+  [:a.application-handling__dropdown-box-item
+   {:href     href
+    :on-click close-list}
+   (or label [:i.zmdi.zmdi-spinner.spin])])
 
-(defn hakukohde-row
-  [close-list haku {:keys [oid] :as hakukohde} current-hakukohde]
-  (if (= oid (:oid current-hakukohde))
-    (selected-hakukohde-row close-list (hakukohde->label hakukohde))
-    [:a.application-handling__dropdown-box-item
-     {:key      (str "hakukohde-row-" oid)
-      :href     (str "/lomake-editori/applications"
-                     (if oid
-                       (str "/hakukohde/" oid)
-                       (str "/haku/" (:oid haku))))
-      :on-click close-list}
-     (hakukohde->label hakukohde)]))
+(defn- hakukohde-row
+  [close-list oid selected?]
+  (let [name @(subscribe [:application/hakukohde-name oid])]
+    (if selected?
+      (selected-row close-list name)
+      (unselected-row close-list
+                      (str "/lomake-editori/applications/hakukohde/" oid)
+                      name))))
 
-(def all-hakukohteet-row-data
-  [{:name {:fi all-hakukohteet-label}
-    :oid  nil}])
+(defn- haku-row
+  [close-list oid selected?]
+  (if selected?
+    (selected-row close-list all-hakukohteet-label)
+    (unselected-row close-list
+                    (str "/lomake-editori/applications/haku/" oid)
+                    all-hakukohteet-label)))
 
 (defn haku-applications-heading
-  [[haku selected-hakukohde hakukohteet]]
+  [[haku-oid selected-hakukohde-oid hakukohde-oids]]
   (let [list-opened (r/atom false)
         open-list   #(reset! list-opened true)
         close-list  #(reset! list-opened false)]
-    (fn []
+    (fn [[haku-oid selected-hakukohde-oid hakukohde-oids]]
       [:div.application-handling__header-haku-and-hakukohde
-       [:div.application-handling__header-haku (from-multi-lang (:name haku))]
+       [:div.application-handling__header-haku
+        (if-let [haku-name @(subscribe [:application/haku-name haku-oid])]
+          haku-name
+          [:i.zmdi.zmdi-spinner.spin])]
        (if @list-opened
          [:div.application-handling__dropdown-box-wrapper
-          (into
-            [:div.application-handling__dropdown-box-opened
-             (map #(hakukohde-row close-list haku % selected-hakukohde) (into all-hakukohteet-row-data hakukohteet))])]
-         [closed-hakukohde-row open-list (hakukohde->label selected-hakukohde)])])))
+          [:div.application-handling__dropdown-box-opened
+           (haku-row close-list haku-oid (nil? selected-hakukohde-oid))
+           (doall
+            (for [hakukohde-oid hakukohde-oids]
+              ^{:key hakukohde-oid}
+              [hakukohde-row
+               close-list
+               hakukohde-oid
+               (= hakukohde-oid selected-hakukohde-oid)]))]]
+         (closed-row open-list
+                     (if selected-hakukohde-oid
+                       @(subscribe [:application/hakukohde-name
+                                    selected-hakukohde-oid])
+                       all-hakukohteet-label)))])))
 
 (defn selected-applications-heading
   [haku-data list-heading]
@@ -289,16 +296,16 @@
 
 (defn haku-heading
   []
-  (let [belongs-to-haku    (subscribe [:application/application-list-belongs-to-haku?])
-        applications       (subscribe [:application/filtered-applications])
-        header             (subscribe [:application/list-heading])
-        haku-header        (subscribe [:application/list-heading-data-for-haku])
-        selected-hakukohde (subscribe [:state-query [:application :selected-hakukohde]])]
+  (let [belongs-to-haku (subscribe [:application/application-list-belongs-to-haku?])
+        applications    (subscribe [:application/filtered-applications])
+        header          (subscribe [:application/list-heading])
+        haku-header     (subscribe [:application/list-heading-data-for-haku])]
     [:div.application-handling__header
      [selected-applications-heading @haku-header @header]
      [:div.editor-form__form-controls-container
       [mass-update-applications-link]
-      (when @belongs-to-haku [excel-download-link @applications (:oid @selected-hakukohde) @header])]]))
+      (when @belongs-to-haku
+        [excel-download-link @applications (second @haku-header) @header])]]))
 
 (defn- select-application
   [application-key]
@@ -317,8 +324,14 @@
     states
     (hakukohde-review-state reviews hakukohde-oid requirement)))
 
+(defn- hakukohde-and-tarjoaja-name [hakukohde-oid]
+  (if-let [hakukohde-and-tarjoaja-name @(subscribe [:application/hakukohde-and-tarjoaja-name
+                                                    hakukohde-oid])]
+    [:span hakukohde-and-tarjoaja-name]
+    [:i.zmdi.zmdi-spinner.spin]))
+
 (defn applications-hakukohde-rows
-  [review-settings application all-hakukohteet selected-hakukohde]
+  [review-settings application selected-hakukohde]
   (let [direct-form-application?      (empty? (:hakukohde application))
         application-hakukohde-oids    (if direct-form-application?
                                         ["form"]
@@ -329,8 +342,7 @@
        {:class (when direct-form-application? "application-handling__application-hakukohde-cell--form")}]
       (map
         (fn [hakukohde-oid]
-          (let [hakukohde              ((keyword hakukohde-oid) all-hakukohteet)
-                processing-state       (hakukohde-review-state application-hakukohde-reviews hakukohde-oid "processing-state")
+          (let [processing-state       (hakukohde-review-state application-hakukohde-reviews hakukohde-oid "processing-state")
                 selection-state        (hakukohde-review-state application-hakukohde-reviews hakukohde-oid "selection-state")
                 show-state-email-icon? (and
                                          (< 0 (:new-application-modifications application))
@@ -342,11 +354,12 @@
             [:div.application-handling__list-row-hakukohde
              (when (not direct-form-application?)
                [:span.application-handling__application-hakukohde-cell
-                {:class    (when (= selected-hakukohde hakukohde-oid) "application-handling__application-hakukohde-cell--selected")
+                {:class    (when (= selected-hakukohde hakukohde-oid)
+                             "application-handling__application-hakukohde-cell--selected")
                  :on-click (fn []
                              (select-application (:key application))
                              (dispatch [:state-update #(assoc-in % [:application :selected-review-hakukohde] hakukohde-oid)]))}
-                (from-multi-lang (:name hakukohde)) " - " (from-multi-lang (:tarjoaja-name hakukohde))])
+                [hakukohde-and-tarjoaja-name hakukohde-oid]])
              [:span.application-handling__application-hl
               {:class (when direct-form-application? "application-handling__application-hl--direct-form")}]
              [:span.application-handling__hakukohde-state-cell
@@ -382,7 +395,6 @@
         date-time          (->> day-date-time (rest) (clojure.string/join " "))
         applicant          (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
         review-settings    (subscribe [:state-query [:application :review-settings :config]])
-        hakukohteet        (subscribe [:state-query [:application :hakukohteet]])
         selected-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde]])]
     [:div.application-handling__list-row
      {:on-click #(select-application (:key application))
@@ -396,7 +408,7 @@
       [:span.application-handling__list-row--application-time
        [:span.application-handling__list-row--time-day day]
        [:span date-time]]]
-     [applications-hakukohde-rows @review-settings application @hakukohteet @selected-hakukohde]]))
+     [applications-hakukohde-rows @review-settings application @selected-hakukohde]]))
 
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
@@ -571,30 +583,25 @@
          [:div.application-handling__review-deactivate-toggle-label-right
           "Passiivinen"]]]])))
 
-(defn- hakukohde-label
-  [hakukohde]
-  (let [name (:name hakukohde)]
-    (or (:fi name)
-        (:sv name)
-        (:en name))))
+(defn- hakukohde-name [hakukohde-oid]
+  (if-let [hakukohde-name @(subscribe [:application/hakukohde-name
+                                       hakukohde-oid])]
+    [:span hakukohde-name]
+    [:i.zmdi.zmdi-spinner.spin]))
 
 (defn- opened-review-hakukohde-list-row
-  [selected-hakukohde-oid hakukohteet hakukohde-oid]
-  (let [hakukohde ((keyword hakukohde-oid) hakukohteet)
-        selected? (= selected-hakukohde-oid hakukohde-oid)]
+  [selected-hakukohde-oid hakukohde-oid]
+  (let [selected? (= selected-hakukohde-oid hakukohde-oid)]
     [:div.application-handling__review-state-row.application-handling__review-state-row-hakukohde
      {:data-hakukohde-oid hakukohde-oid
       :class              (when selected? "application-handling__review-state-selected-row-hakukohde")
-      :on-click           (fn [evt]
-                            (dispatch [:application/select-review-hakukohde (aget evt "target" "dataset" "hakukohdeOid")]))}
+      :on-click           #(dispatch [:application/select-review-hakukohde hakukohde-oid])}
      (when selected? [icon-check])
-     (hakukohde-label hakukohde)]))
-
+     [hakukohde-name hakukohde-oid]]))
 
 (defn- selected-review-hakukohde-row
-  [selected-hakukohde-oid on-click haku-hakukohteet application-hakukohde-oids]
-  (let [selected-hakukohde                  ((keyword selected-hakukohde-oid) haku-hakukohteet)
-        application-has-multiple-hakukohde? (< 1 (count application-hakukohde-oids))
+  [selected-hakukohde-oid on-click application-hakukohde-oids]
+  (let [application-has-multiple-hakukohde? (< 1 (count application-hakukohde-oids))
         settings-visible?                   (subscribe [:state-query [:application :review-settings :visible?]])]
     [:div.application-handling__review-state-row.application-handling__review-state-row-hakukohde.application-handling__review-state-selected-row-hakukohde
      {:on-click (when (and application-has-multiple-hakukohde?
@@ -603,12 +610,11 @@
       :class (str (when-not application-has-multiple-hakukohde? "application-handling__review-state-row-hakukohde--single-option")
                   (when-not @settings-visible? " application-handling__review-state-row--enabled"))}
      [icon-check]
-     (hakukohde-label selected-hakukohde)]))
+     [hakukohde-name selected-hakukohde-oid]]))
 
 (defn- application-hakukohde-selection
   []
   (let [selected-hakukohde-oid     (subscribe [:state-query [:application :selected-review-hakukohde]])
-        haku-hakukohteet           (subscribe [:state-query [:application :hakukohteet]])
         application-hakukohde-oids (subscribe [:state-query [:application :selected-application-and-form :application :hakukohde]])
         list-opened                (subscribe [:application/review-list-visible? :hakukohde])
         select-list-item           (partial toggle-review-list-visibility :hakukohde)]
@@ -620,8 +626,8 @@
            [:div.application-handling__review-state-list-opened-anchor
             (into
               [:div.application-handling__review-state-list-opened {:on-click select-list-item}]
-              (map #(opened-review-hakukohde-list-row @selected-hakukohde-oid @haku-hakukohteet %) @application-hakukohde-oids))]
-           (selected-review-hakukohde-row @selected-hakukohde-oid select-list-item @haku-hakukohteet @application-hakukohde-oids))]))))
+              (map #(opened-review-hakukohde-list-row @selected-hakukohde-oid %) @application-hakukohde-oids))]
+           (selected-review-hakukohde-row @selected-hakukohde-oid select-list-item @application-hakukohde-oids))]))))
 
 (defn- review-settings-checkbox [setting-kwd]
   (let [checked?  (subscribe [:application/review-state-setting-enabled? setting-kwd])
@@ -1027,22 +1033,7 @@
        [application-deactivate-toggle]
        [application-review-events]]]]))
 
-(defn- hakukohteet-list-row [hakukohde]
-  ^{:key (str "hakukohteet-list-row-" (:oid hakukohde))}
-  [:li.application-handling__hakukohteet-list-row
-   [:div.application-handling__review-area-hakukohde-heading
-    (str (-> hakukohde :name :fi) " - " (-> hakukohde :tarjoaja-name :fi))]
-   (doall
-    (for [koulutus (:koulutukset hakukohde)]
-      ^{:key (str "koulutus-" (:oid koulutus))}
-      [:div.application-handling__review-area-koulutus-heading
-       (koulutus->str koulutus :fi)]))])
-
-(defn- hakukohteet-list [hakukohteet]
-  (into [:ul.application-handling__hakukohteet-list]
-        (map hakukohteet-list-row hakukohteet)))
-
-(defn application-heading [application hakukohteet-by-oid]
+(defn application-heading [application]
   (let [answers            (:answers application)
         pref-name          (-> application :person :preferred-name)
         last-name          (-> application :person :last-name)
@@ -1085,9 +1076,13 @@
              [:i.zmdi.zmdi-account-o]
              [:span "Hakijaa ei ole yksilöity. "
               [:span.important "Tee yksilöinti henkilöpalvelussa."]]])])]
-      (when (and (not (contains? (:answers application) :hakukohteet))
-                 (not-empty hakukohteet-by-oid))
-        (hakukohteet-list (map hakukohteet-by-oid (:hakukohde application))))]]))
+      (when (not (contains? (:answers application) :hakukohteet))
+        [:ul.application-handling__hakukohteet-list
+         (for [hakukohde-oid (:hakukohde application)]
+           ^{:key (str "hakukohteet-list-row-" hakukohde-oid)}
+           [:li.application-handling__hakukohteet-list-row
+            [:div.application-handling__review-area-hakukohde-heading
+             [hakukohde-and-tarjoaja-name hakukohde-oid]]])])]]))
 
 (defn close-application []
   [:a {:href     "#"
@@ -1102,21 +1097,19 @@
   []
   [:div.application-handling__floating-application-review-placeholder])
 
-
 (defn application-review-area [applications]
   (let [selected-key                  (subscribe [:state-query [:application :selected-key]])
         selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
         belongs-to-current-form       (fn [key applications] (first (filter #(= key (:key %)) applications)))
         expanded?                     (subscribe [:state-query [:application :application-list-expanded?]])
-        review-positioning            (subscribe [:state-query [:application :review-positioning]])
-        hakukohteet                   (subscribe [:state-query [:application :hakukohteet]])]
+        review-positioning            (subscribe [:state-query [:application :review-positioning]])]
     (fn [applications]
       (let [application        (:application @selected-application-and-form)]
         (when (and (belongs-to-current-form @selected-key applications)
                    (not @expanded?))
           [:div.application-handling__detail-container
            [close-application]
-           [application-heading application @hakukohteet]
+           [application-heading application]
            [:div.application-handling__review-area
             [:div.application-handling__application-contents
              [application-contents @selected-application-and-form]]
