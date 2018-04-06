@@ -1,7 +1,6 @@
 (ns ataru.hakija.core
   (:require [reagent.core :as reagent]
             [re-frame.core :as re-frame]
-            [re-frisk.core :as re-frisk]
             [taoensso.timbre :refer-macros [spy info]]
             [ataru.cljs-util :as cljs-util]
             [ataru.hakija.hakija-ajax :refer [post]]
@@ -51,16 +50,9 @@
   (reagent/render [form-view]
                   (.getElementById js/document "app")))
 
-(defn- re-frisk-environment?
-  []
-  (let [cfg (js->clj js/config)]
-    (or (get cfg "enable-re-frisk")
-        (= (get cfg "environment-name") "luokka"))))
 
 (defn ^:export init []
   (cljs-util/set-global-error-handler! #(post "/hakemus/api/client-error" %))
   (mount-root)
   (re-frame/dispatch-sync [:application/initialize-db])
-  (when (re-frisk-environment?)
-    (re-frisk/enable-re-frisk!))
   (dispatch-form-load))
