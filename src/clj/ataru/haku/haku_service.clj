@@ -58,12 +58,11 @@
              (:organization-oid haku)))
 
 (defn- hakujen-tarjoajat [tarjonta-service haut]
-  (->> haut
-       (map :hakukohde)
-       distinct
-       (tarjonta-protocol/get-hakukohteet tarjonta-service)
-       (reduce #(assoc %1 (:oid %2) (set (:tarjoajaOids %2)))
-               {})))
+  (util/map-kv (->> (map :hakukohde haut)
+                    distinct
+                    (tarjonta-protocol/get-hakukohteet tarjonta-service)
+                    (util/group-by-first :oid))
+               (comp set :tarjoajaOids)))
 
 (defn- remove-organization-oid [haku]
   (dissoc haku :organization-oid))
