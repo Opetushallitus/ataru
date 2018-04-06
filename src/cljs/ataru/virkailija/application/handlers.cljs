@@ -75,7 +75,6 @@
   [applications]
   (reduce
    (fn [acc application]
-     (cljs.pprint/pprint application)
      (merge-with + acc (attachment-processing-state-counts-for-application application)))
    {}
    applications))

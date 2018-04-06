@@ -330,6 +330,13 @@
     [:span hakukohde-and-tarjoaja-name]
     [:i.zmdi.zmdi-spinner.spin]))
 
+(defn- attachment-state-counts [states]
+  [:span.application-handling__list-row--attachment-states
+   (when (< 0 (:checked states))
+     [:span.application-handling_list-row-attachment-state-counts.checked (:checked states)])
+   (when (< 0 (:unchecked states))
+     [:span.application-handling_list-row-attachment-state-counts.unchecked (:unchecked states)])])
+
 (defn applications-hakukohde-rows
   [review-settings application selected-hakukohde attachment-states]
   (let [direct-form-application?      (empty? (:hakukohde application))
@@ -365,10 +372,7 @@
               {:class (when direct-form-application? "application-handling__application-hl--direct-form")}]
              (when (and (not= "form" hakukohde-oid)
                         (:attachment-handling review-settings true))
-               [:span.application-handling__list-row--attachment-states
-                [:i.application-handling_list-row-checked-attachments (:checked hakukohde-attachment-states) "v"]
-                " "
-                [:i.application-handling_list-row-checked-attachments (:unchecked hakukohde-attachment-states) "!"]])
+               [attachment-state-counts hakukohde-attachment-states])
              [:span.application-handling__hakukohde-state-cell
               [:span.application-handling__hakukohde-state.application-handling__count-tag
                [:span.application-handling__state-label
@@ -419,10 +423,7 @@
        [:span.application-handling__list-row--time-day day]
        [:span date-time]]
       (when (:attachment-handling @review-settings true)
-        [:span.application-handling__list-row--attachment-states
-         [:i.application-handling_list-row-checked-attachments (:checked form-attachment-states) "v"]
-         " "
-         [:i.application-handling_list-row-checked-attachments (:unchecked form-attachment-states) "!"]])
+        [attachment-state-counts form-attachment-states])
       [:span.application-handling__list-row--state]
       (when (:selection-state @review-settings true)
         [:span.application-handling__hakukohde-selection-cell])]

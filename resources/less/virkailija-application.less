@@ -384,6 +384,23 @@ and (max-width: 1000px) {
   display: inline-block;
   color: @sg-color-gray;
   flex: 0 0 127px;
+  padding-left: 30px;
+}
+
+.application-handling_list-row-attachment-state-counts {
+  border-radius: 50%;
+  color: white;
+  font-size: 12px;
+  padding: 0 6px;
+
+  &.checked {
+    background-color: @light-green;
+    margin-right: 3px;
+  }
+
+  &.unchecked {
+    background-color: @sg-color-red;
+  }
 }
 
 /* List styles end */
