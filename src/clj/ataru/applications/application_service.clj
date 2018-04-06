@@ -212,39 +212,79 @@
                                        hakukohderyhma-oid
                                        application))))
 
-(defn- parse-application-list-query
-  [query-key query-value]
-  (cond (= :hakukohde query-key)
-        [(if (:ensisijaisesti query-value)
-           :ensisijainen-hakukohde-oid
-           :hakukohde-oid)
-         (:hakukohde-oid query-value)
-         []]
-        (= :hakukohderyhma query-key)
-        [:haku-oid
-         (:haku-oid query-value)
-         [(partial (if (:ensisijaisesti query-value)
-                     applied-ensisijaisesti-hakukohderyhmassa?
-                     applied-to-hakukohderyhma?)
-                   (:hakukohderyhma-oid query-value))]]
-        :else
-        [query-key query-value []]))
+(defn ->form-query
+  [key]
+  {:query_key   "form"
+   :query_value key
+   :predicate   (constantly true)})
+
+(defn ->hakukohde-query
+  [hakukohde-oid ensisijaisesti]
+  {:query_key   (if ensisijaisesti "ensisijainen-hakukohde" "hakukohde")
+   :query_value hakukohde-oid
+   :predicate   (constantly true)})
+
+(defn ->hakukohderyhma-query
+  [haku-oid hakukohderyhma-oid ensisijaisesti]
+  {:query_key   "haku"
+   :query_value haku-oid
+   :predicate   (partial (if ensisijaisesti
+                           applied-ensisijaisesti-hakukohderyhmassa?
+                           applied-to-hakukohderyhma?)
+                         hakukohderyhma-oid)})
+
+(defn ->haku-query
+  [haku-oid]
+  {:query_key   "haku"
+   :query_value haku-oid
+   :predicate   (constantly true)})
+
+(defn ->ssn-query
+  [ssn]
+  {:query_key   "ssn"
+   :query_value ssn
+   :predicate   (constantly true)})
+
+(defn ->dob-query
+  [dob]
+  {:query_key   "dob"
+   :query_value dob
+   :predicate   (constantly true)})
+
+(defn ->email-query
+  [email]
+  {:query_key   "email"
+   :query_value email
+   :predicate   (constantly true)})
+
+(defn ->name-query
+  [name]
+  {:query_key   "name"
+   :query_value (application-store/->name-query-value name)
+   :predicate   (constantly true)})
+
+(defn ->person-oid-query
+  [person-oid]
+  {:query_key   "person-oid"
+   :query_value person-oid
+   :predicate   (constantly true)})
+
+(defn ->application-oid-query
+  [application-oid]
+  {:query_key   "application-oid"
+   :query_value application-oid
+   :predicate   (constantly true)})
 
 (defn get-application-list-by-query
-  [organization-service person-service tarjonta-service session query-key query-value]
-  (let [[query-key query-value predicates] (parse-application-list-query
-                                            query-key
-                                            query-value)
-        applications                       (aac/get-application-list-by-query
-                                            organization-service
-                                            tarjonta-service
-                                            session
-                                            query-key
-                                            query-value
-                                            predicates)
-        persons                            (person-service/get-persons
-                                            person-service
-                                            (distinct (keep :person-oid applications)))]
+  [organization-service person-service tarjonta-service session query]
+  (let [applications (aac/get-application-list-by-query
+                      organization-service
+                      tarjonta-service
+                      session
+                      query)
+        persons      (person-service/get-persons
+                      person-service
+                      (distinct (keep :person-oid applications)))]
     (map (fn [application]
            (let [onr-person (get persons (keyword (:person-oid application)))
                  person     (if (or (:yksiloity onr-person)

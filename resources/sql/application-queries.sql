@@ -118,11 +118,11 @@ WHERE
     THEN a.dob = to_date(:query_value, 'DD.MM.YYYY')
   WHEN :query_key = 'ssn'
     THEN a.ssn = :query_value
-  WHEN :query_key = 'haku-oid'
+  WHEN :query_key = 'haku'
     THEN a.haku = :query_value
-  WHEN :query_key = 'hakukohde-oid'
+  WHEN :query_key = 'hakukohde'
     THEN :query_value = ANY (a.hakukohde)
-  WHEN :query_key = 'ensisijainen-hakukohde-oid'
+  WHEN :query_key = 'ensisijainen-hakukohde'
     THEN :query_value = a.hakukohde[1]
   END
 ORDER BY a.created_time DESC;

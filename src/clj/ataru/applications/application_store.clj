@@ -223,21 +223,18 @@
                                    virkailija-oid)})
       id)))
 
-(defn- name-search-query [name]
+(defn ->name-query-value
+  [name]
   (->> (clojure.string/split name #"\s+")
        (remove clojure.string/blank?)
        (map #(str % ":*"))
        (clojure.string/join " & ")))
 
 (defn get-application-heading-list
-  ([query-key query-value]
-   (let [parsed-value (case :query-key
-                        :name (name-search-query query-value)
-                        query-value)]
-     (->> (exec-db :db yesql-get-application-list-for-virkailija
-                   {:query_key   (name query-key)
-                    :query_value parsed-value})
-          (map ->kebab-case-kw)))))
+  [query]
+  (map ->kebab-case-kw
+       (exec-db :db yesql-get-application-list-for-virkailija
+                (select-keys query [:query_key :query_value]))))
 
 (defn get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
   [person-oid]

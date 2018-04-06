@@ -73,22 +73,18 @@
    (constantly true)))
 
 (defn get-application-list-by-query
-  [organization-service tarjonta-service session query-key query-value predicates]
+  [organization-service tarjonta-service session query]
   (session-orgs/run-org-authorized
    session
    organization-service
    [:view-applications :edit-applications]
    (constantly [])
-   #(filter-authorized tarjonta-service % (conj predicates
-                                                authorized-by-form?
-                                                authorized-by-tarjoajat?)
-                       (application-store/get-application-heading-list
-                        query-key
-                        query-value))
-   #(filter-authorized tarjonta-service nil predicates
-                       (application-store/get-application-heading-list
-                        query-key
-                        query-value))))
+   #(filter-authorized tarjonta-service % [(:predicate query)
+                                           authorized-by-form?
+                                           authorized-by-tarjoajat?]
+                       (application-store/get-application-heading-list query))
+   #(filter-authorized tarjonta-service nil [(:predicate query)]
+                       (application-store/get-application-heading-list query))))
 
 (defn get-latest-application-by-key
   [organization-service tarjonta-service session application-key]

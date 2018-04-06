@@ -251,35 +251,34 @@
                        {applicationOid :- s/Str nil}]
         :summary "Return applications header-level info for form"
         :return {:applications [ataru-schema/ApplicationInfo]}
-        (let [[query-key query-value]
-              (cond
-                (some? formKey) [:form formKey]
-                (some? hakukohdeOid)
-                [:hakukohde
-                 {:hakukohde-oid hakukohdeOid
-                  :ensisijaisesti ensisijaisesti}]
-                (and (some? hakukohderyhmaOid) (some? hakuOid))
-                [:hakukohderyhma
-                 {:haku-oid hakuOid
-                  :hakukohderyhma-oid hakukohderyhmaOid
-                  :ensisijaisesti ensisijaisesti}]
-                (some? hakuOid) [:haku-oid hakuOid]
-                (some? ssn) [:ssn ssn]
-                (some? dob) [:dob (when (dob/dob? dob) dob)]
-                (some? email) [:email email]
-                (some? name) [:name name]
-                (some? personOid) [:person-oid personOid]
-                (some? applicationOid) [:application-oid applicationOid])]
-          (if (nil? query-key)
-            (response/bad-request)
-            (response/ok
-             {:applications (application-service/get-application-list-by-query
-                             organization-service
-                             person-service
-                             tarjonta-service
-                             session
-                             query-key
-                             query-value)}))))
+        (if-let [query (cond (some? formKey)
+                             (application-service/->form-query formKey)
+                             (some? hakukohdeOid)
+                             (application-service/->hakukohde-query hakukohdeOid ensisijaisesti)
+                             (and (some? hakuOid) (some? hakukohderyhmaOid))
+                             (application-service/->hakukohderyhma-query hakuOid hakukohderyhmaOid ensisijaisesti)
+                             (some? hakuOid)
+                             (application-service/->haku-query hakuOid)
+                             (some? ssn)
+                             (application-service/->ssn-query ssn)
+                             (and (some? dob) (dob/dob? dob))
+                             (application-service/->dob-query dob)
+                             (some? email)
+                             (application-service/->email-query email)
+                             (some? name)
+                             (application-service/->name-query name)
+                             (some? personOid)
+                             (application-service/->person-oid-query personOid)
+                             (some? applicationOid)
+                             (application-service/->application-oid-query applicationOid))]
+          (response/ok
+           {:applications (application-service/get-application-list-by-query
+                           organization-service
+                           person-service
+                           tarjonta-service
+                           session
+                           query)})
+          (response/bad-request)))
       (api/GET "/virkailija-settings" {session :session}
         :return ataru-schema/VirkailijaSettings
         (ok (virkailija-edit/get-review-settings session)))
