@@ -389,29 +389,6 @@
                                            :processing-state])))))
 
 (re-frame.core/reg-sub
-  :application/attachment-states
-  (fn [db _]
-    (let [attachments        (->> db :application :selected-application-and-form :form :content
-                                  u/flatten-form-fields
-                                  (filter (fn [field]
-                                            (= "attachment" (:fieldType field)))))
-          attachment-reviews (-> db :application :review :attachment-reviews)
-          hakukohteet        (conj (not-empty (->> db :application :selected-application-and-form :application :hakukohde)) "form")]
-      (reduce (fn [states-by-hakukohde hakukohde]
-                (let [hakukohde-attachment-reviews (vals ((keyword hakukohde) attachment-reviews))
-                      checked-attachments          (count (filter #(= "checked" %) hakukohde-attachment-reviews))
-                      hakukohde-attachments        (count (filter (if (= "form" hakukohde)
-                                                                    #(empty? (:belongs-to-hakukohteet %))
-                                                                    #(contains? (-> % :belongs-to-hakukohteet set)
-                                                                                hakukohde))
-                                                                  attachments))]
-                  (assoc states-by-hakukohde hakukohde
-                         {:checked   checked-attachments
-                          :unchecked (- hakukohde-attachments checked-attachments)})))
-              {}
-              hakukohteet))))
-
-(re-frame.core/reg-sub
   :application/get-attachment-answer-by-key
   (fn [db [_ key]]
     (let [answers (-> db :application :selected-application-and-form :application :answers)]
@@ -419,7 +396,6 @@
            (filter #(contains? (-> % val :value flatten set) (name key)))
            first
            val))))
-
 
 (re-frame.core/reg-sub
   :application/get-attachments

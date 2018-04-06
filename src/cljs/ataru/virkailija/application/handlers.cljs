@@ -64,12 +64,9 @@
 
 (defn- attachment-processing-state-counts-for-application
   [{:keys [application-attachment-reviews]}]
-  (frequencies
-    (map
-      :state
-      (or
-       (not-empty application-attachment-reviews)
-       [{:state "not-checked"}]))))
+  (->> application-attachment-reviews
+       (map :state)
+       frequencies))
 
 (defn attachment-state-counts
   [applications]

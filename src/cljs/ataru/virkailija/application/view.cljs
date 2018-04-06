@@ -358,7 +358,7 @@
                                               (filter #(and (= (:requirement %) "processing-state")
                                                             (= (:state %) "information-request")))
                                               (seq)))
-                hakukohde-attachment-states (get attachment-states hakukohde-oid)]
+                hakukohde-attachment-states ((keyword hakukohde-oid) attachment-states)]
             [:div.application-handling__list-row-hakukohde
              (when (not direct-form-application?)
                [:span.application-handling__application-hakukohde-cell
@@ -400,6 +400,22 @@
                    "Kesken")]])]))
         application-hakukohde-oids))))
 
+(defn- application-attachment-states
+  [application]
+  (let [attachment-reviews (->> application
+                                :application-attachment-reviews
+                                (group-by (comp keyword :hakukohde)))
+        hakukohteet        (conj (map keyword (:hakukohde application)) :form)]
+    (reduce (fn [states-by-hakukohde hakukohde]
+              (let [hakukohde-attachment-reviews (->> attachment-reviews hakukohde (map :state))
+                    checked-attachments          (count (filter #(= "checked" %) hakukohde-attachment-reviews))
+                    hakukohde-attachments        (count hakukohde-attachment-reviews)]
+                (assoc states-by-hakukohde hakukohde
+                       {:checked   checked-attachments
+                        :unchecked (- hakukohde-attachments checked-attachments)})))
+            {}
+            hakukohteet)))
+
 (defn application-list-row [application selected?]
   (let [day-date-time          (clojure.string/split (t/time->str (:created-time application)) #"\s")
         day                    (first day-date-time)
@@ -408,8 +424,8 @@
         review-settings        (subscribe [:state-query [:application :review-settings :config]])
         hakukohteet            (subscribe [:state-query [:application :hakukohteet]])
         selected-hakukohde     (subscribe [:state-query [:application :selected-review-hakukohde]])
-        attachment-states      (subscribe [:application/attachment-states])
-        form-attachment-states (get @attachment-states "form")]
+        attachment-states      (application-attachment-states application)
+        form-attachment-states (:form attachment-states)]
     [:div.application-handling__list-row
      {:on-click #(select-application (:key application))
       :class    (clojure.string/join " " [(when selected?
@@ -1037,8 +1053,7 @@
   (let [list-opened (r/atom false)]
     (fn [attachment selected-hakukohde]
       (let [attachment-key (-> attachment :key keyword)
-            selected-state (or @(subscribe [:state-query [:application :review :attachment-reviews selected-hakukohde attachment-key]])
-                               "not-checked")]
+            selected-state (subscribe [:state-query [:application :review :attachment-reviews selected-hakukohde attachment-key]])]
         [:div.application__attachment-review-row
          [:div.application__attachment-review-row-answer-information
           [:p.application__attachment-review-row-label (:label attachment)]
@@ -1054,17 +1069,17 @@
            [:div.application-handling__review-state-list-opened
             (for [[state label] review-states/attachment-hakukohde-review-types]
               [:div.application-handling__review-state-row.application-handling__review-state-row--small
-               {:class    (when (= state selected-state) "application-handling__review-state-selected-row application-handling__review-state-row--enabled")
+               {:class    (when (= state @selected-state) "application-handling__review-state-selected-row application-handling__review-state-row--enabled")
                 :on-click (fn []
                             (swap! list-opened not)
                             (dispatch [:application/update-attachment-review attachment-key selected-hakukohde state]))
                 :key      (str attachment-key label)}
-               (when (= state selected-state) (icon-check)) label])]
+               (when (= state @selected-state) (icon-check)) label])]
            [:div.application-handling__review-state-row.application-handling__review-state-row--small
             {:class    "application-handling__review-state-selected-row application-handling__review-state-row--enabled"
              :on-click #(swap! list-opened not)}
             (icon-check)
-            (application-states/get-review-state-label-by-name review-states/attachment-hakukohde-review-types selected-state)])]))))
+            (application-states/get-review-state-label-by-name review-states/attachment-hakukohde-review-types @selected-state)])]))))
 
 (defn- attachment-review-area [review-positioning]
   (let [selected-review-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde]])
