@@ -14,6 +14,7 @@
 (sql/defqueries "sql/migration-1.86-queries.sql")
 (sql/defqueries "sql/migration-1.88-queries.sql")
 (sql/defqueries "sql/migration-1.90-queries.sql")
+(sql/defqueries "sql/migration-1.92-queries.sql")
 
 (defn get-ids-of-latest-applications
   []
@@ -133,3 +134,11 @@
 (defn fetch-by-id [id connection]
   (first (yesql-get-by-id-1_90-query {:id id} {:connection connection})))
 
+(defn get-1.92-latest-application-key-and-form [connection]
+  (yesql-get-1_92-latest-application-key-and-form {} {:connection connection}))
+
+(defn get-1.92-form-by-id [connection id]
+  (first (yesql-get-1_92-form {:id id} {:connection connection})))
+
+(defn insert-1.92-attachment-review [connection review]
+  (yesql-insert-1_92-attachment-review! review {:connection connection}))
