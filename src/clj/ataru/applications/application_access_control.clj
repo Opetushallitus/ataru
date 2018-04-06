@@ -7,14 +7,14 @@
    [ataru.odw.odw-service :as odw-service]
    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]))
 
-(defn- authorized-by-form?
+(defn authorized-by-form?
   [authorized-organization-oids application]
   (or (nil? authorized-organization-oids)
       (some? (:haku application))
       (contains? authorized-organization-oids
                  (:organization-oid application))))
 
-(defn- authorized-by-tarjoajat?
+(defn authorized-by-tarjoajat?
   [authorized-organization-oids application]
   (or (nil? authorized-organization-oids)
       (nil? (:haku application))
@@ -42,22 +42,12 @@
   (dissoc application :organization-oid))
 
 (defn filter-authorized
-  ([tarjonta-service authorized-organization-oids applications]
-   (filter-authorized tarjonta-service
-                      authorized-organization-oids
-                      [authorized-by-form?
-                       authorized-by-tarjoajat?]
-                      applications))
-  ([tarjonta-service authorized-organization-oids predicates applications]
-   (->> applications
-        (populate-applications-hakukohteet tarjonta-service)
-        (filter (if (empty? predicates)
-                  (constantly true)
-                  (apply every-pred
-                         (map #(partial % authorized-organization-oids)
-                              predicates))))
-        (map depopulate-application-hakukohteet)
-        (map remove-organization-oid))))
+  [tarjonta-service predicate applications]
+  (->> applications
+       (populate-applications-hakukohteet tarjonta-service)
+       (filter predicate)
+       (map depopulate-application-hakukohteet)
+       (map remove-organization-oid)))
 
 (defn applications-access-authorized?
   [organization-service tarjonta-service session application-keys rights]
@@ -79,11 +69,13 @@
    organization-service
    [:view-applications :edit-applications]
    (constantly [])
-   #(filter-authorized tarjonta-service % [(:predicate query)
-                                           authorized-by-form?
-                                           authorized-by-tarjoajat?]
+   #(filter-authorized tarjonta-service
+                       (every-pred (partial (:predicate query) %)
+                                   (partial authorized-by-form? %)
+                                   (partial authorized-by-tarjoajat? %))
                        (application-store/get-application-heading-list query))
-   #(filter-authorized tarjonta-service nil [(:predicate query)]
+   #(filter-authorized tarjonta-service
+                       (partial (:predicate query) nil)
                        (application-store/get-application-heading-list query))))
 
 (defn get-latest-application-by-key
@@ -95,7 +87,9 @@
    (constantly nil)
    #(some->> (application-store/get-latest-application-by-key application-key)
              vector
-             (filter-authorized tarjonta-service %)
+             (filter-authorized tarjonta-service
+                                (every-pred (partial authorized-by-form? %)
+                                            (partial authorized-by-tarjoajat? %)))
              first)
    #(remove-organization-oid
      (application-store/get-latest-application-by-key application-key))))
@@ -107,7 +101,9 @@
     organization-service
     [:view-applications :edit-applications]
     (constantly nil)
-    #(filter-authorized tarjonta-service %
+    #(filter-authorized tarjonta-service
+                        (every-pred (partial authorized-by-form? %)
+                                    (partial authorized-by-tarjoajat? %))
                         (application-store/get-external-applications
                          haku-oid
                          hakukohde-oid
