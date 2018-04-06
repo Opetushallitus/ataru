@@ -1115,7 +1115,8 @@
          [application-hakukohde-selection]
          [:a
           {:on-click #(swap! show-attachment-review? not)}
-          (if @show-attachment-review? ">>" "<<") " Liitepyynnöt"]
+          [:span.application-handling__attachment-review-toggle
+           (if @show-attachment-review? ">>" "<<")] " Liitepyynnöt"]
          [application-hakukohde-review-inputs review-states/hakukohde-review-types]
          (when @(subscribe [:application/show-info-request-ui?])
            [application-information-request])
