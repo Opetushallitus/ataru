@@ -212,36 +212,39 @@
                                        hakukohderyhma-oid
                                        application))))
 
+(defn- parse-application-list-query
+  [query-key query-value]
+  (cond (= :hakukohde query-key)
+        [(if (:ensisijaisesti query-value)
+           :ensisijainen-hakukohde-oid
+           :hakukohde-oid)
+         (:hakukohde-oid query-value)
+         []]
+        (= :hakukohderyhma query-key)
+        [:haku-oid
+         (:haku-oid query-value)
+         [(partial (if (:ensisijaisesti query-value)
+                     applied-ensisijaisesti-hakukohderyhmassa?
+                     applied-to-hakukohderyhma?)
+                   (:hakukohderyhma-oid query-value))]]
+        :else
+        [query-key query-value []]))
+
 (defn get-application-list-by-query
   [organization-service person-service tarjonta-service session query-key query-value]
-  (let [[query-key query-value predicates]
-        (cond (= :hakukohde query-key)
-              [(if (:ensisijaisesti query-value)
-                 :ensisijainen-hakukohde-oid
-                 :hakukohde-oid)
-               (:hakukohde-oid query-value)
-               []]
-              (= :hakukohderyhma query-key)
-              [:haku-oid
-               (:haku-oid query-value)
-               [(partial (if (:ensisijaisesti query-value)
-                           applied-ensisijaisesti-hakukohderyhmassa?
-                           applied-to-hakukohderyhma?)
-                         (:hakukohderyhma-oid query-value))]]
-              :else
-              [query-key
-               query-value
-               []])
-        applications (aac/get-application-list-by-query
-                      organization-service
-                      tarjonta-service
-                      session
-                      query-key
-                      query-value
-                      predicates)
-        persons      (person-service/get-persons
-                      person-service
-                      (distinct (keep :person-oid applications)))]
+  (let [[query-key query-value predicates] (parse-application-list-query
+                                            query-key
+                                            query-value)
+        applications                       (aac/get-application-list-by-query
+                                            organization-service
+                                            tarjonta-service
+                                            session
+                                            query-key
+                                            query-value
+                                            predicates)
+        persons                            (person-service/get-persons
+                                            person-service
+                                            (distinct (keep :person-oid applications)))]
     (map (fn [application]
            (let [onr-person (get persons (keyword (:person-oid application)))
                  person     (if (or (:yksiloity onr-person)
