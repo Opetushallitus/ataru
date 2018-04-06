@@ -389,15 +389,6 @@
                                            :processing-state])))))
 
 (re-frame.core/reg-sub
-  :application/get-attachment-answer-by-key
-  (fn [db [_ key]]
-    (let [answers (-> db :application :selected-application-and-form :application :answers)]
-      (->> (-> db :application :selected-application-and-form :application :answers)
-           (filter #(contains? (-> % val :value flatten set) (name key)))
-           first
-           val))))
-
-(re-frame.core/reg-sub
   :application/get-attachments
   (fn [db _]
     (let [answered-attachments (->> db :application :selected-application-and-form :application :answers
