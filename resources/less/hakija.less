@@ -111,11 +111,17 @@ body {
   list-style-type: none; 
   margin: 0;
   padding: 0;
+  display: table;
+}
+.application__form-field-list li {
+  display: table-row;
 }
 .application__form-field-list li::before {
   content: '-';
-  margin-right: 1em;
   padding-left: 10px;
+  padding-right: 10px;
+  display: table-cell;
+  vertical-align: top;
 }
 
 .application__read-only-heading-text {
