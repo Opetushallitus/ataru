@@ -250,38 +250,38 @@
 
 (defn- hakukohde-selection-header
   [field-descriptor]
-  [:div.application__wrapper-heading.application__wrapper-heading-block
+  [:div.application__wrapper-heading
    [:h2 @(subscribe [:application/hakukohteet-header])]
    [scroll-to-anchor field-descriptor]])
 
 (defn- select-new-hakukohde-row []
   (when @(subscribe [:application/hakukohteet-editable?])
-    [:div
-     [:div.application__hakukohde-row--search-toggle
-      {:on-click hakukohde-search-toggle-event-handler
-       :role     "button"
-       :class    (clojure.string/join " " [(when (not @(subscribe [:application/show-hakukohde-search]))
-                                             "application__hakukohde-row--search-toggle--closed")
-                                           (when @(subscribe [:application/prioritize-hakukohteet?])
-                                             "application__hakukohde-row--search-toggle--prioritized")])}
-      [:div.application__hakukohde-row-icon-container
-       [:i.zmdi.zmdi-graduation-cap.zmdi-hc-3x]]
-      (let [hakukohteet-full? @(subscribe [:application/hakukohteet-full?])]
-        [:a.application__hakukohde-selection-open-search
-         {:class (when hakukohteet-full? "application__hakukohde-selection-open-search--inactive")}
-         (get-translation :add-application-option)
-         (when-let [max-hakukohteet @(subscribe [:application/max-hakukohteet])]
-           [:span.application__hakukohde-selection-max-label
-            (get-translation :applications_at_most max-hakukohteet)])])]
-     (when @(subscribe [:application/show-hakukohde-search])
-       [hakukohde-selection-search])]))
+    [:div.application__hakukohde-row--search-toggle
+     {:on-click hakukohde-search-toggle-event-handler
+      :role     "button"
+      :class    (clojure.string/join " " [(when (not @(subscribe [:application/show-hakukohde-search]))
+                                            "application__hakukohde-row--search-toggle--closed")
+                                          (when @(subscribe [:application/prioritize-hakukohteet?])
+                                            "application__hakukohde-row--search-toggle--prioritized")])}
+     [:div.application__hakukohde-row-icon-container
+      [:i.zmdi.zmdi-graduation-cap.zmdi-hc-3x]]
+     [:a.application__hakukohde-selection-open-search
+      {:class (when @(subscribe [:application/hakukohteet-full?])
+                "application__hakukohde-selection-open-search--inactive")}
+      (get-translation :add-application-option)
+      (when-let [max-hakukohteet @(subscribe [:application/max-hakukohteet])]
+        [:span.application__hakukohde-selection-max-label
+         (get-translation :applications_at_most max-hakukohteet)])]]))
 
 (defn hakukohteet
   [field-descriptor]
-  [:div.application__wrapper-element.application__wrapper-element-border
+  [:div.application__wrapper-element.application__wrapper-element--border
    [hakukohde-selection-header field-descriptor]
-   [:div.application__hakukohde-selected-list
-    (for [hakukohde-oid @(subscribe [:application/selected-hakukohteet])]
-      ^{:key (str "selected-hakukohde-row-" hakukohde-oid)}
-      [selected-hakukohde-row hakukohde-oid])]
-    (select-new-hakukohde-row)])
+   [:div.application__wrapper-contents.application__wrapper-contents--hakukohde
+    [:div.application__hakukohde-selected-list
+     (for [hakukohde-oid @(subscribe [:application/selected-hakukohteet])]
+       ^{:key (str "selected-hakukohde-row-" hakukohde-oid)}
+       [selected-hakukohde-row hakukohde-oid])]
+    [select-new-hakukohde-row]
+    (when @(subscribe [:application/show-hakukohde-search])
+      [hakukohde-selection-search])]])
