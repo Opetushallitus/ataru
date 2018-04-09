@@ -186,28 +186,22 @@
       [:div.application__hakukohde-selected-row-description
        {:id aria-description-id}
        (hilight-text @(subscribe [:application/hakukohde-description hakukohde-oid]) search-term)]]
-      (cond
-        (not hakukohde-hakuaika-on?) [:div.application__hakukohde-row-additional-text-container
-                                      {:aria-labelledby  aria-header-id
-                                       :aria-describedby aria-description-id
-                                       :aria-disabled    true}
-                                      (get-translation :not-selectable-application-period-ended)]
-        :else [:div.application__hakukohde-row-button-container
-               (cond
-                 hakukohde-selected? [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
-                 hakukohteet-full? [:a.application__hakukohde-select-button.application__hakukohde-select-button--disabled
-                                    {:role             "button"
-                                     :aria-labelledby  aria-header-id
-                                     :aria-describedby aria-description-id
-                                     :aria-disabled    true}
-                                    (get-translation :add)]
-                 :else [:a.application__hakukohde-select-button
-                        {:on-click           hakukohde-select-event-handler
-                         :role               "button"
-                         :data-hakukohde-oid hakukohde-oid
-                         :aria-labelledby    aria-header-id
-                         :aria-describedby   aria-description-id}
-                        (get-translation :add)])])]))
+     (if hakukohde-hakuaika-on?
+       [:div.application__hakukohde-row-button-container
+        (if hakukohde-selected?
+          [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
+          [:button.application__hakukohde-select-button
+           {:data-hakukohde-oid hakukohde-oid
+            :on-click           hakukohde-select-event-handler
+            :disabled           hakukohteet-full?
+            :aria-labelledby    aria-header-id
+            :aria-describedby   aria-description-id}
+           (get-translation :add)])]
+       [:div.application__hakukohde-row-additional-text-container
+        {:aria-labelledby  aria-header-id
+         :aria-describedby aria-description-id
+         :aria-disabled    true}
+        (get-translation :not-selectable-application-period-ended)])]))
 
 (defn- hakukohde-selection-search
   []

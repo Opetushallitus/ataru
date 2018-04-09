@@ -1149,7 +1149,6 @@ and (max-width: @desktop-content-width) {
   padding: 11px 0;
   border-bottom: 1px solid @separator-color;
   display: flex;
-  align-items: center;
 
   &:first-child {
     padding-top: 0;
@@ -1234,6 +1233,8 @@ and (max-width: @desktop-content-width) {
 
 .application__hakukohde-row-button-container {
   color: @pale-blue;
+  min-width: 78px;
+  text-align: right;
   &[disabled] {
     opacity: 0.33;
     a {
@@ -1254,16 +1255,29 @@ and (max-width: @desktop-content-width) {
 }
 
 .application__hakukohde-select-button {
+  border: 0;
   border-radius: 3px;
   padding: 8px 20px;
   color: @white;
   background-color: @pale-blue;
-}
-
-.application__hakukohde-select-button--disabled {
-  background-color: @sg-gray-lighten-3;
-  color: @white;
-  cursor: default;
+  font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  cursor: pointer;
+  &:focus {
+    outline: none;
+  }
+  &::-moz-focus-inner {
+    border: 0;
+  }
+  &:hover {
+    border: 0;
+    background-color: @pale-blue;
+  }
+  &:disabled {
+    background-color: @sg-gray-lighten-3;
+    color: @white;
+    cursor: default;
+  }
 }
 
 .application__question_hakukohde_names_container {
