@@ -303,7 +303,7 @@
     (fn [field-descriptor children]
       (let [label (non-blank-val (get-in field-descriptor [:label @lang])
                                  (get-in field-descriptor [:label @default-lang]))]
-        [:div.application__wrapper-element.application__wrapper-element--border
+        [:div.application__wrapper-element
          [:div.application__wrapper-heading
           [:h2 label]
           [scroll-to-anchor field-descriptor]]

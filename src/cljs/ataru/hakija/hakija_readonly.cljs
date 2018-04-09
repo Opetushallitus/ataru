@@ -85,7 +85,7 @@
 (defn wrapper [content application lang children]
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [content application lang children]
-      [:div.application__wrapper-element.application__wrapper-element--border
+      [:div.application__wrapper-element
        [:div.application__wrapper-heading
         [:h2 (-> content :label lang)]
         [scroll-to-anchor content]]
@@ -103,7 +103,7 @@
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [content application lang children]
       (let [groups-amount (->> content :id keyword (get @ui) :count)]
-        [:div.application__wrapper-element.application__wrapper-element--border.application__question-group.application__read-only
+        [:div.application__wrapper-element.application__question-group.application__read-only
          [:p.application__read-only-heading-text (-> content :label lang)]
          [:div
           (for [idx (range groups-amount)]
