@@ -168,7 +168,10 @@
                                              :sv "Inga sökresultat"}
    :preview                                 {:fi "Esikatselu"
                                              :en "Preview"
-                                             :sv "Förhandsvisa"}})
+                                             :sv "Förhandsvisa"}
+   :window-close-warning                    {:fi "Varmistathan että hakemus on lähetetty ennen kuin suljet sivun!"
+                                             :en "Please ensure you have submitted the form before closing the browser!"
+                                             :sv "?"}})
 
 (def general-texts
   {:yes      {:en "Yes"

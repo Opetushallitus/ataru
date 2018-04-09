@@ -1107,3 +1107,18 @@
   :application/remove-question-group-mouse-out
   (fn [db [_ field-descriptor idx]]
     (assoc-in db [:application :ui (keyword (:id field-descriptor)) :mouse-over-remove-button idx] false)))
+
+(defn- confirm-window-close!
+  [event]
+  (let [warning-label (util/get-translation :window-close-warning)]
+    (set! (.-returnValue event) warning-label)
+    warning-label))
+
+(reg-event-fx
+  :application/setup-window-unload
+  (fn [{db :db} _]
+    (let [warning-enabled? (-> db :application :submit-status (nil?))]
+      (.removeEventListener js/window "beforeunload" confirm-window-close!)
+      (when warning-enabled?
+        (.addEventListener js/window "beforeunload" confirm-window-close!)))
+    {:db db}))
