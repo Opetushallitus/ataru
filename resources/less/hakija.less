@@ -1028,19 +1028,16 @@ and (max-width: @desktop-content-width) {
 
 .application__hakukohde-selection-open-search {
   color: @pale-blue;
-}
 
-.application__hakukohde-selection-open-search--inactive {
-  color: @sg-gray-lighten-3;
+  &--disabled {
+    color: @sg-gray-lighten-3;
+    cursor: default;
+  }
 }
 
 .application__hakukohde-selection-search-no-hits {
   margin-top: 10px;
   .light;
-}
-
-.application__hakukohde-selection-max-label {
-  margin-left: 8px;
 }
 
 .application__hakukohde-selection-search-arrow-up {
@@ -1159,37 +1156,6 @@ and (max-width: @desktop-content-width) {
   }
 
 }
-.application__hakukohde-row--search-toggle {
-  display: flex;
-  align-items: center;
-  position: relative;
-  cursor: pointer;
-  color: @gray-of-the-beast;
-  padding: 20px 0px 20px 0px;
-  i {
-    opacity: 0.33;
-  }
-  margin-top: 15px;
-  margin-bottom: 10px;
-  border-width: 1px;
-  border-color: white;
-  border-style: dashed;
-
-  &.application__hakukohde-row--search-toggle--closed {
-    border-width: 1px;
-    border-style: dashed;
-    border-color: @gray-of-the-beast;
-    border-image-source: url(/hakemus/images/border.png);
-    border-image-slice: 2;
-    border-image-repeat: round;
-  }
-
-  &.application__hakukohde-row--search-toggle--prioritized {
-    padding-left: 20px;
-  }
-
-  .unselectable
-}
 
 .application__hakukohde-priority-number-readonly {
   font-size: 30px;
@@ -1222,7 +1188,6 @@ and (max-width: @desktop-content-width) {
   padding-bottom: 0;
 }
 .application__hakukohde-selection {
-  margin-top: -25px;
   animation: 0.8s fadeIn;
   animation-fill-mode: forwards;
 

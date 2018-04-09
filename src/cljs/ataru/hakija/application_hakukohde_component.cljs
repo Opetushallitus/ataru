@@ -256,22 +256,13 @@
 
 (defn- select-new-hakukohde-row []
   (when @(subscribe [:application/hakukohteet-editable?])
-    [:div.application__hakukohde-row--search-toggle
-     {:on-click hakukohde-search-toggle-event-handler
-      :role     "button"
-      :class    (clojure.string/join " " [(when (not @(subscribe [:application/show-hakukohde-search]))
-                                            "application__hakukohde-row--search-toggle--closed")
-                                          (when @(subscribe [:application/prioritize-hakukohteet?])
-                                            "application__hakukohde-row--search-toggle--prioritized")])}
-     [:div.application__hakukohde-row-icon-container
-      [:i.zmdi.zmdi-graduation-cap.zmdi-hc-3x]]
-     [:a.application__hakukohde-selection-open-search
-      {:class (when @(subscribe [:application/hakukohteet-full?])
-                "application__hakukohde-selection-open-search--inactive")}
-      (get-translation :add-application-option)
-      (when-let [max-hakukohteet @(subscribe [:application/max-hakukohteet])]
-        [:span.application__hakukohde-selection-max-label
-         (get-translation :applications_at_most max-hakukohteet)])]]))
+    [:a.application__hakukohde-selection-open-search
+     (if @(subscribe [:application/hakukohteet-full?])
+       {:class "application__hakukohde-selection-open-search--disabled"}
+       {:on-click hakukohde-search-toggle-event-handler})
+     (get-translation :add-application-option)
+     (when-let [max-hakukohteet @(subscribe [:application/max-hakukohteet])]
+       (str " " (get-translation :applications_at_most max-hakukohteet)))]))
 
 (defn hakukohteet
   [field-descriptor]
