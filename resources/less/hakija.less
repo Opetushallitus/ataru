@@ -1021,17 +1021,16 @@ and (max-width: @desktop-content-width) {
   margin-left: @field-margin-left;
 }
 
-.application__hakukohde-selected-list {
-  margin-right: 30px;
-  margin-top: -15px;
-}
-
 .application__hakukohde-selection-open-search {
   color: @pale-blue;
 
   &--disabled {
     color: @sg-gray-lighten-3;
     cursor: default;
+  }
+
+  &--left-margin {
+    margin-left: 40px;
   }
 }
 
@@ -1077,6 +1076,7 @@ and (max-width: @desktop-content-width) {
 .application__hakukohde-row-priority-container {
   display: flex;
   flex-direction: column;
+  margin-right: 16px;
   font-size: 30px;
   align-items: center;
   cursor: default;
@@ -1146,7 +1146,6 @@ and (max-width: @desktop-content-width) {
 
 .application__hakukohde-row {
   padding: 20px 0;
-  position: relative;
   border-bottom: 1px solid @separator-color;
   display: flex;
   align-items: center;
@@ -1154,10 +1153,9 @@ and (max-width: @desktop-content-width) {
   @media only screen and (max-width: @desktop-content-width) {
     margin-left: 10px;
   }
-
 }
 
-.application__hakukohde-priority-number-readonly {
+.application__hakukohde-priority-number-readonly {
   font-size: 30px;
   cursor: default;
   margin: 0;
@@ -1213,8 +1211,8 @@ and (max-width: @desktop-content-width) {
 }
 
 .application__hakukohde-row-text-container {
-  margin-left: 16px;
-  padding-right: 140px;
+  margin-right: 16px;
+  flex: 2;
 }
 
 .application__hakukohde-selected-row-header {
@@ -1234,9 +1232,6 @@ and (max-width: @desktop-content-width) {
 }
 
 .application__hakukohde-row-button-container {
-  position: absolute;
-  right: 20px;
-  top: 25px;
   color: @pale-blue;
   &[disabled] {
     opacity: 0.33;
