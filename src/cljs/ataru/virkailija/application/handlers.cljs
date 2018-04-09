@@ -65,15 +65,17 @@
 (defn- attachment-processing-state-counts-for-application
   [{:keys [application-attachment-reviews]}]
   (->> application-attachment-reviews
-       (map :state)
-       frequencies))
+       (group-by :state)))
 
 (defn attachment-state-counts
   [applications]
   (reduce
    (fn [acc application]
-     (merge-with + acc (attachment-processing-state-counts-for-application application)))
-   {}
+     (merge-with (fn [prev new]
+                   (+ prev (if (not-empty new) 1 0)))
+                 acc
+                 (attachment-processing-state-counts-for-application application)))
+   {"checked" 0 "not-checked" 0 "incomplete" 0}
    applications))
 
 (defn- update-review-field-of-selected-application-in-list
