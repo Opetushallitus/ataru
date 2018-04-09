@@ -1126,6 +1126,7 @@ and (max-width: @desktop-content-width) {
 .application__hakukohde-selection-search-input {
   width: 400px;
   padding: 0;
+  margin-bottom: 11px;
 
   @media only screen and (max-width: @desktop-content-width) {
     max-width: 400px;
@@ -1145,10 +1146,18 @@ and (max-width: @desktop-content-width) {
 }
 
 .application__hakukohde-row {
-  padding: 20px 0;
+  padding: 11px 0;
   border-bottom: 1px solid @separator-color;
   display: flex;
   align-items: center;
+
+  &:first-child {
+    padding-top: 0;
+  }
+
+  &:last-child {
+    border-bottom: 0;
+  }
 
   @media only screen and (max-width: @desktop-content-width) {
     margin-left: 10px;
@@ -1162,34 +1171,26 @@ and (max-width: @desktop-content-width) {
   padding-right: 10px;
 }
 
-.application__hakukohde-row--selected {
-  padding: 0;
-  min-height: 88px;
-}
-
-.application__hakukohde-row--selected.fadeIn {
+.application__hakukohde-row.fadeIn {
   -webkit-animation-duration: 0.7s;
   -moz-animation-duration: 0.7s;
   -o-animation-duration: 0.7s;
   animation-duration: 0.7s;
 }
 
-.application__hakukohde-row--selected.fadeOut {
+.application__hakukohde-row.fadeOut {
   -webkit-animation-duration: 0.5s;
   -moz-animation-duration: 0.5s;
   -o-animation-duration: 0.5s;
   animation-duration: 0.5s;
 }
 
-.application__hakukohde-row:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
-}
 .application__hakukohde-selection {
   animation: 0.8s fadeIn;
   animation-fill-mode: forwards;
 
 }
+
 @keyframes fadeIn {
   0% {
     opacity: 0;

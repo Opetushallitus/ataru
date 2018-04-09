@@ -148,7 +148,7 @@
         prioritize-hakukohteet? @(subscribe [:application/prioritize-hakukohteet?])
         haku-editable? @(subscribe [:application/hakukohteet-editable?])
         hakukohde-editable? @(subscribe [:application/hakukohde-hakuaika-on? hakukohde-oid])]
-    [:div.application__hakukohde-row.application__hakukohde-row--selected.animated
+    [:div.application__hakukohde-row.animated
      {:class (if deleting?
                "fadeOut"
                "fadeIn")}
