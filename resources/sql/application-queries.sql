@@ -564,6 +564,13 @@ VALUES (:application_key, :event_type, :new_review_state, :virkailija_oid, :haku
 -- Add application review, initially it doesn't have all fields. This is just a "skeleton"
 INSERT INTO application_reviews (application_key, state) VALUES (:application_key, :state);
 
+-- name: yesql-save-attachent-review!
+-- Add not-checked state to new application attachments
+INSERT INTO application_hakukohde_attachment_reviews (application_key, attachment_key, hakukohde, state)
+VALUES (:application_key, :attachment_key, :hakukohde, :state)
+ON CONFLICT (application_key, attachment_key, hakukohde)
+  DO NOTHING;
+
 -- name: yesql-save-application-review!
 -- Save modifications for existing review record
 UPDATE application_reviews

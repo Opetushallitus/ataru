@@ -117,6 +117,25 @@
     (unwrap-application application)
     (throw (ex-info "No existing form found when updating" {:secret secret}))))
 
+(defn- create-attachment-reviews
+  [attachment-field application-key]
+  (let [review-base {:application_key application-key
+                     :attachment_key  (:id attachment-field)
+                     :state           "not-checked"}]
+    (if (contains? attachment-field :belongs-to-hakukohteet)
+      (map #(assoc review-base :hakukohde %) (:belongs-to-hakukohteet attachment-field))
+      (assoc review-base :hakukohde "form"))))
+
+(defn- create-attachment-hakukohde-reviews-for-application
+  [application connection]
+  (doseq [review (->> (forms/fetch-by-id (:form-id application))
+                      :content
+                      util/flatten-form-fields
+                      (filter #(= "attachment" (:fieldType %)))
+                      (map #(create-attachment-reviews % (:key application)))
+                      flatten)]
+    (yesql-save-attachent-review! review connection)))
+
 (defn- get-latest-version-for-virkailija-edit-and-lock-for-update [virkailija-secret lang conn]
   (if-let [application (first (yesql-get-latest-version-by-virkailija-secret-lock-for-update {:virkailija_secret virkailija-secret} {:connection conn}))]
     (unwrap-application application)
@@ -140,6 +159,7 @@
       (yesql-add-application-review! {:application_key key
                                       :state           application-review-states/initial-application-review-state}
                                      connection)
+      (create-attachment-hakukohde-reviews-for-application new-application connection)
       id)))
 
 (defn- form->form-id [{:keys [form] :as application}]
@@ -195,6 +215,7 @@
                       :id        (if updated-by-applicant?
                                    (extract-email new-application)
                                    virkailija-oid)})
+      (create-attachment-hakukohde-reviews-for-application new-application {:connection conn})
       id)))
 
 (defn get-application-list-by-form
