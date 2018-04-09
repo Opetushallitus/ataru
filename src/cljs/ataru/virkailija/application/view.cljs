@@ -443,7 +443,7 @@
       [:span.application-handling__list-row--state]
       (when (:selection-state @review-settings true)
         [:span.application-handling__hakukohde-selection-cell])]
-     [applications-hakukohde-rows @review-settings application @selected-hakukohde @attachment-states]]))
+     [applications-hakukohde-rows @review-settings application @selected-hakukohde attachment-states]]))
 
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
@@ -1145,7 +1145,7 @@
                 [review-settings-checkbox :attachment-handling])
               [:span.application-handling__attachment-review-toggle
                (if @show-attachment-review? ">>" "<<")] " Liitepyynnöt"])
-           [application-hakukohde-review-inputs application-review-states/hakukohde-review-types]
+           [application-hakukohde-review-inputs review-states/hakukohde-review-types]
            (when @(subscribe [:application/show-info-request-ui?])
              [application-information-request])
            [application-review-inputs]
