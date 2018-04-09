@@ -123,5 +123,5 @@
      :params                         {}
      :options                        []
      :metadata                       metadata
-     :validators                     [:hakukohteet]
+     :validators                     ["hakukohteet"]
      :exclude-from-answers-if-hidden true}))

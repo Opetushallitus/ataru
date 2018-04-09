@@ -78,7 +78,7 @@
 
                    {:fieldClass "formField"
                     :fieldType  "hakukohteet"}
-                   nil
+                   [ec/hakukohteet-module path]
 
                    :else (do
                            (error content)

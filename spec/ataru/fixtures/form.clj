@@ -1,4 +1,5 @@
-(ns ataru.fixtures.form)
+(ns ataru.fixtures.form
+  (:require [ataru.db.migrations :as migrations]))
 
 (def metadata {:created-by  {:oid  "1.2.246.562.24.1000000"
                              :date "2018-03-21T15:45:29.23+02:00"
@@ -32,6 +33,7 @@
      :fieldClass "questionGroup"}))
 
 (def form-with-content
+  (migrations/inject-hakukohde-component-if-missing
   {:name        {:fi "Test fixture!"}
    :created-by "DEVELOPER"
    :content     [{:fieldClass "formField"
@@ -48,9 +50,9 @@
                                 :metadata metadata
                                 :label      {:fi "" :sv ""}
                                 :id         "G__32"
-                                :fieldType  "textField"}]}]})
+                                :fieldType  "textField"}]}]}))
 
-(def person-info-form {:id 2147483647, ;; shouldn't clash with serial sequence id. Tests also create forms which use serial id, and the previous id 15 caused serious issues.
+(def person-info-form (migrations/inject-hakukohde-component-if-missing {:id 2147483647, ;; shouldn't clash with serial sequence id. Tests also create forms which use serial id, and the previous id 15 caused serious issues.
                        :key "41101b4f-1762-49af-9db0-e3603adae3ae"
                        :name {:fi "Uusi lomake"},
                        :created-by "DEVELOPER",
@@ -199,7 +201,7 @@
                                   :id "164954b5-7b23-4774-bd44-dee14071316b"
                                   :params {}
                                   :options []
-                                  :fieldType "attachment"}]})
+                                  :fieldType "attachment"}]}))
 
 (def more-questions
   [{:fieldClass "formField"
