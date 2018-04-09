@@ -21,7 +21,8 @@
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clojure.core.match :refer [match]]
             [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
-            [taoensso.timbre :refer [spy debug info error]])
+            [taoensso.timbre :refer [spy debug info error]]
+            [ataru.component-data.component :as component])
   (:import (java.time ZonedDateTime ZoneId)))
 
 (def default-fetch-size 50)
