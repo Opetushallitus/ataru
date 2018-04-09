@@ -154,8 +154,6 @@
                "fadeIn")}
      (when prioritize-hakukohteet?
        [prioritize-hakukohde-buttons hakukohde-oid (not hakukohde-editable?)])
-     [:div.application__hakukohde-row-icon-container
-      [:i.zmdi.zmdi-graduation-cap.zmdi-hc-3x]]
      [:div.application__hakukohde-row-text-container.application__hakukohde-row-text-container--selected
       [:div.application__hakukohde-selected-row-header
        @(subscribe [:application/hakukohde-label hakukohde-oid])]
