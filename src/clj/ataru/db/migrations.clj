@@ -84,8 +84,7 @@
                    (info "Updating followups of form-id:" (:id form))
                    (jdbc/execute! conn ["update forms set content = ? where id = ?" (:content form) (:id form)]))]
     (doseq [form (->> (migration-app-store/get-all-forms connection)
-                      (map #(store/fetch-by-id (:id %)))
-                      (sort-by :created-time))]
+                      (map #(migration-app-store/fetch-by-id (:id %) connection)))]
       (some->
         form
         inject-hakukohde-component-if-missing

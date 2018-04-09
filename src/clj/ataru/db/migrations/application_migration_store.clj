@@ -129,3 +129,7 @@
 
 (defn get-all-forms [connection]
   (yesql-get-forms-1_90-query {} {:connection connection}))
+
+(defn fetch-by-id [id connection]
+  (first (yesql-get-by-id-1_90-query {:id id} {:connection connection})))
+
