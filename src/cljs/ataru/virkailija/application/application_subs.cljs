@@ -391,13 +391,10 @@
 (re-frame.core/reg-sub
   :application/get-attachments
   (fn [db _]
-    (let [answered-attachments (->> db :application :selected-application-and-form :application :answers
-                                    (keep (fn [[_ answer]]
-                                            (when (= "attachment" (:fieldType answer)) answer))))
-          form-fields          (u/form-fields-by-id (-> db :application :selected-application-and-form :form))]
-      (for [attachment answered-attachments
-            :let [belongs-to-hakukohteet (-> (:key attachment)
-                                             keyword
-                                             (form-fields)
-                                             :belongs-to-hakukohteet)]]
-        (assoc attachment :belongs-to-hakukohteet belongs-to-hakukohteet)))))
+    (let [answers     (-> db :application :selected-application-and-form :application :answers)
+          attachments (->> (-> db :application :selected-application-and-form :form :content)
+                           u/flatten-form-fields
+                           (filter #(= "attachment" (:fieldType %))))]
+      (for [attachment attachments
+            :let [answer ((-> attachment :id keyword) answers)]]
+        (assoc attachment :values (:values answer))))))

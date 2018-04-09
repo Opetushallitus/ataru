@@ -62,11 +62,6 @@
     {}
     applications))
 
-(defn- attachment-processing-state-counts-for-application
-  [{:keys [application-attachment-reviews]}]
-  (->> application-attachment-reviews
-       (group-by :state)))
-
 (defn attachment-state-counts
   [applications]
   (reduce
@@ -74,7 +69,9 @@
      (merge-with (fn [prev new]
                    (+ prev (if (not-empty new) 1 0)))
                  acc
-                 (attachment-processing-state-counts-for-application application)))
+                 (->> application
+                      :application-attachment-reviews
+                      (group-by :state))))
    {"checked" 0 "not-checked" 0 "incomplete" 0}
    applications))
 
