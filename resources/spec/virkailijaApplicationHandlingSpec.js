@@ -6,7 +6,6 @@
   describe('Application handling', function() {
     describe('for first form', function() {
       var firstNotSelected = null;
-      var eventCountBefore = null;
       before(
         navigateToApplicationHandling,
         wait.until(directFormHakuListExists),
@@ -511,11 +510,11 @@
     }
 
     function includedHakukohdeProcessingStateFilters() {
-      return testFrame().find('.application-handling__filter-state:eq(0) .application-handling__filter-state-selected-row').length
+      return testFrame().find('.application-handling__filter-state:eq(1) .application-handling__filter-state-selected-row').length
     }
 
     function includedSelectionStateFilters() {
-      return testFrame().find('.application-handling__filter-state:eq(1) .application-handling__filter-state-selected-row').length
+      return testFrame().find('.application-handling__filter-state:eq(2) .application-handling__filter-state-selected-row').length
     }
 
     function applicationHeadingIs(expected) {
@@ -525,11 +524,11 @@
     }
 
     function hakukohdeProcessingFilterLink() {
-      return testFrame().find('.application-handling__filter-state a').eq(0)
+      return testFrame().find('.application-handling__filter-state a').eq(1)
     }
 
     function selectionStateFilterLink() {
-      return testFrame().find('.application-handling__filter-state a').eq(1)
+      return testFrame().find('.application-handling__filter-state a').eq(2)
     }
 
     function applicationRow() {
