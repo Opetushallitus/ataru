@@ -47,10 +47,13 @@
                (fnil (if (= original-values values) disj conj) #{})
                :hakukohteet)))
 
+(defn- toggle-hakukohde-search
+  [db]
+  (update-in db [:application :show-hakukohde-search] not))
+
 (reg-event-db
   :application/hakukohde-search-toggle
-  (fn [db _]
-    (update-in db [:application :show-hakukohde-search] not)))
+  (fn [db _] (toggle-hakukohde-search db)))
 
 
 (reg-event-db
@@ -105,27 +108,32 @@
     (assoc-in db [:application :answers :hakukohteet :valid] valid?)))
 
 (reg-event-fx
-  :application/hakukohde-add-selection
-  (fn [{db :db} [_ hakukohde-oid]]
-    (let [selected-hakukohteet (get-in db [:application :answers :hakukohteet :values] [])
-          not-yet-selected? (every? #(not= hakukohde-oid (:value %))
-                                    selected-hakukohteet)
-          new-hakukohde-values (cond-> selected-hakukohteet
-                                 not-yet-selected?
-                                 (conj {:valid true :value hakukohde-oid}))
-          db (-> db
-                 (assoc-in [:application :answers :hakukohteet :values]
-                           new-hakukohde-values)
-                 set-values-changed
-                 set-visibility-of-belongs-to-hakukohteet-questions)]
-      {:db db
-       :validate {:value new-hakukohde-values
-                  :answers (get-in db [:application :answers])
-                  :field-descriptor (hakukohteet-field db)
-                  :editing? (get-in db [:application :editing?])
-                  :on-validated (fn [[valid? errors]]
-                                  (dispatch [:application/set-hakukohde-valid
-                                             valid?]))}})))
+ :application/hakukohde-add-selection
+ (fn [{db :db} [_ hakukohde-oid]]
+   (let [field-descriptor     (hakukohteet-field db)
+         selected-hakukohteet (get-in db [:application :answers :hakukohteet :values] [])
+         not-yet-selected?    (every? #(not= hakukohde-oid (:value %))
+                                      selected-hakukohteet)
+         new-hakukohde-values (cond-> selected-hakukohteet
+                                not-yet-selected?
+                                (conj {:valid true :value hakukohde-oid}))
+         max-hakukohteet      (get-in field-descriptor [:params :max-hakukohteet] nil)
+         db                   (-> db
+                                  (assoc-in [:application :answers :hakukohteet :values]
+                                            new-hakukohde-values)
+                                  set-values-changed
+                                  set-visibility-of-belongs-to-hakukohteet-questions)]
+     {:db       (cond-> db
+                  (and (some? max-hakukohteet)
+                       (<= max-hakukohteet (count new-hakukohde-values)))
+                  toggle-hakukohde-search)
+      :validate {:value            new-hakukohde-values
+                 :answers          (get-in db [:application :answers])
+                 :field-descriptor field-descriptor
+                 :editing?         (get-in db [:application :editing?])
+                 :on-validated     (fn [[valid? errors]]
+                                     (dispatch [:application/set-hakukohde-valid
+                                                valid?]))}})))
 
 (defn- remove-hakukohde-from-deleting
   [hakukohteet hakukohde]
