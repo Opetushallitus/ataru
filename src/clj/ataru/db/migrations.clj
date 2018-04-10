@@ -72,12 +72,12 @@
 (defn inject-hakukohde-component-if-missing
   "Add hakukohde component to legacy forms (new ones have one added on creation)"
   [form]
-  (let [has-hakukohde-component? (-> (filter #(= (keyword (:id %)) :hakukohteet) (:content form))
+  (let [has-hakukohde-component? (-> (filter #(= (keyword (:id %)) :hakukohteet) (get-in form [:content :content]))
                                      (first)
                                      (not-empty))]
     (if has-hakukohde-component?
       nil
-      (update-in form [:content] #(into [(component/hakukohteet)] %)))))
+      (update-in form [:content :content] #(into [(component/hakukohteet)] %)))))
 
 (defn migrate-legacy-form-content-to-contain-hakukohteet-module [connection]
   (let [update (fn [form conn]
