@@ -134,7 +134,7 @@
                       (filter #(= "attachment" (:fieldType %)))
                       (map #(create-attachment-reviews % (:key application)))
                       flatten)]
-    (yesql-save-attachent-review! review connection)))
+    (yesql-save-attachment-review! review connection)))
 
 (defn- get-latest-version-for-virkailija-edit-and-lock-for-update [virkailija-secret lang conn]
   (if-let [application (first (yesql-get-latest-version-by-virkailija-secret-lock-for-update {:virkailija_secret virkailija-secret} {:connection conn}))]
