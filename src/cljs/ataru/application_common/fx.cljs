@@ -2,7 +2,8 @@
   (:require [re-frame.core :as re-frame]
             [cljs.core.async :as async]
             [ataru.hakija.has-applied :refer [has-applied]]
-            [ataru.hakija.application-validators :as validator]))
+            [ataru.hakija.application-validators :as validator]
+            [ataru.cljs-util :as util]))
 
 (re-frame/reg-fx :delayed-dispatch
   (fn [{:keys [dispatch-vec timeout]}]
@@ -73,3 +74,18 @@
                     (fn [result]
                       (when (= val (current-val id))
                         (on-validated result))))))))
+
+(defn- confirm-window-close!
+  [event]
+  (let [warning-label   (util/get-translation :window-close-warning)
+        values-changed? @(re-frame/subscribe [:application/values-changed?])]
+    (when values-changed?
+      (set! (.-returnValue event) warning-label)
+      warning-label)))
+
+(re-frame/reg-fx
+  :set-window-close-callback
+  (fn [submitted?]
+    (.removeEventListener js/window "beforeunload" confirm-window-close!)
+    (when (not submitted?)
+      (.addEventListener js/window "beforeunload" confirm-window-close!))))

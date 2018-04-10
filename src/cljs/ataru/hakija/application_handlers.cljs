@@ -1108,19 +1108,9 @@
   (fn [db [_ field-descriptor idx]]
     (assoc-in db [:application :ui (keyword (:id field-descriptor)) :mouse-over-remove-button idx] false)))
 
-(defn- confirm-window-close!
-  [event]
-  (let [warning-label   (util/get-translation :window-close-warning)
-        values-changed? @(subscribe [:application/values-changed?])]
-    (when values-changed?
-      (set! (.-returnValue event) warning-label)
-      warning-label)))
-
 (reg-event-fx
   :application/setup-window-unload
   (fn [{db :db} _]
-    (let [warning-enabled? (-> db :application :submit-status (nil?))]
-      (.removeEventListener js/window "beforeunload" confirm-window-close!)
-      (when warning-enabled?
-        (.addEventListener js/window "beforeunload" confirm-window-close!)))
-    {:db db}))
+    (let [submitted? (-> db :application :submit-status (some?))]
+      {:db                        db
+       :set-window-close-callback submitted?})))

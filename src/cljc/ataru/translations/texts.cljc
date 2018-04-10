@@ -169,8 +169,8 @@
    :preview                                 {:fi "Esikatselu"
                                              :en "Preview"
                                              :sv "Förhandsvisa"}
-   :window-close-warning                    {:fi "Varmistathan että hakemus on lähetetty ennen kuin suljet sivun!"
-                                             :en "Please ensure you have submitted the form before closing the browser!"
+   :window-close-warning                    {:fi "Varmistathan että hakemus on lähetetty ennen sivun sulkemista."
+                                             :en "Please ensure you have submitted the form before closing the page."
                                              :sv "?"}})
 
 (def general-texts
