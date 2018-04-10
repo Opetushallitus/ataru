@@ -78,14 +78,15 @@
 (defn- confirm-window-close!
   [event]
   (let [warning-label   (util/get-translation :window-close-warning)
-        values-changed? @(re-frame/subscribe [:application/values-changed?])]
-    (when values-changed?
+        values-changed? @(re-frame/subscribe [:state-query [:application :values-changed?]])
+        submit-status   @(re-frame/subscribe [:state-query [:application :submit-status]])]
+    (when (and (some? values-changed?)
+               (nil? submit-status))
       (set! (.-returnValue event) warning-label)
       warning-label)))
 
 (re-frame/reg-fx
   :set-window-close-callback
-  (fn [submitted?]
+  (fn []
     (.removeEventListener js/window "beforeunload" confirm-window-close!)
-    (when (not submitted?)
-      (.addEventListener js/window "beforeunload" confirm-window-close!))))
+    (.addEventListener js/window "beforeunload" confirm-window-close!)))

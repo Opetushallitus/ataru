@@ -1111,6 +1111,5 @@
 (reg-event-fx
   :application/setup-window-unload
   (fn [{db :db} _]
-    (let [submitted? (-> db :application :submit-status (some?))]
-      {:db                        db
-       :set-window-close-callback submitted?})))
+    {:db                        db
+     :set-window-close-callback nil}))
