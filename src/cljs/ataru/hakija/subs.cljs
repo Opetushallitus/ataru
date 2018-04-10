@@ -239,3 +239,8 @@
   :application/tarjonta-hakukohteet
   (fn [db _]
     (-> db :form :tarjonta :hakukohteet)))
+
+(re-frame/reg-sub
+  :application/values-changed?
+  (fn [db _]
+    (-> db :application :values-changed? (some?))))

@@ -1,5 +1,5 @@
 (ns ataru.hakija.application-handlers
-  (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch]]
+  (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch subscribe]]
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
             [ataru.util :as autil]
@@ -1110,9 +1110,11 @@
 
 (defn- confirm-window-close!
   [event]
-  (let [warning-label (util/get-translation :window-close-warning)]
-    (set! (.-returnValue event) warning-label)
-    warning-label))
+  (let [warning-label   (util/get-translation :window-close-warning)
+        values-changed? @(subscribe [:application/values-changed?])]
+    (when values-changed?
+      (set! (.-returnValue event) warning-label)
+      warning-label)))
 
 (reg-event-fx
   :application/setup-window-unload
