@@ -894,6 +894,7 @@ and (max-width: @desktop-content-width) {
     position: static;
     margin-left: 10px;
   }
+
   /*
      Without this first selector, the rule will be dependent on include
      order (for row fields) which seems to be pretty random
@@ -1015,10 +1016,6 @@ and (max-width: @desktop-content-width) {
 
 .application__hakukohde-selection-header {
   margin-bottom: 0;
-}
-
-.application__wrapper-contents--hakukohde {
-  margin-left: @field-margin-left;
 }
 
 .application__hakukohde-selection-open-search-wrapper {
@@ -1151,16 +1148,14 @@ and (max-width: @desktop-content-width) {
 }
 
 .application__hakukohde-row {
-  padding: 11px 0;
+  padding-bottom: 11px;
+  margin-bottom: 11px;
   border-bottom: 1px solid @separator-color;
   display: flex;
 
-  &:first-child {
-    padding-top: 0;
-  }
-
-  @media only screen and (max-width: @desktop-content-width) {
-    margin-left: 10px;
+  &:last-child {
+    border: 0;
+    margin-bottom: 21px;
   }
 }
 
@@ -1205,10 +1200,6 @@ and (max-width: @desktop-content-width) {
   position: absolute;
   top: 15px;
   right: 15px;
-}
-
-.application__hakukohde-selected-list {
-  margin-bottom: 11px;
 }
 
 .application__hakukohde-selection-search-close-button a {

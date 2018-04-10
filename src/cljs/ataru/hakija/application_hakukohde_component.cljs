@@ -260,13 +260,14 @@
 
 (defn hakukohteet
   [field-descriptor]
-  [:div.application__wrapper-element.application__wrapper-element--border
+  [:div.application__wrapper-element
    [hakukohde-selection-header field-descriptor]
-   [:div.application__wrapper-contents.application__wrapper-contents--hakukohde
-    [:div.application__hakukohde-selected-list
-     (for [hakukohde-oid @(subscribe [:application/selected-hakukohteet])]
-       ^{:key (str "selected-hakukohde-row-" hakukohde-oid)}
-       [selected-hakukohde-row hakukohde-oid])]
-    [select-new-hakukohde-row]
-    (when @(subscribe [:application/show-hakukohde-search])
-      [hakukohde-selection-search])]])
+   [:div.application__wrapper-contents
+    [:div.application__form-field
+     [:div.application__hakukohde-selected-list
+      (for [hakukohde-oid @(subscribe [:application/selected-hakukohteet])]
+        ^{:key (str "selected-hakukohde-row-" hakukohde-oid)}
+        [selected-hakukohde-row hakukohde-oid])]
+     [select-new-hakukohde-row]
+     (when @(subscribe [:application/show-hakukohde-search])
+       [hakukohde-selection-search])]]])
