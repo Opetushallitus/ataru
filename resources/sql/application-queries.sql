@@ -744,26 +744,13 @@ SELECT
 FROM application_hakukohde_reviews
 WHERE application_key = :application_key AND requirement = :requirement AND hakukohde = :hakukohde;
 
--- name: yesql-upsert-attachment-hakukohde-review!
-INSERT INTO application_hakukohde_attachment_reviews (application_key, attachment_key, state, hakukohde)
-VALUES (:application_key, :attachment_key, :state, :hakukohde)
-ON CONFLICT (application_key, attachment_key, hakukohde)
-  WHERE hakukohde IS NOT NULL
-  DO UPDATE SET state = :state, modified_time = now();
-
--- name: yesql-get-existing-duplicate-attachment-review
-SELECT id
-FROM application_hakukohde_attachment_reviews
-WHERE application_key = :application_key AND attachment_key = :attachment_key AND state = :state AND hakukohde = :hakukohde;
+-- name: yesql-update-attachment-hakukohde-review!
+UPDATE application_hakukohde_attachment_reviews
+SET state = :state, modified_time = now()
+WHERE application_key = :application_key AND attachment_key = :attachment_key AND hakukohde = :hakukohde;
 
 -- name: yesql-get-existing-attachment-review
-SELECT
-  id,
-  modified_time,
-  attachment_key,
-  state,
-  hakukohde,
-  application_key
+SELECT *
 FROM application_hakukohde_attachment_reviews
 WHERE application_key = :application_key AND attachment_key = :attachment_key AND hakukohde = :hakukohde;
 

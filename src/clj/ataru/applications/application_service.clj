@@ -94,7 +94,7 @@
   [application-key]
   (reduce
    (fn [acc {:keys [attachment-key state hakukohde]}]
-     (update-in acc [(or hakukohde :form)] assoc attachment-key state))
+     (assoc-in acc [hakukohde attachment-key] state))
    {}
    (application-store/get-application-attachment-reviews application-key)))
 

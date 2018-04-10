@@ -75,6 +75,31 @@
       secret
       (recur (crypto/url-part 34)))))
 
+(defn- create-attachment-reviews
+  [attachment-field application-key hakutoiveet]
+  (let [review-base {:application_key application-key
+                     :attachment_key  (:id attachment-field)
+                     :state           "not-checked"}]
+    (map #(assoc review-base :hakukohde %)
+         (cond
+           (not-empty (:belongs-to-hakukohteet attachment-field))
+           (clojure.set/intersection (set hakutoiveet)
+                                     (-> attachment-field :belongs-to-hakukohteet set))
+
+           (not-empty hakutoiveet)
+           hakutoiveet
+
+           :else [:form]))))
+
+(defn- create-attachment-hakukohde-reviews-for-application
+  [application connection]
+  (doseq [review (->> (forms/fetch-by-id (:form_id application))
+                      :content
+                      util/flatten-form-fields
+                      (filter #(= "attachment" (:fieldType %)))
+                      (mapcat #(create-attachment-reviews % (:key application) (:hakukohde application))))]
+    (yesql-save-attachment-review! review connection)))
+
 (defn- add-new-application-version
   "Add application and also initial metadata (event for receiving application, and initial review record)"
   [application create-new-secret? conn]
@@ -97,6 +122,7 @@
         new-application             (if (contains? application :key)
                                       (yesql-add-application-version<! application-to-store connection)
                                       (yesql-add-application<! application-to-store connection))]
+    (create-attachment-hakukohde-reviews-for-application new-application {:connection conn})
     (when create-new-secret?
       (yesql-add-application-secret!
         {:application_key (:key new-application)
@@ -116,25 +142,6 @@
   (if-let [application (first (yesql-get-latest-version-by-secret-lock-for-update {:secret secret} {:connection conn}))]
     (unwrap-application application)
     (throw (ex-info "No existing form found when updating" {:secret secret}))))
-
-(defn- create-attachment-reviews
-  [attachment-field application-key]
-  (let [review-base {:application_key application-key
-                     :attachment_key  (:id attachment-field)
-                     :state           "not-checked"}]
-    (if (contains? attachment-field :belongs-to-hakukohteet)
-      (map #(assoc review-base :hakukohde %) (:belongs-to-hakukohteet attachment-field))
-      (assoc review-base :hakukohde "form"))))
-
-(defn- create-attachment-hakukohde-reviews-for-application
-  [application connection]
-  (doseq [review (->> (forms/fetch-by-id (:form-id application))
-                      :content
-                      util/flatten-form-fields
-                      (filter #(= "attachment" (:fieldType %)))
-                      (map #(create-attachment-reviews % (:key application)))
-                      flatten)]
-    (yesql-save-attachment-review! review connection)))
 
 (defn- get-latest-version-for-virkailija-edit-and-lock-for-update [virkailija-secret lang conn]
   (if-let [application (first (yesql-get-latest-version-by-virkailija-secret-lock-for-update {:virkailija_secret virkailija-secret} {:connection conn}))]
@@ -159,7 +166,6 @@
       (yesql-add-application-review! {:application_key key
                                       :state           application-review-states/initial-application-review-state}
                                      connection)
-      (create-attachment-hakukohde-reviews-for-application new-application connection)
       id)))
 
 (defn- form->form-id [{:keys [form] :as application}]
@@ -215,7 +221,6 @@
                       :id        (if updated-by-applicant?
                                    (extract-email new-application)
                                    virkailija-oid)})
-      (create-attachment-hakukohde-reviews-for-application new-application {:connection conn})
       id)))
 
 (defn get-application-list-by-form
@@ -474,25 +479,23 @@
 (defn save-attachment-hakukohde-review
   [application-key hakukohde-oid attachment-key hakukohde-review-state session]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [connection                  {:connection conn}
-          review-to-store             {:application_key application-key
-                                       :attachment_key  attachment-key
-                                       :state           hakukohde-review-state
-                                       :hakukohde       hakukohde-oid}
-          existing-duplicate-review   (yesql-get-existing-duplicate-attachment-review review-to-store connection)
-          existing-requirement-review (yesql-get-existing-attachment-review review-to-store connection)
-          username                    (get-in session [:identity :username])
-          organization-oid            (get-in session [:identity :organizations 0 :oid])]
-      (when (empty? existing-duplicate-review)
-        (auditlog-review-modify review-to-store (first existing-requirement-review) session)
-        (yesql-upsert-attachment-hakukohde-review! review-to-store connection)
-        (let [hakukohde-event {:application_key  application-key
-                               :event_type       "attachment-review-state-change"
-                               :new_review_state (:state review-to-store)
-                               :review_key       attachment-key
-                               :hakukohde        (:hakukohde review-to-store)
-                               :virkailija_oid   (-> session :identity :oid)}]
-          (store-and-log-review-event connection hakukohde-event session))))))
+    (let [connection      {:connection conn}
+          review-to-store {:application_key application-key
+                           :attachment_key  attachment-key
+                           :state           hakukohde-review-state
+                           :hakukohde       hakukohde-oid}]
+      (if-let [existing-attachment-review (first (yesql-get-existing-attachment-review review-to-store connection))]
+        (when-not (= hakukohde-review-state (:state existing-attachment-review))
+          (auditlog-review-modify review-to-store existing-attachment-review session)
+          (yesql-update-attachment-hakukohde-review! review-to-store connection)
+          (let [hakukohde-event {:application_key  application-key
+                                 :event_type       "attachment-review-state-change"
+                                 :new_review_state (:state review-to-store)
+                                 :review_key       attachment-key
+                                 :hakukohde        (:hakukohde review-to-store)
+                                 :virkailija_oid   (-> session :identity :oid)}]
+            (store-and-log-review-event connection hakukohde-event session)))
+        (throw (new IllegalStateException (str "No existing attahcment review found for " review-to-store)))))))
 
 (s/defn get-applications-for-form :- [schema/Application]
   [form-key :- s/Str filtered-states :- [s/Str]]

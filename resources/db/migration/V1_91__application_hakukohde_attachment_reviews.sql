@@ -1,9 +1,9 @@
 CREATE TABLE application_hakukohde_attachment_reviews (
   id              BIGSERIAL PRIMARY KEY,
-  application_key VARCHAR(40) NOT NULL,
-  attachment_key  VARCHAR(40) NOT NULL,
-  hakukohde       VARCHAR(40) NOT NULL,
-  state           VARCHAR(40) NOT NULL,
+  application_key text NOT NULL,
+  attachment_key  text NOT NULL,
+  hakukohde       text NOT NULL,
+  state           text NOT NULL,
   modified_time   TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 

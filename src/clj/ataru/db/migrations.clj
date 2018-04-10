@@ -425,13 +425,20 @@
         (migration-app-store/update-1.88-form-content (:id form) connection))))
 
 (defn- create-attachment-reviews
-  [attachment-field application-key]
+  [attachment-field application-key hakutoiveet]
   (let [review-base {:application_key application-key
                      :attachment_key  (:id attachment-field)
                      :state           "not-checked"}]
-    (if (contains? attachment-field :belongs-to-hakukohteet)
-      (map #(assoc review-base :hakukohde %) (:belongs-to-hakukohteet attachment-field))
-      (assoc review-base :hakukohde "form"))))
+    (map #(assoc review-base :hakukohde %)
+         (cond
+           (not-empty (:belongs-to-hakukohteet attachment-field))
+           (clojure.set/intersection (set hakutoiveet)
+                                     (-> attachment-field :belongs-to-hakukohteet set))
+
+           (not-empty hakutoiveet)
+           hakutoiveet
+
+           :else [:form]))))
 
 (defn- migrate-attachment-states-to-applications
   [connection]
@@ -440,7 +447,7 @@
                       :content
                       util/flatten-form-fields
                       (filter #(= "attachment" (:fieldType %)))
-                      (map #(create-attachment-reviews % (:key res)))
+                      (map #(create-attachment-reviews % (:key res) (:hakukohde res)))
                       flatten)]
     (migration-app-store/insert-1.92-attachment-review connection review)))
 

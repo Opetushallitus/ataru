@@ -135,13 +135,12 @@
 (defn- update-attachment-hakukohde-review-field-of-selected-application-in-list
   [application selected-application-key hakukohde attachment-key state]
   (if (= selected-application-key (:key application))
-    (let [attachment-reviews            (or (:application-attachment-reviews application) [])
-          reviews-with-existing-removed (remove
+    (let [reviews-with-existing-removed (remove
                                           (fn [review]
                                             (and
                                              (= (:attachment-key review) attachment-key)
                                              (= (:hakukohde review) hakukohde)))
-                                          attachment-reviews)
+                                          (:application-attachment-reviews application))
           new-review                    {:attachment-key attachment-key
                                          :state          state
                                          :hakukohde      hakukohde}]
