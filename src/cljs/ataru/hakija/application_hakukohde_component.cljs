@@ -248,16 +248,15 @@
 
 (defn- select-new-hakukohde-row []
   (when @(subscribe [:application/hakukohteet-editable?])
-    [:a.application__hakukohde-selection-open-search
-     {:class (str (when @(subscribe [:application/hakukohteet-full?])
-                    "application__hakukohde-selection-open-search--disabled")
-                  (when @(subscribe [:application/prioritize-hakukohteet?])
-                    " application__hakukohde-selection-open-search--left-margin"))
-      :on-click (when-not @(subscribe [:application/hakukohteet-full?])
-                  hakukohde-search-toggle-event-handler)}
-     (get-translation :add-application-option)
-     (when-let [max-hakukohteet @(subscribe [:application/max-hakukohteet])]
-       (str " " (get-translation :applications_at_most max-hakukohteet)))]))
+    [:div.application__hakukohde-selection-open-search-wrapper
+     [:a.application__hakukohde-selection-open-search
+      {:class (str (when @(subscribe [:application/hakukohteet-full?])
+                     "application__hakukohde-selection-open-search--disabled"))
+       :on-click (when-not @(subscribe [:application/hakukohteet-full?])
+                   hakukohde-search-toggle-event-handler)}
+      (get-translation :add-application-option)
+      (when-let [max-hakukohteet @(subscribe [:application/max-hakukohteet])]
+        (str " " (get-translation :applications_at_most max-hakukohteet)))]]))
 
 (defn hakukohteet
   [field-descriptor]

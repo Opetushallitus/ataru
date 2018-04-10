@@ -1021,16 +1021,21 @@ and (max-width: @desktop-content-width) {
   margin-left: @field-margin-left;
 }
 
+.application__hakukohde-selection-open-search-wrapper {
+  border: 1px dashed @gray-of-the-beast;
+  border-image-source: url(/hakemus/images/border.png);
+  border-image-slice: 2;
+  border-image-repeat: round;
+  padding: 25px 0px 25px 0px;
+}
+
 .application__hakukohde-selection-open-search {
   color: @pale-blue;
+  margin-left: 40px;
 
   &--disabled {
     color: @sg-gray-lighten-3;
     cursor: default;
-  }
-
-  &--left-margin {
-    margin-left: 40px;
   }
 }
 
@@ -1154,10 +1159,6 @@ and (max-width: @desktop-content-width) {
     padding-top: 0;
   }
 
-  &:last-child {
-    border-bottom: 0;
-  }
-
   @media only screen and (max-width: @desktop-content-width) {
     margin-left: 10px;
   }
@@ -1204,6 +1205,10 @@ and (max-width: @desktop-content-width) {
   position: absolute;
   top: 15px;
   right: 15px;
+}
+
+.application__hakukohde-selected-list {
+  margin-bottom: 11px;
 }
 
 .application__hakukohde-selection-search-close-button a {
