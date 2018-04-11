@@ -438,11 +438,11 @@
            (not-empty hakutoiveet)
            hakutoiveet
 
-           :else [:form]))))
+           :else ["form"]))))
 
 (defn- migrate-attachment-states-to-applications
   [connection]
-  (doseq [res    (migration-app-store/get-1.92-latest-application-key-and-form connection)
+  (doseq [res    (migration-app-store/get-1.92-latest-application-key-form-and-hakukohde connection)
           review (->> (migration-app-store/get-1.92-form-by-id connection (:form_id res))
                       :content
                       util/flatten-form-fields

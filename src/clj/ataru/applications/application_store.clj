@@ -89,7 +89,7 @@
            (not-empty hakutoiveet)
            hakutoiveet
 
-           :else [:form]))))
+           :else ["form"]))))
 
 (defn- create-attachment-hakukohde-reviews-for-application
   [application connection]
