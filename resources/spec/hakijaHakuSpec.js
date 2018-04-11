@@ -16,7 +16,7 @@
         wait.until(function() { return formSections().length == 3 }, 10000)
       )
       it('with complete form and the only hakukohde selected', function() {
-        expect(formFields().length).to.equal(14)
+        expect(formFields().length).to.equal(15)
         expect(submitButton().prop('disabled')).to.equal(true)
         expect(formHeader().text()).to.equal('testing2')
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 10 tietoa')
@@ -37,7 +37,7 @@
         }, 10000)
       )
       it('with complete form and no hakukohde selected', function () {
-        expect(formFields().length).to.equal(14)
+        expect(formFields().length).to.equal(15)
         expect(submitButton().prop('disabled')).to.equal(true)
         expect(formHeader().text()).to.equal('testing2')
         expect(selectedHakukohteet().length).to.equal(0)
@@ -91,17 +91,17 @@
         clickElement(function () {
           return testFrame().find('.application__hakukohde-selection-open-search')
         }),
-        setNthFieldInputValue(0, 'Etunimi Tokanimi'),
-        setNthFieldInputValue(2, 'Sukunimi'),
-        setNthFieldInputValue(4, '020202A0202'),
-        setNthFieldInputValue(5, 'test@example.com'),
-        setNthFieldInputValue(6, '0123456789'),
-        setNthFieldInputValue(8, 'Katutie 12 B'),
-        setNthFieldInputValue(9, '00100'),
-        setNthFieldOption(11, '091'),
-        setNthFieldInputValue(13, '55cm'),
+        setNthFieldInputValue(1, 'Etunimi Tokanimi'),
+        setNthFieldInputValue(3, 'Sukunimi'),
+        setNthFieldInputValue(5, '020202A0202'),
+        setNthFieldInputValue(6, 'test@example.com'),
+        setNthFieldInputValue(7, '0123456789'),
+        setNthFieldInputValue(9, 'Katutie 12 B'),
+        setNthFieldInputValue(10, '00100'),
+        setNthFieldOption(12, '091'),
+        setNthFieldInputValue(14, '55cm'),
         wait.until(function () {
-          return formFields().eq(10).find('input').val() !== ''
+          return formFields().eq(11).find('input').val() !== ''
         })
       )
       it('validates and shows form correctly', function () {

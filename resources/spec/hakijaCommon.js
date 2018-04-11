@@ -50,7 +50,7 @@ function invalidFieldsStatus() {
 }
 
 function selectedHakukohteet() {
-  return testFrame().find('.application__hakukohde-row--selected')
+  return testFrame().find('.application__hakukohde-selected-list').find('.application__hakukohde-row')
 }
 
 function hakukohdeSearchInput() {
@@ -109,7 +109,7 @@ function hakukohdeSearchHits() {
 }
 
 function nthHakukohdeSearchResultButton(n) {
-  return hakukohdeSearchHits().eq(n).find('a')
+  return hakukohdeSearchHits().eq(n).find('button')
 }
 
 function nthHakukohdePriorityUp(n) {
