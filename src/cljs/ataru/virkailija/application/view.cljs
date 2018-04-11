@@ -1103,13 +1103,7 @@
         show-attachment-review? (r/atom false)]
     (fn []
       (let [selected-review-hakukohde          (subscribe [:state-query [:application :selected-review-hakukohde]])
-            application-attachments            (subscribe [:application/get-attachments])
-            attachments-for-selected-hakukohde (if (= "form" @selected-review-hakukohde)
-                                                 @application-attachments
-                                                 (filter #(or (empty? (:belongs-to-hakukohteet %))
-                                                              (contains? (-> % :belongs-to-hakukohteet set)
-                                                                         @selected-review-hakukohde))
-                                                         @application-attachments))]
+            attachments-for-selected-hakukohde (subscribe [:application/get-attachments-for-selected-hakukohde @selected-review-hakukohde])]
         [:div.application-handling__review-outer
          {:class (when (= :fixed @review-positioning)
                    "application-handling__review-outer-floating")}
@@ -1131,10 +1125,10 @@
              [:span.application-handling__review-settings-header-text "Asetukset"]])]
          [:div.application-handling__review
           (when @show-attachment-review?
-            [attachment-review-area @selected-review-hakukohde attachments-for-selected-hakukohde @review-positioning])
+            [attachment-review-area @selected-review-hakukohde @attachments-for-selected-hakukohde @review-positioning])
           [:div.application-handling__review-outer-container
            [application-hakukohde-selection]
-           (when (not-empty attachments-for-selected-hakukohde)
+           (when (not-empty @attachments-for-selected-hakukohde)
              [:div.application-handling__attachment-review-toggle-container
               {:on-click (fn []
                            (when-not @settings-visible
@@ -1142,7 +1136,7 @@
               (when @settings-visible
                 [review-settings-checkbox :attachment-handling])
               [:span.application-handling__attachment-review-toggle
-               (if @show-attachment-review? ">>" "<<")] " Liitepyynnöt (" (count attachments-for-selected-hakukohde) ")"])
+               (if @show-attachment-review? ">>" "<<")] " Liitepyynnöt (" (count @attachments-for-selected-hakukohde) ")"])
            [application-hakukohde-review-inputs review-states/hakukohde-review-types]
            (when @(subscribe [:application/show-info-request-ui?])
              [application-information-request])

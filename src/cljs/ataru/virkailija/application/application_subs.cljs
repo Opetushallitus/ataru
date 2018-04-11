@@ -389,12 +389,16 @@
                                            :processing-state])))))
 
 (re-frame.core/reg-sub
-  :application/get-attachments
-  (fn [db _]
-    (let [answers     (-> db :application :selected-application-and-form :application :answers)
-          attachments (->> (-> db :application :selected-application-and-form :form :content)
-                           u/flatten-form-fields
-                           (filter #(= "attachment" (:fieldType %))))]
-      (for [attachment attachments
+  :application/get-attachments-for-selected-hakukohde
+  (fn [db [_ selected-hakukohde]]
+    (let [answers                   (-> db :application :selected-application-and-form :application :answers)
+          attachments-for-hakukohde (->> (-> db :application :selected-application-and-form :form :content)
+                                         u/flatten-form-fields
+                                         (filter (fn [field]
+                                                   (and (= "attachment" (:fieldType field))
+                                                        (or (empty? (:belongs-to-hakukohteet field))
+                                                            (contains? (-> field :belongs-to-hakukohteet set)
+                                                                       selected-hakukohde))))))]
+      (for [attachment attachments-for-hakukohde
             :let [answer ((-> attachment :id keyword) answers)]]
         (assoc attachment :values (:values answer))))))
