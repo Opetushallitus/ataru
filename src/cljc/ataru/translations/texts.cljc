@@ -171,7 +171,7 @@
                                              :sv "Förhandsvisa"}
    :window-close-warning                    {:fi "Varmistathan että hakemus on lähetetty ennen sivun sulkemista."
                                              :en "Please ensure you have submitted the form before closing the page."
-                                             :sv "?"}})
+                                             :sv ""}})
 
 (def general-texts
   {:yes      {:en "Yes"
