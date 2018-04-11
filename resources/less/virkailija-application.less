@@ -231,7 +231,7 @@ and (max-width: 1000px) {
 .application-handling__list {
   cursor: pointer;
   overflow-x: visible;
-  overflow-y: auto;
+  overflow-y: scroll;
   max-height: 120px;
   padding: 0 1px;
 }
@@ -274,7 +274,7 @@ and (max-width: 1000px) {
   display: flex;
   overflow: visible;
   border-bottom: none;
-  padding: 20px 0 10px 12px;
+  padding: 20px 16px 10px 12px;
   margin: 1px;
   box-shadow: none;
   background: transparent;
@@ -320,20 +320,46 @@ and (max-width: 1000px) {
   margin-right: 1px;
 }
 
-.application-handling__list-row-person-info {
-  display: flex;
-}
+/* List header row */
 
 .application-handling__list-row--applicant {
-  flex: 0 3 450px;
   display: inline-block;
+  flex-grow: 2;
+}
+
+.application-handling__list-row--time {
+  display: inline-block;
+  color: @sg-color-gray-2;
+  flex: 0 0 166px;
 }
 
 .application-handling__list-row--identification {
   cursor: pointer;
   display: inline-block;
   padding-left: 12px;
-  padding-right: 5px
+  padding-right: 5px;
+  flex: 0 0 165px;
+}
+
+.application-handling__list-row--attachment-state {
+  display: inline-block;
+  flex: 0 0 129px;
+}
+
+.application-handling__list-row--state {
+  display: inline-block;
+  flex: 0 0 137px;
+}
+
+.application-handling__list-row--selection {
+  display: inline-block;
+  flex: 0 0 105px;
+}
+
+/* List row */
+
+.application-handling__list-row-person-info {
+  display: flex;
 }
 
 .application-handling__list-row--application-applicant {
@@ -342,16 +368,10 @@ and (max-width: 1000px) {
   color: @pale-blue;
 }
 
-.application-handling__list-row--time {
-  flex: 2 3 288px;
-  display: inline-block;
-  color: @sg-color-gray-2;
-}
-
 .application-handling__list-row--application-time {
-  flex: 0 3 550px;
   display: inline-block;
   color: @sg-color-gray;
+  flex: 0 0 160px;
   .light;
 }
 
@@ -360,15 +380,31 @@ and (max-width: 1000px) {
   display: inline-block;
 }
 
-.application-handling__list-row--state {
-  flex: 0 0 160px;
-  display: inline-block;
+.application-handling__list-row--attachment-states {
+  align-items: center;
+  display: flex;
+  color: @sg-color-gray;
+  flex: 0 0 127px;
+  padding-left: 30px;
 }
 
-.application-handling__list-row--selection {
-  flex: 0 0 120px;
-  display: inline-block;
+.application-handling_list-row-attachment-state-counts {
+  border-radius: 50%;
+  color: white;
+  font-size: 11px;
+  padding: 2px 6px;
+
+  &.checked {
+    background-color: @light-green;
+    margin-right: 3px;
+  }
+
+  &.unchecked {
+    background-color: @sg-color-red;
+  }
 }
+
+/* List styles end */
 
 .application-handling__list-row-email-icon {
   margin-left: 10px;
@@ -494,14 +530,71 @@ and (max-width: 1000px) {
   visibility: visible;
 }
 
+.application-handling__attachment-review-container {
+  background-color: @very-light-gray;
+  border-bottom: solid @review-separator-color 1px;
+  border-left: 3px solid @link-color;
+  border-top: solid @review-separator-color 1px;
+  left: 25px;
+  padding: 10px;
+  position: absolute;
+  transform: translateX(-100%);
+  width: 448px;
+}
+
+.application-handling__attachment-review-container-floating {
+  left: unset;
+  position: fixed;
+  right: 60px;
+}
+
+.application-handling__attachment-review-header {
+  margin-top: 20px;
+  padding-bottom: 5px;
+  border-bottom: solid @review-separator-color 1px;
+}
+
+.application__attachment-review-row {
+  display: flex;
+  justify-content: space-between;
+
+  &:not(:last-child) {
+    margin: 10px 0;
+    border-bottom: dashed @review-separator-color 1px;
+  }
+}
+
+.application__attachment-review-row-answer-information {
+  font-weight: lighter;
+}
+
+.application__attachment-review-row-label {
+  margin: 0 10px 5px 0;
+}
+
 .application-handling__review-outer-container {
-  padding-right: 5px;
   position: relative;
   border-top: solid @review-separator-color 1px;
   padding-top: 15px;
   background-color: @very-light-gray;
   padding-left: 15px;
   padding-right: 15px;
+}
+
+.application-handling__attachment-review-toggle-container {
+  position: relative;
+  margin-bottom: 15px;
+  padding-top: 8px;
+  cursor: pointer;
+}
+
+.application-handling__attachment-review-toggle {
+  font-size: 14px;
+  padding: 0 5px;
+  color: white;
+  background-color: @link-color;
+  border-radius: 2px;
+  font-weight: lighter;
 }
 
 .application-handling__floating-application-review-placeholder {
@@ -1015,6 +1108,12 @@ and (max-width: 1000px) {
   box-shadow: @modal-shadow;
   background: @white;
   cursor: default;
+}
+
+.application-handling__review-state-row--small {
+  width: 150px;
+  height: 41px;
+  flex-shrink: 0;
 }
 
 .application-handling__review-state-row:hover {
@@ -1742,7 +1841,7 @@ th.application__readonly-adjacent--header {
 }
 
 .application-handling__application-hl {
-  flex: 1 0 0;
+  flex: 1 0 150px;
   border-bottom: 1px dashed @light-gray;
   height: 12px;
   margin: 0 10px;
@@ -1761,11 +1860,11 @@ th.application__readonly-adjacent--header {
 }
 
 .application-handling__hakukohde-state-cell {
-  flex: 0 0 150px;
+  flex: 0 0 137px;
 }
 
 .application-handling__hakukohde-selection-cell {
-  flex: 0 0 110px;
+  flex: 0 0 105px;
 }
 
 .application-handling__count-tag {

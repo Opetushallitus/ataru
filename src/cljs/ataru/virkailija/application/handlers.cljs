@@ -62,6 +62,19 @@
     {}
     applications))
 
+(defn attachment-state-counts
+  [applications]
+  (reduce
+   (fn [acc application]
+     (merge-with (fn [prev new]
+                   (+ prev (if (not-empty new) 1 0)))
+                 acc
+                 (->> application
+                      :application-attachment-reviews
+                      (group-by :state))))
+   {"checked" 0 "not-checked" 0 "incomplete" 0}
+   applications))
+
 (defn- update-review-field-of-selected-application-in-list
   [application selected-application-key field value]
   (if (= selected-application-key (:key application))
@@ -119,6 +132,35 @@
            (assoc-in [:application :applications] updated-applications)
            (assoc-in [:application :review-state-counts] (review-state-counts updated-applications)))))))
 
+(defn- update-attachment-hakukohde-review-field-of-selected-application-in-list
+  [application selected-application-key hakukohde attachment-key state]
+  (if (= selected-application-key (:key application))
+    (let [reviews-with-existing-removed (remove
+                                          (fn [review]
+                                            (and
+                                             (= (:attachment-key review) attachment-key)
+                                             (= (:hakukohde review) hakukohde)))
+                                          (:application-attachment-reviews application))
+          new-review                    {:attachment-key attachment-key
+                                         :state          state
+                                         :hakukohde      hakukohde}]
+      (assoc application :application-attachment-reviews (conj reviews-with-existing-removed new-review)))
+    application))
+
+(reg-event-db
+  :application/update-attachment-review
+  (fn [db [_ attachment-key hakukohde-oid state]]
+    (let [selected-key           (get-in db [:application :selected-key])
+          application-list       (get-in db [:application :applications])
+          updated-applications   (mapv
+                                   #(update-attachment-hakukohde-review-field-of-selected-application-in-list
+                                     % selected-key hakukohde-oid (name attachment-key) state)
+                                   application-list)]
+      (-> db
+          (assoc-in [:application :review :attachment-reviews (keyword hakukohde-oid) attachment-key] state)
+          (assoc-in [:application :applications] updated-applications)
+          (assoc-in [:application :attachment-state-counts] (attachment-state-counts updated-applications))))))
+
 (defn- update-sort
   [db column-id swap-order?]
   (let [current-applications (get-in db [:application :applications])
@@ -168,6 +210,7 @@
                  (assoc-in [:application :applications] applications-with-times)
                  (assoc-in [:application :fetching-applications] false)
                  (assoc-in [:application :review-state-counts] (review-state-counts applications-with-times))
+                 (assoc-in [:application :attachment-state-counts] (attachment-state-counts applications-with-times))
                  (assoc-in [:application :sort] application-sorting/initial-sort)
                  (assoc-in [:application :information-request] nil)
                  (update-sort (:column application-sorting/initial-sort) false))
@@ -188,19 +231,22 @@
       (cljs-util/get-unselected-review-states states)))
 
 (defn fetch-applications-fx [db path]
-  {:db   (-> db
-             (assoc-in [:application :fetching-applications] true)
-             (assoc-in [:application :processing-state-filter] (extract-unselected-review-states-from-query
-                                                                 :processing-state-filter
-                                                                 review-states/application-hakukohde-processing-states))
-             (assoc-in [:application :selection-state-filter] (extract-unselected-review-states-from-query
-                                                                :selection-state-filter
-                                                                review-states/application-hakukohde-selection-states)))
+  {:db       (-> db
+                 (assoc-in [:application :fetching-applications] true)
+                 (assoc-in [:application :attachment-state-filter] (extract-unselected-review-states-from-query
+                                                                     :attachment-state-filter
+                                                                     review-states/attachment-hakukohde-review-types))
+                 (assoc-in [:application :processing-state-filter] (extract-unselected-review-states-from-query
+                                                                     :processing-state-filter
+                                                                     review-states/application-hakukohde-processing-states))
+                 (assoc-in [:application :selection-state-filter] (extract-unselected-review-states-from-query
+                                                                    :selection-state-filter
+                                                                    review-states/application-hakukohde-selection-states)))
    :dispatch [:application/refresh-haut-and-hakukohteet]
-   :http {:method              :get
-          :path                path
-          :skip-parse-times?   true
-          :handler-or-dispatch :application/handle-fetch-applications-response}})
+   :http     {:method              :get
+              :path                path
+              :skip-parse-times?   true
+              :handler-or-dispatch :application/handle-fetch-applications-response}})
 
 (reg-event-fx
   :application/fetch-applications
@@ -247,6 +293,7 @@
                                              events
                                              review
                                              hakukohde-reviews
+                                             attachment-reviews
                                              information-requests
                                              review-notes]}]
   (-> db
@@ -257,6 +304,7 @@
       (assoc-in [:application :review] review)
       (assoc-in [:application :review-notes] review-notes)
       (assoc-in [:application :review :hakukohde-reviews] hakukohde-reviews)
+      (assoc-in [:application :review :attachment-reviews] attachment-reviews)
       (update-in [:application :selected-review-hakukohde] (fn [current-hakukohde]
                                                              (or
                                                                (when (contains? (set (:hakukohde application)) current-hakukohde) current-hakukohde)
@@ -285,7 +333,8 @@
                                                                                         :application-key
                                                                                         :score
                                                                                         :state
-                                                                                        :hakukohde-reviews])}))})))
+                                                                                        :hakukohde-reviews
+                                                                                        :attachment-reviews])}))})))
 
 (reg-event-fx
   :application/handle-fetch-application-attachment-metadata

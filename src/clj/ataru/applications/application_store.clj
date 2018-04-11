@@ -75,6 +75,31 @@
       secret
       (recur (crypto/url-part 34)))))
 
+(defn- create-attachment-reviews
+  [attachment-field application-key hakutoiveet]
+  (let [review-base {:application_key application-key
+                     :attachment_key  (:id attachment-field)
+                     :state           "not-checked"}]
+    (map #(assoc review-base :hakukohde %)
+         (cond
+           (not-empty (:belongs-to-hakukohteet attachment-field))
+           (clojure.set/intersection (set hakutoiveet)
+                                     (-> attachment-field :belongs-to-hakukohteet set))
+
+           (not-empty hakutoiveet)
+           hakutoiveet
+
+           :else ["form"]))))
+
+(defn- create-attachment-hakukohde-reviews-for-application
+  [application connection]
+  (doseq [review (->> (forms/fetch-by-id (:form_id application))
+                      :content
+                      util/flatten-form-fields
+                      (filter #(= "attachment" (:fieldType %)))
+                      (mapcat #(create-attachment-reviews % (:key application) (:hakukohde application))))]
+    (yesql-save-attachment-review! review connection)))
+
 (defn- add-new-application-version
   "Add application and also initial metadata (event for receiving application, and initial review record)"
   [application create-new-secret? conn]
@@ -97,6 +122,7 @@
         new-application             (if (contains? application :key)
                                       (yesql-add-application-version<! application-to-store connection)
                                       (yesql-add-application<! application-to-store connection))]
+    (create-attachment-hakukohde-reviews-for-application new-application {:connection conn})
     (when create-new-secret?
       (yesql-add-application-secret!
         {:application_key (:key new-application)
@@ -324,6 +350,10 @@
   [application-key]
   (mapv ->kebab-case-kw (exec-db :db yesql-get-application-hakukohde-reviews {:application_key application-key})))
 
+(defn get-application-attachment-reviews
+  [application-key]
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-application-attachment-reviews {:application_key application-key})))
+
 (defn get-latest-application-by-secret [secret]
   (when-let [application (->> (exec-db :db yesql-get-latest-application-by-secret {:secret secret})
                               (first)
@@ -388,6 +418,22 @@
                        yesql-organization-oids-of-applications-of-persons
                        {:person_oids person-oids})))))
 
+(defn- auditlog-review-modify
+  [review old-value session]
+  (audit-log/log {:new              review
+                  :old              old-value
+                  :id               (get-in session [:identity :username])
+                  :operation        audit-log/operation-modify
+                  :organization-oid (get-in session [:identity :organizations 0 :oid])}))
+
+(defn- store-and-log-review-event
+  [connection event session]
+  (yesql-add-application-event<! event connection)
+  (audit-log/log {:new              event
+                  :id               (get-in session [:identity :username])
+                  :operation        audit-log/operation-new
+                  :organization-oid (get-in session [:identity :organizations 0 :oid])}))
+
 (defn save-application-review [review session]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection       {:connection conn}
@@ -396,11 +442,7 @@
           review-to-store  (transform-keys ->snake_case review)
           username         (get-in session [:identity :username])
           organization-oid (get-in session [:identity :organizations 0 :oid])]
-      (audit-log/log {:new              review-to-store
-                      :old              old-review
-                      :id               username
-                      :operation        audit-log/operation-modify
-                      :organization-oid organization-oid})
+      (auditlog-review-modify review-to-store old-review session)
       (yesql-save-application-review! review-to-store connection)
       (when (not= (:state old-review) (:state review-to-store))
         (let [application-event {:application_key  app-key
@@ -409,13 +451,7 @@
                                  :virkailija_oid   (-> session :identity :oid)
                                  :hakukohde        nil
                                  :review_key       nil}]
-          (yesql-add-application-event<!
-            application-event
-            connection)
-          (audit-log/log {:new              application-event
-                          :id               username
-                          :operation        audit-log/operation-new
-                          :organization-oid organization-oid}))))))
+          (store-and-log-review-event connection application-event session))))))
 
 (defn save-application-hakukohde-review
   [application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state session]
@@ -430,11 +466,7 @@
                                   username                    (get-in session [:identity :username])
                                   organization-oid            (get-in session [:identity :organizations 0 :oid])]
                               (when (empty? existing-duplicate-review)
-                                (audit-log/log {:new              review-to-store
-                                                :old              (first existing-requirement-review)
-                                                :id               username
-                                                :operation        audit-log/operation-modify
-                                                :organization-oid organization-oid})
+                                (auditlog-review-modify review-to-store (first existing-requirement-review) session)
                                 (yesql-upsert-application-hakukohde-review! review-to-store connection)
                                 (let [hakukohde-event {:application_key  application-key
                                                        :event_type       "hakukohde-review-state-change"
@@ -442,13 +474,28 @@
                                                        :review_key       hakukohde-review-requirement
                                                        :hakukohde        (:hakukohde review-to-store)
                                                        :virkailija_oid   (-> session :identity :oid)}]
-                                  (yesql-add-application-event<!
-                                    hakukohde-event
-                                    connection)
-                                  (audit-log/log {:new              hakukohde-event
-                                                  :id               username
-                                                  :operation        audit-log/operation-new
-                                                  :organization-oid organization-oid}))))))
+                                  (store-and-log-review-event connection hakukohde-event session))))))
+
+(defn save-attachment-hakukohde-review
+  [application-key hakukohde-oid attachment-key hakukohde-review-state session]
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+    (let [connection      {:connection conn}
+          review-to-store {:application_key application-key
+                           :attachment_key  attachment-key
+                           :state           hakukohde-review-state
+                           :hakukohde       hakukohde-oid}]
+      (if-let [existing-attachment-review (first (yesql-get-existing-attachment-review review-to-store connection))]
+        (when-not (= hakukohde-review-state (:state existing-attachment-review))
+          (auditlog-review-modify review-to-store existing-attachment-review session)
+          (yesql-update-attachment-hakukohde-review! review-to-store connection)
+          (let [hakukohde-event {:application_key  application-key
+                                 :event_type       "attachment-review-state-change"
+                                 :new_review_state (:state review-to-store)
+                                 :review_key       attachment-key
+                                 :hakukohde        (:hakukohde review-to-store)
+                                 :virkailija_oid   (-> session :identity :oid)}]
+            (store-and-log-review-event connection hakukohde-event session)))
+        (throw (new IllegalStateException (str "No existing attahcment review found for " review-to-store)))))))
 
 (s/defn get-applications-for-form :- [schema/Application]
   [form-key :- s/Str filtered-states :- [s/Str]]

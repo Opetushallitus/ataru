@@ -266,35 +266,47 @@
   (or (not only-identified?)
       (not (-> application :person :yksiloity))))
 
+(defn- state-filter
+  [states states-to-include default-state-name hakukohteet]
+  (or
+   (not (empty? (clojure.set/intersection
+                 states-to-include
+                 (set states))))
+   (and
+    (contains? states-to-include default-state-name)
+    (or
+     (empty? states)
+     (< (count states)
+        (count hakukohteet))))))
+
 (defn- filter-by-hakukohde-review
   [application requirement-name default-state-name states-to-include]
   (let [states (->> (:application-hakukohde-reviews application)
                     (filter #(= requirement-name (:requirement %)))
                     (map :state))]
-    (or
-      (not (empty? (clojure.set/intersection
-                     states-to-include
-                     (set states))))
-      (and
-        (contains? states-to-include default-state-name)
-        (or
-          (empty? states)
-          (< (count states)
-             (count (:hakukohde application))))))))
+    (state-filter states states-to-include default-state-name (:hakukohde application))))
+
+(defn- filter-by-attachment-review
+  [application default-state-name states-to-include]
+  (let [states (->> (:application-attachment-reviews application)
+                    (map :state))]
+    (state-filter states states-to-include default-state-name (:hakukohde application))))
 
 (re-frame/reg-sub
   :application/filtered-applications
   (fn [db _]
     (let [applications                 (-> db :application :applications)
+          attachment-states-to-include (-> db :application :attachment-state-filter set)
           processing-states-to-include (-> db :application :processing-state-filter set)
           selection-states-to-include  (-> db :application :selection-state-filter set)
-          only-identified? (-> db :application :only-identified?)]
+          only-identified?             (-> db :application :only-identified?)]
       (filter
         (fn [application]
           (and
-            (filter-by-yksiloity application only-identified?)
-            (filter-by-hakukohde-review application "processing-state" review-states/initial-application-hakukohde-processing-state processing-states-to-include)
-            (filter-by-hakukohde-review application "selection-state" "incomplete" selection-states-to-include)))
+           (filter-by-yksiloity application only-identified?)
+           (filter-by-hakukohde-review application "processing-state" review-states/initial-application-hakukohde-processing-state processing-states-to-include)
+           (filter-by-hakukohde-review application "selection-state" "incomplete" selection-states-to-include)
+           (filter-by-attachment-review application "not-checked" attachment-states-to-include)))
         applications))))
 
 (re-frame/reg-sub
@@ -375,3 +387,18 @@
                                            :hakukohde-reviews
                                            (keyword selected-hakukohde)
                                            :processing-state])))))
+
+(re-frame.core/reg-sub
+  :application/get-attachments-for-selected-hakukohde
+  (fn [db [_ selected-hakukohde]]
+    (let [answers                   (-> db :application :selected-application-and-form :application :answers)
+          attachments-for-hakukohde (->> (-> db :application :selected-application-and-form :form :content)
+                                         u/flatten-form-fields
+                                         (filter (fn [field]
+                                                   (and (= "attachment" (:fieldType field))
+                                                        (or (empty? (:belongs-to-hakukohteet field))
+                                                            (contains? (-> field :belongs-to-hakukohteet set)
+                                                                       selected-hakukohde))))))]
+      (for [attachment attachments-for-hakukohde
+            :let [answer ((-> attachment :id keyword) answers)]]
+        (assoc attachment :values (:values answer))))))

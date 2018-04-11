@@ -87,6 +87,12 @@ SELECT
                                      'hakukohde', hakukohde))
    FROM application_hakukohde_reviews ahr
    WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+  (SELECT json_agg(json_build_object('attachment_key', attachment_key,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_attachment_reviews aar
+   WHERE aar.application_key = a.key
+     AND (aar.hakukohde = 'form' OR aar.hakukohde = ANY (a.hakukohde))) AS application_attachment_reviews,
   (SELECT COUNT(*)
    FROM new_application_modifications am
    WHERE am.application_key = a.key) AS new_application_modifications
@@ -126,6 +132,12 @@ SELECT
                                      'hakukohde', hakukohde))
    FROM application_hakukohde_reviews ahr
    WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+  (SELECT json_agg(json_build_object('attachment_key', attachment_key,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_attachment_reviews aar
+   WHERE aar.application_key = a.key
+     AND (aar.hakukohde = 'form' OR aar.hakukohde = ANY (a.hakukohde))) AS application_attachment_reviews,
   (SELECT COUNT(*)
    FROM new_application_modifications am
    WHERE am.application_key = a.key)  AS new_application_modifications
@@ -554,6 +566,13 @@ VALUES (:application_key, :event_type, :new_review_state, :virkailija_oid, :haku
 -- Add application review, initially it doesn't have all fields. This is just a "skeleton"
 INSERT INTO application_reviews (application_key, state) VALUES (:application_key, :state);
 
+-- name: yesql-save-attachment-review!
+-- Add not-checked state to new application attachments
+INSERT INTO application_hakukohde_attachment_reviews (application_key, attachment_key, hakukohde, state)
+VALUES (:application_key, :attachment_key, :hakukohde, :state)
+ON CONFLICT (application_key, attachment_key, hakukohde)
+  DO NOTHING;
+
 -- name: yesql-save-application-review!
 -- Save modifications for existing review record
 UPDATE application_reviews
@@ -689,6 +708,16 @@ SELECT
 FROM application_hakukohde_reviews
 WHERE application_key = :application_key;
 
+-- name: yesql-get-application-attachment-reviews
+SELECT
+  attachment_key,
+  state,
+  reviews.hakukohde
+FROM application_hakukohde_attachment_reviews AS reviews
+  JOIN latest_applications AS applications ON application_key = key
+WHERE reviews.application_key = :application_key
+      AND (reviews.hakukohde = 'form' OR reviews.hakukohde = ANY (applications.hakukohde));
+
 -- name: yesql-get-payment-obligation-for-applications
 SELECT DISTINCT ON (application_key, hakukohde) application_key, hakukohde, state
 FROM application_hakukohde_reviews
@@ -718,6 +747,16 @@ SELECT
   application_key
 FROM application_hakukohde_reviews
 WHERE application_key = :application_key AND requirement = :requirement AND hakukohde = :hakukohde;
+
+-- name: yesql-update-attachment-hakukohde-review!
+UPDATE application_hakukohde_attachment_reviews
+SET state = :state, modified_time = now()
+WHERE application_key = :application_key AND attachment_key = :attachment_key AND hakukohde = :hakukohde;
+
+-- name: yesql-get-existing-attachment-review
+SELECT *
+FROM application_hakukohde_attachment_reviews
+WHERE application_key = :application_key AND attachment_key = :attachment_key AND hakukohde = :hakukohde;
 
 -- name: yesql-applications-by-haku-and-hakukohde-oids
 SELECT

@@ -90,6 +90,14 @@
     {}
     (application-store/get-application-hakukohde-reviews application-key)))
 
+(defn- parse-application-attachment-reviews
+  [application-key]
+  (reduce
+   (fn [acc {:keys [attachment-key state hakukohde]}]
+     (assoc-in acc [hakukohde attachment-key] state))
+   {}
+   (application-store/get-application-attachment-reviews application-key)))
+
 (defn- person-info-from-application [application]
   (let [answers (util/answers-by-key (:answers application))]
     {:first-name     (-> answers :first-name :value)
@@ -166,6 +174,7 @@
                                (merge tarjonta-info))
      :form                 form
      :hakukohde-reviews    (parse-application-hakukohde-reviews application-key)
+     :attachment-reviews   (parse-application-attachment-reviews application-key)
      :events               (application-store/get-application-events application-key)
      :review               (application-store/get-application-review application-key)
      :review-notes         (application-store/get-application-review-notes application-key)
@@ -221,6 +230,17 @@
         (name review-state)
         session))))
 
+(defn- save-attachment-hakukohde-reviews
+  [application-key attachment-reviews session]
+  (doseq [[hakukohde review] attachment-reviews
+          [attachment-key review-state] review]
+    (application-store/save-attachment-hakukohde-review
+      application-key
+      (name hakukohde)
+      (name attachment-key)
+      review-state
+      session)))
+
 (defn save-application-review
   [review session organization-service]
   (let [application-key (:application-key review)]
@@ -231,9 +251,8 @@
       [:edit-applications])
     (application-store/save-application-review review session)
     (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session)
-    {:review (application-store/get-application-review application-key)
-     :events (application-store/get-application-events application-key)
-     :hakukohde-reviews (parse-application-hakukohde-reviews application-key)}))
+    (save-attachment-hakukohde-reviews application-key (:attachment-reviews review) session)
+    {:events (application-store/get-application-events application-key)}))
 
 (defn mass-update-application-states
   [session organization-service application-keys hakukohde-oid from-state to-state]

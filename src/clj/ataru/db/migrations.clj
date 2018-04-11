@@ -1,28 +1,28 @@
 (ns ataru.db.migrations
-  (:require
-    [camel-snake-kebab.core :refer [->camelCaseKeyword]]
-    [camel-snake-kebab.extras :refer [transform-keys]]
-    [ataru.db.flyway-migration :as migrations]
-    [ataru.forms.form-store :as store]
-    [ataru.applications.application-store :as application-store]
-    [ataru.db.migrations.application-migration-store :as migration-app-store]
-    [ataru.component-data.person-info-module :as person-info-module]
-    [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
-    [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
-    [ataru.util.random :as c]
-    [ataru.db.db :refer [get-datasource]]
-    [clojure.core.match :refer [match]]
-    [taoensso.timbre :refer [spy debug info error]]
-    [ataru.config.core :refer [config]]
-    [ataru.component-data.value-transformers :as t]
-    [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
-    [ataru.person-service.person-integration :as person-integration]
-    [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
-    [ataru.background-job.job :as job]
-    [ataru.application.review-states :as review-states]
-    [ataru.koodisto.koodisto :as koodisto]
-    [ataru.organization-service.ldap-client :as ldap]
-    [ataru.component-data.component :as component])
+  (:require [ataru.application.review-states :as review-states]
+            [ataru.applications.application-store :as application-store]
+            [ataru.background-job.job :as job]
+            [ataru.component-data.person-info-module :as person-info-module]
+            [ataru.component-data.value-transformers :as t]
+            [ataru.config.core :refer [config]]
+            [ataru.db.db :refer [get-datasource]]
+            [ataru.db.flyway-migration :as migrations]
+            [ataru.db.migrations.application-migration-store :as migration-app-store]
+            [ataru.forms.form-store :as store]
+            [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
+            [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
+            [ataru.koodisto.koodisto :as koodisto]
+            [ataru.organization-service.ldap-client :as ldap]
+            [ataru.person-service.person-integration :as person-integration]
+            [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
+            [ataru.util :as util]
+            [ataru.util.random :as c]
+            [camel-snake-kebab.core :refer [->camelCaseKeyword]]
+            [camel-snake-kebab.extras :refer [transform-keys]]
+            [clojure.core.match :refer [match]]
+            [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
+            [taoensso.timbre :refer [spy debug info error]]
+            [ataru.component-data.component :as component])
   (:import (java.time ZonedDateTime ZoneId)))
 
 (def default-fetch-size 50)
@@ -424,6 +424,33 @@
                                           field))))
         (migration-app-store/update-1.88-form-content (:id form) connection))))
 
+(defn- create-attachment-reviews
+  [attachment-field application-key hakutoiveet]
+  (let [review-base {:application_key application-key
+                     :attachment_key  (:id attachment-field)
+                     :state           "not-checked"}]
+    (map #(assoc review-base :hakukohde %)
+         (cond
+           (not-empty (:belongs-to-hakukohteet attachment-field))
+           (clojure.set/intersection (set hakutoiveet)
+                                     (-> attachment-field :belongs-to-hakukohteet set))
+
+           (not-empty hakutoiveet)
+           hakutoiveet
+
+           :else ["form"]))))
+
+(defn- migrate-attachment-states-to-applications
+  [connection]
+  (doseq [res    (migration-app-store/get-1.92-latest-application-key-form-and-hakukohde connection)
+          review (->> (migration-app-store/get-1.92-form-by-id connection (:form_id res))
+                      :content
+                      util/flatten-form-fields
+                      (filter #(= "attachment" (:fieldType %)))
+                      (map #(create-attachment-reviews % (:key res) (:hakukohde res)))
+                      flatten)]
+    (migration-app-store/insert-1.92-attachment-review connection review)))
+
 (migrations/defmigration
   migrate-person-info-module "1.13"
   "Update person info module structure in existing forms"
@@ -521,6 +548,12 @@
   "Migrate legacy form content to contain hakukohteet module"
   (with-db-transaction [conn {:connection connection}]
     (migrate-legacy-form-content-to-contain-hakukohteet-module conn)))
+
+(migrations/defmigration
+  update-forms-metadata "1.92"
+  "Migrate attachment states for applications"
+  (with-db-transaction [conn {:connection connection}]
+    (migrate-attachment-states-to-applications conn)))
 
 (defn migrate
   []
