@@ -1110,6 +1110,5 @@
 
 (reg-event-fx
   :application/setup-window-unload
-  (fn [{db :db} _]
-    {:db                        db
-     :set-window-close-callback nil}))
+  (fn [_ _]
+    {:set-window-close-callback nil}))
