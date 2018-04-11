@@ -805,7 +805,10 @@
         [:div]))))
 
 (defn editable-fields [form-data]
-  (when form-data
-    (into [:div.animated.fadeIn]
-          (for [content (:content form-data)]
-            [render-field content]))))
+  (r/create-class
+    {:component-did-mount #(dispatch [:application/setup-window-unload])
+     :reagent-render      (fn [form-data]
+                            (into
+                              [:div.animated.fadeIn]
+                              (for [content (:content form-data)]
+                                [render-field content])))}))

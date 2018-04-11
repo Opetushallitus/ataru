@@ -239,3 +239,4 @@
   :application/tarjonta-hakukohteet
   (fn [db _]
     (-> db :form :tarjonta :hakukohteet)))
+

@@ -106,7 +106,8 @@
         [readonly-fields form]
         (do
           (dispatch [:application/run-rule])                ; wtf
-          [editable-fields form])))))
+          (when form
+            [editable-fields form submit-status]))))))
 
 (defn application-contents []
   (let [form            (subscribe [:state-query [:form]])

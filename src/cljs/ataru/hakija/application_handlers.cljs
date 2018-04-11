@@ -1,5 +1,5 @@
 (ns ataru.hakija.application-handlers
-  (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch]]
+  (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch subscribe]]
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
             [ataru.util :as autil]
@@ -1107,3 +1107,8 @@
   :application/remove-question-group-mouse-out
   (fn [db [_ field-descriptor idx]]
     (assoc-in db [:application :ui (keyword (:id field-descriptor)) :mouse-over-remove-button idx] false)))
+
+(reg-event-fx
+  :application/setup-window-unload
+  (fn [_ _]
+    {:set-window-close-callback nil}))
