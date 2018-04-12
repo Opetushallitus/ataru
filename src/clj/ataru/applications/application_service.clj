@@ -11,6 +11,7 @@
    [ataru.hakija.hakija-form-service :as hakija-form-service]
    [taoensso.timbre :refer [spy debug]]
    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
+   [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
    [ataru.organization-service.ldap-client :as ldap]
    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
    [ataru.information-request.information-request-store :as information-request-store]
@@ -20,10 +21,6 @@
    [ataru.person-service.birth-date-converter :as bd-converter]
    [medley.core :refer [filter-vals]])
   (:import [java.io ByteArrayInputStream]))
-
-(defn get-application-list-by-form [form-key session organization-service]
-  (aac/check-form-access form-key session organization-service [:view-applications :edit-applications])
-  {:applications (application-store/get-application-list-by-form form-key)})
 
 (defn- extract-koodisto-fields [field-descriptor-list]
   (reduce
@@ -152,33 +149,156 @@
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
   [application-key session organization-service tarjonta-service ohjausparametrit-service person-client]
-  (let [bare-application (aac/get-latest-application-by-key application-key session organization-service)
-        tarjonta-info    (tarjonta-parser/parse-tarjonta-info-by-haku
-                          tarjonta-service
-                          organization-service
-                          ohjausparametrit-service
-                          (:haku bare-application)
-                          (:hakukohde bare-application))
-        form             (-> (:form bare-application)
-                             form-store/fetch-by-id
-                             (populate-hakukohde-answer-options tarjonta-info)
-                             (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))
-        application      (populate-koodisto-fields bare-application form)
-        person           (get-person application person-client)]
-    (aac/check-application-access application-key session organization-service [:view-applications :edit-applications])
-    {:application          (-> application
-                               (dissoc :person-oid)
-                               (assoc :person (if (:yksiloity person)
-                                                (populate-person-koodisto-fields person)
-                                                person))
-                               (merge tarjonta-info))
-     :form                 form
-     :hakukohde-reviews    (parse-application-hakukohde-reviews application-key)
-     :attachment-reviews   (parse-application-attachment-reviews application-key)
-     :events               (application-store/get-application-events application-key)
-     :review               (application-store/get-application-review application-key)
-     :review-notes         (application-store/get-application-review-notes application-key)
-     :information-requests (information-request-store/get-information-requests application-key)}))
+  (when-let [bare-application (aac/get-latest-application-by-key
+                               organization-service
+                               tarjonta-service
+                               session
+                               application-key)]
+    (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku
+                         tarjonta-service
+                         organization-service
+                         ohjausparametrit-service
+                         (:haku bare-application)
+                         (:hakukohde bare-application))
+          form          (-> (:form bare-application)
+                            form-store/fetch-by-id
+                            (populate-hakukohde-answer-options tarjonta-info)
+                            (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))
+          application   (populate-koodisto-fields bare-application form)
+          person        (get-person application person-client)]
+      {:application          (-> application
+                                 (dissoc :person-oid)
+                                 (assoc :person (if (:yksiloity person)
+                                                  (populate-person-koodisto-fields person)
+                                                  person))
+                                 (merge tarjonta-info))
+       :form                 form
+       :hakukohde-reviews    (parse-application-hakukohde-reviews application-key)
+       :attachment-reviews   (parse-application-attachment-reviews application-key)
+       :events               (application-store/get-application-events application-key)
+       :review               (application-store/get-application-review application-key)
+       :review-notes         (application-store/get-application-review-notes application-key)
+       :information-requests (information-request-store/get-information-requests application-key)})))
+
+(defn- belongs-to-hakukohderyhma?
+  [hakukohderyhma-oid hakukohde]
+  (->> (:ryhmaliitokset hakukohde)
+       (map :ryhmaOid)
+       (some #(= hakukohderyhma-oid %))))
+
+(defn- applied-to-hakukohderyhma?
+  [hakukohderyhma-oid _ application]
+  (some #(belongs-to-hakukohderyhma? hakukohderyhma-oid %)
+        (:hakukohde application)))
+
+(defn- first-hakukohde-in-hakukohderyhma
+  [hakukohderyhma-oid application]
+  (->> (:hakukohde application)
+       (filter #(belongs-to-hakukohderyhma? hakukohderyhma-oid %))
+       first))
+
+(defn- belongs-to-some-organization?
+  [authorized-organization-oids hakukohde]
+  (not-empty
+   (clojure.set/intersection
+    authorized-organization-oids
+    (set (:tarjoajaOids hakukohde)))))
+
+(defn- applied-ensisijaisesti-hakukohderyhmassa?
+  [hakukohderyhma-oid authorized-organization-oids application]
+  (and (some? authorized-organization-oids)
+       (belongs-to-some-organization? authorized-organization-oids
+                                      (first-hakukohde-in-hakukohderyhma
+                                       hakukohderyhma-oid
+                                       application))))
+
+(defn ->form-query
+  [key]
+  {:query_key   "form"
+   :query_value key
+   :predicate   (constantly true)})
+
+(defn ->hakukohde-query
+  [hakukohde-oid ensisijaisesti]
+  {:query_key   (if ensisijaisesti "ensisijainen-hakukohde" "hakukohde")
+   :query_value hakukohde-oid
+   :predicate   (constantly true)})
+
+(defn ->hakukohderyhma-query
+  [haku-oid hakukohderyhma-oid ensisijaisesti]
+  {:query_key   "haku"
+   :query_value haku-oid
+   :predicate   (partial (if ensisijaisesti
+                           applied-ensisijaisesti-hakukohderyhmassa?
+                           applied-to-hakukohderyhma?)
+                         hakukohderyhma-oid)})
+
+(defn ->haku-query
+  [haku-oid]
+  {:query_key   "haku"
+   :query_value haku-oid
+   :predicate   (constantly true)})
+
+(defn ->ssn-query
+  [ssn]
+  {:query_key   "ssn"
+   :query_value ssn
+   :predicate   (constantly true)})
+
+(defn ->dob-query
+  [dob]
+  {:query_key   "dob"
+   :query_value dob
+   :predicate   (constantly true)})
+
+(defn ->email-query
+  [email]
+  {:query_key   "email"
+   :query_value email
+   :predicate   (constantly true)})
+
+(defn ->name-query
+  [name]
+  {:query_key   "name"
+   :query_value (application-store/->name-query-value name)
+   :predicate   (constantly true)})
+
+(defn ->person-oid-query
+  [person-oid]
+  {:query_key   "person-oid"
+   :query_value person-oid
+   :predicate   (constantly true)})
+
+(defn ->application-oid-query
+  [application-oid]
+  {:query_key   "application-oid"
+   :query_value application-oid
+   :predicate   (constantly true)})
+
+(defn get-application-list-by-query
+  [organization-service person-service tarjonta-service session query]
+  (let [applications (aac/get-application-list-by-query
+                      organization-service
+                      tarjonta-service
+                      session
+                      query)
+        persons      (person-service/get-persons
+                      person-service
+                      (distinct (keep :person-oid applications)))]
+    (map (fn [application]
+           (let [onr-person (get persons (keyword (:person-oid application)))
+                 person     (if (or (:yksiloity onr-person)
+                                    (:yksiloityVTJ onr-person))
+                              {:preferred-name (:kutsumanimi onr-person)
+                               :last-name      (:sukunimi onr-person)
+                               :yksiloity      true}
+                              {:preferred-name (:preferred-name application)
+                               :last-name      (:last-name application)
+                               :yksiloity      false})]
+             (-> application
+                 (assoc :person person)
+                 (dissoc :person-oid :preferred-name :last-name))))
+         applications)))
 
 (defn get-excel-report-of-applications-by-key
   [application-keys selected-hakukohde user-wants-to-skip-answers? session organization-service tarjonta-service ohjausparametrit-service person-service]
@@ -242,52 +362,64 @@
       session)))
 
 (defn save-application-review
-  [review session organization-service]
+  [organization-service tarjonta-service session review]
   (let [application-key (:application-key review)]
-    (aac/check-application-access
-      application-key
-      session
-      organization-service
-      [:edit-applications])
-    (application-store/save-application-review review session)
-    (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session)
-    (save-attachment-hakukohde-reviews application-key (:attachment-reviews review) session)
-    {:events (application-store/get-application-events application-key)}))
+    (when (aac/applications-access-authorized?
+           organization-service
+           tarjonta-service
+           session
+           [application-key]
+           [:edit-applications])
+      (application-store/save-application-review review session)
+      (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session)
+      (save-attachment-hakukohde-reviews application-key (:attachment-reviews review) session)
+      {:events (application-store/get-application-events application-key)})))
 
 (defn mass-update-application-states
-  [session organization-service application-keys hakukohde-oid from-state to-state]
-  (doseq [application-key application-keys]
-    (aac/check-application-access
-      application-key
-      session
-      organization-service
-      [:edit-applications]))
-  (application-store/mass-update-application-states session application-keys hakukohde-oid from-state to-state)
-  {})
+  [organization-service tarjonta-service session application-keys hakukohde-oid from-state to-state]
+  (when (aac/applications-access-authorized?
+         organization-service
+         tarjonta-service
+         session
+         application-keys
+         [:edit-applications])
+    (application-store/mass-update-application-states
+     session
+     application-keys
+     hakukohde-oid
+     from-state
+     to-state)))
 
 (defn send-modify-application-link-email [application-key session organization-service tarjonta-service]
-  (when-let [application-id (:id (aac/get-latest-application-by-key application-key session organization-service))]
+  (when-let [application-id (:id (aac/get-latest-application-by-key
+                                  organization-service
+                                  tarjonta-service
+                                  session
+                                  application-key))]
     (application-store/add-new-secret-to-application application-key)
     (email/start-email-submit-confirmation-job tarjonta-service application-id)
     (application-store/add-application-event {:application-key application-key
                                               :event-type      "modification-link-sent"}
                                              session)))
 
-(defn add-review-note [note session organization-service]
-  (aac/check-application-access (:application-key note)
-                                session
-                                organization-service
-                                [:view-applications :edit-applications])
-  (application-store/add-review-note note session))
+(defn add-review-note [organization-service tarjonta-service session note]
+  (when (aac/applications-access-authorized?
+         organization-service
+         tarjonta-service
+         session
+         [(:application-key note)]
+         [:view-applications :edit-applications])
+    (application-store/add-review-note note session)))
 
 (defn remove-review-note [note-id]
   (application-store/remove-review-note note-id))
 
 (defn get-application-version-changes
-  [application-key session organization-service]
-  (aac/check-application-access
-    application-key
-    session
-    organization-service
-    [:view-applications :edit-applications])
-  (application-store/get-application-version-changes application-key))
+  [organization-service tarjonta-service session application-key]
+  (when (aac/applications-access-authorized?
+         organization-service
+         tarjonta-service
+         session
+         [application-key]
+         [:view-applications :edit-applications])
+    (application-store/get-application-version-changes application-key)))

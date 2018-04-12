@@ -23,7 +23,6 @@
             [ataru.middleware.session-timeout :as session-timeout]
             [ataru.middleware.user-feedback :as user-feedback]
             [ataru.person-service.person-integration :as person-integration]
-            [ataru.person-service.person-service :as person-service]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.statistics.statistics-service :as statistics-service]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
@@ -225,17 +224,25 @@
                      :from-state       (apply s/enum (map first review-states/application-hakukohde-processing-states))
                      :to-state         (apply s/enum (map first review-states/application-hakukohde-processing-states))}]
         :summary "Update list of application-hakukohde with given state to new state"
-        (ok (application-service/mass-update-application-states session
-              organization-service
-              (:application-keys body)
-              (:hakukohde-oid body)
-              (:from-state body)
-              (:to-state body))))
+        (if (application-service/mass-update-application-states
+             organization-service
+             tarjonta-service
+             session
+             (:application-keys body)
+             (:hakukohde-oid body)
+             (:from-state body)
+             (:to-state body))
+          (response/ok {})
+          (response/unauthorized {:error (str "Hakemusten "
+                                              (clojure.string/join ", " (:application-keys body))
+                                              " käsittely ei ole sallittu")})))
 
       (api/GET "/list" {session :session}
         :query-params [{formKey :- s/Str nil}
                        {hakukohdeOid :- s/Str nil}
+                       {hakukohderyhmaOid :- s/Str nil}
                        {hakuOid :- s/Str nil}
+                       {ensisijaisesti :- s/Bool false}
                        {ssn :- s/Str nil}
                        {dob :- s/Str nil}
                        {email :- s/Str nil}
@@ -244,37 +251,34 @@
                        {applicationOid :- s/Str nil}]
         :summary "Return applications header-level info for form"
         :return {:applications [ataru-schema/ApplicationInfo]}
-        (let [[query-key query-value] (cond
-                                        (some? formKey) [:form formKey]
-                                        (some? hakukohdeOid) [:hakukohde-oid hakukohdeOid]
-                                        (some? hakuOid) [:haku-oid hakuOid]
-                                        (some? ssn) [:ssn ssn]
-                                        (some? dob) [:dob (when (dob/dob? dob) dob)]
-                                        (some? email) [:email email]
-                                        (some? name) [:name name]
-                                        (some? personOid) [:person-oid personOid]
-                                        (some? applicationOid) [:application-oid applicationOid])
-              applications (when query-key
-                             (:applications
-                              (if (= query-key :form)
-                                (application-service/get-application-list-by-form query-value session organization-service)
-                                (access-controlled-application/get-application-list-by-query query-key query-value session organization-service))))
-              persons      (person-service/get-persons person-service (distinct (keep :person-oid applications)))]
-          (if applications
-            (response/ok {:applications (for [application applications
-                                              :let [person      (get persons (keyword (:person-oid application)))
-                                                    person-info (if (or (-> person :yksiloity)
-                                                                        (-> person :yksiloityVTJ))
-                                                                  {:preferred-name (:kutsumanimi person)
-                                                                   :last-name      (:sukunimi person)
-                                                                   :yksiloity      true}
-                                                                  {:preferred-name (:preferred-name application)
-                                                                   :last-name      (:last-name application)
-                                                                   :yksiloity      false})]]
-                                          (-> application
-                                              (assoc :person person-info)
-                                              (dissoc :person-oid :preferred-name :last-name)))})
-            (response/bad-request))))
+        (if-let [query (cond (some? formKey)
+                             (application-service/->form-query formKey)
+                             (some? hakukohdeOid)
+                             (application-service/->hakukohde-query hakukohdeOid ensisijaisesti)
+                             (and (some? hakuOid) (some? hakukohderyhmaOid))
+                             (application-service/->hakukohderyhma-query hakuOid hakukohderyhmaOid ensisijaisesti)
+                             (some? hakuOid)
+                             (application-service/->haku-query hakuOid)
+                             (some? ssn)
+                             (application-service/->ssn-query ssn)
+                             (and (some? dob) (dob/dob? dob))
+                             (application-service/->dob-query dob)
+                             (some? email)
+                             (application-service/->email-query email)
+                             (some? name)
+                             (application-service/->name-query name)
+                             (some? personOid)
+                             (application-service/->person-oid-query personOid)
+                             (some? applicationOid)
+                             (application-service/->application-oid-query applicationOid))]
+          (response/ok
+           {:applications (application-service/get-application-list-by-query
+                           organization-service
+                           person-service
+                           tarjonta-service
+                           session
+                           query)})
+          (response/bad-request)))
       (api/GET "/virkailija-settings" {session :session}
         :return ataru-schema/VirkailijaSettings
         (ok (virkailija-edit/get-review-settings session)))
@@ -295,12 +299,17 @@
                  :hakukohde-reviews    ataru-schema/HakukohdeReviews
                  :form                 ataru-schema/FormWithContent
                  :information-requests [ataru-schema/InformationRequest]}
-        (ok (application-service/get-application-with-human-readable-koodis application-key
-                                                                            session
-                                                                            organization-service
-                                                                            tarjonta-service
-                                                                            ohjausparametrit-service
-                                                                            person-service)))
+        (if-let [application (application-service/get-application-with-human-readable-koodis
+                              application-key
+                              session
+                              organization-service
+                              tarjonta-service
+                              ohjausparametrit-service
+                              person-service)]
+          (response/ok application)
+          (response/unauthorized {:error (str "Hakemuksen "
+                                              application-key
+                                              " käsittely ei ole sallittu")})))
 
       (api/GET "/:application-key/modify" {session :session}
         :path-params [application-key :- String]
@@ -329,9 +338,15 @@
         :return ataru-schema/ReviewNote
         :body [note {:notes           s/Str
                      :application-key s/Str}]
-        (if-let [note (application-service/add-review-note note session organization-service)]
+        (if-let [note (application-service/add-review-note
+                       organization-service
+                       tarjonta-service
+                       session
+                       note)]
           (response/ok note)
-          (response/bad-request)))
+          (response/unauthorized {:error (str "Hakemuksen "
+                                              (:application-key note)
+                                              " käsittely ei ole sallittu")})))
 
       (api/DELETE "/notes/:note-id" []
         :summary "Remove note"
@@ -345,11 +360,15 @@
         :summary "Update existing application review"
         :body [review ataru-schema/Review]
         :return {:events [ataru-schema/Event]}
-        (ok
-          (application-service/save-application-review
-            review
-            session
-            organization-service)))
+        (if-let [result (application-service/save-application-review
+                         organization-service
+                         tarjonta-service
+                         session
+                         review)]
+          (response/ok result)
+          (response/unauthorized {:error (str "Hakemuksen "
+                                              (:application-key review)
+                                              " käsittely ei ole sallittu")})))
 
       (api/POST "/information-request" {session :session}
         :body [information-request ataru-schema/NewInformationRequest]
@@ -381,9 +400,15 @@
         :summary "Get changes made to an application in version x"
         :path-params [application-key :- s/Str]
         :return [s/Any]
-        (ok (application-service/get-application-version-changes application-key
-                                                                 session
-                                                                 organization-service))))
+        (if-let [result (application-service/get-application-version-changes
+                         organization-service
+                         tarjonta-service
+                         session
+                         application-key)]
+          (response/ok result)
+          (response/unauthorized {:error (str "Hakemuksen "
+                                              application-key
+                                              " käsittely ei ole sallittu")}))))
 
     (api/context "/cache" []
       (api/GET "/clear" {session :session}
@@ -410,7 +435,7 @@
     (api/GET "/haut" {session :session}
       :summary "List haku and hakukohde information found for applications stored in system"
       :return ataru-schema/Haut
-      (let [tarjonta-haut (haku-service/get-haut session organization-service)]
+      (let [tarjonta-haut (haku-service/get-haut session organization-service tarjonta-service)]
         (ok {:tarjonta-haut    tarjonta-haut
              :direct-form-haut (haku-service/get-direct-form-haut session organization-service)
              :haut             (->> (keys tarjonta-haut)
@@ -504,7 +529,7 @@
     (api/POST "/checkpermission" []
       :body [dto ataru-schema/PermissionCheckDto]
       :return ataru-schema/PermissionCheckResponseDto
-      (ok (permission-check/check dto)))
+      (ok (permission-check/check tarjonta-service dto)))
 
     (api/context "/external" []
       :tags ["external-api"]

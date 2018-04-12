@@ -8,7 +8,7 @@
 
 (defn- all-org-oids [organization-service organizations]
   (let [all-organizations (.get-all-organizations organization-service organizations)]
-        (map :oid all-organizations)))
+    (set (map :oid all-organizations))))
 
 (defn right-seq? [val] (s/validate [Right] val))
 
@@ -29,12 +29,12 @@
                           when-superuser-fn]
   {:pre [(right-seq? rights)]}
   (let [organizations     (select-organizations-for-rights session rights)
-        organization-oids (map :oid organizations)]
+        organization-oids (set (map :oid organizations))]
     (cond
       (empty? organizations)
       (when-no-orgs-fn)
 
-      (some #{organization-client/oph-organization} organization-oids)
+      (contains? organization-oids organization-client/oph-organization)
       (when-superuser-fn)
 
       :else
@@ -50,11 +50,9 @@
    rights
    (fn [] false)
    #(let [organization-oid (if (instance? clojure.lang.IFn organization-oid-handle)
-                               (organization-oid-handle)
-                               organization-oid-handle)]
-     (-> #{organization-oid}
-         (some %)
-         boolean))
+                             (organization-oid-handle)
+                             organization-oid-handle)]
+      (contains? % organization-oid))
    (fn [] true)))
 
 (defn organization-list

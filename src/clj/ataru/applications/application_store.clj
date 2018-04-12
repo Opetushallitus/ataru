@@ -223,32 +223,18 @@
                                    virkailija-oid)})
       id)))
 
-(defn get-application-list-by-form
-  "Only list with header-level info, not answers. Does NOT include applications associated with any hakukohde."
-  [form-key]
-  (->> (exec-db :db yesql-get-application-list-by-form {:form_key form-key})
-       (map ->kebab-case-kw)))
-
-(defn- name-search-query [name]
+(defn ->name-query-value
+  [name]
   (->> (clojure.string/split name #"\s+")
        (remove clojure.string/blank?)
        (map #(str % ":*"))
        (clojure.string/join " & ")))
 
 (defn get-application-heading-list
-  ([query-key query-value organization-oids]
-   (let [have-organization? (not-empty organization-oids)
-         parsed-value       (case :query-key
-                              :name (name-search-query query-value)
-                              query-value)]
-     (->> (exec-db :db yesql-get-application-list-for-virkailija
-                   {:query_type                   (if have-organization? "ORGS" "ALL")
-                    :query_key                    (name query-key)
-                    :query_value                  parsed-value
-                    :authorized_organization_oids (if have-organization? organization-oids [""])})
-          (map ->kebab-case-kw))))
-  ([query-key query-value]
-   (get-application-heading-list query-key query-value nil)))
+  [query]
+  (map ->kebab-case-kw
+       (exec-db :db yesql-get-application-list-for-virkailija
+                (select-keys query [:query_key :query_value]))))
 
 (defn get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
   [person-oid]
@@ -285,13 +271,8 @@
      :passinNumero (-> answers :passport-number :value)
      :idTunnus     (-> answers :national-id-number :value)}))
 
-(defn onr-applications [person-oid organizations]
-  (->> (exec-db :db yesql-onr-applications
-                {:person_oid person-oid
-                 :query_type (if (nil? organizations) "ALL" "ORGS")
-                 :authorized_organization_oids (if (nil? organizations)
-                                                 [""]
-                                                 organizations)})
+(defn onr-applications [person-oid]
+  (->> (exec-db :db yesql-onr-applications {:person_oid person-oid})
        (map unwrap-onr-application)))
 
 (defn has-ssn-applied [haku-oid ssn]
@@ -322,27 +303,9 @@
 (defn get-application [application-id]
   (unwrap-application (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
 
-(defn get-latest-application-by-key [application-key organization-oids]
-  (-> (exec-db :db yesql-get-latest-application-by-key {:application_key              application-key
-                                                        :query_type                   "ORGS"
-                                                        :authorized_organization_oids organization-oids})
-      (first)
-      (unwrap-application)))
-
-(defn get-latest-application-by-key-unrestricted [application-key]
-  (-> (exec-db :db yesql-get-latest-application-by-key {:application_key              application-key
-                                                        :query_type                   "ALL"
-                                                        :authorized_organization_oids [""]})
-      (first)
-      (unwrap-application)))
-
-(defn get-latest-application-by-key-with-hakukohde-reviews
-  [application-key]
-  (-> (exec-db :db
-               yesql-get-latest-application-by-key-with-hakukohde-reviews
-               {:application_key              application-key
-                :query_type                   "ALL"
-                :authorized_organization_oids [""]})
+(defn get-latest-application-by-key [application-key]
+  (-> (exec-db :db yesql-get-latest-application-by-key
+               {:application_key application-key})
       (first)
       (unwrap-application)))
 
@@ -387,7 +350,11 @@
   [application-key]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection      {:connection conn}
-          application     (get-latest-application-by-key-unrestricted application-key)
+          application     (-> (yesql-get-latest-application-by-key
+                               {:application_key application-key}
+                               connection)
+                              (first)
+                              (unwrap-application))
           new-secret      (generate-new-application-secret connection)]
       (yesql-add-application-secret! {:application_key application-key :secret new-secret} connection)
       (:id application))))
@@ -399,24 +366,17 @@
           application-key (-> (yesql-get-application-key-for-any-version-of-secret {:secret old-secret} connection)
                               (first)
                               :application_key)
-          application     (get-latest-application-by-key-unrestricted application-key)
+          application     (-> (yesql-get-latest-application-by-key
+                               {:application_key application-key}
+                               connection)
+                              (first)
+                              (unwrap-application))
           new-secret      (generate-new-application-secret connection)]
       (yesql-add-application-secret! {:application_key application-key :secret new-secret} connection)
       (:id application))))
 
 (defn get-application-events [application-key]
   (mapv ->kebab-case-kw (exec-db :db yesql-get-application-events {:application_key application-key})))
-
-(defn get-application-organization-oid [application-key]
-  (:organization_oid (first (exec-db :db yesql-get-application-organization-by-key {:application_key application-key}))))
-
-(defn get-organization-oids-of-applications-of-persons [person-oids]
-  (if (empty? person-oids)
-    #{}
-    (set (map :organization_oid
-              (exec-db :db
-                       yesql-organization-oids-of-applications-of-persons
-                       {:person_oids person-oids})))))
 
 (defn- auditlog-review-modify
   [review old-value session]
@@ -531,36 +491,14 @@
     {:id application-id :person_oid person-oid}))
 
 (defn get-haut
-  [organization-oids]
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-haut-and-hakukohteet-from-applications
-                                 {:incomplete_states incomplete-states
-                                  :query_type "ORGS"
-                                  :authorized_organization_oids organization-oids})))
-
-(defn get-all-haut
   []
   (mapv ->kebab-case-kw (exec-db :db yesql-get-haut-and-hakukohteet-from-applications
-                                 {:incomplete_states incomplete-states
-                                  :query_type "ALL"
-                                  :authorized_organization_oids [""]})))
+                                 {:incomplete_states incomplete-states})))
 
 (defn get-direct-form-haut
-  [organization-oids]
-  (->> (exec-db :db yesql-get-direct-form-haut
-                {:incomplete_states            incomplete-states
-                 :query_type                   "ORGS"
-                 :authorized_organization_oids organization-oids})
-       (mapv ->kebab-case-kw)
-       (reduce #(assoc %1 (:key %2) %2) {})))
-
-(defn get-all-direct-form-haut
   []
-  (->> (exec-db :db yesql-get-direct-form-haut
-                {:incomplete_states            incomplete-states
-                 :query_type                   "ALL"
-                 :authorized_organization_oids [""]})
-       (mapv ->kebab-case-kw)
-       (reduce #(assoc %1 (:key %2) %2) {})))
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-direct-form-haut
+                                 {:incomplete_states incomplete-states})))
 
 (defn add-application-feedback
   [feedback]
@@ -673,14 +611,10 @@
                        (hakutoiveet-priority-order hakukohde))})
 
 (defn get-external-applications
-  [haku-oid hakukohde-oid hakemus-oids organizations]
+  [haku-oid hakukohde-oid hakemus-oids]
   (->> (exec-db :db
                 yesql-applications-by-haku-and-hakukohde-oids
-                {:query_type (if (nil? organizations) "ALL" "ORGS")
-                 :authorized_organization_oids (if (nil? organizations)
-                                                 [""]
-                                                 organizations)
-                 :haku_oid                     haku-oid
+                {:haku_oid                     haku-oid
                  ; Empty string to avoid empty parameter lists
                  :hakukohde_oids               (cond-> [""]
                                                        (some? hakukohde-oid)
@@ -701,9 +635,19 @@
        (map unwrap-person-and-hakemus-oid)
        (into {})))
 
+(defn- get-latest-application-by-key-with-hakukohde-reviews
+  [connection application-key]
+  (-> (yesql-get-latest-application-by-key-with-hakukohde-reviews
+       {:application_key application-key}
+       connection)
+      (first)
+      (unwrap-application)))
+
 (defn- update-hakukohde-process-state!
   [connection username organization-oid session hakukohde-oid from-state to-state application-key]
-  (let [application      (get-latest-application-by-key-with-hakukohde-reviews application-key)
+  (let [application      (get-latest-application-by-key-with-hakukohde-reviews
+                          connection
+                          application-key)
         existing-reviews (filter
                            #(= (:state %) from-state)
                            (application-states/get-all-reviews-for-requirement "processing-state" application hakukohde-oid))
@@ -730,6 +674,16 @@
      :operation        audit-log/operation-new
      :organization-oid organization-oid}))
 
+(defn applications-authorization-data [application-keys]
+  (map ->kebab-case-kw
+       (exec-db :db yesql-applications-authorization-data
+                {:application_keys application-keys})))
+
+(defn persons-applications-authorization-data [person-oids]
+  (map ->kebab-case-kw
+       (exec-db :db yesql-persons-applications-authorization-data
+                {:person_oids person-oids})))
+
 (defn mass-update-application-states
   [session application-keys hakukohde-oid from-state to-state]
   (let [audit-log-entries (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
@@ -740,7 +694,8 @@
                                 (partial update-hakukohde-process-state! connection username organization-oid session hakukohde-oid from-state to-state)
                                 application-keys)))]
     (doseq [audit-log-entry audit-log-entries]
-      (audit-log/log audit-log-entry))))
+      (audit-log/log audit-log-entry))
+    true))
 
 (defn add-application-event [event session]
   (jdbc/with-db-transaction [db {:datasource (db/get-datasource :db)}]
