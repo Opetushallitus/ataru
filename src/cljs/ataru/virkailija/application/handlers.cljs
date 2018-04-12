@@ -462,13 +462,14 @@
 
 (reg-event-db
   :editor/handle-refresh-haut-and-hakukohteet
-  (fn [db [_ {:keys [tarjonta-haut direct-form-haut haut hakukohteet]}]]
+  (fn [db [_ {:keys [tarjonta-haut direct-form-haut haut hakukohteet hakukohderyhmat]}]]
     (-> db
         (assoc-in [:application :haut :tarjonta-haut] (keys-to-names tarjonta-haut))
         (assoc-in [:application :haut :direct-form-haut] (keys-to-names direct-form-haut))
         (assoc-in [:application :forms] (keys-to-names direct-form-haut))
         (update :haut merge (keys-to-names haut))
         (update :hakukohteet merge (keys-to-names hakukohteet))
+        (update :hakukohderyhmat merge (keys-to-names hakukohderyhmat))
         (update :fetching-haut dec)
         (update :fetching-hakukohteet dec))))
 

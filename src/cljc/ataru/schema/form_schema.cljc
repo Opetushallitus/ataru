@@ -477,7 +477,8 @@
 (s/defschema Haut {:tarjonta-haut    {s/Str TarjontaHaku}
                    :direct-form-haut {s/Str DirectFormHaku}
                    :haut             {s/Str Haku}
-                   :hakukohteet      {s/Str Hakukohde}})
+                   :hakukohteet      {s/Str Hakukohde}
+                   :hakukohderyhmat  {s/Str Hakukohderyhma}})
 
 (s/defschema ApplicationFeedback {:form-key   s/Str
                                   :form-id    s/Int

@@ -1,6 +1,7 @@
 (ns ataru.haku.haku-service
   (:require
    [ataru.util :as util]
+   [ataru.organization-service.organization-service :as organization-service]
    [ataru.organization-service.session-organizations :as session-orgs]
    [ataru.applications.application-store :as application-store]
    [ataru.forms.form-store :as form-store]
@@ -107,8 +108,11 @@
                             distinct
                             (keep #(tarjonta/get-haku tarjonta-service %))
                             (map tarjonta-service/parse-haku)
-                            (reduce #(assoc %1 (:oid %2) %2) {}))
+                            (util/group-by-first :oid))
      :hakukohteet      (->> (keys tarjonta-haut)
                             distinct
                             (mapcat #(tarjonta/hakukohde-search tarjonta-service % nil))
-                            (reduce #(assoc %1 (:oid %2) %2) {}))}))
+                            (util/group-by-first :oid))
+     :hakukohderyhmat  (util/group-by-first
+                        :oid
+                        (organization-service/get-hakukohde-groups organization-service))}))
