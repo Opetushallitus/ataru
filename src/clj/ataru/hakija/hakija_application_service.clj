@@ -30,8 +30,8 @@
     [clj-time.coerce :as t]
     [ataru.applications.application-service :as application-service]))
 
-(defn- store-and-log [application store-fn]
-  (let [application-id (store-fn application)]
+(defn- store-and-log [application applied-hakukohteet store-fn]
+  (let [application-id (store-fn application applied-hakukohteet)]
     (log/info "Stored application with id: " application-id)
     {:passed?        true
      :id application-id
@@ -172,7 +172,7 @@
       :else
       (do
         (remove-orphan-attachments final-application latest-application)
-        (store-and-log final-application store-fn)))))
+        (store-and-log final-application applied-hakukohteet store-fn)))))
 
 (defn- start-person-creation-job [application-id]
   (log/info "Started person creation job (to person service) with job id"
