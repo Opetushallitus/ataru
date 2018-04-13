@@ -19,7 +19,8 @@
             [clojure.java.jdbc :as jdbc]
             [schema.core :as s]
             [taoensso.timbre :refer [info]]
-            [yesql.core :refer [defqueries]]))
+            [yesql.core :refer [defqueries]]
+            [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]))
 
 (defqueries "sql/application-queries.sql")
 (defqueries "sql/virkailija-credentials-queries.sql")
@@ -77,28 +78,66 @@
 
 (defn- create-attachment-reviews
   [attachment-field application-key hakutoiveet]
-  (let [review-base {:application_key application-key
-                     :attachment_key  (:id attachment-field)
-                     :state           "not-checked"}]
+  (let [review-base                        {:application_key application-key
+                                            :attachment_key  (:id attachment-field)
+                                            :state           "not-checked"}
+        relevant-field-hakukohde-oids      (clojure.set/intersection (set (map :oid hakutoiveet))
+                                                                     (-> attachment-field :belongs-to-hakukohteet set))
+        relevant-field-hakukohderyhma-oids (->> hakutoiveet
+                                                (filter #(not-empty (clojure.set/intersection (-> attachment-field :belongs-to-hakukohderyhma set)
+                                                                                              (-> % :ryhmaliitokset set))))
+                                                (map :oid))
+        hakukohde-oids                     (concat relevant-field-hakukohde-oids relevant-field-hakukohderyhma-oids)]
     (map #(assoc review-base :hakukohde %)
          (cond
-           (not-empty (:belongs-to-hakukohteet attachment-field))
-           (clojure.set/intersection (set hakutoiveet)
-                                     (-> attachment-field :belongs-to-hakukohteet set))
+           (or (-> attachment-field :belongs-to-hakukohderyhma not-empty)
+               (-> attachment-field :belongs-to-hakukohteet not-empty))
+           hakukohde-oids
 
            (not-empty hakutoiveet)
-           hakutoiveet
+           (map :oid hakutoiveet)
 
            :else ["form"]))))
 
+(defn- followup-option-selected?
+  [field answers]
+  (let [parent-answer-key (-> field :followup-of keyword)
+        answers    (-> answers
+                       parent-answer-key
+                       :value
+                       vector ; Make sure we won't flatten a string answer to ()
+                       flatten
+                       set)]
+    (contains? answers (:option-value field))))
+
+(defn- filter-relevant-attachments
+  [answers fields]
+  (filter (fn [field]
+            (and (= "attachment" (:fieldType field))
+                 (or (not (contains? field :followup-of))
+                     (followup-option-selected? field answers))))
+          fields))
+
+(defn- parse-hakukohde
+  [oid hakukohde]
+  {:oid            (or (:oid hakukohde) oid)
+   :ryhmaliitokset (some->> (:ryhmaliitokset hakukohde)
+                            (map #(:ryhmaOid %)))})
+
+(defn- get-hakukohde-rymaliitoket
+  [oid]
+  (parse-hakukohde oid (tarjonta-client/get-hakukohde oid)))
+
 (defn- create-attachment-hakukohde-reviews-for-application
   [application connection]
-  (doseq [review (->> (forms/fetch-by-id (:form_id application))
-                      :content
-                      util/flatten-form-fields
-                      (filter #(= "attachment" (:fieldType %)))
-                      (mapcat #(create-attachment-reviews % (:key application) (:hakukohde application))))]
-    (yesql-save-attachment-review! review connection)))
+  (let [hakutoiveet (map get-hakukohde-rymaliitoket (:hakukohde application))
+        reviews (->> (forms/fetch-by-id (:form_id application))
+                     :content
+                     util/flatten-form-fields
+                     (filter-relevant-attachments (-> application :content :answers util/answers-by-key))
+                     (mapcat #(create-attachment-reviews % (:key application) hakutoiveet)))]
+    (doseq [review reviews]
+      (yesql-save-attachment-review! review connection))))
 
 (defn- add-new-application-version
   "Add application and also initial metadata (event for receiving application, and initial review record)"
