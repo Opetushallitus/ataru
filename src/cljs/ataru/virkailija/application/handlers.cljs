@@ -259,6 +259,13 @@
     (fetch-applications-fx db (str "/lomake-editori/api/applications/list?hakukohdeOid=" hakukohde-oid))))
 
 (reg-event-fx
+  :application/fetch-applications-by-hakukohderyhma
+  (fn [{:keys [db]} [_ [haku-oid hakukohderyhma-oid]]]
+    (fetch-applications-fx db (str "/lomake-editori/api/applications/list"
+                                   "?hakuOid=" haku-oid
+                                   "&hakukohderyhmaOid=" hakukohderyhma-oid))))
+
+(reg-event-fx
   :application/fetch-applications-by-haku
   (fn [{:keys [db]} [_ haku-oid]]
     (fetch-applications-fx db (str "/lomake-editori/api/applications/list?hakuOid=" haku-oid))))
@@ -429,33 +436,50 @@
       (cond-> {:db db}
         (some? autosave) (assoc :stop-autosave autosave)))))
 
+(defn- clear-selection
+  [db]
+  (update db :application dissoc
+          :selected-form-key
+          :selected-haku
+          :selected-hakukohde
+          :selected-hakukohderyhma))
+
 (reg-event-fx
- :application/clear-applications-haku-and-form-selections
- (fn [{db :db} _]
-   (cljs-util/unset-query-param "term")
-   {:db (-> db
-            (assoc-in [:editor :selected-form-key] nil)
-            (assoc-in [:application :applications] nil)
-            (assoc-in [:application :search-control :search-term :value] "")
-            (update-in [:application] dissoc :selected-form-key :selected-haku :selected-hakukohde))}))
+  :application/clear-applications-haku-and-form-selections
+  (fn [{db :db} _]
+    (cljs-util/unset-query-param "term")
+    {:db (-> db
+             (assoc-in [:editor :selected-form-key] nil)
+             (assoc-in [:application :applications] nil)
+             (assoc-in [:application :search-control :search-term :value] "")
+             clear-selection)}))
 
 (reg-event-db
- :application/select-form
- (fn [db [_ form-key]]
-   (assoc-in db [:application :selected-form-key] form-key)))
+  :application/select-form
+  (fn [db [_ form-key]]
+    (-> db
+        clear-selection
+        (assoc-in [:application :selected-form-key] form-key))))
 
 (reg-event-db
   :application/select-hakukohde
   (fn [db [_ hakukohde-oid]]
     (-> db
-        (update-in [:application] dissoc :selected-form-key :selected-haku)
+        clear-selection
         (assoc-in [:application :selected-hakukohde] hakukohde-oid))))
+
+(reg-event-db
+  :application/select-hakukohderyhma
+  (fn [db [_ [haku-oid hakukohderyhma-oid]]]
+    (-> db
+        clear-selection
+        (assoc-in [:application :selected-hakukohderyhma] [haku-oid hakukohderyhma-oid]))))
 
 (reg-event-db
   :application/select-haku
   (fn [db [_ haku-oid]]
     (-> db
-        (update :application dissoc :selected-form-key :selected-hakukohde)
+        clear-selection
         (assoc-in [:application :selected-haku] haku-oid))))
 
 (defn- keys-to-names [m] (reduce-kv #(assoc %1 (name %2) %3) {} m))

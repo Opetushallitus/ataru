@@ -25,19 +25,35 @@
 (re-frame/reg-sub
   :application/list-heading-data-for-haku
   (fn [db]
-    (let [selected-hakukohde-oid (get-in db [:application :selected-hakukohde])
-          selected-haku-oid      (if selected-hakukohde-oid
-                                   (->> (get-in db [:application :haut :tarjonta-haut])
-                                        (filter (fn [[_ {:keys [hakukohteet]}]]
-                                                  (some (fn [{:keys [oid]}]
-                                                          (= selected-hakukohde-oid oid))
-                                                        hakukohteet)))
-                                        ffirst)
-                                   (get-in db [:application :selected-haku]))]
+    (let [selected-hakukohde-oid  (get-in db [:application :selected-hakukohde])
+          selected-hakukohderyhma (get-in db [:application :selected-hakukohderyhma])
+          selected-haku-oid       (cond (some? selected-hakukohde-oid)
+                                        (->> (get-in db [:application :haut :tarjonta-haut])
+                                             (filter (fn [[_ {:keys [hakukohteet]}]]
+                                                       (some (fn [{:keys [oid]}]
+                                                               (= selected-hakukohde-oid oid))
+                                                             hakukohteet)))
+                                             ffirst)
+                                        (some? selected-hakukohderyhma)
+                                        (first selected-hakukohderyhma)
+                                        :else
+                                        (get-in db [:application :selected-haku]))
+          haun-hakukohteet        (map :oid (get-in db [:application
+                                                        :haut
+                                                        :tarjonta-haut
+                                                        selected-haku-oid
+                                                        :hakukohteet]))
+          haun-hakukohderyhmat    (distinct (mapcat (fn [hakukohde-oid]
+                                                      (get-in db [:hakukohteet
+                                                                  hakukohde-oid
+                                                                  :ryhmaliitokset]))
+                                                    haun-hakukohteet))]
       (when selected-haku-oid
         [selected-haku-oid
          selected-hakukohde-oid
-         (map :oid (get-in db [:application :haut :tarjonta-haut selected-haku-oid :hakukohteet]))]))))
+         (second selected-hakukohderyhma)
+         haun-hakukohteet
+         haun-hakukohderyhmat]))))
 
 (re-frame/reg-sub
   :application/application-list-selected-by
@@ -46,16 +62,22 @@
       (cond
         (:selected-form-key db-application) :selected-form-key
         (:selected-haku db-application) :selected-haku
-        (:selected-hakukohde db-application) :selected-hakukohde))))
+        (:selected-hakukohde db-application) :selected-hakukohde
+        (:selected-hakukohderyhma db-application) :selected-hakukohderyhma))))
 
 (re-frame/reg-sub
- :application/application-list-belongs-to-haku?
+ :application/show-mass-update-link?
  (fn [db]
-   (boolean
-    (or
-     (get-in db [:application :selected-haku])
-     (get-in db [:application :selected-hakukohde])
-     (get-in db [:application :selected-form-key])))))
+   (and (not-empty @(re-frame/subscribe [:application/filtered-applications]))
+        (contains? #{:selected-form-key :selected-haku :selected-hakukohde}
+                   @(re-frame/subscribe [:application/application-list-selected-by])))))
+
+(re-frame/reg-sub
+ :application/show-excel-link?
+ (fn [db]
+   (and (not-empty @(re-frame/subscribe [:application/filtered-applications]))
+        (contains? #{:selected-form-key :selected-haku :selected-hakukohde}
+                   @(re-frame/subscribe [:application/application-list-selected-by])))))
 
 (defn- haku-completely-processed?
   [haku]
@@ -184,6 +206,12 @@
              (str " - " tarjoaja-name)))
       (when (zero? (:fetching-hakukohteet db))
         hakukohde-oid))))
+
+(re-frame/reg-sub
+  :application/hakukohderyhma-name
+  (fn [db [_ hakukohderyhma-oid]]
+    (when-let [hakukohderyhma (get-in db [:hakukohderyhmat hakukohderyhma-oid])]
+      (or (from-multi-lang (:name hakukohderyhma) :fi) hakukohderyhma-oid))))
 
 (re-frame/reg-sub
   :application/haku-name

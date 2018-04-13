@@ -87,7 +87,15 @@
     (dispatch [:application/select-hakukohde hakukohde-oid])
     (dispatch [:application/fetch-applications-by-hakukohde hakukohde-oid]))
 
-  (defroute #"^/lomake-editori/applications/haku/(.*)" [haku-oid query-params]
+  (defroute "/lomake-editori/applications/haku/:haku-oid/hakukohderyhma/:hakukohderyhma-oid"
+    [haku-oid hakukohderyhma-oid]
+    (common-actions-for-applications-route)
+    (dispatch [:application/close-search-control])
+    (dispatch [:application/select-hakukohderyhma [haku-oid hakukohderyhma-oid]])
+    (dispatch [:application/fetch-applications-by-hakukohderyhma [haku-oid hakukohderyhma-oid]]))
+
+  (defroute "/lomake-editori/applications/haku/:haku-oid"
+    [haku-oid]
     (common-actions-for-applications-route)
     (dispatch [:application/close-search-control])
     (dispatch [:application/select-haku haku-oid])
