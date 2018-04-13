@@ -66,7 +66,7 @@ body {
   margin-top: 13px;
 }
 .application__form-field {
-  margin-left: 245px;
+  margin-left: @field-margin-left;
   display: flex;
   flex-direction: column;
   margin-bottom: 20px;
@@ -133,7 +133,7 @@ body {
 
 .application__wrapper-heading {
   position: absolute;
-  width: 245px;
+  width: @field-margin-left;
   h2 {
     color: @text-color;
     font-size: 16px;
@@ -143,13 +143,6 @@ body {
   }
 }
 
-.application__wrapper-heading-block {
-  position: relative;
-}
-
-.application__wrapper-element--border {
-  border-top: solid 1px @review-separator-color;
-}
 .application__scroll-to-anchor {
   position: relative;
   top: -@total-banner-height;
@@ -316,6 +309,7 @@ body {
   color: @gray;
 }
 .application__wrapper-element {
+  border-top: solid 1px @review-separator-color;
   margin-bottom: 32px;
   position: relative; /* So that we can make wrapper heading absolute */
   min-height: 65px;
@@ -324,7 +318,7 @@ body {
 .application__question-group {
   display: flex;
   flex-direction: column;
-  margin-left: 245px;
+  margin-left: @field-margin-left;
   margin-bottom: 20px;
   max-width: 610px;
 
@@ -900,6 +894,7 @@ and (max-width: @desktop-content-width) {
     position: static;
     margin-left: 10px;
   }
+
   /*
      Without this first selector, the rule will be dependent on include
      order (for row fields) which seems to be pretty random
@@ -1023,26 +1018,32 @@ and (max-width: @desktop-content-width) {
   margin-bottom: 0;
 }
 
-.application__hakukohde-selected-list {
-  margin-right: 30px;
-  margin-top: -15px;
+.application__hakukohde-selection-open-search-wrapper {
+  border: 1px dashed @gray-of-the-beast;
+  border-image-source: url(/hakemus/images/border.png);
+  border-image-slice: 2;
+  border-image-repeat: round;
+  padding: 25px 0px 25px 0px;
 }
 
 .application__hakukohde-selection-open-search {
   color: @pale-blue;
+  margin-left: 40px;
+
+  &--disabled {
+    color: @sg-gray-lighten-3;
+    cursor: default;
+  }
 }
 
-.application__hakukohde-selection-open-search--inactive {
-  color: @sg-gray-lighten-3;
+.application__hakukohde-max-selected {
+  color: @gray-of-the-beast;
+  font-style: italic;
 }
 
 .application__hakukohde-selection-search-no-hits {
   margin-top: 10px;
   .light;
-}
-
-.application__hakukohde-selection-max-label {
-  margin-left: 8px;
 }
 
 .application__hakukohde-selection-search-arrow-up {
@@ -1082,6 +1083,7 @@ and (max-width: @desktop-content-width) {
 .application__hakukohde-row-priority-container {
   display: flex;
   flex-direction: column;
+  margin-right: 16px;
   font-size: 30px;
   align-items: center;
   cursor: default;
@@ -1131,6 +1133,7 @@ and (max-width: @desktop-content-width) {
 .application__hakukohde-selection-search-input {
   width: 400px;
   padding: 0;
+  margin-bottom: 11px;
 
   @media only screen and (max-width: @desktop-content-width) {
     max-width: 400px;
@@ -1150,85 +1153,44 @@ and (max-width: @desktop-content-width) {
 }
 
 .application__hakukohde-row {
-  padding: 20px 0;
-  position: relative;
+  padding-bottom: 11px;
+  margin-bottom: 11px;
   border-bottom: 1px solid @separator-color;
   display: flex;
-  align-items: center;
 
-  @media only screen and (max-width: @desktop-content-width) {
-    margin-left: 10px;
+  &:last-child {
+    border: 0;
+    margin-bottom: 21px;
   }
-
-}
-.application__hakukohde-row--search-toggle {
-  display: flex;
-  align-items: center;
-  position: relative;
-  cursor: pointer;
-  color: @gray-of-the-beast;
-  padding: 20px 0px 20px 0px;
-  i {
-    opacity: 0.33;
-  }
-  margin-top: 15px;
-  margin-bottom: 10px;
-  border-width: 1px;
-  border-color: white;
-  border-style: dashed;
-
-  &.application__hakukohde-row--search-toggle--closed {
-    border-width: 1px;
-    border-style: dashed;
-    border-color: @gray-of-the-beast;
-    border-image-source: url(/hakemus/images/border.png);
-    border-image-slice: 2;
-    border-image-repeat: round;
-  }
-
-  &.application__hakukohde-row--search-toggle--prioritized {
-    padding-left: 20px;
-  }
-
-  .unselectable
 }
 
-.application__hakukohde-priority-number-readonly {
+.application__hakukohde-priority-number-readonly {
   font-size: 30px;
   cursor: default;
   margin: 0;
   padding-right: 10px;
 }
 
-.application__hakukohde-row--selected {
-  padding: 0;
-  min-height: 88px;
-}
-
-.application__hakukohde-row--selected.fadeIn {
+.application__hakukohde-row.fadeIn {
   -webkit-animation-duration: 0.7s;
   -moz-animation-duration: 0.7s;
   -o-animation-duration: 0.7s;
   animation-duration: 0.7s;
 }
 
-.application__hakukohde-row--selected.fadeOut {
+.application__hakukohde-row.fadeOut {
   -webkit-animation-duration: 0.5s;
   -moz-animation-duration: 0.5s;
   -o-animation-duration: 0.5s;
   animation-duration: 0.5s;
 }
 
-.application__hakukohde-row:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
-}
 .application__hakukohde-selection {
-  margin-top: -25px;
   animation: 0.8s fadeIn;
   animation-fill-mode: forwards;
 
 }
+
 @keyframes fadeIn {
   0% {
     opacity: 0;
@@ -1249,13 +1211,9 @@ and (max-width: @desktop-content-width) {
   color: @gray-of-the-beast;
 }
 
-.application__hakukohde-row-icon-container {
-  color: @blue-text-color;
-  margin: 0 15px;
-}
-
 .application__hakukohde-row-text-container {
-   padding-right: 140px;
+  margin-right: 16px;
+  flex: 2;
 }
 
 .application__hakukohde-selected-row-header {
@@ -1275,10 +1233,9 @@ and (max-width: @desktop-content-width) {
 }
 
 .application__hakukohde-row-button-container {
-  position: absolute;
-  right: 20px;
-  top: 25px;
   color: @pale-blue;
+  min-width: 78px;
+  text-align: right;
   &[disabled] {
     opacity: 0.33;
     a {
@@ -1299,16 +1256,29 @@ and (max-width: @desktop-content-width) {
 }
 
 .application__hakukohde-select-button {
+  border: 0;
   border-radius: 3px;
   padding: 8px 20px;
   color: @white;
   background-color: @pale-blue;
-}
-
-.application__hakukohde-select-button--disabled {
-  background-color: @sg-gray-lighten-3;
-  color: @white;
-  cursor: default;
+  font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  cursor: pointer;
+  &:focus {
+    outline: none;
+  }
+  &::-moz-focus-inner {
+    border: 0;
+  }
+  &:hover {
+    border: 0;
+    background-color: @pale-blue;
+  }
+  &:disabled {
+    background-color: @sg-gray-lighten-3;
+    color: @white;
+    cursor: default;
+  }
 }
 
 .application__question_hakukohde_names_container {

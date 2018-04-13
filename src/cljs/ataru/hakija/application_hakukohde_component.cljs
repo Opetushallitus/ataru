@@ -148,14 +148,12 @@
         prioritize-hakukohteet? @(subscribe [:application/prioritize-hakukohteet?])
         haku-editable? @(subscribe [:application/hakukohteet-editable?])
         hakukohde-editable? @(subscribe [:application/hakukohde-hakuaika-on? hakukohde-oid])]
-    [:div.application__hakukohde-row.application__hakukohde-row--selected.animated
+    [:div.application__hakukohde-row.animated
      {:class (if deleting?
                "fadeOut"
                "fadeIn")}
      (when prioritize-hakukohteet?
        [prioritize-hakukohde-buttons hakukohde-oid (not hakukohde-editable?)])
-     [:div.application__hakukohde-row-icon-container
-      [:i.zmdi.zmdi-graduation-cap.zmdi-hc-3x]]
      [:div.application__hakukohde-row-text-container.application__hakukohde-row-text-container--selected
       [:div.application__hakukohde-selected-row-header
        @(subscribe [:application/hakukohde-label hakukohde-oid])]
@@ -188,28 +186,22 @@
       [:div.application__hakukohde-selected-row-description
        {:id aria-description-id}
        (hilight-text @(subscribe [:application/hakukohde-description hakukohde-oid]) search-term)]]
-      (cond
-        (not hakukohde-hakuaika-on?) [:div.application__hakukohde-row-additional-text-container
-                                      {:aria-labelledby  aria-header-id
-                                       :aria-describedby aria-description-id
-                                       :aria-disabled    true}
-                                      (get-translation :not-selectable-application-period-ended)]
-        :else [:div.application__hakukohde-row-button-container
-               (cond
-                 hakukohde-selected? [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
-                 hakukohteet-full? [:a.application__hakukohde-select-button.application__hakukohde-select-button--disabled
-                                    {:role             "button"
-                                     :aria-labelledby  aria-header-id
-                                     :aria-describedby aria-description-id
-                                     :aria-disabled    true}
-                                    (get-translation :add)]
-                 :else [:a.application__hakukohde-select-button
-                        {:on-click           hakukohde-select-event-handler
-                         :role               "button"
-                         :data-hakukohde-oid hakukohde-oid
-                         :aria-labelledby    aria-header-id
-                         :aria-describedby   aria-description-id}
-                        (get-translation :add)])])]))
+     (if hakukohde-hakuaika-on?
+       [:div.application__hakukohde-row-button-container
+        (if hakukohde-selected?
+          [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
+          [:button.application__hakukohde-select-button
+           {:data-hakukohde-oid hakukohde-oid
+            :on-click           hakukohde-select-event-handler
+            :disabled           hakukohteet-full?
+            :aria-labelledby    aria-header-id
+            :aria-describedby   aria-description-id}
+           (get-translation :add)])]
+       [:div.application__hakukohde-row-additional-text-container
+        {:aria-labelledby  aria-header-id
+         :aria-describedby aria-description-id
+         :aria-disabled    true}
+        (get-translation :not-selectable-application-period-ended)])]))
 
 (defn- hakukohde-selection-search
   []
@@ -250,38 +242,31 @@
 
 (defn- hakukohde-selection-header
   [field-descriptor]
-  [:div.application__wrapper-heading.application__wrapper-heading-block
+  [:div.application__wrapper-heading
    [:h2 @(subscribe [:application/hakukohteet-header])]
    [scroll-to-anchor field-descriptor]])
 
 (defn- select-new-hakukohde-row []
   (when @(subscribe [:application/hakukohteet-editable?])
-    [:div
-     [:div.application__hakukohde-row--search-toggle
-      {:on-click hakukohde-search-toggle-event-handler
-       :role     "button"
-       :class    (clojure.string/join " " [(when (not @(subscribe [:application/show-hakukohde-search]))
-                                             "application__hakukohde-row--search-toggle--closed")
-                                           (when @(subscribe [:application/prioritize-hakukohteet?])
-                                             "application__hakukohde-row--search-toggle--prioritized")])}
-      [:div.application__hakukohde-row-icon-container
-       [:i.zmdi.zmdi-graduation-cap.zmdi-hc-3x]]
-      (let [hakukohteet-full? @(subscribe [:application/hakukohteet-full?])]
-        [:a.application__hakukohde-selection-open-search
-         {:class (when hakukohteet-full? "application__hakukohde-selection-open-search--inactive")}
-         (get-translation :add-application-option)
-         (when-let [max-hakukohteet @(subscribe [:application/max-hakukohteet])]
-           [:span.application__hakukohde-selection-max-label
-            (get-translation :applications_at_most max-hakukohteet)])])]
-     (when @(subscribe [:application/show-hakukohde-search])
-       [hakukohde-selection-search])]))
+    (if @(subscribe [:application/hakukohteet-full?])
+      (let [max-hakukohteet @(subscribe [:application/max-hakukohteet])]
+        [:span.application__hakukohde-max-selected
+         (get-translation :applications_at_most max-hakukohteet)])
+      [:div.application__hakukohde-selection-open-search-wrapper
+       [:a.application__hakukohde-selection-open-search
+        {:on-click hakukohde-search-toggle-event-handler}
+        (get-translation :add-application-option)]])))
 
 (defn hakukohteet
   [field-descriptor]
-  [:div.application__wrapper-element.application__wrapper-element-border
+  [:div.application__wrapper-element
    [hakukohde-selection-header field-descriptor]
-   [:div.application__hakukohde-selected-list
-    (for [hakukohde-oid @(subscribe [:application/selected-hakukohteet])]
-      ^{:key (str "selected-hakukohde-row-" hakukohde-oid)}
-      [selected-hakukohde-row hakukohde-oid])]
-    (select-new-hakukohde-row)])
+   [:div.application__wrapper-contents
+    [:div.application__form-field
+     [:div.application__hakukohde-selected-list
+      (for [hakukohde-oid @(subscribe [:application/selected-hakukohteet])]
+        ^{:key (str "selected-hakukohde-row-" hakukohde-oid)}
+        [selected-hakukohde-row hakukohde-oid])]
+     [select-new-hakukohde-row]
+     (when @(subscribe [:application/show-hakukohde-search])
+       [hakukohde-selection-search])]]])

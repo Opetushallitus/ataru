@@ -14,7 +14,7 @@
         wait.until(function() { return formSections().length == 3 }, 10000)
       )
       it('with complete form and default hakukohde selected', function() {
-        expect(formFields().length).to.equal(14)
+        expect(formFields().length).to.equal(15)
         expect(submitButton().prop('disabled')).to.equal(true)
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 10 tietoa')
         expect(formHeader().text()).to.equal('testing2')

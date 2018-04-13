@@ -133,9 +133,9 @@
    :add-application-option                  {:fi "Lisää hakukohde"
                                              :sv "Lägg till ansökningsmål"
                                              :en "Add application option"}
-   :applications_at_most                    {:fi "(enintään %s)"
-                                             :sv "(som mest %s)"
-                                             :en "(at most %s)"}
+   :applications_at_most                    {:fi "Tässä haussa voit hakea %s hakukohteeseen"
+                                             :sv "Tässä haussa voit hakea %s hakukohteeseen"
+                                             :en "Tässä haussa voit hakea %s hakukohteeseen"}
    :file-upload-failed                      {:fi "Tiedostoa ei ladattu, yritä uudelleen"
                                              :en "File failed to upload, try again"
                                              :sv "Fil inte laddat, försök igen"}
