@@ -477,21 +477,20 @@
   [oid]
   (parse-hakukohde oid (tarjonta-client/get-hakukohde oid)))
 
-(def get-cached-hakukohde-and-ryhmaliitokset (memoize get-hakukohde-rymaliitoket))
-
 (defn- migrate-attachment-states-to-applications
   [connection]
-  (doseq [key    (migration-app-store/get-1.92-latest-application-keys connection)
-          :let [application (migration-app-store/get-1.92-application connection key)
-                hakutoiveet (map get-cached-hakukohde-and-ryhmaliitokset (:hakukohde application))
-                form        (migration-app-store/get-1.92-form-by-id connection (:form_id application))]
-          review (->> form
-                      :content
-                      :content
-                      util/flatten-form-fields
-                      (filter-relevant-attachments (-> application :content :answers util/answers-by-key))
-                      (mapcat #(create-attachment-reviews % (:key application) hakutoiveet)))]
-    (migration-app-store/insert-1.92-attachment-review connection review)))
+  (let [get-cached-hakukohde-and-ryhmaliitokset (memoize get-hakukohde-rymaliitoket)]
+    (doseq [key    (migration-app-store/get-1.92-latest-application-keys connection)
+            :let [application (migration-app-store/get-1.92-application connection key)
+                  hakutoiveet (map get-cached-hakukohde-and-ryhmaliitokset (:hakukohde application))
+                  form        (migration-app-store/get-1.92-form-by-id connection (:form_id application))]
+            review (->> form
+                        :content
+                        :content
+                        util/flatten-form-fields
+                        (filter-relevant-attachments (-> application :content :answers util/answers-by-key))
+                        (mapcat #(create-attachment-reviews % (:key application) hakutoiveet)))]
+      (migration-app-store/insert-1.92-attachment-review connection review))))
 
 (migrations/defmigration
   migrate-person-info-module "1.13"

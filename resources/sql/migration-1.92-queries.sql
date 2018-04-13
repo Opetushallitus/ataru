@@ -4,7 +4,7 @@ FROM latest_applications;
 
 -- name: yesql-get-1_92-application
 SELECT *
-FROM applications
+FROM latest_applications
 WHERE key = :key;
 
 -- name: yesql-get-1_92-form
