@@ -134,8 +134,11 @@
 (defn fetch-by-id [id connection]
   (first (yesql-get-by-id-1_90-query {:id id} {:connection connection})))
 
-(defn get-1.92-latest-application-key-form-and-hakukohde [connection]
-  (yesql-get-1_92-latest-application-key-form-and-hakukohde {} {:connection connection}))
+(defn get-1.92-latest-application-keys [connection]
+  (map :key (yesql-get-1_92-latest-application-keys {} {:connection connection})))
+
+(defn get-1.92-application [connection key]
+  (first (yesql-get-1_92-application {:key key} {:connection connection})))
 
 (defn get-1.92-form-by-id [connection id]
   (first (yesql-get-1_92-form {:id id} {:connection connection})))
