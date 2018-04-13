@@ -42,9 +42,13 @@
         :options   options}
        (cons field
          (->> options
-              (mapcat :followups)
-              flatten-form-fields
-              (map #(assoc % :followup? true))))
+              (mapcat (fn [option]
+                        (map (fn [followup]
+                               (assoc followup
+                                      :followup-of (:id field)
+                                      :option-value (:value option)))
+                             (:followups option))))
+              flatten-form-fields))
        :else field))))
 
 (defn form-fields-by-id [form]

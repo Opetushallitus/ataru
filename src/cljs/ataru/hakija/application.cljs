@@ -87,7 +87,7 @@
 (defn- remove-invisible-followup-values
   [answers flat-form ui]
   (let [followup-field-ids  (->> flat-form
-                                 (filter-vals #(:followup? %))
+                                 (filter-vals #(contains? % :followup-of))
                                  (keys)
                                  (map keyword)
                                  (set))
