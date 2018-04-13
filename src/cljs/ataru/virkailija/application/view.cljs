@@ -287,37 +287,36 @@
         (if-let [haku-name @(subscribe [:application/haku-name haku-oid])]
           haku-name
           [:i.zmdi.zmdi-spinner.spin])]
-       (if @list-opened
-         [:div.application-handling__dropdown-box-wrapper
-          [:div.application-handling__dropdown-box-opened
-           (haku-row close-list
-                     haku-oid
-                     (and (nil? selected-hakukohde-oid)
-                          (nil? selected-hakukohderyhma-oid)))
-           (doall
-            (for [hakukohde-oid hakukohde-oids]
-              ^{:key hakukohde-oid}
-              [hakukohde-row
-               close-list
-               hakukohde-oid
-               (= hakukohde-oid selected-hakukohde-oid)]))
-           (doall
-            (for [hakukohderyhma-oid hakukohderyhma-oids]
-              ^{:key hakukohderyhma-oid}
-              [hakukohderyhma-row
-               close-list
-               haku-oid
-               hakukohderyhma-oid
-               (= hakukohderyhma-oid selected-hakukohderyhma-oid)]))]]
-         (closed-row open-list
-                     (cond (some? selected-hakukohde-oid)
-                           @(subscribe [:application/hakukohde-name
-                                        selected-hakukohde-oid])
-                           (some? selected-hakukohderyhma-oid)
-                           @(subscribe [:application/hakukohderyhma-name
-                                        selected-hakukohderyhma-oid])
-                           :else
-                           all-hakukohteet-label)))])))
+       (when @list-opened
+         [:div.application-handling__dropdown-box-opened
+          (haku-row close-list
+                    haku-oid
+                    (and (nil? selected-hakukohde-oid)
+                         (nil? selected-hakukohderyhma-oid)))
+          (doall
+           (for [hakukohde-oid hakukohde-oids]
+             ^{:key hakukohde-oid}
+             [hakukohde-row
+              close-list
+              hakukohde-oid
+              (= hakukohde-oid selected-hakukohde-oid)]))
+          (doall
+           (for [hakukohderyhma-oid hakukohderyhma-oids]
+             ^{:key hakukohderyhma-oid}
+             [hakukohderyhma-row
+              close-list
+              haku-oid
+              hakukohderyhma-oid
+              (= hakukohderyhma-oid selected-hakukohderyhma-oid)]))])
+       (closed-row open-list
+                   (cond (some? selected-hakukohde-oid)
+                         @(subscribe [:application/hakukohde-name
+                                      selected-hakukohde-oid])
+                         (some? selected-hakukohderyhma-oid)
+                         @(subscribe [:application/hakukohderyhma-name
+                                      selected-hakukohderyhma-oid])
+                         :else
+                         all-hakukohteet-label))])))
 
 (defn selected-applications-heading
   [haku-data list-heading]
