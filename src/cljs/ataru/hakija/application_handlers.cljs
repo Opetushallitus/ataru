@@ -207,7 +207,7 @@
   [db field-descriptor option]
   (let [id (keyword (:id field-descriptor))
         selected? (get-in db [:application :answers id :options (:value option)])]
-    (reduce (partial set-field-visibility selected?)
+    (reduce (partial set-field-visibility (and selected?))
             db
             (:followups option))))
 
@@ -699,6 +699,7 @@
                                                      field-descriptor
                                                      valid?]))}}
         {:db (set-multiple-choice-followup-visibility db field-descriptor option)
+         :dispatch [:application/show-answers-belonging-to-hakukohteet]
          :validate {:value (get-in db [:application :answers id :value])
                     :answers (get-in db [:application :answers])
                     :field-descriptor field-descriptor
@@ -734,6 +735,7 @@
                  (assoc-in value-path new-value)
                  (set-multi-value-changed id :value)
                  (set-single-choice-followup-visibility field-descriptor value)))
+       :dispatch [:application/show-answers-belonging-to-hakukohteet]
        :validate {:value new-value
                   :answers (get-in db [:application :answers])
                   :field-descriptor field-descriptor

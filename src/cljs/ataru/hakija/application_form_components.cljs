@@ -26,6 +26,7 @@
 (defonce html-sanitizer (.build builder))
 
 (declare render-field)
+(declare visible?)
 
 (defn- text-field-size->class [size]
   (match size
@@ -472,7 +473,8 @@
     (fn [field-descriptor option parent-id question-group-idx]
       (let [on-change (fn [_]
                         (dispatch [:application/toggle-multiple-choice-option field-descriptor option question-group-idx]))
-            checked?  (subscribe [:application/multiple-choice-option-checked? parent-id value question-group-idx])]
+            checked?  (subscribe [:application/multiple-choice-option-checked? parent-id value question-group-idx])
+            ui        (subscribe [:state-query [:application :ui]])]
         [:div {:key option-id}
          [:input.application__form-checkbox
           (merge {:id        option-id
@@ -486,7 +488,10 @@
           (merge {:for option-id}
                  (when @cannot-edit? {:class "disabled"}))
           label]
-         (when (and @checked? (not-empty (:followups option)) (not question-group-idx))
+         (when (and @checked?
+                    (not-empty (:followups option))
+                    (some (partial visible? ui) (:followups option))
+                    (not question-group-idx))
            [multi-choice-followups (:followups option)])]))))
 
 (defn multiple-choice
@@ -538,7 +543,9 @@
         (merge {:for option-id}
                (when @cannot-edit? {:class "disabled"}))
         label]
-       (when (and @checked? (not-empty (:followups option)))
+       (when (and @checked?
+                  (not-empty (:followups option))
+                  (some (partial visible? (subscribe [:state-query [:application :ui]])) (:followups option)))
          [:div.application__form-single-choice-followups-indicator])])))
 
 (defn- single-choice-followups [field-descriptor]
@@ -549,7 +556,8 @@
                                            (map :followups)
                                            (first)))]
     (fn [field-descriptor]
-      (when (seq @followups)
+      (when (and (seq @followups)
+                 (some (partial visible? (subscribe [:state-query [:application :ui]])) @followups))
         [:div.application__form-multi-choice-followups-container.animated.fadeIn
          (for [followup @followups]
            ^{:key (:id followup)}
