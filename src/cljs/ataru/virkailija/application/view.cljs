@@ -252,6 +252,18 @@
                       (str "/lomake-editori/applications/hakukohde/" oid)
                       name))))
 
+(defn- hakukohderyhma-row
+  [close-list haku-oid oid selected?]
+  (let [name @(subscribe [:application/hakukohderyhma-name oid])]
+    (if selected?
+      (selected-row close-list name)
+      (unselected-row close-list
+                      (str "/lomake-editori/applications/haku/"
+                           haku-oid
+                           "/hakukohderyhma/"
+                           oid)
+                      name))))
+
 (defn- haku-row
   [close-list oid selected?]
   (if selected?
@@ -261,32 +273,50 @@
                     all-hakukohteet-label)))
 
 (defn haku-applications-heading
-  [[haku-oid selected-hakukohde-oid hakukohde-oids]]
+  [_]
   (let [list-opened (r/atom false)
         open-list   #(reset! list-opened true)
         close-list  #(reset! list-opened false)]
-    (fn [[haku-oid selected-hakukohde-oid hakukohde-oids]]
+    (fn [[haku-oid
+          selected-hakukohde-oid
+          selected-hakukohderyhma-oid
+          hakukohde-oids
+          hakukohderyhma-oids]]
       [:div.application-handling__header-haku-and-hakukohde
        [:div.application-handling__header-haku
         (if-let [haku-name @(subscribe [:application/haku-name haku-oid])]
           haku-name
           [:i.zmdi.zmdi-spinner.spin])]
-       (if @list-opened
-         [:div.application-handling__dropdown-box-wrapper
-          [:div.application-handling__dropdown-box-opened
-           (haku-row close-list haku-oid (nil? selected-hakukohde-oid))
-           (doall
-            (for [hakukohde-oid hakukohde-oids]
-              ^{:key hakukohde-oid}
-              [hakukohde-row
-               close-list
-               hakukohde-oid
-               (= hakukohde-oid selected-hakukohde-oid)]))]]
-         (closed-row open-list
-                     (if selected-hakukohde-oid
-                       @(subscribe [:application/hakukohde-name
-                                    selected-hakukohde-oid])
-                       all-hakukohteet-label)))])))
+       (when @list-opened
+         [:div.application-handling__dropdown-box-opened
+          (haku-row close-list
+                    haku-oid
+                    (and (nil? selected-hakukohde-oid)
+                         (nil? selected-hakukohderyhma-oid)))
+          (doall
+           (for [hakukohde-oid hakukohde-oids]
+             ^{:key hakukohde-oid}
+             [hakukohde-row
+              close-list
+              hakukohde-oid
+              (= hakukohde-oid selected-hakukohde-oid)]))
+          (doall
+           (for [hakukohderyhma-oid hakukohderyhma-oids]
+             ^{:key hakukohderyhma-oid}
+             [hakukohderyhma-row
+              close-list
+              haku-oid
+              hakukohderyhma-oid
+              (= hakukohderyhma-oid selected-hakukohderyhma-oid)]))])
+       (closed-row open-list
+                   (cond (some? selected-hakukohde-oid)
+                         @(subscribe [:application/hakukohde-name
+                                      selected-hakukohde-oid])
+                         (some? selected-hakukohderyhma-oid)
+                         @(subscribe [:application/hakukohderyhma-name
+                                      selected-hakukohderyhma-oid])
+                         :else
+                         all-hakukohteet-label))])))
 
 (defn selected-applications-heading
   [haku-data list-heading]
@@ -296,15 +326,17 @@
 
 (defn haku-heading
   []
-  (let [belongs-to-haku (subscribe [:application/application-list-belongs-to-haku?])
-        applications    (subscribe [:application/filtered-applications])
-        header          (subscribe [:application/list-heading])
-        haku-header     (subscribe [:application/list-heading-data-for-haku])]
+  (let [show-mass-update-link? (subscribe [:application/show-mass-update-link?])
+        show-excel-link?       (subscribe [:application/show-excel-link?])
+        applications           (subscribe [:application/filtered-applications])
+        header                 (subscribe [:application/list-heading])
+        haku-header            (subscribe [:application/list-heading-data-for-haku])]
     [:div.application-handling__header
      [selected-applications-heading @haku-header @header]
      [:div.editor-form__form-controls-container
-      [mass-update-applications-link]
-      (when @belongs-to-haku
+      (when @show-mass-update-link?
+        [mass-update-applications-link])
+      (when @show-excel-link?
         [excel-download-link @applications (second @haku-header) @header])]]))
 
 (defn- select-application

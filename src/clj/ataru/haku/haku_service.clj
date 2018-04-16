@@ -1,10 +1,12 @@
 (ns ataru.haku.haku-service
   (:require
    [ataru.util :as util]
+   [ataru.organization-service.organization-service :as organization-service]
    [ataru.organization-service.session-organizations :as session-orgs]
    [ataru.applications.application-store :as application-store]
    [ataru.forms.form-store :as form-store]
-   [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]))
+   [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
+   [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]))
 
 (defn- raw-haku-row->hakukohde
   [{:keys [hakukohde application-count processed processing]}]
@@ -60,15 +62,15 @@
 (defn- hakujen-tarjoajat [tarjonta-service haut]
   (util/map-kv (->> (map :hakukohde haut)
                     distinct
-                    (tarjonta-protocol/get-hakukohteet tarjonta-service)
+                    (tarjonta/get-hakukohteet tarjonta-service)
                     (util/group-by-first :oid))
                (comp set :tarjoajaOids)))
 
 (defn- remove-organization-oid [haku]
   (dissoc haku :organization-oid))
 
-(defn get-haut
-  [session organization-service tarjonta-service]
+(defn- get-tarjonta-haut
+  [organization-service tarjonta-service session]
   (session-orgs/run-org-authorized
    session
    organization-service
@@ -82,7 +84,8 @@
            handle-hakukohteet))
    #(handle-hakukohteet (application-store/get-haut))))
 
-(defn get-direct-form-haut [session organization-service]
+(defn- get-direct-form-haut
+  [organization-service session]
   (session-orgs/run-org-authorized
    session
    organization-service
@@ -95,3 +98,21 @@
    #(->> (application-store/get-direct-form-haut)
          (map remove-organization-oid)
          (util/group-by-first :key))))
+
+(defn get-haut
+  [organization-service tarjonta-service session]
+  (let [tarjonta-haut (get-tarjonta-haut organization-service tarjonta-service session)]
+    {:tarjonta-haut    tarjonta-haut
+     :direct-form-haut (get-direct-form-haut organization-service session)
+     :haut             (->> (keys tarjonta-haut)
+                            distinct
+                            (keep #(tarjonta/get-haku tarjonta-service %))
+                            (map tarjonta-service/parse-haku)
+                            (util/group-by-first :oid))
+     :hakukohteet      (->> (keys tarjonta-haut)
+                            distinct
+                            (mapcat #(tarjonta/hakukohde-search tarjonta-service % nil))
+                            (util/group-by-first :oid))
+     :hakukohderyhmat  (util/group-by-first
+                        :oid
+                        (organization-service/get-hakukohde-groups organization-service))}))

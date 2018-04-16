@@ -435,18 +435,7 @@
     (api/GET "/haut" {session :session}
       :summary "List haku and hakukohde information found for applications stored in system"
       :return ataru-schema/Haut
-      (let [tarjonta-haut (haku-service/get-haut session organization-service tarjonta-service)]
-        (ok {:tarjonta-haut    tarjonta-haut
-             :direct-form-haut (haku-service/get-direct-form-haut session organization-service)
-             :haut             (->> (keys tarjonta-haut)
-                                    distinct
-                                    (keep #(tarjonta/get-haku tarjonta-service %))
-                                    (map tarjonta-service/parse-haku)
-                                    (reduce #(assoc %1 (:oid %2) %2) {}))
-             :hakukohteet      (->> (keys tarjonta-haut)
-                                    distinct
-                                    (mapcat #(tarjonta/hakukohde-search tarjonta-service % nil))
-                                    (reduce #(assoc %1 (:oid %2) %2) {}))})))
+      (ok (haku-service/get-haut organization-service tarjonta-service session)))
 
     (api/context "/koodisto" []
       :tags ["koodisto-api"]
