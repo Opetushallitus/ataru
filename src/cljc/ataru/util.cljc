@@ -113,6 +113,7 @@
                 acc)))})))
 
 (defn followups? [dropdown-options]
+  (println dropdown-options)
   (some some? (mapcat :followups dropdown-options)))
 
 (defn resolve-followups [dropdown-options value]

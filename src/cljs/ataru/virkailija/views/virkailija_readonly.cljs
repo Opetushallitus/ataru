@@ -171,7 +171,7 @@
           true)))))
 
 (defn- followups [followups content application lang]
-  [:div
+  [:div.application-handling__followups-container
    (text content application lang nil)
    (into [:div]
      (for [followup followups
