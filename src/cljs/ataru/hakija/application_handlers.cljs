@@ -183,9 +183,26 @@
     (fn [languages]
       (mapv keyword languages))))
 
+(defn- selected-hakukohteet [db]
+  (map :value (get-in db [:application :answers :hakukohteet :values] [])))
+
+(defn selected-hakukohteet-and-ryhmat [db]
+  (let [selected-hakukohteet     (set (selected-hakukohteet db))
+        selected-hakukohderyhmat (->> (get-in db [:form :tarjonta :hakukohteet])
+                                      (filter #(contains? selected-hakukohteet (:oid %)))
+                                      (mapcat :hakukohderyhmat))]
+    (set (concat selected-hakukohteet selected-hakukohderyhmat))))
+
 (defn- set-field-visibility
   [visible? db field-descriptor]
   (let [id (keyword (:id field-descriptor))
+        belongs-to (set (concat (:belongs-to-hakukohderyhma field-descriptor)
+                                (:belongs-to-hakukohteet field-descriptor)))
+        visible? (and visible?
+                      (or (empty? belongs-to)
+                          (not-empty (clojure.set/intersection
+                                      belongs-to
+                                      (selected-hakukohteet-and-ryhmat db)))))
         db (assoc-in db [:application :ui id :visible?] visible?)]
     (if (or (= (:fieldType field-descriptor) "adjacentfieldset")
             (= (:fieldClass field-descriptor) "questionGroup"))
@@ -193,6 +210,24 @@
               db
               (:children field-descriptor))
       db)))
+
+(defn- field-intersection-with-selected-hakukohteet-and-ryhmat [db field]
+  (when-let [ids (seq (concat (:belongs-to-hakukohderyhma field)
+                              (:belongs-to-hakukohteet field)))]
+    (let [selected-hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat db)]
+      (clojure.set/intersection
+       (set ids)
+       selected-hakukohteet-and-ryhmat))))
+
+(defn toggle-answers-visibility-based-on-belongs-to-hakukohde-or-ryhma
+  [db]
+  (autil/reduce-form-fields
+    (fn [db field]
+      (if-let [intersection (field-intersection-with-selected-hakukohteet-and-ryhmat db field)]
+        (assoc-in db [:application :ui (keyword (:id field)) :visible?] (not (empty? intersection)))
+        db))
+    db
+    (get-in db [:form :content])))
 
 (defn- set-single-choice-followup-visibility
   [db field-descriptor value]
@@ -207,7 +242,7 @@
   [db field-descriptor option]
   (let [id (keyword (:id field-descriptor))
         selected? (get-in db [:application :answers id :options (:value option)])]
-    (reduce (partial set-field-visibility (and selected?))
+    (reduce (partial set-field-visibility selected?)
             db
             (:followups option))))
 
@@ -446,6 +481,7 @@
         (assoc :wrapper-sections (extract-wrapper-sections form))
         (merge-submitted-answers answers)
         (original-values->answers)
+        (toggle-answers-visibility-based-on-belongs-to-hakukohde-or-ryhma)
         (set-followup-visibility))))
 
 
@@ -468,7 +504,6 @@
                    (assoc-in [:form :selected-language] (or (keyword (:lang application)) :fi))
                    (handle-form (:answers application) form))
      :dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
-                  [:application/show-answers-belonging-to-hakukohteet]
                   [:application/hakukohde-query-change "" 0]
                   [:application/set-page-title]]}))
 
@@ -486,7 +521,6 @@
   (fn [{:keys [db]} [_ form]]
     {:db         (handle-form db nil form)
      :dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
-                  [:application/show-answers-belonging-to-hakukohteet]
                   [:application/hakukohde-query-change "" 0]
                   [:application/set-page-title]]}))
 
@@ -699,7 +733,6 @@
                                                      field-descriptor
                                                      valid?]))}}
         {:db (set-multiple-choice-followup-visibility db field-descriptor option)
-         :dispatch [:application/show-answers-belonging-to-hakukohteet]
          :validate {:value (get-in db [:application :answers id :value])
                     :answers (get-in db [:application :answers])
                     :field-descriptor field-descriptor
@@ -729,13 +762,11 @@
                  (update-in button-path (fn [answer]
                                           (assoc answer :value (mapv (partial mapv :value)
                                                                      (:values answer)))))
-                 (set-multi-value-changed id :value)
-                 (set-single-choice-followup-visibility field-descriptor value))
+                 (set-multi-value-changed id :value))
              (-> db
                  (assoc-in value-path new-value)
                  (set-multi-value-changed id :value)
                  (set-single-choice-followup-visibility field-descriptor value)))
-       :dispatch [:application/show-answers-belonging-to-hakukohteet]
        :validate {:value new-value
                   :answers (get-in db [:application :answers])
                   :field-descriptor field-descriptor

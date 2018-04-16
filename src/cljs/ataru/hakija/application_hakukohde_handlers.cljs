@@ -3,40 +3,13 @@
     [clojure.string :as string]
     [re-frame.core :refer [subscribe reg-event-db reg-fx reg-event-fx dispatch]]
     [ataru.util :as util]
-    [ataru.hakija.application-validators :as validator]))
+    [ataru.hakija.application-validators :as validator]
+    [ataru.hakija.application-handlers :refer [toggle-answers-visibility-based-on-belongs-to-hakukohde-or-ryhma]]))
 
 (defn- hakukohteet-field [db]
   (->> (:flat-form-content db)
        (filter #(= "hakukohteet" (:id %)))
        first))
-
-(defn- selected-hakukohteet [db]
-  (map :value (get-in db [:application :answers :hakukohteet :values] [])))
-
-(defn- selected-hakukohteet-and-ryhmat [db]
-  (let [selected-hakukohteet     (set (selected-hakukohteet db))
-        selected-hakukohderyhmat (->> (get-in db [:form :tarjonta :hakukohteet])
-                                      (filter #(contains? selected-hakukohteet (:oid %)))
-                                      (mapcat :hakukohderyhmat))]
-    (set (concat selected-hakukohteet selected-hakukohderyhmat))))
-
-(defn- field-intersection-with-selected-hakukohteet-and-ryhmat [db field]
-  (when-let [ids (seq (concat (:belongs-to-hakukohderyhma field)
-                              (:belongs-to-hakukohteet field)))]
-    (let [selected-hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat db)]
-      (clojure.set/intersection
-       (set ids)
-       selected-hakukohteet-and-ryhmat))))
-
-(defn- set-visibility-of-belongs-to-hakukohteet-questions
-  [db]
-  (util/reduce-form-fields
-    (fn [db field]
-      (if-let [intersection (field-intersection-with-selected-hakukohteet-and-ryhmat db field)]
-        (assoc-in db [:application :ui (keyword (:id field)) :visible?] (not (empty? intersection)))
-        db))
-    db
-    (get-in db [:form :content])))
 
 (defn- set-values-changed
   [db]
@@ -121,7 +94,7 @@
                                   (assoc-in [:application :answers :hakukohteet :values]
                                             new-hakukohde-values)
                                   set-values-changed
-                                  set-visibility-of-belongs-to-hakukohteet-questions)]
+                                  toggle-answers-visibility-based-on-belongs-to-hakukohde-or-ryhma)]
      {:db       (cond-> db
                   (and (some? max-hakukohteet)
                        (<= max-hakukohteet (count new-hakukohde-values)))
@@ -148,7 +121,7 @@
                           new-hakukohde-values)
                 (update-in [:application :ui :hakukohteet :deleting] remove-hakukohde-from-deleting hakukohde-oid)
                 set-values-changed
-                set-visibility-of-belongs-to-hakukohteet-questions)]
+                toggle-answers-visibility-based-on-belongs-to-hakukohde-or-ryhma)]
      {:db db
       :validate {:value new-hakukohde-values
                  :answers (get-in db [:application :answers])
@@ -164,11 +137,6 @@
     {:db             (update-in db [:application :ui :hakukohteet :deleting] (comp set conj) hakukohde-oid)
      :dispatch-later [{:ms       500
                        :dispatch [:application/hakukohde-remove hakukohde-oid]}]}))
-
-(reg-event-db
-  :application/show-answers-belonging-to-hakukohteet
-  (fn [db _]
-    (set-visibility-of-belongs-to-hakukohteet-questions db)))
 
 (reg-event-db
   :application/change-hakukohde-priority
