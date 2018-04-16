@@ -190,18 +190,20 @@
 
 (defn- hakukohde-selection-header
   [content]
-  [:div.application__wrapper-heading.application__wrapper-heading-block
+  [:div.application__wrapper-heading
    [:h2 @(subscribe [:application/hakukohteet-header])]
    [scroll-to-anchor content]])
 
 (defn- hakukohteet
   [content]
-  [:div.application__wrapper-element.application__wrapper-element-border
+  [:div.application__wrapper-element
    [hakukohde-selection-header content]
-   [:div.application__hakukohde-selected-list
-    (for [hakukohde-oid @(subscribe [:application/selected-hakukohteet])]
-      ^{:key (str "selected-hakukohde-row-" hakukohde-oid)}
-      [selected-hakukohde-row hakukohde-oid])]])
+   [:div.application__wrapper-contents
+    [:div.application__form-field
+     [:div.application__hakukohde-selected-list
+      (for [hakukohde-oid @(subscribe [:application/selected-hakukohteet])]
+        ^{:key (str "selected-hakukohde-row-" hakukohde-oid)}
+        [selected-hakukohde-row hakukohde-oid])]]]])
 
 (defn field
   [content application lang question-group-index]
