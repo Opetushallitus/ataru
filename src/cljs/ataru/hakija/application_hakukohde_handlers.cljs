@@ -4,7 +4,7 @@
     [re-frame.core :refer [subscribe reg-event-db reg-fx reg-event-fx dispatch]]
     [ataru.util :as util]
     [ataru.hakija.application-validators :as validator]
-    [ataru.hakija.application-handlers :refer [toggle-answers-visibility-based-on-belongs-to-hakukohde-or-ryhma]]))
+    [ataru.hakija.application-handlers :refer [set-field-visibilities]]))
 
 (defn- hakukohteet-field [db]
   (->> (:flat-form-content db)
@@ -94,7 +94,7 @@
                                   (assoc-in [:application :answers :hakukohteet :values]
                                             new-hakukohde-values)
                                   set-values-changed
-                                  toggle-answers-visibility-based-on-belongs-to-hakukohde-or-ryhma)]
+                                  set-field-visibilities)]
      {:db       (cond-> db
                   (and (some? max-hakukohteet)
                        (<= max-hakukohteet (count new-hakukohde-values)))
@@ -121,7 +121,7 @@
                           new-hakukohde-values)
                 (update-in [:application :ui :hakukohteet :deleting] remove-hakukohde-from-deleting hakukohde-oid)
                 set-values-changed
-                toggle-answers-visibility-based-on-belongs-to-hakukohde-or-ryhma)]
+                set-field-visibilities)]
      {:db db
       :validate {:value new-hakukohde-values
                  :answers (get-in db [:application :answers])

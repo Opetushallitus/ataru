@@ -193,58 +193,54 @@
                                       (mapcat :hakukohderyhmat))]
     (set (concat selected-hakukohteet selected-hakukohderyhmat))))
 
-(defn- set-field-visibility
-  [visible? db field-descriptor]
-  (let [id (keyword (:id field-descriptor))
-        belongs-to (set (concat (:belongs-to-hakukohderyhma field-descriptor)
-                                (:belongs-to-hakukohteet field-descriptor)))
-        visible? (and visible?
-                      (or (empty? belongs-to)
-                          (not-empty (clojure.set/intersection
-                                      belongs-to
-                                      (selected-hakukohteet-and-ryhmat db)))))
-        db (assoc-in db [:application :ui id :visible?] visible?)]
-    (if (or (= (:fieldType field-descriptor) "adjacentfieldset")
-            (= (:fieldClass field-descriptor) "questionGroup"))
-      (reduce (partial set-field-visibility visible?)
-              db
-              (:children field-descriptor))
-      db)))
+(declare set-field-visibility)
 
-(defn- field-intersection-with-selected-hakukohteet-and-ryhmat [db field]
-  (when-let [ids (seq (concat (:belongs-to-hakukohderyhma field)
-                              (:belongs-to-hakukohteet field)))]
-    (let [selected-hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat db)]
-      (clojure.set/intersection
-       (set ids)
-       selected-hakukohteet-and-ryhmat))))
-
-(defn toggle-answers-visibility-based-on-belongs-to-hakukohde-or-ryhma
-  [db]
-  (autil/reduce-form-fields
-    (fn [db field]
-      (if-let [intersection (field-intersection-with-selected-hakukohteet-and-ryhmat db field)]
-        (assoc-in db [:application :ui (keyword (:id field)) :visible?] (not (empty? intersection)))
-        db))
-    db
-    (get-in db [:form :content])))
-
-(defn- set-single-choice-followup-visibility
-  [db field-descriptor value]
-  (reduce (fn [db option]
-            (reduce (partial set-field-visibility (= value (:value option)))
-                    db
-                    (:followups option)))
-          db
-          (:options field-descriptor)))
-
-(defn- set-multiple-choice-followup-visibility
-  [db field-descriptor option]
-  (let [id (keyword (:id field-descriptor))
-        selected? (get-in db [:application :answers id :options (:value option)])]
-    (reduce (partial set-field-visibility selected?)
+(defn- set-followups-visibility
+  [db field-descriptor option-selected?]
+  (let [visible? (get-in db [:application :ui (keyword (:id field-descriptor)) :visible?] true)]
+    (reduce (fn [db option]
+              (let [selected? (option-selected? option)]
+                (reduce #(set-field-visibility %1 %2 (and visible? selected?))
+                        db
+                        (:followups option))))
             db
-            (:followups option))))
+            (:options field-descriptor))))
+
+(defn- set-single-choice-field-visibility
+  [db field-descriptor]
+  (let [value (get-in db [:application :answers (keyword (:id field-descriptor)) :value])]
+    (set-followups-visibility db field-descriptor #(= value (:value %)))))
+
+(defn- set-multi-choice-field-visibility
+  [db field-descriptor]
+  (let [options (get-in db [:application :answers (keyword (:id field-descriptor)) :options])]
+    (set-followups-visibility db field-descriptor #(get options (:value %)))))
+
+(defn- set-field-visibility
+  ([db field-descriptor]
+   (set-field-visibility db field-descriptor true))
+  ([db field-descriptor visible?]
+   (let [id         (keyword (:id field-descriptor))
+         belongs-to (set (concat (:belongs-to-hakukohderyhma field-descriptor)
+                                 (:belongs-to-hakukohteet field-descriptor)))
+         visible?   (and visible?
+                         (or (empty? belongs-to)
+                             (not-empty (clojure.set/intersection
+                                         belongs-to
+                                         (selected-hakukohteet-and-ryhmat db)))))]
+     (cond-> (reduce #(set-field-visibility %1 %2 visible?)
+                     (assoc-in db [:application :ui id :visible?] visible?)
+                     (:children field-descriptor))
+             (or (= "dropdown" (:fieldType field-descriptor))
+                 (= "singleChoice" (:fieldType field-descriptor)))
+             (set-single-choice-field-visibility field-descriptor)
+             (= "multipleChoice" (:fieldType field-descriptor))
+             (set-multi-choice-field-visibility field-descriptor)))))
+
+(defn set-field-visibilities
+  [db]
+  (rules/run-all-rules
+   (reduce set-field-visibility db (get-in db [:form :content]))))
 
 (defn- set-multi-value-changed [db id value-key]
   (let [answer (-> db :application :answers id)
@@ -410,27 +406,6 @@
       (set-country-specific-fields-visibility)
       (set-question-group-row-amounts)))
 
-(defn- set-followup-visibility
-  [db]
-  (autil/reduce-form-fields
-   (fn [db field]
-     (let [id (keyword (:id field))
-           value (get-in db [:application :answers id :value])
-           options (:options field)
-           field-type (:fieldType field)]
-       (if (and options
-                (not-empty (mapcat :followups options)))
-         (if (or (= "dropdown" field-type)
-                 (= "singleChoice" field-type))
-           (set-single-choice-followup-visibility db field value)
-           (reduce (fn [db option]
-                     (set-multiple-choice-followup-visibility db field option))
-                   db
-                   options))
-         db)))
-   db
-   (get-in db [:form :content])))
-
 (defn- original-values->answers [db]
   (cond-> db
     (or (-> db :application :secret)
@@ -481,8 +456,7 @@
         (assoc :wrapper-sections (extract-wrapper-sections form))
         (merge-submitted-answers answers)
         (original-values->answers)
-        (toggle-answers-visibility-based-on-belongs-to-hakukohde-or-ryhma)
-        (set-followup-visibility))))
+        (set-field-visibilities))))
 
 
 (defn- handle-get-application [{:keys [db]}
@@ -563,7 +537,8 @@
           answers  (get-in db [:application :answers])]
       {:db (-> db
                (assoc-in [:application :answers id :value] value)
-               (set-multi-value-changed id :value))
+               (set-multi-value-changed id :value)
+               (set-field-visibility field))
        :validate {:value value
                   :answers answers
                   :field-descriptor field
@@ -732,7 +707,7 @@
                                           (dispatch [:application/set-multiple-choice-valid
                                                      field-descriptor
                                                      valid?]))}}
-        {:db (set-multiple-choice-followup-visibility db field-descriptor option)
+        {:db (set-field-visibility db field-descriptor)
          :validate {:value (get-in db [:application :answers id :value])
                     :answers (get-in db [:application :answers])
                     :field-descriptor field-descriptor
@@ -766,7 +741,7 @@
              (-> db
                  (assoc-in value-path new-value)
                  (set-multi-value-changed id :value)
-                 (set-single-choice-followup-visibility field-descriptor new-value)))
+                 (set-field-visibility field-descriptor)))
        :validate {:value new-value
                   :answers (get-in db [:application :answers])
                   :field-descriptor field-descriptor
@@ -1125,9 +1100,8 @@
 
 (reg-event-fx
   :application/dropdown-change
-  (fn [{db :db} [_ field-descriptor value group-idx]]
-    {:db (set-single-choice-followup-visibility db field-descriptor value)
-     :dispatch (if (some? group-idx)
+  (fn [_ [_ field-descriptor value group-idx]]
+    {:dispatch (if (some? group-idx)
                  [:application/set-repeatable-application-field field-descriptor value 0 group-idx]
                  [:application/set-application-field field-descriptor value])}))
 
