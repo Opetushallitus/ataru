@@ -159,7 +159,7 @@
         var hakukohdeValues = testFrame().find('.application__hakukohde-selected-list').text()
         expect(hakukohdeValues).to.equal('1Testihakukohde 1 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne A2Testihakukohde 2 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne B')
 
-        var otherValues = _.map(testFrame().find('.application__form-field div'), function(e) { return $(e).text() })
+        var otherValues = _.map(testFrame().find('.application__form-field div'), function(e) { return $(e).text() }).slice(9)
         var expectedOtherValues = ["Etunimi Tokanimi",
           "Etunimi",
           "Sukunimi",
