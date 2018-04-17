@@ -41,14 +41,14 @@
        {:fieldType (:or "dropdown" "multipleChoice" "singleChoice")
         :options   options}
        (cons field
-         (->> options
-              (mapcat (fn [option]
-                        (map (fn [followup]
-                               (assoc followup
-                                      :followup-of (:id field)
-                                      :option-value (:value option)))
-                             (:followups option))))
-              flatten-form-fields))
+             (mapcat (fn [option]
+                       (map (fn [followup]
+                              (cond-> followup
+                                      (not (contains? followup :followup-of))
+                                      (assoc :followup-of (:id field)
+                                             :option-value (:value option))))
+                            (flatten-form-fields (:followups option))))
+                     options))
        :else field))))
 
 (defn form-fields-by-id [form]
