@@ -5,6 +5,7 @@
             [cljs-time.core :as c]
             [cljs.core.async :as async]
             [cljs.core.match :refer-macros [match]]
+            [ataru.component-data.value-transformers :refer [update-options-while-keeping-existing-followups]]
             [ataru.virkailija.form-sorting :refer [sort-by-time-and-deletedness]]
             [ataru.virkailija.autosave :as autosave]
             [ataru.component-data.component :as component]
@@ -74,13 +75,15 @@
   :editor/select-custom-multi-options
   (fn [db [_ & path]]
     (let [dropdown-path (current-form-content-path db [path])]
-      (update-in db dropdown-path dissoc :koodisto-source))))
+      (-> db
+          (update-in dropdown-path dissoc :koodisto-source)
+          (update-in dropdown-path assoc :options [])))))
 
 (reg-event-db
   :editor/select-koodisto-options
   (fn [db [_ uri version title & path]]
     (let [dropdown-path (current-form-content-path db [path])]
-      (update-in db dropdown-path assoc :koodisto-source {:uri uri :version version :title title}))))
+      (update-in db dropdown-path assoc :koodisto-source {:uri uri :version version :title title} :options []))))
 
 (defn- update-modified-by
   [db path]
@@ -585,6 +588,33 @@
                       ui))))))
 
 (reg-event-db :editor/toggle-language toggle-language)
+
+(reg-event-fx
+  :editor/fetch-koodisto-for-component-with-id
+  (fn [{db :db} [_ id {:keys [uri version]}]]
+    {:http {:method              :get
+            :params              {}
+            :path                (str "/lomake-editori/api/koodisto/" uri "/" version)
+            :handler-or-dispatch :editor/set-new-koodisto-while-keeping-existing-followups
+            :handler-args        {:id id :uri uri :version version}}}))
+
+(reg-event-db
+  :editor/set-new-koodisto-while-keeping-existing-followups
+  (fn [db [_ new-koodisto {:keys [id uri version]}]]
+    (let [key (get-in db [:editor :selected-form-key])
+          form (get-in db [:editor :forms key :content])
+          update-koodisto-component (fn [component]
+                                      (assoc-in component [:options]
+                                        (update-options-while-keeping-existing-followups new-koodisto (:options component))))
+          find-koodisto-component (fn [component]
+                                    (if (and (= id (:id component))
+                                             (= uri (get-in component [:koodisto-source :uri]))
+                                             (= version (get-in component [:koodisto-source :version])))
+                                      (update-koodisto-component component)
+                                      component))
+          updated-form (clojure.walk/prewalk find-koodisto-component form)]
+      (assoc-in db [:editor :forms key :content] updated-form))
+    ))
 
 (reg-event-fx
   :editor/show-belongs-to-hakukohteet-modal

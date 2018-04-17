@@ -1,5 +1,6 @@
 (ns ataru.koodisto.koodisto
-  (:require [ataru.koodisto.koodisto-db-cache :as koodisto-cache]))
+  (:require [ataru.koodisto.koodisto-db-cache :as koodisto-cache]
+            [ataru.component-data.value-transformers :refer [update-options-while-keeping-existing-followups]]))
 
 (defn get-koodisto-options
   [uri version]
@@ -23,10 +24,11 @@
                                                                          (merge option {:default-value true})
                                                                          option))
                                                           koodis)
-                                                     koodis)]
+                                                     koodis)
+                        koodis-with-followups (update-options-while-keeping-existing-followups koodis-with-default-option (:options %))]
                     (assoc % :options (if (= (:fieldType %) "dropdown")
-                                        (into empty-option koodis-with-default-option)
-                                        koodis-with-default-option)))
+                                        (into empty-option koodis-with-followups)
+                                        koodis-with-followups)))
                   %)
                 (:content form))))
 
