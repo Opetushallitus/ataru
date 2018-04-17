@@ -811,6 +811,6 @@
     {:component-did-mount #(dispatch [:application/setup-window-unload])
      :reagent-render      (fn [form-data]
                             (into
-                              [:div.animated.fadeIn]
+                              [:div.application__editable-content.animated.fadeIn]
                               (for [content (:content form-data)]
                                 [render-field content])))}))
