@@ -1,7 +1,6 @@
 (ns ataru.hakija.application
   "Pure functions handling application data"
   (:require [ataru.util :as util]
-            [ataru.cljs-util :refer [console-log]]
             [medley.core :refer [remove-vals filter-vals remove-keys]]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.application-common.application-field-common :refer [required-validators]]

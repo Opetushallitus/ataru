@@ -15,16 +15,6 @@
             [goog.string.format])
   (:import [goog.net Cookies]))
 
-(defn console-log [& args]
-  "With pretty cljs-devtools formatting"
-  (.apply (.-log js/console) js/console (clj->js args))
-  args)
-
-(defn wrap-debug [f]
-  (fn [& args]
-    (debug "Wrapped Debug " args)
-    (apply f args)))
-
 (def wrap-scroll-to
   (with-meta identity {:component-did-mount #(let [node (r/dom-node %)]
                                               (if (.-scrollIntoViewIfNeeded node)

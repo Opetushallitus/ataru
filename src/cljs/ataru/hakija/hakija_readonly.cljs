@@ -9,7 +9,6 @@
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe]]
             [ataru.util :as util]
-            [ataru.cljs-util :refer [console-log]]
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint

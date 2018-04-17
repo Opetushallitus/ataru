@@ -4,7 +4,7 @@
             [reagent.ratom :refer-macros [reaction]]
             [markdown.core :refer [md->html]]
             [cljs.core.match :refer-macros [match]]
-            [ataru.cljs-util :as cljs-util :refer [console-log get-translation]]
+            [ataru.cljs-util :as cljs-util :refer [get-translation]]
             [ataru.hakija.hakija-readonly :as readonly-view]
             [ataru.application-common.application-field-common
              :refer
