@@ -27,6 +27,11 @@
 
 (declare render-field)
 
+(defn- visible? [ui field-descriptor]
+  (and (get-in @ui [(keyword (:id field-descriptor)) :visible?] true)
+       (or (empty? (:children field-descriptor))
+           (some (partial visible? ui) (:children field-descriptor)))))
+
 (defn- text-field-size->class [size]
   (match size
          "S" "application__form-text-input__size-small"
@@ -472,7 +477,8 @@
     (fn [field-descriptor option parent-id question-group-idx]
       (let [on-change (fn [_]
                         (dispatch [:application/toggle-multiple-choice-option field-descriptor option question-group-idx]))
-            checked?  (subscribe [:application/multiple-choice-option-checked? parent-id value question-group-idx])]
+            checked?  (subscribe [:application/multiple-choice-option-checked? parent-id value question-group-idx])
+            ui        (subscribe [:state-query [:application :ui]])]
         [:div {:key option-id}
          [:input.application__form-checkbox
           (merge {:id        option-id
@@ -486,7 +492,10 @@
           (merge {:for option-id}
                  (when @cannot-edit? {:class "disabled"}))
           label]
-         (when (and @checked? (not-empty (:followups option)) (not question-group-idx))
+         (when (and @checked?
+                    (not-empty (:followups option))
+                    (some (partial visible? ui) (:followups option))
+                    (not question-group-idx))
            [multi-choice-followups (:followups option)])]))))
 
 (defn multiple-choice
@@ -538,45 +547,43 @@
         (merge {:for option-id}
                (when @cannot-edit? {:class "disabled"}))
         label]
-       (when (and @checked? (not-empty (:followups option)))
+       (when (and @checked?
+                  (not-empty (:followups option))
+                  (some (partial visible? (subscribe [:state-query [:application :ui]])) (:followups option)))
          [:div.application__form-single-choice-followups-indicator])])))
 
-(defn- single-choice-followups [field-descriptor]
-  (let [id (keyword (:id field-descriptor))
-        single-choice-value (subscribe [:state-query [:application :answers id :value]])
-        followups           (reaction (->> (:options field-descriptor)
-                                           (filter (comp (partial = @single-choice-value) :value))
-                                           (map :followups)
-                                           (first)))]
-    (fn [field-descriptor]
-      (when (seq @followups)
-        [:div.application__form-multi-choice-followups-container.animated.fadeIn
-         (for [followup @followups]
-           ^{:key (:id followup)}
-           [render-field followup])]))))
-
 (defn single-choice-button [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [button-id    (answer-key field-descriptor)
-        validators   (:validators field-descriptor)]
+  (let [button-id  (answer-key field-descriptor)
+        validators (:validators field-descriptor)]
     (fn [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
-      [div-kwd
-       [label field-descriptor]
-       (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
-         [question-hakukohde-names field-descriptor])
-       [:div.application__form-text-input-info-text
-        [info-text field-descriptor]]
-       [:div.application__form-single-choice-button-outer-container
-        {:aria-labelledby (id-for-label field-descriptor)
-         :aria-invalid    @(subscribe [:application/answer-invalid? button-id])
-         :role       "radiogroup"}
-        (doall
-         (map-indexed (fn [option-idx option]
-                        ^{:key (str "single-choice-" (when idx (str idx "-")) (:id field-descriptor) "-" option-idx)}
-                        [single-choice-option option button-id field-descriptor idx])
-                      (:options field-descriptor)))]
-       (when-not idx
-         [:div.application__form-single-choice-button-followups-container
-          [single-choice-followups field-descriptor]])])))
+      (let [single-choice-value (subscribe [:state-query [:application :answers (keyword (:id field-descriptor)) :value]])
+            followups           (->> (:options field-descriptor)
+                                     (filter (comp (partial = @single-choice-value) :value))
+                                     (map :followups)
+                                     (first))]
+        [div-kwd
+         {:class "application__form-single-choice-button-container"}
+         [label field-descriptor]
+         (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
+           [question-hakukohde-names field-descriptor])
+         [:div.application__form-text-input-info-text
+          [info-text field-descriptor]]
+         [:div.application__form-single-choice-button-outer-container
+          {:aria-labelledby (id-for-label field-descriptor)
+           :aria-invalid    @(subscribe [:application/answer-invalid? button-id])
+           :role            "radiogroup"}
+          (doall
+            (map-indexed (fn [option-idx option]
+                           ^{:key (str "single-choice-" (when idx (str idx "-")) (:id field-descriptor) "-" option-idx)}
+                           [single-choice-option option button-id field-descriptor idx])
+                         (:options field-descriptor)))]
+         (when (and (not idx)
+                    (seq followups)
+                    (some (partial visible? (subscribe [:state-query [:application :ui]])) followups))
+           [:div.application__form-multi-choice-followups-container.animated.fadeIn
+            (for [followup followups]
+              ^{:key (:id followup)}
+              [render-field followup])])]))))
 
 (defonce max-attachment-size-bytes (* 10 1024 1024))
 
@@ -765,11 +772,6 @@
 (defn- feature-enabled? [{:keys [fieldType]}]
   (or (not= fieldType "attachment")
       (fc/feature-enabled? :attachment)))
-
-(defn- visible? [ui field-descriptor]
-  (and (get-in @ui [(keyword (:id field-descriptor)) :visible?] true)
-       (or (empty? (:children field-descriptor))
-           (some (partial visible? ui) (:children field-descriptor)))))
 
 (defn render-field
   [field-descriptor & args]
