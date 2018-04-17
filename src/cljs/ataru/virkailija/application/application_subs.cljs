@@ -429,3 +429,10 @@
          :state  state
          :values (:values answer)
          :label  (:label field)}))))
+
+(re-frame.core/reg-sub
+  :application/lang
+  (fn [db _]
+    (or (-> db :application :selected-application-and-form :form :selected-language keyword)
+        (-> db :application :selected-application-and-form :application :lang keyword)
+        :fi)))
