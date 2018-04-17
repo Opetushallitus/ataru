@@ -206,12 +206,12 @@
             db
             (:options field-descriptor))))
 
-(defn- set-single-choice-field-visibility
+(defn- set-single-choice-followups-visibility
   [db field-descriptor]
   (let [value (get-in db [:application :answers (keyword (:id field-descriptor)) :value])]
     (set-followups-visibility db field-descriptor #(= value (:value %)))))
 
-(defn- set-multi-choice-field-visibility
+(defn- set-multi-choice-followups-visibility
   [db field-descriptor]
   (let [options (get-in db [:application :answers (keyword (:id field-descriptor)) :options])]
     (set-followups-visibility db field-descriptor #(get options (:value %)))))
@@ -233,9 +233,9 @@
                      (:children field-descriptor))
              (or (= "dropdown" (:fieldType field-descriptor))
                  (= "singleChoice" (:fieldType field-descriptor)))
-             (set-single-choice-field-visibility field-descriptor)
+             (set-single-choice-followups-visibility field-descriptor)
              (= "multipleChoice" (:fieldType field-descriptor))
-             (set-multi-choice-field-visibility field-descriptor)))))
+             (set-multi-choice-followups-visibility field-descriptor)))))
 
 (defn set-field-visibilities
   [db]
