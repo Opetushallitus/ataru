@@ -116,10 +116,6 @@
   (when (not @element-visible)
     (reset! submit-button-state :submit)))
 
-(defn- from-multi-lang
-  [text]
-  (some #(get text %) [:fi :sv :en]))
-
 (defn- mass-update-applications-link
   []
   (let [element-visible?           (r/atom false)
@@ -1081,15 +1077,15 @@
        [:div.application-handling__resend-modify-link-confirmation-indicator]
        "Muokkauslinkki lähetetty hakijalle sähköpostilla"])))
 
-(defn- attachment-review-row [review selected-hakukohde]
+(defn- attachment-review-row [review selected-hakukohde lang]
   (let [list-opened (r/atom false)]
-    (fn [review selected-hakukohde]
+    (fn [review selected-hakukohde lang]
       (let [attachment-key (-> review :key keyword)
             selected-state (or (:state review)
                                "not-checked")]
         [:div.application__attachment-review-row
          [:div.application__attachment-review-row-answer-information
-          [:p.application__attachment-review-row-label (some #(-> review :label % not-empty) [:fi :sv :en])]
+          [:p.application__attachment-review-row-label (some #(-> review :label % not-empty) [lang :fi :sv :en])]
           (for [attachment-file (-> review :values flatten)
                 :let [text (str (:filename attachment-file) " (" (util/size-bytes->str (:size attachment-file)) ")")]]
             ^{:key (:key attachment-file)}
@@ -1115,19 +1111,23 @@
             (icon-check)
             (application-states/get-review-state-label-by-name review-states/attachment-hakukohde-review-types selected-state)])]))))
 
-(defn- attachment-review-area [hakukohde reviews review-positioning]
-  [:div.application-handling__attachment-review-container
-   {:class (when (= :fixed review-positioning)
-             "application-handling__attachment-review-container-floating")}
-   (when (not-empty reviews)
-     [:div
-      [:p.application-handling__attachment-review-header
-       (str (if (= "form" hakukohde) "Lomakkeen" "Hakukohteen")
-            " liitepyynnöt (" (count reviews) ")")]
-      (doall
-        (for [attachment reviews]
-          ^{:key (:id attachment)}
-          [attachment-review-row attachment hakukohde]))])])
+(defn- attachment-review-area [hakukohde reviews review-positioning lang]
+  (fn [hakukohde reviews review-positioning lang]
+    [:div.application-handling__attachment-review-container.animated
+     {:class (str (when (= :fixed review-positioning)
+                    "application-handling__attachment-review-container-floating")
+                  (if @(subscribe [:state-query [:application :show-attachment-reviews?]])
+                    " fadeInRight"
+                    " fadeOutRight"))}
+     (when (not-empty reviews)
+       [:div
+        [:p.application-handling__attachment-review-header
+         (str (if (= "form" hakukohde) "Lomakkeen" "Hakukohteen")
+              " liitepyynnöt (" (count reviews) ")")]
+        (doall
+          (for [attachment reviews]
+            ^{:key (:id attachment)}
+            [attachment-review-row attachment hakukohde lang]))])]))
 
 (defn application-review []
   (let [review-positioning      (subscribe [:state-query [:application :review-positioning]])
@@ -1135,7 +1135,8 @@
         show-attachment-review? (r/atom false)]
     (fn []
       (let [selected-review-hakukohde        (subscribe [:state-query [:application :selected-review-hakukohde]])
-            attachment-reviews-for-hakukohde (subscribe [:application/get-attachment-reviews-for-selected-hakukohde @selected-review-hakukohde])]
+            attachment-reviews-for-hakukohde (subscribe [:application/get-attachment-reviews-for-selected-hakukohde @selected-review-hakukohde])
+            lang                             (subscribe [:application/lang])]
         [:div.application-handling__review-outer
          {:class (when (= :fixed @review-positioning)
                    "application-handling__review-outer-floating")}
@@ -1157,14 +1158,18 @@
              [:span.application-handling__review-settings-header-text "Asetukset"]])]
          [:div.application-handling__review
           (when @show-attachment-review?
-            [attachment-review-area @selected-review-hakukohde @attachment-reviews-for-hakukohde @review-positioning])
+            [attachment-review-area @selected-review-hakukohde @attachment-reviews-for-hakukohde @review-positioning @lang])
           [:div.application-handling__review-outer-container
            [application-hakukohde-selection]
            (when (not-empty @attachment-reviews-for-hakukohde)
              [:div.application-handling__attachment-review-toggle-container
               {:on-click (fn []
                            (when-not @settings-visible
-                             (swap! show-attachment-review? not)))}
+                             (let [show? (not @show-attachment-review?)]
+                               (dispatch [:state-update #(assoc-in % [:application :show-attachment-reviews?] show?)])
+                               (if show?
+                                 (reset! show-attachment-review? show?)
+                                 (js/setTimeout #(reset! show-attachment-review? show?) 500)))))}
               (when @settings-visible
                 [review-settings-checkbox :attachment-handling])
               [:span.application-handling__attachment-review-toggle
