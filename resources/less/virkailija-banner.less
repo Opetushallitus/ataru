@@ -72,8 +72,9 @@
     margin-left: 85px;
     min-width: 200px;
     color: @paler-blue;
+    user-select: none;
     .tooltip-indicator {
-      cursor: help;
+      cursor: pointer;
     }
   }
 }
@@ -116,4 +117,37 @@
   .local-dev-logout {
     top: 145px;
   }
+}
+
+.profile__organization {
+  position: relative;
+}
+
+.profile__organization-select {
+  .arrow(top, white, 8px, 23%);
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.30));
+  box-sizing: border-box;
+  display: block;
+  border-radius: 3px;
+  position: absolute;
+  z-index: 10;
+  top: 28px;
+  left: -56px;
+  text-align: start;
+  background-color: white;
+  width: 450px;
+  padding: 15px;
+  font-size: 13px;
+  line-height: 21px;
+}
+
+.profile__organization-select-title {
+  text-transform: uppercase;
+  color: @text-color;
+  margin: 0 0 10px 0;
+}
+
+.profile__organization-select-results {
+  list-style: none;
+  padding: 0;
 }

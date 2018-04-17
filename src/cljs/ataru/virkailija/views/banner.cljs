@@ -5,7 +5,7 @@
   (:require [ataru.virkailija.routes :as routes]
             [cljs.core.match :refer-macros [match]]
             [re-frame.core :refer [subscribe dispatch]]
-            [ataru.cljs-util :as cljs-util]
+            [reagent.core :as reagent]
             [cljs.core.async :refer  [<! timeout]]
             [taoensso.timbre :refer-macros [spy debug]]
             [clojure.string :as string]))
@@ -37,6 +37,10 @@
      [:div.divider]
      [section-link :application]]))
 
+(defn- get-label
+  [label]
+  (some #(-> label %) [:fi :sv :en]))
+
 (defn create-org-labels [organizations]
   (map
    (fn [org]
@@ -44,20 +48,42 @@
    organizations))
 
 (defn profile []
-  (let [user-info (subscribe [:state-query [:editor :user-info]])]
+  (let [user-info             (subscribe [:state-query [:editor :user-info]])
+        org-select-visible?   (reagent/atom false)]
     (fn []
       (when @user-info
-        (let [org-count      (count (:organizations @user-info))
-              org-labels     (create-org-labels (:organizations @user-info))
-              joint-orgs-str (string/join " \n" org-labels)
-              tooltip-str    (str joint-orgs-str "\n\nKäyttäjätunnus: " (:username @user-info))
-              org-str        (cond
-                               (= 0 org-count) "Ei organisaatiota"
-                               (< 1 org-count) "Useita organisaatioita"
-                               :else           (get-in (first (:organizations @user-info)) [:name :fi]))]
+        (let [organizations         (:organizations @user-info)
+              search-results        (subscribe [:state-query [:editor :organizations :matches]])
+              selected-organization (subscribe [:state-query [:editor :user-info :selected-organization]])
+              org-count             (count organizations)
+              org-labels            (create-org-labels organizations)
+              joint-orgs-str        (string/join " \n" org-labels)
+              tooltip-str           (str joint-orgs-str "\n\nKäyttäjätunnus: " (:username @user-info))
+              org-str               (cond
+                                      (some? @selected-organization) (get-label (:name @selected-organization))
+                                      (= 0 org-count) "Ei organisaatiota"
+                                      (< 1 org-count) "Useita organisaatioita"
+                                      :else (get-in (first organizations) [:name :fi]))]
           [:div.profile
-           [:div
-            [:p.tooltip-indicator {:title tooltip-str} org-str]]])))))
+           [:div.profile__organization
+            [:a.tooltip-indicator
+             {:on-click #(swap! org-select-visible? not)} org-str]
+            (when @org-select-visible?
+              [:div.profile__organization-select
+               [:h4.profile__organization-select-title "Valitse organisaatio"]
+               [:input.profile__organization-select-input
+                {:value     @(subscribe [:state-query [:editor :organizations :query]])
+                 :on-change #(dispatch [:editor/update-organization-select-query (.-value (.-target %))])}]
+               (into
+                 [:ul.profile__organization-select-results
+                  (map
+                    (fn [{:keys [oid name]}]
+                      [:li.profile__organization-select-result
+                       {:key (str "organization-match-" oid)}
+                       [:a
+                        {:on-click #(dispatch [:editor/select-organization oid])}
+                        (get-label name)]])
+                    @search-results)])])]])))))
 
 (defn status []
   (let [flash    (subscribe [:state-query [:flash]])

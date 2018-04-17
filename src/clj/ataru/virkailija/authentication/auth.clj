@@ -34,10 +34,13 @@
       (do
         (cas-store/login ticket)
         (let [virkailija               (ldap/get-virkailija-by-username username)
-              user-right-organizations (map-kv (fn [right org-oids]
-                                                 [right (organization-service/get-organizations-for-oids organization-service org-oids)])
-                                               (ldap/user->right-organization-oids virkailija rights/right-names))]
-          (info "username" username "logged in, redirect to" redirect-url)
+              right-organization-oids  (ldap/user->right-organization-oids virkailija rights/right-names)
+              organization-oids        (-> (vals right-organization-oids) (flatten) (set))
+              user-right-organizations (map-kv
+                                         (fn [right org-oids]
+                                           [right (organization-service/get-organizations-for-oids organization-service org-oids)])
+                                         right-organization-oids)]
+          (info "user" username "with organizations" organization-oids "logged in, redirect to" redirect-url)
           (db/exec :db yesql-upsert-virkailija<! {:oid        (:employeeNumber virkailija)
                                                   :first_name (:givenName virkailija)
                                                   :last_name  (:sn virkailija)})
@@ -50,7 +53,8 @@
                                           :last-name                (:sn virkailija)
                                           :oid                      (:employeeNumber virkailija)
                                           :ticket                   ticket
-                                          :user-right-organizations user-right-organizations}}))))
+                                          :user-right-organizations user-right-organizations
+                                          :organizations            (.get-selectable-organizations organization-service organization-oids)}}))))
       (redirect-to-logged-out-page))
     (catch Exception e
       (error e "Error in login ticket handling")

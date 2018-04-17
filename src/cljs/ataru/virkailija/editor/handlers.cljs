@@ -818,3 +818,35 @@
   :editor/set-email-template-language
   (fn [db [_ lang]]
     (assoc-in db [:editor :email-template-lang] lang)))
+
+(reg-event-fx
+  :editor/update-organization-select-query
+  (fn [{db :db} [_ query]]
+    {:db (assoc-in db [:editor :organizations :query] query)
+     :dispatch-debounced {:timeout 500
+                          :id [:organization-query]
+                          :dispatch [:editor/do-organization-query]}}))
+
+(reg-event-fx
+  :editor/do-organization-query
+  (fn [{db :db} [_]]
+    {:http {:method :get
+            :path (str "/lomake-editori/api/organization/user-organizations?query=" (-> db :editor :organizations :query))
+            :handler-or-dispatch :editor/update-organization-query-results}}))
+
+(reg-event-fx
+  :editor/update-organization-query-results
+  (fn [{db :db} [_ results]]
+    {:db (assoc-in db [:editor :organizations :matches] (vals results))}))
+
+(reg-event-fx
+  :editor/select-organization
+  (fn [_ [_ oid]]
+    {:http {:method              :post
+            :path                (str "/lomake-editori/api/organization/user-organization/" oid)
+            :handler-or-dispatch :editor/update-selected-organization}}))
+
+(reg-event-db
+  :editor/update-selected-organization
+  (fn [db [_ selected-organization]]
+    (assoc-in db [:editor :user-info :selected-organization] selected-organization)))

@@ -34,6 +34,7 @@
             [ataru.virkailija.authentication.auth-utils :as auth-utils]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
             [ataru.organization-service.session-organizations :refer [organization-list]]
+            [ataru.organization-service.organization-selection :as organization-selection]
             [cheshire.core :as json]
             [cheshire.generate :refer [add-encoder]]
             [clojure.core.match :refer [match]]
@@ -151,10 +152,11 @@
     :tags ["form-api"]
 
     (api/GET "/user-info" {session :session}
-      (ok {:username      (-> session :identity :username)
-           :organizations (organization-list session)
-           :oid           (-> session :identity :oid)
-           :name          (format "%s %s" (-> session :identity :first-name ) (-> session :identity :last-name))}))
+      (ok {:username              (-> session :identity :username)
+           :organizations         (organization-list session)
+           :oid                   (-> session :identity :oid)
+           :name                  (format "%s %s" (-> session :identity :first-name) (-> session :identity :last-name))
+           :selected-organization (-> session :selected-organization)}))
 
     (api/GET "/forms" {session :session}
       :summary "Return forms for editor view. Also used by external services.
@@ -462,7 +464,18 @@
         (->
          (.get-hakukohde-groups organization-service)
          ok
-         (header "Cache-Control" "public, max-age=300"))))
+         (header "Cache-Control" "public, max-age=300")))
+
+      (api/GET "/user-organizations" {session :session}
+        :query-params [{query :- s/Str nil}]
+        (ok (organization-selection/query-organization (-> session :identity :organizations) query)))
+
+      (api/POST "/user-organization/:oid" {session :session}
+        :path-params [oid :- s/Str]
+        (if-let [selected-organization (organization-selection/select-organization (-> session :identity :organizations) oid)]
+          (-> (ok selected-organization)
+              (assoc :session (assoc session :selected-organization selected-organization)))
+          (bad-request {}))))
 
     (api/context "/tarjonta" []
       :tags ["tarjonta-api"]

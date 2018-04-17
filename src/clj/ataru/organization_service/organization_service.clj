@@ -5,6 +5,7 @@
    [ataru.config.core :refer [config]]
    [ataru.organization-service.ldap-client :as ldap-client]
    [ataru.cas.client :as cas-client]
+   [ataru.util :as util]
    [clojure.core.cache :as cache]
    [medley.core :refer [map-kv]]
    [ataru.organization-service.organization-client :as org-client]))
@@ -27,7 +28,9 @@
     "Gets a flattened organization hierarhy based on direct organizations")
   (get-hakukohde-groups [this]
     "Gets all hakukohde groups")
-  (get-organizations-for-oids [this organization-oids]))
+  (get-organizations-for-oids [this organization-oids])
+  (get-selectable-organizations [this organization-oids]
+    "Gets user's organizations and all suborganizations"))
 
 (defn get-orgs-from-client [cas-client direct-oids]
   (flatten (map #(org-client/get-organizations cas-client %) direct-oids)))
@@ -109,6 +112,12 @@
                            group-oids)]
       (concat normal-orgs groups)))
 
+  (get-selectable-organizations [this organization-oids]
+    (let [normal-org-oids (remove group-oid? organization-oids)
+          normal-orgs     (remove nil? (mapcat #(org-client/get-organizations (:cas-client this) %)
+                                               normal-org-oids))]
+      (util/group-by-first :oid normal-orgs)))
+
   (start [this]
     (-> this
         (assoc :cas-client (cas-client/new-client "/organisaatio-service"))
@@ -146,6 +155,9 @@
     (fake-orgs-by-root-orgs root-orgs))
 
   (get-organizations-for-oids [this organization-oids]
+    (map ldap-client/fake-org-by-oid organization-oids))
+
+  (get-selectable-organizations [this organization-oids]
     (map ldap-client/fake-org-by-oid organization-oids)))
 
 (defn new-organization-service []
