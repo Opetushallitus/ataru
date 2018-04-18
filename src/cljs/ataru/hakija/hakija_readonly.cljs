@@ -176,7 +176,7 @@
           selected-options (filter #(contains? values (:value %)) (:options content))]
       (for [option selected-options]
         [:div
-         [:p.application__form-field-value (some (:label option) [lang :fi :sv :en])]
+         [:p.application__text-field-paragraph (some (:label option) [lang :fi :sv :en])]
          (into [:div.application-handling__nested-container]
                (for [followup (:followups option)
                      :let [followup-is-visible? (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?])]
