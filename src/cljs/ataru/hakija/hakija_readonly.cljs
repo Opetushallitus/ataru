@@ -174,17 +174,19 @@
                                flatten
                                set)
           selected-options (filter #(contains? values (:value %)) (:options content))]
-      (for [option selected-options]
-        [:div
-         [:p.application__text-field-paragraph (some (:label option) [lang :fi :sv :en])]
-         (into [:div.application-handling__nested-container]
-               (for [followup (:followups option)
-                     :let [followup-is-visible? (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?])]
-                     :when (if (boolean? followup-is-visible?)
-                             followup-is-visible?
-                             (followup-has-answer? followup application))]
-                 [:div
-                  [field followup application lang]]))]))]])
+      (doall
+        (for [option selected-options]
+          ^{:key (:value option)}
+          [:div
+           [:p.application__text-field-paragraph (some (:label option) [lang :fi :sv :en])]
+           (into [:div.application-handling__nested-container]
+                 (for [followup (:followups option)
+                       :let [followup-is-visible? (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?])]
+                       :when (if (boolean? followup-is-visible?)
+                               followup-is-visible?
+                               (followup-has-answer? followup application))]
+                   [:div
+                    [field followup application lang]]))])))]])
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
@@ -215,18 +217,9 @@
         ^{:key (str "selected-hakukohde-row-" hakukohde-oid)}
         [selected-hakukohde-row hakukohde-oid])]]]])
 
-(defn- show-field? [content application]
-  (and (or (empty? (:belongs-to-hakukohteet content))
-           (not-empty (clojure.set/intersection (set (:belongs-to-hakukohteet content))
-                                                (set (:hakukohde application)))))
-       (or (not (contains? content :children))
-           (some #(not= "infoElement" (:fieldClass %))
-                 (:children content)))))
-
 (defn field
   [content application lang question-group-index]
-  (when (show-field? content application)
-    (match content
+  (match content
          {:fieldClass "wrapperElement" :module "person-info" :children children} [wrapper content application lang children]
          {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
          {:fieldClass "questionGroup" :fieldType "fieldset" :children children} [question-group content application lang children]
@@ -237,7 +230,7 @@
          {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")} [selectable content application lang question-group-index]
          {:fieldClass "formField" :fieldType (:or "textField" "textArea")} (text content application lang question-group-index)
          {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang question-group-index]
-         {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content])))
+         {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content]))
 
 (defn- application-language [{:keys [lang]}]
   (when (some? lang)
@@ -248,7 +241,10 @@
 (defn- visible? [ui field-descriptor]
   (and (get-in @ui [(keyword (:id field-descriptor)) :visible?] true)
        (or (empty? (:children field-descriptor))
-           (some (partial visible? ui) (:children field-descriptor)))))
+           (some (partial visible? ui) (:children field-descriptor)))
+       (or (not (contains? field-descriptor :children))
+           (some #(not= "infoElement" (:fieldClass %))
+                 (:children field-descriptor)))))
 
 (defn readonly-fields [form application]
   (when form

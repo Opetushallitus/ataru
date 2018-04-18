@@ -180,17 +180,19 @@
                                flatten
                                set)
           selected-options (filter #(contains? values (:value %)) (:options content))]
-      (for [option selected-options]
-        [:div
-         [:p.application__form-field-value (some (:label option) [lang :fi :sv :en])]
-         (into [:div.application-handling__nested-container]
-               (for [followup (:followups option)
-                     :let [followup-is-visible? (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?])]
-                     :when (if (boolean? followup-is-visible?)
-                             followup-is-visible?
-                             (followup-has-answer? followup application))]
-                 [:div
-                  [field followup application lang]]))]))]])
+      (doall
+        (for [option selected-options]
+          ^{:key (:value option)}
+          [:div
+           [:p.application__form-field-value (some (:label option) [lang :fi :sv :en])]
+           (into [:div.application-handling__nested-container]
+                 (for [followup (:followups option)
+                       :let [followup-is-visible? (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?])]
+                       :when (if (boolean? followup-is-visible?)
+                               followup-is-visible?
+                               (followup-has-answer? followup application))]
+                   [:div
+                    [field followup application lang]]))])))]])
 
 (defn- haku-row [haku-name]
   [:div.application__form-field
@@ -249,39 +251,38 @@
         ^{:key (str "question-group-" (:id content) "-" idx "-" (:id child))}
         [field child application lang idx])])])
 
-(defn- show-field? [content application]
-  (and (or (empty? (:belongs-to-hakukohteet content))
-           (not-empty (clojure.set/intersection (set (:belongs-to-hakukohteet content))
-                                                (set (:hakukohde application)))))
-       (or (not (contains? content :children))
-           (some #(and (not= "infoElement" (:fieldClass %))
-                       (contains? (:answers application) (keyword (:id %))))
-                 (:children content)))))
-
 (defn field [content application lang group-idx]
-  ;; render the field if either
-  ;; 1) the field isn't a hakukohde specific question
-  ;; 2) the field is a hakukohde specific question and the user has applied to one of
-  ;;    those hakukohteet to whom the field belongs to
-  (when (show-field? content application)
-    (match content
-           {:module "person-info"} [person-info-module content application lang]
-           {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
-           {:fieldClass "questionGroup" :fieldType "fieldset" :children children} [question-group content application lang children]
-           {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]
-           {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children group-idx]
-           {:fieldClass "formField" :exclude-from-answers true} nil
-           {:fieldClass "infoElement"} nil
-           {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")} [selectable content application lang]
-           {:fieldClass "formField" :fieldType (:or "textField" "textArea")} (text content application lang group-idx)
-           {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang group-idx]
-           {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content])))
+  (match content
+         {:module "person-info"} [person-info-module content application lang]
+         {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
+         {:fieldClass "questionGroup" :fieldType "fieldset" :children children} [question-group content application lang children]
+         {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]
+         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children group-idx]
+         {:fieldClass "formField" :exclude-from-answers true} nil
+         {:fieldClass "infoElement"} nil
+         {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")} [selectable content application lang]
+         {:fieldClass "formField" :fieldType (:or "textField" "textArea")} (text content application lang group-idx)
+         {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang group-idx]
+         {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content]))
 
 (defn- application-language [{:keys [lang]}]
   (when (some? lang)
     (-> lang
         clojure.string/lower-case
         keyword)))
+
+(defn- visible? [field-descriptor application]
+  ;; render the field if
+  ;; 1) the field isn't a hakukohde specific question
+  ;; 2) the field is a hakukohde specific question and the user has applied to one of
+  ;;    those hakukohteet to whom the field belongs to
+  ;; 3) the field has no children or has at least one child that is not an infoElement
+  (and (or (empty? (:belongs-to-hakukohteet field-descriptor))
+           (not-empty (clojure.set/intersection (set (:belongs-to-hakukohteet field-descriptor))
+                                                (set (:hakukohde application)))))
+       (or (not (contains? field-descriptor :children))
+           (some #(and (not= "infoElement" (:fieldClass %)))
+                 (:children field-descriptor)))))
 
 (defn readonly-fields [form application]
   (when form
@@ -290,5 +291,5 @@
                    :fi)]
       (into [:div.application__readonly-container]
         (for [content (:content form)
-              :when (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id content)) :visible?] true)]
+              :when (visible? content application)]
           [field content application lang nil])))))
