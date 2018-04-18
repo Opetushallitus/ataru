@@ -163,17 +163,28 @@
         (< 0 (count answer-value))
         true))))
 
-(defn- followups [followups content application lang question-group-index]
+(defn- selectable [content application lang]
   [:div
-   (text content application lang question-group-index)
-   (into [:div]
-     (for [followup followups
-           :let [followup-is-visible? (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?])]
-           :when (if (boolean? followup-is-visible?)
-                   followup-is-visible?
-                   (followup-has-answer? followup application))]
-       [:div
-        [field followup application lang question-group-index]]))])
+   [:div.application__form-field-label (some (:label content) [lang :fi :sv :en])]
+   [:div.application-handling__nested-container
+    (let [values           (-> application
+                               (get-in [:answers (keyword (:id content))])
+                               :value
+                               vector
+                               flatten
+                               set)
+          selected-options (filter #(contains? values (:value %)) (:options content))]
+      (for [option selected-options]
+        [:div
+         [:p.application__form-field-value (some (:label option) [lang :fi :sv :en])]
+         (into [:div.application-handling__nested-container]
+               (for [followup (:followups option)
+                     :let [followup-is-visible? (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?])]
+                     :when (if (boolean? followup-is-visible?)
+                             followup-is-visible?
+                             (followup-has-answer? followup application))]
+                 [:div
+                  [field followup application lang]]))]))]])
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
@@ -204,9 +215,18 @@
         ^{:key (str "selected-hakukohde-row-" hakukohde-oid)}
         [selected-hakukohde-row hakukohde-oid])]]]])
 
+(defn- show-field? [content application]
+  (and (or (empty? (:belongs-to-hakukohteet content))
+           (not-empty (clojure.set/intersection (set (:belongs-to-hakukohteet content))
+                                                (set (:hakukohde application)))))
+       (or (not (contains? content :children))
+           (some #(not= "infoElement" (:fieldClass %))
+                 (:children content)))))
+
 (defn field
   [content application lang question-group-index]
-  (match content
+  (when (show-field? content application)
+    (match content
          {:fieldClass "wrapperElement" :module "person-info" :children children} [wrapper content application lang children]
          {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
          {:fieldClass "questionGroup" :fieldType "fieldset" :children children} [question-group content application lang children]
@@ -214,11 +234,10 @@
          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children question-group-index]
          {:fieldClass "formField" :exclude-from-answers true} nil
          {:fieldClass "infoElement"} nil
-         {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice") :options (options :guard util/followups?)}
-         [followups (mapcat :followups options) content application lang question-group-index]
-         {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang question-group-index)
+         {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")} [selectable content application lang question-group-index]
+         {:fieldClass "formField" :fieldType (:or "textField" "textArea")} (text content application lang question-group-index)
          {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang question-group-index]
-         {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content]))
+         {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content])))
 
 (defn- application-language [{:keys [lang]}]
   (when (some? lang)
