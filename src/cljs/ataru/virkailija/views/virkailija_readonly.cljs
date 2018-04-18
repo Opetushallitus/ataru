@@ -52,7 +52,7 @@
             (render-paragraphs values))]]))
 
 (defn- attachment-list [attachments]
-  [:div
+  [:div.application-handling__nested-container
    (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size virus-scan-status :virus-scan-status}]
                   (let [text              (str filename " (" (util/size-bytes->str size) ")")
                         component-key     (str "attachment-div-" idx)
