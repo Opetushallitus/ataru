@@ -169,17 +169,28 @@
           (< 0 (count answer-value))
           true)))))
 
-(defn- followups [followups content application lang]
-  [:div.application-handling__followups-container
-   (text content application lang nil)
-   (into [:div]
-     (for [followup followups
-           :let [followup-is-visible? (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?])]
-           :when (if (boolean? followup-is-visible?)
-                   followup-is-visible?
-                   (followup-has-answer? followup application))]
-       [:div
-        [field followup application lang]]))])
+(defn- selectable [content application lang]
+  [:div
+   [:div.application__form-field-label (some (:label content) [lang :fi :sv :en])]
+   [:div.application-handling__nested-container
+    (let [values           (-> application
+                               (get-in [:answers (keyword (:id content))])
+                               :value
+                               vector
+                               flatten
+                               set)
+          selected-options (filter #(contains? values (:value %)) (:options content))]
+      (for [option selected-options]
+        [:div
+         [:p.application__form-field-value (some (:label option) [lang :fi :sv :en])]
+         (into [:div.application-handling__nested-container]
+               (for [followup (:followups option)
+                     :let [followup-is-visible? (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?])]
+                     :when (if (boolean? followup-is-visible?)
+                             followup-is-visible?
+                             (followup-has-answer? followup application))]
+                 [:div
+                  [field followup application lang]]))]))]])
 
 (defn- haku-row [haku-name]
   [:div.application__form-field
@@ -238,14 +249,14 @@
         ^{:key (str "question-group-" (:id content) "-" idx "-" (:id child))}
         [field child application lang idx])])])
 
-(defn- show-field? [field application]
-  (and (or (empty? (:belongs-to-hakukohteet field))
-           (not-empty (clojure.set/intersection (set (:belongs-to-hakukohteet field))
+(defn- show-field? [content application]
+  (and (or (empty? (:belongs-to-hakukohteet content))
+           (not-empty (clojure.set/intersection (set (:belongs-to-hakukohteet content))
                                                 (set (:hakukohde application)))))
-       (or (not (contains? field :children))
+       (or (not (contains? content :children))
            (some #(and (not= "infoElement" (:fieldClass %))
                        (contains? (:answers application) (keyword (:id %))))
-                 (:children field)))))
+                 (:children content)))))
 
 (defn field [content application lang group-idx]
   ;; render the field if either
@@ -261,9 +272,8 @@
            {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children group-idx]
            {:fieldClass "formField" :exclude-from-answers true} nil
            {:fieldClass "infoElement"} nil
-           {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice") :options (options :guard util/followups?)}
-           [followups (mapcat :followups options) content application lang]
-           {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang group-idx)
+           {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")} [selectable content application lang]
+           {:fieldClass "formField" :fieldType (:or "textField" "textArea")} (text content application lang group-idx)
            {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang group-idx]
            {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content])))
 
