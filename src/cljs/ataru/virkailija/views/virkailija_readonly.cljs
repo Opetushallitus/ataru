@@ -238,17 +238,21 @@
         ^{:key (str "question-group-" (:id content) "-" idx "-" (:id child))}
         [field child application lang idx])])])
 
-(defn field [{field-hakukohteet :belongs-to-hakukohteet :as content}
-             {application-hakukohteet :hakukohde :as application}
-             lang
-             group-idx]
+(defn- show-field? [field application]
+  (and (or (empty? (:belongs-to-hakukohteet field))
+           (not-empty (clojure.set/intersection (set (:belongs-to-hakukohteet field))
+                                                (set (:hakukohde application)))))
+       (or (not (contains? field :children))
+           (some #(and (not= "infoElement" (:fieldClass %))
+                       (contains? (:answers application) (keyword (:id %))))
+                 (:children field)))))
+
+(defn field [content application lang group-idx]
   ;; render the field if either
   ;; 1) the field isn't a hakukohde specific question
   ;; 2) the field is a hakukohde specific question and the user has applied to one of
   ;;    those hakukohteet to whom the field belongs to
-  (when (or (empty? field-hakukohteet)
-            (not-empty (clojure.set/intersection (set field-hakukohteet)
-                                                 (set application-hakukohteet))))
+  (when (show-field? content application)
     (match content
            {:module "person-info"} [person-info-module content application lang]
            {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
