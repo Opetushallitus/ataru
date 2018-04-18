@@ -323,13 +323,6 @@
                              (.open js/window url "_blank")))}
       "Lisää muotoiluohjeita"]]]])
 
-(defn koodisto-field [path lang]
-  (let [component (subscribe [:editor/get-component-value path])
-        value     (get-in @component [:label lang])]
-    [:div.editor-form__koodisto-field
-     {:on-drop   prevent-default}
-     value]))
-
 (defn input-field [path lang dispatch-fn {:keys [class value-fn tag]
                                           :or   {tag :input}}]
   (let [component (subscribe [:editor/get-component-value path])
@@ -373,19 +366,23 @@
                         [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])]))
       languages)))
 
-(defn- koodisto-fields-with-lang [field-fn languages & {:keys [header?] :or {header? false}}]
-  (let [multiple-languages? (> (count languages) 1)]
-    (map-indexed (fn [idx lang]
-                   (let [field-spec (field-fn lang)]
-                     ^{:key (str "option-" lang "-" idx)}
-                     [:div.editor-form__koodisto-field-container
-                      (when-not header?
-                        {:class "editor-form__koodisto-option-wrapper"})
-                      (cond-> field-spec
-                        multiple-languages? add-multi-lang-class)
-                      (when multiple-languages?
-                        [:div.editor-form__text-field-label ""])]))
-      languages)))
+(defn- koodisto-field [path lang]
+  (let [component (subscribe [:editor/get-component-value path])
+        value     (get-in @component [:label lang])]
+    [:div.editor-form__koodisto-field
+     {:on-drop prevent-default}
+     value]))
+
+(defn- koodisto-fields-with-lang [languages option-path]
+  (let [multiple-languages? (> (count languages) 1)
+        component           @(subscribe [:editor/get-component-value option-path])]
+    [:div
+     {:title (clojure.string/join ", " (map (fn [lang] (get-in component [:label lang])) languages))}
+     (map-indexed (fn [idx lang]
+                    (let [field-spec (koodisto-field option-path lang)]
+                      ^{:key (str "option-" lang "-" idx)}
+                      [:div.editor-form__koodisto-field-container
+                       field-spec])) languages)]))
 
 (defn info-addon
   "Info text which is added to an existing component"
@@ -556,10 +553,7 @@
            (fn [lang]
              [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
            languages)
-         (koodisto-fields-with-lang
-           (fn [lang]
-             [koodisto-field option-path lang])
-           languages))
+         (koodisto-fields-with-lang languages option-path))
        ]
       (if editable?
         [remove-dropdown-option-button path option-index])
