@@ -633,10 +633,8 @@
             hide-koodisto-options (fn [evt]
                                     (reset! opened? false))
             show-koodisto-options (fn [evt]
-                                    (swap! opened? (fn [old]
-                                                     (if (not old)
-                                                       (dispatch [:editor/fetch-koodisto-for-component-with-id id selected-koodisto]))
-                                                     true)))]
+                                    (dispatch [:editor/fetch-koodisto-for-component-with-id id selected-koodisto])
+                                    (reset! opened? true))]
         (if (not @opened?)
           [:div.editor-form__show-koodisto-values
            [:a
