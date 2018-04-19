@@ -366,9 +366,8 @@
                         [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])]))
       languages)))
 
-(defn- koodisto-field [path lang]
-  (let [component (subscribe [:editor/get-component-value path])
-        value     (get-in @component [:label lang])]
+(defn- koodisto-field [component lang]
+  (let [value     (get-in component [:label lang])]
     [:div.editor-form__koodisto-field
      {:on-drop prevent-default}
      value]))
@@ -379,7 +378,7 @@
     [:div
      {:title (clojure.string/join ", " (map (fn [lang] (get-in component [:label lang])) languages))}
      (map-indexed (fn [idx lang]
-                    (let [field-spec (koodisto-field option-path lang)]
+                    (let [field-spec (koodisto-field component lang)]
                       ^{:key (str "option-" lang "-" idx)}
                       [:div.editor-form__koodisto-field-container
                        field-spec])) languages)]))
