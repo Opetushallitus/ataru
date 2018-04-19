@@ -366,22 +366,21 @@
                         [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])]))
       languages)))
 
-(defn- koodisto-field [component lang]
-  (let [value     (get-in component [:label lang])]
-    [:div.editor-form__koodisto-field
-     {:on-drop prevent-default}
-     value]))
+(defn- koodisto-field [component idx lang]
+  (let [value (get-in component [:label lang])]
+    [:div.editor-form__koodisto-field-container
+     {:key (str "option-" lang "-" idx)}
+     [:div.editor-form__koodisto-field
+      {:on-drop prevent-default}
+      value]]))
 
 (defn- koodisto-fields-with-lang [languages option-path]
   (let [multiple-languages? (> (count languages) 1)
         component           @(subscribe [:editor/get-component-value option-path])]
     [:div
      {:title (clojure.string/join ", " (map (fn [lang] (get-in component [:label lang])) languages))}
-     (map-indexed (fn [idx lang]
-                    (let [field-spec (koodisto-field component lang)]
-                      ^{:key (str "option-" lang "-" idx)}
-                      [:div.editor-form__koodisto-field-container
-                       field-spec])) languages)]))
+     (map-indexed (partial koodisto-field component)
+                  languages)]))
 
 (defn info-addon
   "Info text which is added to an existing component"
@@ -619,11 +618,11 @@
 
 (defn- custom-answer-options [languages options path question-group-element? editable?]
   [:div.editor-form__multi-options-container
-   (map-indexed (fn [idx _]
-                  (dropdown-option idx [path :options idx] path languages
-                                   :editable? editable?
-                                   :include-followup? (not question-group-element?)))
-                options)])
+   (doall (map-indexed (fn [idx _]
+                         (dropdown-option idx [path :options idx] path languages
+                                          :editable? editable?
+                                          :include-followup? (not question-group-element?)))
+                       options))])
 
 (defn koodisto-answer-options [id path selected-koodisto question-group-element?]
   (let [opened? (r/atom false)]
