@@ -392,7 +392,9 @@ and (max-width: 1000px) {
   border-radius: 50%;
   color: white;
   font-size: 11px;
-  padding: 2px 6px;
+  padding: 2px 0;
+  width: 18px;
+  text-align: center;
 
   &.checked {
     background-color: @light-green;
@@ -535,17 +537,19 @@ and (max-width: 1000px) {
   border-bottom: solid @review-separator-color 1px;
   border-left: 3px solid @link-color;
   border-top: solid @review-separator-color 1px;
-  left: 25px;
+  //left: 25px;
   padding: 10px;
   position: absolute;
-  transform: translateX(-100%);
+  //transform: translateX(-100%);
   width: 448px;
+  right: 424px;
+  animation-duration: 0.5s;
 }
 
 .application-handling__attachment-review-container-floating {
   left: unset;
   position: fixed;
-  right: 60px;
+  right: 509px;
 }
 
 .application-handling__attachment-review-header {
@@ -591,6 +595,7 @@ and (max-width: 1000px) {
 .application-handling__attachment-review-toggle {
   font-size: 14px;
   padding: 0 5px;
+  margin-right: 10px;
   color: white;
   background-color: @link-color;
   border-radius: 2px;

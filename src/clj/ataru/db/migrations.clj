@@ -22,7 +22,8 @@
             [clojure.core.match :refer [match]]
             [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
             [taoensso.timbre :refer [spy debug info error]]
-            [ataru.component-data.component :as component])
+            [ataru.component-data.component :as component]
+            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service])
   (:import (java.time ZonedDateTime ZoneId)))
 
 (def default-fetch-size 50)
@@ -426,30 +427,70 @@
 
 (defn- create-attachment-reviews
   [attachment-field application-key hakutoiveet]
-  (let [review-base {:application_key application-key
-                     :attachment_key  (:id attachment-field)
-                     :state           "not-checked"}]
+  (let [review-base                        {:application_key application-key
+                                            :attachment_key  (:id attachment-field)
+                                            :state           "not-checked"}
+        relevant-field-hakukohde-oids      (clojure.set/intersection (set (map :oid hakutoiveet))
+                                                                     (-> attachment-field :belongs-to-hakukohteet set))
+        relevant-field-hakukohderyhma-oids (->> hakutoiveet
+                                                (filter #(not-empty (clojure.set/intersection (-> attachment-field :belongs-to-hakukohderyhma set)
+                                                                                              (-> % :ryhmaliitokset set))))
+                                                (map :oid))
+        hakukohde-oids                     (concat relevant-field-hakukohde-oids relevant-field-hakukohderyhma-oids)]
     (map #(assoc review-base :hakukohde %)
          (cond
-           (not-empty (:belongs-to-hakukohteet attachment-field))
-           (clojure.set/intersection (set hakutoiveet)
-                                     (-> attachment-field :belongs-to-hakukohteet set))
+           (or (-> attachment-field :belongs-to-hakukohderyhma not-empty)
+               (-> attachment-field :belongs-to-hakukohteet not-empty))
+           hakukohde-oids
 
            (not-empty hakutoiveet)
-           hakutoiveet
+           (map :oid hakutoiveet)
 
            :else ["form"]))))
 
+(defn- followup-option-selected?
+  [field answers]
+  (let [parent-answer-key (-> field :followup-of keyword)
+        answers    (-> answers
+                       parent-answer-key
+                       :value
+                       vector ; Make sure we won't flatten a string answer to ()
+                       flatten
+                       set)]
+    (contains? answers (:option-value field))))
+
+(defn- filter-relevant-attachments
+  [answers fields]
+  (filter (fn [field]
+            (and (= "attachment" (:fieldType field))
+                 (or (not (contains? field :followup-of))
+                     (followup-option-selected? field answers))))
+          fields))
+
+(defn- parse-hakukohde
+  [oid hakukohde]
+  {:oid            (or (:oid hakukohde) oid)
+   :ryhmaliitokset (some->> (:ryhmaliitokset hakukohde)
+                            (map #(:ryhmaOid %)))})
+
+(defn- get-hakukohde-rymaliitoket
+  [oid]
+  (parse-hakukohde oid (tarjonta-client/get-hakukohde oid)))
+
 (defn- migrate-attachment-states-to-applications
   [connection]
-  (doseq [res    (migration-app-store/get-1.92-latest-application-key-form-and-hakukohde connection)
-          review (->> (migration-app-store/get-1.92-form-by-id connection (:form_id res))
-                      :content
-                      util/flatten-form-fields
-                      (filter #(= "attachment" (:fieldType %)))
-                      (map #(create-attachment-reviews % (:key res) (:hakukohde res)))
-                      flatten)]
-    (migration-app-store/insert-1.92-attachment-review connection review)))
+  (let [get-cached-hakukohde-and-ryhmaliitokset (memoize get-hakukohde-rymaliitoket)]
+    (doseq [key    (migration-app-store/get-1.92-latest-application-keys connection)
+            :let [application (migration-app-store/get-1.92-application connection key)
+                  hakutoiveet (map get-cached-hakukohde-and-ryhmaliitokset (:hakukohde application))
+                  form        (migration-app-store/get-1.92-form-by-id connection (:form_id application))]
+            review (->> form
+                        :content
+                        :content
+                        util/flatten-form-fields
+                        (filter-relevant-attachments (-> application :content :answers util/answers-by-key))
+                        (mapcat #(create-attachment-reviews % (:key application) hakutoiveet)))]
+      (migration-app-store/insert-1.92-attachment-review connection review))))
 
 (migrations/defmigration
   migrate-person-info-module "1.13"

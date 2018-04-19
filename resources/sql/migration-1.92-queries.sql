@@ -1,6 +1,11 @@
--- name: yesql-get-1_92-latest-application-key-form-and-hakukohde
-SELECT key, form_id, hakukohde
+-- name: yesql-get-1_92-latest-application-keys
+SELECT key
 FROM latest_applications;
+
+-- name: yesql-get-1_92-application
+SELECT *
+FROM latest_applications
+WHERE key = :key;
 
 -- name: yesql-get-1_92-form
 SELECT *

@@ -77,32 +77,59 @@
 
 (defn- create-attachment-reviews
   [attachment-field application-key hakutoiveet]
-  (let [review-base {:application_key application-key
-                     :attachment_key  (:id attachment-field)
-                     :state           "not-checked"}]
+  (let [review-base                        {:application_key application-key
+                                            :attachment_key  (:id attachment-field)
+                                            :state           "not-checked"}
+        relevant-field-hakukohde-oids      (clojure.set/intersection (set (map :oid hakutoiveet))
+                                                                     (-> attachment-field :belongs-to-hakukohteet set))
+        relevant-field-hakukohderyhma-oids (->> hakutoiveet
+                                                (filter #(not-empty (clojure.set/intersection (-> attachment-field :belongs-to-hakukohderyhma set)
+                                                                                              (-> % :hakukohderyhmat set))))
+                                                (map :oid))
+        hakukohde-oids                     (concat relevant-field-hakukohde-oids relevant-field-hakukohderyhma-oids)]
     (map #(assoc review-base :hakukohde %)
          (cond
-           (not-empty (:belongs-to-hakukohteet attachment-field))
-           (clojure.set/intersection (set hakutoiveet)
-                                     (-> attachment-field :belongs-to-hakukohteet set))
+           (or (-> attachment-field :belongs-to-hakukohderyhma not-empty)
+               (-> attachment-field :belongs-to-hakukohteet not-empty))
+           hakukohde-oids
 
            (not-empty hakutoiveet)
-           hakutoiveet
+           (map :oid hakutoiveet)
 
            :else ["form"]))))
 
+(defn- followup-option-selected?
+  [field answers]
+  (let [parent-answer-key (-> field :followup-of keyword)
+        answers    (-> answers
+                       parent-answer-key
+                       :value
+                       vector ; Make sure we won't flatten a string answer to ()
+                       flatten
+                       set)]
+    (contains? answers (:option-value field))))
+
+(defn- filter-relevant-attachments
+  [answers fields]
+  (filter (fn [field]
+            (and (= "attachment" (:fieldType field))
+                 (or (not (contains? field :followup-of))
+                     (followup-option-selected? field answers))))
+          fields))
+
 (defn- create-attachment-hakukohde-reviews-for-application
-  [application connection]
-  (doseq [review (->> (forms/fetch-by-id (:form_id application))
-                      :content
-                      util/flatten-form-fields
-                      (filter #(= "attachment" (:fieldType %)))
-                      (mapcat #(create-attachment-reviews % (:key application) (:hakukohde application))))]
-    (yesql-save-attachment-review! review connection)))
+  [application applied-hakukohteet connection]
+  (let [reviews (->> (forms/fetch-by-id (:form_id application))
+                     :content
+                     util/flatten-form-fields
+                     (filter-relevant-attachments (-> application :content :answers util/answers-by-key))
+                     (mapcat #(create-attachment-reviews % (:key application) applied-hakukohteet)))]
+    (doseq [review reviews]
+      (yesql-save-attachment-review! review connection))))
 
 (defn- add-new-application-version
   "Add application and also initial metadata (event for receiving application, and initial review record)"
-  [application create-new-secret? conn]
+  [application create-new-secret? applied-hakukohteet conn]
   (let [connection                  {:connection conn}
         answers                     (->> application
                                          :answers
@@ -122,7 +149,7 @@
         new-application             (if (contains? application :key)
                                       (yesql-add-application-version<! application-to-store connection)
                                       (yesql-add-application<! application-to-store connection))]
-    (create-attachment-hakukohde-reviews-for-application new-application {:connection conn})
+    (create-attachment-hakukohde-reviews-for-application new-application applied-hakukohteet {:connection conn})
     (when create-new-secret?
       (yesql-add-application-secret!
         {:application_key (:key new-application)
@@ -148,10 +175,10 @@
     (unwrap-application application)
     (throw (ex-info "No existing form found when updating as virkailija" {:virkailija-secret virkailija-secret}))))
 
-(defn add-application [new-application]
+(defn add-application [new-application applied-hakukohteet]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (info (str "Inserting new application"))
-    (let [{:keys [id key] :as new-application} (add-new-application-version new-application true conn)
+    (let [{:keys [id key] :as new-application} (add-new-application-version new-application true applied-hakukohteet conn)
           connection                {:connection conn}]
       (audit-log/log {:new       new-application
                       :operation audit-log/operation-new
@@ -190,7 +217,7 @@
        (map :oid)
        (first)))
 
-(defn update-application [{:keys [lang secret virkailija-secret] :as new-application}]
+(defn update-application [{:keys [lang secret virkailija-secret] :as new-application} applied-hakukohteet]
   {:pre [(or (not-blank? secret)
              (not-blank? virkailija-secret))]}
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
@@ -201,6 +228,7 @@
           {:keys [id key] :as new-application} (add-new-application-version
                                                  (merge-applications new-application old-application)
                                                  updated-by-applicant?
+                                                 applied-hakukohteet
                                                  conn)
           virkailija-oid        (when-not updated-by-applicant? (get-virkailija-oid virkailija-secret key conn))]
       (info (str "Updating application with key "
