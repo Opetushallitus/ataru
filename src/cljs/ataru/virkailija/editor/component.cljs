@@ -618,27 +618,13 @@
                                    (dispatch [:editor/select-koodisto-options uri version title path]))}
                       title]]))]])])))
 
-(defn- custom-answer-options [path question-group-element? editable?]
-  (let [languages  @(subscribe [:editor/languages])
-        value      @(subscribe [:editor/get-component-value path])
-        field-type (:fieldType value)]
-    (seq [
-          ^{:key "options-input"}
-          [:div.editor-form__multi-options-container
-           (map-indexed (fn [idx _]
-                          (dropdown-option idx [path :options idx] path languages
-                                           :editable? editable?
-                                           :include-followup? (and (not question-group-element?)
-                                                                   (some #{field-type} ["dropdown" "multipleChoice" "singleChoice"]))))
-             (:options value))]
-          (if editable?
-            ^{:key "options-input-add"}
-            [:div.editor-form__add-dropdown-item
-             [:a
-              {:on-click (fn [evt]
-                           (.preventDefault evt)
-                           (dispatch [:editor/add-dropdown-option path]))}
-              [:i.zmdi.zmdi-plus-square] " Lisää"]])])))
+(defn- custom-answer-options [languages options path question-group-element? editable?]
+  [:div.editor-form__multi-options-container
+   (map-indexed (fn [idx _]
+                  (dropdown-option idx [path :options idx] path languages
+                                   :editable? editable?
+                                   :include-followup? (not question-group-element?)))
+                options)])
 
 (defn koodisto-answer-options [id path selected-koodisto question-group-element?]
   (let [opened? (r/atom false)]
@@ -664,7 +650,7 @@
             [:a
              {:on-click hide-koodisto-options}
              [:i.zmdi.zmdi-chevron-up] " Sulje vastausvaihtoehdot"]]
-           (custom-answer-options path question-group-element? editable?)])))))
+           (custom-answer-options languages (:options value) path question-group-element? editable?)])))))
 
 (defn dropdown [initial-content path]
   (let [languages        (subscribe [:editor/languages])
@@ -700,12 +686,16 @@
            [:div.editor-form--padded
             [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
             (when-not (= field-type "singleChoice") [dropdown-multi-options path options-koodisto])]
-
            (if (nil? @options-koodisto)
-             (let [editable? true]
-               (custom-answer-options path question-group-element? editable?))
-             [koodisto-answer-options (:id @value) path @options-koodisto question-group-element?]
-             )]]]))))
+             (custom-answer-options languages (:options @value) path question-group-element? true)
+             [koodisto-answer-options (:id @value) path @options-koodisto question-group-element?])
+           (when (nil? @options-koodisto)
+             [:div.editor-form__add-dropdown-item
+              [:a
+               {:on-click (fn [evt]
+                            (.preventDefault evt)
+                            (dispatch [:editor/add-dropdown-option path]))}
+               [:i.zmdi.zmdi-plus-square] " Lisää"]])]]]))))
 
 (defn drag-n-drop-spacer [path content]
   (let [expanded? (r/atom false)]
