@@ -19,4 +19,5 @@
              (if-let [existing-folluwups (:followups existing-option)]
                (assoc new-option :followups existing-folluwups)
                new-option)
-             new-option)) new-options)))
+             new-option))
+         new-options)))
