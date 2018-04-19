@@ -61,12 +61,14 @@ body {
 
 .application__readonly-container {
   width: 100%;
+  @media only screen and (max-width: @desktop-content-width) {
+    padding: 0 10px;
+  }
 }
 .application__wrapper-contents {
   margin-top: 13px;
 }
 .application__form-field {
-  margin-left: @field-margin-left;
   display: flex;
   flex-direction: column;
   margin-bottom: 20px;
@@ -132,7 +134,7 @@ body {
 }
 
 .application__wrapper-heading {
-  position: absolute;
+  min-width: @field-margin-left;
   width: @field-margin-left;
   h2 {
     color: @text-color;
@@ -140,6 +142,11 @@ body {
     font-weight: normal;
     text-transform: uppercase;
     display: inline-block;
+    margin-bottom: 0;
+  }
+
+  @media only screen and (max-width: @desktop-content-width) {
+    position: static;
   }
 }
 
@@ -310,9 +317,13 @@ body {
 }
 .application__wrapper-element {
   border-top: solid 1px @review-separator-color;
-  margin-bottom: 32px;
-  position: relative; /* So that we can make wrapper heading absolute */
+  margin-bottom: 20px;
   min-height: 65px;
+  display: flex;
+
+  @media only screen and (max-width: @desktop-content-width) {
+    display: initial;
+  }
 }
 
 .application__question-group {
@@ -329,11 +340,9 @@ body {
       margin-bottom: 0px;
     }
   }
-}
 
-@media only screen and (max-width: @desktop-content-width) {
-  .application__question-group {
-    margin-left: 10px;
+  @media only screen and (max-width: @desktop-content-width) {
+    margin-left: 0;
   }
 }
 
@@ -400,12 +409,31 @@ body {
   margin-bottom: 150px;
   width: @desktop-content-width;
 }
-.application__row-field-wrapper {
+
+.application__editable-content {
+  @media only screen and (max-width: @desktop-content-width) {
+    margin: 0 10px;
+  }
+}
+
+.application__editable-content > *:not(.application__wrapper-element),
+.application__readonly-container > *:not(.application__wrapper-element){
   margin-left: @field-margin-left;
+
+  @media only screen and (max-width: @desktop-content-width) {
+    margin-left: 0;
+  }
+}
+
+.application__row-field-wrapper {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   margin-bottom: 0px;
+
+  @media only screen and (max-width: @desktop-content-width) {
+    margin: 0;
+  }
 }
 .application__row-field {
   margin-left: 0px;
@@ -697,6 +725,10 @@ textarea.application__form-text-area__size-large {
   flex-flow: column nowrap;
   max-width: 610px;
   width: 100%;
+
+  @media only screen and (max-width: @desktop-content-width) {
+    padding-right: 0;
+  }
 }
 
 .application__form-checkbox {
@@ -874,6 +906,10 @@ th.application__readonly-adjacent--header {
   flex-flow: column wrap;
   margin-right: 10px;
   margin-bottom: 10px;
+
+  @media only screen and (max-width: @desktop-content-width) {
+    margin-right: 0;
+  }
 }
 
 .application__form-adjacent-row label span {
@@ -888,20 +924,7 @@ th.application__readonly-adjacent--header {
   display: block;
 }
 
-@media only screen
-and (max-width: @desktop-content-width) {
-  .application__wrapper-heading {
-    position: static;
-    margin-left: 10px;
-  }
-
-  /*
-     Without this first selector, the rule will be dependent on include
-     order (for row fields) which seems to be pretty random
-   */
-  .application__row-field.application__form-field, .application__form-field {
-    margin-left: 10px;
-  }
+@media only screen and (max-width: @desktop-content-width) {
   .logo-fi, .logo-sv, .logo-en {
     background: url(/hakemus/images/opintopolku_small-fi.png) no-repeat;
     background-size: 100%;
@@ -940,9 +963,6 @@ and (max-width: @desktop-content-width) {
     margin-top: 90px;
     width: auto;
   }
-  .application__row-field-wrapper {
-    margin: 0px;
-  }
   .application__form-text-input__size-large,
   .application__form-text-area__size-small,
   .application__form-text-area__size-medium,
@@ -978,9 +998,6 @@ and (max-width: @desktop-content-width) {
   .application__form-adjacent-row--desktop-only {
     display: none;
   }
-  .application__form-outer-checkbox-container {
-    padding-right: 10px;
-  }
 }
 
 @keyframes slide-from-bottom {
@@ -1003,6 +1020,11 @@ and (max-width: @desktop-content-width) {
       bottom: 0;
     }
   }
+}
+
+.application__hakukohde-contents-wrapper {
+  flex-grow: 2;
+  max-width: 800px;
 }
 
 .application__hakukohde-sub-header-dates {

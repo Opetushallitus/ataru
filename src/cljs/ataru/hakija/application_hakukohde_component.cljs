@@ -261,7 +261,7 @@
   [field-descriptor]
   [:div.application__wrapper-element
    [hakukohde-selection-header field-descriptor]
-   [:div.application__wrapper-contents
+   [:div.application__wrapper-contents.application__hakukohde-contents-wrapper
     [:div.application__form-field
      [:div.application__hakukohde-selected-list
       (for [hakukohde-oid @(subscribe [:application/selected-hakukohteet])]

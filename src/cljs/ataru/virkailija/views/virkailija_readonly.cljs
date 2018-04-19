@@ -9,7 +9,6 @@
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe]]
             [ataru.util :as util]
-            [ataru.cljs-util :refer [console-log]]
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
@@ -171,7 +170,7 @@
           true)))))
 
 (defn- followups [followups content application lang]
-  [:div
+  [:div.application-handling__followups-container
    (text content application lang nil)
    (into [:div]
      (for [followup followups

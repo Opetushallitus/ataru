@@ -4,7 +4,7 @@
             [reagent.ratom :refer-macros [reaction]]
             [markdown.core :refer [md->html]]
             [cljs.core.match :refer-macros [match]]
-            [ataru.cljs-util :as cljs-util :refer [console-log get-translation]]
+            [ataru.cljs-util :as cljs-util :refer [get-translation]]
             [ataru.hakija.hakija-readonly :as readonly-view]
             [ataru.application-common.application-field-common
              :refer
@@ -811,6 +811,6 @@
     {:component-did-mount #(dispatch [:application/setup-window-unload])
      :reagent-render      (fn [form-data]
                             (into
-                              [:div.animated.fadeIn]
+                              [:div.application__editable-content.animated.fadeIn]
                               (for [content (:content form-data)]
                                 [render-field content])))}))

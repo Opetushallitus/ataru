@@ -1353,18 +1353,24 @@ and (max-width: 1000px) {
 .application__readonly-container {
   width: 100%;
 }
+
 .application__wrapper-contents {
   margin-top: 13px;
   transition: background-color 1s;
 }
+
 .application__form-field {
-  margin-left: 245px;
   display: flex;
   flex-direction: column;
   margin-bottom: 20px;
   padding-right: 15px;
   max-width: 610px;
   transition: background-color 1s;
+}
+
+.application__readonly-container > .application__form-field,
+.application-handling__followups-container{
+  margin-left: 245px;
 }
 
 .highlighted {
@@ -1406,8 +1412,7 @@ and (max-width: 1000px) {
 }
 
 .application__wrapper-heading {
-  position: absolute;
-  width: 245px;
+  flex: 0 0 245px;
   h2 {
     color: @text-color;
     font-size: 16px;
@@ -1453,6 +1458,10 @@ and (max-width: 1000px) {
   .important {
     text-decoration: underline;
   }
+}
+
+.application__wrapper-element {
+  display: flex;
 }
 
 .application__wrapper-element--border {
