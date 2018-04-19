@@ -629,7 +629,6 @@
     (fn [id path selected-koodisto question-group-element?]
       (let [languages             @(subscribe [:editor/languages])
             value                 @(subscribe [:editor/get-component-value path])
-            field-type            (:fieldType value)
             editable?             false
             hide-koodisto-options (fn [evt]
                                     (reset! opened? false))
