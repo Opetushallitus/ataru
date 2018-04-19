@@ -228,7 +228,7 @@
         [hakukohteet-list-row hakukohde-oid])]]))
 
 (defn- person-info-module [content application lang]
-  [:div.application__person-info-wrapper
+  [:div.application__person-info-wrapper.application__wrapper-element
    [wrapper content application lang (:children content)]])
 
 (defn- repeat-count
