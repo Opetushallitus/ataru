@@ -553,9 +553,8 @@
            (fn [lang]
              [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
            languages)
-         (koodisto-fields-with-lang languages option-path))
-       ]
-      (if editable?
+         (koodisto-fields-with-lang languages option-path))]
+      (when editable?
         [remove-dropdown-option-button path option-index])
       (when include-followup?
         [followup-question option-path])]
