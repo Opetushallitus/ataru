@@ -5,12 +5,12 @@
    [ataru.config.core :refer [config]]
    [ataru.organization-service.ldap-client :as ldap-client]
    [ataru.cas.client :as cas-client]
-   [ataru.util :as util]
    [clojure.core.cache :as cache]
    [medley.core :refer [map-kv]]
    [ataru.organization-service.organization-client :as org-client]))
 
 (def all-orgs-cache-time-to-live (* 2 60 1000))
+(def org-parents-cache-time-to-live (* 5 60 1000))
 (def group-cache-time-to-live (* 5 60 1000))
 (def group-oid-prefix "1.2.246.562.28")
 
@@ -29,8 +29,8 @@
   (get-hakukohde-groups [this]
     "Gets all hakukohde groups")
   (get-organizations-for-oids [this organization-oids])
-  (get-selectable-organizations [this organization-oids]
-    "Gets user's organizations and all suborganizations"))
+  (get-organization-with-parents [this organization-oid]
+    "Gets an organization and all its parents in a hierarchical map"))
 
 (defn get-orgs-from-client [cas-client direct-oids]
   (flatten (map #(org-client/get-organizations cas-client %) direct-oids)))
@@ -70,6 +70,13 @@
   {:pre [(group-oid? group-oid)]}
   (let [groups (get-groups-from-cache-or-client group-cache cas-client)]
     (get groups group-oid (unknown-group group-oid))))
+
+(defn get-organization-with-parents-cached
+  [org-parents-cache organization-oid]
+  (get-from-cache-or-real-source
+    org-parents-cache
+    organization-oid
+    #(org-client/get-organization-parents organization-oid)))
 
 (defn- hakukohderyhmat-from-groups [groups]
   (let [hakukohde-groups (filter :hakukohderyhma? groups)]
@@ -112,18 +119,16 @@
                            group-oids)]
       (concat normal-orgs groups)))
 
-  (get-selectable-organizations [this organization-oids]
-    (let [normal-org-oids (remove group-oid? organization-oids)
-          normal-orgs     (remove nil? (mapcat #(org-client/get-organizations (:cas-client this) %)
-                                               normal-org-oids))]
-      (util/group-by-first :oid normal-orgs)))
+  (get-organization-with-parents [this organization-oid]
+    (get-organization-with-parents-cached (:org-parents-cache this) organization-oid))
 
   (start [this]
     (-> this
         (assoc :cas-client (cas-client/new-client "/organisaatio-service"))
         (assoc :ldap-connection (ldap-client/create-ldap-connection))
         (assoc :all-orgs-cache (atom (cache/ttl-cache-factory {} :ttl all-orgs-cache-time-to-live)))
-        (assoc :group-cache (atom (cache/ttl-cache-factory {} :ttl group-cache-time-to-live)))))
+        (assoc :group-cache (atom (cache/ttl-cache-factory {} :ttl group-cache-time-to-live)))
+        (assoc :org-parents-cache (atom (cache/ttl-cache-factory {} :ttl org-parents-cache-time-to-live)))))
 
   (stop [this]
     (.close (:ldap-connection this))
@@ -155,9 +160,6 @@
     (fake-orgs-by-root-orgs root-orgs))
 
   (get-organizations-for-oids [this organization-oids]
-    (map ldap-client/fake-org-by-oid organization-oids))
-
-  (get-selectable-organizations [this organization-oids]
     (map ldap-client/fake-org-by-oid organization-oids)))
 
 (defn new-organization-service []

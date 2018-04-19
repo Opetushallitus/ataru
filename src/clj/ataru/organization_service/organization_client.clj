@@ -90,8 +90,16 @@
         body)
       (log/error (str "Couldn't fetch organization by number from url: " url)))))
 
+(defn get-organization-parents
+  "Get organization and all its parents; the root organization is the 1st element, the queried organization the last one."
+  [organization-oid]
+  (let [url      (resolve-url :organisaatio-service.get-parents organization-oid)
+        response @(http/get url)]
+    (if (= 200 (:status response))
+      (-> response (read-body) (get-all-organizations-as-seq))
+      (throw (Exception. (str "Got status code " (:status response) " While reading organization parents"))))))
+
 (defn fake-hakukohderyhma [index]
   (group->map {:oid (format "1.2.246.562.28.0000000000%d" index)
                :nimi {:fi (format "Testihakukohderyhma %d" index)}
-               :ryhmatyypit ["hakukohde"]
-               }))
+               :ryhmatyypit ["hakukohde"]}))

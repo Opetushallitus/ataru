@@ -1,14 +1,28 @@
 (ns ataru.organization-service.session-organizations
   (:require
-   [schema.core :as s]
-   [ataru.organization-service.organization-client :as organization-client]
-   [ataru.organization-service.user-rights :refer [Right]]))
+    [schema.core :as s]
+    [ataru.organization-service.organization-client :as organization-client]
+    [ataru.organization-service.user-rights :refer [Right]]
+    [ataru.organization-service.organization-service :as organization-service]))
 
-(defn- right-organizations [session] (-> session :identity :user-right-organizations))
+(defn- right-organizations
+  [session]
+  (-> session :identity :user-right-organizations))
 
 (defn- all-org-oids [organization-service organizations]
   (let [all-organizations (.get-all-organizations organization-service organizations)]
     (set (map :oid all-organizations))))
+
+(defn- filter-orgs-for-rights
+  [user-organizations rights organization-oids]
+  (filter
+    (fn [oid]
+      (-> user-organizations
+          (get oid)
+          :rights
+          (clojure.set/intersection (set rights))
+          (not-empty)))
+    organization-oids))
 
 (defn right-seq? [val] (s/validate [Right] val))
 
@@ -28,11 +42,19 @@
                           when-ordinary-user-fn
                           when-superuser-fn]
   {:pre [(right-seq? rights)]}
-  (let [organizations     (select-organizations-for-rights session rights)
-        organization-oids (set (map :oid organizations))]
+  (let [organizations         (select-organizations-for-rights session rights)
+        organization-oids     (set (map :oid organizations))
+        selected-organization (:selected-organization session)]
     (cond
       (empty? organizations)
       (when-no-orgs-fn)
+
+      (some? selected-organization)
+      (when-ordinary-user-fn
+        (filter-orgs-for-rights
+          (:organizations session)
+          rights
+          (all-org-oids organization-service selected-organization)))
 
       (contains? organization-oids organization-client/oph-organization)
       (when-superuser-fn)

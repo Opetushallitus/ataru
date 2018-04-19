@@ -7,6 +7,7 @@
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.organization-service.user-rights :as rights]
             [ataru.virkailija.authentication.cas-ticketstore :as cas-store]
+            [ataru.util :as util]
             [clj-util.cas :as cas]
             [environ.core :refer [env]]
             [medley.core :refer [map-kv]]
@@ -28,19 +29,57 @@
               username   (.run (.validateServiceTicket cas-client (resolve-url :ataru.login-success) ticket))]
           [username ticket]))))
 
+(defn- user-right-organizations->organization-rights
+  [user-right-organizations]
+  "Takes map keyed by right with list of organizations as values, outputs map keyed by organization oid with list of rights as values"
+  (reduce
+    (fn [acc [right oids]]
+      (merge-with
+        into
+        acc
+        (reduce
+          (fn [acc2 organization]
+            (update-in acc2 [(:oid organization)] conj right))
+          {}
+          oids)))
+    {}
+    user-right-organizations))
+
+(defn- add-rights-to-organization
+  [user-right-organizations organization-service organization]
+  "Add list of rights to organization, looking up in hierarchy if necessary"
+  (let [organization-rights (user-right-organizations->organization-rights user-right-organizations)
+        rights              (set (or
+                                   (get organization-rights (:oid organization))
+                                   (let [closest-direct-org (->> (organization-service/get-organization-with-parents
+                                                                   organization-service
+                                                                   (:oid organization))
+                                                                 (reverse)
+                                                                 (filter (fn [{oid :oid}]
+                                                                           (get organization-rights oid)))
+                                                                 (first))]
+                                     (get organization-rights (:oid closest-direct-org)))))]
+    (assoc organization :rights rights)))
+
 (defn login [login-provider organization-service redirect-url]
   (try
     (if-let [[username ticket] (login-provider)]
       (do
         (cas-store/login ticket)
-        (let [virkailija               (ldap/get-virkailija-by-username username)
-              right-organization-oids  (ldap/user->right-organization-oids virkailija rights/right-names)
-              organization-oids        (-> (vals right-organization-oids) (flatten) (set))
-              user-right-organizations (map-kv
-                                         (fn [right org-oids]
-                                           [right (organization-service/get-organizations-for-oids organization-service org-oids)])
-                                         right-organization-oids)]
-          (info "user" username "with organizations" organization-oids "logged in, redirect to" redirect-url)
+        (let [virkailija                (ldap/get-virkailija-by-username username)
+              right-organization-oids   (ldap/user->right-organization-oids virkailija rights/right-names)
+              organization-oids         (-> (vals right-organization-oids) (flatten) (set))
+              user-right-organizations  (map-kv
+                                          (fn [right org-oids]
+                                            [right (organization-service/get-organizations-for-oids organization-service org-oids)])
+                                          right-organization-oids)
+              organizations             (organization-service/get-all-organizations
+                                          organization-service (map (fn [oid] {:oid oid}) organization-oids))
+              organizations-with-rights (util/group-by-first
+                                          :oid
+                                          (map
+                                            (partial add-rights-to-organization user-right-organizations organization-service)
+                                            organizations))]
           (db/exec :db yesql-upsert-virkailija<! {:oid        (:employeeNumber virkailija)
                                                   :first_name (:givenName virkailija)
                                                   :last_name  (:sn virkailija)})
@@ -54,7 +93,7 @@
                                           :oid                      (:employeeNumber virkailija)
                                           :ticket                   ticket
                                           :user-right-organizations user-right-organizations
-                                          :organizations            (.get-selectable-organizations organization-service organization-oids)}}))))
+                                          :organizations            organizations-with-rights}}))))
       (redirect-to-logged-out-page))
     (catch Exception e
       (error e "Error in login ticket handling")
