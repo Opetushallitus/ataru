@@ -10,3 +10,14 @@
                                    (Integer/valueOf month)
                                    (Integer/valueOf year)]
                             :cljs [day month year])))))
+
+(defn update-options-while-keeping-existing-followups [new-options existing-options]
+  (if (empty? existing-options)
+    new-options
+    (map (fn [new-option]
+           (if-let [existing-option (first (filter #(= (:value %) (:value new-option)) existing-options))]
+             (if-let [existing-folluwups (:followups existing-option)]
+               (assoc new-option :followups existing-folluwups)
+               new-option)
+             new-option))
+         new-options)))
