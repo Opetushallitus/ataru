@@ -375,12 +375,13 @@
       value]]))
 
 (defn- koodisto-fields-with-lang [languages option-path]
-  (let [multiple-languages? (> (count languages) 1)
-        component           @(subscribe [:editor/get-component-value option-path])]
-    [:div
-     {:title (clojure.string/join ", " (map (fn [lang] (get-in component [:label lang])) languages))}
-     (map-indexed (partial koodisto-field component)
-                  languages)]))
+  (fn [languages option-path]
+    (let [multiple-languages? (> (count languages) 1)
+          component           @(subscribe [:editor/get-component-value option-path])]
+      [:div
+       {:title (clojure.string/join ", " (map (fn [lang] (get-in component [:label lang])) languages))}
+       (map-indexed (partial koodisto-field component)
+                    languages)])))
 
 (defn info-addon
   "Info text which is added to an existing component"
@@ -551,7 +552,7 @@
            (fn [lang]
              [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
            languages)
-         (koodisto-fields-with-lang languages option-path))]
+         [koodisto-fields-with-lang languages option-path])]
       (when editable?
         [remove-dropdown-option-button path option-index])
       (when include-followup?
