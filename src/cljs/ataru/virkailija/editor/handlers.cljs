@@ -593,7 +593,6 @@
   :editor/fetch-koodisto-for-component-with-id
   (fn [{db :db} [_ id {:keys [uri version]}]]
     {:http {:method              :get
-            :params              {}
             :path                (str "/lomake-editori/api/koodisto/" uri "/" version)
             :handler-or-dispatch :editor/set-new-koodisto-while-keeping-existing-followups
             :handler-args        {:id id :uri uri :version version}}}))
@@ -601,20 +600,19 @@
 (reg-event-db
   :editor/set-new-koodisto-while-keeping-existing-followups
   (fn [db [_ new-koodisto {:keys [id uri version]}]]
-    (let [key (get-in db [:editor :selected-form-key])
-          form (get-in db [:editor :forms key :content])
+    (let [key                       (get-in db [:editor :selected-form-key])
+          form                      (get-in db [:editor :forms key :content])
           update-koodisto-component (fn [component]
                                       (assoc-in component [:options]
                                         (update-options-while-keeping-existing-followups new-koodisto (:options component))))
-          find-koodisto-component (fn [component]
-                                    (if (and (= id (:id component))
-                                             (= uri (get-in component [:koodisto-source :uri]))
-                                             (= version (get-in component [:koodisto-source :version])))
-                                      (update-koodisto-component component)
-                                      component))
-          updated-form (clojure.walk/prewalk find-koodisto-component form)]
-      (assoc-in db [:editor :forms key :content] updated-form))
-    ))
+          find-koodisto-component   (fn [component]
+                                      (if (and (= id (:id component))
+                                               (= uri (get-in component [:koodisto-source :uri]))
+                                               (= version (get-in component [:koodisto-source :version])))
+                                        (update-koodisto-component component)
+                                        component))
+          updated-form              (clojure.walk/prewalk find-koodisto-component form)]
+      (assoc-in db [:editor :forms key :content] updated-form))))
 
 (reg-event-fx
   :editor/show-belongs-to-hakukohteet-modal
