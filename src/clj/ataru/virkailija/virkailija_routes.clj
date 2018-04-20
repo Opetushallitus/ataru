@@ -574,6 +574,7 @@
           (response/bad-request {:error "No haku or application oid provided."})
           (if-let [applications (access-controlled-application/external-applications
                                   organization-service
+                                  tarjonta-service
                                   session
                                   hakuOid
                                   hakukohdeOid
