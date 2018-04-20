@@ -591,11 +591,11 @@
        [application-list-basic-column-header
         :applicant-name
         "Hakija"]
-       [:span.application-handling__list-row--identification
-        {:on-click #(dispatch [:application/update-identification])}
-        (if @only-identified?
-          [:i.application-handling__list-row--identification.zmdi.zmdi-check-square]
-          [:i.application-handling__list-row--identification.zmdi.zmdi-square-o])
+       [:label.application-handling__identification
+        [:input.application-handling__identification--checkbox
+         {:type     "checkbox"
+          :checked  @only-identified?
+          :on-click #(dispatch [:application/update-identification])}]
         "Vain yksilöimättömät"]]
       [:span.application-handling__list-row--time
        [application-list-basic-column-header
