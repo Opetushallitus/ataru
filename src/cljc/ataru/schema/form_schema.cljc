@@ -223,10 +223,11 @@
    (s/optional-key :default-hakukohde) FormTarjontaHakukohde})
 
 (s/defschema Haku
-  {:oid s/Str
-   :name LocalizedStringOptional
-   :hakuajat [{:start java.time.ZonedDateTime
-               (s/optional-key :end) java.time.ZonedDateTime}]})
+  {:oid                    s/Str
+   :name                   LocalizedStringOptional
+   :prioritize-hakukohteet s/Bool
+   :hakuajat               [{:start                java.time.ZonedDateTime
+                             (s/optional-key :end) java.time.ZonedDateTime}]})
 
 (s/defschema Hakukohderyhma
   {:oid s/Str
