@@ -33,7 +33,7 @@
   (fn [db [_ hakukohde-query]]
     (if (= hakukohde-query (get-in db [:application :hakukohde-query]))
       (let [lang              (-> db :form :selected-language)
-            order-by-hakuaika (fn [hk] (not @(subscribe [:application/hakukohde-hakuaika-on? (:value hk)])))
+            order-by-hakuaika (fn [hk] (not @(subscribe [:application/hakukohde-editable? (:value hk)])))
             order-by-name     #(get-in % [:label lang])
             hakukohde-options (->> (hakukohteet-field db)
                                    :options
