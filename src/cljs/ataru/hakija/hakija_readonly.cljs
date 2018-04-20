@@ -27,6 +27,13 @@
     (clojure.string/split s #"\s*,\s*")
     s))
 
+(defn- visible? [ui field-descriptor]
+  (and (get-in @ui [(keyword (:id field-descriptor)) :visible?] true)
+       (or (empty? (:children field-descriptor))
+           (some #(and (visible? ui %)
+                       (not= "infoElement" (:fieldClass %)))
+                 (:children field-descriptor)))))
+
 (defn text [field-descriptor application lang group-idx]
   (let [id (keyword (:id field-descriptor))
         answer (get-in application [:answers id])]
@@ -93,7 +100,7 @@
 
 (defn- question-group-row [application lang children idx]
   [:div.application__question-group-row
-   [:div.application__question-group-row-content
+   [:div.application__question-group-row-content.application__form-field
     (for [child children]
       ^{:key (str (:id child) "-" idx)}
       [field child application lang idx])]])
@@ -102,7 +109,7 @@
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [content application lang children]
       (let [groups-amount (->> content :id keyword (get @ui) :count)]
-        [:div.application__wrapper-element.application__question-group.application__read-only
+        [:div.application__question-group.application__read-only
          [:p.application__read-only-heading-text (-> content :label lang)]
          [:div
           (for [idx (range groups-amount)]
@@ -154,39 +161,28 @@
            [:th.application__readonly-adjacent--header (str (-> child :label lang)) (required-hint field-descriptor)]))]
       [fieldset-answer-table fieldset-answers]]]))
 
-(defn- followup-has-answer?
-  [followup application]
-  (when-let [answer-value (:value ((answer-key followup) (:answers application)))]
-    (and
-      (boolean answer-value)
-      (if (sequential? answer-value)
-        (< 0 (count answer-value))
-        true))))
-
-(defn- selectable [content application lang]
+(defn- selectable [content application lang question-group-idx]
   [:div
    [:div.application__form-field-label (some (:label content) [lang :fi :sv :en])]
    [:div.application-handling__nested-container
-    (let [values           (-> application
-                               (get-in [:answers (keyword (:id content))])
-                               :value
+    (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
+
+                                       (some? question-group-idx)
+                                       (nth question-group-idx))
                                vector
                                flatten
                                set)
-          selected-options (filter #(contains? values (:value %)) (:options content))]
+          selected-options (filter #(contains? values (:value %)) (:options content))
+          ui               (subscribe [:state-query [:application :ui]])]
       (doall
         (for [option selected-options]
           ^{:key (:value option)}
           [:div
            [:p.application__text-field-paragraph (some (:label option) [lang :fi :sv :en])]
-           (into [:div.application-handling__nested-container]
-                 (for [followup (:followups option)
-                       :let [followup-is-visible? (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?])]
-                       :when (if (boolean? followup-is-visible?)
-                               followup-is-visible?
-                               (followup-has-answer? followup application))]
-                   [:div
-                    [field followup application lang]]))])))]])
+           (when (some #(visible? ui %) (:followups option))
+             [:div.application-handling__nested-container
+              (for [followup (:followups option)]
+                [field followup application lang])])])))]])
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
@@ -237,14 +233,6 @@
     (-> lang
         clojure.string/lower-case
         keyword)))
-
-(defn- visible? [ui field-descriptor]
-  (and (get-in @ui [(keyword (:id field-descriptor)) :visible?] true)
-       (or (empty? (:children field-descriptor))
-           (some (partial visible? ui) (:children field-descriptor)))
-       (or (not (contains? field-descriptor :children))
-           (some #(not= "infoElement" (:fieldClass %))
-                 (:children field-descriptor)))))
 
 (defn readonly-fields [form application]
   (when form

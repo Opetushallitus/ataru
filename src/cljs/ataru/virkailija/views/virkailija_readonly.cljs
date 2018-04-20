@@ -22,6 +22,28 @@
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]))
 
+(defn- belongs-to-hakukohderyhma? [field application]
+  (let [hakukohteet             (-> application :hakukohde set)
+        applied-hakukohderyhmat (->> (-> application :tarjonta :hakukohteet)
+                                     (filter #(contains? hakukohteet (:oid %)))
+                                     (mapcat :hakukohderyhmat)
+                                     set)]
+    (not-empty (clojure.set/intersection (-> field :belongs-to-hakukohderyhma set)
+                                         applied-hakukohderyhmat))))
+
+(defn- belongs-to-hakukohde? [field application]
+  (not-empty (clojure.set/intersection (set (:belongs-to-hakukohteet field))
+                                       (set (:hakukohde application)))))
+
+(defn- visible? [field-descriptor application]
+  (and (or (empty? (:belongs-to-hakukohteet field-descriptor))
+           (belongs-to-hakukohde? field-descriptor application))
+       (or (empty? (:belongs-to-hakukohderyhma field-descriptor))
+           (belongs-to-hakukohderyhma? field-descriptor application))
+       (or (not (contains? field-descriptor :children))
+           (some #(and (not= "infoElement" (:fieldClass %)))
+                 (:children field-descriptor)))))
+
 (defn text [field-descriptor application lang group-idx]
   (let [id               (keyword (:id field-descriptor))
         use-onr-info?    (contains? (:person application) id)
@@ -169,30 +191,28 @@
           (< 0 (count answer-value))
           true)))))
 
-(defn- selectable [content application lang]
+(defn- selectable [content application lang question-group-idx]
   [:div
    [:div.application__form-field-label (some (:label content) [lang :fi :sv :en])]
    [:div.application-handling__nested-container
-    (let [values           (-> application
-                               (get-in [:answers (keyword (:id content))])
-                               :value
+    (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
+
+                                       (some? question-group-idx)
+                                       (nth question-group-idx))
                                vector
                                flatten
                                set)
-          selected-options (filter #(contains? values (:value %)) (:options content))]
+          selected-options (filter #(contains? values (:value %)) (:options content))
+          ui               (subscribe [:state-query [:application :ui]])]
       (doall
         (for [option selected-options]
           ^{:key (:value option)}
           [:div
-           [:p.application__form-field-value (some (:label option) [lang :fi :sv :en])]
-           (into [:div.application-handling__nested-container]
-                 (for [followup (:followups option)
-                       :let [followup-is-visible? (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?])]
-                       :when (if (boolean? followup-is-visible?)
-                               followup-is-visible?
-                               (followup-has-answer? followup application))]
-                   [:div
-                    [field followup application lang]]))])))]])
+           [:p.application__text-field-paragraph (some (:label option) [lang :fi :sv :en])]
+           (when (some #(visible? % application) (:followups option))
+             [:div.application-handling__nested-container
+              (for [followup (:followups option)]
+                [field followup application lang])])])))]])
 
 (defn- haku-row [haku-name]
   [:div.application__form-field
@@ -260,7 +280,7 @@
          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children group-idx]
          {:fieldClass "formField" :exclude-from-answers true} nil
          {:fieldClass "infoElement"} nil
-         {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")} [selectable content application lang]
+         {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")} [selectable content application lang group-idx]
          {:fieldClass "formField" :fieldType (:or "textField" "textArea")} (text content application lang group-idx)
          {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang group-idx]
          {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content]))
@@ -270,19 +290,6 @@
     (-> lang
         clojure.string/lower-case
         keyword)))
-
-(defn- visible? [field-descriptor application]
-  ;; render the field if
-  ;; 1) the field isn't a hakukohde specific question
-  ;; 2) the field is a hakukohde specific question and the user has applied to one of
-  ;;    those hakukohteet to whom the field belongs to
-  ;; 3) the field has no children or has at least one child that is not an infoElement
-  (and (or (empty? (:belongs-to-hakukohteet field-descriptor))
-           (not-empty (clojure.set/intersection (set (:belongs-to-hakukohteet field-descriptor))
-                                                (set (:hakukohde application)))))
-       (or (not (contains? field-descriptor :children))
-           (some #(and (not= "infoElement" (:fieldClass %)))
-                 (:children field-descriptor)))))
 
 (defn readonly-fields [form application]
   (when form
