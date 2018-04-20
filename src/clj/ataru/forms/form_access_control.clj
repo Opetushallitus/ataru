@@ -32,11 +32,19 @@
   (let [form-keys-from-tarjonta (set (keys (tarjonta-protocol/get-forms-in-use virkailija-tarjonta-service session)))]
     (contains? form-keys-from-tarjonta form-key)))
 
-(defn get-organizations-with-edit-rights [session]
-  (-> session
-      :identity
-      :user-right-organizations
-      :form-edit))
+(defn get-organizations-with-edit-rights
+  [session]
+  (if (:selected-organization session)
+    (->> (:organizations session)
+         (filter
+           (fn [org]
+             (and
+               (= (:oid org) (-> session :selected-organization :oid))
+               (contains? (:rights org) :form-edit)))))
+    (-> session
+        :identity
+        :user-right-organizations
+        :form-edit)))
 
 (defn- check-edit-authorization [form session virkailija-tarjonta-service organization-service do-fn]
   (let [organizations (get-organizations-with-edit-rights session)]

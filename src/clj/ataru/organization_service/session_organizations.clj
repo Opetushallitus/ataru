@@ -26,14 +26,19 @@
 
 (defn right-seq? [val] (s/validate [Right] val))
 
-(defn select-organizations-for-rights [session rights]
+(defn select-organizations-for-rights [organization-service session rights]
   {:pre [(right-seq? rights)]}
-  (let [right-orgs (right-organizations session)]
-    (->> rights
-         (map #(get right-orgs %))
-         (remove nil?)
-         flatten
-         distinct)))
+  (if-let [selected-organization (:selected-organization session)]
+    (filter-orgs-for-rights
+      (:organizations session)
+      rights
+      (all-org-oids organization-service [selected-organization]))
+    (let [right-orgs (right-organizations session)]
+      (->> rights
+           (map #(get right-orgs %))
+           (remove nil?)
+           flatten
+           distinct))))
 
 (defn run-org-authorized [session
                           organization-service
@@ -42,7 +47,7 @@
                           when-ordinary-user-fn
                           when-superuser-fn]
   {:pre [(right-seq? rights)]}
-  (let [organizations         (select-organizations-for-rights session rights)
+  (let [organizations         (select-organizations-for-rights organization-service session rights)
         organization-oids     (set (map :oid organizations))
         selected-organization (:selected-organization session)]
     (cond
@@ -50,11 +55,7 @@
       (when-no-orgs-fn)
 
       (some? selected-organization)
-      (when-ordinary-user-fn
-        (filter-orgs-for-rights
-          (:organizations session)
-          rights
-          (all-org-oids organization-service selected-organization)))
+      (when-ordinary-user-fn (map :oid organizations))
 
       (contains? organization-oids organization-client/oph-organization)
       (when-superuser-fn)

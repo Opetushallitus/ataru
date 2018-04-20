@@ -837,7 +837,7 @@
 (reg-event-fx
   :editor/update-organization-query-results
   (fn [{db :db} [_ results]]
-    {:db (assoc-in db [:editor :organizations :matches] (vals results))}))
+    {:db (assoc-in db [:editor :organizations :matches] results)}))
 
 (reg-event-fx
   :editor/select-organization

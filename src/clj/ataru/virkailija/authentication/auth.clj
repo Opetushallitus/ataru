@@ -4,6 +4,7 @@
             [ataru.db.db :as db]
             [ataru.log.audit-log :as audit-log]
             [ataru.organization-service.ldap-client :as ldap]
+            [ataru.organization-service.organization-client :as organization-client]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.organization-service.user-rights :as rights]
             [ataru.virkailija.authentication.cas-ticketstore :as cas-store]
@@ -69,6 +70,7 @@
         (let [virkailija                (ldap/get-virkailija-by-username username)
               right-organization-oids   (ldap/user->right-organization-oids virkailija rights/right-names)
               organization-oids         (-> (vals right-organization-oids) (flatten) (set))
+              oph-organization-member?  (contains? organization-oids organization-client/oph-organization)
               user-right-organizations  (map-kv
                                           (fn [right org-oids]
                                             [right (organization-service/get-organizations-for-oids organization-service org-oids)])
@@ -93,6 +95,7 @@
                                           :oid                      (:employeeNumber virkailija)
                                           :ticket                   ticket
                                           :user-right-organizations user-right-organizations
+                                          :superuser                oph-organization-member?
                                           :organizations            organizations-with-rights}}))))
       (redirect-to-logged-out-page))
     (catch Exception e

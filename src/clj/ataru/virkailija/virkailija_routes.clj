@@ -468,11 +468,11 @@
 
       (api/GET "/user-organizations" {session :session}
         :query-params [{query :- s/Str nil}]
-        (ok (organization-selection/query-organization (-> session :identity :organizations) query)))
+        (ok (organization-selection/query-organization organization-service session query)))
 
       (api/POST "/user-organization/:oid" {session :session}
         :path-params [oid :- s/Str]
-        (if-let [selected-organization (organization-selection/select-organization (-> session :identity :organizations) oid)]
+        (if-let [selected-organization (organization-selection/select-organization organization-service session oid)]
           (-> (ok selected-organization)
               (assoc :session (assoc session :selected-organization selected-organization)))
           (bad-request {}))))
