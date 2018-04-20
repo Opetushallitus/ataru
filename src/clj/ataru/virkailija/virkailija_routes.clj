@@ -475,7 +475,11 @@
         (if-let [selected-organization (organization-selection/select-organization organization-service session oid)]
           (-> (ok selected-organization)
               (assoc :session (assoc session :selected-organization selected-organization)))
-          (bad-request {}))))
+          (bad-request {})))
+
+      (api/DELETE "/user-organization" {session :session}
+        (-> (ok {})
+            (assoc :session (dissoc session :selected-organization)))))
 
     (api/context "/tarjonta" []
       :tags ["tarjonta-api"]

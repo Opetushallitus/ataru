@@ -71,6 +71,11 @@
             (when @org-select-visible?
               [:div.profile__organization-select
                [:h4.profile__organization-select-title "Valitse organisaatio"]
+               (when @selected-organization
+                 [:div
+                  [:a
+                   {:on-click #(dispatch [:editor/remove-selected-organization])}
+                   "Poista valinta"]])
                [:input.profile__organization-select-input
                 {:value     @(subscribe [:state-query [:editor :organizations :query]])
                  :on-change #(dispatch [:editor/update-organization-select-query (.-value (.-target %))])}]

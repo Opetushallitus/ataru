@@ -849,4 +849,11 @@
 (reg-event-db
   :editor/update-selected-organization
   (fn [db [_ selected-organization]]
-    (assoc-in db [:editor :user-info :selected-organization] selected-organization)))
+    (assoc-in db [:editor :user-info :selected-organization] (not-empty selected-organization))))
+
+(reg-event-fx
+  :editor/remove-selected-organization
+  (fn [_]
+    {:http {:method              :delete
+            :path                "/lomake-editori/api/organization/user-organization"
+            :handler-or-dispatch :editor/update-selected-organization}}))
