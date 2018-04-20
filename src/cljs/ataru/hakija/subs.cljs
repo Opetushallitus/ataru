@@ -140,12 +140,13 @@
          (not @(re-frame/subscribe [:application/cannot-edit? :hakukohteet])))))
 
 (re-frame/reg-sub
-  :application/hakukohde-hakuaika-on?
+  :application/hakukohde-editable?
   (fn [db [_ hakukohde-oid]]
-    (->> (get-in db [:form :tarjonta :hakukohteet])
-         (some #(when (= hakukohde-oid (:oid %)) %))
-         :hakuaika
-         :on)))
+    (or (-> db :application :virkailija-secret empty? not)
+        (->> (get-in db [:form :tarjonta :hakukohteet])
+             (some #(when (= hakukohde-oid (:oid %)) %))
+             :hakuaika
+             :on))))
 
 (re-frame/reg-sub
   :application/hakukohde-query

@@ -147,7 +147,7 @@
   (let [deleting? @(subscribe [:application/hakukohde-deleting? hakukohde-oid])
         prioritize-hakukohteet? @(subscribe [:application/prioritize-hakukohteet?])
         haku-editable? @(subscribe [:application/hakukohteet-editable?])
-        hakukohde-editable? @(subscribe [:application/hakukohde-hakuaika-on? hakukohde-oid])]
+        hakukohde-editable? @(subscribe [:application/hakukohde-editable? hakukohde-oid])]
     [:div.application__hakukohde-row.animated
      {:class (if deleting?
                "fadeOut"
@@ -174,7 +174,7 @@
         search-term         @(subscribe [:application/hakukohde-query])
         aria-header-id      (str "hakukohde-search-hit-header-" hakukohde-oid)
         aria-description-id (str "hakukohde-search-hit-description-" hakukohde-oid)
-        hakukohde-hakuaika-on? @(subscribe [:application/hakukohde-hakuaika-on? hakukohde-oid])
+        hakukohde-editable? @(subscribe [:application/hakukohde-editable? hakukohde-oid])
         hakukohteet-full?   @(subscribe [:application/hakukohteet-full?])]
     [:div.application__hakukohde-row.application__hakukohde-row--search-hit
      {:class         (when hakukohde-selected? "application__hakukohde-row--search-hit-selected")
@@ -186,7 +186,7 @@
       [:div.application__hakukohde-selected-row-description
        {:id aria-description-id}
        (hilight-text @(subscribe [:application/hakukohde-description hakukohde-oid]) search-term)]]
-     (if hakukohde-hakuaika-on?
+     (if hakukohde-editable?
        [:div.application__hakukohde-row-button-container
         (if hakukohde-selected?
           [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
