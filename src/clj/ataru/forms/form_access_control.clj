@@ -35,7 +35,9 @@
 (defn get-organizations-with-edit-rights
   [session]
   (if (:selected-organization session)
-    (->> (:organizations session)
+    (->> session
+         :identity
+         :organizations
          (filter
            (fn [org]
              (and
