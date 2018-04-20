@@ -34,6 +34,9 @@
                                     (str "term=" term)))
         application-key         (when-let [application-key (get-in db [:application :selected-key])]
                                   (str "application-key=" application-key))
+        ensisijaisesti          (when (or (some? selected-hakukohde)
+                                          (some? selected-hakukohderyhma))
+                                  (str "ensisijaisesti=" (get-in db [:application :ensisijaisesti?])))
         attachment-state-filter (state-filter->query-param
                                  db
                                  :attachment-state-filter
@@ -48,6 +51,7 @@
                                  review-states/application-hakukohde-selection-states)
         query-params            (when-let [params (->> [term
                                                         application-key
+                                                        ensisijaisesti
                                                         attachment-state-filter
                                                         processing-state-filter
                                                         selection-state-filter]
@@ -305,14 +309,23 @@
 (reg-event-fx
   :application/fetch-applications-by-hakukohde
   (fn [{:keys [db]} [_ hakukohde-oid]]
-    (fetch-applications-fx db (str "/lomake-editori/api/applications/list?hakukohdeOid=" hakukohde-oid))))
+    (fetch-applications-fx
+     db
+     (str "/lomake-editori/api/applications/list"
+          "?hakukohdeOid=" hakukohde-oid
+          (when-let [ensisijaisesti (get-in db [:application :ensisijaisesti?] false)]
+            (str "&ensisijaisesti=" ensisijaisesti))))))
 
 (reg-event-fx
   :application/fetch-applications-by-hakukohderyhma
   (fn [{:keys [db]} [_ [haku-oid hakukohderyhma-oid]]]
-    (fetch-applications-fx db (str "/lomake-editori/api/applications/list"
-                                   "?hakuOid=" haku-oid
-                                   "&hakukohderyhmaOid=" hakukohderyhma-oid))))
+    (fetch-applications-fx
+     db
+     (str "/lomake-editori/api/applications/list"
+          "?hakuOid=" haku-oid
+          "&hakukohderyhmaOid=" hakukohderyhma-oid
+          (when-let [ensisijaisesti (get-in db [:application :ensisijaisesti?] false)]
+            (str "&ensisijaisesti=" ensisijaisesti))))))
 
 (reg-event-fx
   :application/fetch-applications-by-haku
@@ -530,6 +543,20 @@
     (-> db
         clear-selection
         (assoc-in [:application :selected-haku] haku-oid))))
+
+(defn- set-ensisijaisesti
+  [db ensisijaisesti?]
+  (assoc-in db [:application :ensisijaisesti?] ensisijaisesti?))
+
+(reg-event-db
+  :application/set-ensisijaisesti
+  (fn [db [_ ensisijaisesti?]]
+    (set-ensisijaisesti db ensisijaisesti?)))
+
+(reg-event-fx
+  :application/navigate-to-ensisijaisesti
+  (fn [{:keys [db]} [_ ensisijaisesti?]]
+    {:navigate (applications-link (set-ensisijaisesti db ensisijaisesti?))}))
 
 (defn- keys-to-names [m] (reduce-kv #(assoc %1 (name %2) %3) {} m))
 

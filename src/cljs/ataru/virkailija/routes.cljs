@@ -6,10 +6,11 @@
             [re-frame.core :refer [dispatch]]
             [accountant.core :as accountant]))
 
-(accountant/configure-navigation! {:nav-handler  (fn [path]
-                                                   (secretary/dispatch! path))
-                                   :path-exists? (fn [path]
-                                                   (secretary/locate-route path))})
+(accountant/configure-navigation!
+ {:nav-handler  (fn [path]
+                  (secretary/dispatch! path))
+  :path-exists? (fn [path]
+                  (secretary/locate-route (first (clojure.string/split path #"\?"))))})
 
 (defn set-history!
   [path]
@@ -17,7 +18,7 @@
 
 (defn navigate-to-click-handler
   [path & _]
-  (when (secretary/locate-route path)
+  (when (secretary/locate-route (first (clojure.string/split path #"\?")))
     (set-history! path)))
 
 (defn- select-editor-form-if-not-deleted
@@ -71,27 +72,33 @@
     (common-actions-for-applications-route)
     (dispatch [:application/show-complete-haut-list]))
 
-  (defroute #"^/lomake-editori/applications/search/" []
+  (defroute "/lomake-editori/applications/search/" []
     (secretary/dispatch! "/lomake-editori/applications/search"))
 
-  (defroute #"^/lomake-editori/applications/search" [_ params]
+  (defroute "/lomake-editori/applications/search"
+    [query-params]
     (dispatch [:set-active-panel :application])
     (dispatch [:application/show-search-term])
-    (if-let [term (:term (:query-params params))]
+    (if-let [term (:term query-params)]
       (dispatch [:application/search-by-term term])
       (dispatch [:application/clear-applications-haku-and-form-selections])))
 
-  (defroute #"^/lomake-editori/applications/hakukohde/(.*)" [hakukohde-oid]
+  (defroute "/lomake-editori/applications/hakukohde/:hakukohde-oid"
+    [hakukohde-oid query-params]
     (common-actions-for-applications-route)
     (dispatch [:application/close-search-control])
     (dispatch [:application/select-hakukohde hakukohde-oid])
+    (dispatch [:application/set-ensisijaisesti
+               (= "true" (:ensisijaisesti query-params))])
     (dispatch [:application/fetch-applications-by-hakukohde hakukohde-oid]))
 
   (defroute "/lomake-editori/applications/haku/:haku-oid/hakukohderyhma/:hakukohderyhma-oid"
-    [haku-oid hakukohderyhma-oid]
+    [haku-oid hakukohderyhma-oid query-params]
     (common-actions-for-applications-route)
     (dispatch [:application/close-search-control])
     (dispatch [:application/select-hakukohderyhma [haku-oid hakukohderyhma-oid]])
+    (dispatch [:application/set-ensisijaisesti
+               (= "true" (:ensisijaisesti query-params))])
     (dispatch [:application/fetch-applications-by-hakukohderyhma [haku-oid hakukohderyhma-oid]]))
 
   (defroute "/lomake-editori/applications/haku/:haku-oid"
@@ -101,7 +108,8 @@
     (dispatch [:application/select-haku haku-oid])
     (dispatch [:application/fetch-applications-by-haku haku-oid]))
 
-  (defroute #"^/lomake-editori/applications/(.*)" [key]
+  (defroute "/lomake-editori/applications/:key"
+    [key]
     (common-actions-for-applications-route)
     (dispatch [:application/close-search-control])
     (dispatch [:application/select-form key])

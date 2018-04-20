@@ -268,6 +268,17 @@
                     (str "/lomake-editori/applications/haku/" oid)
                     all-hakukohteet-label)))
 
+(defn- ensisijaisesti
+  []
+  (let [ensisijaisesti? @(subscribe [:application/ensisijaisesti?])]
+    [:label.application-handling__ensisijaisesti
+     [:input.application-handling__ensisijaisesti-checkbox
+      {:type     "checkbox"
+       :checked  ensisijaisesti?
+       :on-click #(dispatch [:application/navigate-to-ensisijaisesti
+                             (not ensisijaisesti?)])}]
+     "Hakenut ensisijaisesti"]))
+
 (defn haku-applications-heading
   [_]
   (let [list-opened (r/atom false)
@@ -312,7 +323,9 @@
                          @(subscribe [:application/hakukohderyhma-name
                                       selected-hakukohderyhma-oid])
                          :else
-                         all-hakukohteet-label))])))
+                         all-hakukohteet-label))
+       (when @(subscribe [:application/show-ensisijaisesti?])
+         [ensisijaisesti])])))
 
 (defn selected-applications-heading
   [haku-data list-heading]

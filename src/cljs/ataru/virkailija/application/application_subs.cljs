@@ -66,6 +66,17 @@
         (:selected-hakukohderyhma db-application) :selected-hakukohderyhma))))
 
 (re-frame/reg-sub
+  :application/show-ensisijaisesti?
+  (fn [db]
+    (contains? #{:selected-hakukohde :selected-hakukohderyhma}
+               @(re-frame/subscribe [:application/application-list-selected-by]))))
+
+(re-frame/reg-sub
+  :application/ensisijaisesti?
+  (fn [db]
+    (get-in db [:application :ensisijaisesti?] false)))
+
+(re-frame/reg-sub
  :application/show-mass-update-link?
  (fn [db]
    (and (not-empty @(re-frame/subscribe [:application/filtered-applications]))
