@@ -199,6 +199,7 @@
            (when (some #(visible? % application) (:followups option))
              [:div.application-handling__nested-container
               (for [followup (:followups option)]
+                ^{:key (:id followup)}
                 [field followup application lang])])])))]])
 
 (defn- haku-row [haku-name]

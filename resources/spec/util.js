@@ -10,8 +10,8 @@ chai.should();
 var loadInFrame = function(src) {
   $('#test')
     .attr('src', src)
-    .attr('width', 1024)
-    .attr('height', 768)
+    .attr('width', 1400)
+    .attr('height', 900)
     .on('error', function (err) {
       console.error(err);
       window.uiError = err;
