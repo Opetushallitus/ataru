@@ -849,10 +849,12 @@
 (reg-event-fx
   :editor/update-selected-organization
   (fn [{db :db} [_ selected-organization]]
-    {:db       (assoc-in db
-                         [:editor :user-info :selected-organization]
-                         (not-empty selected-organization))
-     :dispatch [:editor/refresh-forms-for-editor]}))
+    {:db         (assoc-in db
+                           [:editor :user-info :selected-organization]
+                           (not-empty selected-organization))
+     :dispatch-n [[:editor/refresh-forms-for-editor]
+                  [:application/refresh-haut-and-hakukohteet]
+                  [:application/clear-applications-haku-and-form-selections]]}))
 
 (reg-event-fx
   :editor/remove-selected-organization

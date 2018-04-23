@@ -39,8 +39,8 @@
       (->> rights
            (map #(get right-orgs %))
            (remove nil?)
-           flatten
-           distinct))))
+           (flatten)
+           (set)))))
 
 (defn run-org-authorized [session
                           organization-service
@@ -57,7 +57,7 @@
       (when-no-orgs-fn)
 
       (some? selected-organization)
-      (when-ordinary-user-fn (map :oid organizations))
+      (when-ordinary-user-fn (->> organizations (map :oid) (set)))
 
       (contains? organization-oids organization-client/oph-organization)
       (when-superuser-fn)
