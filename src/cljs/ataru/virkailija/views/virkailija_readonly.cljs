@@ -110,20 +110,15 @@
   [:div.application__wrapper-element.application__wrapper-element--border
    [:div.application__wrapper-heading
     [:h2 (-> content :label lang)]
-    (when (and (= (:module content) "person-info")
-               (-> application :person :turvakielto))
-      [:p.security-block
-       [:i.zmdi.zmdi-account-o]
-       "Henkilöllä turvakielto!"])
     [scroll-to-anchor content]]
    (into [:div.application__wrapper-contents]
          (for [child children]
            [field child application lang]))])
 
-(defn row-container [application lang children]
+(defn row-container [application lang children group-idx person-info-field?]
   (fn [application lang children]
     (into [:div] (for [child children]
-                   [field child application lang]))))
+                   [field child application lang group-idx person-info-field?]))))
 
 (defn- extract-values [children answers group-idx]
   (let [child-answers  (->> (map answer-key children)
@@ -241,7 +236,18 @@
 
 (defn- person-info-module [content application lang]
   [:div.application__person-info-wrapper.application__wrapper-element
-   [wrapper content application lang (:children content)]])
+   [:div.application__wrapper-element.application__wrapper-element--border
+    [:div.application__wrapper-heading
+     [:h2 (-> content :label lang)]
+     (when (-> application :person :turvakielto)
+       [:p.security-block
+        [:i.zmdi.zmdi-account-o]
+        "Henkilöllä turvakielto!"])
+     [scroll-to-anchor content]]
+    (into [:div.application__wrapper-contents]
+          (for [child (:children content)
+                :when (not (:exclude-from-answers child))]
+            [field child application lang nil true]))]])
 
 (defn- repeat-count
   [application question-group-children]
@@ -263,17 +269,19 @@
         ^{:key (str "question-group-" (:id content) "-" idx "-" (:id child))}
         [field child application lang idx])])])
 
-(defn field [content application lang group-idx]
+(defn field
+  [content application lang group-idx person-info-field?]
   (match content
          {:module "person-info"} [person-info-module content application lang]
-         {:fieldClass "formField" :id (_ :guard #(contains? (:person application) (keyword %)))} (text content application lang group-idx)
          {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
          {:fieldClass "questionGroup" :fieldType "fieldset" :children children} [question-group content application lang children]
-         {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]
+         {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children group-idx person-info-field?]
          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children group-idx]
-         {:fieldClass "formField" :exclude-from-answers true} nil
          {:fieldClass "infoElement"} nil
-         {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")} [selectable content application lang group-idx]
+         {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")}
+         (if person-info-field?
+           (text content application lang group-idx)
+           [selectable content application lang group-idx])
          {:fieldClass "formField" :fieldType (:or "textField" "textArea")} (text content application lang group-idx)
          {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang group-idx]
          {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content]))
