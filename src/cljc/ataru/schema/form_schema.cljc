@@ -263,10 +263,7 @@
 
 (s/defschema SingleChoiceValue
   (s/cond-pre s/Str
-              s/Int
-              [(s/cond-pre s/Str
-                           File
-                           [(s/cond-pre (s/maybe s/Str) s/Int File)])]))
+              [[(s/maybe s/Str)]]))
 
 (s/defschema BaseAnswer
   {:key                          s/Str,
