@@ -16,6 +16,59 @@
             [camel-snake-kebab.extras :as ce]
             [cljs-time.core :as t]))
 
+(defn- state-filter->query-param
+  [db filter all-states]
+  (when-let [filters (seq (clojure.set/difference
+                           (set (map first all-states))
+                           (set (get-in db [:application filter]))))]
+    (str (name filter) "=" (clojure.string/join "," filters))))
+
+(defn- applications-link
+  [db]
+  (let [selected-form           (get-in db [:application :selected-form-key])
+        selected-haku           (get-in db [:application :selected-haku])
+        selected-hakukohde      (get-in db [:application :selected-hakukohde])
+        selected-hakukohderyhma (get-in db [:application :selected-hakukohderyhma])
+        term                    (when (= :search-term (get-in db [:application :search-control :show]))
+                                  (when-let [term (get-in db [:application :search-control :search-term :value])]
+                                    (str "term=" term)))
+        application-key         (when-let [application-key (get-in db [:application :selected-key])]
+                                  (str "application-key=" application-key))
+        ensisijaisesti          (when (or (some? selected-hakukohde)
+                                          (some? selected-hakukohderyhma))
+                                  (str "ensisijaisesti=" (get-in db [:application :ensisijaisesti?])))
+        attachment-state-filter (state-filter->query-param
+                                 db
+                                 :attachment-state-filter
+                                 review-states/attachment-hakukohde-review-types)
+        processing-state-filter (state-filter->query-param
+                                 db
+                                 :processing-state-filter
+                                 review-states/application-hakukohde-processing-states)
+        selection-state-filter  (state-filter->query-param
+                                 db
+                                 :selection-state-filter
+                                 review-states/application-hakukohde-selection-states)
+        query-params            (when-let [params (->> [term
+                                                        application-key
+                                                        ensisijaisesti
+                                                        attachment-state-filter
+                                                        processing-state-filter
+                                                        selection-state-filter]
+                                                       (filter some?)
+                                                       seq)]
+                                  (str "?" (clojure.string/join "&" params)))]
+    (cond (some? selected-form)
+          (str "/lomake-editori/applications/" selected-form query-params)
+          (some? selected-haku)
+          (str "/lomake-editori/applications/haku/" selected-haku query-params)
+          (some? selected-hakukohde)
+          (str "/lomake-editori/applications/hakukohde/" selected-hakukohde query-params)
+          (some? selected-hakukohderyhma)
+          (str "/lomake-editori/applications/haku/" (first selected-hakukohderyhma)
+               "/hakukohderyhma/" (second selected-hakukohderyhma)
+               query-params))))
+
 (reg-event-fx
   :application/select-application
   (fn [{:keys [db]} [_ application-key]]
@@ -256,14 +309,23 @@
 (reg-event-fx
   :application/fetch-applications-by-hakukohde
   (fn [{:keys [db]} [_ hakukohde-oid]]
-    (fetch-applications-fx db (str "/lomake-editori/api/applications/list?hakukohdeOid=" hakukohde-oid))))
+    (fetch-applications-fx
+     db
+     (str "/lomake-editori/api/applications/list"
+          "?hakukohdeOid=" hakukohde-oid
+          (when-let [ensisijaisesti (get-in db [:application :ensisijaisesti?] false)]
+            (str "&ensisijaisesti=" ensisijaisesti))))))
 
 (reg-event-fx
   :application/fetch-applications-by-hakukohderyhma
   (fn [{:keys [db]} [_ [haku-oid hakukohderyhma-oid]]]
-    (fetch-applications-fx db (str "/lomake-editori/api/applications/list"
-                                   "?hakuOid=" haku-oid
-                                   "&hakukohderyhmaOid=" hakukohderyhma-oid))))
+    (fetch-applications-fx
+     db
+     (str "/lomake-editori/api/applications/list"
+          "?hakuOid=" haku-oid
+          "&hakukohderyhmaOid=" hakukohderyhma-oid
+          (when-let [ensisijaisesti (get-in db [:application :ensisijaisesti?] false)]
+            (str "&ensisijaisesti=" ensisijaisesti))))))
 
 (reg-event-fx
   :application/fetch-applications-by-haku
@@ -481,6 +543,20 @@
     (-> db
         clear-selection
         (assoc-in [:application :selected-haku] haku-oid))))
+
+(defn- set-ensisijaisesti
+  [db ensisijaisesti?]
+  (assoc-in db [:application :ensisijaisesti?] ensisijaisesti?))
+
+(reg-event-db
+  :application/set-ensisijaisesti
+  (fn [db [_ ensisijaisesti?]]
+    (set-ensisijaisesti db ensisijaisesti?)))
+
+(reg-event-fx
+  :application/navigate-to-ensisijaisesti
+  (fn [{:keys [db]} [_ ensisijaisesti?]]
+    {:navigate (applications-link (set-ensisijaisesti db ensisijaisesti?))}))
 
 (defn- keys-to-names [m] (reduce-kv #(assoc %1 (name %2) %3) {} m))
 

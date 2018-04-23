@@ -66,6 +66,29 @@
         (:selected-hakukohderyhma db-application) :selected-hakukohderyhma))))
 
 (re-frame/reg-sub
+  :application/show-ensisijaisesti?
+  (fn [db]
+    (let [selected-by @(re-frame/subscribe [:application/application-list-selected-by])]
+      (cond (= :selected-hakukohde selected-by)
+            (some->> (get-in db [:application :selected-hakukohde])
+                     (get (get-in db [:hakukohteet]))
+                     :haku-oid
+                     (get (get-in db [:haut]))
+                     :prioritize-hakukohteet)
+            (= :selected-hakukohderyhma selected-by)
+            (some->> (get-in db [:application :selected-hakukohderyhma])
+                     first
+                     (get (get-in db [:haut]))
+                     :prioritize-hakukohteet)
+            :else
+            false))))
+
+(re-frame/reg-sub
+  :application/ensisijaisesti?
+  (fn [db]
+    (get-in db [:application :ensisijaisesti?] false)))
+
+(re-frame/reg-sub
  :application/show-mass-update-link?
  (fn [db]
    (and (not-empty @(re-frame/subscribe [:application/filtered-applications]))
