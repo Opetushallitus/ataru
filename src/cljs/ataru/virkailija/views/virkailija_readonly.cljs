@@ -107,30 +107,24 @@
 
 (declare field)
 
-(defn child-fields [children application lang ui]
-  (for [child children
-        :when (get-in ui [(keyword (:id child)) :visible?] true)]
-    [field child application lang]))
-
 (defn wrapper [content application lang children]
-  (let [ui (subscribe [:state-query [:application :ui]])]
-    (fn [content application lang children]
-      [:div.application__wrapper-element.application__wrapper-element--border
-       [:div.application__wrapper-heading
-        [:h2 (-> content :label lang)]
-        (when (and (= (:module content) "person-info")
-                   (-> application :person :turvakielto))
-          [:p.security-block
-           [:i.zmdi.zmdi-account-o]
-           "Henkilöllä turvakielto!"])
-        [scroll-to-anchor content]]
-       (into [:div.application__wrapper-contents]
-         (child-fields children application lang @ui))])))
+  [:div.application__wrapper-element.application__wrapper-element--border
+   [:div.application__wrapper-heading
+    [:h2 (-> content :label lang)]
+    (when (and (= (:module content) "person-info")
+               (-> application :person :turvakielto))
+      [:p.security-block
+       [:i.zmdi.zmdi-account-o]
+       "Henkilöllä turvakielto!"])
+    [scroll-to-anchor content]]
+   (into [:div.application__wrapper-contents]
+         (for [child children]
+           [field child application lang]))])
 
 (defn row-container [application lang children]
-  (let [ui (subscribe [:state-query [:application :ui]])]
-    (fn [application lang children]
-      (into [:div] (child-fields children application lang @ui)))))
+  (fn [application lang children]
+    (into [:div] (for [child children]
+                   [field child application lang]))))
 
 (defn- extract-values [children answers group-idx]
   (let [child-answers  (->> (map answer-key children)
