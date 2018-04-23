@@ -27,6 +27,13 @@
     (clojure.string/split s #"\s*,\s*")
     s))
 
+(defn- visible? [ui field-descriptor]
+  (and (get-in @ui [(keyword (:id field-descriptor)) :visible?] true)
+       (or (empty? (:children field-descriptor))
+           (some #(and (visible? ui %)
+                       (not= "infoElement" (:fieldClass %)))
+                 (:children field-descriptor)))))
+
 (defn text [field-descriptor application lang group-idx]
   (let [id (keyword (:id field-descriptor))
         answer (get-in application [:answers id])]
@@ -93,7 +100,7 @@
 
 (defn- question-group-row [application lang children idx]
   [:div.application__question-group-row
-   [:div.application__question-group-row-content
+   [:div.application__question-group-row-content.application__form-field
     (for [child children]
       ^{:key (str (:id child) "-" idx)}
       [field child application lang idx])]])
@@ -102,7 +109,7 @@
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [content application lang children]
       (let [groups-amount (->> content :id keyword (get @ui) :count)]
-        [:div.application__wrapper-element.application__question-group.application__read-only
+        [:div.application__question-group.application__read-only
          [:p.application__read-only-heading-text (-> content :label lang)]
          [:div
           (for [idx (range groups-amount)]
@@ -154,26 +161,28 @@
            [:th.application__readonly-adjacent--header (str (-> child :label lang)) (required-hint field-descriptor)]))]
       [fieldset-answer-table fieldset-answers]]]))
 
-(defn- followup-has-answer?
-  [followup application]
-  (when-let [answer-value (:value ((answer-key followup) (:answers application)))]
-    (and
-      (boolean answer-value)
-      (if (sequential? answer-value)
-        (< 0 (count answer-value))
-        true))))
-
-(defn- followups [followups content application lang question-group-index]
+(defn- selectable [content application lang question-group-idx]
   [:div
-   (text content application lang question-group-index)
-   (into [:div]
-     (for [followup followups
-           :let [followup-is-visible? (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?])]
-           :when (if (boolean? followup-is-visible?)
-                   followup-is-visible?
-                   (followup-has-answer? followup application))]
-       [:div
-        [field followup application lang question-group-index]]))])
+   [:div.application__form-field-label (some (:label content) [lang :fi :sv :en])]
+   [:div.application-handling__nested-container
+    (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
+
+                                       (some? question-group-idx)
+                                       (nth question-group-idx))
+                               vector
+                               flatten
+                               set)
+          selected-options (filter #(contains? values (:value %)) (:options content))
+          ui               (subscribe [:state-query [:application :ui]])]
+      (doall
+        (for [option selected-options]
+          ^{:key (:value option)}
+          [:div
+           [:p.application__text-field-paragraph (some (:label option) [lang :fi :sv :en])]
+           (when (some #(visible? ui %) (:followups option))
+             [:div.application-handling__nested-container
+              (for [followup (:followups option)]
+                [field followup application lang])])])))]])
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
@@ -214,9 +223,8 @@
          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children question-group-index]
          {:fieldClass "formField" :exclude-from-answers true} nil
          {:fieldClass "infoElement"} nil
-         {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice") :options (options :guard util/followups?)}
-         [followups (mapcat :followups options) content application lang question-group-index]
-         {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang question-group-index)
+         {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")} [selectable content application lang question-group-index]
+         {:fieldClass "formField" :fieldType (:or "textField" "textArea")} (text content application lang question-group-index)
          {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang question-group-index]
          {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content]))
 
@@ -225,11 +233,6 @@
     (-> lang
         clojure.string/lower-case
         keyword)))
-
-(defn- visible? [ui field-descriptor]
-  (and (get-in @ui [(keyword (:id field-descriptor)) :visible?] true)
-       (or (empty? (:children field-descriptor))
-           (some (partial visible? ui) (:children field-descriptor)))))
 
 (defn readonly-fields [form application]
   (when form

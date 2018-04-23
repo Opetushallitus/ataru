@@ -22,6 +22,28 @@
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]))
 
+(defn- belongs-to-hakukohderyhma? [field application]
+  (let [hakukohteet             (-> application :hakukohde set)
+        applied-hakukohderyhmat (->> (-> application :tarjonta :hakukohteet)
+                                     (filter #(contains? hakukohteet (:oid %)))
+                                     (mapcat :hakukohderyhmat)
+                                     set)]
+    (not-empty (clojure.set/intersection (-> field :belongs-to-hakukohderyhma set)
+                                         applied-hakukohderyhmat))))
+
+(defn- belongs-to-hakukohde? [field application]
+  (not-empty (clojure.set/intersection (set (:belongs-to-hakukohteet field))
+                                       (set (:hakukohde application)))))
+
+(defn- visible? [field-descriptor application]
+  (and (or (empty? (:belongs-to-hakukohteet field-descriptor))
+           (belongs-to-hakukohde? field-descriptor application))
+       (or (empty? (:belongs-to-hakukohderyhma field-descriptor))
+           (belongs-to-hakukohderyhma? field-descriptor application))
+       (or (not (contains? field-descriptor :children))
+           (some #(and (not= "infoElement" (:fieldClass %)))
+                 (:children field-descriptor)))))
+
 (defn text [field-descriptor application lang group-idx]
   (let [id               (keyword (:id field-descriptor))
         use-onr-info?    (contains? (:person application) id)
@@ -52,7 +74,7 @@
             (render-paragraphs values))]]))
 
 (defn- attachment-list [attachments]
-  [:div
+  [:div.application-handling__nested-container
    (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size virus-scan-status :virus-scan-status}]
                   (let [text              (str filename " (" (util/size-bytes->str size) ")")
                         component-key     (str "attachment-div-" idx)
@@ -169,17 +191,28 @@
           (< 0 (count answer-value))
           true)))))
 
-(defn- followups [followups content application lang]
-  [:div.application-handling__followups-container
-   (text content application lang nil)
-   (into [:div]
-     (for [followup followups
-           :let [followup-is-visible? (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?])]
-           :when (if (boolean? followup-is-visible?)
-                   followup-is-visible?
-                   (followup-has-answer? followup application))]
-       [:div
-        [field followup application lang]]))])
+(defn- selectable [content application lang question-group-idx]
+  [:div
+   [:div.application__form-field-label (some (:label content) [lang :fi :sv :en])]
+   [:div.application-handling__nested-container
+    (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
+
+                                       (some? question-group-idx)
+                                       (nth question-group-idx))
+                               vector
+                               flatten
+                               set)
+          selected-options (filter #(contains? values (:value %)) (:options content))
+          ui               (subscribe [:state-query [:application :ui]])]
+      (doall
+        (for [option selected-options]
+          ^{:key (:value option)}
+          [:div
+           [:p.application__text-field-paragraph (some (:label option) [lang :fi :sv :en])]
+           (when (some #(visible? % application) (:followups option))
+             [:div.application-handling__nested-container
+              (for [followup (:followups option)]
+                [field followup application lang])])])))]])
 
 (defn- haku-row [haku-name]
   [:div.application__form-field
@@ -215,7 +248,7 @@
         [hakukohteet-list-row hakukohde-oid])]]))
 
 (defn- person-info-module [content application lang]
-  [:div.application__person-info-wrapper
+  [:div.application__person-info-wrapper.application__wrapper-element
    [wrapper content application lang (:children content)]])
 
 (defn- repeat-count
@@ -238,30 +271,19 @@
         ^{:key (str "question-group-" (:id content) "-" idx "-" (:id child))}
         [field child application lang idx])])])
 
-(defn field [{field-hakukohteet :belongs-to-hakukohteet :as content}
-             {application-hakukohteet :hakukohde :as application}
-             lang
-             group-idx]
-  ;; render the field if either
-  ;; 1) the field isn't a hakukohde specific question
-  ;; 2) the field is a hakukohde specific question and the user has applied to one of
-  ;;    those hakukohteet to whom the field belongs to
-  (when (or (empty? field-hakukohteet)
-            (not-empty (clojure.set/intersection (set field-hakukohteet)
-                                                 (set application-hakukohteet))))
-    (match content
-           {:module "person-info"} [person-info-module content application lang]
-           {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
-           {:fieldClass "questionGroup" :fieldType "fieldset" :children children} [question-group content application lang children]
-           {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]
-           {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children group-idx]
-           {:fieldClass "formField" :exclude-from-answers true} nil
-           {:fieldClass "infoElement"} nil
-           {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice") :options (options :guard util/followups?)}
-           [followups (mapcat :followups options) content application lang]
-           {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang group-idx)
-           {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang group-idx]
-           {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content])))
+(defn field [content application lang group-idx]
+  (match content
+         {:module "person-info"} [person-info-module content application lang]
+         {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
+         {:fieldClass "questionGroup" :fieldType "fieldset" :children children} [question-group content application lang children]
+         {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]
+         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children group-idx]
+         {:fieldClass "formField" :exclude-from-answers true} nil
+         {:fieldClass "infoElement"} nil
+         {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")} [selectable content application lang group-idx]
+         {:fieldClass "formField" :fieldType (:or "textField" "textArea")} (text content application lang group-idx)
+         {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang group-idx]
+         {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content]))
 
 (defn- application-language [{:keys [lang]}]
   (when (some? lang)
@@ -276,5 +298,5 @@
                    :fi)]
       (into [:div.application__readonly-container]
         (for [content (:content form)
-              :when (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id content)) :visible?] true)]
+              :when (visible? content application)]
           [field content application lang nil])))))
