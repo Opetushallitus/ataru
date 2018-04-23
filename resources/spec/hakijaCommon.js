@@ -186,7 +186,7 @@ function focusInput(index) {
 }
 
 function readonlyAnswer(index) {
-  return testFrame().find('.application__readonly-text:eq(' + index + ')').text()
+  return testFrame().find('.application__text-field-paragraph:eq(' + index + ')').text()
 }
 
 function adjacentReadonlyAnswer(index) {

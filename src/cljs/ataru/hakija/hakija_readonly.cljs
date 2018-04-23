@@ -41,7 +41,7 @@
      [:label.application__form-field-label
       (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
      (if @(subscribe [:application/cannot-view? id])
-       [:div "***********"]
+       [:div.application__text-field-paragraph "***********"]
        [:div.application__readonly-text
         (let [values (cond-> (get-value answer group-idx)
                        (contains? field-descriptor :koodisto-source)
@@ -162,7 +162,7 @@
       [fieldset-answer-table fieldset-answers]]]))
 
 (defn- selectable [content application lang question-group-idx]
-  [:div
+  [:div.application__form-field
    [:div.application__form-field-label (some (:label content) [lang :fi :sv :en])]
    [:div.application-handling__nested-container
     (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
@@ -182,6 +182,7 @@
            (when (some #(visible? ui %) (:followups option))
              [:div.application-handling__nested-container
               (for [followup (:followups option)]
+                ^{:key (:id followup)}
                 [field followup application lang])])])))]])
 
 (defn- selected-hakukohde-row

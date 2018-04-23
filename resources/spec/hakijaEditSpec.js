@@ -125,9 +125,9 @@
       )
 
       it('shows submitted form', function () {
-        var displayedValues = _.map(testFrame().find('.application__form-field div'), function (e) {
-          return $(e).text()
-        })
+        var displayedValues = _.map(testFrame().find('.application__text-field-paragraph'), function(e) { return $(e).text() });
+        console.log("values");
+        console.log(displayedValues);
         var expectedValues = [
           "Etunimi Tokanimi",
           "Tokanimi",
@@ -143,7 +143,9 @@
           "Jyväskylä",
           "suomi",
           "Tekstikentän vastaus",
-          "Toistuva vastaus 1Toistuva vastaus 2Toistuva vastaus 3",
+          "Toistuva vastaus 1",
+          "Toistuva vastaus 2",
+          "Toistuva vastaus 3",
           "Pakollisen tekstialueen vastaus",
           "Kolmas vaihtoehto",
           "Jatkokysymyksen vastaus",
@@ -152,12 +154,10 @@
           "En",
           "Arkkitehti",
           "Muokattu vastaus",
-          "",
-          "",
           "Toinen vaihtoehto",
           "Pudotusvalikon 1. kysymys",
           "1,323"
-        ]
+        ];
 
         var tabularValues = _.map(testFrame().find('.application__form-field table td'), function (e) {
           return $(e).text()

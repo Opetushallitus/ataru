@@ -120,36 +120,39 @@
       )
 
       it('shows submitted form', function() {
-        var displayedValues = _.map(testFrame().find('.application__form-field div'), function(e) { return $(e).text() })
+        var displayedValues = _.map(testFrame().find('.application__text-field-paragraph'), function(e) { return $(e).text() });
+        console.log("values");
+        console.log(displayedValues);
         var expectedValues = ["Etunimi Tokanimi",
-                              "Etunimi",
-                              "Sukunimi",
-                              "Suomi",
-                              "020202A0202",
-                              "test@example.com",
-                              "0123456789",
-                              "Suomi",
-                              "Katutie 12 B",
-                              "40100",
-                              "JYVÄSKYLÄ",
-                              "Jyväskylä",
-                              "suomi",
-                              "Tekstikentän vastaus",
-                              "Toistuva vastaus 1Toistuva vastaus 2Toistuva vastaus 3",
-                              "Pakollisen tekstialueen vastaus",
-                              "Kolmas vaihtoehto",
-                              "Jatkokysymyksen vastaus",
-                              "Lisensiaatin tutkinto",
-                              "Toinen vaihtoehto",
-                              "En",
-                              "Arkkitehti",
-                              "Toisen pakollisen tekstialueen vastaus",
-                              "",
-                              "",
-                              "Ensimmäinen vaihtoehto",
-                              "Jatkokysymys AJatkokysymys B",
-                              "Pudotusvalikon 1. kysymys",
-                              "1,323"];
+            "Etunimi",
+            "Sukunimi",
+            "Suomi",
+            "020202A0202",
+            "test@example.com",
+            "0123456789",
+            "Suomi",
+            "Katutie 12 B",
+            "40100",
+            "JYVÄSKYLÄ",
+            "Jyväskylä",
+            "suomi",
+            "Tekstikentän vastaus",
+            "Toistuva vastaus 1",
+            "Toistuva vastaus 2",
+            "Toistuva vastaus 3",
+            "Pakollisen tekstialueen vastaus",
+            "Kolmas vaihtoehto",
+            "Jatkokysymyksen vastaus",
+            "Lisensiaatin tutkinto",
+            "Toinen vaihtoehto",
+            "En",
+            "Arkkitehti",
+            "Toisen pakollisen tekstialueen vastaus",
+            "Ensimmäinen vaihtoehto",
+            "Jatkokysymys A",
+            "Jatkokysymys B",
+            "Pudotusvalikon 1. kysymys",
+            "1,323"];
 
         var tabularValues = _.map(testFrame().find('.application__form-field table td'), function(e) { return $(e).text() })
         var expectedTabularValues = ["A1", "B1", "C1", "A2", "", "C2", "A1", "B1", "C1", "A2", "", "C2", "Vasen vierekkäinen", "Oikea vierekkäinen", "A1", "B1", "C1", "A2", "", "C2"]

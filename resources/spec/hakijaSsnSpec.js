@@ -92,7 +92,7 @@
       )
 
       it('has submitted the form', function() {
-        var displayedValues = _.map(testFrame().find('.application__form-field div'), function(e) { return $(e).text() })
+        var displayedValues = _.map(testFrame().find('.application__text-field-paragraph'), function(e) { return $(e).text() });
         var expectedValues = ["Etunimi Tokanimi",
           "Etunimi",
           "Sukunimi",
