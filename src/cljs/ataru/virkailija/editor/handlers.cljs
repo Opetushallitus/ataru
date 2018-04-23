@@ -846,10 +846,13 @@
             :path                (str "/lomake-editori/api/organization/user-organization/" oid)
             :handler-or-dispatch :editor/update-selected-organization}}))
 
-(reg-event-db
+(reg-event-fx
   :editor/update-selected-organization
-  (fn [db [_ selected-organization]]
-    (assoc-in db [:editor :user-info :selected-organization] (not-empty selected-organization))))
+  (fn [{db :db} [_ selected-organization]]
+    {:db       (assoc-in db
+                         [:editor :user-info :selected-organization]
+                         (not-empty selected-organization))
+     :dispatch [:editor/refresh-forms-for-editor]}))
 
 (reg-event-fx
   :editor/remove-selected-organization

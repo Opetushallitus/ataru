@@ -2,7 +2,7 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [reagent.core :as r]
-            [ataru.cljs-util :refer [debounce-subscribe wrap-scroll-to]]
+            [ataru.cljs-util :refer [wrap-scroll-to]]
             [ataru.virkailija.editor.core :as c]
             [ataru.virkailija.editor.subs]
             [ataru.component-data.component :as component]
@@ -22,7 +22,7 @@
      [:span.editor-form__list-form-used-in-haku-count used-in-haku-count])])
 
 (defn form-list []
-  (let [forms             (debounce-subscribe 333 [:state-query [:editor :forms]])
+  (let [forms             (subscribe [:state-query [:editor :forms]])
         selected-form-key (subscribe [:state-query [:editor :selected-form-key]])
         forms-in-use      (subscribe [:state-query [:editor :forms-in-use]])]
     (fn []
