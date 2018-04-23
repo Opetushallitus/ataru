@@ -47,12 +47,11 @@
 (defn text [field-descriptor application lang group-idx]
   (let [id               (keyword (:id field-descriptor))
         use-onr-info?    (contains? (:person application) id)
-        values           (if use-onr-info?
-                           (-> application :person id)
-                           (cond-> (get-value (-> application :answers id) group-idx)
-                                   (and (predefined-value-answer? field-descriptor)
-                                        (not (contains? field-descriptor :koodisto-source)))
-                                   (replace-with-option-label (:options field-descriptor) lang)))
+        values           (replace-with-option-label (if use-onr-info?
+                                                      (-> application :person id)
+                                                      (get-value (-> application :answers id) group-idx))
+                                                    (:options field-descriptor)
+                                                    lang)
         highlight-field? (subscribe [:application/field-highlighted? id])]
     [:div.application__form-field
      {:class (when @highlight-field? "highlighted")
@@ -196,8 +195,7 @@
                                vector
                                flatten
                                set)
-          selected-options (filter #(contains? values (:value %)) (:options content))
-          ui               (subscribe [:state-query [:application :ui]])]
+          selected-options (filter #(contains? values (:value %)) (:options content))]
       (doall
         (for [option selected-options]
           ^{:key (:value option)}
@@ -268,6 +266,7 @@
 (defn field [content application lang group-idx]
   (match content
          {:module "person-info"} [person-info-module content application lang]
+         {:fieldClass "formField" :id (_ :guard #(contains? (:person application) (keyword %)))} (text content application lang group-idx)
          {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
          {:fieldClass "questionGroup" :fieldType "fieldset" :children children} [question-group content application lang children]
          {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]

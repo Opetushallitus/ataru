@@ -1,25 +1,25 @@
 (ns ataru.applications.application-service
   (:require
    [ataru.applications.application-access-control :as aac]
+   [ataru.applications.application-store :as application-store]
+   [ataru.applications.excel-export :as excel]
+   [ataru.email.application-email-confirmation :as email]
    [ataru.forms.form-access-control :as form-access-control]
    [ataru.forms.form-store :as form-store]
-   [ataru.koodisto.koodisto :as koodisto]
-   [ataru.applications.application-store :as application-store]
-   [ataru.middleware.user-feedback :refer [user-feedback-exception]]
-   [ataru.applications.excel-export :as excel]
-   [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
    [ataru.hakija.hakija-form-service :as hakija-form-service]
-   [taoensso.timbre :refer [spy debug]]
+   [ataru.information-request.information-request-store :as information-request-store]
+   [ataru.koodisto.koodisto :as koodisto]
+   [ataru.middleware.user-feedback :refer [user-feedback-exception]]
+   [ataru.organization-service.ldap-client :as ldap]
+   [ataru.person-service.birth-date-converter :as bd-converter]
+   [ataru.person-service.person-service :as person-service]
+   [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
-   [ataru.organization-service.ldap-client :as ldap]
-   [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
-   [ataru.information-request.information-request-store :as information-request-store]
-   [ataru.email.application-email-confirmation :as email]
-   [ataru.person-service.person-service :as person-service]
    [ataru.util :as util]
-   [ataru.person-service.birth-date-converter :as bd-converter]
-   [medley.core :refer [filter-vals]])
+   [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
+   [medley.core :refer [filter-vals]]
+   [taoensso.timbre :refer [spy debug]])
   (:import [java.io ByteArrayInputStream]))
 
 (defn- extract-koodisto-fields [field-descriptor-list]
@@ -149,28 +149,25 @@
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
   [application-key session organization-service tarjonta-service ohjausparametrit-service person-client]
-  (when-let [bare-application (aac/get-latest-application-by-key
-                               organization-service
-                               tarjonta-service
-                               session
-                               application-key)]
+  (when-let [application (aac/get-latest-application-by-key
+                           organization-service
+                           tarjonta-service
+                           session
+                           application-key)]
     (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku
-                         tarjonta-service
-                         organization-service
-                         ohjausparametrit-service
-                         (:haku bare-application)
-                         (:hakukohde bare-application))
-          form          (-> (:form bare-application)
+                          tarjonta-service
+                          organization-service
+                          ohjausparametrit-service
+                          (:haku application)
+                          (:hakukohde application))
+          form          (-> (:form application)
                             form-store/fetch-by-id
+                            koodisto/populate-form-koodisto-fields
                             (populate-hakukohde-answer-options tarjonta-info)
-                            (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))
-          application   (populate-koodisto-fields bare-application form)
-          person        (get-person application person-client)]
+                            (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))]
       {:application          (-> application
                                  (dissoc :person-oid)
-                                 (assoc :person (if (:yksiloity person)
-                                                  (populate-person-koodisto-fields person)
-                                                  person))
+                                 (assoc :person (get-person application person-client))
                                  (merge tarjonta-info))
        :form                 form
        :hakukohde-reviews    (parse-application-hakukohde-reviews application-key)
