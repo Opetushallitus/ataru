@@ -36,13 +36,14 @@
                                        (set (:hakukohde application)))))
 
 (defn- visible? [field-descriptor application]
-  (and (or (empty? (:belongs-to-hakukohteet field-descriptor))
+  (and (not= "infoElement" (:fieldClass field-descriptor))
+       (not= true (:exclude-from-answers field-descriptor))
+       (or (empty? (:belongs-to-hakukohteet field-descriptor))
            (belongs-to-hakukohde? field-descriptor application))
        (or (empty? (:belongs-to-hakukohderyhma field-descriptor))
            (belongs-to-hakukohderyhma? field-descriptor application))
        (or (not (contains? field-descriptor :children))
-           (some #(and (not= "infoElement" (:fieldClass %)))
-                 (:children field-descriptor)))))
+           (some #(visible? % application) (:children field-descriptor)))))
 
 (defn text [field-descriptor application lang group-idx]
   (let [id               (keyword (:id field-descriptor))
@@ -283,20 +284,20 @@
 
 (defn field
   [content application lang group-idx person-info-field?]
-  (match content
-         {:module "person-info"} [person-info-module content application lang]
-         {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
-         {:fieldClass "questionGroup" :fieldType "fieldset" :children children} [question-group content application lang children]
-         {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children group-idx person-info-field?]
-         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children group-idx]
-         {:fieldClass "infoElement"} nil
-         {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")}
-         (if person-info-field?
-           (text content application lang group-idx)
-           [selectable content application lang group-idx])
-         {:fieldClass "formField" :fieldType (:or "textField" "textArea")} (text content application lang group-idx)
-         {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang group-idx]
-         {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content]))
+  (when (visible? content application)
+    (match content
+      {:module "person-info"} [person-info-module content application lang]
+      {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
+      {:fieldClass "questionGroup" :fieldType "fieldset" :children children} [question-group content application lang children]
+      {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children group-idx person-info-field?]
+      {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children group-idx]
+      {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")}
+      (if person-info-field?
+        (text content application lang group-idx)
+        [selectable content application lang group-idx])
+      {:fieldClass "formField" :fieldType (:or "textField" "textArea")} (text content application lang group-idx)
+      {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang group-idx]
+      {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content])))
 
 (defn- application-language [{:keys [lang]}]
   (when (some? lang)
@@ -310,6 +311,5 @@
                    (application-language application)       ; language is set to application when in officer side
                    :fi)]
       (into [:div.application__readonly-container]
-        (for [content (:content form)
-              :when (visible? content application)]
+        (for [content (:content form)]
           [field content application lang nil])))))
