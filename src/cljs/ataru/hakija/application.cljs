@@ -110,7 +110,7 @@
                                         (map keyword)
                                         (set))
         hidden-field-ids           (->> ui
-                                        (filter-vals #(false? (:visible? %)))
+                                        (filter-vals #(not= true (:visible? %)))
                                         (keys)
                                         (set))
         fields-to-remove           (clojure.set/intersection fields-to-remove-if-hidden hidden-field-ids)]
