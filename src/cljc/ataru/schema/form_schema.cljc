@@ -261,13 +261,23 @@
                            File
                            [(s/cond-pre s/Str s/Int File)])]))
 
-(s/defschema Answer {:key                          s/Str,
-                     :value                        Value
-                     :fieldType                    (apply s/enum form-fields)
-                     (s/optional-key :cannot-view) s/Bool
-                     (s/optional-key :label)       (s/maybe (s/cond-pre
-                                                              LocalizedString
-                                                              s/Str))})
+(s/defschema SingleChoiceValue
+  (s/cond-pre s/Str
+              [[(s/maybe s/Str)]]))
+
+(s/defschema BaseAnswer
+  {:key                          s/Str,
+   :value                        Value
+   :fieldType                    (apply s/enum form-fields)
+   (s/optional-key :cannot-view) s/Bool
+   (s/optional-key :label)       (s/maybe (s/cond-pre
+                                           LocalizedString
+                                           s/Str))})
+
+(s/defschema Answer
+  (s/if #(= "singleChoice" (:fieldType %))
+    (st/assoc BaseAnswer :value SingleChoiceValue)
+    BaseAnswer))
 
 (def review-requirement-values
   (->> review-states/hakukohde-review-types
