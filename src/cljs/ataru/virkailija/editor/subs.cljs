@@ -22,10 +22,13 @@
                          (or (get-in db lang-path) [:fi]))]
       languages)))
 
+(defn- name-matches?
+  [pattern named]
+  (boolean (re-find pattern (some (:name named) [:fi :sv :en]))))
+
 (defn- hakukohde-matches?
   [pattern hakukohde]
-  (or (some (partial re-find pattern)
-            (map second (:name hakukohde)))
+  (or (name-matches? pattern hakukohde)
       (some (partial re-find pattern)
             (map second (:tarjoaja-name hakukohde)))))
 
@@ -55,7 +58,7 @@
   (fn [db [_ id]]
     (if-let [search-term (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term])]
       (let [pattern (re-pattern (str "(?i)" search-term))]
-        (filter #(re-find pattern (some (:name %) [:fi :sv :en]))
+        (filter (partial name-matches? pattern)
                 (get-in db [:editor :used-by-haut :hakukohderyhmat])))
       (get-in db [:editor :used-by-haut :hakukohderyhmat] []))))
 
