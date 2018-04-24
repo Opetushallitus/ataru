@@ -534,7 +534,7 @@
   [:a.editor-form__multi-options-remove--cross {:on-click (fn [evt]
                                                             (.preventDefault evt)
                                                             (dispatch [:editor/remove-dropdown-option path :options option-index]))}
-   [:i.zmdi.zmdi-close.zmdi-hc-lg]])
+   [:i.zmdi.zmdi-delete.zmdi-hc-lg]])
 
 
 
@@ -542,21 +542,35 @@
   (let [multiple-languages? (< 1 (count languages))]
     ^{:key (str "options-" option-index)}
     [:div
+
      [:div.editor-form__multi-options-wrapper-outer
       [:div
-       (cond-> {:key (str "options-" option-index)}
-         multiple-languages?
-         (assoc :class "editor-form__multi-options-wrapper-inner"))
+       [:div.editor-form__multi-options-wrapper-outer--arrows
+        [:div.editor-form__multi-options-wrapper-outer--arrows--up
+         {:on-click (fn [e]
+                      (.preventDefault e)
+                      (dispatch [:editor/move-option-up path option-index])
+                      )}]
+        [:div.editor-form__multi-options-wrapper-outer--arrows--stretch]
+        [:div.editor-form__multi-options-wrapper-outer--arrows--down
+         {:on-click (fn [e]
+                      (.preventDefault e)
+                      (dispatch [:editor/move-option-down path option-index])
+                      )}]]]
+
+      [:div.editor-form__multi-options-wrapper-inner
+       {:key (str "options-" option-index)}
        (if editable?
          (input-fields-with-lang
            (fn [lang]
              [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
            languages)
          [koodisto-fields-with-lang languages option-path])]
-      (when editable?
-        [remove-dropdown-option-button path option-index])
+
       (when include-followup?
-        [followup-question option-path])]
+        [followup-question option-path])
+      (when editable?
+        [remove-dropdown-option-button path option-index])]
      (when include-followup?
        [followup-question-overlay option-path])]))
 

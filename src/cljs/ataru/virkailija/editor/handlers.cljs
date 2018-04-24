@@ -44,12 +44,11 @@
       (concat further-path)
       (flatten)))
 
-(reg-event-fx
+(reg-event-db
   :editor/remove-dropdown-option
-  (fn [cofx [_ & path]]
-    (let [option-path (current-form-content-path (:db cofx) [path])]
-      {:db (update-in (:db cofx) (drop-last option-path) util/remove-nth (last option-path))
-       :dispatch [:editor/remove-followup-question (first path)]})))
+  (fn [db [_ & path]]
+    (let [option-path (current-form-content-path db [path])]
+      (update-in db (drop-last option-path) util/remove-nth (last option-path)))))
 
 (reg-event-db
   :editor/add-dropdown-option
@@ -70,6 +69,27 @@
                                 (assoc-in label-path value)
                                 (assoc-in value-path value))]
       option-updated-db)))
+
+(defn- swap-vector [v i1 i2]
+  (assoc v i2 (v i1) i1 (v i2)))
+
+(reg-event-db
+  :editor/move-option-up
+  (fn [db [_ path index]]
+    (if (= 0 index)
+      db
+      (let [options-path (current-form-content-path db [path :options])]
+        (update-in db options-path swap-vector index (dec index))))))
+
+(reg-event-db
+  :editor/move-option-down
+  (fn [db [_ path index]]
+    (let [options-path    (current-form-content-path db [path :options])
+          options         (get-in db options-path)
+          is-last-option? (= (inc index) (count options))]
+      (if is-last-option?
+        db
+        (update-in db options-path swap-vector index (inc index))))))
 
 (reg-event-db
   :editor/select-custom-multi-options
