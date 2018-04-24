@@ -35,11 +35,11 @@
                                   :modified-by metadata})]
       (update-in db (util/flatten-path db option-path :followups) (fnil conj []) component))))
 
-(defn followup-question-overlay [option-path]
+(defn followup-question-overlay [option-path show-followups]
   (let [layer-visible? (subscribe [:editor/followup-overlay option-path :visible?])
         followups      (subscribe [:editor/get-component-value (flatten [option-path :followups])])]
-    (fn [option-path]
-      (when (or @layer-visible? (not-empty @followups))
+    (fn [option-path hide-followups]
+      (when (or @layer-visible? (and @show-followups (not-empty @followups)))
         [:div.editor-form__followup-question-overlay-parent
          [:div.editor-form__followup-question-overlay-outer
           [:div.editor-form__followup-indicator]
@@ -52,7 +52,7 @@
             (fn [generate-fn]
               (dispatch [:editor/generate-followup-component generate-fn option-path]))]]]]))))
 
-(defn followup-question [option-path]
+(defn followup-question [option-path show-followups]
   (let [layer-visible?        (subscribe [:editor/followup-overlay option-path :visible?])
         followup-component    (subscribe [:editor/get-component-value (vec (flatten [option-path :followups]))])
         allow-more-followups? (->> option-path
@@ -64,6 +64,11 @@
       [:div.editor-form__followup-question
        (when allow-more-followups?
          (match [@followup-component @layer-visible?]
-           [(_ :guard not-empty) _] "Lisäkysymykset"
+           [(_ :guard not-empty) _] [:a
+                                     {:on-click #(swap! show-followups not)}
+                                     (str "Lisäkysymykset (" (count @followup-component) ") ")
+                                     (if @show-followups
+                                       [:i.zmdi.zmdi-chevron-up.zmdi-hc-lg]
+                                       [:i.zmdi.zmdi-chevron-down.zmdi-hc-lg])]
            [_ true] [:a {:on-click #(dispatch [:editor/followup-overlay-close option-path])} "Lisäkysymykset"]
            :else [:a {:on-click #(dispatch [:editor/followup-overlay-open option-path])} "Lisäkysymykset"]))])))

@@ -539,7 +539,8 @@
 
 
 (defn- dropdown-option [option-index option-path path languages & {:keys [header? include-followup? editable?] :or {header? false include-followup? true editable? true} :as opts}]
-  (let [multiple-languages? (< 1 (count languages))]
+  (let [multiple-languages? (< 1 (count languages))
+        show-followups        (r/atom false)]
     ^{:key (str "options-" option-index)}
     [:div
 
@@ -549,12 +550,14 @@
         [:div.editor-form__multi-options-wrapper-outer--arrows--up
          {:on-click (fn [e]
                       (.preventDefault e)
+                      (reset! show-followups false)
                       (dispatch [:editor/move-option-up path option-index])
                       )}]
         [:div.editor-form__multi-options-wrapper-outer--arrows--stretch]
         [:div.editor-form__multi-options-wrapper-outer--arrows--down
          {:on-click (fn [e]
                       (.preventDefault e)
+                      (reset! show-followups false)
                       (dispatch [:editor/move-option-down path option-index])
                       )}]]]
 
@@ -566,13 +569,12 @@
              [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
            languages)
          [koodisto-fields-with-lang languages option-path])]
-
       (when include-followup?
-        [followup-question option-path])
+        [followup-question option-path show-followups])
       (when editable?
         [remove-dropdown-option-button path option-index])]
      (when include-followup?
-       [followup-question-overlay option-path])]))
+       [followup-question-overlay option-path show-followups])]))
 
 (defn- dropdown-multi-options [path options-koodisto]
   (let [dropdown-id                (util/new-uuid)
