@@ -48,37 +48,6 @@
          (filter koodi-pred)
          first)))
 
-(defn- populate-koodisto-fields [application {:keys [content]}]
-  (let [koodisto-fields (extract-koodisto-fields content)
-        lang            (-> (:lang application)
-                            clojure.string/lower-case
-                            keyword)]
-    (update application :answers
-      (partial map
-        (fn [{:keys [key] :as answer}]
-          (cond-> answer
-            (contains? koodisto-fields key)
-            (update :value (fn [koodi-value]
-                             (let [koodisto-uri (get-in koodisto-fields [key :uri])
-                                   version (get-in koodisto-fields [key :version])
-                                   koodisto (koodisto/get-koodisto-options koodisto-uri version)
-                                   get-label (fn [koodi-uri]
-                                               (let [labels (:label (get-koodi koodisto koodi-uri))]
-                                                 (or (some #(when (not (clojure.string/blank? (get labels %)))
-                                                              (get labels %))
-                                                           [lang :fi :sv :en])
-                                                     (str "Tuntematon koodi " koodi-uri))))]
-                               (cond (string? koodi-value)
-                                     (let [values (clojure.string/split koodi-value #"\s*,\s*")]
-                                       (if (< 1 (count values))
-                                         (map get-label values)
-                                         (get-label (first values))))
-                                     (and (vector? koodi-value)
-                                          (every? vector? koodi-value))
-                                     (map (partial map get-label) koodi-value)
-                                     :else
-                                     (map get-label koodi-value)))))))))))
-
 (defn- parse-application-hakukohde-reviews
   [application-key]
   (reduce
@@ -104,19 +73,6 @@
      :birth-date     (-> answers :birth-date :value)
      :gender         (-> answers :gender :value)
      :nationality    (-> answers :nationality :value)}))
-
-(defn get-country-by-code [code]
-  (or (->> (koodisto/get-koodisto-options "maatjavaltiot2" 1)
-           (filter #(= code (:value %)))
-           first
-           :label
-           :fi)
-      (str "Tuntematon maakoodi " code)))
-
-(defn populate-person-koodisto-fields [person]
-  (-> person
-      (update :gender util/gender-int-to-string)
-      (update :nationality get-country-by-code)))
 
 (defn- person-info-from-onr-person [person]
   {:first-name     (:etunimet person)
