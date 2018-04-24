@@ -182,25 +182,36 @@
 (defn- selectable [content application lang question-group-idx]
   [:div
    [:div.application__form-field-label (some (:label content) [lang :fi :sv :en])]
-   [:div.application-handling__nested-container
-    (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
-
-                                       (some? question-group-idx)
-                                       (nth question-group-idx))
-                               vector
-                               flatten
-                               set)
-          selected-options (filter #(contains? values (:value %)) (:options content))]
+   (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
+                                      (some? question-group-idx)
+                                      (nth question-group-idx))
+                              vector
+                              flatten
+                              set)
+         selected-options (filter #(contains? values (:value %))
+                                  (:options content))
+         values-wo-option (remove (fn [value]
+                                    (some #(= value (:value %))
+                                          selected-options))
+                                  values)]
+     [:div.application-handling__nested-container
       (doall
-        (for [option selected-options]
-          ^{:key (:value option)}
-          [:div
-           [:p.application__text-field-paragraph (some (:label option) [lang :fi :sv :en])]
-           (when (some #(visible? % application) (:followups option))
-             [:div.application-handling__nested-container
-              (for [followup (:followups option)]
-                ^{:key (:id followup)}
-                [field followup application lang])])])))]])
+       (for [option selected-options]
+         ^{:key (:value option)}
+         [:div
+          [:p.application__text-field-paragraph
+           (some (:label option) [lang :fi :sv :en])]
+          (when (some #(visible? % application) (:followups option))
+            [:div.application-handling__nested-container
+             (for [followup (:followups option)]
+               ^{:key (:id followup)}
+               [field followup application lang])])]))
+      (doall
+       (for [value values-wo-option]
+         ^{:key value}
+         [:div
+          [:p.application__text-field-paragraph
+           (str "Tuntematon vastausvaihtoehto " value)]]))])])
 
 (defn- haku-row [haku-name]
   [:div.application__form-field
