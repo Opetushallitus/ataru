@@ -42,7 +42,7 @@
            (belongs-to-hakukohde? field-descriptor application))
        (or (empty? (:belongs-to-hakukohderyhma field-descriptor))
            (belongs-to-hakukohderyhma? field-descriptor application))
-       (or (not (contains? field-descriptor :children))
+       (or (empty? (:children field-descriptor))
            (some #(visible? % application) (:children field-descriptor)))))
 
 (defn text [field-descriptor application lang group-idx]
