@@ -160,7 +160,10 @@
     (fake-orgs-by-root-orgs root-orgs))
 
   (get-organizations-for-oids [this organization-oids]
-    (map ldap-client/fake-org-by-oid organization-oids)))
+    (map ldap-client/fake-org-by-oid organization-oids))
+
+  (get-organization-with-parents [this organization-oid]
+    (get-organizations-for-oids this organization-oid)))
 
 (defn new-organization-service []
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode
