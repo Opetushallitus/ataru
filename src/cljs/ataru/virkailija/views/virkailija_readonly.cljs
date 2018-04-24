@@ -47,12 +47,11 @@
 (defn text [field-descriptor application lang group-idx]
   (let [id               (keyword (:id field-descriptor))
         use-onr-info?    (contains? (:person application) id)
-        values           (if use-onr-info?
-                           (-> application :person id)
-                           (cond-> (get-value (-> application :answers id) group-idx)
-                                   (and (predefined-value-answer? field-descriptor)
-                                        (not (contains? field-descriptor :koodisto-source)))
-                                   (replace-with-option-label (:options field-descriptor) lang)))
+        values           (replace-with-option-label (if use-onr-info?
+                                                      (-> application :person id)
+                                                      (get-value (-> application :answers id) group-idx))
+                                                    (:options field-descriptor)
+                                                    lang)
         highlight-field? (subscribe [:application/field-highlighted? id])]
     [:div.application__form-field
      {:class (when @highlight-field? "highlighted")
@@ -107,30 +106,19 @@
 
 (declare field)
 
-(defn child-fields [children application lang ui]
-  (for [child children
-        :when (get-in ui [(keyword (:id child)) :visible?] true)]
-    [field child application lang]))
-
 (defn wrapper [content application lang children]
-  (let [ui (subscribe [:state-query [:application :ui]])]
-    (fn [content application lang children]
-      [:div.application__wrapper-element.application__wrapper-element--border
-       [:div.application__wrapper-heading
-        [:h2 (-> content :label lang)]
-        (when (and (= (:module content) "person-info")
-                   (-> application :person :turvakielto))
-          [:p.security-block
-           [:i.zmdi.zmdi-account-o]
-           "Henkilöllä turvakielto!"])
-        [scroll-to-anchor content]]
-       (into [:div.application__wrapper-contents]
-         (child-fields children application lang @ui))])))
+  [:div.application__wrapper-element.application__wrapper-element--border
+   [:div.application__wrapper-heading
+    [:h2 (-> content :label lang)]
+    [scroll-to-anchor content]]
+   (into [:div.application__wrapper-contents]
+         (for [child children]
+           [field child application lang]))])
 
-(defn row-container [application lang children]
-  (let [ui (subscribe [:state-query [:application :ui]])]
-    (fn [application lang children]
-      (into [:div] (child-fields children application lang @ui)))))
+(defn row-container [application lang children group-idx person-info-field?]
+  (fn [application lang children]
+    (into [:div] (for [child children]
+                   [field child application lang group-idx person-info-field?]))))
 
 (defn- extract-values [children answers group-idx]
   (let [child-answers  (->> (map answer-key children)
@@ -194,25 +182,36 @@
 (defn- selectable [content application lang question-group-idx]
   [:div
    [:div.application__form-field-label (some (:label content) [lang :fi :sv :en])]
-   [:div.application-handling__nested-container
-    (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
-
-                                       (some? question-group-idx)
-                                       (nth question-group-idx))
-                               vector
-                               flatten
-                               set)
-          selected-options (filter #(contains? values (:value %)) (:options content))
-          ui               (subscribe [:state-query [:application :ui]])]
+   (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
+                                      (some? question-group-idx)
+                                      (nth question-group-idx))
+                              vector
+                              flatten
+                              set)
+         selected-options (filter #(contains? values (:value %))
+                                  (:options content))
+         values-wo-option (remove (fn [value]
+                                    (some #(= value (:value %))
+                                          selected-options))
+                                  values)]
+     [:div.application-handling__nested-container
       (doall
-        (for [option selected-options]
-          ^{:key (:value option)}
-          [:div
-           [:p.application__text-field-paragraph (some (:label option) [lang :fi :sv :en])]
-           (when (some #(visible? % application) (:followups option))
-             [:div.application-handling__nested-container
-              (for [followup (:followups option)]
-                [field followup application lang])])])))]])
+       (for [option selected-options]
+         ^{:key (:value option)}
+         [:div
+          [:p.application__text-field-paragraph
+           (some (:label option) [lang :fi :sv :en])]
+          (when (some #(visible? % application) (:followups option))
+            [:div.application-handling__nested-container
+             (for [followup (:followups option)]
+               ^{:key (:id followup)}
+               [field followup application lang])])]))
+      (doall
+       (for [value values-wo-option]
+         ^{:key value}
+         [:div
+          [:p.application__text-field-paragraph
+           (str "Tuntematon vastausvaihtoehto " value)]]))])])
 
 (defn- haku-row [haku-name]
   [:div.application__form-field
@@ -249,7 +248,18 @@
 
 (defn- person-info-module [content application lang]
   [:div.application__person-info-wrapper.application__wrapper-element
-   [wrapper content application lang (:children content)]])
+   [:div.application__wrapper-element.application__wrapper-element--border
+    [:div.application__wrapper-heading
+     [:h2 (-> content :label lang)]
+     (when (-> application :person :turvakielto)
+       [:p.security-block
+        [:i.zmdi.zmdi-account-o]
+        "Henkilöllä turvakielto!"])
+     [scroll-to-anchor content]]
+    (into [:div.application__wrapper-contents]
+          (for [child (:children content)
+                :when (not (:exclude-from-answers child))]
+            [field child application lang nil true]))]])
 
 (defn- repeat-count
   [application question-group-children]
@@ -271,16 +281,19 @@
         ^{:key (str "question-group-" (:id content) "-" idx "-" (:id child))}
         [field child application lang idx])])])
 
-(defn field [content application lang group-idx]
+(defn field
+  [content application lang group-idx person-info-field?]
   (match content
          {:module "person-info"} [person-info-module content application lang]
          {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
          {:fieldClass "questionGroup" :fieldType "fieldset" :children children} [question-group content application lang children]
-         {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]
+         {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children group-idx person-info-field?]
          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children group-idx]
-         {:fieldClass "formField" :exclude-from-answers true} nil
          {:fieldClass "infoElement"} nil
-         {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")} [selectable content application lang group-idx]
+         {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")}
+         (if person-info-field?
+           (text content application lang group-idx)
+           [selectable content application lang group-idx])
          {:fieldClass "formField" :fieldType (:or "textField" "textArea")} (text content application lang group-idx)
          {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang group-idx]
          {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content]))

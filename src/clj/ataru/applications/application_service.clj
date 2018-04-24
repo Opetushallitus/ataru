@@ -1,25 +1,25 @@
 (ns ataru.applications.application-service
   (:require
    [ataru.applications.application-access-control :as aac]
+   [ataru.applications.application-store :as application-store]
+   [ataru.applications.excel-export :as excel]
+   [ataru.email.application-email-confirmation :as email]
    [ataru.forms.form-access-control :as form-access-control]
    [ataru.forms.form-store :as form-store]
-   [ataru.koodisto.koodisto :as koodisto]
-   [ataru.applications.application-store :as application-store]
-   [ataru.middleware.user-feedback :refer [user-feedback-exception]]
-   [ataru.applications.excel-export :as excel]
-   [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
    [ataru.hakija.hakija-form-service :as hakija-form-service]
-   [taoensso.timbre :refer [spy debug]]
+   [ataru.information-request.information-request-store :as information-request-store]
+   [ataru.koodisto.koodisto :as koodisto]
+   [ataru.middleware.user-feedback :refer [user-feedback-exception]]
+   [ataru.organization-service.ldap-client :as ldap]
+   [ataru.person-service.birth-date-converter :as bd-converter]
+   [ataru.person-service.person-service :as person-service]
+   [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
-   [ataru.organization-service.ldap-client :as ldap]
-   [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
-   [ataru.information-request.information-request-store :as information-request-store]
-   [ataru.email.application-email-confirmation :as email]
-   [ataru.person-service.person-service :as person-service]
    [ataru.util :as util]
-   [ataru.person-service.birth-date-converter :as bd-converter]
-   [medley.core :refer [filter-vals]])
+   [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
+   [medley.core :refer [filter-vals]]
+   [taoensso.timbre :refer [spy debug]])
   (:import [java.io ByteArrayInputStream]))
 
 (defn- extract-koodisto-fields [field-descriptor-list]
@@ -48,37 +48,6 @@
          (filter koodi-pred)
          first)))
 
-(defn- populate-koodisto-fields [application {:keys [content]}]
-  (let [koodisto-fields (extract-koodisto-fields content)
-        lang            (-> (:lang application)
-                            clojure.string/lower-case
-                            keyword)]
-    (update application :answers
-      (partial map
-        (fn [{:keys [key] :as answer}]
-          (cond-> answer
-            (contains? koodisto-fields key)
-            (update :value (fn [koodi-value]
-                             (let [koodisto-uri (get-in koodisto-fields [key :uri])
-                                   version (get-in koodisto-fields [key :version])
-                                   koodisto (koodisto/get-koodisto-options koodisto-uri version)
-                                   get-label (fn [koodi-uri]
-                                               (let [labels (:label (get-koodi koodisto koodi-uri))]
-                                                 (or (some #(when (not (clojure.string/blank? (get labels %)))
-                                                              (get labels %))
-                                                           [lang :fi :sv :en])
-                                                     (str "Tuntematon koodi " koodi-uri))))]
-                               (cond (string? koodi-value)
-                                     (let [values (clojure.string/split koodi-value #"\s*,\s*")]
-                                       (if (< 1 (count values))
-                                         (map get-label values)
-                                         (get-label (first values))))
-                                     (and (vector? koodi-value)
-                                          (every? vector? koodi-value))
-                                     (map (partial map get-label) koodi-value)
-                                     :else
-                                     (map get-label koodi-value)))))))))))
-
 (defn- parse-application-hakukohde-reviews
   [application-key]
   (reduce
@@ -104,19 +73,6 @@
      :birth-date     (-> answers :birth-date :value)
      :gender         (-> answers :gender :value)
      :nationality    (-> answers :nationality :value)}))
-
-(defn get-country-by-code [code]
-  (or (->> (koodisto/get-koodisto-options "maatjavaltiot2" 1)
-           (filter #(= code (:value %)))
-           first
-           :label
-           :fi)
-      (str "Tuntematon maakoodi " code)))
-
-(defn populate-person-koodisto-fields [person]
-  (-> person
-      (update :gender util/gender-int-to-string)
-      (update :nationality get-country-by-code)))
 
 (defn- person-info-from-onr-person [person]
   {:first-name     (:etunimet person)
@@ -149,28 +105,25 @@
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
   [application-key session organization-service tarjonta-service ohjausparametrit-service person-client]
-  (when-let [bare-application (aac/get-latest-application-by-key
-                               organization-service
-                               tarjonta-service
-                               session
-                               application-key)]
+  (when-let [application (aac/get-latest-application-by-key
+                           organization-service
+                           tarjonta-service
+                           session
+                           application-key)]
     (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku
-                         tarjonta-service
-                         organization-service
-                         ohjausparametrit-service
-                         (:haku bare-application)
-                         (:hakukohde bare-application))
-          form          (-> (:form bare-application)
+                          tarjonta-service
+                          organization-service
+                          ohjausparametrit-service
+                          (:haku application)
+                          (:hakukohde application))
+          form          (-> (:form application)
                             form-store/fetch-by-id
+                            koodisto/populate-form-koodisto-fields
                             (populate-hakukohde-answer-options tarjonta-info)
-                            (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))
-          application   (populate-koodisto-fields bare-application form)
-          person        (get-person application person-client)]
+                            (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))]
       {:application          (-> application
                                  (dissoc :person-oid)
-                                 (assoc :person (if (:yksiloity person)
-                                                  (populate-person-koodisto-fields person)
-                                                  person))
+                                 (assoc :person (get-person application person-client))
                                  (merge tarjonta-info))
        :form                 form
        :hakukohde-reviews    (parse-application-hakukohde-reviews application-key)
