@@ -37,7 +37,7 @@
 
 (defn- visible? [field-descriptor application]
   (and (not= "infoElement" (:fieldClass field-descriptor))
-       (not= true (:exclude-from-answers field-descriptor))
+       (not (:exclude-from-answers field-descriptor))
        (or (empty? (:belongs-to-hakukohteet field-descriptor))
            (belongs-to-hakukohde? field-descriptor application))
        (or (empty? (:belongs-to-hakukohderyhma field-descriptor))
