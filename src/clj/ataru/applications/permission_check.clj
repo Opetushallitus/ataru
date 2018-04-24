@@ -12,7 +12,8 @@
             (aac/filter-authorized tarjonta-service
                                    (every-pred (partial aac/authorized-by-form? orgs)
                                                (partial aac/authorized-by-tarjoajat? orgs)))
-            not-empty)})
+            not-empty
+            boolean)})
     (catch Exception e
       (let [msg "Error while checking permission"]
         (error e msg)
