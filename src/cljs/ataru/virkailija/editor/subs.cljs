@@ -53,7 +53,11 @@
 (re-frame/reg-sub
   :editor/filtered-hakukohderyhmat
   (fn [db [_ id]]
-    (get-in db [:editor :used-by-haut :hakukohderyhmat] {})))
+    (if-let [search-term (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term])]
+      (let [pattern (re-pattern (str "(?i)" search-term))]
+        (filter #(re-find pattern (some (:name %) [:fi :sv :en]))
+                (get-in db [:editor :used-by-haut :hakukohderyhmat])))
+      (get-in db [:editor :used-by-haut :hakukohderyhmat] []))))
 
 (re-frame/reg-sub
   :editor/fetching-haut?
