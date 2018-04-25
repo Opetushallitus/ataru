@@ -35,11 +35,11 @@
                                   :modified-by metadata})]
       (update-in db (util/flatten-path db option-path :followups) (fnil conj []) component))))
 
-(defn followup-question-overlay [option-path show-followups]
+(defn followup-question-overlay [option-index option-path show-followups]
   (let [layer-visible? (subscribe [:editor/followup-overlay option-path :visible?])
         followups      (subscribe [:editor/get-component-value (flatten [option-path :followups])])]
-    (fn [option-path show-followups]
-      (when (or @layer-visible? (and @show-followups (not-empty @followups)))
+    (fn [option-index option-path show-followups]
+      (when (or @layer-visible? (and (get @show-followups option-index) (not-empty @followups)))
         [:div.editor-form__followup-question-overlay-parent
          [:div.editor-form__followup-question-overlay-outer
           [:div.editor-form__followup-indicator]
@@ -52,7 +52,7 @@
             (fn [generate-fn]
               (dispatch [:editor/generate-followup-component generate-fn option-path]))]]]]))))
 
-(defn followup-question [option-path show-followups]
+(defn followup-question [option-index option-path show-followups]
   (let [layer-visible?        (subscribe [:editor/followup-overlay option-path :visible?])
         followup-component    (subscribe [:editor/get-component-value (vec (flatten [option-path :followups]))])
         allow-more-followups? (->> option-path
@@ -60,14 +60,16 @@
                                    (filter #(= :followups %))
                                    count
                                    (> 2))]
-    (fn [option-path show-followups]
+    (fn [option-index option-path show-followups]
       [:div.editor-form__followup-question
        (when allow-more-followups?
          (match [@followup-component @layer-visible?]
            [(_ :guard not-empty) _] [:a
-                                     {:on-click #(swap! show-followups not)}
+                                     {:on-click #(swap! show-followups
+                                                   (fn [v] (assoc v option-index
+                                                                    (not (get v option-index)))))}
                                      (str "Lisäkysymykset (" (count @followup-component) ") ")
-                                     (if @show-followups
+                                     (if (get @show-followups option-index)
                                        [:i.zmdi.zmdi-chevron-up.zmdi-hc-lg]
                                        [:i.zmdi.zmdi-chevron-down.zmdi-hc-lg])]
            [_ true] [:a {:on-click #(dispatch [:editor/followup-overlay-close option-path])} "Lisäkysymykset"]
