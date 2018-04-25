@@ -1,6 +1,7 @@
 (ns ataru.test-utils
   (:require [ataru.virkailija.virkailija-routes :as v]
             [ataru.organization-service.organization-service :as org-service]
+            [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
             [ring.mock.request :as mock]
             [speclj.core :refer :all]
             [ataru.db.db :as db]
@@ -42,14 +43,17 @@
     (should-not-be-nil headers)
     (should-not-contain header headers)))
 
-(defn create-fake-virkailija-credentials [application-key]
+(defn- create-fake-virkailija-update-secret
+  [application-key]
   (db/exec :db yesql-upsert-virkailija<! {:oid        "1213"
                                           :first_name "Hemuli"
                                           :last_name  "Hemuli?"})
-  (ataru.virkailija.authentication.virkailija-edit/create-virkailija-credentials {:identity {:oid        "1213"
-                                                                                             :username   "tsers"
-                                                                                             :first-name "Hemuli"
-                                                                                             :last-name  "Hemuli?"}} application-key))
+  (virkailija-edit/create-virkailija-update-secret
+   {:identity {:oid        "1213"
+               :username   "tsers"
+               :first-name "Hemuli"
+               :last-name  "Hemuli?"}}
+   application-key))
 
 (defn get-latest-form
   [form-name]
@@ -94,4 +98,4 @@
        :test-form-application-secret (:secret application)}
 
       (some? application)
-      (assoc :virkailija-secret (:secret (create-fake-virkailija-credentials (:key application)))))))
+      (assoc :virkailija-secret (create-fake-virkailija-update-secret (:key application))))))

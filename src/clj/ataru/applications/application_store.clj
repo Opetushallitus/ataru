@@ -22,7 +22,6 @@
             [yesql.core :refer [defqueries]]))
 
 (defqueries "sql/application-queries.sql")
-(defqueries "sql/virkailija-credentials-queries.sql")
 
 (defn- exec-db
   [ds-key query params]
@@ -230,12 +229,14 @@
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
 
-(defn- get-virkailija-oid [virkailija-secret application-key conn]
-  (->> (yesql-get-virkailija-oid {:virkailija_secret virkailija-secret
-                                  :application_key   application-key}
-                                 {:connection conn})
-       (map :oid)
-       (first)))
+(defn- get-virkailija-oid
+  [conn secret]
+  (->> (jdbc/query conn ["SELECT virkailija_oid
+                          FROM virkailija_update_secrets
+                          WHERE secret = ?"
+                         secret])
+       first
+       :virkailija_oid))
 
 (defn update-application [{:keys [lang secret virkailija-secret] :as new-application} applied-hakukohteet]
   {:pre [(or (not-blank? secret)
@@ -251,7 +252,8 @@
                                                  applied-hakukohteet
                                                  (->  old-application :answers util/answers-by-key)
                                                  conn)
-          virkailija-oid        (when-not updated-by-applicant? (get-virkailija-oid virkailija-secret key conn))]
+          virkailija-oid        (when-not updated-by-applicant?
+                                  (get-virkailija-oid conn virkailija-secret))]
       (info (str "Updating application with key "
                  (:key old-application)
                  " based on valid application secret, retaining key" (when-not updated-by-applicant? " and secret") " from previous version"))

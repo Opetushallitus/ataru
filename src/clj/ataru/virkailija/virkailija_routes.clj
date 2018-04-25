@@ -320,10 +320,12 @@
       (api/GET "/:application-key/modify" {session :session}
         :path-params [application-key :- String]
         :summary "Get HTTP redirect response for modifying a single application in Hakija side"
-        (if-let [virkailija-credentials (virkailija-edit/create-virkailija-credentials session application-key)]
+        (if-let [virkailija-update-secret (virkailija-edit/create-virkailija-update-secret
+                                           session
+                                           application-key)]
           (let [modify-url (str (-> config :public-config :applicant :service_url)
                                 "/hakemus?virkailija-secret="
-                                (:secret virkailija-credentials))]
+                                virkailija-update-secret)]
             (response/temporary-redirect modify-url))
           (response/bad-request)))
 

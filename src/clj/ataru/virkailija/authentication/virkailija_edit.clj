@@ -10,21 +10,35 @@
   (:import (java.util UUID)))
 
 (sql/defqueries "sql/virkailija-queries.sql")
-(sql/defqueries "sql/virkailija-credentials-queries.sql")
 
-(defn create-virkailija-credentials [session application-key]
-  (let [secret (str (UUID/randomUUID))]
-    (db/exec :db yesql-upsert-virkailija-credentials<! {:oid             (-> session :identity :oid)
-                                                        :secret          secret
-                                                        :application_key application-key})))
+(defn create-virkailija-update-secret
+  [session application-key]
+  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+    (let [secret (str (UUID/randomUUID))]
+      (jdbc/execute! connection ["INSERT INTO virkailija_update_secrets
+                                  (virkailija_oid, application_key, secret)
+                                  VALUES (?, ?, ?)"
+                                 (get-in session [:identity :oid])
+                                 application-key
+                                 secret])
+      secret)))
 
-(defn invalidate-virkailija-credentials [virkailija-secret]
-  (db/exec :db yesql-invalidate-virkailija-credentials! {:virkailija_secret virkailija-secret}))
+(defn invalidate-virkailija-update-secret
+  [secret]
+  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+    (jdbc/execute! connection ["UPDATE virkailija_update_secrets
+                                SET valid = tstzrange(lower(valid), now(), '[)')
+                                WHERE secret = ?"
+                               secret])))
 
-(defn virkailija-secret-valid? [virkailija-secret]
-  (-> (db/exec :db yesql-get-virkailija-secret-valid {:virkailija_secret virkailija-secret})
-      first
-      :valid))
+(defn virkailija-update-secret-valid?
+  [secret]
+  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+    (not (empty?
+          (jdbc/query connection ["SELECT 1
+                                   FROM virkailija_update_secrets
+                                   WHERE secret = ? AND valid @> now()"
+                                  secret])))))
 
 (defn- get-virkailija-for-update [oid conn]
   (->> (yesql-get-virkailija-for-update {:oid oid}

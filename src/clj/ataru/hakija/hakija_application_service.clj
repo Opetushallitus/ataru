@@ -23,7 +23,6 @@
     [ataru.util :as util]
     [ataru.files.file-store :as file-store]
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
-    [ataru.virkailija.authentication.virkailija-edit :refer [invalidate-virkailija-credentials virkailija-secret-valid?]]
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
     [ataru.config.core :refer [config]]
     [clj-time.core :as time]
@@ -88,8 +87,8 @@
       (file-store/delete-file (name attachment-key)))
     (log/info (str "Updated application " (:key old-application) ", removed old attachments: " (clojure.string/join ", " orphan-attachments)))))
 
-(defn- valid-virkailija-secret [{:keys [virkailija-secret]}]
-  (when (virkailija-edit/virkailija-secret-valid? virkailija-secret)
+(defn- valid-virkailija-update-secret [{:keys [virkailija-secret]}]
+  (when (virkailija-edit/virkailija-update-secret-valid? virkailija-secret)
     virkailija-secret))
 
 (defn- set-original-value
@@ -122,7 +121,7 @@
         applied-hakukohteet           (filter #(contains? (set (:hakukohde application)) (:oid %))
                                               hakukohteet)
         applied-hakukohderyhmat       (mapcat :hakukohderyhmat applied-hakukohteet)
-        virkailija-secret             (valid-virkailija-secret application)
+        virkailija-secret             (valid-virkailija-update-secret application)
         latest-application            (application-store/get-latest-version-of-application-for-edit application)
         form-roles                    (cond-> []
                                         (some? virkailija-secret)
@@ -157,7 +156,7 @@
                                        applied-hakukohderyhmat)]
     (cond
       (and (not (nil? virkailija-secret))
-           (not (virkailija-secret-valid? virkailija-secret)))
+           (not (virkailija-edit/virkailija-update-secret-valid? virkailija-secret)))
       {:passed? false :failures ["Tried to edit application with invalid virkailija secret."]}
 
       (and (:secret application)
@@ -199,7 +198,7 @@
   (start-attachment-finalizer-job application-id))
 
 (defn- start-virkailija-edit-jobs [virkailija-secret application-id application]
-  (invalidate-virkailija-credentials virkailija-secret)
+  (virkailija-edit/invalidate-virkailija-update-secret virkailija-secret)
   (when (nil? (:person-oid application))
     (start-person-creation-job application-id))
   (start-attachment-finalizer-job application-id))
@@ -262,7 +261,7 @@
                                    :else
                                    [:hakija nil])
         application      (cond
-                           (and (= actor-role :virkailija) (virkailija-edit/virkailija-secret-valid? secret))
+                           (and (= actor-role :virkailija) (virkailija-edit/virkailija-update-secret-valid? secret))
                            (application-store/get-latest-application-for-virkailija-edit secret)
 
                            (and (= actor-role :hakija) (some? secret))

@@ -417,8 +417,8 @@ SELECT
   f.key     AS form_key
 FROM latest_applications AS a
 JOIN forms f ON a.form_id = f.id
-JOIN virkailija_credentials AS vc ON vc.application_key = a.key
-WHERE vc.secret = :virkailija_secret;
+JOIN virkailija_update_secrets AS vus ON vus.application_key = a.key
+WHERE vus.secret = :virkailija_secret;
 
 -- name: yesql-get-latest-version-by-secret-lock-for-update
 WITH application_secret AS (SELECT
@@ -463,17 +463,6 @@ WHERE key = (SELECT application_key
              WHERE secret = :secret);
 
 -- name: yesql-get-latest-version-by-virkailija-secret-lock-for-update
-WITH latest_version AS (
-    SELECT
-      a.id AS latest_id,
-      key
-    FROM applications a
-      JOIN virkailija_credentials AS vc
-        ON a.key = vc.application_key
-    WHERE vc.secret = :virkailija_secret
-    ORDER BY id DESC
-    LIMIT 1
-)
 SELECT
   a.id,
   a.key,
@@ -485,7 +474,11 @@ SELECT
   a.hakukohde,
   a.person_oid
 FROM applications a
-  JOIN latest_version lv ON a.id = lv.latest_id
+WHERE a.id = (SELECT max(a.id)
+              FROM applications AS a
+              JOIN virkailija_update_secrets AS vus
+                ON vus.application_key = a.key
+              WHERE vus.secret = :virkailija_secret)
 FOR UPDATE;
 
 -- name: yesql-add-application-event<!
