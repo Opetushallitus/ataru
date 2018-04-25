@@ -44,41 +44,55 @@
 (defn create-org-labels [organizations]
   (map
    (fn [org]
-     (str (get-in org [:name :fi]) " (" (string/join ", " (map #(get right-labels (keyword %)) (:rights org))) ")"))
+     (str (get-label (:name org)) " (" (string/join ", " (map #(get right-labels (keyword %)) (:rights org))) ")"))
    organizations))
+
+(defn- org-label
+  [organizations selected-organization]
+  (let [org-count (count organizations)]
+    (cond
+      (some? selected-organization) (get-label (:name selected-organization))
+      (zero? org-count) "Ei organisaatiota"
+      (< 1 org-count) "Useita organisaatioita"
+      :else (-> organizations (first) :name (get-label)))))
 
 (defn profile []
   (let [user-info             (subscribe [:state-query [:editor :user-info]])
         org-select-visible?   (reagent/atom false)]
     (fn []
       (when @user-info
-        (let [organizations         (:organizations @user-info)
-              search-results        (subscribe [:state-query [:editor :organizations :matches]])
-              selected-organization (subscribe [:state-query [:editor :user-info :selected-organization]])
-              org-count             (count organizations)
-              org-labels            (create-org-labels organizations)
-              joint-orgs-str        (string/join " \n" org-labels)
-              tooltip-str           (str joint-orgs-str "\n\nKäyttäjätunnus: " (:username @user-info))
-              org-str               (cond
-                                      (some? @selected-organization) (get-label (:name @selected-organization))
-                                      (= 0 org-count) "Ei organisaatiota"
-                                      (< 1 org-count) "Useita organisaatioita"
-                                      :else (get-in (first organizations) [:name :fi]))]
+        (let [organizations             (:organizations @user-info)
+              search-results            (subscribe [:state-query [:editor :organizations :matches]])
+              selected-organization-sub (subscribe [:state-query [:editor :user-info :selected-organization]])
+              selected-organization     (when @selected-organization-sub [@selected-organization-sub])
+              org-str                   (org-label organizations (first selected-organization))]
           [:div.profile
            [:div.profile__organization
-            [:a.tooltip-indicator
-             {:on-click #(swap! org-select-visible? not)} org-str]
+            [:a.profile__organization-link
+             {:on-click #(swap! org-select-visible? not)}
+             [:i.profile__organization-link-icon.zmdi.zmdi-accounts-list.zmdi-hc-2x]
+             [:div.profile__organization-link-name org-str]]
             (when @org-select-visible?
               [:div.profile__organization-select
-               [:h4.profile__organization-select-title "Valitse organisaatio"]
-               (when @selected-organization
+               [:div.profile__organization-select-username-container
+                [:i..profile__organization-select-username-icon.zmdi.zmdi-account.zmdi-hc-lg]
+                [:span.profile__organization-select-username-name (str (:name @user-info) " (" (:username @user-info) ")")]]
+               (into
+                 [:ul.profile__organization-select-user-orgs]
+                 (map
+                   (fn [org] [:li org])
+                   (create-org-labels (or selected-organization organizations))))
+               (when selected-organization
                  [:div
                   [:a
                    {:on-click #(dispatch [:editor/remove-selected-organization])}
-                   "Poista valinta"]])
-               [:input.profile__organization-select-input
-                {:value     @(subscribe [:state-query [:editor :organizations :query]])
-                 :on-change #(dispatch [:editor/update-organization-select-query (.-value (.-target %))])}]
+                   (str "Palauta oletusorganisaatio (" (org-label organizations nil) ")")]])
+               [:h4.profile__organization-select-title "Valitse organisaatio"]
+               [:input.editor-form__text-field.profile__organization-select-input
+                {:type        "text"
+                 :placeholder "Etsi aliorganisaatioita"
+                 :value       @(subscribe [:state-query [:editor :organizations :query]])
+                 :on-change   #(dispatch [:editor/update-organization-select-query (.-value (.-target %))])}]
                (into
                  [:ul.profile__organization-select-results
                   (map

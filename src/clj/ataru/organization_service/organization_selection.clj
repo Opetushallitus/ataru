@@ -3,16 +3,18 @@
             [ataru.organization-service.organization-service :as organization-service]
             [medley.core :refer [find-first]]))
 
-(defn- organization-list
+(defn- all-organizations
   [organization-service]
   (organization-service/get-all-organizations organization-service [{:oid ""}]))
 
 (defn query-organization
   [organization-service session query]
-  (let [superuser? (-> session :identity :superuser (boolean))
-        organizations (if superuser?
-                        (organization-list organization-service)
-                        (-> session :organizations (vals)))]
+  (let [superuser?    (-> session :identity :superuser (boolean))
+        organizations (sort-by
+                        #(some (fn [lang] (-> % :name lang)) [:fi :sv :en])
+                        (if superuser?
+                          (all-organizations organization-service)
+                          (-> session :organizations (vals))))]
     (take 11
           (if (or (string/blank? query)
                   (< (count query) 2))
@@ -30,5 +32,6 @@
 (defn select-organization
   [organization-service session organization-oid]
   (if (-> session :identity :superuser)
-    (find-first #(= (:oid %) organization-oid) (organization-list organization-service))
+    (some-> (find-first #(= (:oid %) organization-oid) (all-organizations organization-service))
+            (assoc :rights [:edit-applications :view-applications :form-edit]))
     (get (-> session :identity :organizations) (keyword organization-oid))))

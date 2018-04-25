@@ -121,17 +121,39 @@
 
 .profile__organization {
   position: relative;
+  width: 200px;
+  height: 25px;
+}
+
+.profile__organization-link {
+  display: block;
+  position: relative;
+}
+
+.profile__organization-link-icon {
+  position: absolute;
+}
+
+.profile__organization-link-name {
+  position: absolute;
+  top: 4px;
+  left: 30px;
+  cursor: pointer;
+  max-width: 200px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .profile__organization-select {
-  .arrow(top, white, 8px, 23%);
+  .arrow(top, white, 8px, 15%);
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.30));
   box-sizing: border-box;
   display: block;
   border-radius: 3px;
   position: absolute;
   z-index: 10;
-  top: 28px;
+  top: 32px;
   left: -56px;
   text-align: start;
   background-color: white;
@@ -139,12 +161,28 @@
   padding: 15px;
   font-size: 13px;
   line-height: 21px;
+  color: @text-color;
+}
+
+.profile__organization-select-username-name {
+  margin-left: 6px;
+}
+
+.profile__organization-select-user-orgs {
+  list-style: none;
+  color: @gray-of-the-beast;
+  padding: 0;
+  margin: 5px 0;
 }
 
 .profile__organization-select-title {
   text-transform: uppercase;
   color: @text-color;
-  margin: 0 0 10px 0;
+  margin: 10px 0;
+}
+
+.editor-form__text-field.profile__organization-select-input {
+  width: 300px;
 }
 
 .profile__organization-select-results {
