@@ -98,7 +98,9 @@
           [field-descriptor (get flat-form-map (name ans-key))
            field-type       (:fieldType field-descriptor)]
           :when
-          (and (get-in ui [ans-key :visible?] true)
+          (and (or (= :birth-date ans-key)
+                   (= :gender ans-key)
+                   (get-in ui [ans-key :visible?] true))
                (not (:exclude-from-answers field-descriptor))
                (or (not-empty value)
                    values
