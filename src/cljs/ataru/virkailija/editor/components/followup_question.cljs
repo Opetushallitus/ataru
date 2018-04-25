@@ -38,7 +38,7 @@
 (defn followup-question-overlay [option-path show-followups]
   (let [layer-visible? (subscribe [:editor/followup-overlay option-path :visible?])
         followups      (subscribe [:editor/get-component-value (flatten [option-path :followups])])]
-    (fn [option-path hide-followups]
+    (fn [option-path show-followups]
       (when (or @layer-visible? (and @show-followups (not-empty @followups)))
         [:div.editor-form__followup-question-overlay-parent
          [:div.editor-form__followup-question-overlay-outer
@@ -60,7 +60,7 @@
                                    (filter #(= :followups %))
                                    count
                                    (> 2))]
-    (fn [option-path]
+    (fn [option-path show-followups]
       [:div.editor-form__followup-question
        (when allow-more-followups?
          (match [@followup-component @layer-visible?]
