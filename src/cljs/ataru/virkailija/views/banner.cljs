@@ -75,12 +75,12 @@
             (when @org-select-visible?
               [:div.profile__organization-select
                [:div.profile__organization-select-username-container
-                [:i..profile__organization-select-username-icon.zmdi.zmdi-account.zmdi-hc-lg]
+                [:i.profile__organization-select-username-icon.zmdi.zmdi-account.zmdi-hc-lg]
                 [:span.profile__organization-select-username-name (str (:name @user-info) " (" (:username @user-info) ")")]]
                (into
-                 [:ul.profile__organization-select-user-orgs]
+                 [:ul.profile__organization-select-user-orgs.zmdi-hc-ul]
                  (map
-                   (fn [org] [:li org])
+                   (fn [org] [:li [:i.zmdi.zmdi-hc-li.zmdi-accounts] org])
                    (create-org-labels (or selected-organization organizations))))
                (when selected-organization
                  [:div
