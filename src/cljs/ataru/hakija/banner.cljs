@@ -115,6 +115,14 @@
         [invalid-field-status @valid-status]
         [sent-indicator @submit-status]]])))
 
+(defn virkailija-fill-ribbon
+  []
+  (when (and (some? @(subscribe [:state-query [:application :virkailija-secret]]))
+             (not @(subscribe [:state-query [:application :editing?]])))
+    [:div.application__virkailija-fill-ribbon
+     "Testihakemus / Virkailijatäyttö"]))
+
 (defn banner [] [:div.application__banner-container
+                 [virkailija-fill-ribbon]
                  [:div.application__top-banner-container
                   [:div.application-top-banner [logo] [status-controls]]]])
