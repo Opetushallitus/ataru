@@ -82,6 +82,7 @@
                                           (map
                                             (partial add-rights-to-organization user-right-organizations organization-service)
                                             organizations))]
+          (info "user" username "logged in")
           (db/exec :db yesql-upsert-virkailija<! {:oid        (:employeeNumber virkailija)
                                                   :first_name (:givenName virkailija)
                                                   :last_name  (:sn virkailija)})
