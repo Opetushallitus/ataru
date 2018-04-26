@@ -14,8 +14,8 @@
                         #(some (fn [lang] (-> % :name lang)) [:fi :sv :en])
                         (if superuser?
                           (all-organizations organization-service)
-                          (-> session :organizations (vals))))]
-    (take 11
+                          (-> session :identity :organizations (vals))))]
+    (take 10
           (if (or (string/blank? query)
                   (< (count query) 2))
             organizations
