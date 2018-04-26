@@ -75,7 +75,7 @@
    session
    organization-service
    [:view-applications :edit-applications]
-   vector
+   (constantly {})
    #(let [haut (application-store/get-haut)]
       (->> haut
            (filter (some-fn (partial authorized-by-form? %)
@@ -94,7 +94,7 @@
    session
    organization-service
    [:view-applications :edit-applications]
-   vector
+   (constantly {})
    #(->> (application-store/get-direct-form-haut)
          (filter (partial authorized-by-form? %))
          (map remove-organization-oid)
