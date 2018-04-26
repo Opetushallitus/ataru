@@ -433,25 +433,21 @@
   (audit-log/log {:new              review
                   :old              old-value
                   :id               (get-in session [:identity :username])
-                  :operation        audit-log/operation-modify
-                  :organization-oid (get-in session [:identity :organizations 0 :oid])}))
+                  :operation        audit-log/operation-modify}))
 
 (defn- store-and-log-review-event
   [connection event session]
   (yesql-add-application-event<! event connection)
   (audit-log/log {:new              event
                   :id               (get-in session [:identity :username])
-                  :operation        audit-log/operation-new
-                  :organization-oid (get-in session [:identity :organizations 0 :oid])}))
+                  :operation        audit-log/operation-new}))
 
 (defn save-application-review [review session]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection       {:connection conn}
           app-key          (:application-key review)
           old-review       (first (yesql-get-application-review {:application_key app-key} connection))
-          review-to-store  (transform-keys ->snake_case review)
-          username         (get-in session [:identity :username])
-          organization-oid (get-in session [:identity :organizations 0 :oid])]
+          review-to-store  (transform-keys ->snake_case review)]
       (auditlog-review-modify review-to-store old-review session)
       (yesql-save-application-review! review-to-store connection)
       (when (not= (:state old-review) (:state review-to-store))
@@ -472,9 +468,7 @@
                                                                :state           hakukohde-review-state
                                                                :hakukohde       hakukohde-oid}
                                   existing-duplicate-review   (yesql-get-existing-application-hakukohde-review review-to-store connection)
-                                  existing-requirement-review (yesql-get-existing-requirement-review review-to-store connection)
-                                  username                    (get-in session [:identity :username])
-                                  organization-oid            (get-in session [:identity :organizations 0 :oid])]
+                                  existing-requirement-review (yesql-get-existing-requirement-review review-to-store connection)]
                               (when (empty? existing-duplicate-review)
                                 (auditlog-review-modify review-to-store (first existing-requirement-review) session)
                                 (yesql-upsert-application-hakukohde-review! review-to-store connection)
@@ -695,7 +689,7 @@
       (unwrap-application)))
 
 (defn- update-hakukohde-process-state!
-  [connection username organization-oid session hakukohde-oid from-state to-state application-key]
+  [connection username session hakukohde-oid from-state to-state application-key]
   (let [application      (get-latest-application-by-key-with-hakukohde-reviews
                           connection
                           application-key)
@@ -722,8 +716,7 @@
                                      connection))
     {:new              new-event
      :id               username
-     :operation        audit-log/operation-new
-     :organization-oid organization-oid}))
+     :operation        audit-log/operation-new}))
 
 (defn applications-authorization-data [application-keys]
   (map ->kebab-case-kw
@@ -739,10 +732,9 @@
   [session application-keys hakukohde-oid from-state to-state]
   (let [audit-log-entries (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (let [connection       {:connection conn}
-                                  username         (get-in session [:identity :username])
-                                  organization-oid (get-in session [:identity :organizations 0 :oid])]
+                                  username         (get-in session [:identity :username])]
                               (mapv
-                                (partial update-hakukohde-process-state! connection username organization-oid session hakukohde-oid from-state to-state)
+                                (partial update-hakukohde-process-state! connection username session hakukohde-oid from-state to-state)
                                 application-keys)))]
     (doseq [audit-log-entry audit-log-entries]
       (audit-log/log audit-log-entry))
