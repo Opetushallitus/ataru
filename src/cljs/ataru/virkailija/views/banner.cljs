@@ -70,7 +70,7 @@
            [:div.profile__organization
             [:a.profile__organization-link
              {:on-click #(swap! org-select-visible? not)}
-             [:i.profile__organization-link-icon.zmdi.zmdi-accounts-list.zmdi-hc-2x]
+             [:i.profile__organization-link-icon.zmdi.zmdi-accounts.zmdi-hc-2x]
              [:div.profile__organization-link-name org-str]]
             (when @org-select-visible?
               [:div.profile__organization-select
@@ -87,20 +87,21 @@
                   [:a
                    {:on-click #(dispatch [:editor/remove-selected-organization])}
                    (str "Palauta oletusorganisaatio (" (org-label organizations nil) ")")]])
-               [:h4.profile__organization-select-title "Valitse organisaatio"]
+               [:h4.profile__organization-select-title "Vaihda organisaatio"]
                [:input.editor-form__text-field.profile__organization-select-input
                 {:type        "text"
                  :placeholder "Etsi aliorganisaatioita"
                  :value       @(subscribe [:state-query [:editor :organizations :query]])
                  :on-change   #(dispatch [:editor/update-organization-select-query (.-value (.-target %))])}]
                (into
-                 [:ul.profile__organization-select-results
+                 [:ul.profile__organization-select-results.zmdi-hc-ul
                   (map
                     (fn [{:keys [oid name]}]
                       [:li.profile__organization-select-result
                        {:key (str "organization-match-" oid)}
                        [:a
                         {:on-click #(dispatch [:editor/select-organization oid])}
+                        [:i.zmdi.zmdi-hc-li.zmdi-accounts]
                         (get-label name)]])
                     @search-results)])])]])))))
 
