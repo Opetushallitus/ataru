@@ -50,7 +50,10 @@
   (not-empty
    (clojure.set/intersection
     authorized-organization-oids
-    (get tarjoajat (:hakukohde haku)))))
+    (->> haku
+         :hakukohde
+         (get tarjoajat)
+         (set)))))
 
 (defn- authorized-by-form?
   [authorized-organization-oids haku]
