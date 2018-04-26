@@ -14,17 +14,18 @@
     (set (map :oid all-organizations))))
 
 (defn- filter-orgs-for-rights
-  [session rights organization-oids]
+  [session rights organizations]
   (if (-> session :identity :superuser)
-    organization-oids
+    organizations
     (filter
-      (fn [oid]
+      (fn [org]
         (-> (-> session :identity :organizations)
-            (get oid)
+            (get (keyword (:oid org)))
             :rights
+            (set)
             (clojure.set/intersection (set rights))
             (not-empty)))
-      organization-oids)))
+      organizations)))
 
 (defn right-seq? [val] (s/validate [Right] val))
 
