@@ -103,7 +103,9 @@
                         {:on-click #(dispatch [:editor/select-organization oid])}
                         [:i.zmdi.zmdi-hc-li.zmdi-accounts]
                         (get-label name)]])
-                    @search-results)])])]])))))
+                    @search-results)])
+               (when (< 10 (count @search-results))
+                 [:div.profile__organization-more-results "Lisää tuloksia, tarkenna hakua"])])]])))))
 
 (defn status []
   (let [flash    (subscribe [:state-query [:flash]])

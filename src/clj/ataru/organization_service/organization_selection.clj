@@ -15,7 +15,7 @@
                         (if superuser?
                           (all-organizations organization-service)
                           (-> session :identity :organizations (vals))))]
-    (take 10
+    (take 11
           (if (or (string/blank? query)
                   (< (count query) 2))
             organizations
