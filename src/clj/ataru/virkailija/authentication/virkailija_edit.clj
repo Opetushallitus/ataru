@@ -11,6 +11,34 @@
 
 (sql/defqueries "sql/virkailija-queries.sql")
 
+(defn create-virkailija-create-secret
+  [session]
+  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+    (let [secret (str (UUID/randomUUID))]
+      (jdbc/execute! connection ["INSERT INTO virkailija_create_secrets
+                                  (virkailija_oid, secret)
+                                  VALUES (?, ?)"
+                                 (get-in session [:identity :oid])
+                                 secret])
+      secret)))
+
+(defn invalidate-virkailija-create-secret
+  [secret]
+  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+    (jdbc/execute! connection ["UPDATE virkailija_create_secrets
+                                SET valid = tstzrange(lower(valid), now(), '[)')
+                                WHERE secret = ?"
+                               secret])))
+
+(defn virkailija-create-secret-valid?
+  [secret]
+  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+    (not (empty?
+          (jdbc/query connection ["SELECT 1
+                                   FROM virkailija_create_secrets
+                                   WHERE secret = ? AND valid @> now()"
+                                  secret])))))
+
 (defn create-virkailija-update-secret
   [session application-key]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]

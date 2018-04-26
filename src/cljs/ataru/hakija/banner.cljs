@@ -54,12 +54,13 @@
              [:div.application__sent-indicator.animated.fadeIn (get-translation :application-confirmation)]
              :else nil))))
 
-(defn- edit-text [hakija-secret
+(defn- edit-text [editing?
+                  hakija-secret
                   virkailija-secret]
-  (cond (some? hakija-secret)
+  (cond (and editing? (some? hakija-secret))
         (get-translation :application-hakija-edit-text)
 
-        (some? virkailija-secret)
+        (and editing? (some? virkailija-secret))
         (get-translation :application-virkailija-edit-text)
 
         :else
@@ -68,13 +69,16 @@
 (defn send-button-or-placeholder [valid-status submit-status]
   (let [secret            (subscribe [:state-query [:application :secret]])
         virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])
-        editing           (reaction (or (some? @secret) (some? @virkailija-secret)))
+        editing           (subscribe [:state-query [:application :editing?]])
         values-changed?   (subscribe [:state-query [:application :values-changed?]])]
     (fn [valid-status submit-status]
       (match submit-status
              :submitted [:div.application__sent-placeholder.animated.fadeIn
                          [:i.zmdi.zmdi-check]
-                         [:span.application__sent-placeholder-text (get-translation (if @virkailija-secret :modifications-saved :application-sent))]]
+                         [:span.application__sent-placeholder-text
+                          (get-translation (if (and @editing @virkailija-secret)
+                                             :modifications-saved
+                                             :application-sent))]]
              :else [:button.application__send-application-button
                     {:disabled (or (not (:valid valid-status))
                                    (contains? #{:submitting :submitted} submit-status)
@@ -82,7 +86,7 @@
                      :on-click #(if @editing
                                   (dispatch [:application/edit])
                                   (dispatch [:application/submit]))}
-                    (edit-text @secret @virkailija-secret)]))))
+                    (edit-text @editing @secret @virkailija-secret)]))))
 
 (defn- preview-toggle
   [submit-status enabled?]

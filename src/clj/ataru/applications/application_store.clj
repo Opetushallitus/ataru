@@ -194,21 +194,45 @@
     (unwrap-application application)
     (throw (ex-info "No existing form found when updating as virkailija" {:virkailija-secret virkailija-secret}))))
 
+(defn- get-virkailija-oid-for-update-secret
+  [conn secret]
+  (->> (jdbc/query conn ["SELECT virkailija_oid
+                          FROM virkailija_update_secrets
+                          WHERE secret = ?"
+                         secret])
+       first
+       :virkailija_oid))
+
+(defn- get-virkailija-oid-for-create-secret
+  [conn secret]
+  (->> (jdbc/query conn ["SELECT virkailija_oid
+                          FROM virkailija_create_secrets
+                          WHERE secret = ?"
+                         secret])
+       first
+       :virkailija_oid))
+
 (defn add-application [new-application applied-hakukohteet]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (info (str "Inserting new application"))
-    (let [{:keys [id key] :as new-application} (add-new-application-version new-application true applied-hakukohteet nil conn)
-          connection                {:connection conn}]
+    (let [virkailija-oid                       (when-let [secret (:virkailija-secret new-application)]
+                                                 (get-virkailija-oid-for-create-secret conn secret))
+          {:keys [id key] :as new-application} (add-new-application-version new-application true applied-hakukohteet nil conn)
+          connection                           {:connection conn}]
       (audit-log/log {:new       new-application
                       :operation audit-log/operation-new
-                      :id        (extract-email new-application)})
+                      :id        (if (some? virkailija-oid)
+                                   virkailija-oid
+                                   (extract-email new-application))})
       (yesql-add-application-event<! {:application_key  key
-                                      :event_type       "received-from-applicant"
+                                      :event_type       (if (some? virkailija-oid)
+                                                          "received-from-virkailija"
+                                                          "received-from-applicant")
                                       :new_review_state nil
-                                      :virkailija_oid   nil
+                                      :virkailija_oid   virkailija-oid
                                       :hakukohde        nil
                                       :review_key       nil}
-                                    connection)
+                                     connection)
       (yesql-add-application-review! {:application_key key
                                       :state           application-review-states/initial-application-review-state}
                                      connection)
@@ -229,15 +253,6 @@
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
 
-(defn- get-virkailija-oid
-  [conn secret]
-  (->> (jdbc/query conn ["SELECT virkailija_oid
-                          FROM virkailija_update_secrets
-                          WHERE secret = ?"
-                         secret])
-       first
-       :virkailija_oid))
-
 (defn update-application [{:keys [lang secret virkailija-secret] :as new-application} applied-hakukohteet]
   {:pre [(or (not-blank? secret)
              (not-blank? virkailija-secret))]}
@@ -253,7 +268,7 @@
                                                  (->  old-application :answers util/answers-by-key)
                                                  conn)
           virkailija-oid        (when-not updated-by-applicant?
-                                  (get-virkailija-oid conn virkailija-secret))]
+                                  (get-virkailija-oid-for-update-secret conn virkailija-secret))]
       (info (str "Updating application with key "
                  (:key old-application)
                  " based on valid application secret, retaining key" (when-not updated-by-applicant? " and secret") " from previous version"))

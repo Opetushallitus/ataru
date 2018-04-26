@@ -91,6 +91,10 @@
   (when (virkailija-edit/virkailija-update-secret-valid? virkailija-secret)
     virkailija-secret))
 
+(defn- valid-virkailija-create-secret [{:keys [virkailija-secret]}]
+  (when (virkailija-edit/virkailija-create-secret-valid? virkailija-secret)
+    virkailija-secret))
+
 (defn- set-original-value
   [old-values-by-key new-answer]
   (assoc new-answer :original-value (get old-values-by-key (:key new-answer))))
@@ -121,7 +125,9 @@
         applied-hakukohteet           (filter #(contains? (set (:hakukohde application)) (:oid %))
                                               hakukohteet)
         applied-hakukohderyhmat       (mapcat :hakukohderyhmat applied-hakukohteet)
-        virkailija-secret             (valid-virkailija-update-secret application)
+        virkailija-secret             (if is-modify?
+                                        (valid-virkailija-update-secret application)
+                                        (valid-virkailija-create-secret application))
         latest-application            (application-store/get-latest-version-of-application-for-edit application)
         form-roles                    (cond-> []
                                         (some? virkailija-secret)
@@ -155,8 +161,8 @@
                                        form
                                        applied-hakukohderyhmat)]
     (cond
-      (and (not (nil? virkailija-secret))
-           (not (virkailija-edit/virkailija-update-secret-valid? virkailija-secret)))
+      (and (some? (:virkailija-secret application))
+           (nil? virkailija-secret))
       {:passed? false :failures ["Tried to edit application with invalid virkailija secret."]}
 
       (and (:secret application)
@@ -168,6 +174,7 @@
       {:passed? false :failures ["Hakukohde must be specified"]}
 
       (and (not is-modify?)
+           (nil? virkailija-secret)
            (some #(not (:on (:hakuaika %))) applied-hakukohteet))
       {:passed? false :failures ["Application period is not open."]}
 
@@ -212,8 +219,11 @@
   (log/info "Application submitted:" application)
   (let [{:keys [passed? id]
          :as   result}
-        (validate-and-store tarjonta-service organization-service ohjausparametrit-service application application-store/add-application false)]
+        (validate-and-store tarjonta-service organization-service ohjausparametrit-service application application-store/add-application false)
+        virkailija-secret (:virkailija-secret application)]
     (when passed?
+      (when virkailija-secret
+        (virkailija-edit/invalidate-virkailija-create-secret virkailija-secret))
       (start-submit-jobs tarjonta-service id))
     result))
 

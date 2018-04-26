@@ -20,7 +20,8 @@
  :application/can-apply?
  (fn [db]
    (if-let [hakukohteet (get-in db [:form :tarjonta :hakukohteet])]
-     (some #(get-in % [:hakuaika :on]) hakukohteet)
+     (or (some? (get-in db [:application :virkailija-secret]))
+         (some #(get-in % [:hakuaika :on]) hakukohteet))
      true)))
 
 (re-frame/reg-sub
@@ -142,7 +143,7 @@
 (re-frame/reg-sub
   :application/hakukohde-editable?
   (fn [db [_ hakukohde-oid]]
-    (or (-> db :application :virkailija-secret empty? not)
+    (or (some? (get-in db [:application :virkailija-secret]))
         (->> (get-in db [:form :tarjonta :hakukohteet])
              (some #(when (= hakukohde-oid (:oid %)) %))
              :hakuaika

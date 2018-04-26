@@ -426,6 +426,7 @@
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"
                          "received-from-applicant"
+                         "received-from-virkailija"
                          "review-state-change"
                          "hakukohde-review-state-change"
                          "attachment-review-state-change"
