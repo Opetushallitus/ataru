@@ -629,12 +629,6 @@ INSERT INTO application_feedback (created_time, form_key, form_id, form_name, st
 VALUES
   (now(), :form_key, :form_id, :form_name, :rating, left(:feedback, 2000), :user_agent);
 
--- name: yesql-get-hakija-secret-by-virkailija-secret
-SELECT las.secret
-FROM latest_application_secrets AS las
-  JOIN virkailija_credentials AS vc ON vc.application_key = las.application_key
-WHERE vc.secret = :virkailija_secret;
-
 -- name: yesql-get-application-hakukohde-reviews
 SELECT
   id,

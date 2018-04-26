@@ -549,11 +549,6 @@
   (->kebab-case-kw
     (exec-db :db yesql-add-application-feedback<! (transform-keys ->snake_case feedback))))
 
-(defn get-hakija-secret-by-virkailija-secret [virkailija-secret]
-  (-> (exec-db :db yesql-get-hakija-secret-by-virkailija-secret {:virkailija_secret virkailija-secret})
-      (first)
-      :secret))
-
 (defn- payment-obligation-to-application [application payment-obligations]
   (let [obligations (reduce (fn [r o]
                               (assoc r (:hakukohde o) (:state o)))
