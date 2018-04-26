@@ -473,22 +473,12 @@ WITH latest_version AS (
     WHERE vc.secret = :virkailija_secret
     ORDER BY id DESC
     LIMIT 1
-), latest_secret_version AS (
-    SELECT
-      ass.secret AS latest_secret,
-      ass.application_key
-    FROM application_secrets ass
-    WHERE ass.application_key = (SELECT key
-                                 FROM latest_version)
-    ORDER BY ass.id DESC
-    LIMIT 1
 )
 SELECT
   a.id,
   a.key,
-  las.latest_secret AS secret,
   a.lang,
-  a.form_id         AS form,
+  a.form_id AS form,
   a.created_time,
   a.content,
   a.haku,
@@ -496,7 +486,6 @@ SELECT
   a.person_oid
 FROM applications a
   JOIN latest_version lv ON a.id = lv.latest_id
-  JOIN latest_secret_version las ON las.application_key = a.key
 FOR UPDATE;
 
 -- name: yesql-add-application-event<!
