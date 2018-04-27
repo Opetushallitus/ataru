@@ -274,12 +274,14 @@
                                                              (:haku application)
                                                              (util/application-in-processing? (:application-hakukohde-reviews application))
                                                              form-roles)
-                               (some? (:form application)) (hakija-form-service/fetch-form-by-key
+                               (some? (:form application)) (hakija-form-service/fetch-form-by-key-with-flagged-fields
                                                              (->> application
                                                                   :form
                                                                   form-store/fetch-by-id
                                                                   :key)
-                                                             form-roles))
+                                                             form-roles
+                                                             nil
+                                                             (util/application-in-processing? (:application-hakukohde-reviews application))))
         person           (some-> application
                                  (application-service/get-person person-client)
                                  (dissoc :ssn :birth-date))

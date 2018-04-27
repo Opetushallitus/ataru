@@ -102,6 +102,8 @@
                  (let [cannot-view? (contains? viewing-forbidden-person-info-field-ids
                                                (keyword (:id field)))
                        cannot-edit? (or cannot-view?
+                                        (and (nil? hakukohteet)
+                                             application-in-processing-state?)
                                         (uneditable? field hakukohteet roles application-in-processing-state?))]
                    (assoc field
                           :cannot-view cannot-view?
@@ -115,8 +117,15 @@
   (when-let [form (form-store/fetch-by-key key)]
     (when (not (:deleted form))
       (-> form
-          koodisto/populate-form-koodisto-fields
-          (flag-uneditable-and-unviewable-fields nil roles false)))))
+          koodisto/populate-form-koodisto-fields))))
+
+(s/defn ^:always-validate fetch-form-by-key-with-flagged-fields :- s/Any
+  [key :- s/Any
+   roles :- [form-role/FormRole]
+   hakukohteet :- s/Any
+   application-in-processing-state? :- s/Bool]
+  (some-> (fetch-form-by-key key roles)
+          (flag-uneditable-and-unviewable-fields hakukohteet roles application-in-processing-state?)))
 
 (s/defn ^:always-validate fetch-form-by-haku-oid :- s/Any
   [tarjonta-service :- s/Any
@@ -132,13 +141,12 @@
                         (remove nil?))
         hakukohteet   (get-in tarjonta-info [:tarjonta :hakukohteet])
         form          (when (= 1 (count form-keys))
-                        (fetch-form-by-key (first form-keys) roles))]
+                        (fetch-form-by-key-with-flagged-fields (first form-keys) roles hakukohteet application-in-processing-state?))]
     (when (not tarjonta-info)
       (throw (Exception. (str "No haku found for haku " haku-oid " and keys " (pr-str form-keys)))))
     (if form
       (-> form
           (merge tarjonta-info)
-          (flag-uneditable-and-unviewable-fields hakukohteet roles application-in-processing-state?)
           (populate-hakukohde-answer-options tarjonta-info)
           (populate-can-submit-multiple-applications tarjonta-info))
       (warn "could not find local form for haku" haku-oid "with keys" (pr-str form-keys)))))
