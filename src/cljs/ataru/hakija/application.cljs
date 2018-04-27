@@ -83,39 +83,6 @@
          (fn [field] [(:id field) field])
          (util/flatten-form-fields (:content form)))))
 
-(defn- remove-invisible-followup-values
-  [answers flat-form ui]
-  (let [followup-field-ids  (->> flat-form
-                                 (filter-vals #(contains? % :followup-of))
-                                 (keys)
-                                 (map keyword)
-                                 (set))
-        hidden-field-ids    (->> ui
-                                 (filter-vals #(not (:visible? %)))
-                                 (keys)
-                                 (set))
-        hidden-followup-ids (clojure.set/intersection followup-field-ids hidden-field-ids)]
-    (remove-keys #(contains? hidden-followup-ids %) answers)))
-
-(def ^:private form-fields-to-hide (comp not-empty
-                                         (partial clojure.set/intersection #{:exclude-from-answers-if-hidden :belongs-to-hakukohteet})
-                                         set
-                                         keys))
-
-(defn- remove-invisible-answers
-  [answers flat-form ui]
-  (let [fields-to-remove-if-hidden (->> flat-form
-                                        (filter-vals form-fields-to-hide)
-                                        (keys)
-                                        (map keyword)
-                                        (set))
-        hidden-field-ids           (->> ui
-                                        (filter-vals #(not (:visible? %)))
-                                        (keys)
-                                        (set))
-        fields-to-remove           (clojure.set/intersection fields-to-remove-if-hidden hidden-field-ids)]
-    (remove-keys #(contains? fields-to-remove %) answers)))
-
 (defn- value-from-values [field-map value]
   (let [t (if (= (:fieldType field-map) "attachment")
             #(-> % :value :key)
@@ -126,28 +93,33 @@
 
 (defn- create-answers-to-submit [answers form ui]
   (let [flat-form-map (form->flat-form-map form)]
-    (for [[ans-key {:keys [value values]}] (-> answers
-                                               (remove-invisible-followup-values flat-form-map ui)
-                                               (remove-invisible-answers flat-form-map ui))
-          :let [field-map   (get flat-form-map (name ans-key))
-                field-type  (:fieldType field-map)
-                label       (:label field-map)]
-          :when (or
-                  values
-                  (:cannot-edit field-map)
-                  (:cannot-view field-map)
-                  ; permit empty dropdown values, because server side validation expects to match form fields to answers
-                  (and (empty? value) (= "dropdown" field-type))
-                  (and (not-empty value) (not (:exclude-from-answers field-map))))]
+    (for [[ans-key {:keys [value values]}] answers
+          :let
+          [field-descriptor (get flat-form-map (name ans-key))
+           field-type       (:fieldType field-descriptor)]
+          :when
+          (and (or (= :birth-date ans-key)
+                   (= :gender ans-key)
+                   (get-in ui [ans-key :visible?] true))
+               (not (:exclude-from-answers field-descriptor))
+               (or (not-empty value)
+                   values
+                   (:cannot-edit field-descriptor)
+                   (:cannot-view field-descriptor)
+                   ;; permit empty value, because server side validation expects to match form fields to answers
+                   (and (empty? value)
+                        (or (= "dropdown" field-type)
+                            (= "singleChoice" field-type)))))]
       {:key       (name ans-key)
-       :value     (cond (= "singleChoice" field-type)
+       :value     (cond (or (= "dropdown" field-type)
+                            (= "singleChoice" field-type))
                         value
                         (some? value)
                         value
                         :else
-                        (map (partial value-from-values field-map) values))
+                        (map (partial value-from-values field-descriptor) values))
        :fieldType field-type
-       :label     label})))
+       :label     (:label field-descriptor)})))
 
 (defn create-application-to-submit [application form lang]
   (let [{secret :secret virkailija-secret :virkailija-secret} application]
