@@ -55,6 +55,17 @@
                :last-name  "Hemuli?"}}
    application-key))
 
+(defn- create-fake-virkailija-create-secret
+  []
+  (db/exec :db yesql-upsert-virkailija<! {:oid        "1214"
+                                          :first_name "Mymmeli"
+                                          :last_name  "Mymmeli?"})
+  (virkailija-edit/create-virkailija-create-secret
+   {:identity {:oid        "1214"
+               :username   "ksers"
+               :first-name "Mymmeli"
+               :last-name  "Mymmeli?"}}))
+
 (defn get-latest-form
   [form-name]
   (if-let [form (->> (form-store/get-all-forms)
@@ -95,7 +106,8 @@
       {:test-form-key                (:key test-form)
        :ssn-form-key                 (:key (get-latest-form "SSN_testilomake"))
        :test-question-group-form-key (:key (get-latest-form "Kysymysryhmä: testilomake"))
-       :test-form-application-secret (:secret application)}
+       :test-form-application-secret (:secret application)
+       :virkailija-create-secret     (create-fake-virkailija-create-secret)}
 
       (some? application)
       (assoc :virkailija-secret (create-fake-virkailija-update-secret (:key application))))))

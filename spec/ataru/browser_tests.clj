@@ -68,7 +68,9 @@
     (it "is possible to apply using a form successfully with non-finnish ssn"
       (run-phantom-test "hakija-ssn"))
     (it "is possible to apply using a form with a question group"
-      (run-phantom-test "hakija-question-group-form")))
+      (run-phantom-test "hakija-question-group-form"))
+    (it "is possible to apply as virkailija"
+      (run-phantom-test "virkailija-haku")))
 
   (describe "editing a submitted application /"
     (it "is possible to edit a plain application successfully"

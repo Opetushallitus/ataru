@@ -124,7 +124,22 @@
                                   :nimi  {:kieli_fi "hakukohteen-organisaatiosta"}
                                   :usePriority      true
                                   :ataruLomakeAvain "hakukohteen-organisaatiosta-form"
-                                  :hakukohdeOids    ["1.2.246.562.20.49028100004"]})})
+                                  :hakukohdeOids    ["1.2.246.562.20.49028100004"]})
+
+   :1.2.246.562.29.65950024189 (merge
+                                base-haku
+                                {:oid              "1.2.246.562.29.65950024189"
+                                 :usePriority      true
+                                 :ataruLomakeAvain "41101b4f-1762-49af-9db0-e3603adae3ae"
+                                 :hakukohdeOids    ["1.2.246.562.20.49028100005"]
+                                 :hakuaikas        [{:hakuaikaId "10291885",
+                                                     :alkuPvm    (- (System/currentTimeMillis)
+                                                                    (* 2 86400000)),
+                                                     :loppuPvm   (- (System/currentTimeMillis)
+                                                                    86400000),
+                                                     :nimet      {:kieli_sv ""
+                                                                  :kieli_fi ""
+                                                                  :kieli_en ""}}]})})
 
 (def hakukohde
   {:1.2.246.562.20.49028196522 base-hakukohde
@@ -206,9 +221,18 @@
                                   :oid              "1.2.246.562.20.49028100004"
                                   :hakuOid          "1.2.246.562.29.65950024188"
                                   :koulutukset      [{:oid "1.2.246.562.17.74335799465"}]
-                                  :hakukohteenNimet
-                                                    {:kieli_fi "Hakukohde johon käyttäjällä on organisaatio"
-                                                     :kieli_sv "sv Hakukohde johon käyttäjällä on organisaatio"}})})
+                                  :hakukohteenNimet {:kieli_fi "Hakukohde johon käyttäjällä on organisaatio"
+                                                     :kieli_sv "sv Hakukohde johon käyttäjällä on organisaatio"}})
+
+   :1.2.246.562.20.49028100005 (merge
+                                base-hakukohde
+                                {:ataruLomakeAvain "41101b4f-1762-49af-9db0-e3603adae3ae"
+                                 :oid              "1.2.246.562.20.49028100005"
+                                 :hakuOid          "1.2.246.562.29.65950024189"
+                                 :koulutukset      [{:oid "1.2.246.562.17.74335799464"}]
+                                 :hakukohteenNimet
+                                 {:kieli_fi "Testihakukohde"
+                                  :kieli_sv "sv Testihakukohde"}})})
 
 (def koulutus
   {:1.2.246.562.17.74335799461 {:oid             "1.2.246.562.17.74335799461"
