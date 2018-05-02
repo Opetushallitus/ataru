@@ -608,23 +608,67 @@
         [:div.application-handling__list-loading-indicator
          [:i.zmdi.zmdi-spinner]])))
 
+(defn- application-filter-checkbox
+  [filters label kw state]
+  (let [kw    (keyword kw)
+        state (keyword state)]
+    [:label.application-handling__filter-checkbox-label
+     [:input.application-handling__filter-checkbox
+      {:type     "checkbox"
+       :checked  (boolean (get-in @filters [kw state]))
+       :on-click #(dispatch [:application/toggle-filter kw state])}]
+     label]))
+
+(defn- review-type-filter
+  [filters [kw group-label states]]
+  [:div.application-handling__filter-group
+   {:key (str "application-filter-group-" kw)}
+   [:div.application-handling__filter-group-title group-label]
+   (into
+     [:div.application-handling__filter-group-checkboxes]
+     (map
+       (fn [[state checkbox-label]]
+         (application-filter-checkbox filters checkbox-label kw state))
+       states))])
+
+(defn- application-filters
+  []
+  (let [filters         (subscribe [:state-query [:application :filters]])
+        filters-visible (r/atom false)]
+    (fn []
+      [:span.application-handling__filters
+       [:a
+        {:on-click #(swap! filters-visible not)}
+        "Lisärajaimet"]
+       (when @filters-visible
+         [:div.application-handling__filters-popup
+          [:h3 "Yksilöinti"]
+          [:div.application-handling__filter-group
+           [application-filter-checkbox filters "Yksilöimättömät" :only-identified :unidentified]
+           [application-filter-checkbox filters "Yksilöidyt" :only-identified :identified]]
+          [:h3 "Käsittelymerkinnät"]
+          (doall
+            (map
+              (partial review-type-filter filters)
+              (filter
+                (fn [[kw _ _]]
+                  (contains? #{:language-requirement :degree-requirement :eligibility-state :payment-obligation} kw))
+                review-states/hakukohde-review-types)))])])))
+
 (defn application-list [applications]
   (let [fetching        (subscribe [:state-query [:application :fetching-applications]])
-        review-settings (subscribe [:state-query [:application :review-settings :config]])
-        only-identified? (subscribe [:state-query [:application :only-identified?]])]
+        review-settings (subscribe [:state-query [:application :review-settings :config]])]
     [:div
      [:div.application-handling__list-header.application-handling__list-row
       [:span.application-handling__list-row--applicant
        [application-list-basic-column-header
         :applicant-name
         "Hakija"]
-       [:label.application-handling__identification
-        [:input.application-handling__identification--checkbox
-         {:type     "checkbox"
-          :checked  (or @only-identified? false)
-          :on-click #(dispatch [:application/update-identification])}]
-        "Vain yksilöimättömät"]]
-      [created-time-column-header]
+       [application-filters]]
+      [:span.application-handling__list-row--time
+       [application-list-basic-column-header
+        :created-time
+        "Viimeksi muokattu"]]
       (when (:attachment-handling @review-settings true)
         [:span.application-handling__list-row--attachment-state
          [hakukohde-state-filter-controls

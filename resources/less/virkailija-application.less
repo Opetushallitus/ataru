@@ -42,8 +42,6 @@
   display: flex;
   justify-content: space-between;
   padding-top: 0;
-  margin-bottom: 10px;
-  padding-bottom: 10px;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -2139,4 +2137,36 @@ th.application__readonly-adjacent--header {
 
 .application-handling__nested-container {
   margin-left: 10px;
+}
+
+.application-handling__filters {
+  position: relative;
+  margin-left: 10px;
+}
+
+.application-handling__filters-popup {
+  .arrow(top, white, 8px, 15%);
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.30));
+  box-sizing: border-box;
+  display: block;
+  border-radius: 3px;
+  position: absolute;
+  z-index: 10;
+  top: 32px;
+  left: -56px;
+  text-align: start;
+  background-color: white;
+  width: 450px;
+  padding: 15px;
+  font-size: 13px;
+  line-height: 21px;
+  color: @text-color;
+}
+
+.application-handling__filter-checkbox-label {
+  display: block;
+}
+
+.application-handling__filter-group {
+  margin-bottom: 10px;
 }

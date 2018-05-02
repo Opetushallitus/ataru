@@ -242,9 +242,13 @@
             (application-sorting/sort-by-column current-applications column-id :descending))))))
 
 (reg-event-db
-  :application/update-identification
-  (fn [db _]
-    (update-in db [:application :only-identified?] not)))
+  :application/toggle-filter
+  (fn [db [_ filter-id state]]
+    (if state
+      (update-in
+        db
+        [:application :filters filter-id state]
+        not))))
 
 (reg-event-db
   :application/toggle-shown-time-column
