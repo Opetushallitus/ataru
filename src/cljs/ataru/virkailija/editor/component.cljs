@@ -549,16 +549,13 @@
            {:on-click (fn [e]
                         (.preventDefault e)
                         (reset! show-followups nil)
-                        (dispatch [:editor/move-option-up path option-index])
-                        )}]
+                        (dispatch [:editor/move-option-up path option-index]))}]
           [:div.editor-form__multi-options-wrapper-outer--arrows--stretch]
           [:div.editor-form__multi-options-wrapper-outer--arrows--down
            {:on-click (fn [e]
                         (.preventDefault e)
                         (reset! show-followups nil)
-                        (dispatch [:editor/move-option-down path option-index])
-                        )}]]]
-
+                        (dispatch [:editor/move-option-down path option-index]))}]]]
         [:div.editor-form__multi-options-wrapper-inner
          {:key (str "options-" option-index)}
          (if editable?
