@@ -455,6 +455,8 @@
    :notes                         s/Str
    :first-name                    (s/maybe s/Str)
    :last-name                     (s/maybe s/Str)
+   :hakukohde                     (s/maybe s/Str)
+   :state-name                    (s/maybe s/Str)
    (s/optional-key :created-time) org.joda.time.DateTime})
 
 (s/defschema Review
