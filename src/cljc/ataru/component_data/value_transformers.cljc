@@ -11,13 +11,16 @@
                                    (Integer/valueOf year)]
                             :cljs [day month year])))))
 
-(defn update-options-while-keeping-existing-followups [new-options existing-options]
+(defn update-options-while-keeping-existing-followups [newest-options existing-options]
   (if (empty? existing-options)
-    new-options
-    (map (fn [new-option]
-           (if-let [existing-option (first (filter #(= (:value %) (:value new-option)) existing-options))]
-             (if-let [existing-folluwups (:followups existing-option)]
-               (assoc new-option :followups existing-folluwups)
-               new-option)
-             new-option))
-         new-options)))
+    newest-options
+    (let [existing-values                 (set (map :value existing-options))
+          options-that-didnt-exist-before (filter #(not (contains? existing-values (:value %))) newest-options)]
+      (concat options-that-didnt-exist-before
+              (map (fn [existing-option]
+                     (if-let [new-option (first (filter #(= (:value %) (:value existing-option)) newest-options))]
+                       (if-let [existing-folluwups (:followups existing-option)]
+                         (assoc new-option :followups existing-folluwups)
+                         existing-option)
+                       existing-option))
+                   existing-options)))))

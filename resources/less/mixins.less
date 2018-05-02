@@ -176,3 +176,19 @@ span, p {
   -ms-user-select: none; /* IE10+/Edge */
   user-select: none; /* Standard */
 }
+.caret(@direction, @color, @size: 8px) when (@direction = up) {
+  border: solid @color;
+  border-width: 0 @size @size 0;
+  display: inline-block;
+  padding: @size;
+  transform: rotate(-135deg);
+  -webkit-transform: rotate(-135deg);
+}
+.caret(@direction, @color, @size: 8px) when (@direction = down) {
+  border: solid @color;
+  border-width: 0 @size @size 0;
+  display: inline-block;
+  padding: @size;
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+}

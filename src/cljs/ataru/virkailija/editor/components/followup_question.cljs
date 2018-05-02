@@ -10,20 +10,6 @@
    [taoensso.timbre :refer-macros [spy debug]]
    [ataru.virkailija.temporal :as temporal]))
 
-(reg-sub :editor/followup-overlay
-  (fn [db [_ option-path]]
-    (get-in db [:editor :followup-overlay option-path :visible?])))
-
-(reg-event-db
-  :editor/followup-overlay-open
-  (fn [db [_ option-path]]
-    (assoc-in db [:editor :followup-overlay option-path :visible?] true)))
-
-(reg-event-db
-  :editor/followup-overlay-close
-  (fn [db [_ option-path]]
-    (assoc-in db [:editor :followup-overlay option-path :visible?] false)))
-
 (reg-event-db
   :editor/generate-followup-component
   (fn [db [_ generate-fn option-path]]
@@ -35,35 +21,42 @@
                                   :modified-by metadata})]
       (update-in db (util/flatten-path db option-path :followups) (fnil conj []) component))))
 
-(defn followup-question-overlay [option-path]
-  (let [layer-visible? (subscribe [:editor/followup-overlay option-path :visible?])
-        followups      (subscribe [:editor/get-component-value (flatten [option-path :followups])])]
-    (fn [option-path]
-      (when (or @layer-visible? (not-empty @followups))
-        [:div.editor-form__followup-question-overlay-parent
-         [:div.editor-form__followup-question-overlay-outer
-          [:div.editor-form__followup-indicator]
-          [:div.editor-form__followup-indicator-inlay]
-          [:div.editor-form__followup-question-overlay
-           (into [:div]
-             (for [[index followup] (map vector (range) @followups)]
-               [ataru.virkailija.editor.core/soresu->reagent followup (vec (flatten [option-path :followups index]))]))
-           [toolbar/followup-toolbar option-path
-            (fn [generate-fn]
-              (dispatch [:editor/generate-followup-component generate-fn option-path]))]]]]))))
+(defn followup-question-overlay [option-index option-path show-followups]
+  (let [followups (subscribe [:editor/get-component-value (flatten [option-path :followups])])]
+    (fn [option-index option-path show-followups]
+      (let [layer-visible? (get @show-followups option-index)]
+        (when layer-visible?
+          [:div.editor-form__followup-question-overlay-parent
+           [:div.editor-form__followup-question-overlay-outer
+            [:div.editor-form__followup-indicator]
+            [:div.editor-form__followup-indicator-inlay]
+            [:div.editor-form__followup-question-overlay
+             (into [:div]
+               (for [[index followup] (map vector (range) @followups)]
+                 [ataru.virkailija.editor.core/soresu->reagent followup (vec (flatten [option-path :followups index]))]))
+             [toolbar/followup-toolbar option-path
+              (fn [generate-fn]
+                (dispatch [:editor/generate-followup-component generate-fn option-path]))]]]])))))
 
-(defn followup-question [option-path]
-  (let [layer-visible?        (subscribe [:editor/followup-overlay option-path :visible?])
-        followup-component    (subscribe [:editor/get-component-value (vec (flatten [option-path :followups]))])
+(defn followup-question [option-index option-path show-followups]
+  (let [followup-component    (subscribe [:editor/get-component-value (vec (flatten [option-path :followups]))])
         allow-more-followups? (->> option-path
                                    flatten
                                    (filter #(= :followups %))
                                    count
                                    (> 2))]
-    (fn [option-path]
+    (fn [option-index option-path show-followups]
       [:div.editor-form__followup-question
        (when allow-more-followups?
-         (match [@followup-component @layer-visible?]
-           [(_ :guard not-empty) _] "Lisäkysymykset"
-           [_ true] [:a {:on-click #(dispatch [:editor/followup-overlay-close option-path])} "Lisäkysymykset"]
-           :else [:a {:on-click #(dispatch [:editor/followup-overlay-open option-path])} "Lisäkysymykset"]))])))
+         (let [layer-visible? (get @show-followups option-index)
+               followups?     (not-empty @followup-component)]
+           [:a
+            {:on-click #(swap! show-followups
+                          (fn [v] (assoc v option-index
+                                           (not (get v option-index)))))}
+            (when followups? (str "Lisäkysymykset (" (count @followup-component) ") "))
+            (if followups?
+              (if layer-visible?
+                  [:i.zmdi.zmdi-chevron-up.zmdi-hc-lg]
+                  [:i.zmdi.zmdi-chevron-down.zmdi-hc-lg])
+              "Lisäkysymykset")]))])))

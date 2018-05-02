@@ -534,31 +534,42 @@
   [:a.editor-form__multi-options-remove--cross {:on-click (fn [evt]
                                                             (.preventDefault evt)
                                                             (dispatch [:editor/remove-dropdown-option path :options option-index]))}
-   [:i.zmdi.zmdi-close.zmdi-hc-lg]])
+   [:i.zmdi.zmdi-delete.zmdi-hc-lg]])
 
 
 
-(defn- dropdown-option [option-index option-path path languages & {:keys [header? include-followup? editable?] :or {header? false include-followup? true editable? true} :as opts}]
+(defn- dropdown-option [option-index option-path path languages show-followups & {:keys [header? include-followup? editable?] :or {header? false include-followup? true editable? true} :as opts}]
   (let [multiple-languages? (< 1 (count languages))]
-    ^{:key (str "options-" option-index)}
-    [:div
-     [:div.editor-form__multi-options-wrapper-outer
+    (fn [option-index option-path path languages show-followups & {:keys [header? include-followup? editable?] :or {header? false include-followup? true editable? true} :as opts}]
       [:div
-       (cond-> {:key (str "options-" option-index)}
-         multiple-languages?
-         (assoc :class "editor-form__multi-options-wrapper-inner"))
-       (if editable?
-         (input-fields-with-lang
-           (fn [lang]
-             [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
-           languages)
-         [koodisto-fields-with-lang languages option-path])]
-      (when editable?
-        [remove-dropdown-option-button path option-index])
-      (when include-followup?
-        [followup-question option-path])]
-     (when include-followup?
-       [followup-question-overlay option-path])]))
+       [:div.editor-form__multi-options-wrapper-outer
+        [:div
+         [:div.editor-form__multi-options-wrapper-outer--arrows
+          [:div.editor-form__multi-options-wrapper-outer--arrows--up
+           {:on-click (fn [e]
+                        (.preventDefault e)
+                        (reset! show-followups nil)
+                        (dispatch [:editor/move-option-up path option-index]))}]
+          [:div.editor-form__multi-options-wrapper-outer--arrows--stretch]
+          [:div.editor-form__multi-options-wrapper-outer--arrows--down
+           {:on-click (fn [e]
+                        (.preventDefault e)
+                        (reset! show-followups nil)
+                        (dispatch [:editor/move-option-down path option-index]))}]]]
+        [:div.editor-form__multi-options-wrapper-inner
+         {:key (str "options-" option-index)}
+         (if editable?
+           (input-fields-with-lang
+             (fn [lang]
+               [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
+             languages)
+           [koodisto-fields-with-lang languages option-path])]
+        (when include-followup?
+          [followup-question option-index option-path show-followups])
+        (when editable?
+          [remove-dropdown-option-button path option-index])]
+       (when include-followup?
+         [followup-question-overlay option-index option-path show-followups])])))
 
 (defn- dropdown-multi-options [path options-koodisto]
   (let [dropdown-id                (util/new-uuid)
@@ -617,13 +628,19 @@
                                    (dispatch [:editor/select-koodisto-options uri version title path]))}
                       title]]))]])])))
 
-(defn- custom-answer-options [languages options path question-group-element? editable?]
-  [:div.editor-form__multi-options-container
-   (doall (map-indexed (fn [idx _]
-                         (dropdown-option idx [path :options idx] path languages
-                                          :editable? editable?
-                                          :include-followup? (not question-group-element?)))
-                       options))])
+(defn- custom-answer-options [languages options path question-group-element? editable? show-followups]
+  (fn [languages options path question-group-element? editable?]
+    (when (or (nil? @show-followups)
+              (not (= (count @show-followups) (count options))))
+      (reset! show-followups (vec (replicate (count options) false))))
+    [:div.editor-form__multi-options-container
+     (doall (map-indexed (fn [idx _]
+                           ^{:key (str "options-" idx)}
+                           [dropdown-option idx [path :options idx] path languages
+                            show-followups
+                            :editable? editable?
+                            :include-followup? (not question-group-element?)])
+                         options))]))
 
 (defn koodisto-answer-options [id path selected-koodisto question-group-element?]
   (let [opened? (r/atom false)]
@@ -635,7 +652,8 @@
                                     (reset! opened? false))
             show-koodisto-options (fn [evt]
                                     (dispatch [:editor/fetch-koodisto-for-component-with-id id selected-koodisto])
-                                    (reset! opened? true))]
+                                    (reset! opened? true))
+            show-followups (r/atom nil)]
         (if (not @opened?)
           [:div.editor-form__show-koodisto-values
            [:a
@@ -646,7 +664,7 @@
             [:a
              {:on-click hide-koodisto-options}
              [:i.zmdi.zmdi-chevron-up] " Sulje vastausvaihtoehdot"]]
-           (custom-answer-options languages (:options value) path question-group-element? editable?)])))))
+           [custom-answer-options languages (:options value) path question-group-element? editable? show-followups]])))))
 
 (defn dropdown [initial-content path]
   (let [languages        (subscribe [:editor/languages])
@@ -655,7 +673,8 @@
         animation-effect (fade-out-effect path)]
     (fn [initial-content path {:keys [question-group-element?]}]
       (let [languages  @languages
-            field-type (:fieldType @value)]
+            field-type (:fieldType @value)
+            show-followups (r/atom nil)]
         [:div.editor-form__component-wrapper
          {:class @animation-effect}
          (let [header (case field-type
@@ -683,13 +702,14 @@
             [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
             (when-not (= field-type "singleChoice") [dropdown-multi-options path options-koodisto])]
            (if (nil? @options-koodisto)
-             (custom-answer-options languages (:options @value) path question-group-element? true)
+             [custom-answer-options languages (:options @value) path question-group-element? true show-followups]
              [koodisto-answer-options (:id @value) path @options-koodisto question-group-element?])
            (when (nil? @options-koodisto)
              [:div.editor-form__add-dropdown-item
               [:a
                {:on-click (fn [evt]
                             (.preventDefault evt)
+                            (reset! show-followups nil)
                             (dispatch [:editor/add-dropdown-option path]))}
                [:i.zmdi.zmdi-plus-square] " Lisää"]])]]]))))
 

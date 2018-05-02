@@ -59,7 +59,9 @@
             clickElement(function() { return formComponents().eq(0).find('.editor-form__show-koodisto-values a:contains("vastausvaihtoehdot")') }),
             clickElement(function() { return formComponents().eq(0).find('.editor-form__followup-question:eq(0) a:contains("Lisäkysymykset")') }),
             clickElement(function() { return formComponents().eq(0).find('.editor-form__followup-question-overlay a:contains("Lista, monta valittavissa")') }),
-            setTextFieldValue(function() { return formComponents().eq(0).find('.editor-form__followup-question-overlay input.editor-form__text-field') }, "Lisäkysymys koodistolle")
+            setTextFieldValue(function() { return formComponents().eq(0).find('.editor-form__followup-question-overlay input.editor-form__text-field') }, "Lisäkysymys koodistolle"),
+            clickElement(function() { return formComponents().eq(0).find('.editor-form__multi-options-wrapper-outer--arrows--down') }),
+            clickElement(function() { return formComponents().eq(0).find('.editor-form__followup-question:eq(1) a:contains("Lisäkysymykset")') })
         )
         it('has lisäkymys in first option', function() {
             expect(formComponents().eq(0).find('.editor-form__followup-question-overlay .editor-form__text-field').eq(0).val())
