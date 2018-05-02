@@ -340,8 +340,10 @@
       (api/POST "/notes" {session :session}
         :summary "Add new review note for the application"
         :return ataru-schema/ReviewNote
-        :body [note {:notes           s/Str
-                     :application-key s/Str}]
+        :body [note {:notes                       s/Str
+                     :application-key             s/Str
+                     (s/optional-key :hakukohde)  (s/maybe s/Str)
+                     (s/optional-key :state-name) (s/maybe s/Str)}]
         (if-let [note (application-service/add-review-note
                        organization-service
                        tarjonta-service

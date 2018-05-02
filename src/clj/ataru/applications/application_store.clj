@@ -747,7 +747,9 @@
          (-> note :notes clojure.string/blank? not)]}
   (-> (exec-db :db yesql-add-review-note<! {:application_key (:application-key note)
                                             :notes           (:notes note)
-                                            :virkailija_oid  (-> session :identity :oid)})
+                                            :virkailija_oid  (-> session :identity :oid)
+                                            :hakukohde       (:hakukohde note)
+                                            :state_name      (:state-name note)})
       (merge (select-keys (:identity session) [:first-name :last-name]))
       (dissoc :virkailija_oid :removed)
       (->kebab-case-kw)))
