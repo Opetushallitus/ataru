@@ -630,10 +630,9 @@
 
 (defn- custom-answer-options [languages options path question-group-element? editable? show-followups]
   (fn [languages options path question-group-element? editable?]
-    (let [reset-show-followups! (fn [] (reset! show-followups (vec (replicate (count options) false))))]
-      (if (or (nil? @show-followups)
+    (when (or (nil? @show-followups)
               (not (= (count @show-followups) (count options))))
-        (reset-show-followups!)))
+      (reset! show-followups (vec (replicate (count options) false))))
     [:div.editor-form__multi-options-container
      (doall (map-indexed (fn [idx _]
                            ^{:key (str "options-" idx)}
