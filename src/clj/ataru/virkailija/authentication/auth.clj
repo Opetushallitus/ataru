@@ -34,33 +34,15 @@
   [user-right-organizations]
   "Takes map keyed by right with list of organizations as values, outputs map keyed by organization oid with list of rights as values"
   (reduce
-    (fn [acc [right oids]]
-      (merge-with
-        into
+    (fn [acc [right organizations]]
+      (reduce
+        (fn [acc organization]
+          (let [existing-rights (get-in acc [(:oid organization) :rights] #{})]
+            (assoc acc (:oid organization) (assoc organization :rights (conj existing-rights right)))))
         acc
-        (reduce
-          (fn [acc2 organization]
-            (update-in acc2 [(:oid organization)] conj right))
-          {}
-          oids)))
+        organizations))
     {}
     user-right-organizations))
-
-(defn- add-rights-to-organization
-  [user-right-organizations organization-service organization]
-  "Add list of rights to organization, looking up in hierarchy if necessary"
-  (let [organization-rights (user-right-organizations->organization-rights user-right-organizations)
-        rights              (set (or
-                                   (get organization-rights (:oid organization))
-                                   (let [closest-direct-org (->> (organization-service/get-organization-with-parents
-                                                                   organization-service
-                                                                   (:oid organization))
-                                                                 (reverse)
-                                                                 (filter (fn [{oid :oid}]
-                                                                           (get organization-rights oid)))
-                                                                 (first))]
-                                     (get organization-rights (:oid closest-direct-org)))))]
-    (assoc organization :rights rights)))
 
 (defn login [login-provider organization-service redirect-url]
   (try
@@ -75,13 +57,11 @@
                                           (fn [right org-oids]
                                             [right (organization-service/get-organizations-for-oids organization-service org-oids)])
                                           right-organization-oids)
-              organizations             (organization-service/get-all-organizations
-                                          organization-service (map (fn [oid] {:oid oid}) organization-oids))
-              organizations-with-rights (util/group-by-first
-                                          :oid
-                                          (map
-                                            (partial add-rights-to-organization user-right-organizations organization-service)
-                                            organizations))]
+              organizations-with-rights (->> user-right-organizations
+                                             (map-kv (fn [right organizations]
+                                                       [right (organization-service/get-all-organizations organization-service organizations)]))
+                                             (user-right-organizations->organization-rights)
+                                             (util/group-by-first :oid))]
           (info "user" username "logged in")
           (db/exec :db yesql-upsert-virkailija<! {:oid        (:employeeNumber virkailija)
                                                   :first_name (:givenName virkailija)

@@ -28,9 +28,7 @@
     "Gets a flattened organization hierarhy based on direct organizations")
   (get-hakukohde-groups [this]
     "Gets all hakukohde groups")
-  (get-organizations-for-oids [this organization-oids])
-  (get-organization-with-parents [this organization-oid]
-    "Gets an organization and all its parents in a hierarchical map"))
+  (get-organizations-for-oids [this organization-oids]))
 
 (defn get-orgs-from-client [cas-client direct-oids]
   (flatten (map #(org-client/get-organizations cas-client %) direct-oids)))
@@ -70,13 +68,6 @@
   {:pre [(group-oid? group-oid)]}
   (let [groups (get-groups-from-cache-or-client group-cache cas-client)]
     (get groups group-oid (unknown-group group-oid))))
-
-(defn get-organization-with-parents-cached
-  [org-parents-cache organization-oid]
-  (get-from-cache-or-real-source
-    org-parents-cache
-    organization-oid
-    #(org-client/get-organization-parents organization-oid)))
 
 (defn- hakukohderyhmat-from-groups [groups]
   (let [hakukohde-groups (filter :hakukohderyhma? groups)]
@@ -119,9 +110,6 @@
                            group-oids)]
       (concat normal-orgs groups)))
 
-  (get-organization-with-parents [this organization-oid]
-    (get-organization-with-parents-cached (:org-parents-cache this) organization-oid))
-
   (start [this]
     (-> this
         (assoc :cas-client (cas-client/new-client "/organisaatio-service"))
@@ -156,14 +144,12 @@
       {:form-edit         orgs
        :view-applications orgs
        :edit-applications orgs}))
+
   (get-all-organizations [this root-orgs]
     (fake-orgs-by-root-orgs root-orgs))
 
   (get-organizations-for-oids [this organization-oids]
-    (map ldap-client/fake-org-by-oid organization-oids))
-
-  (get-organization-with-parents [this organization-oid]
-    (get-organizations-for-oids this organization-oid)))
+    (map ldap-client/fake-org-by-oid organization-oids)))
 
 (defn new-organization-service []
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode
