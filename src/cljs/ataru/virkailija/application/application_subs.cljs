@@ -385,6 +385,11 @@
         applications))))
 
 (re-frame/reg-sub
+  :application/filtered-applications-count
+  (fn [_ _]
+    (count @(re-frame/subscribe [:application/filtered-applications]))))
+
+(re-frame/reg-sub
   :application/review-state-setting-enabled?
   (fn [db [_ setting-kwd]]
     (if-some [enabled-in-state? (-> db :application :review-settings :config setting-kwd)]

@@ -633,8 +633,10 @@
 
 (defn- application-filters
   []
-  (let [filters         (subscribe [:state-query [:application :filters]])
-        filters-visible (r/atom false)]
+  (let [filters           (subscribe [:state-query [:application :filters]])
+        application-count (subscribe [:application/filtered-applications-count])
+        review-settings   (subscribe [:state-query [:application :review-settings :config]])
+        filters-visible   (r/atom false)]
     (fn []
       [:span.application-handling__filters
        [:a
@@ -642,6 +644,7 @@
         "Lisärajaimet"]
        (when @filters-visible
          [:div.application-handling__filters-popup
+          [:div (str "Hakemuksia listalla " @application-count)]
           [:h3 "Yksilöinti"]
           [:div.application-handling__filter-group
            [application-filter-checkbox filters "Yksilöimättömät" :only-identified :unidentified]
