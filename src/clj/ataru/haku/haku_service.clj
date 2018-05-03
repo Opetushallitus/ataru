@@ -52,8 +52,7 @@
     authorized-organization-oids
     (->> haku
          :hakukohde
-         (get tarjoajat)
-         (set)))))
+         (get tarjoajat)))))
 
 (defn- authorized-by-form?
   [authorized-organization-oids haku]

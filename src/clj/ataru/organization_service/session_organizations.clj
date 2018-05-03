@@ -9,10 +9,6 @@
   [session]
   (-> session :identity :user-right-organizations))
 
-(defn- all-org-oids [organization-service organizations]
-  (let [all-organizations (.get-all-organizations organization-service organizations)]
-    (set (map :oid all-organizations))))
-
 (defn- filter-orgs-for-rights
   [session rights organizations]
   (if (-> session :identity :superuser)
@@ -35,13 +31,14 @@
     (filter-orgs-for-rights
       session
       rights
-      (.get-all-organizations organization-service [selected-organization]))
+      (organization-service/get-all-organizations organization-service [selected-organization]))
     (let [right-orgs (right-organizations session)]
       (->> rights
            (map #(get right-orgs %))
            (remove nil?)
            (flatten)
-           (set)))))
+           (distinct)
+           (organization-service/get-all-organizations organization-service)))))
 
 (defn run-org-authorized [session
                           organization-service
@@ -57,14 +54,13 @@
       (empty? organizations)
       (when-no-orgs-fn)
 
-      (some? selected-organization)
-      (when-ordinary-user-fn (->> organizations (map :oid) (set)))
+      (or
+        (some? selected-organization)
+        (not superuser?))
+      (when-ordinary-user-fn organization-oids)
 
-      (contains? organization-oids organization-client/oph-organization)
-      (when-superuser-fn)
-
-      :else
-      (when-ordinary-user-fn (all-org-oids organization-service organizations)))))
+      superuser?
+      (when-superuser-fn))))
 
 (defn organization-allowed?
   "Parameter organization-oid-handle can be either the oid value or a function which returns the oid"
