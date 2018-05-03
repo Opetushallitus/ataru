@@ -722,6 +722,33 @@
       :disabled  @disabled?
       :on-change #(dispatch [:application/toggle-review-state-setting setting-kwd])}]))
 
+(defn- review-state-comment
+  [state-name selected-hakukohde]
+  (fn [state-name selected-hakukohde]
+    (let [review-note     (subscribe [:state-query [:application :notes selected-hakukohde state-name]])
+          review-notes    (subscribe [:state-query [:application :review-notes]])
+          previous-note   (->> @review-notes
+                               (filter #(= (name state-name) (:state-name %)))
+                               first
+                               :notes)
+          button-enabled? (and (-> @review-note clojure.string/blank? not)
+                               (not= @review-note previous-note))]
+      [:div.application-handling__review-state-selected-container
+       [:textarea.application-handling__review-note-input.application-handling__eligibility-state-comment
+        {:value       @review-note
+         :placeholder "Hylkäyksen syy.."
+         :on-change   (fn [event]
+                        (let [note (.. event -target -value)]
+                          (dispatch [:state-update #(assoc-in % [:application :notes selected-hakukohde state-name] note)])))}]
+       [:button.application-handling__review-note-submit-button
+        {:type     "button"
+         :on-click #(dispatch [:application/add-review-note @review-note state-name])
+         :disabled (not button-enabled?)
+         :class    (if button-enabled?
+                     "application-handling__review-note-submit-button--enabled"
+                     "application-handling__review-note-submit-button--disabled")}
+        "Tallenna"]])))
+
 (defn- application-hakukohde-review-input
   [label kw states]
   (let [current-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde]])
@@ -731,15 +758,7 @@
         input-visible?    (subscribe [:application/review-state-setting-enabled? kw])]
     (fn [_ _ _]
       (when (or @settings-visible? @input-visible?)
-        (let [review-state-for-current-hakukohde (subscribe [:state-query [:application :review :hakukohde-reviews (keyword @current-hakukohde) kw]])
-              review-note                        (subscribe [:state-query [:application :notes (keyword @current-hakukohde) kw]])
-              review-notes                       (subscribe [:state-query [:application :review-notes]])
-              previous-note                      (->> @review-notes
-                                                      (filter #(= (name kw) (:state-name %)))
-                                                      first
-                                                      :notes)
-              button-enabled?                    (and (-> @review-note clojure.string/blank? not)
-                                                      (not= @review-note previous-note))]
+        (let [review-state-for-current-hakukohde (subscribe [:state-query [:application :review :hakukohde-reviews (keyword @current-hakukohde) kw]])]
           [:div.application-handling__review-state-container
            {:class (str "application-handling__review-state-container-" (name kw))}
            (when @settings-visible?
@@ -759,22 +778,7 @@
                  (or @review-state-for-current-hakukohde (ffirst states)))]
               (when (and (= :eligibility-state kw)
                          (= "uneligible" @review-state-for-current-hakukohde))
-                [:textarea.application-handling__review-note-input.application-handling__eligibility-state-comment
-                 {:value       @review-note
-                  :placeholder "Syy.."
-                  :on-change   (fn [event]
-                                 (let [note (.. event -target -value)]
-                                   (dispatch [:state-update #(assoc-in % [:application :notes (keyword @current-hakukohde) kw] note)])))}])
-              (when (and (= :eligibility-state kw)
-                         (= "uneligible" @review-state-for-current-hakukohde))
-                [:button.application-handling__review-note-submit-button
-                 {:type     "button"
-                  :on-click #(dispatch [:application/add-review-note @review-note kw])
-                  :disabled (not button-enabled?)
-                  :class    (if button-enabled?
-                              "application-handling__review-note-submit-button--enabled"
-                              "application-handling__review-note-submit-button--disabled")}
-                 "Tallenna"])])])))))
+                [review-state-comment kw (keyword @current-hakukohde)])])])))))
 
 (defn- application-hakukohde-review-inputs
   [review-types]
