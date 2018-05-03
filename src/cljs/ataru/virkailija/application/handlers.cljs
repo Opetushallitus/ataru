@@ -359,17 +359,17 @@
 
 (defn- review-notes-by-hakukohde-and-state-name
   [review-notes]
-  (let [notes-by-hakukohde (group-by :hakukohde review-notes)]
+  (let [notes-by-hakukohde (->> review-notes
+                                (filter #(some? (:hakukohde %)))
+                                (group-by :hakukohde))]
     (reduce-kv (fn [by-hakukohde hakukohde notes]
-                 (if hakukohde
-                   (let [notes-by-state-name (group-by :state-name notes)]
-                     (assoc by-hakukohde
-                            (keyword hakukohde)
-                            (reduce-kv (fn [by-state-name state-name notes]
-                                         (assoc by-state-name (keyword state-name) (-> notes first :notes)))
-                                       {}
-                                       notes-by-state-name)))
-                   by-hakukohde))
+                 (let [notes-by-state-name (group-by :state-name notes)]
+                   (assoc by-hakukohde
+                          (keyword hakukohde)
+                          (reduce-kv (fn [by-state-name state-name notes]
+                                       (assoc by-state-name (keyword state-name) (-> notes first :notes)))
+                                     {}
+                                     notes-by-state-name))))
                {}
                notes-by-hakukohde)))
 

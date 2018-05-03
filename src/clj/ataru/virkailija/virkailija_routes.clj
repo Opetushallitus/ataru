@@ -343,7 +343,7 @@
         :body [note {:notes                       s/Str
                      :application-key             s/Str
                      (s/optional-key :hakukohde)  s/Str
-                     (s/optional-key :state-name) s/Str}]
+                     (s/optional-key :state-name) ataru-schema/HakukohdeReviewTypeNames}]
         (if-let [note (application-service/add-review-note
                        organization-service
                        tarjonta-service

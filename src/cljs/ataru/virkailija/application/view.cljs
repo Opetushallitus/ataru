@@ -728,7 +728,8 @@
     (let [review-note     (subscribe [:state-query [:application :notes selected-hakukohde state-name]])
           review-notes    (subscribe [:state-query [:application :review-notes]])
           previous-note   (->> @review-notes
-                               (filter #(= (name state-name) (:state-name %)))
+                               (filter #(and (= (name state-name) (:state-name %))
+                                             (= (name selected-hakukohde) (:hakukohde %))))
                                first
                                :notes)
           button-enabled? (and (-> @review-note clojure.string/blank? not)

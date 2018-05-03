@@ -317,7 +317,8 @@
 
 (defn get-application-review-notes [application-key]
   (->> (exec-db :db yesql-get-application-review-notes {:application_key application-key})
-       (map ->kebab-case-kw)))
+       (map ->kebab-case-kw)
+       (map util/remove-nil-values)))
 
 (defn get-application-review [application-key]
   (->> (exec-db :db yesql-get-application-review {:application_key application-key})
@@ -750,6 +751,7 @@
                                             :virkailija_oid  (-> session :identity :oid)
                                             :hakukohde       (:hakukohde note)
                                             :state_name      (:state-name note)})
+      util/remove-nil-values
       (merge (select-keys (:identity session) [:first-name :last-name]))
       (dissoc :virkailija_oid :removed)
       (->kebab-case-kw)))

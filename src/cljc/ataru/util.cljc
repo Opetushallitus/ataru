@@ -165,3 +165,8 @@
        (remove clojure.string/blank?)
        (distinct)
        (clojure.string/join " | ")))
+
+(defn remove-nil-values [m]
+  (->> m
+       (filter second)
+       (into {})))

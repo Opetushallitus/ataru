@@ -286,6 +286,9 @@
        (mapcat (partial map first))
        distinct))
 
+(s/defschema HakukohdeReviewTypeNames
+  (apply s/enum review-states/hakukohde-review-type-names))
+
 ;; Header-level info about application, doesn't contain the actual answers
 (s/defschema ApplicationInfo
   {:id                                              s/Int
@@ -302,7 +305,7 @@
    (s/optional-key :haku)                           (s/maybe s/Str)
    (s/optional-key :hakukohde)                      (s/maybe [s/Str])
    (s/optional-key :secret)                         s/Str
-   (s/optional-key :application-hakukohde-reviews)  [{:requirement (apply s/enum review-states/hakukohde-review-type-names)
+   (s/optional-key :application-hakukohde-reviews)  [{:requirement HakukohdeReviewTypeNames
                                                       :state       (apply s/enum review-requirement-values)
                                                       :hakukohde   s/Str}] ; "form" or oid
    (s/optional-key :application-attachment-reviews) [{:attachment-key s/Str
@@ -455,8 +458,8 @@
    :notes                         s/Str
    :first-name                    (s/maybe s/Str)
    :last-name                     (s/maybe s/Str)
-   :hakukohde                     (s/maybe s/Str)
-   :state-name                    (s/maybe s/Str)
+   (s/optional-key :hakukohde)    s/Str
+   (s/optional-key :state-name)   HakukohdeReviewTypeNames
    (s/optional-key :created-time) org.joda.time.DateTime})
 
 (s/defschema Review
