@@ -87,7 +87,10 @@
                      (not (form-role/with-henkilo? roles)))
                 (not (contains? editing-forbidden-person-info-field-ids (keyword (:id field)))))
             (or (form-role/virkailija? roles)
-                (editing-allowed-by-hakuaika? field hakukohteet application-in-processing-state?)))))
+                (editing-allowed-by-hakuaika? field hakukohteet application-in-processing-state?))
+            (or (form-role/virkailija? roles)
+                (not (and (nil? hakukohteet)
+                          application-in-processing-state?))))))
 
 (s/defn ^:always-validate flag-uneditable-and-unviewable-fields :- s/Any
   [form :- s/Any
@@ -102,8 +105,6 @@
                  (let [cannot-view? (contains? viewing-forbidden-person-info-field-ids
                                                (keyword (:id field)))
                        cannot-edit? (or cannot-view?
-                                        (and (nil? hakukohteet)
-                                             application-in-processing-state?)
                                         (uneditable? field hakukohteet roles application-in-processing-state?))]
                    (assoc field
                           :cannot-view cannot-view?

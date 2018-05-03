@@ -37,10 +37,16 @@
      :id application-id
      :application application}))
 
-(defn in-processing-state-in-jatkuva-haku?
-  [application-hakukohde-reviews applied-hakukohteet]
-  (boolean (and (some #(get-in % [:hakuaika :jatkuva-haku?]) applied-hakukohteet)
-                (util/application-in-processing? application-hakukohde-reviews))))
+(defn in-processing-state?
+  [application form]
+  (let [applied-hakukohteet        (filter #(contains? (set (:hakukohde application)) (:oid %))
+                                           (-> form :tarjonta :hakukohteet))
+        bare-form-haku?            (nil? (:haku application))
+        application-in-processing? (util/application-in-processing? (:application-hakukohde-reviews application))]
+    (boolean (if bare-form-haku?
+               application-in-processing?
+               (and (some #(get-in % [:hakuaika :jatkuva-haku?]) applied-hakukohteet)
+                    application-in-processing?)))))
 
 (defn remove-unviewable-answers
   [application form]
@@ -267,12 +273,13 @@
         secret-expired?  (when (nil? application)
                            (application-store/application-exists-with-secret? secret))
         lang-override    (when secret-expired? (application-store/get-application-language-by-secret secret))
+        application-in-processing? (util/application-in-processing? (:application-hakukohde-reviews application))
         form             (cond (some? (:haku application)) (hakija-form-service/fetch-form-by-haku-oid
                                                              tarjonta-service
                                                              organization-service
                                                              ohjausparametrit-service
                                                              (:haku application)
-                                                             (util/application-in-processing? (:application-hakukohde-reviews application))
+                                                             application-in-processing?
                                                              form-roles)
                                (some? (:form application)) (hakija-form-service/fetch-form-by-key-with-flagged-fields
                                                              (->> application
@@ -281,7 +288,7 @@
                                                                   :key)
                                                              form-roles
                                                              nil
-                                                             (util/application-in-processing? (:application-hakukohde-reviews application))))
+                                                             application-in-processing?))
         person           (some-> application
                                  (application-service/get-person person-client)
                                  (dissoc :ssn :birth-date))
@@ -289,10 +296,7 @@
                                  (remove-unviewable-answers form)
                                  attachments-metadata->answers
                                  (dissoc :person-oid :application-hakukohde-reviews)
-                                 (assoc :in-processing-state-in-jatkuva-haku
-                                        (in-processing-state-in-jatkuva-haku? (:application-hakukohde-reviews application)
-                                                                              (filter #(contains? (set (:hakukohde application)) (:oid %))
-                                                                                (-> form :tarjonta :hakukohteet)))))]
+                                 (assoc :cannot-edit-because-in-processing (in-processing-state? application form)))]
     [(when full-application
        {:application full-application
         :person      person
