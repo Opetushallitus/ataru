@@ -39,24 +39,18 @@
                 (dispatch [:editor/generate-followup-component generate-fn option-path]))]]]])))))
 
 (defn followup-question [option-index option-path show-followups]
-  (let [followup-component    (subscribe [:editor/get-component-value (vec (flatten [option-path :followups]))])
-        allow-more-followups? (->> option-path
-                                   flatten
-                                   (filter #(= :followups %))
-                                   count
-                                   (> 2))]
+  (let [followup-component (subscribe [:editor/get-component-value (vec (flatten [option-path :followups]))])]
     (fn [option-index option-path show-followups]
       [:div.editor-form__followup-question
-       (when allow-more-followups?
-         (let [layer-visible? (get @show-followups option-index)
-               followups?     (not-empty @followup-component)]
-           [:a
-            {:on-click #(swap! show-followups
-                          (fn [v] (assoc v option-index
-                                           (not (get v option-index)))))}
-            (when followups? (str "Lisäkysymykset (" (count @followup-component) ") "))
-            (if followups?
-              (if layer-visible?
-                  [:i.zmdi.zmdi-chevron-up.zmdi-hc-lg]
-                  [:i.zmdi.zmdi-chevron-down.zmdi-hc-lg])
-              "Lisäkysymykset")]))])))
+       (let [layer-visible? (get @show-followups option-index)
+             followups?     (not-empty @followup-component)]
+         [:a
+          {:on-click #(swap! show-followups
+                        (fn [v] (assoc v option-index
+                                         (not (get v option-index)))))}
+          (when followups? (str "Lisäkysymykset (" (count @followup-component) ") "))
+          (if followups?
+            (if layer-visible?
+              [:i.zmdi.zmdi-chevron-up.zmdi-hc-lg]
+              [:i.zmdi.zmdi-chevron-down.zmdi-hc-lg])
+            "Lisäkysymykset")])])))
