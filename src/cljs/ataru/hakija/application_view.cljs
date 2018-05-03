@@ -86,7 +86,7 @@
          (when (not-empty apply-dates)
            [:div.application__sub-header-container
             [:span.application__sub-header-dates apply-dates]])
-         (when (and (:in-processing-state-in-jatkuva-haku @application)
+         (when (and (:cannot-edit-because-in-processing @application)
                     (not @virkailija-secret))
            [:div.application__sub-header-container
             [:span.application__sub-header-modifying-prevented

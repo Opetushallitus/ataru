@@ -474,7 +474,7 @@
                    (assoc-in [:application :state] (:state application))
                    (assoc-in [:application :hakukohde] (:hakukohde application))
                    (assoc-in [:application :person] person)
-                   (assoc-in [:application :in-processing-state-in-jatkuva-haku] (:in-processing-state-in-jatkuva-haku application))
+                   (assoc-in [:application :cannot-edit-because-in-processing] (:cannot-edit-because-in-processing application))
                    (assoc-in [:form :selected-language] (or (keyword (:lang application)) :fi))
                    (handle-form (:answers application) form))
      :dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]

@@ -348,7 +348,7 @@
 (s/defschema ApplicationWithPersonAndForm
   {:application (-> Application
                     (st/dissoc :person-oid)
-                    (st/assoc :in-processing-state-in-jatkuva-haku s/Bool))
+                    (st/assoc :cannot-edit-because-in-processing s/Bool))
    :person      Person
    :form        (s/conditional #(contains? % :tarjonta) FormWithContentAndTarjontaMetadata
                                :else FormWithContent)})
