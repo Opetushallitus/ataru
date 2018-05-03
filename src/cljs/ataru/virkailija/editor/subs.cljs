@@ -191,3 +191,19 @@
           (fn [[lang {:keys [content stored-content]}]]
             [lang (not= content stored-content)])
           templates)))))
+
+
+(re-frame/reg-sub
+  :editor/base-education-module-exists?
+  (fn [db _]
+    (let [selected-form-key     (-> db :editor :selected-form-key)
+          selected-form-content (-> db
+                                    :editor
+                                    :forms
+                                    (get selected-form-key)
+                                    :content)]
+      (contains? (->> selected-form-content
+                      (mapcat :children)
+                      (map :id)
+                      set)
+                 "completed-base-education"))))

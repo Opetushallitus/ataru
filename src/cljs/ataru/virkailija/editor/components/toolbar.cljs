@@ -3,7 +3,7 @@
    [ataru.component-data.component :as component]
    [ataru.component-data.base-education-module :as base-education-module]
    [ataru.feature-config :as fc]
-   [re-frame.core :refer [dispatch]]
+   [re-frame.core :refer [dispatch subscribe]]
    [taoensso.timbre :refer-macros [spy debug]]))
 
 (def ^:private toolbar-elements
@@ -57,17 +57,20 @@
                     component/text-field)})
 
 (defn- component-toolbar [path elements generator]
-  (into [:ul.form__add-component-toolbar--list]
-    (for [[component-name generate-fn] elements
-          :when                        (not (and
-                                              (vector? path)
-                                              (= :children (second path))
-                                              (= "Lomakeosio" component-name)))]
-      [:li.form__add-component-toolbar--list-item
-       [:a {:on-click (fn [evt]
-                        (.preventDefault evt)
-                        (generator generate-fn))}
-        component-name]])))
+  (fn [path elements generator]
+    (let [base-education-module-exists? (subscribe [:editor/base-education-module-exists?])]
+      (into [:ul.form__add-component-toolbar--list]
+            (for [[component-name generate-fn] elements
+                  :when (and (not (and (vector? path)
+                                       (= :children (second path))
+                                       (= "Lomakeosio" component-name)))
+                             (not (and @base-education-module-exists?
+                                       (= "Pohjakoulutusmoduuli" component-name))))]
+              [:li.form__add-component-toolbar--list-item
+               [:a {:on-click (fn [evt]
+                                (.preventDefault evt)
+                                (generator generate-fn))}
+                component-name]])))))
 
 (defn add-component [path]
   [:div.editor-form__add-component-toolbar
