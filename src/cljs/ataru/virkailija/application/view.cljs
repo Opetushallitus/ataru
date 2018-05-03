@@ -722,6 +722,34 @@
       :disabled  @disabled?
       :on-change #(dispatch [:application/toggle-review-state-setting setting-kwd])}]))
 
+(defn- review-state-comment
+  [state-name selected-hakukohde]
+  (fn [state-name selected-hakukohde]
+    (let [review-note     (subscribe [:state-query [:application :notes selected-hakukohde state-name]])
+          review-notes    (subscribe [:state-query [:application :review-notes]])
+          previous-note   (->> @review-notes
+                               (filter #(and (= (name state-name) (:state-name %))
+                                             (= (name selected-hakukohde) (:hakukohde %))))
+                               first
+                               :notes)
+          button-enabled? (and (-> @review-note clojure.string/blank? not)
+                               (not= @review-note previous-note))]
+      [:div.application-handling__review-state-selected-container
+       [:textarea.application-handling__review-note-input.application-handling__eligibility-state-comment
+        {:value       @review-note
+         :placeholder "Hylkäyksen syy.."
+         :on-change   (fn [event]
+                        (let [note (.. event -target -value)]
+                          (dispatch [:state-update #(assoc-in % [:application :notes selected-hakukohde state-name] note)])))}]
+       [:button.application-handling__review-note-submit-button
+        {:type     "button"
+         :on-click #(dispatch [:application/add-review-note @review-note state-name])
+         :disabled (not button-enabled?)
+         :class    (if button-enabled?
+                     "application-handling__review-note-submit-button--enabled"
+                     "application-handling__review-note-submit-button--disabled")}
+        "Tallenna"]])))
+
 (defn- application-hakukohde-review-input
   [label kw states]
   (let [current-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde]])
@@ -729,7 +757,7 @@
         list-click        (partial toggle-review-list-visibility kw)
         settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
         input-visible?    (subscribe [:application/review-state-setting-enabled? kw])]
-    (fn []
+    (fn [_ _ _]
       (when (or @settings-visible? @input-visible?)
         (let [review-state-for-current-hakukohde (subscribe [:state-query [:application :review :hakukohde-reviews (keyword @current-hakukohde) kw]])]
           [:div.application-handling__review-state-container
@@ -742,12 +770,16 @@
              [:div.application-handling__review-state-list-opened-anchor
               (into [:div.application-handling__review-state-list-opened
                      {:on-click list-click}]
-                (opened-review-state-list kw review-state-for-current-hakukohde states))]
-             [review-state-selected-row
-              list-click
-              (application-states/get-review-state-label-by-name
-                states
-                (or @review-state-for-current-hakukohde (ffirst states)))])])))))
+                    (opened-review-state-list kw review-state-for-current-hakukohde states))]
+             [:div.application-handling__review-state-selected-container
+              [review-state-selected-row
+               list-click
+               (application-states/get-review-state-label-by-name
+                 states
+                 (or @review-state-for-current-hakukohde (ffirst states)))]
+              (when (and (= :eligibility-state kw)
+                         (= "uneligible" @review-state-for-current-hakukohde))
+                [review-state-comment kw (keyword @current-hakukohde)])])])))))
 
 (defn- application-hakukohde-review-inputs
   [review-types]
@@ -906,14 +938,14 @@
          :on-change (fn [event]
                       (let [review-comment (.. event -target -value)]
                         (dispatch [:application/set-review-comment-value review-comment])))}]
-       [:button.application-handling__review-note-submit-button
+       [:button.application-handling__general-review-note-submit-button
         {:type     "button"
          :class    (if @button-enabled?
                      "application-handling__review-note-submit-button--enabled"
                      "application-handling__review-note-submit-button--disabled")
          :disabled (not @button-enabled?)
          :on-click (fn [_]
-                     (dispatch [:application/add-review-note @input-value]))}
+                     (dispatch [:application/add-review-note @input-value nil]))}
         "Lisää"]])))
 
 (defn- application-review-note [note-idx]

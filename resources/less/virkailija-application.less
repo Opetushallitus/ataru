@@ -842,7 +842,6 @@ and (max-width: 1000px) {
   box-shadow :none;
   padding: 5px;
   height: 41px;
-  margin-left: 10px;
   font-family: 'Open Sans', sans-serif;
   font-size: 14px;
   border: none;
@@ -850,7 +849,12 @@ and (max-width: 1000px) {
   flex-flow: column nowrap;
   align-items: center;
   justify-content: center;
+}
+
+.application-handling__general-review-note-submit-button {
+  &:extend(.application-handling__review-note-submit-button);
   flex: 0 1 130px;
+  margin-left: 10px;
 }
 
 .application-handling__review-note-submit-button--disabled {
@@ -1101,6 +1105,17 @@ and (max-width: 1000px) {
   display: flex;
   justify-content: space-between;
   position: relative;
+}
+
+.application-handling__review-state-selected-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.application-handling__eligibility-state-comment {
+  height: 60px;
+  resize: none;
+  margin-bottom: 4px;
 }
 
 .application-handling__review-state-container--bottom-border {

@@ -357,6 +357,22 @@
         answer-map (into {} (map (fn [answer] [(keyword (:key answer)) answer])) answers)]
     (assoc application :answers answer-map)))
 
+(defn- review-notes-by-hakukohde-and-state-name
+  [review-notes]
+  (let [notes-by-hakukohde (->> review-notes
+                                (filter #(some? (:hakukohde %)))
+                                (group-by :hakukohde))]
+    (reduce-kv (fn [by-hakukohde hakukohde notes]
+                 (let [notes-by-state-name (group-by :state-name notes)]
+                   (assoc by-hakukohde
+                          (keyword hakukohde)
+                          (reduce-kv (fn [by-state-name state-name notes]
+                                       (assoc by-state-name (keyword state-name) (-> notes first :notes)))
+                                     {}
+                                     notes-by-state-name))))
+               {}
+               notes-by-hakukohde)))
+
 (defn update-application-details [db {:keys [form
                                              application
                                              events
@@ -372,6 +388,7 @@
       (assoc-in [:application :events] events)
       (assoc-in [:application :review] review)
       (assoc-in [:application :review-notes] review-notes)
+      (assoc-in [:application :notes] (review-notes-by-hakukohde-and-state-name review-notes))
       (assoc-in [:application :review :hakukohde-reviews] hakukohde-reviews)
       (assoc-in [:application :review :attachment-reviews] attachment-reviews)
       (update-in [:application :selected-review-hakukohde] (fn [current-hakukohde]
@@ -767,22 +784,27 @@
 
 (reg-event-fx
   :application/add-review-note
-  (fn [{:keys [db]} [_ note]]
+  (fn [{:keys [db]} [_ text state-name]]
     (let [application-key (-> db :application :selected-key)
+          hakukohde       (-> db :application :selected-review-hakukohde)
           tmp-id          (cljs-util/new-uuid)
+          note            (merge {:notes           text
+                                  :application-key application-key}
+                                 (when state-name
+                                   {:hakukohde  hakukohde
+                                    :state-name state-name}))
           db              (-> db
                               (update-in [:application :review-notes]
                                          (fn [notes]
-                                           (vec (cons {:created-time (t/now)
-                                                       :id           tmp-id
-                                                       :notes        note
-                                                       :animated?    true}
+                                           (vec (cons (merge note
+                                                             {:created-time (t/now)
+                                                              :id           tmp-id
+                                                              :animated?    true})
                                                       notes))))
                               (assoc-in [:application :review-comment] nil))]
       {:db   db
        :http {:method              :post
-              :params              {:notes           note
-                                    :application-key application-key}
+              :params              note
               :path                "/lomake-editori/api/applications/notes"
               :handler-or-dispatch :application/handle-add-review-note-response
               :handler-args        {:tmp-id tmp-id}}})))
