@@ -81,9 +81,6 @@
   [search-result]
   (doall (mapcat :tulokset (:tulokset search-result))))
 
-(defn get-hakukohde-and-tarjoaja-name [hakukohde]
-  {:name          (parse-multi-lang-text (:hakukohteenNimet hakukohde))
-   :tarjoaja-name (parse-multi-lang-text (:tarjoajaNimet hakukohde))})
 
 (defrecord CachedTarjontaService [cache-service]
   TarjontaService
