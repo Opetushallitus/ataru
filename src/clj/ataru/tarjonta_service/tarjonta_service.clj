@@ -81,19 +81,21 @@
   [search-result]
   (doall (mapcat :tulokset (:tulokset search-result))))
 
+(def allowed-hakukohde-tilas #{"VALMIS" "JULKAISTU"})
 
 (defrecord CachedTarjontaService [cache-service]
   TarjontaService
   (get-hakukohde [this hakukohde-oid]
     (when-let [hakukohde (cache/cache-get cache-service :hakukohde hakukohde-oid)]
-      (when-not (= (:tila hakukohde) "PERUTTU")
+      (when (contains? allowed-hakukohde-tilas (:tila hakukohde))
         ;; Serialization breaks boxed booleans, as it doesn't return the
         ;; canonical instance
         (update hakukohde
                 :kaytetaanHakukohdekohtaistaHakuaikaa #(.booleanValue %)))))
 
   (get-hakukohteet [this hakukohde-oids]
-    (remove #(or (nil? %) (= "PERUTTU" (:tila %)))
+    (remove #(or (nil? %)
+                 (not (contains? allowed-hakukohde-tilas (:tila %))))
             (cache/cache-get-many
              cache-service
              :hakukohde
@@ -107,7 +109,7 @@
     (some->> (client/hakukohde-search haku-oid organization-oid)
              parse-search-result
              (map :oid)
-             (keep (partial get-hakukohde this))
+             (.get-hakukohteet this)
              (mapv parse-hakukohde)))
 
   (get-haku [this haku-oid]
