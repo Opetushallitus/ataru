@@ -87,27 +87,27 @@
 
 (defn- haku-list-item
   [path id haku selected-hakukohteet]
-  (let [name (subscribe [:editor/get-some-name haku])
+  (let [name            (subscribe [:editor/get-some-name haku])
         on-click-add    (fn [hakukohde _] (dispatch [:editor/add-to-belongs-to-hakukohteet
-                                           path
-                                           (:oid hakukohde)]))
+                                                     path
+                                                     (:oid hakukohde)]))
         on-click-remove (fn [hakukohde _] (dispatch [:editor/remove-from-belongs-to-hakukohteet
-                                           path (:oid hakukohde)]))
-        get-name (fn [hakukohde] @(subscribe [:editor/get-hakukohde-name hakukohde]))
-        show-at-most @(subscribe [:editor/belongs-to-hakukohteet-modal-show-more-value id (:oid haku)])]
+                                                     path (:oid hakukohde)]))
+        get-name        (fn [hakukohde] @(subscribe [:editor/get-hakukohde-name hakukohde]))]
     (fn [path id haku selected-hakukohteet]
-      [:li.belongs-to-hakukohteet-modal__haku-list-item
-       [:span.belongs-to-hakukohteet-modal__haku-label
-        @name]
-       [:ul.belongs-to-hakukohteet-modal__hakukohde-list
-        (for [hakukohde (first (split-at show-at-most (:hakukohteet haku)))]
-          ^{:key (:oid hakukohde)}
-          [selectable-list-item path id hakukohde selected-hakukohteet get-name on-click-add on-click-remove])
-        (when (< show-at-most (count (:hakukohteet haku)))
-          [:li.belongs-to-hakukohteet-modal__hakukohde-list-item--show-more
-           {:on-click #(dispatch [:editor/belongs-to-hakukohteet-modal-show-more id (:oid haku)])}
-           [:span.belongs-to-hakukohteet-modal__hakukohde-label
-            "Näytä lisää.."]])]])))
+      (let [show-at-most (subscribe [:editor/belongs-to-hakukohteet-modal-show-more-value id (:oid haku)])]
+        [:li.belongs-to-hakukohteet-modal__haku-list-item
+         [:span.belongs-to-hakukohteet-modal__haku-label
+          @name]
+         [:ul.belongs-to-hakukohteet-modal__hakukohde-list
+          (for [hakukohde (first (split-at @show-at-most (:hakukohteet haku)))]
+            ^{:key (:oid hakukohde)}
+            [selectable-list-item path id hakukohde selected-hakukohteet get-name on-click-add on-click-remove])
+          (when (< @show-at-most (count (:hakukohteet haku)))
+            [:li.belongs-to-hakukohteet-modal__hakukohde-list-item--show-more
+             {:on-click #(dispatch [:editor/belongs-to-hakukohteet-modal-show-more id (:oid haku)])}
+             [:span.belongs-to-hakukohteet-modal__hakukohde-label
+              "Näytä lisää.."]])]]))))
 
 (defn- belongs-to-hakukohteet-modal
   [path id selected-hakukohteet selected-hakukohderyhmat]
