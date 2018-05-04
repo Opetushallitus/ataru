@@ -209,7 +209,7 @@
                [field followup application lang])])]))
       (doall
        (for [value values-wo-option]
-         ^{:key value}
+         ^{:key (str "unknown-option-" value)}
          [:div
           [:p.application__text-field-paragraph
            (str "Tuntematon vastausvaihtoehto " value)]]))])])
