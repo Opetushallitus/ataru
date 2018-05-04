@@ -432,6 +432,7 @@
                          "received-from-virkailija"
                          "review-state-change"
                          "hakukohde-review-state-change"
+                         "eligibility-state-automatically-changed"
                          "attachment-review-state-change"
                          "modification-link-sent"))
 

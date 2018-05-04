@@ -503,3 +503,15 @@
   :application/loaded-application-count
   (fn [db _]
     (-> db :application :applications (count))))
+
+(re-frame.core/reg-sub
+  :application/eligibility-automatically-checked?
+  (fn [db _]
+    (let [hakukohde (get-in db [:application :selected-review-hakukohde])]
+      (->> (get-in db [:application :events])
+           (filter #(and (= "eligibility-state" (:review-key %))
+                         (= hakukohde (:hakukohde %))))
+           (sort-by :id >)
+           first
+           :event-type
+           (= "eligibility-state-automatically-changed")))))

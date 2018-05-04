@@ -836,11 +836,12 @@
 
 (defn- application-hakukohde-review-input
   [label kw states]
-  (let [current-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde]])
-        list-opened       (subscribe [:application/review-list-visible? kw])
-        list-click        (partial toggle-review-list-visibility kw)
-        settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
-        input-visible?    (subscribe [:application/review-state-setting-enabled? kw])]
+  (let [current-hakukohde                  (subscribe [:state-query [:application :selected-review-hakukohde]])
+        list-opened                        (subscribe [:application/review-list-visible? kw])
+        list-click                         (partial toggle-review-list-visibility kw)
+        settings-visible?                  (subscribe [:state-query [:application :review-settings :visible?]])
+        input-visible?                     (subscribe [:application/review-state-setting-enabled? kw])
+        eligibility-automatically-checked? (subscribe [:application/eligibility-automatically-checked?])]
     (fn [_ _ _]
       (when (or @settings-visible? @input-visible?)
         (let [review-state-for-current-hakukohde (subscribe [:state-query [:application :review :hakukohde-reviews (keyword @current-hakukohde) kw]])]
@@ -849,7 +850,12 @@
            (when @settings-visible?
              [review-settings-checkbox kw])
            [:div.application-handling__review-header
-            {:class (str "application-handling__review-header--" (name kw))} label]
+            {:class (str "application-handling__review-header--" (name kw))}
+            [:span label]
+            (when (and (= :eligibility-state kw)
+                       @eligibility-automatically-checked?)
+              [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
+               {:title "Hakukelpoisuus asetettu automaattisesti"}])]
            (if @list-opened
              [:div.application-handling__review-state-list-opened-anchor
               (into [:div.application-handling__review-state-list-opened
@@ -859,8 +865,8 @@
               [review-state-selected-row
                list-click
                (application-states/get-review-state-label-by-name
-                 states
-                 (or @review-state-for-current-hakukohde (ffirst states)))]
+                states
+                (or @review-state-for-current-hakukohde (ffirst states)))]
               (when (and (= :eligibility-state kw)
                          (= "uneligible" @review-state-for-current-hakukohde))
                 [review-state-comment kw (keyword @current-hakukohde)])])])))))
@@ -929,6 +935,18 @@
                  (:new-review-state event)))
           " "
           (virkailija-initials-span event)]
+
+         {:event-type "eligibility-state-automatically-changed"}
+         [:div.application-handling__multi-line-event-caption
+          [:span.application-handling__event-caption--inner
+           (str "Hakukelpoisuus: "
+                (some #(when (= (:new-review-state event) (first %))
+                         (second %))
+                      review-states/application-hakukohde-eligibility-states))]
+          [:span.application-handling__event-caption--inner.application-handling__event-caption--extra-info
+           (str "Hakukohteen \""
+                @(subscribe [:application/hakukohde-name (:hakukohde event)])
+                "\" hakukelpoisuus asetettu automaattisesti")]]
 
          {:event-type "attachment-review-state-change"}
          [:span.application-handling__event-caption--inner
