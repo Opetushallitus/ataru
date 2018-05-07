@@ -457,8 +457,8 @@
             {}
             hakukohteet)))
 
-(defn application-list-row [application selected?]
-  (let [day-date-time          (clojure.string/split (t/time->str (:created-time application)) #"\s")
+(defn application-list-row [application selected? selected-time-column]
+  (let [day-date-time          (clojure.string/split (t/time->str (@selected-time-column application)) #"\s")
         day                    (first day-date-time)
         date-time              (->> day-date-time (rest) (clojure.string/join " "))
         applicant              (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
@@ -486,18 +486,18 @@
         [:span.application-handling__hakukohde-selection-cell])]
      [applications-hakukohde-rows @review-settings application @selected-hakukohde attachment-states]]))
 
-(defn application-list-contents [applications]
+(defn application-list-contents [applications selected-time-column]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
         expanded?    (subscribe [:state-query [:application :application-list-expanded?]])]
-    (fn [applications]
+    (fn [applications selected-time-column]
       (into [:div.application-handling__list
              {:class (str (when (= true @expanded?) "application-handling__list--expanded")
                           (when (> (count applications) 0) " animated fadeIn"))}]
             (for [application applications
-                  :let        [selected? (= @selected-key (:key application))]]
+                  :let [selected? (= @selected-key (:key application))]]
               (if selected?
-                [cljs-util/wrap-scroll-to [application-list-row application selected?]]
-                [application-list-row application selected?]))))))
+                [cljs-util/wrap-scroll-to [application-list-row application selected? selected-time-column]]
+                [application-list-row application selected? selected-time-column]))))))
 
 (defn- toggle-state-filter!
   [hakukohde-filters states filter-kw filter-id selected?]
@@ -573,7 +573,26 @@
           (if (= :descending (:order @application-sort))
             [:i.zmdi.zmdi-chevron-down.application-handling__sort-arrow]
             [:i.zmdi.zmdi-chevron-up.application-handling__sort-arrow])
-          [:i.zmdi.zmdi-chevron-down..application-handling__sort-arrow.application-handling__sort-arrow--disabled])])))
+          [:i.zmdi.zmdi-chevron-down.application-handling__sort-arrow.application-handling__sort-arrow--disabled])])))
+
+(defn created-time-column-header [selected-time-column]
+  (let [application-sort (subscribe [:state-query [:application :sort]])]
+    (fn [selected-time-column]
+      [:span.application-handling__basic-list-basic-column-header
+       [:span
+        {:on-click #(dispatch [:application/toggle-shown-time-column])}
+        (if (= :created-time @selected-time-column)
+          "Viimeksi muokattu"
+          "Luotu")
+        "|"]
+       [:i.zmdi
+        {:on-click #(dispatch [:application/update-sort @selected-time-column])
+         :class    (if (= @selected-time-column (:column @application-sort))
+                     (if (= :descending (:order @application-sort))
+                       "zmdi-chevron-down application-handling__sort-arrow"
+                       "zmdi-chevron-up application-handling__sort-arrow")
+                     "zmdi-chevron-down application-handling__sort-arrow application-handling__sort-arrow--disabled")}]])))
+
 
 (defn application-list-loading-indicator []
   (let [fetching (subscribe [:state-query [:application :fetching-applications]])]
@@ -584,7 +603,8 @@
 (defn application-list [applications]
   (let [fetching        (subscribe [:state-query [:application :fetching-applications]])
         review-settings (subscribe [:state-query [:application :review-settings :config]])
-        only-identified? (subscribe [:state-query [:application :only-identified?]])]
+        only-identified? (subscribe [:state-query [:application :only-identified?]])
+        selected-time-column (subscribe [:state-query [:application :selected-time-column]])]
     [:div
      [:div.application-handling__list-header.application-handling__list-row
       [:span.application-handling__list-row--applicant
@@ -597,10 +617,11 @@
           :checked  (or @only-identified? false)
           :on-click #(dispatch [:application/update-identification])}]
         "Vain yksilöimättömät"]]
-      [:span.application-handling__list-row--time
-       [application-list-basic-column-header
-        :created-time
-        "Viimeksi muokattu"]]
+      [:span
+       {:class (if (= :created-time @selected-time-column)
+                 "application-handling__list-row--created-time"
+                 "application-handling__list-row--original-created-time")}
+         [created-time-column-header selected-time-column]]
       (when (:attachment-handling @review-settings true)
         [:span.application-handling__list-row--attachment-state
          [hakukohde-state-filter-controls
@@ -621,7 +642,7 @@
           "Valinta"
           review-states/application-hakukohde-selection-states]])]
      (when-not @fetching
-       [application-list-contents applications])]))
+       [application-list-contents applications selected-time-column])]))
 
 (defn application-contents [{:keys [form application]}]
   [readonly-contents/readonly-fields form application])

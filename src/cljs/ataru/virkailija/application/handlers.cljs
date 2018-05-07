@@ -246,6 +246,15 @@
   (fn [db _]
     (update-in db [:application :only-identified?] not)))
 
+(reg-event-fx
+  :application/toggle-shown-time-column
+  (fn [{:keys [db]} _]
+    (let [new-value (if (= :created-time (-> db :application :selected-time-column))
+                      :original-created-time
+                      :created-time)]
+      {:db       (assoc-in db [:application :selected-time-column] new-value)
+       :dispatch [:application/update-sort new-value]})))
+
 (reg-event-db
  :application/update-sort
  (fn [db [_ column-id]]
@@ -253,7 +262,9 @@
 
 (defn- parse-application-time
   [application]
-  (assoc application :created-time (temporal/str->googdate (:created-time application))))
+  (-> application
+      (update :created-time temporal/str->googdate)
+      (update :original-created-time temporal/str->googdate)))
 
 (reg-event-fx
   :application/handle-fetch-applications-response
@@ -265,6 +276,7 @@
                  (assoc-in [:application :review-state-counts] (review-state-counts applications-with-times))
                  (assoc-in [:application :attachment-state-counts] (attachment-state-counts applications-with-times))
                  (assoc-in [:application :sort] application-sorting/initial-sort)
+                 (assoc-in [:application :selected-time-column] :created-time)
                  (assoc-in [:application :information-request] nil)
                  (update-sort (:column application-sorting/initial-sort) false))
           application-key (if (= 1 (count applications-with-times))
