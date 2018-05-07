@@ -48,10 +48,13 @@
                           when-superuser-fn]
   {:pre [(right-seq? rights)]}
   (let [organizations         (select-organizations-for-rights organization-service session rights)
+        superuser?            (-> session :identity :superuser)
         organization-oids     (set (map :oid organizations))
         selected-organization (:selected-organization session)]
     (cond
-      (empty? organizations)
+      (and
+        (not superuser?)
+        (empty? organizations))
       (when-no-orgs-fn)
 
       (or
