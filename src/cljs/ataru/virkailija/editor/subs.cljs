@@ -184,12 +184,14 @@
 (re-frame/reg-sub
   :editor/email-templates-altered
   (fn [db _]
-    (let [templates (get-in db [:editor :email-template])]
+    (let [form-key (get-in db [:editor :selected-form-key])
+          templates (get-in db [:editor :email-template form-key])]
       (into
         {}
         (map
-          (fn [[lang {:keys [content stored-content]}]]
-            [lang (not= content stored-content)])
+          (fn [[lang template]]
+            (let [any-changes? (not= (dissoc template :stored-content) (get template :stored-content))]
+              [lang any-changes?]))
           templates)))))
 
 
@@ -207,3 +209,9 @@
                       (map :id)
                       set)
                  "completed-base-education"))))
+
+
+(re-frame/reg-sub
+  :editor/email-template
+  (fn [db _]
+    (get-in db [:editor :email-template (get-in db [:editor :selected-form-key])])))

@@ -9,12 +9,14 @@
   (db/exec ds-key query params))
 
 (defn create-or-update-email-template
-  [form-key lang virkailija-oid content]
+  [form-key lang virkailija-oid subject content content-ending]
   (first (exec-db :db yesql-upsert-email-template!< {:form_key       form-key
                                                      :lang           lang
                                                      :virkailija_oid virkailija-oid
-                                                     :haku_oid       ""
-                                                     :content        content})))
+                                                     :subject        subject
+                                                     :content        content
+                                                     :content_ending content-ending
+                                                     :haku_oid       ""})))
 
 (defn get-email-templates
   [form-key]

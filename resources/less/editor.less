@@ -1415,6 +1415,7 @@ input.editor-form__text-field ~ .editor-form__markdown-anchor {
   padding: 5px 60px;
   color: @link-color;
   line-height: 21px;
+  .unselectable;
 }
 
 .virkailija-email-preview__tab-edited {
@@ -1439,6 +1440,17 @@ input.editor-form__text-field ~ .editor-form__markdown-anchor {
   padding: 10px;
   border: 1px solid @section-gray-border;
   border-top: none;
+}
+
+.virkailija-email-preview__input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid @input-border-gray;
+}
+
+.virkailija-email-preview__input-field-error {
+  background: #ffe9e9;
+  border: 1px solid #e09191;
 }
 
 .virkailija-email-preview__text-input {

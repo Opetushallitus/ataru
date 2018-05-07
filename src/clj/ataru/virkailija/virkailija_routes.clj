@@ -207,14 +207,12 @@
 
     (api/POST "/email-template/:form-key/previews" []
       :path-params [form-key :- s/Str]
-      :body [body {:contents [{:lang    (s/enum "fi" "sv" "en")
-                               :content s/Str}]}]
+      :body [body {:contents [ataru-schema/EmailTemplate]}]
       (ok (email/preview-submit-emails (:contents body))))
 
     (api/POST "/email-templates/:form-key" {session :session}
       :path-params [form-key :- s/Str]
-      :body [body {:contents [{:lang    (s/enum "fi" "sv" "en")
-                               :content s/Str}]}]
+      :body [body {:contents [ataru-schema/EmailTemplate]}]
       (ok (email/store-email-templates form-key session (:contents body))))
 
     (api/GET "/email-templates/:form-key" []

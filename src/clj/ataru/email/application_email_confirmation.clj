@@ -14,6 +14,7 @@
     [clojure.string :as string]
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
     [ataru.util :as util]
+    [ataru.translations.texts :refer [email-default-texts]]
     [medley.core :refer [find-first]])
   (:import
     [org.owasp.html HtmlPolicyBuilder ElementPolicy]))
@@ -117,23 +118,28 @@
                 application-id))
 
 (defn preview-submit-email
-  [lang content]
-  {:from    from-address
-   :subject ((keyword lang) submit-email-subjects)
-   :content content
-   :lang    lang
-   :body    (-> (submit-email-template-filename lang)
-                (selmer/render-file {:lang            lang
-                                     :hakukohteet     ["Hakukohde 1" "Hakukohde 2" "Hakukohde 3"]
-                                     :application-url "https://opintopolku.fi/hakemus/01234567890abcdefghijklmn"
-                                     :application-oid "1.2.246.562.11.00000000000000000000"
-                                     :content         (->safe-html content)}))})
+  [lang subject content content-ending]
+  {:from           from-address
+   :subject        subject
+   :content        content
+   :content-ending content-ending
+   :lang           lang
+   :body           (-> (submit-email-template-filename lang)
+                       (selmer/render-file {:lang            lang
+                                            :hakukohteet     ["Hakukohde 1" "Hakukohde 2" "Hakukohde 3"]
+                                            :application-url "https://opintopolku.fi/hakemus/01234567890abcdefghijklmn"
+                                            :application-oid "1.2.246.562.11.00000000000000000000"
+                                            :content         (->safe-html content)
+                                            :content-ending  (->safe-html content-ending)}))})
 
-(defn preview-submit-emails
-  [previews]
+(defn preview-submit-emails [previews]
   (map
-    #(preview-submit-email (key %) (-> % (val) (first) :content))
-    (merge languages-map (clojure.walk/keywordize-keys (group-by :lang previews)))))
+   #(let [lang           (:lang %)
+          subject        (:subject %)
+          content        (:content %)
+          content-ending (:content-ending %)]
+      (preview-submit-email lang subject content content-ending)) previews))
+
 
 (defn- create-edit-email [tarjonta-service application-id]
   (create-email tarjonta-service
@@ -169,20 +175,24 @@
   [tarjonta-service application-id]
   (start-email-job (create-refresh-secret-email tarjonta-service application-id)))
 
-(defn- add-blank-templates
-  [templates]
+(defn- add-blank-templates [templates]
   (as-> templates x
-        (util/group-by-first (comp keyword :lang) x)
-        (merge languages-map x)
-        (map (fn [el]
-               {:lang (-> el (key) (name)) :content (-> el (val) :content)})
-             x)))
+    (util/group-by-first (comp keyword :lang) x)
+    (merge languages-map x)
+    (map (fn [el]
+             (let [lang     (first el)
+                   template (second el)]
+               {:lang           (name lang)
+                :subject        (get template :subject (get-in email-default-texts [:email-submit-confirmation-template :submit-email-subjects lang]))
+                :content        (get template :content "")
+                :content-ending (get template :content_ending (get-in email-default-texts [:email-submit-confirmation-template :with-application-period lang]))}))
+         x)))
 
 (defn get-email-templates
   [form-key]
   (as-> (email-store/get-email-templates form-key) x
         (add-blank-templates x)
-        (map #(preview-submit-email (:lang %) (:content %)) x)))
+        (map #(preview-submit-email (:lang %) (:subject %) (:content %) (:content-ending %)) x)))
 
 (defn store-email-templates
   [form-key session templates]
@@ -190,8 +200,10 @@
                                   form-key
                                   (:lang %)
                                   (-> session :identity :oid)
-                                  (:content %))
-                               templates)]
+                                  (:subject %)
+                                  (:content %)
+                                  (:content-ending %))
+                           templates)]
     (map
-      #(preview-submit-email (:lang %) (:content %))
-      stored-templates)))
+     #(preview-submit-email (:lang %) (:subject %) (:content %) (:content_ending %))
+     stored-templates)))

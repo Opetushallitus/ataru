@@ -538,3 +538,8 @@
                              Validator      keyword})
 
 (def form-coercer (c/coercer! FormWithContent form-coercion-matchers))
+
+(s/defschema EmailTemplate {:lang (s/enum "fi" "sv" "en")
+                            :content s/Str
+                            :content-ending s/Str
+                            :subject s/Str})                ; (s/constrained s/Str (comp not clojure.string/blank?))
