@@ -76,10 +76,12 @@
       (recur (crypto/url-part 34)))))
 
 (defn- create-attachment-reviews
-  [attachment-field application-key hakutoiveet]
+  [attachment-field value application-key hakutoiveet]
   (let [review-base                        {:application_key application-key
                                             :attachment_key  (:id attachment-field)
-                                            :state           "not-checked"}
+                                            :state           (if (not-empty value)
+                                                               "not-checked"
+                                                               "incomplete")}
         relevant-field-hakukohde-oids      (clojure.set/intersection (set (map :oid hakutoiveet))
                                                                      (-> attachment-field :belongs-to-hakukohteet set))
         relevant-field-hakukohderyhma-oids (->> hakutoiveet
@@ -119,11 +121,19 @@
 
 (defn- create-attachment-hakukohde-reviews-for-application
   [application applied-hakukohteet connection]
-  (let [reviews (->> (forms/fetch-by-id (:form_id application))
-                     :content
-                     util/flatten-form-fields
-                     (filter-relevant-attachments (-> application :content :answers util/answers-by-key))
-                     (mapcat #(create-attachment-reviews % (:key application) applied-hakukohteet)))]
+  (let [answers-by-key (-> application :content :answers util/answers-by-key)
+        reviews        (->> (forms/fetch-by-id (:form_id application))
+                            :content
+                            util/flatten-form-fields
+                            (filter-relevant-attachments answers-by-key)
+                            (mapcat (fn [attachment]
+                                      (let [attachment-key (-> attachment :id keyword)]
+                                        (create-attachment-reviews attachment
+                                                                   (-> answers-by-key
+                                                                       attachment-key
+                                                                       :value)
+                                                                   (:key application)
+                                                                   applied-hakukohteet)))))]
     (doseq [review reviews]
       (yesql-save-attachment-review! review connection))))
 
