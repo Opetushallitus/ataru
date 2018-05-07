@@ -35,16 +35,10 @@
 (defn get-organizations-with-edit-rights
   [session]
   (if (:selected-organization session)
-    (if (-> session :identity :superuser)
+    (if (or (-> session :identity :superuser)
+            (contains? (-> session :selected-organization :rights) :form-edit))
       [(:selected-organization session)]
-      (->> session
-           :identity
-           :organizations
-           (filter
-             (fn [org]
-               (and
-                 (= (:oid org) (-> session :selected-organization :oid))
-                 (contains? (:rights org) :form-edit))))))
+      [])
     (-> session
         :identity
         :user-right-organizations
