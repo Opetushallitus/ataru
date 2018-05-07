@@ -655,7 +655,9 @@
               (partial review-type-filter filters)
               (filter
                 (fn [[kw _ _]]
-                  (contains? #{:language-requirement :degree-requirement :eligibility-state :payment-obligation} kw))
+                  (and
+                    (contains? #{:language-requirement :degree-requirement :eligibility-state :payment-obligation} kw)
+                    (-> @review-settings (get kw) (false?) (not))))
                 review-states/hakukohde-review-types)))])])))
 
 (defn application-list [applications]
