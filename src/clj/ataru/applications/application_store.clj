@@ -76,12 +76,12 @@
       (recur (crypto/url-part 34)))))
 
 (defn- create-attachment-reviews
-  [attachment-field value application-key hakutoiveet]
+  [attachment-field answer application-key hakutoiveet]
   (let [review-base                        {:application_key application-key
                                             :attachment_key  (:id attachment-field)
-                                            :state           (if (not-empty value)
-                                                               "not-checked"
-                                                               "incomplete")}
+                                            :state           (if (empty? answer)
+                                                               "incomplete"
+                                                               "not-checked")}
         relevant-field-hakukohde-oids      (clojure.set/intersection (set (map :oid hakutoiveet))
                                                                      (-> attachment-field :belongs-to-hakukohteet set))
         relevant-field-hakukohderyhma-oids (->> hakutoiveet
@@ -119,27 +119,37 @@
                      (followup-option-selected? field answers))))
           fields))
 
+(defn- create-application-attachment-reviews
+  [application old-answers applied-hakukohteet update?]
+  (let [answers-by-key (-> application :content :answers util/answers-by-key)]
+    (->> (forms/fetch-by-id (:form_id application))
+         :content
+         util/flatten-form-fields
+         (filter-relevant-attachments answers-by-key)
+         (mapcat (fn [attachment]
+                   (let [attachment-key (-> attachment :id keyword)
+                         answer         (-> answers-by-key attachment-key :value)
+                         old-answer     (-> old-answers attachment-key :value)]
+                     (when (or (not update?)
+                               (not= answer old-answer))
+                       (create-attachment-reviews attachment
+                                                  answer
+                                                  (:key application)
+                                                  applied-hakukohteet))))))))
+
 (defn- create-attachment-hakukohde-reviews-for-application
-  [application applied-hakukohteet connection]
-  (let [answers-by-key (-> application :content :answers util/answers-by-key)
-        reviews        (->> (forms/fetch-by-id (:form_id application))
-                            :content
-                            util/flatten-form-fields
-                            (filter-relevant-attachments answers-by-key)
-                            (mapcat (fn [attachment]
-                                      (let [attachment-key (-> attachment :id keyword)]
-                                        (create-attachment-reviews attachment
-                                                                   (-> answers-by-key
-                                                                       attachment-key
-                                                                       :value)
-                                                                   (:key application)
-                                                                   applied-hakukohteet)))))]
+  [application applied-hakukohteet old-answers connection]
+  (let [update?        (not-empty old-answers)
+        reviews        (create-application-attachment-reviews application old-answers applied-hakukohteet update?)]
     (doseq [review reviews]
-      (yesql-save-attachment-review! review connection))))
+      ((if update?
+         yesql-update-attachment-hakukohde-review!
+         yesql-save-attachment-review!)
+       review connection))))
 
 (defn- add-new-application-version
   "Add application and also initial metadata (event for receiving application, and initial review record)"
-  [application create-new-secret? applied-hakukohteet conn]
+  [application create-new-secret? applied-hakukohteet old-answers conn]
   (let [connection                  {:connection conn}
         answers                     (->> application
                                          :answers
@@ -159,7 +169,7 @@
         new-application             (if (contains? application :key)
                                       (yesql-add-application-version<! application-to-store connection)
                                       (yesql-add-application<! application-to-store connection))]
-    (create-attachment-hakukohde-reviews-for-application new-application applied-hakukohteet {:connection conn})
+    (create-attachment-hakukohde-reviews-for-application new-application applied-hakukohteet old-answers {:connection conn})
     (when create-new-secret?
       (yesql-add-application-secret!
         {:application_key (:key new-application)
@@ -188,7 +198,7 @@
 (defn add-application [new-application applied-hakukohteet]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (info (str "Inserting new application"))
-    (let [{:keys [id key] :as new-application} (add-new-application-version new-application true applied-hakukohteet conn)
+    (let [{:keys [id key] :as new-application} (add-new-application-version new-application true applied-hakukohteet nil conn)
           connection                {:connection conn}]
       (audit-log/log {:new       new-application
                       :operation audit-log/operation-new
@@ -239,6 +249,7 @@
                                                  (merge-applications new-application old-application)
                                                  updated-by-applicant?
                                                  applied-hakukohteet
+                                                 (->  old-application :answers util/answers-by-key)
                                                  conn)
           virkailija-oid        (when-not updated-by-applicant? (get-virkailija-oid virkailija-secret key conn))]
       (info (str "Updating application with key "

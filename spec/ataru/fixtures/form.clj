@@ -287,3 +287,18 @@
                  :fieldType  "textField"
                  :label      {:fi "Toistuva kysymys ryhmässä"}
                  :params     {:repeatable true}}]})
+
+(def attachment-test-form
+  {:name       {:fi "Attachment test form"}
+   :created-by "DEVELOPER"
+   :content    [(component/hakukohteet)
+                {:id         "att__1"
+                 :fieldClass "formField"
+                 :metadata   metadata
+                 :fieldType  "attachment"
+                 :label      {:fi "Liite"}}
+                {:id         "att__2"
+                 :fieldClass "formField"
+                 :metadata   metadata
+                 :fieldType  "attachment"
+                 :label      {:fi "Liite ilman vastausta"}}]})
