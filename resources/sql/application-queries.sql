@@ -97,7 +97,12 @@ SELECT
      AND (aar.hakukohde = 'form' OR aar.hakukohde = ANY (a.hakukohde))) AS application_attachment_reviews,
   (SELECT COUNT(*)
    FROM new_application_modifications am
-   WHERE am.application_key = a.key)  AS new_application_modifications
+   WHERE am.application_key = a.key)  AS new_application_modifications,
+  (SELECT created_time
+   FROM applications
+   WHERE a.key = key
+   ORDER BY id ASC
+   LIMIT 1) AS original_created_time
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id
