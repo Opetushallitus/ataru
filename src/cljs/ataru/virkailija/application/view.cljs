@@ -585,12 +585,12 @@
                  "application-handling__list-row--created-time"
                  "application-handling__list-row--original-created-time")}
        [:span.application-handling__basic-list-basic-column-header
-        [:span
+        [:span.application-handling__created-time-column-header
          {:on-click #(dispatch [:application/toggle-shown-time-column])}
          (if (= :created-time @selected-time-column)
            "Viimeksi muokattu"
-           "Luotu")
-         "|"]
+           "Hakemus jätetty")]
+        "|"
         [:i.zmdi
          {:on-click #(dispatch [:application/update-sort @selected-time-column])
           :class    (if (= @selected-time-column (:column @application-sort))
