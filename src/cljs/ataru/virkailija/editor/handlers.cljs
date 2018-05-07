@@ -852,9 +852,7 @@
     {:db         (assoc-in db
                            [:editor :user-info :selected-organization]
                            (not-empty selected-organization))
-     :dispatch-n [[:editor/refresh-forms-for-editor]
-                  [:application/refresh-haut-and-hakukohteet]
-                  [:application/clear-applications-haku-and-form-selections]]}))
+     :navigate   "/lomake-editori/editor"}))
 
 (reg-event-fx
   :editor/remove-selected-organization
