@@ -200,7 +200,7 @@
       }
 
       function timeColumn() {
-        return testFrame().find('.application-handling__list-row--time > span')
+        return testFrame().find('.application-handling__list-row--created-time i')
       }
 
     });

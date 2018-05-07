@@ -10,11 +10,11 @@
     (if (= "inactivated" (:state x)) 1 -1)
     false))
 
-(defn- date-sort [compare-fn x y]
+(defn- date-sort [compare-fn sort-key x y]
   (or
     (compare-by-state x y)
-    (compare-fn (t/time->long (:created-time x))
-                (t/time->long (:created-time y)))))
+    (compare-fn (t/time->long (sort-key x))
+                (t/time->long (sort-key y)))))
 
 (defn- applicant-sort [order-fn x y]
   (or
@@ -29,8 +29,11 @@
    {:ascending (partial applicant-sort +)
     :descending (partial applicant-sort -)}
    :created-time
-   {:ascending (partial date-sort <)
-    :descending (partial date-sort >)}})
+   {:ascending (partial date-sort < :created-time)
+    :descending (partial date-sort > :created-time)}
+   :original-created-time
+   {:ascending (partial date-sort < :original-created-time)
+    :descending (partial date-sort > :original-created-time)}})
 
 (defn sort-by-column [applications column-id order]
   (sort (get-in application-sort-column-fns [column-id order]) applications))
