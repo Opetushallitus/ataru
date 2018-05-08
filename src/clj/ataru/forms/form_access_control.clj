@@ -110,8 +110,7 @@
 
 (defn edit-form-with-operations
   [id operations session virkailija-tarjonta-service organization-service]
-    (let [latest-version (-> (form-store/fetch-form id)
-                             (dissoc :created-time))
+    (let [latest-version (form-store/fetch-form id)
           coerced-form   (form-schema/form-coercer latest-version)
           updated-form   (form-diff/apply-operations coerced-form operations)]
       (post-form updated-form session virkailija-tarjonta-service organization-service)))
@@ -138,3 +137,13 @@
            vector
            #(get-forms-as-ordinary-user session virkailija-tarjonta-service (vec %))
            #(form-store/get-all-forms))})
+
+(defn update-form-lock [form-id session virkailija-tarjonta-service organization-service]
+  (let [form         (form-store/fetch-form form-id)
+        locked       (:locked form)
+        updated-form (merge form
+                            (if locked
+                              {:locked nil :locked-by nil}
+                              {:locked "now()" :locked-by (-> session :identity :username)}))]
+    (select-keys (post-form updated-form session virkailija-tarjonta-service organization-service)
+                 [:locked :locked-by])))
