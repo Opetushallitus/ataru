@@ -177,16 +177,16 @@
 
 (defn- add-blank-templates [templates]
   (as-> templates x
-    (util/group-by-first (comp keyword :lang) x)
-    (merge languages-map x)
-    (map (fn [el]
-             (let [lang     (first el)
-                   template (second el)]
-               {:lang           (name lang)
-                :subject        (get template :subject (get-in email-default-texts [:email-submit-confirmation-template :submit-email-subjects lang]))
-                :content        (get template :content "")
-                :content-ending (get template :content_ending (get-in email-default-texts [:email-submit-confirmation-template :with-application-period lang]))}))
-         x)))
+        (util/group-by-first (comp keyword :lang) x)
+        (merge languages-map x)
+        (map (fn [el]
+                 (let [lang     (first el)
+                       template (second el)]
+                   {:lang           (name lang)
+                    :subject        (get template :subject (get-in email-default-texts [:email-submit-confirmation-template :submit-email-subjects lang]))
+                    :content        (get template :content "")
+                    :content-ending (get template :content_ending (get-in email-default-texts [:email-submit-confirmation-template :with-application-period lang]))}))
+             x)))
 
 (defn get-email-templates
   [form-key]
@@ -204,6 +204,4 @@
                                   (:content %)
                                   (:content-ending %))
                            templates)]
-    (map
-     #(preview-submit-email (:lang %) (:subject %) (:content %) (:content_ending %))
-     stored-templates)))
+    (map #(preview-submit-email (:lang %) (:subject %) (:content %) (:content_ending %)) stored-templates)))
