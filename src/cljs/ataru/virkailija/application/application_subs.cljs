@@ -324,7 +324,7 @@
   (match [identified? unidentified?]
          [true true] true
          [false false] false
-         [false true] (not (-> application :person :yksiloity))
+         [false true] (-> application :person :yksiloity (not))
          [true false] (-> application :person :yksiloity)))
 
 (defn- state-filter
@@ -366,8 +366,8 @@
   (fn [db _]
     (let [applications                 (-> db :application :applications)
           attachment-states-to-include (-> db :application :attachment-state-filter set)
-          processing-states-to-include (-> db :application :processing-state-filter set) ; TODO move to filters
-          selection-states-to-include  (-> db :application :selection-state-filter set) ; TODO move to filters
+          processing-states-to-include (-> db :application :processing-state-filter set)
+          selection-states-to-include  (-> db :application :selection-state-filter set)
           filters                      (-> db :application :filters)
           identified?                  (-> db :application :filters :only-identified :identified)
           unidentified?                (-> db :application :filters :only-identified :unidentified)]
@@ -488,3 +488,21 @@
     (or (-> db :application :selected-application-and-form :form :selected-language keyword)
         (-> db :application :selected-application-and-form :application :lang keyword)
         :fi)))
+
+(re-frame.core/reg-sub
+  :application/enabled-filter-count
+  (fn [db _]
+    (reduce-kv
+      (fn [acc _ filters]
+        (+ acc
+           (reduce-kv
+             (fn [acc2 _ enabled?] (if (false? enabled?) (inc acc2) acc2))
+             0
+             filters)))
+      0
+      (get-in db [:application :filters]))))
+
+(re-frame.core/reg-sub
+  :application/loaded-application-count
+  (fn [db _]
+    (-> db :application :applications (count))))

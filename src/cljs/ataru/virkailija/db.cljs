@@ -13,9 +13,9 @@
    ; Initial active panel on page load.
    :active-panel         :editor
    :application          {:review                     {}
-                          :attachment-state-filter    (mapv first review-states/attachment-hakukohde-review-types) ; TODO
-                          :processing-state-filter    (mapv first review-states/application-hakukohde-processing-states) ; TODO
-                          :selection-state-filter     (mapv first review-states/application-hakukohde-selection-states) ; TODO
+                          :attachment-state-filter    (mapv first review-states/attachment-hakukohde-review-types)
+                          :processing-state-filter    (mapv first review-states/application-hakukohde-processing-states)
+                          :selection-state-filter     (mapv first review-states/application-hakukohde-selection-states)
                           :sort                       application-sorting/initial-sort
                           :application-list-expanded? true
                           :filters                    {:language-requirement {:unreviewed  true
