@@ -5,6 +5,7 @@
             [ataru.virkailija.application-sorting :as application-sorting]
             [ataru.virkailija.virkailija-ajax :refer [http]]
             [ataru.application.review-states :as review-states]
+            [ataru.virkailija.db :as initial-db]
             [ataru.util :as util]
             [ataru.cljs-util :as cljs-util]
             [ataru.virkailija.temporal :as temporal]
@@ -259,6 +260,11 @@
       (-> db
           (assoc-in [:application :selected-time-column] new-value)
           (update-sort new-value true)))))
+
+(reg-event-db
+  :application/remove-filters
+  (fn [db _]
+    (assoc-in db [:application :filters] (get-in initial-db/default-db [:application :filters]))))
 
 (reg-event-db
  :application/update-sort
