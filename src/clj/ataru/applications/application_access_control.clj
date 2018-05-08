@@ -10,14 +10,12 @@
 (defn authorized-by-form?
   [authorized-organization-oids application]
   (or (nil? authorized-organization-oids)
-      (some? (:haku application))
       (contains? authorized-organization-oids
                  (:organization-oid application))))
 
 (defn authorized-by-tarjoajat?
   [authorized-organization-oids application]
   (or (nil? authorized-organization-oids)
-      (nil? (:haku application))
       (not-empty
        (clojure.set/intersection
         authorized-organization-oids
@@ -58,8 +56,8 @@
    (constantly false)
    #(->> (application-store/applications-authorization-data application-keys)
          (populate-applications-hakukohteet tarjonta-service)
-         (every? (every-pred (partial authorized-by-form? %)
-                             (partial authorized-by-tarjoajat? %))))
+         (every? (some-fn (partial authorized-by-form? %)
+                          (partial authorized-by-tarjoajat? %))))
    (constantly true)))
 
 (defn get-application-list-by-query
@@ -71,8 +69,8 @@
    (constantly [])
    #(filter-authorized tarjonta-service
                        (every-pred (partial (:predicate query) %)
-                                   (partial authorized-by-form? %)
-                                   (partial authorized-by-tarjoajat? %))
+                                   (some-fn (partial authorized-by-form? %)
+                                            (partial authorized-by-tarjoajat? %)))
                        (application-store/get-application-heading-list query))
    #(filter-authorized tarjonta-service
                        (partial (:predicate query) nil)
@@ -88,8 +86,8 @@
    #(some->> (application-store/get-latest-application-by-key application-key)
              vector
              (filter-authorized tarjonta-service
-                                (every-pred (partial authorized-by-form? %)
-                                            (partial authorized-by-tarjoajat? %)))
+                                (some-fn (partial authorized-by-form? %)
+                                         (partial authorized-by-tarjoajat? %)))
              first)
    #(remove-organization-oid
      (application-store/get-latest-application-by-key application-key))))
@@ -102,8 +100,8 @@
     [:view-applications :edit-applications]
     (constantly nil)
     #(filter-authorized tarjonta-service
-                        (every-pred (partial authorized-by-form? %)
-                                    (partial authorized-by-tarjoajat? %))
+                        (some-fn (partial authorized-by-form? %)
+                                 (partial authorized-by-tarjoajat? %))
                         (application-store/get-external-applications
                          haku-oid
                          hakukohde-oid

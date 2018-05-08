@@ -535,6 +535,7 @@ WHERE key IN (select key from applications where id = :id)
 WITH filtered_applications AS (
     SELECT
       a.key       AS key,
+      a.form_id   AS form_id,
       a.haku      AS haku,
       a.hakukohde AS hakukohde,
       ar.state    AS state
@@ -551,6 +552,7 @@ WITH filtered_applications AS (
 ), haku_counts AS (
     SELECT
       haku,
+      max(form_id) AS latest_application_form_id,
       count(key) AS application_count
     FROM filtered_applications
     GROUP BY haku
@@ -590,6 +592,10 @@ WITH filtered_applications AS (
 SELECT
   unnested_hakukohde.haku,
   unnested_hakukohde.hakukohde,
+  (SELECT lf.organization_oid
+   FROM latest_forms AS lf
+   JOIN forms AS f ON f.key = lf.key
+   WHERE f.id = max(haku_counts.latest_application_form_id)) AS organization_oid,
   max(haku_counts.application_count)                         AS haku_application_count,
   count(DISTINCT (unnested_hakukohde.key))                   AS application_count,
   coalesce(max(haku_review_complete_counts.processed), 0)    AS processed,
