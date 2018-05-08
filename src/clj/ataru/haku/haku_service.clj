@@ -78,11 +78,15 @@
    vector
    #(let [haut (application-store/get-haut)]
       (->> haut
-           (filter (partial authorized-by-tarjoajat? % (hakujen-tarjoajat
-                                                        tarjonta-service
-                                                        haut)))
+           (filter (some-fn (partial authorized-by-form? %)
+                            (partial authorized-by-tarjoajat? % (hakujen-tarjoajat
+                                                                 tarjonta-service
+                                                                 haut))))
+           (map remove-organization-oid)
            handle-hakukohteet))
-   #(handle-hakukohteet (application-store/get-haut))))
+   #(->> (application-store/get-haut)
+         (map remove-organization-oid)
+         handle-hakukohteet)))
 
 (defn- get-direct-form-haut
   [organization-service session]

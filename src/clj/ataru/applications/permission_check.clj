@@ -10,8 +10,8 @@
        (->> (application-store/persons-applications-authorization-data
              (:personOidsForSamePerson check-dto))
             (aac/filter-authorized tarjonta-service
-                                   (every-pred (partial aac/authorized-by-form? orgs)
-                                               (partial aac/authorized-by-tarjoajat? orgs)))
+                                   (some-fn (partial aac/authorized-by-form? orgs)
+                                            (partial aac/authorized-by-tarjoajat? orgs)))
             not-empty
             boolean)})
     (catch Exception e
