@@ -452,9 +452,7 @@
             [:option {:value (:value option)
                       :key   idx}
              (non-blank-option-label option @lang)])
-          (cond->> (:options field-descriptor)
-            (some? (:koodisto-source field-descriptor))
-            (sort-by #(non-blank-option-label % @lang))))))]]
+          (:options field-descriptor))))]]
      (when-not idx
        (dropdown-followups field-descriptor @value))]))
 
@@ -517,9 +515,7 @@
           (map-indexed (fn [option-idx option]
                          ^{:key (str "multiple-choice-" (:id field-descriptor) "-" option-idx (when idx (str "-" idx)))}
                          [multiple-choice-option field-descriptor option id idx])
-                       (cond->> (:options field-descriptor)
-                         (some? (:koodisto-source field-descriptor))
-                         (sort-by #(non-blank-option-label % @lang)))))]])))
+                       (:options field-descriptor)))]])))
 
 (defn- single-choice-option [option parent-id field-descriptor question-group-idx]
   (let [lang         (subscribe [:application/form-language])
