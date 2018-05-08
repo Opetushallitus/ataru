@@ -152,7 +152,7 @@
             "Massamuutos"]
            (when @element-visible?
              [:div.application-handling__mass-edit-review-states-popup
-              [:div.application-handling__mass-edit-review-states-close-button
+              [:div.application-handling__popup-close-button
                {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state false)}
                [:i.zmdi.zmdi-close]]
               [:h4.application-handling__mass-edit-review-states-heading.application-handling__mass-edit-review-states-heading--title "Massamuutos"]
@@ -652,6 +652,9 @@
            {:on-click #(dispatch [:application/remove-filters])} "Poista"]])
        (when @filters-visible
          [:div.application-handling__filters-popup
+          [:div.application-handling__popup-close-button
+           {:on-click #(reset! filters-visible false)}
+           [:i.zmdi.zmdi-close]]
           [:div (str "Hakemuksia näkyvillä " @filtered-application-count "/" @loaded-application-count)]
           [:h3 "Yksilöinti"]
           [:div.application-handling__filter-group
