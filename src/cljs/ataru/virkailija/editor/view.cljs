@@ -8,7 +8,8 @@
             [ataru.component-data.component :as component]
             [ataru.virkailija.temporal :refer [time->str]]
             [ataru.virkailija.routes :as routes]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [taoensso.timbre :refer-macros [spy debug]]
+            [ataru.virkailija.temporal :as temporal]))
 
 (defn form-row [form selected? used-in-haku-count]
   [:a.editor-form__row
@@ -199,12 +200,18 @@
 
 (defn- lock-form-editing []
   (let [form-locked (subscribe [:editor/current-form-locked])]
-    [:div.editor-form__preview-buttons
-     [:span.editor-form__fold-clickable-text
-      {:on-click #(dispatch [:editor/toggle-form-editing-lock])}
-      (if @form-locked
-        "Poista lukitus"
-        "Lukitse lomake")]]))
+    (fn []
+      (let [locked? (some? (:locked @form-locked))]
+        [:div.editor-form__preview-buttons.editor-form__lock-form-editing
+         (when locked?
+           [:div.editor-form__form-editing-locked
+            "Lomakkeen muokkaus on estetty "
+            (str "(" (:locked-by @form-locked) " " (-> @form-locked :locked temporal/time->short-str) ")")])
+         [:div.editor-form__fold-clickable-text
+          {:on-click #(dispatch [:editor/toggle-form-editing-lock])}
+          (if locked?
+            "Poista lukitus"
+            "Lukitse lomake")]]))))
 
 (defn- form-toolbar [form]
   (let [languages @(subscribe [:editor/languages])]
