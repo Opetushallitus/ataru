@@ -197,6 +197,15 @@
    [:span.editor-form__preview-button-text
     (clojure.string/upper-case (name lang-kwd))]])
 
+(defn- lock-form-editing []
+  (let [form-locked (subscribe [:editor/current-form-locked])]
+    [:div.editor-form__preview-buttons
+     [:span.editor-form__fold-clickable-text
+      {:on-click #(dispatch [:editor/toggle-form-editing-lock])}
+      (if @form-locked
+        "Poista lukitus"
+        "Lukitse lomake")]]))
+
 (defn- form-toolbar [form]
   (let [languages @(subscribe [:editor/languages])]
     [:div.editor-form__toolbar
@@ -211,7 +220,8 @@
       [:div.editor-form__preview-buttons
        [:a.editor-form__email-template-editor-link
         {:on-click #(dispatch [:editor/toggle-email-template-editor])}
-        "Muokkaa sähköpostipohjia"]]]
+        "Muokkaa sähköpostipohjia"]]
+      [lock-form-editing]]
      [:div.editor-form__toolbar-right
       [fold-all]]]))
 
