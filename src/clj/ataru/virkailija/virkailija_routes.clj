@@ -183,6 +183,12 @@
       (access-controlled-form/edit-form-with-operations id operations session virkailija-tarjonta-service organization-service)
       (ok {}))
 
+    (api/PUT "/forms/:id/lock" {session :session}
+      :path-params [id :- Long]
+      ;:return {:locked (s/maybe org.joda.time.DateTime)}
+      :summary "Toggle form locked state"
+      (ok (access-controlled-form/update-form-lock id session virkailija-tarjonta-service organization-service)))
+
     (api/DELETE "/forms/:id" {session :session}
       :path-params [id :- Long]
       :summary "Mark form as deleted"

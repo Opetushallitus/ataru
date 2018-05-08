@@ -4,7 +4,6 @@
             [ataru.middleware.user-feedback :refer [user-feedback-exception]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
-            [clj-time.core :as t]
             [ataru.db.db :refer [exec get-datasource]]
             [yesql.core :refer [defqueries]]
             [taoensso.timbre :refer [warn]])
