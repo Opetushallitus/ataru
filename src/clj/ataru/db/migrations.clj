@@ -489,12 +489,9 @@
     (with-db-transaction [connection {:datasource (get-datasource :db)}]
       (with-update-cursor connection "alter table email_templates add column subject TEXT not null default ''")
       (with-update-cursor connection "alter table email_templates add column content_ending TEXT not null default ''")
-      (loop [langs [:fi :sv :en]]
-        (if-let [lang (first langs)]
-          (do
-            (migration-app-store/set-1_96-content-ending! connection (name lang) (get email-content-ending lang))
-            (migration-app-store/set-1_96-subject! connection (name lang) (get submit-email-subjects lang))
-            (recur (rest langs))))))))
+      (doseq [lang [:fi :sv :en]]
+        (migration-app-store/set-1_96-content-ending! connection (name lang) (get email-content-ending lang))
+        (migration-app-store/set-1_96-subject! connection (name lang) (get submit-email-subjects lang))))))
 
 (defn- migrate-attachment-states-to-applications
   [connection]
