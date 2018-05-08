@@ -594,7 +594,7 @@
        [:label.application-handling__identification
         [:input.application-handling__identification--checkbox
          {:type     "checkbox"
-          :checked  @only-identified?
+          :checked  (or @only-identified? false)
           :on-click #(dispatch [:application/update-identification])}]
         "Vain yksilöimättömät"]]
       [:span.application-handling__list-row--time
