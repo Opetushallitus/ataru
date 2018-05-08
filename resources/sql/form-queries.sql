@@ -7,7 +7,9 @@ SELECT
   deleted,
   created_by,
   created_time,
-  languages
+  languages,
+  locked,
+  locked_by
 FROM latest_forms
 WHERE (deleted IS NULL OR deleted = FALSE)
   AND (:query_type = 'ALL' OR organization_oid IN (:authorized_organization_oids))
@@ -22,15 +24,17 @@ SELECT
   f.deleted,
   f.created_by,
   f.created_time,
-  f.languages
+  f.languages,
+  f.locked,
+  f.locked_by
 FROM latest_forms f
 WHERE (f.key IN (:keys)) AND (f.deleted IS NULL OR NOT f.deleted)
 ORDER BY created_time DESC;
 
 -- name: yesql-add-form<!
 -- Add form
-INSERT INTO forms (name, content, created_by, key, languages, organization_oid, deleted)
-VALUES (:name, :content, :created_by, :key, :languages, :organization_oid, :deleted);
+INSERT INTO forms (name, content, created_by, key, languages, organization_oid, deleted, locked, locked_by)
+VALUES (:name, :content, :created_by, :key, :languages, :organization_oid, :deleted, :locked::timestamp, :locked_by);
 
 -- name: yesql-get-by-id
 SELECT
@@ -57,6 +61,8 @@ SELECT
   f.languages,
   f.deleted,
   f.organization_oid,
+  f.locked,
+  f.locked_by,
   (SELECT count(*)
    FROM latest_applications
    WHERE haku IS NULL

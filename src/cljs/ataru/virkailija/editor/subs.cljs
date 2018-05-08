@@ -194,7 +194,6 @@
               [lang any-changes?]))
           templates)))))
 
-
 (re-frame/reg-sub
   :editor/base-education-module-exists?
   (fn [db _]
@@ -210,8 +209,12 @@
                       set)
                  "completed-base-education"))))
 
-
 (re-frame/reg-sub
   :editor/email-template
   (fn [db _]
     (get-in db [:editor :email-template (get-in db [:editor :selected-form-key])])))
+
+(re-frame/reg-sub
+  :editor/current-form-locked
+  (fn [db _]
+    (get-in db [:editor :forms (get-in db [:editor :selected-form-key]) :locked])))

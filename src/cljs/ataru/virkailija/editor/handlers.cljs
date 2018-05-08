@@ -20,7 +20,8 @@
             [ataru.cljs-util :as cu]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.virkailija.temporal :as temporal]
-            [ataru.virkailija.editor.form-diff :as form-diff])
+            [ataru.virkailija.editor.form-diff :as form-diff]
+            [cljs-time.core :as t])
   (:require-macros [ataru.async-macros :as asyncm]
                    [cljs.core.async.macros :refer [go-loop]]))
 
@@ -747,6 +748,24 @@
                            (not))]
       (cond-> {:db (assoc-in db [:editor :ui :template-editor-visible?] now-visible?)}
               now-visible? (merge {:dispatch [:editor/load-email-template]})))))
+
+(reg-event-db
+  :editor/update-form-lock
+  (fn [db [_ response args]]
+    (let [form-key (-> args :form-key)]
+      (-> db
+          (assoc-in [:editor :forms form-key :locked] (:locked response))
+          (assoc-in [:editor :forms form-key :locked-by] (:locked-by response))))))
+
+(reg-event-fx
+  :editor/toggle-form-editing-lock
+  (fn [{db :db} _]
+    (let [form-key (-> db :editor :selected-form-key)
+          form (get-in db [:editor :forms form-key])]
+      {:http {:method              :put
+              :path                (str "/lomake-editori/api/forms/" (:id form) "/lock")
+              :handler-or-dispatch :editor/update-form-lock
+              :handler-args        {:form-key form-key}}})))
 
 (defn- add-stored-content-to-templates
   [previews]
