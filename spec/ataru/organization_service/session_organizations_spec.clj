@@ -20,9 +20,9 @@
                                            :type :organization}]}}})
 
 (def expected-organizations-for-rights
-  #{{:name {:fi "Lasikoulu"}, :oid "1.2.246.562.10.11", :type :organization}
-    {:name {:fi "Omnia"}, :oid "1.2.246.562.10.22", :type :organization}
-    {:name {:fi "Telajärven aikuislukio"}, :oid "1.2.246.562.10.1234334543", :type :organization}})
+  '({:name {:fi "Telajärven aikuislukio"}, :oid "1.2.246.562.10.1234334543", :type :organization}
+     {:name {:fi "Omnia"}, :oid "1.2.246.562.10.22", :type :organization}
+     {:name {:fi "Lasikoulu"}, :oid "1.2.246.562.10.11", :type :organization}))
 
 (describe
  "Session organizations"
