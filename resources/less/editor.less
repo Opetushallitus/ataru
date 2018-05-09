@@ -897,6 +897,10 @@ form > div > .editor-form__component-wrapper {
   height: 43px;
   color: @selected-blue;
 
+  &.disabled {
+    cursor: default;
+  }
+
   .form__add-component-toolbar--list {
     display: none;
   }
@@ -906,7 +910,7 @@ form > div > .editor-form__component-wrapper {
       display: block;
     }
 
-    .plus-component {
+    .plus-component:not(.disabled) {
       display: none;
     }
   }
@@ -938,6 +942,11 @@ form > div > .editor-form__component-wrapper {
     justify-content: center;
     font-size: 125%;
     align-items: center;
+
+    &.disabled {
+      background-color: @gray;
+      cursor: default;
+    }
   }
 }
 
