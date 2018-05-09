@@ -83,9 +83,7 @@
   (let [processing (- application-count unprocessed processed)]
     [:a.application__search-control-haku-link
      {:href href}
-     (if (some? title)
-       [:span.application__search-control-haku-title title]
-       [:span.application__search-control-haku-title [:i.zmdi.zmdi-spinner.spin]])
+     [:span.application__search-control-haku-title (or title [:i.zmdi.zmdi-spinner.spin])]
      [:span.application__search-control-haku-hl]
      (when haku-application-count
        [:span.application__search-control-haku-count
@@ -143,7 +141,7 @@
        [:div.application__search-control-tarjonta-haku-info
         [:div.application__search-control-open-hakukohteet-container
          {:on-click #(when (< 1 hakukohde-count)
-                       (reset! hakukohteet-opened (not @hakukohteet-opened)))}
+                       (swap! hakukohteet-opened not))}
          [:i.application__search-control-open-hakukohteet
           {:class (clojure.string/join
                     " "
