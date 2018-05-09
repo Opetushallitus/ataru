@@ -755,7 +755,7 @@
     (let [form-key (-> args :form-key)]
       (-> db
           (assoc-in [:editor :forms form-key :locked] (:locked response))
-          (assoc-in [:editor :forms form-key :locked-by] (:locked-by response))))))
+          (assoc-in [:editor :forms form-key :locked-by] (-> db :editor :user-info :name))))))
 
 (reg-event-fx
   :editor/toggle-form-editing-lock

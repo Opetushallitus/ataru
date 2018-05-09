@@ -115,6 +115,11 @@
                               :cookie-attrs {:secure (not (:dev? env))}
                               :store (create-store)}))
 
+(defn- update-virkailija-name [form]
+  (update form :locked-by (fn [username]
+                            (let [user (ataru.organization-service.ldap-client/get-virkailija-by-username username)]
+                              (format "%s %s" (:givenName user) (:sn user))))))
+
 (api/defroutes test-routes
   (api/undocumented
    (api/GET "/virkailija-test.html" []
@@ -174,7 +179,9 @@
       :path-params [id :- Long]
       :return ataru-schema/FormWithContent
       :summary "Get content for form"
-      (ok (form-store/fetch-form id)))
+      (let [form (form-store/fetch-form id)]
+        (ok (cond-> form
+                    (:locked-by form) (update-virkailija-name)))))
 
     (api/PUT "/forms/:id" {session :session}
       :summary "Get content for form"
