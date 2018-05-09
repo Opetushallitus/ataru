@@ -19,6 +19,8 @@
                                             [:fi :sv :en])]
    [:span.editor-form__list-form-time (time->str (:created-time form))]
    [:span.editor-form__list-form-editor (:created-by form)]
+   (when (:locked form)
+     [:i.zmdi.zmdi-lock.editor-form__list-form-locked])
    (when (< 0 used-in-haku-count)
      [:span.editor-form__list-form-used-in-haku-count used-in-haku-count])])
 
