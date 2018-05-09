@@ -35,7 +35,10 @@
                                                  (dispatch [(if (-> event .-target .-checked)
                                                               :editor/add-validator
                                                               :editor/remove-validator) "required" path]))}]
-     [:label.editor-form__checkbox-label {:for id} "Pakollinen tieto"]]))
+     [:label.editor-form__checkbox-label
+      {:for   id
+       :class (when @form-locked "editor-form__checkbox-label--disabled")}
+      "Pakollinen tieto"]]))
 
 (defn- repeater-checkbox
   [path initial-content]
@@ -49,7 +52,10 @@
                                     :disabled  (some? @form-locked)
                                     :on-change (fn [event]
                                                  (dispatch [:editor/set-component-value (-> event .-target .-checked) path :params :repeatable]))}]
-     [:label.editor-form__checkbox-label {:for id} "Vastaaja voi lisätä useita vastauksia"]]))
+     [:label.editor-form__checkbox-label
+      {:for   id
+       :class (when @form-locked "editor-form__checkbox-label--disabled")}
+      "Vastaaja voi lisätä useita vastauksia"]]))
 
 (defn- selectable-list-item
   [path id hakukohde selected-hakukohteet get-name on-click-add on-click-remove]
@@ -477,7 +483,8 @@
                          (when-not checked-now?
                            (dispatch [:editor/set-component-value nil path :params :decimals]))))}]
         [:label.editor-form__checkbox-label
-         {:for id}
+         {:for id
+          :class (when @form-locked "editor-form__checkbox-label--disabled")}
          "Kenttään voi täyttää vain numeroita"]]
        (when @checked?
          [decimal-places-selector path])])))
