@@ -92,6 +92,15 @@
    #(remove-organization-oid
      (application-store/get-latest-application-by-key application-key))))
 
+(defn- populate-hakukohde
+  [external-application]
+  (assoc external-application
+         :hakukohde (map :hakukohdeOid (:hakutoiveet external-application))))
+
+(defn- remove-hakukohde
+  [external-application]
+  (dissoc external-application :hakukohde))
+
 (defn external-applications
   [organization-service tarjonta-service session haku-oid hakukohde-oid hakemus-oids]
   (session-orgs/run-org-authorized
@@ -99,13 +108,14 @@
     organization-service
     [:view-applications :edit-applications]
     (constantly nil)
-    #(filter-authorized tarjonta-service
-                        (some-fn (partial authorized-by-form? %)
-                                 (partial authorized-by-tarjoajat? %))
-                        (application-store/get-external-applications
-                         haku-oid
-                         hakukohde-oid
-                         hakemus-oids))
+    #(->> (application-store/get-external-applications haku-oid
+                                                       hakukohde-oid
+                                                       hakemus-oids)
+          (map populate-hakukohde)
+          (filter-authorized tarjonta-service
+                             (some-fn (partial authorized-by-form? %)
+                                      (partial authorized-by-tarjoajat? %)))
+          (map remove-hakukohde))
     #(map remove-organization-oid (application-store/get-external-applications
                                    haku-oid
                                    hakukohde-oid
