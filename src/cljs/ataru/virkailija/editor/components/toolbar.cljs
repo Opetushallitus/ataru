@@ -73,20 +73,26 @@
                 component-name]])))))
 
 (defn add-component [path]
-  [:div.editor-form__add-component-toolbar
-   [component-toolbar
-    path
-    toolbar-elements
-    (fn [generate-fn]
-      (dispatch [:generate-component generate-fn path]))]
-   [:div.plus-component
-    [:span "+"]]])
+  (let [form-locked (subscribe [:editor/current-form-locked])]
+    [:div.editor-form__add-component-toolbar
+     {:class (when @form-locked "disabled")}
+     (when-not @form-locked
+       [component-toolbar path toolbar-elements
+        (fn [generate-fn]
+          (dispatch [:generate-component generate-fn path]))])
+     [:div.plus-component
+      {:class (when @form-locked "disabled")}
+      [:span "+"]]]))
 
 (defn custom-add-component [toolbar path generator]
-  [:div.editor-form__add-component-toolbar
-   [component-toolbar path toolbar generator]
-   [:div.plus-component
-    [:span "+"]]])
+  (let [form-locked (subscribe [:editor/current-form-locked])]
+    [:div.editor-form__add-component-toolbar
+     {:class (when @form-locked "disabled")}
+     (when-not @form-locked
+       [component-toolbar path toolbar generator])
+     [:div.plus-component
+      {:class (when @form-locked "disabled")}
+      [:span "+"]]]))
 
 (defn followup-toolbar [option-path generator]
   [custom-add-component followup-toolbar-elements option-path generator])
