@@ -127,6 +127,7 @@
          (fn [hakukohde]
            ^{:key (:oid hakukohde)}
            [:div.application__search-control-hakukohde
+            [:div.application__search-control-haku-hover-highlight]
             [hakukohde-info-link hakukohde]])
          hakukohteet)]]
      [:div.application__search-control-hakukohteet

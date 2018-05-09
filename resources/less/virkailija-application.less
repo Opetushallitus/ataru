@@ -1761,6 +1761,25 @@ th.application__readonly-adjacent--header {
   display: flex;
   width: 100%;
   padding-left: 22px;
+  z-index: 2;
+}
+
+.application__search-control-haku-hover-highlight {
+  position: absolute;
+  top: -2px;
+  bottom: 6px;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  border-radius: 3px;
+}
+
+.application__search-control-hakukohde:hover > .application__search-control-haku-hover-highlight {
+  background-color: @application-form-list-background-color;
+}
+
+.application__search-control-hakukohde:last-child:hover > .application__search-control-haku-hover-highlight {
+  bottom: -2px;
 }
 
 .application__search-control-haku-title {
@@ -1770,7 +1789,7 @@ th.application__readonly-adjacent--header {
 
 .application__search-control-haku-hl {
   flex: 1 1 0;
-  border-bottom: 1px dashed @light-gray;
+  border-bottom: 1px dashed @application-form-list-background-color;
   height: 9px;
   margin: 0 10px;
 }
@@ -1805,6 +1824,7 @@ th.application__readonly-adjacent--header {
   display: flex;
   flex-flow: row nowrap;
   .light;
+  position: relative;
 }
 
 .application__search-control-hakukohde:last-child {
