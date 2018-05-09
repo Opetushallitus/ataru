@@ -481,10 +481,10 @@ section.editor-form > div > .editor-form__component-wrapper {
   padding: 0px 14px 20px;
   .editor-form__info-addon-checkbox {
     display: flex;
-    label {
+    font-size: 14px;
+    label:not(.disabled) {
       color: @blue-text-color;
       cursor: pointer;
-      font-size: 14px;
     }
     input {
       margin-right: 9px;
@@ -508,6 +508,10 @@ section.editor-form > div > .editor-form__component-wrapper {
   background-image: linear-gradient(-180deg, #f0f0f0  0%, #FFFFFF  9%);
   border: 1px solid #C1C1C1;
   border-radius: 2px;
+
+  &:disabled {
+    color: @disabled-font-gray;
+  }
 }
 
 .editor-form__koodisto-field {
@@ -577,7 +581,7 @@ section.editor-form > div > .editor-form__component-wrapper {
   margin: 18px 14px;
 }
 
-.editor-form__multi-options-wrapper-outer--arrows {
+.editor-form__multi-options-arrows-container {
   width: 35px;
   height: 100%;
   margin-right: 2px;
@@ -588,28 +592,32 @@ section.editor-form > div > .editor-form__component-wrapper {
   border-radius: 3px;
 }
 
-.editor-form__multi-options-wrapper-outer--arrows--stretch {
+.editor-form__multi-options-arrows--stretch {
   flex: 1;
 }
 
-.editor-form__multi-options-wrapper-outer--arrows--up {
+.editor-form__multi-options-arrow {
   cursor: pointer;
   width: 10px;
   height: 10px;
-  .caret(up, @pale-blue, 1px);
   flex: 0 0 auto;
   margin-left: 13px;
+}
+
+.editor-form__multi-options-arrow--up {
+  .caret(up, @pale-blue, 1px);
   margin-top: 12px;
 }
-.editor-form__multi-options-wrapper-outer--arrows--down {
-  cursor: pointer;
-  width: 10px;
-  height: 10px;
+.editor-form__multi-options-arrow--down {
   .caret(down, @pale-blue, 1px);
-  flex: 0 0 auto;
-  margin-left: 13px;
   margin-bottom: 12px;
 }
+
+.editor-form__multi-options-arrow--disabled {
+  cursor: default;
+  border-color: @disabled-font-gray;
+}
+
 .editor-form__multi-options-wrapper-inner {
   background-color: @element-header-background;
   margin-right: 2px;
@@ -635,6 +643,10 @@ section.editor-form > div > .editor-form__component-wrapper {
   align-items: center;
   background-color: @element-header-background;
   border-radius: 3px;
+}
+
+.editor-form__multi-options-remove--cross--disabled {
+  color: @gray;
 }
 
 .editor-form__text-field-container {
@@ -672,6 +684,11 @@ section.editor-form > div > .editor-form__component-wrapper {
   margin: 14px 14px 0 14px;
 }
 
+.editor-form__add-dropdown-item--disabled {
+  color: @gray;
+  cursor: default;
+}
+
 form > div > .editor-form__component-wrapper {
   margin-left: 0;
   margin-right: 0;
@@ -701,7 +718,7 @@ form > div > .editor-form__component-wrapper {
   display: none;
 }
 
-.editor-form__button + label {
+.editor-form__button-label {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -711,6 +728,11 @@ form > div > .editor-form__component-wrapper {
   background-color: @not-selected-button-background;
   color: @not-selected-button-text;
   margin-right: 1px;
+}
+
+.editor-form__button-label--disabled {
+  opacity: 0.7;
+  cursor: default;
 }
 
 .editor-form__button--large + label {
@@ -1223,6 +1245,12 @@ input.editor-form__text-field ~ .editor-form__markdown-anchor {
     padding: 0px;
     margin: 0px;
     border: none;
+  }
+
+  &__modal-toggle--disabled {
+    color: @disabled-font-gray;
+    cursor: default;
+    .unselectable
   }
 
   &__hakukohde-list {

@@ -218,4 +218,5 @@
   :editor/current-form-locked
   (fn [db _]
     (let [current-form (get-in db [:editor :forms (get-in db [:editor :selected-form-key])])]
-      (select-keys current-form [:locked :locked-by]))))
+      (when (some? (:locked current-form))
+        (select-keys current-form [:locked :locked-by])))))
