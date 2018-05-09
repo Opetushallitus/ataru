@@ -110,10 +110,12 @@
 
 (defn edit-form-with-operations
   [id operations session virkailija-tarjonta-service organization-service]
-    (let [latest-version (form-store/fetch-form id)
-          coerced-form   (form-schema/form-coercer latest-version)
-          updated-form   (form-diff/apply-operations coerced-form operations)]
-      (post-form updated-form session virkailija-tarjonta-service organization-service)))
+  (let [latest-version (form-store/fetch-form id)]
+    (if (:locked latest-version)
+      (throw (user-feedback-exception "Lomakkeen muokkaus on estetty."))
+      (let [coerced-form (form-schema/form-coercer latest-version)
+            updated-form (form-diff/apply-operations coerced-form operations)]
+        (post-form updated-form session virkailija-tarjonta-service organization-service)))))
 
 (defn delete-form [form-id session virkailija-tarjonta-service organization-service]
   (let [form (form-store/fetch-latest-version form-id)]
