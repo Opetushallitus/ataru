@@ -22,6 +22,8 @@
 (defn create-form [& elements]
   {:name       {:fi (clojure.string/join "" (get-names elements))}
    :created-by "DEVELOPER"
+   :locked     nil
+   :locked-by  nil
    :content    elements})
 
 (defn create-wrapper-element [& elements]
@@ -36,6 +38,8 @@
 (def form-with-content
   {:name       {:fi "Test fixture!"}
    :created-by "DEVELOPER"
+   :locked     nil
+   :locked-by  nil
    :content    [(component/hakukohteet)
                 {:fieldClass "formField"
                  :metadata   metadata
@@ -60,6 +64,8 @@
    :created-by       "DEVELOPER"
    :organization-oid "1.2.246.562.10.2.45"
    :created-time     "2016-07-28T09:58:34.217+03:00"
+   :locked           nil
+   :locked-by        nil
    :content          [(component/hakukohteet)
                       {:fieldClass "wrapperElement"
                        :metadata   metadata
@@ -269,6 +275,8 @@
 (def version-test-form
   {:name       {:fi "Test fixture!"}
    :created-by "DEVELOPER"
+   :locked     nil
+   :locked-by  nil
    :content    [(component/hakukohteet)
                 {:id         "G__119"
                  :fieldClass "formField"
@@ -291,6 +299,8 @@
 (def attachment-test-form
   {:name       {:fi "Attachment test form"}
    :created-by "DEVELOPER"
+   :locked     nil
+   :locked-by  nil
    :content    [(component/hakukohteet)
                 {:id         "att__1"
                  :fieldClass "formField"
