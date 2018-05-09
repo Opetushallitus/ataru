@@ -510,9 +510,7 @@ INSERT INTO application_reviews (application_key, state) VALUES (:application_ke
 -- name: yesql-save-attachment-review!
 -- Add not-checked state to new application attachments
 INSERT INTO application_hakukohde_attachment_reviews (application_key, attachment_key, hakukohde, state)
-VALUES (:application_key, :attachment_key, :hakukohde, :state)
-ON CONFLICT (application_key, attachment_key, hakukohde)
-  DO NOTHING;
+VALUES (:application_key, :attachment_key, :hakukohde, :state);
 
 -- name: yesql-save-application-review!
 -- Save modifications for existing review record

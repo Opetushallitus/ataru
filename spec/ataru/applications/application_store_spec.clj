@@ -125,3 +125,50 @@
                              :old   ["x" "y" "z"]
                              :new   ["x" "y" "a"]}}]
                   (store/get-application-version-changes "9d24af7d-f672-4c0e-870f-aaaa"))))))
+
+(describe "creating application attachment reviews"
+  (tags :unit :attachments)
+
+  (it "should create attachment reviews for new applcation without hakukohteet"
+    (let [application (first (filter #(= "attachments" (:key %)) fixtures/applications))]
+      (with-redefs [forms/fetch-by-id (fn [_] form-fixtures/attachment-test-form)]
+        (should== [{:application_key "attachments"
+                    :attachment_key  "att__1"
+                    :state           "not-checked"
+                    :hakukohde       "form"}
+                   {:application_key "attachments"
+                    :attachment_key  "att__2"
+                    :state           "incomplete"
+                    :hakukohde       "form"}]
+         (#'store/create-application-attachment-reviews application nil [] false)))))
+
+  (it "should create attachment reviews for new applcation with hakukohteet"
+    (let [application (first (filter #(= "attachments" (:key %)) fixtures/applications))]
+      (with-redefs [forms/fetch-by-id (fn [_] form-fixtures/attachment-test-form)]
+        (should== [{:application_key "attachments"
+                    :attachment_key  "att__1"
+                    :state           "not-checked"
+                    :hakukohde       "hakukohde1"}
+                   {:application_key "attachments"
+                    :attachment_key  "att__1"
+                    :state           "not-checked"
+                    :hakukohde       "hakukohde2"}
+                   {:application_key "attachments"
+                    :attachment_key  "att__2"
+                    :state           "incomplete"
+                    :hakukohde       "hakukohde1"}
+                   {:application_key "attachments"
+                    :attachment_key  "att__2"
+                    :state           "incomplete"
+                    :hakukohde       "hakukohde2"}]
+                  (#'store/create-application-attachment-reviews application nil [{:oid "hakukohde1"} {:oid "hakukohde2"}] false)))))
+
+  (it "should update attachment reviews for applcation without hakukohteet"
+    (let [application (first (filter #(= "attachments" (:key %)) fixtures/applications))]
+      (with-redefs [forms/fetch-by-id (fn [_] form-fixtures/attachment-test-form)]
+        (should== [{:application_key "attachments"
+                    :attachment_key  "att__2"
+                    :state           "incomplete"
+                    :hakukohde       "form"}]
+                  (#'store/create-application-attachment-reviews application {:att__1 {:value ["liite-id"]}
+                                                                              :att__2 {:value ["32131"]}} [] true))))))

@@ -65,8 +65,7 @@
     :state        "unprocessed"
     :form_id      703
     :id           1
-    :content
-                  {:answers
+    :content      {:answers
                    [{:key "G__19" :label {:fi "Eka kysymys"} :value "1" :fieldType "textField"}
                     {:key "G__17" :label {:fi "Toka kysymys"} :value "2" :fieldType "textField"}
                     {:key "G__24" :label {:fi "Kolmas kysymys"} :value "3" :fieldType "textField"}
@@ -79,8 +78,7 @@
     :state        "unprocessed"
     :form_id      703
     :id           2
-    :content
-                  {:answers
+    :content      {:answers
                    [{:key "G__19" :label {:fi "Eka kysymys"} :value "Vastaus" :fieldType "textField"}
                     {:key "G__17" :label {:fi "Toka kysymys"} :value "lomakkeeseen" :fieldType "textField"}
                     {:key "G__24" :label {:fi "Kolmas kysymys"} :value "asiallinen" :fieldType "textField"}
@@ -92,8 +90,7 @@
     :state        "unprocessed"
     :form_id      703
     :id           3
-    :content
-                  {:answers
+    :content      {:answers
                    [{:key "G__19" :label {:fi "Eka kysymys"} :value "a" :fieldType "textField"}
                     {:key "G__17" :label {:fi "Toka kysymys"} :value "b" :fieldType "textField"}
                     {:key "G__24" :label {:fi "Kolmas kysymys"} :value "d" :fieldType "textField"}
@@ -107,8 +104,7 @@
     :form_id      703
     :id           4
     :hakukohde    ["1.2.246.562.29.11111111110"]
-    :content
-                  {:answers
+    :content      {:answers
                    [{:key "G__19" :label {:fi "Eka kysymys"} :value "1" :fieldType "textField"}
                     {:key "G__17" :label {:fi "Toka kysymys"} :value "2" :fieldType "textField"}
                     {:key "G__24" :label {:fi "Kolmas kysymys"} :value "3" :fieldType "textField"}
@@ -122,8 +118,7 @@
     :form_id      703
     :id           5
     :hakukohde    ["1.2.246.562.29.11111111110"]
-    :content
-                  {:answers
+    :content      {:answers
                    [{:key "G__19" :label {:fi "Eka kysymys"} :value "q" :fieldType "textField"}
                     {:key "G__17" :label {:fi "Toka kysymys"} :value "w" :fieldType "textField"}
                     {:key "G__24" :label {:fi "Kolmas kysymys"} :value "e" :fieldType "textField"}
@@ -137,8 +132,7 @@
     :form_id      703
     :id           6
     :hakukohde    ["1.2.246.562.29.11111111119"]
-    :content
-                  {:answers
+    :content      {:answers
                    [{:key "G__19" :label {:fi "Eka kysymys"} :value "z" :fieldType "textField"}
                     {:key "G__17" :label {:fi "Toka kysymys"} :value "x" :fieldType "textField"}
                     {:key "G__24" :label {:fi "Kolmas kysymys"} :value "c" :fieldType "textField"}
@@ -152,8 +146,7 @@
     :form_id      9999
     :id           999
     :hakukohde    ["1.2.246.562.29.123454321" "1.2.246.562.29.123454322"]
-    :content
-                  {:answers
+    :content      {:answers
                    [{:key       "G__119"
                      :label     {:fi "Eka kysymys"}
                      :value     "z"
@@ -174,8 +167,7 @@
     :form_id      9999
     :id           999
     :hakukohde    ["1.2.246.562.29.123454321" "1.2.246.562.29.123454322" "1.2.246.562.29.123454323"]
-    :content
-                  {:answers
+    :content      {:answers
                    [{:key       "G__119"
                      :label     {:fi "Eka kysymys"}
                      :value     ""
@@ -188,7 +180,19 @@
                      :label     {:fi "Toistuva kysymys ryhmässä"}
                      :value     [["x" "y" "1"]
                                  ["a" "b" "asdfa"]]
-                     :fieldType "textField"}]}}])
+                     :fieldType "textField"}]}}
+   {:key          "attachments"
+    :lang         "fi"
+    :created-time (c/date-time 2016 6 16 7 15 0)
+    :state        "unprocessed"
+    :form_id      110001
+    :id           110101
+    :hakukohde    ["1.2.246.562.29.123454321" "1.2.246.562.29.123454322" "1.2.246.562.29.123454323"]
+    :content      {:answers
+                   [{:key       "att__1"
+                     :label     {:fi "Liite"}
+                     :value     ["liite-id"]
+                     :fieldType "attachment"}]}}])
 
 (def application-review
   {:id              1,
