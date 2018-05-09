@@ -28,13 +28,15 @@
                                 :id         "G__31"
                                 :metadata   metadata
                                 :fieldType  "fieldset"
-                                :children   [{:label       {:fi "Kengännumero" :sv ""}
-                                              :fieldClass  "formField"
-                                              :id "c2e4536c-1cdb-4450-b019-1b38856296ae"
-                                              :metadata    metadata
-                                              :params      {}
-                                              :fieldType   "textField"}]
-                                :label      {:fi "Jalat" :sv "Avsnitt namn"}}]})
+                                :children   [{:label      {:fi "Kengännumero" :sv ""}
+                                              :fieldClass "formField"
+                                              :id         "c2e4536c-1cdb-4450-b019-1b38856296ae"
+                                              :metadata   metadata
+                                              :params     {}
+                                              :fieldType  "textField"}]
+                                :label      {:fi "Jalat" :sv "Avsnitt namn"}}]
+            :locked           nil
+            :locked-by        nil})
 
 (def form2 {:id               2
             :key              "foobar2"
@@ -51,7 +53,9 @@
                                               :id         "e257afce-ff30-40e1-ad6f-c224a1537d01"
                                               :params     {}
                                               :fieldType  "textField"}]
-                                :label      {:fi "Pää" :sv "Avsnitt namn"}}]})
+                                :label      {:fi "Pää" :sv "Avsnitt namn"}}]
+            :locked           nil
+            :locked-by        nil})
 
 (def form3 {:id               3
             :key              "41101b4f-1762-49af-9db0-e3603adae3ad"
@@ -71,7 +75,9 @@
                                               :id         "e257afce-ff30-40e1-ad6f-c224a1537d01"
                                               :params     {}
                                               :fieldType  "textField"}]
-                                :label      {:fi "Pää" :sv "Avsnitt namn"}}]})
+                                :label      {:fi "Pää" :sv "Avsnitt namn"}}]
+            :locked           nil
+            :locked-by        nil})
 
 (def ssn-testform {:id               4
                    :key              "41101b4f-1762-49af-9db0-e3603adae656"
@@ -80,7 +86,9 @@
                    :organization-oid "1.2.246.562.10.0439845"
                    :languages        ["fi"]
                    :content          [(component/hakukohteet)
-                                      (person-info-module/person-info-module)]})
+                                      (person-info-module/person-info-module)]
+                   :locked           nil
+                   :locked-by        nil})
 
 (def belongs-to-hakukohteet-test-form {:id               5
                                        :key              "belongs-to-hakukohteet-test-form"
@@ -95,7 +103,9 @@
                                                            :metadata   metadata
                                                            :id         "c2e4536c-1cdb-4450-b019-1b38856296ae"
                                                            :params     {}
-                                                           :fieldType  "textField"}]})
+                                                           :fieldType  "textField"}]
+                                       :locked           nil
+                                       :locked-by        nil})
 
 (def hakija-hakukohteen-hakuaika-test-form {:id               6
                                             :key              "hakija-hakukohteen-hakuaika-test-form"
@@ -132,7 +142,9 @@
                                                                 :id                        "assosiaatio-hakukohderyhman-kautta"
                                                                 :params                    {}
                                                                 :belongs-to-hakukohderyhma ["1.2.246.562.28.00000000001"]
-                                                                :fieldType                 "textField"}]})
+                                                                :fieldType                 "textField"}]
+                                            :locked           nil
+                                            :locked-by        nil})
 
 (def assosiaatio-hakukohteen-organisaatiosta-form {:id 7
                                                    :key "hakukohteen-organisaatiosta-form"
@@ -142,7 +154,9 @@
                                                    :languages ["fi"]
                                                    :content
                                                    [(component/hakukohteet)
-                                                    (person-info-module/person-info-module)]})
+                                                    (person-info-module/person-info-module)]
+                                                   :locked           nil
+                                                   :locked-by        nil})
 
 (def application1 {:form       1
                    :lang       "fi"

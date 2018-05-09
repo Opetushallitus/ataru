@@ -8,6 +8,7 @@
             [ataru.db.db :refer [get-datasource]]
             [ataru.db.flyway-migration :as migrations]
             [ataru.db.migrations.application-migration-store :as migration-app-store]
+            [ataru.db.migrations.form-migration-store :as migration-form-store]
             [ataru.forms.form-store :as store]
             [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
@@ -53,7 +54,7 @@
     form))
 
 (defn- update-birth-date-place-holder []
-  (doseq [form (->> (store/get-all-forms)
+  (doseq [form (->> (migration-form-store/get-all-forms)
                     (map #(store/fetch-by-id (:id %)))
                     (sort-by :created-time))]
     (store/create-form-or-increment-version!
@@ -70,7 +71,7 @@
 
 (defn refresh-person-info-modules []
   (let [new-person-module (person-info-module/person-info-module)]
-    (doseq [form (->> (store/get-all-forms)
+    (doseq [form (->> (migration-form-store/get-all-forms)
                       (map #(store/fetch-by-id (:id %)))
                       (sort-by :created-time))]
       (store/create-form-or-increment-version!
@@ -90,7 +91,7 @@
   (let [update (fn [form conn]
                    (info "Updating followups of form-id:" (:id form))
                    (jdbc/execute! conn ["update forms set content = ? where id = ?" (:content form) (:id form)]))]
-    (doseq [form (->> (migration-app-store/get-all-forms connection)
+    (doseq [form (->> (migration-form-store/get-all-forms)
                       (map #(migration-app-store/fetch-by-id (:id %) connection)))]
       (some->
         form
@@ -174,7 +175,7 @@
 (defn followups-to-vectored-followups
   []
   (let [existing-forms (try
-                         (map #(store/fetch-by-id (:id %)) (store/get-all-forms))
+                         (map #(store/fetch-by-id (:id %)) (migration-form-store/get-all-forms))
                          (catch Exception _ []))]
     (doseq [form existing-forms]
       (some-> form

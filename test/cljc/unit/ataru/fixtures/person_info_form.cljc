@@ -4,8 +4,9 @@
   {:id         866,
    :name       {:fi "Uusi lomake torstainaaaaaaa"},
    :created-by "DEVELOPER",
-   :content
-               [{:id              "1e350fce-aee4-4bde-a47e-1d2eabd49b1b",
+   :locked     nil
+   :locked-by  nil
+   :content    [{:id              "1e350fce-aee4-4bde-a47e-1d2eabd49b1b",
                  :label           {:fi "Henkilötiedot", :sv "Personlig information"},
                  :module          "person-info",
                  :params          {},
