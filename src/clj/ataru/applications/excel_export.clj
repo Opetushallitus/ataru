@@ -451,9 +451,12 @@
 
 (defn- add-all-hakukohde-reviews
   [get-hakukohde selected-hakukohde application]
-  (let [all-reviews            (application-states/get-all-reviews-for-all-requirements
-                                 application
-                                 selected-hakukohde)
+  (let [active-hakukohteet     (set (:hakukohde application))
+        all-reviews            (->> (application-states/get-all-reviews-for-all-requirements
+                                      application
+                                      selected-hakukohde)
+                                    (filter
+                                      #(contains? active-hakukohteet (:hakukohde %))))
         all-reviews-with-names (map
                                  (fn [{:keys [hakukohde] :as review}]
                                    (assoc review
