@@ -246,14 +246,15 @@
   (fn [db _]
     (update-in db [:application :only-identified?] not)))
 
-(reg-event-fx
+(reg-event-db
   :application/toggle-shown-time-column
-  (fn [{:keys [db]} _]
+  (fn [db _]
     (let [new-value (if (= :created-time (-> db :application :selected-time-column))
                       :original-created-time
                       :created-time)]
-      {:db       (assoc-in db [:application :selected-time-column] new-value)
-       :dispatch [:application/update-sort new-value]})))
+      (-> db
+          (assoc-in [:application :selected-time-column] new-value)
+          (update-sort new-value true)))))
 
 (reg-event-db
  :application/update-sort
