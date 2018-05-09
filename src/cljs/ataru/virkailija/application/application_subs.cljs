@@ -231,6 +231,12 @@
         hakukohde-oid))))
 
 (re-frame/reg-sub
+  :application/tarjoaja-name
+  (fn [db [_ hakukohde-oid]]
+    (if-let [hakukohde (get-in db [:hakukohteet hakukohde-oid])]
+      (from-multi-lang (:tarjoaja-name hakukohde) :fi))))
+
+(re-frame/reg-sub
   :application/hakukohderyhma-name
   (fn [db [_ hakukohderyhma-oid]]
     (when-let [hakukohderyhma (get-in db [:hakukohderyhmat hakukohderyhma-oid])]

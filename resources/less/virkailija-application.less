@@ -1996,28 +1996,41 @@ th.application__readonly-adjacent--header {
   font-size: 20px;
   .semibold;
 }
-
+.application-handling__dropdown-box-item-selected-icon {
+  width: 10px;
+  margin-right: 10px;
+  min-width: 10px;
+}
+.application-handling__dropdown-box-item--label {
+  display: flex;
+}
+.application-handling__dropdown-box-item--description {
+  display: flex;
+  color: @gray-of-the-beast;
+  height: 16px;
+}
 .application-handling__dropdown-box-item {
   position: relative;
   height: 44px;
   color: @text-color;
-  padding: 12px 32px;
+  padding: 0 10px;
   margin-bottom: 3px;
   cursor: pointer;
   box-shadow: @modal-shadow;
   background: @white;
-  display: block;
   width: 100%;
   font-size: 14px;
+  justify-content: left;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  align-content: center;
 }
 
 .application-handling__dropdown-box-item--selected {
   color: @text-color;
   border-radius: 3px;
   margin-left: 0;
-  margin-bottom: 8px;
-  display: inline-block;
-  padding-left: 25px;
 }
 
 .application-handling__dropdown-box-container {

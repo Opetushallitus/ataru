@@ -225,48 +225,50 @@
    [:p.application-handling__dropdown-box-closed-label
     (or label [:i.zmdi.zmdi-spinner.spin])]])
 
-(defn- selected-row
-  [on-click label]
-  [:span.application-handling__dropdown-box-item.application-handling__dropdown-box-item--selected
-   {:on-click on-click}
-   (icon-check)
-   (or label [:i.zmdi.zmdi-spinner.spin])])
-
-(defn- unselected-row
-  [close-list href label]
+(defn- row-component
+  [close-list href label description selected?]
   [:a.application-handling__dropdown-box-item
    {:href     href
     :on-click close-list}
-   (or label [:i.zmdi.zmdi-spinner.spin])])
+   (if selected?
+     [:img.application-handling__dropdown-box-item-selected-icon
+      {:src "/lomake-editori/images/icon_check.png"}]
+     [:span.application-handling__dropdown-box-item-selected-icon])
+   (if label
+     [:div
+      [:span.application-handling__dropdown-box-item--label label]
+      [:span.application-handling__dropdown-box-item--description description]]
+     [:i.zmdi.zmdi-spinner.spin])])
 
 (defn- hakukohde-row
   [close-list oid selected?]
-  (let [name @(subscribe [:application/hakukohde-name oid])]
-    (if selected?
-      (selected-row close-list name)
-      (unselected-row close-list
-                      (str "/lomake-editori/applications/hakukohde/" oid)
-                      name))))
+  (let [name        @(subscribe [:application/hakukohde-name oid])
+        description @(subscribe [:application/tarjoaja-name oid])]
+    (row-component close-list
+                   (str "/lomake-editori/applications/hakukohde/" oid)
+                   name
+                   description
+                   selected?)))
 
 (defn- hakukohderyhma-row
   [close-list haku-oid oid selected?]
   (let [name @(subscribe [:application/hakukohderyhma-name oid])]
-    (if selected?
-      (selected-row close-list name)
-      (unselected-row close-list
-                      (str "/lomake-editori/applications/haku/"
-                           haku-oid
-                           "/hakukohderyhma/"
-                           oid)
-                      name))))
+    (row-component close-list
+                   (str "/lomake-editori/applications/haku/"
+                     haku-oid
+                     "/hakukohderyhma/"
+                     oid)
+                   name
+                   nil
+                   selected?)))
 
 (defn- haku-row
   [close-list oid selected?]
-  (if selected?
-    (selected-row close-list all-hakukohteet-label)
-    (unselected-row close-list
-                    (str "/lomake-editori/applications/haku/" oid)
-                    all-hakukohteet-label)))
+  (row-component close-list
+                 (str "/lomake-editori/applications/haku/" oid)
+                 all-hakukohteet-label
+                 nil
+                 selected?))
 
 (defn- ensisijaisesti
   []
