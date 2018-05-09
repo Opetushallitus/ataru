@@ -206,7 +206,9 @@
          (when locked?
            [:div.editor-form__form-editing-locked
             "Lomakkeen muokkaus on estetty "
-            (str "(" (:locked-by @form-locked) " " (-> @form-locked :locked temporal/time->short-str) ")")])
+            [:i.zmdi.zmdi-lock.editor-form__form-editing-lock-icon]
+            [:div.editor-form__form-editing-locked-by
+             (str "(" (:locked-by @form-locked) " " (-> @form-locked :locked temporal/time->short-str) ")")]])
          [:div.editor-form__fold-clickable-text
           {:on-click #(dispatch [:editor/toggle-form-editing-lock])}
           (if locked?
