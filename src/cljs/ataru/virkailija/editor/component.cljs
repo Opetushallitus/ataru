@@ -243,31 +243,27 @@
               nil)))
 
 (defn- remove-component-button [component-wrapped? path]
-  (let [form-locked (subscribe [:editor/current-form-locked])]
-    (case @(subscribe [:editor/remove-component-button-state path])
-      :active
-      [:button.editor-form__remove-component-button
-       {:on-click #(when-not @form-locked
-                     (dispatch [:editor/start-remove-component path]))
-        :class    (when @form-locked "editor-form__remove-component-button--disabled")
-        :disabled (some? @form-locked)}
-       "Poista"]
-      :confirm
-      [:button.editor-form__remove-component-button--confirm.editor-form__remove-component-button
-       {:on-click (fn [event]
-                    (let [target (-> event
-                                     .-target
-                                     (gdom/getAncestorByClass
-                                       (if component-wrapped?
-                                         "editor-form__section_wrapper"
-                                         "editor-form__component-wrapper")))]
-                      (set! (.-height (.-style target)) (str (.-offsetHeight target) "px"))
-                      (dispatch [:editor/confirm-remove-component path])))}
-       "Vahvista poisto"]
-      :disabled
-      [:button.editor-form__remove-component-button--disabled.editor-form__remove-component-button
-       {:disabled true}
-       "Vahvista poisto"])))
+  (case @(subscribe [:editor/remove-component-button-state path])
+    :active
+    [:button.editor-form__remove-component-button
+     {:on-click #(dispatch [:editor/start-remove-component path])}
+     "Poista"]
+    :confirm
+    [:button.editor-form__remove-component-button--confirm.editor-form__remove-component-button
+     {:on-click (fn [event]
+                  (let [target (-> event
+                                   .-target
+                                   (gdom/getAncestorByClass
+                                     (if component-wrapped?
+                                       "editor-form__section_wrapper"
+                                       "editor-form__component-wrapper")))]
+                    (set! (.-height (.-style target)) (str (.-offsetHeight target) "px"))
+                    (dispatch [:editor/confirm-remove-component path])))}
+     "Vahvista poisto"]
+    :disabled
+    [:button.editor-form__remove-component-button--disabled.editor-form__remove-component-button
+     {:disabled true}
+     "Vahvista poisto"]))
 
 (defn copy [id]
   (let [copy-container (.getElementById js/document "editor-form__copy-question-id-container")]

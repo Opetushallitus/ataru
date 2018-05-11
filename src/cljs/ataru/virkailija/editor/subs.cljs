@@ -168,18 +168,31 @@
   (fn [db [_ id]]
     (get-in db [:editor :ui id :folded?] false)))
 
+(defn- current-form-locked? [db]
+  (let [current-form (get-in db [:editor :forms (get-in db [:editor :selected-form-key])])]
+    (when (some? (:locked current-form))
+      (select-keys current-form [:locked :locked-by]))))
+
+(re-frame/reg-sub
+  :editor/current-form-locked
+  (fn [db _]
+    (current-form-locked? db)))
+
 (re-frame/reg-sub
   :editor/remove-form-button-state
   (fn [db _]
     (get-in db [:editor :ui :remove-form-button-state]
-            (if (some? (get-in db [:editor :selected-form-key]))
+            (if (and (some? (get-in db [:editor :selected-form-key]))
+                     (nil? (current-form-locked? db)))
               :active
               :disabled))))
 
 (re-frame/reg-sub
   :editor/remove-component-button-state
   (fn [db [_ path]]
-    (get-in db [:editor :ui :remove-component-button-state path] :active)))
+    (if (current-form-locked? db)
+      :disabled
+      (get-in db [:editor :ui :remove-component-button-state path] :active))))
 
 (re-frame/reg-sub
   :editor/email-templates-altered
