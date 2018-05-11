@@ -55,7 +55,7 @@
 
 (def html-policy
   (as-> (HtmlPolicyBuilder.) hpb
-        (.allowElements hpb (->string-array "p" "span" "div" "h1" "h2" "h3" "h4" "h5" "ul" "ol" "li"))
+        (.allowElements hpb (->string-array "p" "span" "div" "h1" "h2" "h3" "h4" "h5" "ul" "ol" "li" "br"))
         (.allowElements hpb add-style-to-links (->string-array "a"))
         (.allowUrlProtocols hpb (->string-array "http" "https"))
         (.onElements (.allowAttributes hpb (->string-array "href" "target")) (->string-array "a"))
