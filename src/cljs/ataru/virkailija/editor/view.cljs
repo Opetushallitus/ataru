@@ -89,8 +89,9 @@
    [form-controls]])
 
 (defn- editor-name-input [lang focus?]
-  (let [form (subscribe [:editor/selected-form])
-        new-form-created? (subscribe [:state-query [:editor :new-form-created?]])]
+  (let [form              (subscribe [:editor/selected-form])
+        new-form-created? (subscribe [:state-query [:editor :new-form-created?]])
+        form-locked       (subscribe [:editor/current-form-locked])]
     (r/create-class
      {:component-did-update (fn [this]
                               (when (and focus? @new-form-created?)
@@ -101,6 +102,7 @@
                         [:input.editor-form__form-name-input
                          {:type        "text"
                           :value       (get-in @form [:name lang])
+                          :disabled    (some? @form-locked)
                           :placeholder "Lomakkeen nimi"
                           :on-change   #(do (dispatch [:editor/change-form-name lang (.-value (.-target %))])
                                             (dispatch [:set-state [:editor :new-form-created?] false]))
@@ -211,7 +213,7 @@
             [:i.zmdi.zmdi-lock.editor-form__form-editing-lock-icon]
             [:div.editor-form__form-editing-locked-by
              (str "(" (:locked-by @form-locked) " " (-> @form-locked :locked temporal/time->short-str) ")")]])
-         [:div.editor-form__fold-clickable-text
+         [:div#lock-form.editor-form__fold-clickable-text
           {:on-click #(dispatch [:editor/toggle-form-editing-lock])}
           (if locked?
             "Poista lukitus"
