@@ -185,7 +185,7 @@
                    {:lang           (name lang)
                     :subject        (get template :subject (get-in email-default-texts [:email-submit-confirmation-template :submit-email-subjects lang]))
                     :content        (get template :content "")
-                    :content-ending (get template :content_ending (get-in email-default-texts [:email-submit-confirmation-template :with-application-period lang]))}))
+                    :content-ending (get template :content_ending (get-in email-default-texts [:email-submit-confirmation-template :without-application-period lang]))}))
              x)))
 
 (defn get-email-templates

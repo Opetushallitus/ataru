@@ -485,7 +485,7 @@
 
 (defn- migrate-add-subject-and-content-finish []
   (let [submit-email-subjects (get-in email-default-texts [:email-submit-confirmation-template :submit-email-subjects])
-        email-content-ending  (get-in email-default-texts [:email-submit-confirmation-template :with-application-period])]
+        email-content-ending  (get-in email-default-texts [:email-submit-confirmation-template :without-application-period])]
     (with-db-transaction [connection {:datasource (get-datasource :db)}]
       (with-update-cursor connection "alter table email_templates add column subject TEXT not null default ''")
       (with-update-cursor connection "alter table email_templates add column content_ending TEXT not null default ''")
