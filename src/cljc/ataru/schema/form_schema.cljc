@@ -104,6 +104,7 @@
                         (s/optional-key :no-blank-option)                s/Bool
                         (s/optional-key :exclude-from-answers)           s/Bool
                         (s/optional-key :exclude-from-answers-if-hidden) s/Bool
+                        (s/optional-key :koodisto-ordered-by-user)       s/Bool
                         (s/optional-key :koodisto-source)                {:uri                             s/Str
                                                                           :version                         s/Int
                                                                           (s/optional-key :default-option) s/Any

@@ -667,10 +667,12 @@
            [custom-answer-options languages (:options value) path question-group-element? editable? show-followups]])))))
 
 (defn dropdown [initial-content path]
-  (let [languages        (subscribe [:editor/languages])
-        options-koodisto (subscribe [:editor/get-component-value path :koodisto-source])
-        value            (subscribe [:editor/get-component-value path])
-        animation-effect (fade-out-effect path)]
+  (let [languages                (subscribe [:editor/languages])
+        options-koodisto         (subscribe [:editor/get-component-value path :koodisto-source])
+        koodisto-ordered-by-user (subscribe [:editor/get-component-value path :koodisto-ordered-by-user])
+        value                    (subscribe [:editor/get-component-value path])
+        animation-effect         (fade-out-effect path)
+        koodisto-ordered-id      (util/new-uuid)]
     (fn [initial-content path {:keys [question-group-element?]}]
       (let [languages  @languages
             field-type (:fieldType @value)
@@ -700,6 +702,16 @@
           [:div.editor-form__multi-options_wrapper
            [:div.editor-form--padded
             [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
+            (when (some? @options-koodisto)
+              [:div.editor-form__ordered-by-user-checkbox
+               [:input {:id        koodisto-ordered-id
+                        :type      "checkbox"
+                        :checked   (not @koodisto-ordered-by-user)
+                        :on-change (fn [event]
+                                     (dispatch [:editor/set-ordered-by-user (-> event .-target .-checked) path]))}]
+               [:label
+                {:for koodisto-ordered-id}
+                "Aakkosjärjestyksessä"]])
             (when-not (= field-type "singleChoice") [dropdown-multi-options path options-koodisto])]
            (if (nil? @options-koodisto)
              [custom-answer-options languages (:options @value) path question-group-element? true show-followups]

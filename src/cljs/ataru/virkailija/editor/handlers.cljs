@@ -60,6 +60,12 @@
         (assoc-in [:editor :ui (:id component) :focus?] true)))))
 
 (reg-event-db
+  :editor/set-ordered-by-user
+  (fn [db [_ value & path]]
+    (let [component-path (current-form-content-path db [path])]
+      (update-in db component-path assoc :koodisto-ordered-by-user (not value)))))
+
+(reg-event-db
   :editor/set-dropdown-option-value
   (fn [db [_ value & path]]
     (let [label-path (current-form-content-path db [path])
