@@ -49,8 +49,8 @@
    "Uusi lomake"])
 
 (defn- copy-form []
-  (let [form-key  (subscribe [:state-query [:editor :selected-form-key]])
-        disabled? (reaction (nil? @form-key))]
+  (let [form-key    (subscribe [:state-query [:editor :selected-form-key]])
+        disabled?   (reaction (nil? @form-key))]
     (fn []
       [:button.editor-form__control-button
        {:on-click (fn [event]
