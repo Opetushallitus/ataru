@@ -451,7 +451,9 @@
 
 (defn- add-all-hakukohde-reviews
   [get-hakukohde selected-hakukohde application]
-  (let [active-hakukohteet     (set (:hakukohde application))
+  (let [active-hakukohteet (set (or
+                                  (not-empty (:hakukohde application))
+                                  ["form"]))
         all-reviews            (->> (application-states/get-all-reviews-for-all-requirements
                                       application
                                       selected-hakukohde)
