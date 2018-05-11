@@ -1,25 +1,44 @@
 (ns ataru.organization-service.session-organizations
   (:require
-   [schema.core :as s]
-   [ataru.organization-service.organization-client :as organization-client]
-   [ataru.organization-service.user-rights :refer [Right]]))
+    [schema.core :as s]
+    [ataru.organization-service.organization-client :as organization-client]
+    [ataru.organization-service.user-rights :refer [Right]]
+    [ataru.organization-service.organization-service :as organization-service]))
 
-(defn- right-organizations [session] (-> session :identity :user-right-organizations))
+(defn- right-organizations
+  [session]
+  (-> session :identity :user-right-organizations))
 
-(defn- all-org-oids [organization-service organizations]
-  (let [all-organizations (.get-all-organizations organization-service organizations)]
-    (set (map :oid all-organizations))))
+(defn- filter-orgs-for-rights
+  [session rights organizations]
+  (if (-> session :identity :superuser)
+    organizations
+    (filter
+      (fn [org]
+        (-> (-> session :identity :organizations)
+            (get (keyword (:oid org)))
+            :rights
+            (set)
+            (clojure.set/intersection (set rights))
+            (not-empty)))
+      organizations)))
 
 (defn right-seq? [val] (s/validate [Right] val))
 
-(defn select-organizations-for-rights [session rights]
+(defn select-organizations-for-rights [organization-service session rights]
   {:pre [(right-seq? rights)]}
-  (let [right-orgs (right-organizations session)]
-    (->> rights
-         (map #(get right-orgs %))
-         (remove nil?)
-         flatten
-         distinct)))
+  (if-let [selected-organization (:selected-organization session)]
+    (filter-orgs-for-rights
+      session
+      rights
+      (organization-service/get-all-organizations organization-service [selected-organization]))
+    (let [right-orgs (right-organizations session)]
+      (->> rights
+           (map #(get right-orgs %))
+           (remove nil?)
+           (flatten)
+           (distinct)
+           (organization-service/get-all-organizations organization-service)))))
 
 (defn run-org-authorized [session
                           organization-service
@@ -28,17 +47,23 @@
                           when-ordinary-user-fn
                           when-superuser-fn]
   {:pre [(right-seq? rights)]}
-  (let [organizations     (select-organizations-for-rights session rights)
-        organization-oids (set (map :oid organizations))]
+  (let [organizations         (select-organizations-for-rights organization-service session rights)
+        superuser?            (-> session :identity :superuser)
+        organization-oids     (set (map :oid organizations))
+        selected-organization (:selected-organization session)]
     (cond
-      (empty? organizations)
+      (and
+        (not superuser?)
+        (empty? organizations))
       (when-no-orgs-fn)
 
-      (contains? organization-oids organization-client/oph-organization)
-      (when-superuser-fn)
+      (or
+        (some? selected-organization)
+        (not superuser?))
+      (when-ordinary-user-fn organization-oids)
 
-      :else
-      (when-ordinary-user-fn (all-org-oids organization-service organizations)))))
+      superuser?
+      (when-superuser-fn))))
 
 (defn organization-allowed?
   "Parameter organization-oid-handle can be either the oid value or a function which returns the oid"

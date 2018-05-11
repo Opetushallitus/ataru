@@ -33,24 +33,6 @@
                     (apply partial f args)
                     timeout))))))
 
-(defn debounced-ratom
-  ([ratom] (debounced-ratom 1000 ratom))
-  ([debounce-ms ratom]
-   (let [value (r/atom nil)
-         on-bounce (debounce #(reset! value %) debounce-ms)
-         watch (fn [_ _ old-value new-value]
-                 (on-bounce new-value))]
-     (do
-       (-add-watch ratom :debounce-ratom watch)
-       @ratom ; needed to cause initial -add-watch to trigger
-       value))))
-
-(defn debounce-subscribe
-  ([path] (debounce-subscribe 1000 path))
-  ([debounce-ms path]
-   {:pre [(vector? path)]}
-   (debounced-ratom debounce-ms (subscribe path))))
-
 (defn dispatch-after-state
   [& {:keys [predicate handler]}]
   {:pre [(not (nil? predicate))

@@ -5,7 +5,7 @@
   (:require [ataru.virkailija.routes :as routes]
             [cljs.core.match :refer-macros [match]]
             [re-frame.core :refer [subscribe dispatch]]
-            [ataru.cljs-util :as cljs-util]
+            [reagent.core :as reagent]
             [cljs.core.async :refer  [<! timeout]]
             [taoensso.timbre :refer-macros [spy debug]]
             [clojure.string :as string]))
@@ -37,27 +37,75 @@
      [:div.divider]
      [section-link :application]]))
 
+(defn- get-label
+  [label]
+  (some #(-> label %) [:fi :sv :en]))
+
 (defn create-org-labels [organizations]
   (map
    (fn [org]
-     (str (get-in org [:name :fi]) " (" (string/join ", " (map #(get right-labels (keyword %)) (:rights org))) ")"))
+     (str (get-label (:name org)) " (" (string/join ", " (map #(get right-labels (keyword %)) (:rights org))) ")"))
    organizations))
 
+(defn- org-label
+  [organizations selected-organization]
+  (let [org-count (count organizations)]
+    (cond
+      (some? selected-organization) (get-label (:name selected-organization))
+      (zero? org-count) "Ei organisaatiota"
+      (< 1 org-count) "Useita organisaatioita"
+      :else (-> organizations (first) :name (get-label)))))
+
 (defn profile []
-  (let [user-info (subscribe [:state-query [:editor :user-info]])]
+  (let [user-info             (subscribe [:state-query [:editor :user-info]])
+        org-select-visible?   (reagent/atom false)]
     (fn []
       (when @user-info
-        (let [org-count      (count (:organizations @user-info))
-              org-labels     (create-org-labels (:organizations @user-info))
-              joint-orgs-str (string/join " \n" org-labels)
-              tooltip-str    (str joint-orgs-str "\n\nKäyttäjätunnus: " (:username @user-info))
-              org-str        (cond
-                               (= 0 org-count) "Ei organisaatiota"
-                               (< 1 org-count) "Useita organisaatioita"
-                               :else           (get-in (first (:organizations @user-info)) [:name :fi]))]
+        (let [organizations             (:organizations @user-info)
+              search-results            (subscribe [:state-query [:editor :organizations :matches]])
+              selected-organization-sub (subscribe [:state-query [:editor :user-info :selected-organization]])
+              selected-organization     (when @selected-organization-sub [@selected-organization-sub])
+              org-str                   (org-label organizations (first selected-organization))]
           [:div.profile
-           [:div
-            [:p.tooltip-indicator {:title tooltip-str} org-str]]])))))
+           [:div.profile__organization
+            [:a.profile__organization-link
+             {:on-click #(swap! org-select-visible? not)}
+             [:i.profile__organization-link-icon.zmdi.zmdi-accounts.zmdi-hc-2x]
+             [:div.profile__organization-link-name org-str]]
+            (when @org-select-visible?
+              [:div.profile__organization-select
+               [:div.profile__organization-select-username-container
+                [:i.profile__organization-select-username-icon.zmdi.zmdi-account.zmdi-hc-lg]
+                [:span.profile__organization-select-username-name (str (:name @user-info) " (" (:username @user-info) ")")]]
+               (into
+                 [:ul.profile__organization-select-user-orgs.zmdi-hc-ul]
+                 (map
+                   (fn [org] [:li [:i.zmdi.zmdi-hc-li.zmdi-accounts] org])
+                   (create-org-labels (or selected-organization organizations))))
+               (when selected-organization
+                 [:div
+                  [:a
+                   {:on-click #(dispatch [:editor/remove-selected-organization])}
+                   (str "Palauta oletusorganisaatio (" (org-label organizations nil) ")")]])
+               [:h4.profile__organization-select-title "Vaihda organisaatio"]
+               [:input.editor-form__text-field.profile__organization-select-input
+                {:type        "text"
+                 :placeholder "Etsi aliorganisaatioita"
+                 :value       @(subscribe [:state-query [:editor :organizations :query]])
+                 :on-change   #(dispatch [:editor/update-organization-select-query (.-value (.-target %))])}]
+               (into
+                 [:ul.profile__organization-select-results.zmdi-hc-ul
+                  (map
+                    (fn [{:keys [oid name]}]
+                      [:li.profile__organization-select-result
+                       {:key (str "organization-match-" oid)}
+                       [:a
+                        {:on-click #(dispatch [:editor/select-organization oid])}
+                        [:i.zmdi.zmdi-hc-li.zmdi-accounts]
+                        (get-label name)]])
+                    @search-results)])
+               (when (< 10 (count @search-results))
+                 [:div.profile__organization-more-results "Lisää tuloksia, tarkenna hakua"])])]])))))
 
 (defn status []
   (let [flash    (subscribe [:state-query [:flash]])

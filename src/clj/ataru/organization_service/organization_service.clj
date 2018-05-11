@@ -10,6 +10,7 @@
    [ataru.organization-service.organization-client :as org-client]))
 
 (def all-orgs-cache-time-to-live (* 2 60 1000))
+(def org-parents-cache-time-to-live (* 5 60 1000))
 (def group-cache-time-to-live (* 5 60 1000))
 (def group-oid-prefix "1.2.246.562.28")
 
@@ -114,7 +115,8 @@
         (assoc :cas-client (cas-client/new-client "/organisaatio-service"))
         (assoc :ldap-connection (ldap-client/create-ldap-connection))
         (assoc :all-orgs-cache (atom (cache/ttl-cache-factory {} :ttl all-orgs-cache-time-to-live)))
-        (assoc :group-cache (atom (cache/ttl-cache-factory {} :ttl group-cache-time-to-live)))))
+        (assoc :group-cache (atom (cache/ttl-cache-factory {} :ttl group-cache-time-to-live)))
+        (assoc :org-parents-cache (atom (cache/ttl-cache-factory {} :ttl org-parents-cache-time-to-live)))))
 
   (stop [this]
     (.close (:ldap-connection this))
@@ -142,6 +144,7 @@
       {:form-edit         orgs
        :view-applications orgs
        :edit-applications orgs}))
+
   (get-all-organizations [this root-orgs]
     (fake-orgs-by-root-orgs root-orgs))
 

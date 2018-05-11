@@ -93,5 +93,4 @@
 (defn fake-hakukohderyhma [index]
   (group->map {:oid (format "1.2.246.562.28.0000000000%d" index)
                :nimi {:fi (format "Testihakukohderyhma %d" index)}
-               :ryhmatyypit ["hakukohde"]
-               }))
+               :ryhmatyypit ["hakukohde"]}))

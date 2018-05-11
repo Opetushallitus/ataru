@@ -32,13 +32,11 @@
 
 (defn- forms-in-use
   [cache-service organization-service session]
-  (let [direct-organizations    (select-organizations-for-rights session [:form-edit])
+  (let [direct-organizations    (select-organizations-for-rights organization-service session [:form-edit])
         in-oph-organization?    (some #{oph-organization} (map :oid direct-organizations))
         query-organization-oids (if in-oph-organization?
                                   [oph-organization]
-                                  (map :oid (organization-protocol/get-all-organizations
-                                             organization-service
-                                             direct-organizations)))
+                                  (map :oid direct-organizations))
         hakus                   (mapcat (fn [oid] (cache/cache-get
                                                    cache-service
                                                    :forms-in-use

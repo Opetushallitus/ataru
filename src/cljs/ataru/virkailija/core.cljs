@@ -42,5 +42,6 @@
             (get "enable-re-frisk"))
     (re-frisk/enable-re-frisk!))
   (re-frame/dispatch [:editor/get-user-info])
+  (re-frame/dispatch [:editor/do-organization-query])
   (mount-root)
   (init-scroll-listeners))
