@@ -84,6 +84,33 @@
         }
     }
 
+    function clickLockForm() {
+        return function() {
+            return testFrame()
+                .find("#lock-form")
+                .click();
+        }
+    }
+
+    function getInputs(pseudoClass) {
+        // #editor-form__copy-question-id-container is not a visible element to the user and is only used to copy
+        // question ids to clipboard, so exclude it from this.
+        return testFrame().find('div.editor-form__panel-container input:not(#editor-form__copy-question-id-container)' + pseudoClass);
+    }
+
+    function getRemoveElementButtons(pseudoClass) {
+        return testFrame().find('div.editor-form__panel-container .editor-form__remove-component-button' + pseudoClass);
+    }
+
+    function allAddComponentToolbarsDisabled() {
+        return testFrame().find('.form__add-component-toolbar--list').length === 0
+    }
+
+    function allAddComponentToolbarsEnabled() {
+        return testFrame().find('.form__add-component-toolbar--list').length ===
+            testFrame().find('.editor-form__add-component-toolbar').length;
+    }
+
     before(function () {
         loadInFrame('http://localhost:8350/lomake-editori/auth/cas?ticket=DEVELOPER')
     })
@@ -435,6 +462,34 @@
                     expect(formComponents().eq(16).find('.editor-form__text-field').val()).to.equal('Tekstikenttä numeerisilla arvoilla');
                     expect(formComponents().eq(16).find('.editor-form__checkbox-container input').eq(2).prop('checked')).to.equal(true);
                     expect(formComponents().eq(16).find('select')[0].selectedIndex).to.equal(4);
+                })
+            });
+
+            describe('locking form', function() {
+                before(
+                    clickLockForm()
+                );
+                it('all inputs are locked', function() {
+                    expect(getInputs(':disabled').length).to.equal(getInputs('').length);
+                    expect(getInputs(':enabled').length).to.equal(0);
+                    expect(getRemoveElementButtons(':disabled').length).to.equal(getRemoveElementButtons('').length);
+                    expect(getRemoveElementButtons(':enabled').length).to.equal(0);
+                    expect(allAddComponentToolbarsDisabled()).to.equal(true);
+                    expect(elementExists(testFrame().find('.editor-form__form-editing-locked'))).to.equal(true);
+                })
+            });
+
+            describe('releasing form lock', function() {
+                before(
+                    clickLockForm()
+                );
+                it('all inputs are unlocked', function() {
+                    expect(getInputs(':disabled').length).to.equal(0);
+                    expect(getInputs(':enabled').length).to.equal(getInputs('').length);
+                    expect(getRemoveElementButtons(':disabled').length).to.equal(0);
+                    expect(getRemoveElementButtons(':enabled').length).to.equal(getRemoveElementButtons('').length);
+                    expect(allAddComponentToolbarsEnabled()).to.equal(true);
+                    expect(elementExists(testFrame().find('.editor-form__form-editing-locked'))).to.equal(false);
                 })
             });
 
