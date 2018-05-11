@@ -467,7 +467,11 @@
 
             describe('locking form', function() {
                 before(
-                    clickLockForm()
+                    wait.forMilliseconds(1000), // wait abit since
+                    clickLockForm(),            // this locking is sometimes so fast that the previous request gets blocked.
+                    wait.until(function() {
+                        return elementExists(testFrame().find('.editor-form__form-editing-locked'));
+                    })
                 );
                 it('all inputs are locked', function() {
                     expect(getInputs(':disabled').length).to.equal(getInputs('').length);
@@ -481,7 +485,10 @@
 
             describe('releasing form lock', function() {
                 before(
-                    clickLockForm()
+                    clickLockForm(),
+                    wait.until(function() {
+                        return !elementExists(testFrame().find('.editor-form__form-editing-locked'));
+                    })
                 );
                 it('all inputs are unlocked', function() {
                     expect(getInputs(':disabled').length).to.equal(0);
