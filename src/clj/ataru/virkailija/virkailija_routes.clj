@@ -192,7 +192,8 @@
 
     (api/PUT "/forms/:id/lock" {session :session}
       :path-params [id :- Long]
-      ;:return {:locked (s/maybe org.joda.time.DateTime)}
+      :return {:locked    (s/maybe org.joda.time.DateTime)
+               :locked-by (s/maybe s/Str)}
       :summary "Toggle form locked state"
       (ok (access-controlled-form/update-form-lock id session virkailija-tarjonta-service organization-service)))
 
