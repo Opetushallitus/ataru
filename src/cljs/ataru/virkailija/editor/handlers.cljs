@@ -755,15 +755,19 @@
     (let [form-key (-> args :form-key)]
       (-> db
           (assoc-in [:editor :forms form-key :locked] (:locked response))
-          (assoc-in [:editor :forms form-key :locked-by] (-> db :editor :user-info :name))))))
+          (assoc-in [:editor :forms form-key :locked-by] (-> db :editor :user-info :name))
+          (assoc-in [:editor :forms form-key :id] (:id response))))))
 
 (reg-event-fx
   :editor/toggle-form-editing-lock
   (fn [{db :db} _]
-    (let [form-key (-> db :editor :selected-form-key)
-          form (get-in db [:editor :forms form-key])]
+    (let [form-key  (-> db :editor :selected-form-key)
+          form      (get-in db [:editor :forms form-key])
+          operation (if (some? (get-in db [:editor :forms form-key :locked]))
+                      "open"
+                      "close")]
       {:http {:method              :put
-              :path                (str "/lomake-editori/api/forms/" (:id form) "/lock")
+              :path                (str "/lomake-editori/api/forms/" (:id form) "/lock/" operation)
               :handler-or-dispatch :editor/update-form-lock
               :handler-args        {:form-key form-key}}})))
 

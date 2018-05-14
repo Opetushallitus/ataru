@@ -190,12 +190,14 @@
       (access-controlled-form/edit-form-with-operations id operations session virkailija-tarjonta-service organization-service)
       (ok {}))
 
-    (api/PUT "/forms/:id/lock" {session :session}
-      :path-params [id :- Long]
+    (api/PUT "/forms/:id/lock/:operation" {session :session}
+      :path-params [id :- Long
+                    operation :- (s/enum "open" "close")]
       :return {:locked    (s/maybe org.joda.time.DateTime)
-               :locked-by (s/maybe s/Str)}
+               :locked-by (s/maybe s/Str)
+               :id        Long}
       :summary "Toggle form locked state"
-      (ok (access-controlled-form/update-form-lock id session virkailija-tarjonta-service organization-service)))
+      (ok (access-controlled-form/update-form-lock id operation session virkailija-tarjonta-service organization-service)))
 
     (api/DELETE "/forms/:id" {session :session}
       :path-params [id :- Long]
