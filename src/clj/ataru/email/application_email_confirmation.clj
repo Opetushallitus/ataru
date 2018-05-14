@@ -82,40 +82,19 @@
            (map-indexed #(cond->> (some %2 [lang :fi :sv :en])
                                   priority? (str (inc %1) ". ")))))))
 
-(defn- create-email [tarjonta-service subject template-name application-id]
-  (let [application     (application-store/get-application application-id)
-        form-key        (-> [(:key application)]
-                            (application-store/get-applications-by-keys)
-                            (first)
-                            (:form-key))
-        lang            (keyword (:lang application))
-        subject         (subject lang)
-        content         (-> (find-first #(= (:lang application) (:lang %)) (email-store/get-email-templates form-key))
-                            :content
-                            (->safe-html))
-        recipient       (->> (:answers application)
-                             (filter #(= "email" (:key %)))
-                             first
-                             :value)
-        application-url (modify-link (:secret application))
-        body            (selmer/render-file
-                          (template-name lang)
-                          {:hakukohteet     (hakukohde-names tarjonta-service
-                                                             lang
-                                                             application)
-                           :application-url application-url
-                           :application-oid (:key application)
-                           :content         content})]
-    {:from       from-address
-     :recipients [recipient]
-     :subject    subject
-     :body       body}))
+(defn- add-blank-templates [templates]
+  (as-> templates x
+        (util/group-by-first (comp keyword :lang) x)
+        (merge languages-map x)
+        (map (fn [el]
+                 (let [lang     (first el)
+                       template (second el)]
+                   {:lang           (name lang)
+                    :subject        (get template :subject (get-in email-default-texts [:email-submit-confirmation-template :submit-email-subjects lang]))
+                    :content        (get template :content "")
+                    :content-ending (get template :content_ending (get-in email-default-texts [:email-submit-confirmation-template :without-application-period lang]))}))
+             x)))
 
-(defn- create-submit-email [tarjonta-service application-id]
-  (create-email tarjonta-service
-                submit-email-subjects
-                submit-email-template-filename
-                application-id))
 
 (defn preview-submit-email
   [lang subject content content-ending]
@@ -131,6 +110,52 @@
                                             :application-oid "1.2.246.562.11.00000000000000000000"
                                             :content         (->safe-html content)
                                             :content-ending  (->safe-html content-ending)}))})
+
+(defn get-email-templates
+  [form-key]
+  (as-> (email-store/get-email-templates form-key) x
+        (add-blank-templates x)
+        (map #(preview-submit-email (:lang %) (:subject %) (:content %) (:content-ending %)) x)))
+
+(defn- create-email [tarjonta-service subject template-name application-id]
+  (let [application     (application-store/get-application application-id)
+        form-key        (-> [(:key application)]
+                            (application-store/get-applications-by-keys)
+                            (first)
+                            (:form-key))
+        lang            (keyword (:lang application))
+        email-template  (find-first #(= (:lang application) (:lang %)) (get-email-templates form-key))
+        content         (-> email-template
+                            :content
+                            (->safe-html))
+        content-ending  (-> email-template
+                            :content-ending
+                            (->safe-html))
+        recipient       (->> (:answers application)
+                             (filter #(= "email" (:key %)))
+                             first
+                             :value)
+        subject         (if subject (subject lang) (email-template :subject))
+        application-url (modify-link (:secret application))
+        body            (selmer/render-file
+                          (template-name lang)
+                          {:hakukohteet     (hakukohde-names tarjonta-service
+                                                             lang
+                                                             application)
+                           :application-url application-url
+                           :application-oid (:key application)
+                           :content         content
+                           :content-ending  content-ending})]
+    {:from       from-address
+     :recipients [recipient]
+     :subject    subject
+     :body       body}))
+
+(defn- create-submit-email [tarjonta-service application-id]
+  (create-email tarjonta-service
+                nil
+                submit-email-template-filename
+                application-id))
 
 (defn preview-submit-emails [previews]
   (map
@@ -174,25 +199,6 @@
 (defn start-email-refresh-secret-confirmation-job
   [tarjonta-service application-id]
   (start-email-job (create-refresh-secret-email tarjonta-service application-id)))
-
-(defn- add-blank-templates [templates]
-  (as-> templates x
-        (util/group-by-first (comp keyword :lang) x)
-        (merge languages-map x)
-        (map (fn [el]
-                 (let [lang     (first el)
-                       template (second el)]
-                   {:lang           (name lang)
-                    :subject        (get template :subject (get-in email-default-texts [:email-submit-confirmation-template :submit-email-subjects lang]))
-                    :content        (get template :content "")
-                    :content-ending (get template :content_ending (get-in email-default-texts [:email-submit-confirmation-template :without-application-period lang]))}))
-             x)))
-
-(defn get-email-templates
-  [form-key]
-  (as-> (email-store/get-email-templates form-key) x
-        (add-blank-templates x)
-        (map #(preview-submit-email (:lang %) (:subject %) (:content %) (:content-ending %)) x)))
 
 (defn store-email-templates
   [form-key session templates]
