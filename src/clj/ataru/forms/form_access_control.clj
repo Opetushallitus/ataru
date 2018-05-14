@@ -140,12 +140,14 @@
            #(get-forms-as-ordinary-user session virkailija-tarjonta-service (vec %))
            #(form-store/get-all-forms))})
 
-(defn update-form-lock [form-id session virkailija-tarjonta-service organization-service]
-  (let [form         (form-store/fetch-form form-id)
-        locked       (:locked form)
-        updated-form (merge form
-                            (if locked
-                              {:locked nil :locked-by nil}
-                              {:locked "now()" :locked-by (-> session :identity :username)}))]
-    (select-keys (post-form updated-form session virkailija-tarjonta-service organization-service)
-                 [:locked :locked-by])))
+(defn update-form-lock [form-id operation session virkailija-tarjonta-service organization-service]
+  (let [latest-version  (form-store/fetch-form form-id)
+        lock?           (= "close" operation)
+        updated-form    (merge latest-version
+                               (if lock?
+                                 {:locked "now()" :locked-by (-> session :identity :username)}
+                                 {:locked nil :locked-by nil}))]
+    (if (not= form-id (:id latest-version))
+      (throw (user-feedback-exception "Lomakkeen sisältö on muuttunut. Lataa sivu uudelleen."))
+      (select-keys (post-form updated-form session virkailija-tarjonta-service organization-service)
+                   [:locked :locked-by :id]))))
