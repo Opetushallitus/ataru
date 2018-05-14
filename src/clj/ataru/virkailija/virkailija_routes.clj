@@ -221,6 +221,29 @@
       :path-params [form-key :- s/Str]
       (ok (email/get-email-templates form-key)))
 
+    (api/context "/preview" []
+      (api/GET "/haku/:haku-oid" {session :session}
+        :path-params [haku-oid :- s/Str]
+        :query-params [lang :- s/Str]
+        (if-let [secret (virkailija-edit/create-virkailija-create-secret session)]
+          (response/temporary-redirect
+           (str (-> config :public-config :applicant :service_url)
+                "/hakemus/haku/" haku-oid
+                "?virkailija-secret=" secret
+                "&lang=" lang))
+          (response/internal-server-error)))
+
+      (api/GET "/form/:key" {session :session}
+        :path-params [key :- s/Str]
+        :query-params [lang :- s/Str]
+        (if-let [secret (virkailija-edit/create-virkailija-create-secret session)]
+          (response/temporary-redirect
+           (str (-> config :public-config :applicant :service_url)
+                "/hakemus/" key
+                "?virkailija-secret=" secret
+                "&lang=" lang))
+          (response/internal-server-error))))
+
     (api/context "/applications" []
       :tags ["applications-api"]
 
@@ -320,10 +343,12 @@
       (api/GET "/:application-key/modify" {session :session}
         :path-params [application-key :- String]
         :summary "Get HTTP redirect response for modifying a single application in Hakija side"
-        (if-let [virkailija-credentials (virkailija-edit/create-virkailija-credentials session application-key)]
+        (if-let [virkailija-update-secret (virkailija-edit/create-virkailija-update-secret
+                                           session
+                                           application-key)]
           (let [modify-url (str (-> config :public-config :applicant :service_url)
                                 "/hakemus?virkailija-secret="
-                                (:secret virkailija-credentials))]
+                                virkailija-update-secret)]
             (response/temporary-redirect modify-url))
           (response/bad-request)))
 

@@ -77,43 +77,44 @@
 
 (reg-event-fx
   :application/get-latest-form-by-key
-  (fn [{:keys [db]} [_ form-key roles]]
-    {:db   db
+  (fn [{:keys [db]} [_ form-key virkailija-secret]]
+    {:db   (cond-> db
+                   (some? virkailija-secret)
+                   (assoc-in [:application :virkailija-secret] virkailija-secret))
      :http {:method  :get
             :url     (str "/hakemus/api/form/"
                           form-key
-                          (when (not-empty roles)
-                            (str "?role=" (clojure.string/join
-                                           "&role="
-                                           (map name roles)))))
+                          (if (some? virkailija-secret)
+                            "?role=virkailija"
+                            "?role=hakija"))
             :handler [:application/handle-form]}}))
-
-(defn- get-latest-form-by-hakukohde [{:keys [db]} [_ hakukohde-oid roles]]
-  {:db   (assoc-in db [:application :preselected-hakukohde] hakukohde-oid)
-   :http {:method  :get
-          :url     (str "/hakemus/api/hakukohde/"
-                        hakukohde-oid
-                        (when (not-empty roles)
-                            (str "?role=" (clojure.string/join
-                                           "&role="
-                                           (map name roles)))))
-          :handler [:application/handle-form]}})
 
 (reg-event-fx
   :application/get-latest-form-by-hakukohde
-  get-latest-form-by-hakukohde)
+  (fn [{:keys [db]} [_ hakukohde-oid virkailija-secret]]
+    {:db   (cond-> (assoc-in db [:application :preselected-hakukohde] hakukohde-oid)
+                   (some? virkailija-secret)
+                   (assoc-in [:application :virkailija-secret] virkailija-secret))
+     :http {:method  :get
+            :url     (str "/hakemus/api/hakukohde/"
+                          hakukohde-oid
+                          (if (some? virkailija-secret)
+                            "?role=virkailija"
+                            "?role=hakija"))
+            :handler [:application/handle-form]}}))
 
 (reg-event-fx
   :application/get-latest-form-by-haku
-  (fn [{:keys [db]} [_ haku-oid roles]]
-    {:db db
+  (fn [{:keys [db]} [_ haku-oid virkailija-secret]]
+    {:db   (cond-> db
+                   (some? virkailija-secret)
+                   (assoc-in [:application :virkailija-secret] virkailija-secret))
      :http {:method  :get
             :url     (str "/hakemus/api/haku/"
                           haku-oid
-                          (when (not-empty roles)
-                            (str "?role=" (clojure.string/join
-                                           "&role="
-                                           (map name roles)))))
+                          (if (some? virkailija-secret)
+                            "?role=virkailija"
+                            "?role=hakija"))
             :handler [:application/handle-form]}}))
 
 (defn handle-submit [db _]

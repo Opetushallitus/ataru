@@ -16,20 +16,21 @@
                                                   :last_name  "Hemuli?"}))
 
   (it "creates virkailija credentials"
-    (let [credentials (virkailija-edit/create-virkailija-credentials {:identity {:oid        "1213"
-                                                                                 :username   "hhemuli"
-                                                                                 :first-name "Hemuli"
-                                                                                 :last-name  "Hemuli?"}} "test-key")]
-      (should== [:application_key :oid :secret :valid :created_time] (keys credentials))
-      (should= true (virkailija-edit/virkailija-secret-valid? (:secret credentials)))))
+    (let [secret (virkailija-edit/create-virkailija-update-secret {:identity {:oid        "1213"
+                                                                              :username   "hhemuli"
+                                                                              :first-name "Hemuli"
+                                                                              :last-name  "Hemuli?"}}
+                                                                  "test-key")]
+      (should= true (virkailija-edit/virkailija-update-secret-valid? secret))))
 
   (it "should invalidate credentials"
-    (let [credentials (virkailija-edit/create-virkailija-credentials {:identity {:oid        "1213"
-                                                                                 :username   "hhemuli"
-                                                                                 :first-name "Hemuli"
-                                                                                 :last-name  "Hemuli?"}} "test-key")]
-      (should= true (virkailija-edit/virkailija-secret-valid? (:secret credentials)))
-      (virkailija-edit/invalidate-virkailija-credentials (:secret credentials))
-      (should= false (virkailija-edit/virkailija-secret-valid? (:secret credentials))))))
+    (let [secret (virkailija-edit/create-virkailija-update-secret {:identity {:oid        "1213"
+                                                                              :username   "hhemuli"
+                                                                              :first-name "Hemuli"
+                                                                              :last-name  "Hemuli?"}}
+                                                                  "test-key")]
+      (should= true (virkailija-edit/virkailija-update-secret-valid? secret))
+      (virkailija-edit/invalidate-virkailija-update-secret secret)
+      (should= false (virkailija-edit/virkailija-update-secret-valid? secret)))))
 
 

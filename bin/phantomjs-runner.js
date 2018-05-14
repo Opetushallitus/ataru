@@ -52,8 +52,11 @@ switch (app) {
   case 'hakija-edit':
     url = 'http://localhost:8351/hakemus/hakija-edit-test.html'
     break;
+  case 'virkailija-haku':
+    url = 'http://localhost:8351/hakemus/virkailija-haku-test.html'
+    break;
   case 'virkailija-hakemus-edit':
-    /* To run this test individually, run hakija edit-test, create a fake virkailija with virkailija_credentials
+    /* To run this test individually, run hakija edit-test, create a fake virkailija with update secret
      *  to the same application as hakija-edit-test uses and use the fake secret in the url. Easiest way to do it
      *  is to add the credentials directly in to the db
      * */

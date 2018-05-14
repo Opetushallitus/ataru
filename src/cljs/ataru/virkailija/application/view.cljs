@@ -850,6 +850,11 @@
          {:event-type "received-from-applicant"}
          "Hakemus vastaanotettu"
 
+         {:event-type "received-from-virkailija"}
+         [:span.application-handling__event-caption--inner
+          (virkailija-initials-span event)
+          " syötti hakemuksen"]
+
          {:event-type "hakukohde-review-state-change"}
          [:span.application-handling__event-caption--inner
           (str (->> review-states/hakukohde-review-types

@@ -21,7 +21,7 @@
         expect(selectedHakukohteet().length).to.equal(1)
         expect(hakukohdeSearchHits().is(':visible')).to.equal(false)
         expect(hakukohdeSearchInput().is(':visible')).to.equal(false)
-        expect(selectedHakukohdeTexts()).to.equal('Testihakukohde 1 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne A')
+        expect(selectedHakukohdeTexts()).to.equal('Testihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne A')
       })
     })
 
@@ -36,9 +36,9 @@
           return $(e).find('.application__hakukohde-row-text-container').text()
         })
         expect(results).to.eql([
-          "Testihakukohde 1 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne A",
-          "Testihakukohde 2 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne B",
-          "Testihakukohde 3 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne C"
+          "Testihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne A",
+          "Testihakukohde 2 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne B",
+          "Testihakukohde 3 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne C"
         ])
       })
     })
@@ -52,7 +52,7 @@
       )
       it('adds hakukohde to selected list', function() {
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 10 tietoa')
-        expect(selectedHakukohdeTexts()).to.equal('Testihakukohde 1 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne ATestihakukohde 2 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne B')
+        expect(selectedHakukohdeTexts()).to.equal('Testihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne ATestihakukohde 2 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne B')
       })
     })
   })

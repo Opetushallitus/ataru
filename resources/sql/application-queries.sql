@@ -417,8 +417,8 @@ SELECT
   f.key     AS form_key
 FROM latest_applications AS a
 JOIN forms f ON a.form_id = f.id
-JOIN virkailija_credentials AS vc ON vc.application_key = a.key
-WHERE vc.secret = :virkailija_secret;
+JOIN virkailija_update_secrets AS vus ON vus.application_key = a.key
+WHERE vus.secret = :virkailija_secret;
 
 -- name: yesql-get-latest-version-by-secret-lock-for-update
 WITH application_secret AS (SELECT
@@ -463,40 +463,22 @@ WHERE key = (SELECT application_key
              WHERE secret = :secret);
 
 -- name: yesql-get-latest-version-by-virkailija-secret-lock-for-update
-WITH latest_version AS (
-    SELECT
-      a.id AS latest_id,
-      key
-    FROM applications a
-      JOIN virkailija_credentials AS vc
-        ON a.key = vc.application_key
-    WHERE vc.secret = :virkailija_secret
-    ORDER BY id DESC
-    LIMIT 1
-), latest_secret_version AS (
-    SELECT
-      ass.secret AS latest_secret,
-      ass.application_key
-    FROM application_secrets ass
-    WHERE ass.application_key = (SELECT key
-                                 FROM latest_version)
-    ORDER BY ass.id DESC
-    LIMIT 1
-)
 SELECT
   a.id,
   a.key,
-  las.latest_secret AS secret,
   a.lang,
-  a.form_id         AS form,
+  a.form_id AS form,
   a.created_time,
   a.content,
   a.haku,
   a.hakukohde,
   a.person_oid
 FROM applications a
-  JOIN latest_version lv ON a.id = lv.latest_id
-  JOIN latest_secret_version las ON las.application_key = a.key
+WHERE a.id = (SELECT max(a.id)
+              FROM applications AS a
+              JOIN virkailija_update_secrets AS vus
+                ON vus.application_key = a.key
+              WHERE vus.secret = :virkailija_secret)
 FOR UPDATE;
 
 -- name: yesql-add-application-event<!
@@ -639,12 +621,6 @@ GROUP BY lf.name, lf.key, lf.organization_oid;
 INSERT INTO application_feedback (created_time, form_key, form_id, form_name, stars, feedback, user_agent)
 VALUES
   (now(), :form_key, :form_id, :form_name, :rating, left(:feedback, 2000), :user_agent);
-
--- name: yesql-get-hakija-secret-by-virkailija-secret
-SELECT las.secret
-FROM latest_application_secrets AS las
-  JOIN virkailija_credentials AS vc ON vc.application_key = las.application_key
-WHERE vc.secret = :virkailija_secret;
 
 -- name: yesql-get-application-hakukohde-reviews
 SELECT

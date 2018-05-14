@@ -187,16 +187,15 @@
     "avaa"]
    [:span.editor-form__fold-description-text " osiot"]])
 
-(defn- preview-link [form lang-kwd & [text]]
-  (let [text (if (nil? text)
-               (-> lang-kwd name clojure.string/upper-case)
-               text)]
-    [:a.editor-form__preview-button-link
-     {:key    (str "preview-" (name lang-kwd))
-      :href   (str js/config.applicant.service_url "/hakemus/" (:key form) "?lang=" (name lang-kwd))
-      :target "_blank"}
-     [:i.zmdi.zmdi-open-in-new]
-     [:span.editor-form__preview-button-text text]]))
+(defn- preview-link [form-key lang-kwd]
+  [:a.editor-form__preview-button-link
+   {:key    (str "preview-" (name lang-kwd))
+    :href   (str "/lomake-editori/api/preview/form/" form-key
+                 "?lang=" (name lang-kwd))
+    :target "_blank"}
+   [:i.zmdi.zmdi-open-in-new]
+   [:span.editor-form__preview-button-text
+    (clojure.string/upper-case (name lang-kwd))]])
 
 (defn- form-toolbar [form]
   (let [languages @(subscribe [:editor/languages])]
@@ -206,12 +205,9 @@
        (map (fn [lang-kwd]
               (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages))))
             (keys lang-versions))]
-      (if (= (count languages) 1)
-        [:div.editor-form__preview-buttons
-         (preview-link form (first languages) "Lomakkeen esikatselu")]
-        [:div.editor-form__preview-buttons
-         [:span "Lomakkeen esikatselu:"]
-         (map (partial preview-link form) languages)])
+      [:div.editor-form__preview-buttons
+       [:span "Testihakemus / Virkailijatäyttö:"]
+       (map (partial preview-link (:key form)) languages)]
       [:div.editor-form__preview-buttons
        [:a.editor-form__email-template-editor-link
         {:on-click #(dispatch [:editor/toggle-email-template-editor])}
@@ -221,8 +217,7 @@
 
 (defn form-in-use-warning
   [form]
-  (let [forms-in-use         (subscribe [:state-query [:editor :forms-in-use]])
-        hakija-haku-base-url (str js/config.applicant.service_url "/hakemus/haku/")]
+  (let [forms-in-use (subscribe [:state-query [:editor :forms-in-use]])]
     (fn [form]
       (when-let [form-used-in-hakus (get @forms-in-use (keyword (:key form)))]
         [:div.editor-form__in_use_notification.animated.flash
@@ -230,11 +225,16 @@
          [:ul.editor-form__used-in-haku-list
           (for [haku (vals form-used-in-hakus)]
             [:li {:key (str "form-used-in-haku_" (:haku-oid haku))}
-             [:a {:href   (str "/tarjonta-app/index.html#/haku/" (:haku-oid haku))
-                  :target "_blank"} (some #(get (:haku-name haku) %) [:fi :sv :en])]
+             [:a {:href   (str "/tarjonta-app/index.html#/haku/"
+                               (:haku-oid haku))
+                  :target "_blank"}
+              (some #(get (:haku-name haku) %) [:fi :sv :en])]
              [:span " | "]
-             [:a {:href   (str hakija-haku-base-url (:haku-oid haku))
-                  :target "_blank"} "Lomake"]])]]))))
+             [:a {:href   (str "/lomake-editori/api/preview/haku/"
+                               (:haku-oid haku)
+                               "?lang=fi")
+                  :target "_blank"}
+              "Testihakemus / Virkailijatäyttö"]])]]))))
 
 (defn- close-form []
   [:a {:on-click (fn [event]

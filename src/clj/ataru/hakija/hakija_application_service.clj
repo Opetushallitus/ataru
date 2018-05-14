@@ -23,7 +23,6 @@
     [ataru.util :as util]
     [ataru.files.file-store :as file-store]
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
-    [ataru.virkailija.authentication.virkailija-edit :refer [invalidate-virkailija-credentials virkailija-secret-valid?]]
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
     [ataru.config.core :refer [config]]
     [clj-time.core :as time]
@@ -88,8 +87,12 @@
       (file-store/delete-file (name attachment-key)))
     (log/info (str "Updated application " (:key old-application) ", removed old attachments: " (clojure.string/join ", " orphan-attachments)))))
 
-(defn- valid-virkailija-secret [{:keys [virkailija-secret]}]
-  (when (virkailija-edit/virkailija-secret-valid? virkailija-secret)
+(defn- valid-virkailija-update-secret [{:keys [virkailija-secret]}]
+  (when (virkailija-edit/virkailija-update-secret-valid? virkailija-secret)
+    virkailija-secret))
+
+(defn- valid-virkailija-create-secret [{:keys [virkailija-secret]}]
+  (when (virkailija-edit/virkailija-create-secret-valid? virkailija-secret)
     virkailija-secret))
 
 (defn- set-original-value
@@ -122,7 +125,9 @@
         applied-hakukohteet           (filter #(contains? (set (:hakukohde application)) (:oid %))
                                               hakukohteet)
         applied-hakukohderyhmat       (mapcat :hakukohderyhmat applied-hakukohteet)
-        virkailija-secret             (valid-virkailija-secret application)
+        virkailija-secret             (if is-modify?
+                                        (valid-virkailija-update-secret application)
+                                        (valid-virkailija-create-secret application))
         latest-application            (application-store/get-latest-version-of-application-for-edit application)
         form-roles                    (cond-> []
                                         (some? virkailija-secret)
@@ -156,8 +161,8 @@
                                        form
                                        applied-hakukohderyhmat)]
     (cond
-      (and (not (nil? virkailija-secret))
-           (not (virkailija-secret-valid? virkailija-secret)))
+      (and (some? (:virkailija-secret application))
+           (nil? virkailija-secret))
       {:passed? false :failures ["Tried to edit application with invalid virkailija secret."]}
 
       (and (:secret application)
@@ -169,6 +174,7 @@
       {:passed? false :failures ["Hakukohde must be specified"]}
 
       (and (not is-modify?)
+           (nil? virkailija-secret)
            (some #(not (:on (:hakuaika %))) applied-hakukohteet))
       {:passed? false :failures ["Application period is not open."]}
 
@@ -199,7 +205,7 @@
   (start-attachment-finalizer-job application-id))
 
 (defn- start-virkailija-edit-jobs [virkailija-secret application-id application]
-  (invalidate-virkailija-credentials virkailija-secret)
+  (virkailija-edit/invalidate-virkailija-update-secret virkailija-secret)
   (when (nil? (:person-oid application))
     (start-person-creation-job application-id))
   (start-attachment-finalizer-job application-id))
@@ -213,8 +219,11 @@
   (log/info "Application submitted:" application)
   (let [{:keys [passed? id]
          :as   result}
-        (validate-and-store tarjonta-service organization-service ohjausparametrit-service application application-store/add-application false)]
+        (validate-and-store tarjonta-service organization-service ohjausparametrit-service application application-store/add-application false)
+        virkailija-secret (:virkailija-secret application)]
     (when passed?
+      (when virkailija-secret
+        (virkailija-edit/invalidate-virkailija-create-secret virkailija-secret))
       (start-submit-jobs tarjonta-service id))
     result))
 
@@ -262,7 +271,7 @@
                                    :else
                                    [:hakija nil])
         application      (cond
-                           (and (= actor-role :virkailija) (virkailija-edit/virkailija-secret-valid? secret))
+                           (and (= actor-role :virkailija) (virkailija-edit/virkailija-update-secret-valid? secret))
                            (application-store/get-latest-application-for-virkailija-edit secret)
 
                            (and (= actor-role :hakija) (some? secret))

@@ -16,11 +16,6 @@
 
 (enable-console-print!)
 
-(defn- form-key-from-url []
-  (-> (cljs-util/get-path)
-      (clojure.string/split #"/")
-      (nth 2)))
-
 (defn- path-match
   [path re]
   (when-let [re-match (re-matches re path)]
@@ -31,24 +26,25 @@
   (let [path              (cljs-util/get-path)
         hakukohde-oid     (path-match path #"/hakemus/hakukohde/(.+)/?")
         haku-oid          (path-match path #"/hakemus/haku/(.+)/?")
+        form-key          (path-match path #"/hakemus/(.+)/?")
         query-params      (cljs-util/extract-query-params)
         hakija-secret     (:modify query-params)
         virkailija-secret (:virkailija-secret query-params)]
     (cond
       (u/not-blank? hakukohde-oid)
-      (re-frame/dispatch [:application/get-latest-form-by-hakukohde hakukohde-oid [:hakija]])
+      (re-frame/dispatch [:application/get-latest-form-by-hakukohde hakukohde-oid virkailija-secret])
 
       (u/not-blank? haku-oid)
-      (re-frame/dispatch [:application/get-latest-form-by-haku haku-oid [:hakija]])
+      (re-frame/dispatch [:application/get-latest-form-by-haku haku-oid virkailija-secret])
+
+      (u/not-blank? form-key)
+      (re-frame/dispatch [:application/get-latest-form-by-key form-key virkailija-secret])
 
       (u/not-blank? hakija-secret)
       (re-frame/dispatch [:application/get-application-by-hakija-secret hakija-secret])
 
       (u/not-blank? virkailija-secret)
-      (re-frame/dispatch [:application/get-application-by-virkailija-secret virkailija-secret])
-
-      :else
-      (re-frame/dispatch [:application/get-latest-form-by-key (form-key-from-url) [:hakija]]))))
+      (re-frame/dispatch [:application/get-application-by-virkailija-secret virkailija-secret]))))
 
 (defn mount-root []
   (re-frame/clear-subscription-cache!)
