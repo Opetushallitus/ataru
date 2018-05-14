@@ -680,10 +680,7 @@
         :applicant-name
         "Hakija"]
        [application-filters]]
-      [:span.application-handling__list-row--time
-       [application-list-basic-column-header
-        :created-time
-        "Viimeksi muokattu"]]
+      [created-time-column-header]
       (when (:attachment-handling @review-settings true)
         [:span.application-handling__list-row--attachment-state
          [hakukohde-state-filter-controls
