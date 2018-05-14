@@ -32,19 +32,15 @@
 
 (defn- forms-in-use
   [cache-service organization-service session]
-  (let [direct-organizations    (select-organizations-for-rights organization-service session [:form-edit])
-        in-oph-organization?    (some #{oph-organization} (map :oid direct-organizations))
-        query-organization-oids (if in-oph-organization?
-                                  [oph-organization]
-                                  (map :oid direct-organizations))
-        hakus                   (mapcat (fn [oid] (cache/cache-get
-                                                   cache-service
-                                                   :forms-in-use
-                                                   oid))
-                                        query-organization-oids)]
-    (reduce hakus-by-form-key
-            {}
-            hakus)))
+  (->> (select-organizations-for-rights organization-service
+                                        session
+                                        [:form-edit])
+       ((fn [oids] (if (and (empty? oids)
+                            (get-in session [:identity :superuser]))
+                     [oph-organization]
+                     oids)))
+       (mapcat (partial cache/cache-get cache-service :forms-in-use))
+       (reduce hakus-by-form-key {})))
 
 (defn- epoch-millis->zoned-date-time
   [millis]
