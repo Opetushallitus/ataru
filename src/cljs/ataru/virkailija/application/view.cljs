@@ -1043,12 +1043,18 @@
         notes            (reaction (:notes @note))
         animated?        (reaction (:animated? @note))
         remove-disabled? (reaction (or (-> @note :state some?)
-                                       (-> @note :id not)))]
+                                       (-> @note :id not)))
+        hakukohde-name   (subscribe [:state-query [:hakukohteet (:hakukohde @note) :name :fi]])]
     (fn [note-idx]
       [:div.application-handling__review-note
        (when @animated?
          {:class "animated fadeIn"})
-       [:span.application-handling__review-note-column @notes]
+       [:span.application-handling__review-note-column
+        (when (:hakukohde @note)
+          {:data-tooltip-narrow (str "Kelpoisuusmerkinnän selite"
+                                     (when (not= "form" (:hakukohde @note))
+                                       (str " hakukohteelle " @hakukohde-name)))})
+        @notes]
        [:div.application-handling__review-details-column
         [:span @name]
         [:span @created-time]
