@@ -83,16 +83,18 @@ body {
   padding: 16px 64px;
 }
 
-[data-tooltip] {
+[data-tooltip],[data-tooltip-narrow] {
   display: inline-block;
   position: relative;
   cursor: help;
   color: @pale-blue;
+}
+
+[data-tooltip] {
   white-space: nowrap;
 }
 
-[data-tooltip]:before {
-  content: attr(data-tooltip);
+[data-tooltip]:before,[data-tooltip-narrow]:before {
   display: none;
   position: absolute;
   background: @banner-blue;
@@ -110,7 +112,16 @@ body {
   transform: translateX(-50%);
 }
 
-[data-tooltip]:hover:before, [data-tooltip]:hover:after {
+[data-tooltip]:before {
+  content: attr(data-tooltip);
+}
+
+[data-tooltip-narrow]:before {
+  content: attr(data-tooltip-narrow);
+}
+
+[data-tooltip]:hover:before, [data-tooltip]:hover:after,
+[data-tooltip-narrow]:hover:before, [data-tooltip-narrow]:hover:after{
   display: block;
   z-index: 5;
 }
