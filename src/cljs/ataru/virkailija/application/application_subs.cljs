@@ -1,5 +1,6 @@
 (ns ataru.virkailija.application.application-subs
-  (:require [cljs-time.core :as t]
+  (:require [clojure.core.match :refer [match]]
+            [cljs-time.core :as t]
             [re-frame.core :as re-frame]
             [ataru.util :as u]
             [ataru.application.review-states :as review-states]
@@ -319,9 +320,12 @@
     (-> db :application :modify-application-link :state nil?)))
 
 (defn- filter-by-yksiloity
-  [application only-identified?]
-  (or (not only-identified?)
-      (not (-> application :person :yksiloity))))
+  [application identified? unidentified?]
+  (match [identified? unidentified?]
+         [true true] true
+         [false false] false
+         [false true] (-> application :person :yksiloity (not))
+         [true false] (-> application :person :yksiloity)))
 
 (defn- state-filter
   [states states-to-include default-state-name hakukohteet]
@@ -349,6 +353,14 @@
                     (map :state))]
     (state-filter states states-to-include default-state-name (:hakukohde application))))
 
+(defn- parse-enabled-filters
+  [filters kw]
+  (->> (get filters kw)
+       (filter second)
+       (map first)
+       (map name)
+       (set)))
+
 (re-frame/reg-sub
   :application/filtered-applications
   (fn [db _]
@@ -356,15 +368,26 @@
           attachment-states-to-include (-> db :application :attachment-state-filter set)
           processing-states-to-include (-> db :application :processing-state-filter set)
           selection-states-to-include  (-> db :application :selection-state-filter set)
-          only-identified?             (-> db :application :only-identified?)]
+          filters                      (-> db :application :filters)
+          identified?                  (-> db :application :filters :only-identified :identified)
+          unidentified?                (-> db :application :filters :only-identified :unidentified)]
       (filter
         (fn [application]
           (and
-           (filter-by-yksiloity application only-identified?)
+           (filter-by-yksiloity application identified? unidentified?)
            (filter-by-hakukohde-review application "processing-state" review-states/initial-application-hakukohde-processing-state processing-states-to-include)
            (filter-by-hakukohde-review application "selection-state" "incomplete" selection-states-to-include)
+           (filter-by-hakukohde-review application "language-requirement" "unreviewed" (parse-enabled-filters filters :language-requirement))
+           (filter-by-hakukohde-review application "degree-requirement" "unreviewed" (parse-enabled-filters filters :degree-requirement))
+           (filter-by-hakukohde-review application "eligibility-state" "unreviewed" (parse-enabled-filters filters :eligibility-state))
+           (filter-by-hakukohde-review application "payment-obligation" "unreviewed" (parse-enabled-filters filters :payment-obligation))
            (filter-by-attachment-review application "not-checked" attachment-states-to-include)))
         applications))))
+
+(re-frame/reg-sub
+  :application/filtered-applications-count
+  (fn [_ _]
+    (count @(re-frame/subscribe [:application/filtered-applications]))))
 
 (re-frame/reg-sub
   :application/review-state-setting-enabled?
@@ -465,3 +488,21 @@
     (or (-> db :application :selected-application-and-form :form :selected-language keyword)
         (-> db :application :selected-application-and-form :application :lang keyword)
         :fi)))
+
+(re-frame.core/reg-sub
+  :application/enabled-filter-count
+  (fn [db _]
+    (reduce-kv
+      (fn [acc _ filters]
+        (+ acc
+           (reduce-kv
+             (fn [acc2 _ enabled?] (if (false? enabled?) (inc acc2) acc2))
+             0
+             filters)))
+      0
+      (get-in db [:application :filters]))))
+
+(re-frame.core/reg-sub
+  :application/loaded-application-count
+  (fn [db _]
+    (-> db :application :applications (count))))

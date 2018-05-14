@@ -152,7 +152,7 @@
             "Massamuutos"]
            (when @element-visible?
              [:div.application-handling__mass-edit-review-states-popup
-              [:div.application-handling__mass-edit-review-states-close-button
+              [:div.application-handling__popup-close-button
                {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state false)}
                [:i.zmdi.zmdi-close]]
               [:h4.application-handling__mass-edit-review-states-heading.application-handling__mass-edit-review-states-heading--title "Massamuutos"]
@@ -608,22 +608,78 @@
         [:div.application-handling__list-loading-indicator
          [:i.zmdi.zmdi-spinner]])))
 
+(defn- application-filter-checkbox
+  [filters label kw state]
+  (let [kw    (keyword kw)
+        state (keyword state)]
+    [:label.application-handling__filter-checkbox-label
+     [:input.application-handling__filter-checkbox
+      {:type     "checkbox"
+       :checked  (boolean (get-in @filters [kw state]))
+       :on-click #(dispatch [:application/toggle-filter kw state])}]
+     label]))
+
+(defn- review-type-filter
+  [filters [kw group-label states]]
+  [:div.application-handling__filter-group
+   {:key (str "application-filter-group-" kw)}
+   [:div.application-handling__filter-group-title group-label]
+   (into
+     [:div.application-handling__filter-group-checkboxes]
+     (map
+       (fn [[state checkbox-label]]
+         (application-filter-checkbox filters checkbox-label kw state))
+       states))])
+
+(defn- application-filters
+  []
+  (let [filters                    (subscribe [:state-query [:application :filters]])
+        filtered-application-count (subscribe [:application/filtered-applications-count])
+        loaded-application-count   (subscribe [:application/loaded-application-count])
+        enabled-filter-count       (subscribe [:application/enabled-filter-count])
+        review-settings            (subscribe [:state-query [:application :review-settings :config]])
+        filters-visible            (r/atom false)
+        filters-to-include         #{:language-requirement :degree-requirement :eligibility-state :payment-obligation}]
+    (fn []
+      [:span.application-handling__filters
+       [:a
+        {:on-click #(swap! filters-visible not)}
+        (str "Lisärajaimet" (when (pos? @enabled-filter-count)
+                              (str " (" @enabled-filter-count ")")))]
+       (when (pos? @enabled-filter-count)
+         [:span
+          [:span.application-handling__filters-count-separator "|"]
+          [:a
+           {:on-click #(dispatch [:application/remove-filters])} "Poista"]])
+       (when @filters-visible
+         [:div.application-handling__filters-popup
+          [:div.application-handling__popup-close-button
+           {:on-click #(reset! filters-visible false)}
+           [:i.zmdi.zmdi-close]]
+          [:div (str "Hakemuksia näkyvillä " @filtered-application-count "/" @loaded-application-count)]
+          [:h3 "Yksilöinti"]
+          [:div.application-handling__filter-group
+           [application-filter-checkbox filters "Yksilöimättömät" :only-identified :unidentified]
+           [application-filter-checkbox filters "Yksilöidyt" :only-identified :identified]]
+          [:h3 "Käsittelymerkinnät"]
+          (->> review-states/hakukohde-review-types
+               (filter (fn [[kw _ _]]
+                         (and
+                           (contains? filters-to-include kw)
+                           (-> @review-settings (get kw) (false?) (not)))))
+               (map (partial review-type-filter filters))
+               (doall))])])))
+
 (defn application-list [applications]
   (let [fetching        (subscribe [:state-query [:application :fetching-applications]])
-        review-settings (subscribe [:state-query [:application :review-settings :config]])
-        only-identified? (subscribe [:state-query [:application :only-identified?]])]
+        review-settings (subscribe [:state-query [:application :review-settings :config]])]
     [:div
      [:div.application-handling__list-header.application-handling__list-row
       [:span.application-handling__list-row--applicant
        [application-list-basic-column-header
         :applicant-name
         "Hakija"]
-       [:label.application-handling__identification
-        [:input.application-handling__identification--checkbox
-         {:type     "checkbox"
-          :checked  (or @only-identified? false)
-          :on-click #(dispatch [:application/update-identification])}]
-        "Vain yksilöimättömät"]]
+       [application-filters]]
       [created-time-column-header]
       (when (:attachment-handling @review-settings true)
         [:span.application-handling__list-row--attachment-state
