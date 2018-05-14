@@ -42,36 +42,13 @@
           <a style="color: #0093C4;" href="{{application-url|safe}}" target="_blank">{{application-url|safe}}</a>
         </td>
       </tr>
+      {% if content-ending|not-empty %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
-          Voit katsella ja muokata hakemustasi {%
-          if hakukohteet|not-empty %} hakuaikana{% endif %} yllä olevan linkin
-          kautta. Älä jaa linkkiä ulkopuolisille. Jos käytät yhteiskäyttöistä
-          tietokonetta, muista kirjautua ulos sähköpostiohjelmasta.
+          {{content-ending|safe}}
         </td>
       </tr>
-      <tr>
-        <td style="padding-left: 20px; padding-top: 20px;">
-          Jos sinulla on verkkopankkitunnukset, mobiilivarmenne tai sähköinen
-          henkilökortti, voit vaihtoehtoisesti kirjautua sisään
-          <a style="color: #0093C4;" href="https://www.opintopolku.fi" target="_blank">Opintopolku.fi</a>:ssä, ja
-          tehdä muutoksia hakemukseesi Oma Opintopolku
-          -palvelussa hakuaikana. Oma Opintopolku -palvelussa voit lisäksi
-          nähdä valintojen tulokset ja ottaa opiskelupaikan vastaan.
-        </td>
-      </tr>
-      <tr>
-        <td style="padding-left: 20px; padding-top: 20px;">
-          Älä vastaa tähän viestiin - viesti on lähetetty automaattisesti.
-        </td>
-      </tr>
-      <tr>
-        <td style="padding-left: 20px; padding-top: 20px;">
-          Ystävällisin terveisin
-          <br />
-          Opintopolku
-        </td>
-      </tr>
+      {% endif %}
       <tr>
         <td style="padding-top: 50px;"></td>
       </tr>

@@ -15,6 +15,7 @@
 (sql/defqueries "sql/migration-1.88-queries.sql")
 (sql/defqueries "sql/migration-1.90-queries.sql")
 (sql/defqueries "sql/migration-1.92-queries.sql")
+(sql/defqueries "sql/migration-1.96-queries.sql")
 
 (defn get-ids-of-latest-applications
   []
@@ -145,3 +146,9 @@
 
 (defn insert-1.92-attachment-review [connection review]
   (yesql-insert-1_92-attachment-review! review {:connection connection}))
+
+(defn set-1_96-content-ending! [connection lang content_ending]
+  (yesql-set-1_96-content-ending! {:lang lang :content_ending content_ending} {:connection connection}))
+
+(defn set-1_96-subject! [connection lang subject]
+  (yesql-set-1_96-subject! {:lang lang :subject subject} {:connection connection}))

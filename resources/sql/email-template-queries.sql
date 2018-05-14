@@ -1,8 +1,8 @@
 -- name: yesql-upsert-email-template!<
-INSERT INTO email_templates (form_key, virkailija_oid, lang, content, haku_oid)
-VALUES (:form_key, :virkailija_oid, :lang, :content, :haku_oid)
+INSERT INTO email_templates (form_key, virkailija_oid, lang, subject, content, content_ending, haku_oid)
+VALUES (:form_key, :virkailija_oid, :lang, :subject, :content, :content_ending, :haku_oid)
 ON CONFLICT ON CONSTRAINT email_templates_form_key_haku_oid_lang_key
-  DO UPDATE SET content = :content, virkailija_oid = :virkailija_oid
+  DO UPDATE SET content = :content, virkailija_oid = :virkailija_oid, content_ending = :content_ending, subject = :subject
 RETURNING *;
 
 -- name: yesql-get-email-templates

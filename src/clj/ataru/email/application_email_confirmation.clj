@@ -14,6 +14,7 @@
     [clojure.string :as string]
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
     [ataru.util :as util]
+    [ataru.translations.texts :refer [email-default-texts]]
     [medley.core :refer [find-first]])
   (:import
     [org.owasp.html HtmlPolicyBuilder ElementPolicy]))
@@ -54,7 +55,7 @@
 
 (def html-policy
   (as-> (HtmlPolicyBuilder.) hpb
-        (.allowElements hpb (->string-array "p" "span" "div" "h1" "h2" "h3" "h4" "h5" "ul" "ol" "li"))
+        (.allowElements hpb (->string-array "p" "span" "div" "h1" "h2" "h3" "h4" "h5" "ul" "ol" "li" "br"))
         (.allowElements hpb add-style-to-links (->string-array "a"))
         (.allowUrlProtocols hpb (->string-array "http" "https"))
         (.onElements (.allowAttributes hpb (->string-array "href" "target")) (->string-array "a"))
@@ -81,6 +82,41 @@
            (map-indexed #(cond->> (some %2 [lang :fi :sv :en])
                                   priority? (str (inc %1) ". ")))))))
 
+(defn- add-blank-templates [templates]
+  (as-> templates x
+        (util/group-by-first (comp keyword :lang) x)
+        (merge languages-map x)
+        (map (fn [el]
+                 (let [lang     (first el)
+                       template (second el)]
+                   {:lang           (name lang)
+                    :subject        (get template :subject (get-in email-default-texts [:email-submit-confirmation-template :submit-email-subjects lang]))
+                    :content        (get template :content "")
+                    :content-ending (get template :content_ending (get-in email-default-texts [:email-submit-confirmation-template :without-application-period lang]))}))
+             x)))
+
+
+(defn preview-submit-email
+  [lang subject content content-ending]
+  {:from           from-address
+   :subject        subject
+   :content        content
+   :content-ending content-ending
+   :lang           lang
+   :body           (-> (submit-email-template-filename lang)
+                       (selmer/render-file {:lang            lang
+                                            :hakukohteet     ["Hakukohde 1" "Hakukohde 2" "Hakukohde 3"]
+                                            :application-url "https://opintopolku.fi/hakemus/01234567890abcdefghijklmn"
+                                            :application-oid "1.2.246.562.11.00000000000000000000"
+                                            :content         (->safe-html content)
+                                            :content-ending  (->safe-html content-ending)}))})
+
+(defn get-email-templates
+  [form-key]
+  (as-> (email-store/get-email-templates form-key) x
+        (add-blank-templates x)
+        (map #(preview-submit-email (:lang %) (:subject %) (:content %) (:content-ending %)) x)))
+
 (defn- create-email [tarjonta-service subject template-name application-id]
   (let [application     (application-store/get-application application-id)
         form-key        (-> [(:key application)]
@@ -88,14 +124,18 @@
                             (first)
                             (:form-key))
         lang            (keyword (:lang application))
-        subject         (subject lang)
-        content         (-> (find-first #(= (:lang application) (:lang %)) (email-store/get-email-templates form-key))
+        email-template  (find-first #(= (:lang application) (:lang %)) (get-email-templates form-key))
+        content         (-> email-template
                             :content
+                            (->safe-html))
+        content-ending  (-> email-template
+                            :content-ending
                             (->safe-html))
         recipient       (->> (:answers application)
                              (filter #(= "email" (:key %)))
                              first
                              :value)
+        subject         (if subject (subject lang) (email-template :subject))
         application-url (modify-link (:secret application))
         body            (selmer/render-file
                           (template-name lang)
@@ -104,7 +144,8 @@
                                                              application)
                            :application-url application-url
                            :application-oid (:key application)
-                           :content         content})]
+                           :content         content
+                           :content-ending  content-ending})]
     {:from       from-address
      :recipients [recipient]
      :subject    subject
@@ -112,28 +153,18 @@
 
 (defn- create-submit-email [tarjonta-service application-id]
   (create-email tarjonta-service
-                submit-email-subjects
+                nil
                 submit-email-template-filename
                 application-id))
 
-(defn preview-submit-email
-  [lang content]
-  {:from    from-address
-   :subject ((keyword lang) submit-email-subjects)
-   :content content
-   :lang    lang
-   :body    (-> (submit-email-template-filename lang)
-                (selmer/render-file {:lang            lang
-                                     :hakukohteet     ["Hakukohde 1" "Hakukohde 2" "Hakukohde 3"]
-                                     :application-url "https://opintopolku.fi/hakemus/01234567890abcdefghijklmn"
-                                     :application-oid "1.2.246.562.11.00000000000000000000"
-                                     :content         (->safe-html content)}))})
-
-(defn preview-submit-emails
-  [previews]
+(defn preview-submit-emails [previews]
   (map
-    #(preview-submit-email (key %) (-> % (val) (first) :content))
-    (merge languages-map (clojure.walk/keywordize-keys (group-by :lang previews)))))
+   #(let [lang           (:lang %)
+          subject        (:subject %)
+          content        (:content %)
+          content-ending (:content-ending %)]
+      (preview-submit-email lang subject content content-ending)) previews))
+
 
 (defn- create-edit-email [tarjonta-service application-id]
   (create-email tarjonta-service
@@ -169,29 +200,14 @@
   [tarjonta-service application-id]
   (start-email-job (create-refresh-secret-email tarjonta-service application-id)))
 
-(defn- add-blank-templates
-  [templates]
-  (as-> templates x
-        (util/group-by-first (comp keyword :lang) x)
-        (merge languages-map x)
-        (map (fn [el]
-               {:lang (-> el (key) (name)) :content (-> el (val) :content)})
-             x)))
-
-(defn get-email-templates
-  [form-key]
-  (as-> (email-store/get-email-templates form-key) x
-        (add-blank-templates x)
-        (map #(preview-submit-email (:lang %) (:content %)) x)))
-
 (defn store-email-templates
   [form-key session templates]
   (let [stored-templates (mapv #(email-store/create-or-update-email-template
                                   form-key
                                   (:lang %)
                                   (-> session :identity :oid)
-                                  (:content %))
-                               templates)]
-    (map
-      #(preview-submit-email (:lang %) (:content %))
-      stored-templates)))
+                                  (:subject %)
+                                  (:content %)
+                                  (:content-ending %))
+                           templates)]
+    (map #(preview-submit-email (:lang %) (:subject %) (:content %) (:content_ending %)) stored-templates)))

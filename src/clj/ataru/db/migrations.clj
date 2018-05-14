@@ -23,6 +23,7 @@
             [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
             [taoensso.timbre :refer [spy debug info error]]
             [ataru.component-data.component :as component]
+            [ataru.translations.texts :refer [email-default-texts]]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service])
   (:import (java.time ZonedDateTime ZoneId)))
 
@@ -35,6 +36,11 @@
     (.setFetchSize stmt default-fetch-size)
     (with-open [rset (.executeQuery stmt)]
       (func (jdbc/result-set-seq rset)))))
+
+(defn- with-update-cursor [conn sql]
+  (with-open [stmt (.prepareStatement (jdbc/get-connection conn) sql)]
+    (let [rset (.execute stmt)]
+      rset)))
 
 (defn- update-person-info-module
   [new-person-info-module form]
@@ -477,6 +483,16 @@
   [oid]
   (parse-hakukohde oid (tarjonta-client/get-hakukohde oid)))
 
+(defn- migrate-add-subject-and-content-finish []
+  (let [submit-email-subjects (get-in email-default-texts [:email-submit-confirmation-template :submit-email-subjects])
+        email-content-ending  (get-in email-default-texts [:email-submit-confirmation-template :without-application-period])]
+    (with-db-transaction [connection {:datasource (get-datasource :db)}]
+      (with-update-cursor connection "alter table email_templates add column subject TEXT not null default ''")
+      (with-update-cursor connection "alter table email_templates add column content_ending TEXT not null default ''")
+      (doseq [lang [:fi :sv :en]]
+        (migration-app-store/set-1_96-content-ending! connection (name lang) (get email-content-ending lang))
+        (migration-app-store/set-1_96-subject! connection (name lang) (get submit-email-subjects lang))))))
+
 (defn- migrate-attachment-states-to-applications
   [connection]
   (let [get-cached-hakukohde-and-ryhmaliitokset (memoize get-hakukohde-rymaliitoket)]
@@ -595,6 +611,11 @@
   "Migrate attachment states for applications"
   (with-db-transaction [conn {:connection connection}]
     (migrate-attachment-states-to-applications conn)))
+
+(migrations/defmigration
+  add-subject-and-content-finish "1.96"
+  "Migrate email templates to contain subject and finishing content"
+  (migrate-add-subject-and-content-finish))
 
 (defn migrate
   []
