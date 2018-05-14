@@ -638,7 +638,8 @@
         loaded-application-count   (subscribe [:application/loaded-application-count])
         enabled-filter-count       (subscribe [:application/enabled-filter-count])
         review-settings            (subscribe [:state-query [:application :review-settings :config]])
-        filters-visible            (r/atom false)]
+        filters-visible            (r/atom false)
+        filters-to-include         #{:language-requirement :degree-requirement :eligibility-state :payment-obligation}]
     (fn []
       [:span.application-handling__filters
        [:a
@@ -661,15 +662,13 @@
            [application-filter-checkbox filters "Yksilöimättömät" :only-identified :unidentified]
            [application-filter-checkbox filters "Yksilöidyt" :only-identified :identified]]
           [:h3 "Käsittelymerkinnät"]
-          (doall
-            (map
-              (partial review-type-filter filters)
-              (filter
-                (fn [[kw _ _]]
-                  (and
-                    (contains? #{:language-requirement :degree-requirement :eligibility-state :payment-obligation} kw)
-                    (-> @review-settings (get kw) (false?) (not))))
-                review-states/hakukohde-review-types)))])])))
+          (->> review-states/hakukohde-review-types
+               (filter (fn [[kw _ _]]
+                         (and
+                           (contains? filters-to-include kw)
+                           (-> @review-settings (get kw) (false?) (not)))))
+               (map (partial review-type-filter filters))
+               (doall))])])))
 
 (defn application-list [applications]
   (let [fetching        (subscribe [:state-query [:application :fetching-applications]])
