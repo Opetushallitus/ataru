@@ -226,10 +226,3 @@
   :editor/email-template
   (fn [db _]
     (get-in db [:editor :email-template (get-in db [:editor :selected-form-key])])))
-
-(re-frame/reg-sub
-  :editor/current-form-locked
-  (fn [db _]
-    (let [current-form (get-in db [:editor :forms (get-in db [:editor :selected-form-key])])]
-      (when (some? (:locked current-form))
-        (select-keys current-form [:locked :locked-by])))))
