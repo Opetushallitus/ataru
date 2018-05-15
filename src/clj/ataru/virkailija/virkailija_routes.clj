@@ -179,9 +179,7 @@
       :path-params [id :- Long]
       :return ataru-schema/FormWithContent
       :summary "Get content for form"
-      (let [form (form-store/fetch-form id)]
-        (ok (cond-> form
-                    (:locked-by form) (update-virkailija-name)))))
+      (ok (form-store/fetch-form id)))
 
     (api/PUT "/forms/:id" {session :session}
       :summary "Get content for form"
@@ -194,7 +192,6 @@
       :path-params [id :- Long
                     operation :- (s/enum "open" "close")]
       :return {:locked    (s/maybe org.joda.time.DateTime)
-               :locked-by (s/maybe s/Str)
                :id        Long}
       :summary "Toggle form locked state"
       (ok (access-controlled-form/update-form-lock id operation session virkailija-tarjonta-service organization-service)))
