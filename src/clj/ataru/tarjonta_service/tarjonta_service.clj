@@ -35,6 +35,7 @@
   (->> (select-organizations-for-rights organization-service
                                         session
                                         [:form-edit])
+       (map :oid)
        ((fn [oids] (if (and (empty? oids)
                             (get-in session [:identity :superuser]))
                      [oph-organization]
