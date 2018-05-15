@@ -281,7 +281,7 @@
                                                                  (get onr-persons)
                                                                  (parse-person application))))
                                               allowed-applications)
-        skip-answers-to-preserve-memory? (<= 2000 (count allowed-applications))
+        skip-answers-to-preserve-memory? (<= 4500 (count allowed-applications))
         skip-answers?                    (or user-wants-to-skip-answers?
                                              skip-answers-to-preserve-memory?)]
     (ByteArrayInputStream. (excel/export-applications applications-with-persons
