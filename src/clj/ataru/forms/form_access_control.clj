@@ -142,12 +142,14 @@
 
 (defn update-form-lock [form-id operation session virkailija-tarjonta-service organization-service]
   (let [latest-version  (form-store/fetch-form form-id)
+        previous-locked (:locked latest-version)
         lock?           (= "close" operation)
         updated-form    (merge latest-version
                                (if lock?
                                  {:locked "now()" :locked-by (-> session :identity :username)}
                                  {:locked nil :locked-by nil}))]
-    (if (not= form-id (:id latest-version))
+    (if (or (and lock? (some? previous-locked))
+            (and (not lock?) (nil? previous-locked)))
       (throw (user-feedback-exception "Lomakkeen sisältö on muuttunut. Lataa sivu uudelleen."))
       (select-keys (post-form updated-form session virkailija-tarjonta-service organization-service)
                    [:locked :locked-by :id]))))
