@@ -100,6 +100,43 @@
        [:div.toggle-switch__label-divider]
        [:div.toggle-switch__label-right (get-translation :preview)]]]]))
 
+(defn- seconds-text [seconds]
+  (when (pos? seconds)
+    (str seconds " "
+         (if (= 1 seconds)
+           (get-translation :second)
+           (get-translation :seconds)))))
+
+(defn- minutes-text [minutes]
+  (when (pos? minutes)
+    (str minutes " "
+         (if (= 1 minutes)
+           (get-translation :minute)
+           (get-translation :minutes)))))
+
+(defn- minutes-seconds-text [minutes seconds]
+  (str (minutes-text minutes) " "
+       (seconds-text seconds)))
+
+(defn- hours-minutes-text [hours minutes]
+  (str hours " "
+       (if (= 1 hours)
+         (get-translation :hour)
+         (get-translation :hours))
+       " " (minutes-text minutes)))
+
+(defn- hakuaika-left []
+  (when-let [seconds-left @(subscribe [:state-query [:form :hakuaika-left]])]
+    (let [hours          (Math/floor (/ seconds-left 3600))
+          minutes        (Math/floor (/ (rem seconds-left 3600) 60))
+          seconds        (rem (rem seconds-left 3600) 60)
+          time-left-text (cond
+                           (pos? hours) (hours-minutes-text hours minutes)
+                           (pos? minutes) (minutes-seconds-text minutes seconds)
+                           :else (seconds-text seconds))]
+      [:div.application__hakuaika-left
+       (str "Hakuaikaa jäljellä " time-left-text)])))
+
 (defn status-controls []
   (let [valid-status  (subscribe [:application/valid-status])
         submit-status (subscribe [:state-query [:application :submit-status]])
@@ -125,4 +162,4 @@
 (defn banner [] [:div.application__banner-container
                  [virkailija-fill-ribbon]
                  [:div.application__top-banner-container
-                  [:div.application-top-banner [logo] [status-controls]]]])
+                  [:div.application-top-banner [logo] [hakuaika-left] [status-controls]]]])

@@ -171,7 +171,13 @@
                                              :sv "Förhandsvisa"}
    :window-close-warning                    {:fi "Varmistathan että hakemus on lähetetty ennen sivun sulkemista."
                                              :en "Please ensure you have submitted the form before closing the page."
-                                             :sv ""}})
+                                             :sv ""}
+   :hours                                   {:fi "tuntia" :en "hours" :sv "timmar"}
+   :minutes                                 {:fi "minuuttia" :en "minutes" :sv "minuter"}
+   :seconds                                 {:fi "sekuntia" :en "seconds" :sv "sekunder"}
+   :hour                                    {:fi "tunti" :en "hour" :sv "timme"}
+   :minute                                  {:fi "minuutti" :en "minute" :sv "minut"}
+   :second                                  {:fi "sekunti" :en "second" :sv "sekund"}})
 
 (def general-texts
   {:yes      {:en "Yes"
