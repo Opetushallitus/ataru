@@ -146,7 +146,7 @@
         lock?           (= "close" operation)
         updated-form    (merge latest-version
                                (if lock?
-                                 {:locked "now()" :locked-by (-> session :identity :username)}
+                                 {:locked "now()" :locked-by (-> session :identity :oid)}
                                  {:locked nil :locked-by nil}))]
     (if (or (and lock? (some? previous-locked))
             (and (not lock?) (nil? previous-locked)))
