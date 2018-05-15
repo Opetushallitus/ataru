@@ -713,7 +713,7 @@
         value                    (subscribe [:editor/get-component-value path])
         animation-effect         (fade-out-effect path)
         koodisto-ordered-id      (util/new-uuid)
-        form-locked      (subscribe [:editor/current-form-locked])]
+        form-locked              (subscribe [:editor/current-form-locked])]
     (fn [initial-content path {:keys [question-group-element?]}]
       (let [languages  @languages
             field-type (:fieldType @value)
@@ -748,6 +748,7 @@
                [:input {:id        koodisto-ordered-id
                         :type      "checkbox"
                         :checked   (not @koodisto-ordered-by-user)
+                        :disabled  (some? @form-locked)
                         :on-change (fn [event]
                                      (dispatch [:editor/set-ordered-by-user (-> event .-target .-checked) path]))}]
                [:label
