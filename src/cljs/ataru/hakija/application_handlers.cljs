@@ -10,7 +10,9 @@
                                               extract-wrapper-sections]]
             [taoensso.timbre :refer-macros [spy debug]]
             [clojure.data :as d]
-            [ataru.component-data.value-transformers :as value-transformers]))
+            [ataru.component-data.value-transformers :as value-transformers]
+            [cljs-time.core :as c]
+            [cljs-time.coerce :refer [from-long]]))
 
 (defn initialize-db [_ _]
   {:form        nil
@@ -459,6 +461,13 @@
         (original-values->answers)
         (set-field-visibilities))))
 
+(reg-event-fx
+  :application/post-handle-form-dispatches
+  (fn [_ _]
+    {:dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
+                  [:application/hakukohde-query-change "" 0]
+                  [:application/set-page-title]
+                  [:application/update-hakuaika-left]]}))
 
 (defn- handle-get-application [{:keys [db]}
                                [_
@@ -478,9 +487,7 @@
                    (assoc-in [:application :cannot-edit-because-in-processing] (:cannot-edit-because-in-processing application))
                    (assoc-in [:form :selected-language] (or (keyword (:lang application)) :fi))
                    (handle-form (:answers application) form))
-     :dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
-                  [:application/hakukohde-query-change "" 0]
-                  [:application/set-page-title]]}))
+     :dispatch [:application/post-handle-form-dispatches]}))
 
 (reg-event-fx
   :application/handle-get-application
@@ -495,9 +502,7 @@
   :application/handle-form
   (fn [{:keys [db]} [_ form]]
     {:db         (handle-form db nil form)
-     :dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
-                  [:application/hakukohde-query-change "" 0]
-                  [:application/set-page-title]]}))
+     :dispatch [:application/post-handle-form-dispatches]}))
 
 (reg-event-db
   :application/initialize-db
@@ -1120,3 +1125,21 @@
   :application/setup-window-unload
   (fn [_ _]
     {:set-window-close-callback nil}))
+
+(reg-event-fx
+  :application/update-hakuaika-left
+  (fn [{db :db} _]
+    (let [hakuaika-end             (->> db :form :tarjonta :hakukohteet
+                                        (map :hakuaika)
+                                        (filter :on)
+                                        (sort-by :end >)
+                                        first
+                                        :end)
+          hakuaika-left-in-seconds (c/in-seconds (c/interval (c/now) (from-long hakuaika-end)))
+          relevant-hakuaika-left   (when (and (> (* 24 3600) hakuaika-left-in-seconds)
+                                              (< 0 hakuaika-left-in-seconds))
+                                     hakuaika-left-in-seconds)]
+      {:db             (assoc-in db [:form :hakuaika-left] relevant-hakuaika-left)
+       :dispatch-later (when relevant-hakuaika-left
+                         [{:ms       1000
+                           :dispatch [:application/update-hakuaika-left]}])})))
