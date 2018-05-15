@@ -240,8 +240,8 @@
                     clickElement(function() { return formComponents().eq(4).find('.editor-form__koodisto-popover a:contains("Pohjakoulutus")') })
                 );
                 it('selected correctly', function() {
-                    expect(formComponents()).to.have.length(5)
-                    expect(formComponents().eq(4).find('.editor-form__multi-options_wrapper .editor-form__button--right-edge').text()).to.equal("Koodisto: Pohjakoulutus")
+                    expect(formComponents()).to.have.length(5);
+                    expect(formComponents().eq(4).find('.editor-form__multi-options_wrapper .editor-form__button-label--right-edge').text()).to.equal("Koodisto: Pohjakoulutus")
                 })
             });
 
@@ -300,8 +300,8 @@
                     clickElement(function() { return formComponents().eq(6).find('.editor-form__koodisto-popover a:contains("Tutkinto")') })
                 );
                 it('selected correctly', function() {
-                    expect(formComponents()).to.have.length(7)
-                    expect(formComponents().eq(6).find('.editor-form__multi-options_wrapper .editor-form__button--right-edge').text()).to.equal("Koodisto: Tutkinto")
+                    expect(formComponents()).to.have.length(7);
+                    expect(formComponents().eq(6).find('.editor-form__multi-options_wrapper .editor-form__button-label--right-edge').text()).to.equal("Koodisto: Tutkinto")
                 })
             });
 
@@ -352,8 +352,8 @@
                     clickElement(function() { return formComponents().eq(10).find('.editor-form__koodisto-popover a:contains("Tutkinto")') })
                 );
                 it('selected correctly', function() {
-                    expect(formComponents()).to.have.length(11)
-                    expect(formComponents().eq(10).find('.editor-form__multi-options_wrapper .editor-form__button--right-edge').text()).to.equal("Koodisto: Tutkinto")
+                    expect(formComponents()).to.have.length(11);
+                    expect(formComponents().eq(10).find('.editor-form__multi-options_wrapper .editor-form__button-label--right-edge').text()).to.equal("Koodisto: Tutkinto")
                 })
             });
 
