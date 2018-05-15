@@ -143,9 +143,7 @@
                             :operation        (if (:deleted new-form) audit-log/operation-delete audit-log/operation-modify)
                             :organization-oid organization-oid})
             new-form))))
-    (let [new-form         (create-new-form! (-> form (dissoc :key) (assoc :organization-oid organization-oid
-                                                                           :locked nil
-                                                                           :locked-by nil)))
+    (let [new-form         (create-new-form! (dissoc form :key))
           log-id           (:created-by new-form)
           organization-oid (:organization-oid new-form)]
       (audit-log/log {:new              new-form

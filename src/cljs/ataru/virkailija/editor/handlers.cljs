@@ -430,9 +430,11 @@
   :editor/add-form
   (fn [db _]
     (post-new-form
-     {:name             {:fi "Uusi lomake"}
-      :content          [(component/hakukohteet) (pm/person-info-module)]
-      :languages        [:fi]})
+      {:name      {:fi "Uusi lomake"}
+       :content   [(component/hakukohteet) (pm/person-info-module)]
+       :languages [:fi]
+       :locked    nil
+       :locked-by nil})
     db))
 
 (defn- copy-form [db _]

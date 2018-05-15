@@ -8,8 +8,7 @@ SELECT
   created_by,
   created_time,
   languages,
-  locked,
-  locked_by
+  locked
 FROM latest_forms
 WHERE (deleted IS NULL OR deleted = FALSE)
   AND (:query_type = 'ALL' OR organization_oid IN (:authorized_organization_oids))
@@ -25,8 +24,7 @@ SELECT
   f.created_by,
   f.created_time,
   f.languages,
-  f.locked,
-  f.locked_by
+  f.locked
 FROM latest_forms f
 WHERE (f.key IN (:keys)) AND (f.deleted IS NULL OR NOT f.deleted)
 ORDER BY created_time DESC;
@@ -62,7 +60,7 @@ SELECT
   f.deleted,
   f.organization_oid,
   f.locked,
-  f.locked_by,
+  CONCAT(first_name, ' ', last_name) as locked_by,
   (SELECT count(*)
    FROM latest_applications
    WHERE haku IS NULL
@@ -70,6 +68,7 @@ SELECT
                      FROM forms
                      WHERE key = f.key)) AS application_count
 FROM latest_forms f
+left join virkailija on f.locked_by = virkailija.oid
 WHERE f.key = (SELECT key FROM forms WHERE id = :id);
 
 -- name: yesql-fetch-latest-version-by-key

@@ -152,4 +152,4 @@
             (and (not lock?) (nil? previous-locked)))
       (throw (user-feedback-exception "Lomakkeen sisältö on muuttunut. Lataa sivu uudelleen."))
       (select-keys (post-form updated-form session virkailija-tarjonta-service organization-service)
-                   [:locked :locked-by :id]))))
+                   [:locked :id]))))
