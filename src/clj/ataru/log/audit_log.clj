@@ -73,6 +73,17 @@
                             (into {} (map (fn [[k v]] [k (t v)])))))
                         coll))
 
+(defn- get-message [new old]
+  (m/match [new old]
+           [(_ :guard map-or-vec?) (_ :guard map-or-vec?)]
+           (diff old new)
+
+           [(_ :guard map-or-vec?) (_ :guard nil?)]
+           (json/generate-string (dissoc new :content :answers))
+
+           [(_ :guard string?) _]
+           new))
+
 (defn- do-log [{:keys [new old id operation organization-oid]}]
   {:pre [(or (and (or (string? new)
                       (map-or-vec? new))
