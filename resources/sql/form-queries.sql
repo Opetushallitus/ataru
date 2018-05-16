@@ -60,7 +60,7 @@ SELECT
   f.deleted,
   f.organization_oid,
   f.locked,
-  CONCAT(first_name, ' ', last_name) as locked_by,
+  (CASE WHEN f.locked_by IS NULL THEN NULL ELSE CONCAT(first_name, ' ', last_name) END) as locked_by,
   (SELECT count(*)
    FROM latest_applications
    WHERE haku IS NULL
@@ -68,7 +68,7 @@ SELECT
                      FROM forms
                      WHERE key = f.key)) AS application_count
 FROM latest_forms f
-left join virkailija on f.locked_by = virkailija.oid
+LEFT JOIN virkailija ON f.locked_by = virkailija.oid
 WHERE f.key = (SELECT key FROM forms WHERE id = :id);
 
 -- name: yesql-fetch-latest-version-by-key
