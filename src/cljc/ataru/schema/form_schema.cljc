@@ -41,7 +41,7 @@
 (s/defschema Form {(s/optional-key :id)                s/Int
                    :name                               LocalizedStringOptional
                    :content                            (s/pred empty?)
-                   :locked                             #?(:clj (s/maybe org.joda.time.DateTime)
+                   (s/optional-key :locked)            #?(:clj  (s/maybe org.joda.time.DateTime)
                                                           :cljs (s/maybe s/Str))
                    (s/optional-key :locked-by)         (s/maybe s/Str)
                    (s/optional-key :languages)         [s/Str]

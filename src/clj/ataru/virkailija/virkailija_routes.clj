@@ -115,11 +115,6 @@
                               :cookie-attrs {:secure (not (:dev? env))}
                               :store (create-store)}))
 
-(defn- update-virkailija-name [form]
-  (update form :locked-by (fn [username]
-                            (let [user (ataru.organization-service.ldap-client/get-virkailija-by-username username)]
-                              (format "%s %s" (:givenName user) (:sn user))))))
-
 (api/defroutes test-routes
   (api/undocumented
    (api/GET "/virkailija-test.html" []
@@ -182,7 +177,7 @@
       (ok (form-store/fetch-form id)))
 
     (api/PUT "/forms/:id" {session :session}
-      :summary "Get content for form"
+      :summary "Edit form content"
       :path-params [id :- Long]
       :body [operations [ataru-schema/Operation]]
       (access-controlled-form/edit-form-with-operations id operations session virkailija-tarjonta-service organization-service)
