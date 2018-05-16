@@ -2,8 +2,8 @@
 
 set -e
 
-VIRKAILIJA_CONFIG="../ataru-secrets/virkailija-dev.edn"
-HAKIJA_CONFIG="../ataru-secrets/hakija-dev.edn"
+VIRKAILIJA_CONFIG="../ataru-secrets/virkailija-untuva.edn"
+HAKIJA_CONFIG="../ataru-secrets/hakija-untuva.edn"
 
 type -p rlwrap > /dev/null && RLWRAP="rlwrap" || RLWRAP=""
 
