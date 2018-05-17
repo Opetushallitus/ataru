@@ -1202,7 +1202,7 @@
                      (if @settings-visible?
                        " application-handling__send-information-request-button--cursor-default"
                        " application-handling__send-information-request-button--cursor-pointer"))}
-     [:span "Lähetä muokkauslinkki hakijalle"]
+     [:span "Lähetä vahvistussähköposti hakijalle"]
      [:span.application-handling__resend-modify-application-link-email-text @recipient]]))
 
 (defn- application-resend-modify-link-confirmation []
