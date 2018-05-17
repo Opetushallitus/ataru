@@ -782,8 +782,8 @@
       (dissoc :virkailija_oid :removed)
       (->kebab-case-kw)))
 
-(defn get-application-info-for-tilastokeskus [haku-oid]
-  (exec-db :db yesql-tilastokeskus-applications {:haku_oid haku-oid}))
+(defn get-application-info-for-tilastokeskus [haku-oid hakukohde-oid]
+  (exec-db :db yesql-tilastokeskus-applications {:haku_oid haku-oid :hakukohde_oid hakukohde-oid}))
 
 (defn- get-application-eligibilities-by-hakutoive [application]
   (let [eligibilities-by-hakukohde (:application_hakukohde_reviews application)]

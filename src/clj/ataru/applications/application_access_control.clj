@@ -173,14 +173,14 @@
     (constantly nil)
     #(odw-service/get-applications-for-odw person-service from-date)))
 
-(defn get-applications-for-tilastokeskus [organization-service session haku-oid]
+(defn get-applications-for-tilastokeskus [organization-service session haku-oid hakukohde-oid]
   (session-orgs/run-org-authorized
     session
     organization-service
     [:view-applications :edit-applications]
     (constantly nil)
     (constantly nil)
-    #(application-store/get-application-info-for-tilastokeskus haku-oid)))
+    #(application-store/get-application-info-for-tilastokeskus haku-oid hakukohde-oid)))
 
 (defn get-applications-for-valintalaskenta [organization-service session hakukohde-oid application-keys]
   (session-orgs/run-org-authorized
