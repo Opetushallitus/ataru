@@ -771,6 +771,7 @@ WHERE person_oid IS NOT NULL
   AND haku IS NOT NULL
   AND haku = :haku_oid
   AND state <> 'inactivated'
+  AND (:hakukohde_oid::TEXT IS NULL OR :hakukohde_oid = ANY (hakukohde))
 ORDER BY created_time DESC;
 
 --name: yesql-valintalaskenta-applications

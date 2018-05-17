@@ -656,11 +656,13 @@
           (response/unauthorized {:error "Unauthorized"})))
       (api/GET "/tilastokeskus" {session :session}
         :summary "Get application info for tilastokeskus"
-        :query-params [hakuOid :- s/Str]
+        :query-params [hakuOid :- s/Str
+                       {hakukohdeOid :- s/Str nil}]
         :return [ataru-schema/TilastokeskusApplication]
         (if-let [applications (access-controlled-application/get-applications-for-tilastokeskus organization-service
                                                                                                 session
-                                                                                                hakuOid)]
+                                                                                                hakuOid
+                                                                                                hakukohdeOid)]
           (response/ok applications)
           (response/unauthorized {:error "Unauthorized"})))
 
