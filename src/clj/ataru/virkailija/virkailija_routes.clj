@@ -145,6 +145,7 @@
 
 (defn api-routes [{:keys [organization-service
                           tarjonta-service
+                          job-runner
                           ohjausparametrit-service
                           virkailija-tarjonta-service
                           cache-service
@@ -367,7 +368,8 @@
                                 application-key
                                 session
                                 organization-service
-                                tarjonta-service)]
+                                tarjonta-service
+                                job-runner)]
           (response/ok resend-event)
           (response/bad-request)))
 
@@ -414,7 +416,7 @@
         :body [information-request ataru-schema/NewInformationRequest]
         :summary "Send an information request to an applicant"
         :return ataru-schema/InformationRequest
-        (ok (information-request/store information-request session)))
+        (ok (information-request/store information-request session job-runner)))
 
       (api/POST "/excel" {session :session}
         :form-params [application-keys :- s/Str

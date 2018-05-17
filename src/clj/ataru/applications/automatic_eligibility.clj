@@ -171,8 +171,8 @@
                         :hakukohde   hakukohde}))))))
 
 (defn start-automatic-eligibility-if-ylioppilas-job
-  [job-definitions application-id]
-  (job/start-job job-definitions
+  [job-runner application-id]
+  (job/start-job job-runner
                  "automatic-eligibility-if-ylioppilas-job"
                  {:application-id application-id}))
 

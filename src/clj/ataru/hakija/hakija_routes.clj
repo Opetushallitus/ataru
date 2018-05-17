@@ -111,7 +111,11 @@
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
 
-(defn api-routes [tarjonta-service organization-service ohjausparametrit-service person-service]
+(defn api-routes [tarjonta-service
+                  job-runner
+                  organization-service
+                  ohjausparametrit-service
+                  person-service]
   (api/context "/api" []
     :tags ["application-api"]
     (api/GET ["/haku/:haku-oid" :haku-oid #"[0-9\.]+"] []
@@ -162,6 +166,7 @@
       :body [application ataru-schema/Application]
       (match (hakija-application-service/handle-application-submit
               tarjonta-service
+              job-runner
               organization-service
               ohjausparametrit-service
               application)
@@ -175,6 +180,7 @@
       :body [application ataru-schema/Application]
       (match (hakija-application-service/handle-application-edit
               tarjonta-service
+              job-runner
               organization-service
               ohjausparametrit-service
               application)
@@ -281,6 +287,7 @@
                                (api/context "/hakemus" []
                                   test-routes
                                   (api-routes (:tarjonta-service this)
+                                              (:job-runner this)
                                               (:organization-service this)
                                               (:ohjausparametrit-service this)
                                               (:person-service this))

@@ -37,15 +37,15 @@
                 :recipients [recipient-email]
                 :body       body}))))
 
-(defn- start-email-job [information-request]
+(defn- start-email-job [job-runner information-request]
   (let [initial-state (initial-state information-request)
         job-type      (:type information-request-job/job-definition)
-        job-id        (job/start-job virkailija-jobs/job-definitions
+        job-id        (job/start-job job-runner
                                      job-type
                                      initial-state)]
     (log/info (str "Started information request email job with job id " job-id ", initial state: " initial-state))))
 
-(defn store [information-request session]
+(defn store [information-request session job-runner]
   {:pre [(-> information-request :subject u/not-blank?)
          (-> information-request :message u/not-blank?)
          (-> information-request :application-key u/not-blank?)]}
@@ -54,5 +54,5 @@
       (audit-log/log {:new       information-request
                       :operation audit-log/operation-new
                       :id        (-> session :identity :username)})
-      (start-email-job information-request)
+      (start-email-job job-runner information-request)
       information-request)))

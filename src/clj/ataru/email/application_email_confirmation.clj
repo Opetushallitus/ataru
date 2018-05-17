@@ -181,24 +181,27 @@
                 #(str "templates/email_refresh_secret_template_" (name %) ".html")
                 application-id))
 
-(defn start-email-job [email]
-                      (let [job-type (:type email-job/job-definition)
-                            job-id   (job/start-job
-                                       hakija-jobs/job-definitions
-                                       job-type
-                                       email)]
-                        (log/info "Started application confirmation email job (to viestintäpalvelu) with job id" job-id ":")
-                        (log/info email)))
+(defn start-email-job [job-runner email]
+  (let [job-id (job/start-job job-runner
+                              (:type email-job/job-definition)
+                              email)]
+    (log/info "Started application confirmation email job (to viestintäpalvelu) with job id" job-id ":")
+    (log/info email)))
 
-(defn start-email-submit-confirmation-job [tarjonta-service application-id]
-                                          (start-email-job (create-submit-email tarjonta-service application-id)))
+(defn start-email-submit-confirmation-job
+  [tarjonta-service job-runner application-id]
+  (start-email-job job-runner (create-submit-email tarjonta-service
+                                                   application-id)))
 
-(defn start-email-edit-confirmation-job [tarjonta-service application-id]
-                                        (start-email-job (create-edit-email tarjonta-service application-id)))
+(defn start-email-edit-confirmation-job
+  [tarjonta-service job-runner application-id]
+  (start-email-job job-runner (create-edit-email tarjonta-service
+                                                 application-id)))
 
 (defn start-email-refresh-secret-confirmation-job
-  [tarjonta-service application-id]
-  (start-email-job (create-refresh-secret-email tarjonta-service application-id)))
+  [tarjonta-service job-runner application-id]
+  (start-email-job job-runner (create-refresh-secret-email tarjonta-service
+                                                           application-id)))
 
 (defn store-email-templates
   [form-key session templates]

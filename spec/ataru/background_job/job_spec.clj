@@ -50,7 +50,7 @@
                                :caused-by-error nil})
 
 (defn start-job-runner []
-  (let [runner (job/->JobRunner job-definitions)]
+  (let [runner (job/->PersistentJobRunner job-definitions)]
     (.start runner)))
 
 (defn get-final-iteration-for-job [job-id]
@@ -78,7 +78,7 @@
      (with-redefs [time/now fixed-now
                    config   fake-config]
        (let [job-runner      (start-job-runner)
-             job-id          (job/start-job job-definitions (:type retrying-job) {:counter 0})
+             job-id          (job/start-job job-runner (:type retrying-job) {:counter 0})
              final-iteration (wait-for-final-iteration job-id)]
          (should= expected-final-iteration
                   final-iteration)
