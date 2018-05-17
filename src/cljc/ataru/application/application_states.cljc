@@ -34,7 +34,9 @@
                             unreviewed-targets))))
 
 (defn get-all-reviews-for-all-requirements
-  [application selected-hakukohde-oid]
-  (mapcat
-    #(get-all-reviews-for-requirement % application selected-hakukohde-oid)
-    review-states/hakukohde-review-type-names))
+  ([application selected-hakukohde-oid]
+   (mapcat
+     #(get-all-reviews-for-requirement % application selected-hakukohde-oid)
+     review-states/hakukohde-review-type-names))
+  ([application]
+    (get-all-reviews-for-all-requirements application nil)))

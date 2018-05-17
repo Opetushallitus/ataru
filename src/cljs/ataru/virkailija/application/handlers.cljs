@@ -283,7 +283,7 @@
   (fn [{:keys [db]} [_ {:keys [applications]}]]
     (let [parsed-applications (->> applications
                                    (map parse-application-time)
-                                   (map application-states/get-all-reviews-for-all-requirements))
+                                   (map #(assoc % :application-hakukohde-reviews (application-states/get-all-reviews-for-all-requirements %))))
           db                  (-> db
                                   (assoc-in [:application :applications] parsed-applications)
                                   (assoc-in [:application :fetching-applications] false)
