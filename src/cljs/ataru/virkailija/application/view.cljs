@@ -638,6 +638,7 @@
         loaded-application-count   (subscribe [:application/loaded-application-count])
         enabled-filter-count       (subscribe [:application/enabled-filter-count])
         review-settings            (subscribe [:state-query [:application :review-settings :config]])
+        selected-hakukohde-oid     (subscribe [:state-query [:application :selected-hakukohde]])
         filters-visible            (r/atom false)
         filters-to-include         #{:language-requirement :degree-requirement :eligibility-state :payment-obligation}]
     (fn []
@@ -662,6 +663,9 @@
            [application-filter-checkbox filters "Yksilöimättömät" :only-identified :unidentified]
            [application-filter-checkbox filters "Yksilöidyt" :only-identified :identified]]
           [:h3 "Käsittelymerkinnät"]
+          (when (some? @selected-hakukohde-oid)
+            [:div.application-handling__filter-hakukohde-name
+             @(subscribe [:application/hakukohde-name @selected-hakukohde-oid])])
           (->> review-states/hakukohde-review-types
                (filter (fn [[kw _ _]]
                          (and
