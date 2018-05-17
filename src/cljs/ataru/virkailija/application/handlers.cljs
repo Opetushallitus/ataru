@@ -15,7 +15,8 @@
             [ataru.url :as url]
             [camel-snake-kebab.core :as c]
             [camel-snake-kebab.extras :as ce]
-            [cljs-time.core :as t]))
+            [cljs-time.core :as t]
+            [ataru.application.application-states :as application-states]))
 
 (defn- state-filter->query-param
   [db filter all-states]
@@ -280,20 +281,22 @@
 (reg-event-fx
   :application/handle-fetch-applications-response
   (fn [{:keys [db]} [_ {:keys [applications]}]]
-    (let [applications-with-times (map parse-application-time applications)
-          db (-> db
-                 (assoc-in [:application :applications] applications-with-times)
-                 (assoc-in [:application :fetching-applications] false)
-                 (assoc-in [:application :review-state-counts] (review-state-counts applications-with-times))
-                 (assoc-in [:application :attachment-state-counts] (attachment-state-counts applications-with-times))
-                 (assoc-in [:application :sort] application-sorting/initial-sort)
-                 (assoc-in [:application :selected-time-column] :created-time)
-                 (assoc-in [:application :information-request] nil)
-                 (update-sort (:column application-sorting/initial-sort) false))
-          application-key (if (= 1 (count applications-with-times))
-                            (-> applications-with-times first :key)
-                            (when-let [query-key (:application-key (cljs-util/extract-query-params))]
-                              (some #{query-key} (map :key applications-with-times))))]
+    (let [parsed-applications (->> applications
+                                   (map parse-application-time)
+                                   (map application-states/get-all-reviews-for-all-requirements))
+          db                  (-> db
+                                  (assoc-in [:application :applications] parsed-applications)
+                                  (assoc-in [:application :fetching-applications] false)
+                                  (assoc-in [:application :review-state-counts] (review-state-counts parsed-applications))
+                                  (assoc-in [:application :attachment-state-counts] (attachment-state-counts parsed-applications))
+                                  (assoc-in [:application :sort] application-sorting/initial-sort)
+                                  (assoc-in [:application :selected-time-column] :created-time)
+                                  (assoc-in [:application :information-request] nil)
+                                  (update-sort (:column application-sorting/initial-sort) false))
+          application-key     (if (= 1 (count parsed-applications))
+                                (-> parsed-applications first :key)
+                                (when-let [query-key (:application-key (cljs-util/extract-query-params))]
+                                  (some #{query-key} (map :key parsed-applications))))]
       {:db       db
        :dispatch (if application-key
                    [:application/select-application application-key]
