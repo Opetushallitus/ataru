@@ -242,7 +242,7 @@
   (assoc (dissoc application :form) :form-id form))
 
 (defn- application->loggable-form [{:keys [form] :as application}]
-  (cond-> (select-keys application [:id :key :form-id :answers])
+  (cond-> application
     (some? form)
     (form->form-id)))
 
