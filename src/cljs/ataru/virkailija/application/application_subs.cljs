@@ -4,7 +4,8 @@
             [re-frame.core :as re-frame]
             [ataru.util :as u]
             [ataru.application.review-states :as review-states]
-            [ataru.cljs-util :as util]))
+            [ataru.cljs-util :as util]
+            [ataru.application.application-states :as application-states]))
 
 (defn- from-multi-lang [text lang]
   (some #(get text %) [lang :fi :sv :en]))
@@ -327,31 +328,23 @@
          [false true] (-> application :person :yksiloity (not))
          [true false] (-> application :person :yksiloity)))
 
-(defn- state-filter
-  [states states-to-include default-state-name hakukohteet]
-  (or
-   (not (empty? (clojure.set/intersection
-                 states-to-include
-                 (set states))))
-   (and
-    (contains? states-to-include default-state-name)
-    (or
-     (empty? states)
-     (< (count states)
-        (count hakukohteet))))))
-
 (defn- filter-by-hakukohde-review
-  [application requirement-name default-state-name states-to-include]
-  (let [states (->> (:application-hakukohde-reviews application)
-                    (filter #(= requirement-name (:requirement %)))
-                    (map :state))]
-    (state-filter states states-to-include default-state-name (:hakukohde application))))
+  [application selected-hakukohde requirement-name states-to-include]
+  (let [relevant-states (->> (:application-hakukohde-reviews application)
+                             (filter #(and (= requirement-name (:requirement %))
+                                           (or (not selected-hakukohde) (= selected-hakukohde (:hakukohde %)))))
+                             (map :state)
+                             (set))]
+    (not-empty (clojure.set/intersection states-to-include relevant-states))))
 
 (defn- filter-by-attachment-review
-  [application default-state-name states-to-include]
-  (let [states (->> (:application-attachment-reviews application)
-                    (map :state))]
-    (state-filter states states-to-include default-state-name (:hakukohde application))))
+  [application selected-hakukohde states-to-include]
+  (let [relevant-states (->> (:application-attachment-reviews application)
+                             (filter #(or (not selected-hakukohde) (= selected-hakukohde (:hakukohde %))))
+                             (map :state)
+                             (set))]
+    (or (empty? (:application-attachment-reviews application))
+        (not-empty (clojure.set/intersection states-to-include relevant-states)))))
 
 (defn- parse-enabled-filters
   [filters kw]
@@ -365,6 +358,10 @@
   :application/filtered-applications
   (fn [db _]
     (let [applications                 (-> db :application :applications)
+          selected-hakukohde           (cond
+                                         (-> db :application :selected-hakukohde) (-> db :application :selected-hakukohde)
+                                         (-> db :application :selected-haku) nil
+                                         :else "form")
           attachment-states-to-include (-> db :application :attachment-state-filter set)
           processing-states-to-include (-> db :application :processing-state-filter set)
           selection-states-to-include  (-> db :application :selection-state-filter set)
@@ -374,14 +371,14 @@
       (filter
         (fn [application]
           (and
-           (filter-by-yksiloity application identified? unidentified?)
-           (filter-by-hakukohde-review application "processing-state" review-states/initial-application-hakukohde-processing-state processing-states-to-include)
-           (filter-by-hakukohde-review application "selection-state" "incomplete" selection-states-to-include)
-           (filter-by-hakukohde-review application "language-requirement" "unreviewed" (parse-enabled-filters filters :language-requirement))
-           (filter-by-hakukohde-review application "degree-requirement" "unreviewed" (parse-enabled-filters filters :degree-requirement))
-           (filter-by-hakukohde-review application "eligibility-state" "unreviewed" (parse-enabled-filters filters :eligibility-state))
-           (filter-by-hakukohde-review application "payment-obligation" "unreviewed" (parse-enabled-filters filters :payment-obligation))
-           (filter-by-attachment-review application "not-checked" attachment-states-to-include)))
+            (filter-by-yksiloity application identified? unidentified?)
+            (filter-by-hakukohde-review application selected-hakukohde "processing-state" processing-states-to-include)
+            (filter-by-hakukohde-review application selected-hakukohde "selection-state" selection-states-to-include)
+            (filter-by-hakukohde-review application selected-hakukohde "language-requirement" (parse-enabled-filters filters :language-requirement))
+            (filter-by-hakukohde-review application selected-hakukohde "degree-requirement" (parse-enabled-filters filters :degree-requirement))
+            (filter-by-hakukohde-review application selected-hakukohde "eligibility-state" (parse-enabled-filters filters :eligibility-state))
+            (filter-by-hakukohde-review application selected-hakukohde "payment-obligation" (parse-enabled-filters filters :payment-obligation))
+            (filter-by-attachment-review application selected-hakukohde attachment-states-to-include)))
         applications))))
 
 (re-frame/reg-sub
