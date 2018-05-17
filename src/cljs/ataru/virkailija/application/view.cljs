@@ -1044,7 +1044,7 @@
         animated?        (reaction (:animated? @note))
         remove-disabled? (reaction (or (-> @note :state some?)
                                        (-> @note :id not)))
-        hakukohde-name   (subscribe [:state-query [:hakukohteet (:hakukohde @note) :name :fi]])]
+        hakukohde-name   (subscribe [:application/hakukohde-name (:hakukohde @note)])]
     (fn [note-idx]
       [:div.application-handling__review-note
        (when @animated?
