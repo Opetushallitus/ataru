@@ -136,19 +136,37 @@
                                                   (:key application)
                                                   applied-hakukohteet))))))))
 
+(defn- delete-orphan-attachment-reviews [application-key form connection]
+  (let [field-ids          (->> form
+                                :content
+                                util/flatten-form-fields
+                                (map :id)
+                                set)
+        reviews            (yesql-get-application-attachment-reviews {:application_key application-key} connection)
+        orphan-attachments (->> reviews
+                                (map :attachment_key)
+                                (filter #(not (contains? field-ids %)))
+                                distinct)]
+    (when (not-empty orphan-attachments)
+      (yesql-delete-application-attachment-reviews! {:attachment_keys orphan-attachments
+                                                     :application_key application-key}
+                                                    connection))))
+
 (defn- create-attachment-hakukohde-reviews-for-application
-  [application applied-hakukohteet old-answers connection]
+  [application applied-hakukohteet old-answers form connection]
   (let [update?        (not-empty old-answers)
         reviews        (create-application-attachment-reviews application old-answers applied-hakukohteet update?)]
     (doseq [review reviews]
       ((if update?
          yesql-update-attachment-hakukohde-review!
          yesql-save-attachment-review!)
-       review connection))))
+       review connection))
+    (when update?
+      (delete-orphan-attachment-reviews (:key application) form connection))))
 
 (defn- add-new-application-version
   "Add application and also initial metadata (event for receiving application, and initial review record)"
-  [application create-new-secret? applied-hakukohteet old-answers conn]
+  [application create-new-secret? applied-hakukohteet old-answers form conn]
   (let [connection                  {:connection conn}
         answers                     (->> application
                                          :answers
@@ -168,7 +186,7 @@
         new-application             (if (contains? application :key)
                                       (yesql-add-application-version<! application-to-store connection)
                                       (yesql-add-application<! application-to-store connection))]
-    (create-attachment-hakukohde-reviews-for-application new-application applied-hakukohteet old-answers {:connection conn})
+    (create-attachment-hakukohde-reviews-for-application new-application applied-hakukohteet old-answers form {:connection conn})
     (when create-new-secret?
       (yesql-add-application-secret!
         {:application_key (:key new-application)
@@ -212,12 +230,17 @@
        first
        :virkailija_oid))
 
-(defn add-application [new-application applied-hakukohteet]
+(defn add-application [new-application applied-hakukohteet form]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (info (str "Inserting new application"))
     (let [virkailija-oid                       (when-let [secret (:virkailija-secret new-application)]
                                                  (get-virkailija-oid-for-create-secret conn secret))
-          {:keys [id key] :as new-application} (add-new-application-version new-application true applied-hakukohteet nil conn)
+          {:keys [id key] :as new-application} (add-new-application-version new-application
+                                                                            true
+                                                                            applied-hakukohteet
+                                                                            nil
+                                                                            nil
+                                                                            conn)
           connection                           {:connection conn}]
       (audit-log/log {:new       new-application
                       :operation audit-log/operation-new
@@ -253,7 +276,7 @@
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
 
-(defn update-application [{:keys [lang secret virkailija-secret] :as new-application} applied-hakukohteet]
+(defn update-application [{:keys [lang secret virkailija-secret] :as new-application} applied-hakukohteet form]
   {:pre [(or (not-blank? secret)
              (not-blank? virkailija-secret))]}
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
@@ -266,6 +289,7 @@
                                                  updated-by-applicant?
                                                  applied-hakukohteet
                                                  (->  old-application :answers util/answers-by-key)
+                                                 form
                                                  conn)
           virkailija-oid        (when-not updated-by-applicant?
                                   (get-virkailija-oid-for-update-secret conn virkailija-secret))]

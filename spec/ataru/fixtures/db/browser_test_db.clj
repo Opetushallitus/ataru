@@ -266,9 +266,9 @@
   (form-store/create-new-form! hakija-hakukohteen-hakuaika-test-form
                                (:key hakija-hakukohteen-hakuaika-test-form))
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (application-store/add-application application1 [])
-    (application-store/add-application application2 [])
-    (application-store/add-application application3 [])))
+    (application-store/add-application application1 [] nil)
+    (application-store/add-application application2 [] nil)
+    (application-store/add-application application3 [] nil)))
 
 (defn reset-test-db [insert-initial-fixtures?]
   (db/clear-db! :db (-> config :db :schema))
