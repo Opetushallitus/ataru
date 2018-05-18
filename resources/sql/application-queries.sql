@@ -93,8 +93,7 @@ SELECT
                                      'state', state,
                                      'hakukohde', hakukohde))
    FROM application_hakukohde_attachment_reviews aar
-   WHERE aar.application_key = a.key
-     AND (aar.hakukohde = 'form' OR aar.hakukohde = ANY (a.hakukohde))) AS application_attachment_reviews,
+   WHERE aar.application_key = a.key) AS application_attachment_reviews,
   (SELECT COUNT(*)
    FROM new_application_modifications am
    WHERE am.application_key = a.key)  AS new_application_modifications,
@@ -638,11 +637,9 @@ WHERE application_key = :application_key;
 SELECT
   attachment_key,
   state,
-  reviews.hakukohde
-FROM application_hakukohde_attachment_reviews AS reviews
-  JOIN latest_applications AS applications ON application_key = key
-WHERE reviews.application_key = :application_key
-      AND (reviews.hakukohde = 'form' OR reviews.hakukohde = ANY (applications.hakukohde));
+  hakukohde
+FROM application_hakukohde_attachment_reviews
+WHERE application_key = :application_key;
 
 -- name: yesql-get-payment-obligation-for-applications
 SELECT DISTINCT ON (application_key, hakukohde) application_key, hakukohde, state
