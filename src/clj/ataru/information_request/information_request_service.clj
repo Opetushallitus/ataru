@@ -24,14 +24,12 @@
   (let [application-id  (app-store/add-new-secret-to-application (:application-key information-request))
         application     (app-store/get-application application-id)
         lang            (-> application :lang keyword)
-        first-name      (extract-answer-value "preferred-name" application)
         recipient-email (extract-answer-value "email" application)
         translations    (translations/get-translations lang)
         service-url     (get-in config [:public-config :applicant :service_url])
         application-url (str service-url "/hakemus?modify=" (:secret application))
         body            (selmer/render-file "templates/information-request-template.html"
-                                            (merge {:first-name      first-name
-                                                    :message         (:message information-request)
+                                            (merge {:message         (:message information-request)
                                                     :application-url application-url}
                                                    translations))]
     (-> (select-keys information-request [:subject :application-key :id])
