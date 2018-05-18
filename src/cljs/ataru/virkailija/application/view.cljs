@@ -1166,6 +1166,11 @@
    [:div.application-handling__information-request-submitted-checkmark]
    [:span.application-handling__information-request-submitted-text "Täydennyspyyntö lähetetty"]])
 
+(defn- application-information-request-contains-modification-link []
+  [:div.application-handling__information-request-row
+   [:p.application-handling__information-request-contains-modification-link
+    "Muokkauslinkki lähtee viestin mukana automaattisesti"]])
+
 (defn- application-information-request []
   (let [window-visible?      (subscribe [:state-query [:application :information-request :visible?]])
         request-window-open? (reaction (if-some [visible? @window-visible?]
@@ -1183,6 +1188,7 @@
                   [application-information-request-recipient]
                   [application-information-request-subject]
                   [application-information-request-message]
+                  [application-information-request-contains-modification-link]
                   [application-information-request-submit-button])))
         [:div.application-handling__information-request-show-container-link
          [:a
