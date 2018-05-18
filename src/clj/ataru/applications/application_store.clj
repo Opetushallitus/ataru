@@ -75,12 +75,15 @@
       (recur (crypto/url-part 34)))))
 
 (defn- create-attachment-reviews
-  [attachment-field answer application-key hakutoiveet]
-  (let [review-base                        {:application_key application-key
+  [attachment-field answer old-answer application-key hakutoiveet]
+  (let [value-changed?                     (or (nil? old-answer)
+                                               (not= old-answer answer))
+        review-base                        {:application_key application-key
                                             :attachment_key  (:id attachment-field)
                                             :state           (if (empty? answer)
                                                                "incomplete"
-                                                               "not-checked")}
+                                                               "not-checked")
+                                            :updated?        value-changed?}
         relevant-field-hakukohde-oids      (clojure.set/intersection (set (map :oid hakutoiveet))
                                                                      (-> attachment-field :belongs-to-hakukohteet set))
         relevant-field-hakukohderyhma-oids (->> hakutoiveet
@@ -129,14 +132,13 @@
                    (let [attachment-key (-> attachment :id keyword)
                          answer         (-> answers-by-key attachment-key :value)
                          old-answer     (-> old-answers attachment-key :value)]
-                     (when (or (not update?)
-                               (not= answer old-answer))
-                       (create-attachment-reviews attachment
-                                                  answer
-                                                  (:key application)
-                                                  applied-hakukohteet))))))))
+                     (create-attachment-reviews attachment
+                                                answer
+                                                old-answer
+                                                (:key application)
+                                                applied-hakukohteet)))))))
 
-(defn- delete-orphan-attachment-reviews [application-key form connection]
+(defn- delete-orphan-attachment-reviews [application-key applied-hakukohteet form connection]
   (let [field-ids          (->> form
                                 :content
                                 util/flatten-form-fields
@@ -147,22 +149,24 @@
                                 (map :attachment_key)
                                 (filter #(not (contains? field-ids %)))
                                 distinct)]
-    (when (not-empty orphan-attachments)
-      (yesql-delete-application-attachment-reviews! {:attachment_keys orphan-attachments
-                                                     :application_key application-key}
-                                                    connection))))
+    (println applied-hakukohteet)
+    (println orphan-attachments)
+    (yesql-delete-application-attachment-reviews! {:application_key     application-key
+                                                   :attachment_keys     (cons "" orphan-attachments)
+                                                   :applied_hakukohteet (cons "" applied-hakukohteet)}
+                                                  connection)))
 
 (defn- create-attachment-hakukohde-reviews-for-application
   [application applied-hakukohteet old-answers form connection]
-  (let [update?        (not-empty old-answers)
-        reviews        (create-application-attachment-reviews application old-answers applied-hakukohteet update?)]
+  (let [update? (not-empty old-answers)
+        reviews (create-application-attachment-reviews application old-answers applied-hakukohteet update?)]
     (doseq [review reviews]
-      ((if update?
+      ((if (:updated? review)
          yesql-update-attachment-hakukohde-review!
          yesql-save-attachment-review!)
-       review connection))
+       (dissoc review :updated?) connection))
     (when update?
-      (delete-orphan-attachment-reviews (:key application) form connection))))
+      (delete-orphan-attachment-reviews (:key application) (map :oid applied-hakukohteet) form connection))))
 
 (defn- add-new-application-version
   "Add application and also initial metadata (event for receiving application, and initial review record)"
