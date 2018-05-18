@@ -50,17 +50,6 @@
                                         (.readTree object-mapper new-str))]
     (.writeValueAsString object-mapper diff-node)))
 
-(defn- get-message [new old]
-  (m/match [new old]
-           [(_ :guard map-or-vec?) (_ :guard map-or-vec?)]
-           (diff old new)
-
-           [(_ :guard map-or-vec?) (_ :guard nil?)]
-           (json/generate-string new)
-
-           [(_ :guard string?) _]
-           new))
-
 (defn- date->str [x]
   (cond->> x
     (instance? DateTime x)
