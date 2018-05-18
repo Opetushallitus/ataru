@@ -150,8 +150,6 @@
                                 (map :attachment_key)
                                 (filter #(not (contains? field-ids %)))
                                 distinct)]
-    (println applied-hakukohteet)
-    (println orphan-attachments)
     (yesql-delete-application-attachment-reviews! {:application_key     application-key
                                                    :attachment_keys     (cons "" orphan-attachments)
                                                    :applied_hakukohteet (cons "" applied-hakukohteet)}
