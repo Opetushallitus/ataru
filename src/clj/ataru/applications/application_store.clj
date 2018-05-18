@@ -75,9 +75,9 @@
       (recur (crypto/url-part 34)))))
 
 (defn- create-attachment-reviews
-  [attachment-field answer old-answer application-key hakutoiveet]
-  (let [value-changed?                     (or (nil? old-answer)
-                                               (not= old-answer answer))
+  [attachment-field answer old-answer update? application-key hakutoiveet]
+  (let [value-changed?                     (and update?
+                                                (not= old-answer answer))
         review-base                        {:application_key application-key
                                             :attachment_key  (:id attachment-field)
                                             :state           (if (empty? answer)
@@ -135,6 +135,7 @@
                      (create-attachment-reviews attachment
                                                 answer
                                                 old-answer
+                                                update?
                                                 (:key application)
                                                 applied-hakukohteet)))))))
 
