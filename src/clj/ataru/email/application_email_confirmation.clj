@@ -1,23 +1,22 @@
 (ns ataru.email.application-email-confirmation
   "Application-specific email confirmation init logic"
-  (:require
-    [taoensso.timbre :as log]
-    [selmer.parser :as selmer]
-    [ataru.applications.application-store :as application-store]
-    [ataru.email.email-store :as email-store]
-    [ataru.background-job.job :as job]
-    [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
-    [ataru.background-job.email-job :as email-job]
-    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
-    [ataru.config.core :refer [config]]
-    [markdown.core :as md]
-    [clojure.string :as string]
-    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
-    [ataru.util :as util]
-    [ataru.translations.texts :refer [email-default-texts]]
-    [medley.core :refer [find-first]])
-  (:import
-    [org.owasp.html HtmlPolicyBuilder ElementPolicy]))
+  (:require [ataru.applications.application-store :as application-store]
+            [ataru.background-job.email-job :as email-job]
+            [ataru.background-job.job :as job]
+            [ataru.config.core :refer [config]]
+            [ataru.email.email-store :as email-store]
+            [ataru.forms.form-store :as forms]
+            [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
+            [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
+            [ataru.translations.texts :refer [email-default-texts]]
+            [ataru.util :as util]
+            [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
+            [clojure.string :as string]
+            [markdown.core :as md]
+            [medley.core :refer [find-first]]
+            [selmer.parser :as selmer]
+            [taoensso.timbre :as log])
+  (:import [org.owasp.html HtmlPolicyBuilder ElementPolicy]))
 
 (def languages #{:fi :sv :en})
 (def languages-map {:fi nil :sv nil :en nil})
@@ -118,34 +117,42 @@
         (map #(preview-submit-email (:lang %) (:subject %) (:content %) (:content-ending %)) x)))
 
 (defn- create-email [tarjonta-service subject template-name application-id]
-  (let [application     (application-store/get-application application-id)
-        form-key        (-> [(:key application)]
-                            (application-store/get-applications-by-keys)
-                            (first)
-                            (:form-key))
-        lang            (keyword (:lang application))
-        email-template  (find-first #(= (:lang application) (:lang %)) (get-email-templates form-key))
-        content         (-> email-template
-                            :content
-                            (->safe-html))
-        content-ending  (-> email-template
-                            :content-ending
-                            (->safe-html))
-        recipient       (->> (:answers application)
-                             (filter #(= "email" (:key %)))
-                             first
-                             :value)
-        subject         (if subject (subject lang) (email-template :subject))
-        application-url (modify-link (:secret application))
-        body            (selmer/render-file
-                          (template-name lang)
-                          {:hakukohteet     (hakukohde-names tarjonta-service
-                                                             lang
-                                                             application)
-                           :application-url application-url
-                           :application-oid (:key application)
-                           :content         content
-                           :content-ending  content-ending})]
+  (let [application                     (application-store/get-application application-id)
+        answers-by-key                  (-> application :answers util/answers-by-key)
+        form                            (forms/fetch-by-id (:form application))
+        lang                            (keyword (:lang application))
+        attachment-keys-without-answers (->> (application-store/get-application-attachment-reviews (:key application))
+                                             (map :attachment-key)
+                                             (filter #(not (contains? answers-by-key (keyword %))))
+                                             set)
+        attachments-without-answer      (->> form
+                                             :content
+                                             util/flatten-form-fields
+                                             (filter #(contains? attachment-keys-without-answers (:id %)))
+                                             (map #(-> % :label lang)))
+        email-template                  (find-first #(= (:lang application) (:lang %)) (get-email-templates (:key form)))
+        content                         (-> email-template
+                                            :content
+                                            (->safe-html))
+        content-ending                  (-> email-template
+                                            :content-ending
+                                            (->safe-html))
+        recipient                       (->> (:answers application)
+                                             (filter #(= "email" (:key %)))
+                                             first
+                                             :value)
+        subject                         (if subject (subject lang) (email-template :subject))
+        application-url                 (modify-link (:secret application))
+        body                            (selmer/render-file
+                                          (template-name lang)
+                                          {:hakukohteet                (hakukohde-names tarjonta-service
+                                                                         lang
+                                                                         application)
+                                           :application-url            application-url
+                                           :application-oid            (:key application)
+                                           :content                    content
+                                           :content-ending             content-ending
+                                           :attachments-without-answer attachments-without-answer})]
     {:from       from-address
      :recipients [recipient]
      :subject    subject

@@ -25,6 +25,23 @@
       </tr>
       {% endfor %}
       {% endif %}
+      {% if attachments-without-answer|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Please remember to add attachments to these questions:
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <ul>
+            {% for attachment in attachments-without-answer %}
+            <li>
+              {{attachment}}
+            </li>
+            {% endfor %}
+          </ul>
+        </td>
+      </tr>
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
           The changes to your application have been saved. You can change your application during the application
