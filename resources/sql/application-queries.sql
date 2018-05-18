@@ -491,9 +491,10 @@ VALUES (:application_key, :event_type, :new_review_state, :virkailija_oid, :haku
 INSERT INTO application_reviews (application_key, state) VALUES (:application_key, :state);
 
 -- name: yesql-save-attachment-review!
--- Add not-checked state to new application attachments
 INSERT INTO application_hakukohde_attachment_reviews (application_key, attachment_key, hakukohde, state)
-VALUES (:application_key, :attachment_key, :hakukohde, :state);
+VALUES (:application_key, :attachment_key, :hakukohde, :state)
+ON CONFLICT (application_key, attachment_key, hakukohde)
+  DO NOTHING;
 
 -- name: yesql-save-application-review!
 -- Save modifications for existing review record
@@ -685,7 +686,9 @@ WHERE application_key = :application_key AND attachment_key = :attachment_key AN
 
 -- name: yesql-delete-application-attachment-reviews!
 DELETE FROM application_hakukohde_attachment_reviews
-WHERE application_key = :application_key AND attachment_key IN (:attachment_keys);
+WHERE application_key = :application_key
+      AND (attachment_key IN (:attachment_keys)
+           OR hakukohde NOT IN (:applied_hakukohteet));
 
 -- name: yesql-applications-by-haku-and-hakukohde-oids
 SELECT
