@@ -27,6 +27,7 @@
 
 (defn job-iteration->db-format [job-iteration job-id]
   (assoc (transform-keys ->snake_case job-iteration)
+         :state (:state job-iteration)
          :step (-> job-iteration :step name)
          :transition (-> job-iteration :transition name)
          :job_id job-id))
@@ -44,12 +45,13 @@
                (:step result-iteration))))
 
 (defn- job->job-with-iteration [job]
-  {:job-id (:job-id job)
-   :job-type (:job-type job)
-   :iteration {:state (:state job)
-               :step (keyword (:step job))
+  {:job-id    (:job-id job)
+   :job-type  (:job-type job)
+   :iteration {:state        (:state job)
+               :step         (keyword (:step job))
                :iteration-id (:iteration-id job)
-               :retry-count (:retry-count job)}})
+               :retry-count  (:retry-count job)
+               :stop?        (:stop job)}})
 
 (defn- raw-job->job [raw-job]
   (->> raw-job

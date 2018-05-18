@@ -14,12 +14,13 @@ VALUES
 SELECT
   j.id  AS job_id,
   j.job_type,
+  j.stop,
   ji.id AS iteration_id,
   ji.step,
   ji.state,
   ji.retry_count
 FROM jobs j
-  JOIN job_iterations ji ON j.id = ji.job_id
+JOIN job_iterations ji ON j.id = ji.job_id
 WHERE ji.executed = FALSE
       AND j.job_type IN (:job_types)
       AND ji.next_activation < now()

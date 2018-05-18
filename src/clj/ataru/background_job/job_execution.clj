@@ -137,6 +137,12 @@
                                   " in job "
                                   (:type job-definition)))
 
+      (:stop? iteration)
+      (final-error-iteration (:step iteration)
+                             (:state iteration)
+                             0
+                             (str "Job stopped"))
+
       :else
       (exec-step iteration step-fn runner))))
 
