@@ -683,6 +683,10 @@ SELECT *
 FROM application_hakukohde_attachment_reviews
 WHERE application_key = :application_key AND attachment_key = :attachment_key AND hakukohde = :hakukohde;
 
+-- name: yesql-delete-application-attachment-reviews!
+DELETE FROM application_hakukohde_attachment_reviews
+WHERE application_key = :application_key AND attachment_key IN (:attachment_keys);
+
 -- name: yesql-applications-by-haku-and-hakukohde-oids
 SELECT
   la.key,
