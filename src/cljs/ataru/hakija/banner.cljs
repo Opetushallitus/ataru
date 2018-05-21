@@ -130,15 +130,16 @@
 
 (defn- hakuaika-left []
   (let [hakuaika-end (subscribe [:state-query [:form :hakuaika-end]])
-        server-time  (subscribe [:state-query [:form :load-time]])
         time-diff    (subscribe [:state-query [:form :time-delta-from-server]])
-        seconds-left (r/atom (new-time-left @hakuaika-end @time-diff))]
+        seconds-left (r/atom (new-time-left @hakuaika-end @time-diff))
+        interval     (r/atom nil)]
+    (reset! interval (js/setInterval (fn []
+                                       (let [new-time (new-time-left @hakuaika-end @time-diff)]
+                                         (if (or (nil? @hakuaika-end) (< 0 new-time))
+                                           (reset! seconds-left new-time)
+                                           (.clearInterval js/window @interval))))
+                                     1000))
     (fn []
-      (when (or (nil? @time-diff) (< 0 @seconds-left))
-        (js/setTimeout (fn []
-                         (let [new-time (new-time-left @hakuaika-end @time-diff)]
-                           (reset! seconds-left new-time)))
-                       1000))
       (when (and (> (* 24 3600) @seconds-left) (<= 1 @seconds-left))
         (let [hours          (Math/floor (/ @seconds-left 3600))
               minutes        (Math/floor (/ (rem @seconds-left 3600) 60))
