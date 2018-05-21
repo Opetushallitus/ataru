@@ -70,3 +70,27 @@
       ;; When there are no more jobs right now to execute, the caller can decide to
       ;; stop execution for a short period
       (boolean raw-job))))
+
+(defn get-status []
+  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+    (->> (jdbc/query connection
+                     ["SELECT job_type,
+                              count(*) FILTER (WHERE final
+                                                 AND transition = 'final')
+                                AS success,
+                              count(*) FILTER (WHERE final
+                                                 AND transition = 'fail')
+                                AS fail,
+                              count(*) FILTER (WHERE NOT final
+                                                 AND transition = 'error-retry')
+                                AS error,
+                              count(*) FILTER (WHERE NOT final)
+                                AS running
+                       FROM (SELECT DISTINCT ON (jobs.id) jobs.job_type, ji.*
+                             FROM jobs
+                             JOIN job_iterations AS ji
+                             ON ji.job_id = jobs.id
+                             ORDER BY jobs.id, ji.id DESC) AS t
+                       GROUP BY job_type"])
+         (reduce #(assoc %1 (:job_type %2) (dissoc %2 :job_type))
+                 {}))))
