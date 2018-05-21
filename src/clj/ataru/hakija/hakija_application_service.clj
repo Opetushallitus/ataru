@@ -3,6 +3,7 @@
     [taoensso.timbre :as log]
     [clojure.core.async :as async]
     [clojure.core.match :refer [match]]
+    [ataru.applications.automatic-eligibility :as automatic-eligibility]
     [ataru.background-job.job :as job]
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
     [ataru.email.application-email-confirmation :as application-email]
@@ -202,7 +203,10 @@
   (application-email/start-email-submit-confirmation-job tarjonta-service
                                                          application-id)
   (start-person-creation-job application-id)
-  (start-attachment-finalizer-job application-id))
+  (start-attachment-finalizer-job application-id)
+  (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
+   hakija-jobs/job-definitions
+   application-id))
 
 (defn- start-virkailija-edit-jobs [virkailija-secret application-id application]
   (virkailija-edit/invalidate-virkailija-update-secret virkailija-secret)

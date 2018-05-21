@@ -11,7 +11,8 @@
             [ataru.config.core :refer [config]]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.organization-service.organization-service :as organization-service]
-            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]))
+            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
+            [ataru.suoritus.suoritus-service :as suoritus-service]))
 
 (defn new-system
   ([]
@@ -36,6 +37,8 @@
 
      :person-service       (person-service/new-person-service)
 
+     :suoritus-service     (suoritus-service/new-suoritus-service)
+
      :handler              (component/using
                              (handler/new-handler)
                              [:tarjonta-service :organization-service :ohjausparametrit-service :person-service])
@@ -49,7 +52,10 @@
 
      :job-runner           (component/using
                              (job/new-job-runner hakija-jobs/job-definitions)
-                             [:person-service])
+                             [:ohjausparametrit-service
+                              :person-service
+                              :tarjonta-service
+                              :suoritus-service])
 
      :redis (redis/map->Redis {})
 
