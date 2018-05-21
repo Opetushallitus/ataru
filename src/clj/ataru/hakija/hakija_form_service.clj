@@ -148,6 +148,7 @@
     (if form
       (-> form
           (merge tarjonta-info)
+          (assoc :load-time (System/currentTimeMillis))
           (populate-hakukohde-answer-options tarjonta-info)
           (populate-can-submit-multiple-applications tarjonta-info))
       (warn "could not find local form for haku" haku-oid "with keys" (pr-str form-keys)))))
@@ -167,6 +168,8 @@
                                           false
                                           roles)]
     (when form
-      (assoc-in form [:tarjonta :default-hakukohde]
-                (some #(when (= hakukohde-oid (:oid %)) %)
-                      (:hakukohteet (:tarjonta form)))))))
+      (-> form
+          (assoc :load-time (System/currentTimeMillis))
+          (assoc-in [:tarjonta :default-hakukohde]
+                    (some #(when (= hakukohde-oid (:oid %)) %)
+                      (:hakukohteet (:tarjonta form))))))))

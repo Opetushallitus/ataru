@@ -125,17 +125,30 @@
          (get-translation :hours))
        " " (minutes-text minutes)))
 
+(defn- new-time-left [hakuaika-end time-diff]
+  (/ (- hakuaika-end (.getTime (js/Date.)) time-diff) 1000))
+
 (defn- hakuaika-left []
-  (when-let [seconds-left @(subscribe [:state-query [:form :hakuaika-left]])]
-    (let [hours          (Math/floor (/ seconds-left 3600))
-          minutes        (Math/floor (/ (rem seconds-left 3600) 60))
-          seconds        (rem (rem seconds-left 3600) 60)
-          time-left-text (cond
-                           (pos? hours) (hours-minutes-text hours minutes)
-                           (pos? minutes) (minutes-seconds-text minutes seconds)
-                           :else (seconds-text seconds))]
-      [:div.application__hakuaika-left
-       (str "Hakuaikaa jäljellä " time-left-text)])))
+  (let [hakuaika-end (subscribe [:state-query [:form :hakuaika-end]])
+        server-time  (subscribe [:state-query [:form :load-time]])
+        time-diff    (subscribe [:state-query [:form :time-delta-from-server]])
+        seconds-left (r/atom (new-time-left @hakuaika-end @time-diff))]
+    (fn []
+      (when (or (nil? @time-diff) (< 0 @seconds-left))
+        (js/setTimeout (fn []
+                         (let [new-time (new-time-left @hakuaika-end @time-diff)]
+                           (reset! seconds-left new-time)))
+                       1000))
+      (when (and (> (* 24 3600) @seconds-left) (<= 1 @seconds-left))
+        (let [hours          (Math/floor (/ @seconds-left 3600))
+              minutes        (Math/floor (/ (rem @seconds-left 3600) 60))
+              seconds        (Math/floor (rem (rem @seconds-left 3600) 60))
+              time-left-text (cond
+                               (pos? hours) (hours-minutes-text hours minutes)
+                               (pos? minutes) (minutes-seconds-text minutes seconds)
+                               :else (seconds-text seconds))]
+          [:div.application__hakuaika-left
+           (str "Hakuaikaa jäljellä " time-left-text)])))))
 
 (defn status-controls []
   (let [valid-status  (subscribe [:application/valid-status])
@@ -162,4 +175,7 @@
 (defn banner [] [:div.application__banner-container
                  [virkailija-fill-ribbon]
                  [:div.application__top-banner-container
-                  [:div.application-top-banner [logo] [hakuaika-left] [status-controls]]]])
+                  [:div.application-top-banner
+                   [logo]
+                   [hakuaika-left]
+                   [status-controls]]]])
