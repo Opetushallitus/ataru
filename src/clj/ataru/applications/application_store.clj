@@ -143,15 +143,11 @@
   (let [field-ids          (->> form
                                 :content
                                 util/flatten-form-fields
+                                (filter #(= "attachment" (:fieldType %)))
                                 (map :id)
-                                set)
-        reviews            (yesql-get-application-attachment-reviews {:application_key application-key} connection)
-        orphan-attachments (->> reviews
-                                (map :attachment_key)
-                                (filter #(not (contains? field-ids %)))
-                                distinct)]
+                                set)]
     (yesql-delete-application-attachment-reviews! {:application_key     application-key
-                                                   :attachment_keys     (cons "" orphan-attachments)
+                                                   :attachment_keys     (cons "" field-ids)
                                                    :applied_hakukohteet (cons "" applied-hakukohteet)}
                                                   connection)))
 
