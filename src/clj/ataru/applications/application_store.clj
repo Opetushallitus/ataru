@@ -122,9 +122,9 @@
           fields))
 
 (defn- create-application-attachment-reviews
-  [application old-answers applied-hakukohteet update?]
+  [application old-answers form applied-hakukohteet update?]
   (let [answers-by-key (-> application :content :answers util/answers-by-key)]
-    (->> (forms/fetch-by-id (:form_id application))
+    (->> form
          :content
          util/flatten-form-fields
          (filter-relevant-attachments answers-by-key)
@@ -158,7 +158,7 @@
 (defn- create-attachment-hakukohde-reviews-for-application
   [application applied-hakukohteet old-answers form connection]
   (let [update? (not-empty old-answers)
-        reviews (create-application-attachment-reviews application old-answers applied-hakukohteet update?)]
+        reviews (create-application-attachment-reviews application old-answers form applied-hakukohteet update?)]
     (doseq [review reviews]
       ((if (:updated? review)
          yesql-update-attachment-hakukohde-review!
