@@ -446,7 +446,14 @@
 (defn- handle-form [db answers form]
   (let [form                  (-> (languages->kwd form)
                                   (set-form-language)
-                                  (update :content (partial map set-question-group-id)))
+                                  (update :content (partial map set-question-group-id))
+                                  (assoc :hakuaika-end (->> form :tarjonta :hakukohteet
+                                                            (map :hakuaika)
+                                                            (filter :on)
+                                                            (sort-by :end >)
+                                                            first
+                                                            :end))
+                                  (assoc :time-delta-from-server (- (-> form :load-time) (.getTime (js/Date.)))))
         preselected-hakukohde (-> db :application :preselected-hakukohde)]
     (-> db
         (update :form (fn [{:keys [selected-language]}]
@@ -466,8 +473,7 @@
   (fn [_ _]
     {:dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
                   [:application/hakukohde-query-change "" 0]
-                  [:application/set-page-title]
-                  [:application/update-hakuaika-left]]}))
+                  [:application/set-page-title]]}))
 
 (defn- handle-get-application [{:keys [db]}
                                [_
@@ -1125,21 +1131,3 @@
   :application/setup-window-unload
   (fn [_ _]
     {:set-window-close-callback nil}))
-
-(reg-event-fx
-  :application/update-hakuaika-left
-  (fn [{db :db} _]
-    (let [hakuaika-end             (->> db :form :tarjonta :hakukohteet
-                                        (map :hakuaika)
-                                        (filter :on)
-                                        (sort-by :end >)
-                                        first
-                                        :end)
-          hakuaika-left-in-seconds (c/in-seconds (c/interval (c/now) (from-long hakuaika-end)))
-          relevant-hakuaika-left   (when (and (> (* 24 3600) hakuaika-left-in-seconds)
-                                              (< 0 hakuaika-left-in-seconds))
-                                     hakuaika-left-in-seconds)]
-      {:db             (assoc-in db [:form :hakuaika-left] relevant-hakuaika-left)
-       :dispatch-later (when relevant-hakuaika-left
-                         [{:ms       1000
-                           :dispatch [:application/update-hakuaika-left]}])})))

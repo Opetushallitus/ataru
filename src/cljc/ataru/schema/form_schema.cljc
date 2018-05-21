@@ -257,7 +257,8 @@
                                          :cljs #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$"))})
 
 (s/defschema FormWithContentAndTarjontaMetadata
-  (merge FormWithContent {:tarjonta FormTarjontaMetadata}))
+  (merge FormWithContent {:tarjonta FormTarjontaMetadata
+                          :load-time s/Int}))
 
 (s/defschema Value
   (s/cond-pre s/Str
