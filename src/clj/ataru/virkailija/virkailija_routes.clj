@@ -5,6 +5,7 @@
             [ataru.applications.application-store :as application-store]
             [ataru.applications.excel-export :as excel]
             [ataru.applications.permission-check :as permission-check]
+            [ataru.background-job.job :as job]
             [ataru.email.application-email-confirmation :as email]
             [ataru.email.email-store :as email-store]
             [ataru.cache.cache-service :as cache]
@@ -561,6 +562,18 @@
             "Content-Disposition"
             (:content-disposition file-response))
           (not-found))))
+
+    (api/context "/background-jobs" []
+      :tags ["background-jobs-api"]
+      (api/GET "/status" []
+        :return {s/Str {:success s/Int
+                        :fail    s/Int
+                        :error   s/Int
+                        :running s/Int}}
+        (let [status (job/status)]
+          (cond-> (dissoc status :ok)
+                  (:ok status)       response/ok
+                  (not (:ok status)) response/internal-server-error))))
 
     (api/context "/statistics" []
       :tags ["statistics-api"]

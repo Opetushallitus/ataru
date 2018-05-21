@@ -15,6 +15,14 @@
     (job-store/store-new job-type initial-state)
     (log/error (str "No job definition found for job " job-type))))
 
+(defn status []
+  (let [status (job-store/get-status)]
+    (if (and (= 1 (get-in status ["start-automatic-eligibility-if-ylioppilas-job-job"
+                                  :running]))
+             (every? #(= 0 (:error %)) (vals status)))
+      (assoc status :ok true)
+      (assoc status :ok false))))
+
 (defrecord JobRunner [job-definitions]
   component/Lifecycle
   (start [this]
