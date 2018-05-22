@@ -77,17 +77,29 @@
              :sv (->> koodi-value :metadata (extract-name-with-language "SV"))
              :en (->> koodi-value :metadata (extract-name-with-language "EN"))}})
 
+(defn- code-element->soresu-option [element]
+  {:uri     (:codeElementUri element)
+   :version (:codeElementVersion element)
+   :value   (:codeElementValue element)
+   :label   {:fi (->> element :relationMetadata (extract-name-with-language "FI"))
+             :sv (->> element :relationMetadata (extract-name-with-language "SV"))
+             :en (->> element :relationMetadata (extract-name-with-language "EN"))}})
+
 (defn list-koodistos []
                      (->> (fetch-all-koodisto-groups)
                           (koodisto-groups->uris-and-latest)
                           (mapv koodisto-version->uri-and-name)
                           (sort compare-case-insensitively)))
 
-(defn- parse-vocational-code-element [element]
-  {:value (:codeElementValue element)
-   :label {:fi (->> element :relationMetadata (extract-name-with-language "FI"))
-           :sv (->> element :relationMetadata (extract-name-with-language "SV"))
-           :en (->> element :relationMetadata (extract-name-with-language "EN"))}})
+(defn- add-within
+  [koodi-option]
+  (->> (do-get (resolve-url :koodisto-service.koodi-detail
+                            (:uri koodi-option)
+                            (:version koodi-option)))
+       :withinCodeElements
+       (filter #(not (:passive %)))
+       (map code-element->soresu-option)
+       (assoc koodi-option :within)))
 
 (defn- get-vocational-degree-options [version]
   (let [koodisto-uri (str koodisto-base-url "codeelement/ammatillisetopsperustaiset_1/" version)]
@@ -97,7 +109,7 @@
          (sort-by :codeElementVersion)
          (group-by :codeElementValue)
          (map (fn [[key values]]
-                (-> values last parse-vocational-code-element))))))
+                (-> values last code-element->soresu-option))))))
 
 (defn- get-vocational-institutions-by-type [type version]
   (let [koodisto-uri (str koodisto-base-url "codeelement/oppilaitostyyppi_" type "/" version)]
@@ -119,7 +131,6 @@
        (pmap get-institution)
        (filter some?)))
 
-
 (defn get-koodi-options [koodisto-uri version]
   (condp = koodisto-uri
 
@@ -127,8 +138,15 @@
 
     "oppilaitostyyppi" (get-vocational-institutions version)
 
+    "pohjakoulutusvaatimuskorkeakoulut" (->> (resolve-url :koodisto-service.koodi koodisto-uri
+                                                          {"koodistoVersio"  (str version)
+                                                           "onlyValidKoodis" "true"})
+                                             do-get
+                                             (mapv koodi-value->soresu-option)
+                                             (mapv add-within))
+
     (let [url (resolve-url :koodisto-service.koodi koodisto-uri
-                           {"koodistoVersio" (str version)
+                           {"koodistoVersio"  (str version)
                             "onlyValidKoodis" "true"})]
       (->> (do-get url)
            (mapv koodi-value->soresu-option)
