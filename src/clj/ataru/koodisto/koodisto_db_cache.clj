@@ -70,12 +70,12 @@
   (compare (str/upper-case s1) (str/upper-case s2)))
 
 (defn- koodi-value->soresu-option [koodi-value]
-  {:uri   (:koodiUri koodi-value)
-   :value (:koodiArvo koodi-value)
-   :label {:fi (->> koodi-value :metadata (extract-name-with-language "FI"))
-           :sv (->> koodi-value :metadata (extract-name-with-language "SV"))
-           :en (->> koodi-value :metadata (extract-name-with-language "EN"))}})
-
+  {:uri     (:koodiUri koodi-value)
+   :version (:versio koodi-value)
+   :value   (:koodiArvo koodi-value)
+   :label   {:fi (->> koodi-value :metadata (extract-name-with-language "FI"))
+             :sv (->> koodi-value :metadata (extract-name-with-language "SV"))
+             :en (->> koodi-value :metadata (extract-name-with-language "EN"))}})
 
 (defn list-koodistos []
                      (->> (fetch-all-koodisto-groups)
