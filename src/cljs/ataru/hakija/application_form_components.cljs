@@ -402,7 +402,6 @@
 (defn dropdown [field-descriptor & {:keys [div-kwd editing idx] :or {div-kwd :div.application__form-field editing false}}]
   (let [application  (subscribe [:state-query [:application]])
         lang         (subscribe [:application/form-language])
-        default-lang (subscribe [:application/default-language])
         id           (keyword (:id field-descriptor))
         disabled?    @(subscribe [:application/cannot-edit? id])
         id           (answer-key field-descriptor)
