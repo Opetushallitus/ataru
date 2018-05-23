@@ -238,7 +238,8 @@
                                                                             true
                                                                             applied-hakukohteet
                                                                             nil
-                                                                            nil
+                                                                            form
+                                                                            false
                                                                             conn)
           connection                           {:connection conn}]
       (audit-log/log {:new       new-application
