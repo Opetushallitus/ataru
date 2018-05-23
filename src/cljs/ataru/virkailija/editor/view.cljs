@@ -196,7 +196,7 @@
   (let [form-locked (subscribe [:editor/current-form-locked])]
     (fn []
       (let [locked? (some? (:locked @form-locked))]
-        [:div.editor-form__preview-buttons.editor-form__lock-form-editing
+        [:div.editor-form__preview-buttons
          (when locked?
            [:div.editor-form__form-editing-locked
             "Lomakkeen muokkaus on estetty "
