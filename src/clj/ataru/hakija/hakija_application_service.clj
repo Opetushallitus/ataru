@@ -30,8 +30,10 @@
     [clj-time.coerce :as t]
     [ataru.applications.application-service :as application-service]))
 
-(defn- store-and-log [application applied-hakukohteet store-fn form]
-  (let [application-id (store-fn application applied-hakukohteet form)]
+(defn- store-and-log [application applied-hakukohteet form is-modify?]
+  {:pre [(boolean? is-modify?)]}
+  (let [store-fn (if is-modify? application-store/update-application application-store/add-application)
+        application-id (store-fn application applied-hakukohteet form)]
     (log/info "Stored application with id: " application-id)
     {:passed?        true
      :id application-id
@@ -114,7 +116,7 @@
       (:has-applied (application-store/has-ssn-applied haku-oid (:ssn identifier)))
       (:has-applied (application-store/has-email-applied haku-oid (:email identifier))))))
 
-(defn- validate-and-store [tarjonta-service organization-service ohjausparametrit-service application store-fn is-modify?]
+(defn- validate-and-store [tarjonta-service organization-service ohjausparametrit-service application is-modify?]
   (let [tarjonta-info                 (when (:haku application)
                                         (tarjonta-parser/parse-tarjonta-info-by-haku
                                          tarjonta-service
@@ -185,7 +187,7 @@
       :else
       (do
         (remove-orphan-attachments final-application latest-application)
-        (store-and-log final-application applied-hakukohteet store-fn form)))))
+        (store-and-log final-application applied-hakukohteet form is-modify?)))))
 
 (defn- start-person-creation-job [application-id]
   (log/info "Started person creation job (to person service) with job id"
@@ -223,7 +225,7 @@
   (log/info "Application submitted:" application)
   (let [{:keys [passed? id]
          :as   result}
-        (validate-and-store tarjonta-service organization-service ohjausparametrit-service application application-store/add-application false)
+        (validate-and-store tarjonta-service organization-service ohjausparametrit-service application false)
         virkailija-secret (:virkailija-secret application)]
     (when passed?
       (when virkailija-secret
@@ -235,7 +237,7 @@
   (log/info "Application edited:" application)
   (let [{:keys [passed? id application]
          :as   result}
-        (validate-and-store tarjonta-service organization-service ohjausparametrit-service application application-store/update-application true)
+        (validate-and-store tarjonta-service organization-service ohjausparametrit-service application true)
         virkailija-secret (:virkailija-secret application)]
     (when passed?
       (if virkailija-secret
