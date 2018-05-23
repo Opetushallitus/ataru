@@ -47,7 +47,7 @@
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
             [environ.core :refer [env]]
-            [manifold.deferred]                             ;; DO NOT REMOVE! extend-protocol below breaks otherwise!
+            [manifold.deferred] ;; DO NOT REMOVE! extend-protocol below breaks otherwise!
             [medley.core :refer [map-kv]]
             [org.httpkit.client :as http]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
@@ -59,7 +59,8 @@
             [ring.util.response :refer [redirect header]]
             [schema.core :as s]
             [selmer.parser :as selmer]
-            [taoensso.timbre :refer [spy debug error warn info]])
+            [taoensso.timbre :refer [spy debug error warn info]]
+            [ataru.organization-service.user-rights :as user-rights])
   (:import java.time.ZonedDateTime
            java.time.format.DateTimeFormatter))
 
@@ -158,7 +159,8 @@
            :organizations         (organization-list session)
            :oid                   (-> session :identity :oid)
            :name                  (format "%s %s" (-> session :identity :first-name) (-> session :identity :last-name))
-           :selected-organization (-> session :selected-organization)}))
+           :selected-organization (-> session :selected-organization)
+           :superuser?            (-> session :identity :superuser)}))
 
     (api/GET "/forms" {session :session}
       :summary "Return forms for editor view. Also used by external services.
@@ -516,7 +518,8 @@
 
       (api/POST "/user-organization/:oid" {session :session}
         :path-params [oid :- s/Str]
-        (if-let [selected-organization (organization-selection/select-organization organization-service session oid)]
+        :query-params [{rights :- [user-rights/Right] nil}]
+        (if-let [selected-organization (organization-selection/select-organization organization-service session oid rights)]
           (-> (ok selected-organization)
               (assoc :session (assoc session :selected-organization selected-organization)))
           (bad-request {})))
