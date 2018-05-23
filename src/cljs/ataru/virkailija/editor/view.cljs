@@ -192,16 +192,6 @@
     "avaa"]
    [:span.editor-form__fold-description-text " osiot"]])
 
-(defn- preview-link [form-key lang-kwd]
-  [:a.editor-form__preview-button-link
-   {:key    (str "preview-" (name lang-kwd))
-    :href   (str "/lomake-editori/api/preview/form/" form-key
-                 "?lang=" (name lang-kwd))
-    :target "_blank"}
-   [:i.zmdi.zmdi-open-in-new]
-   [:span.editor-form__preview-button-text
-    (clojure.string/upper-case (name lang-kwd))]])
-
 (defn- lock-form-editing []
   (let [form-locked (subscribe [:editor/current-form-locked])]
     (fn []
@@ -228,9 +218,6 @@
               (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages))))
             (keys lang-versions))]
       [:div.editor-form__preview-buttons
-       [:span "Testihakemus / Virkailijatäyttö:"]
-       (map (partial preview-link (:key form)) languages)]
-      [:div.editor-form__preview-buttons
        [:a.editor-form__email-template-editor-link
         {:on-click #(dispatch [:editor/toggle-email-template-editor])}
         "Muokkaa sähköpostipohjia"]]
@@ -242,22 +229,47 @@
   [form]
   (let [forms-in-use (subscribe [:state-query [:editor :forms-in-use]])]
     (fn [form]
-      (when-let [form-used-in-hakus (get @forms-in-use (keyword (:key form)))]
-        [:div.editor-form__in_use_notification.animated.flash
-         [:span.editor-form__used-in-haku-heading "Tämä lomake on haun käytössä"]
+      (if-let [form-used-in-hakus (get @forms-in-use (keyword (:key form)))]
+        [:div.editor-form__form-link-container.animated.flash
+         [:h3.editor-form__form-link-heading
+          [:i.zmdi.zmdi-alert-circle-o]
+          (if (empty? (rest (vals form-used-in-hakus)))
+            " Tämä lomake on haun käytössä"
+            " Tämä lomake on seuraavien hakujen käytössä")]
          [:ul.editor-form__used-in-haku-list
           (for [haku (vals form-used-in-hakus)]
-            [:li {:key (str "form-used-in-haku_" (:haku-oid haku))}
-             [:a {:href   (str "/tarjonta-app/index.html#/haku/"
-                               (:haku-oid haku))
-                  :target "_blank"}
-              (some #(get (:haku-name haku) %) [:fi :sv :en])]
-             [:span " | "]
-             [:a {:href   (str "/lomake-editori/api/preview/haku/"
-                               (:haku-oid haku)
-                               "?lang=fi")
-                  :target "_blank"}
-              "Testihakemus / Virkailijatäyttö"]])]]))))
+            ^{:key (str "haku-" (:haku-oid haku))}
+            [:li
+             [:div.editor-form__used-in-haku-list-haku-name
+              [:a.editor-form__haku-admin-link
+               {:href   (str "/tarjonta-app/index.html#/haku/"
+                             (:haku-oid haku))
+                :target "_blank"}
+               [:i.zmdi.zmdi-open-in-new]]
+              [:span
+               (some #(get (:haku-name haku) %) [:fi :sv :en])]]
+             [:div.editor-form__haku-preview-link
+              [:a {:href   (str "/lomake-editori/api/preview/haku/"
+                                (:haku-oid haku)
+                                "?lang=fi")
+                   :target "_blank"}
+               "Testihakemus / Virkailijatäyttö"]
+              [:span " | "]
+              [:a {:href   (str js/config.applicant.service_url
+                                "/hakemus/haku/" (:haku-oid haku)
+                                "?lang=fi")
+                   :target "_blank"}
+               "Lomake"]]])]]
+        [:div.editor-form__form-link-container
+         [:h3.editor-form__form-link-heading
+          [:i.zmdi.zmdi-alert-circle-o]
+          " Linkki lomakkeeseen"]
+         [:a.editor-form__form-preview-link
+          {:href   (str js/config.applicant.service_url
+                        "/hakemus/" (:key form)
+                        "?lang=fi")
+           :target "_blank"}
+          "Lomake"]]))))
 
 (defn- close-form []
   [:a {:on-click (fn [event]
