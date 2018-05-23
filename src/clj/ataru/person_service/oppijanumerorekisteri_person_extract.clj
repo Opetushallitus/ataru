@@ -12,6 +12,10 @@
     (if-not finnish-format-date (throw (Exception. "Expected a birth-date in application")))
     (convert-birth-date finnish-format-date)))
 
+(defn- extract-nationalities
+  [nationalities]
+  (mapv (fn [[nat-code & _]] {:kansalaisuusKoodi nat-code}) nationalities))
+
 (defn extract-person-from-application [application]
   (let [email        (extract-field application "email")
         basic-fields {:yhteystieto    [{:yhteystietoTyyppi "YHTEYSTIETO_SAHKOPOSTI"
@@ -21,7 +25,7 @@
                       :sukunimi       (extract-field application "last-name")
                       :sukupuoli      (extract-field application "gender")
                       :aidinkieli     {:kieliKoodi (clojure.string/lower-case (extract-field application "language"))}
-                      :kansalaisuus   [{:kansalaisuusKoodi (extract-field application "nationality")}]
+                      :kansalaisuus   (extract-nationalities (extract-field application "nationality"))
                       :henkiloTyyppi  "OPPIJA"}
         person-id    (extract-field application "ssn")]
     (if person-id
