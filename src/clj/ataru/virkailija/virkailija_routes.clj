@@ -350,14 +350,21 @@
       (api/GET "/:application-key/modify" {session :session}
         :path-params [application-key :- String]
         :summary "Get HTTP redirect response for modifying a single application in Hakija side"
-        (if-let [virkailija-update-secret (virkailija-edit/create-virkailija-update-secret
-                                           session
-                                           application-key)]
-          (let [modify-url (str (-> config :public-config :applicant :service_url)
-                                "/hakemus?virkailija-secret="
-                                virkailija-update-secret)]
-            (response/temporary-redirect modify-url))
-          (response/bad-request)))
+        (let [allowed?                 (access-controlled-application/applications-access-authorized? organization-service
+                                                                                                      tarjonta-service
+                                                                                                      session
+                                                                                                      [application-key]
+                                                                                                      [:edit-applications])
+              virkailija-update-secret (virkailija-edit/create-virkailija-update-secret
+                                         session
+                                         application-key)
+              modify-url               (str (-> config :public-config :applicant :service_url)
+                                            "/hakemus?virkailija-secret="
+                                            virkailija-update-secret)]
+          (if (and allowed?
+                   (some? virkailija-update-secret))
+            (response/temporary-redirect modify-url)
+            (response/bad-request))))
 
       (api/POST "/:application-key/resend-modify-link" {session :session}
         :path-params [application-key :- String]
