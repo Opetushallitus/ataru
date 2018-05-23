@@ -347,7 +347,7 @@
                                                      :fieldType "textField"}
                                                     {:key       "nationality"
                                                      :label     {:en "Nationality" :fi "Kansalaisuus" :sv "Medborgarskap"}
-                                                     :value     "246"
+                                                     :value     [["246"]]
                                                      :fieldType "dropdown"}
                                                     {:key       "2b859fe1-8661-404c-8b19-bfb27604575c"
                                                      :label     {:en "Question" :fi "Pudotusvalikon kysymys" :sv ""}
