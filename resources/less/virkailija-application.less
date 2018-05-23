@@ -984,6 +984,7 @@ and (max-width: 1000px) {
 
 .application-handling__button--disabled {
   cursor: auto;
+  background-color: @section-gray-border;
 }
 
 .application-handling__button:not(:last-child) {
@@ -1168,16 +1169,10 @@ and (max-width: 1000px) {
 
 .application-handling__review-state-row:hover {
   background-color: @application-form-list-background-color;
-  cursor: pointer;
 }
 
 .application-handling__review-state-row--mass-update {
   width: 270px;
-}
-
-.application-handling__review-state-row--disabled {
-  color: @sg-gray-lighten-3;
-  cursor: auto;
 }
 
 .application-handling__review-state-row--enabled {
@@ -1192,13 +1187,18 @@ and (max-width: 1000px) {
   background-color: @white;
 }
 
-.application-handling__review-state-row.application-handling__review-state-selected-row {
+.application-handling__review-state-selected-row {
   color: @text-color;
   border-radius: 3px;
   margin-left: 0;
   padding-left: 25px;
   margin-bottom: 8px;
   display: inline-block;
+}
+
+.application-handling__review-state-row--disabled {
+  color: @disabled-font-gray;
+  cursor: default;
 }
 
 .application-handling__review-state-row-hakukohde {
