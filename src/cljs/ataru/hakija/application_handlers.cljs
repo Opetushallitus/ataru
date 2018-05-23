@@ -1085,35 +1085,41 @@
                (update-in [:application :ui id] dissoc :mouse-over-remove-button))
        :dispatch-n (set-empty-value-dispatches db field-descriptor-id repeat-count)})))
 
-(reg-event-db
+(reg-event-fx
   :application/remove-question-group-row
-  (fn [db [_ field-descriptor idx]]
-    (let [id (keyword (:id field-descriptor))
+  (fn [{:keys [db]} [_ field-descriptor idx]]
+    (let [id                     (keyword (:id field-descriptor))
           with-decremented-count (-> db
                                      (update-in [:application :ui id :count] dec)
-                                     (update-in [:application :ui id] dissoc :mouse-over-remove-button))]
-      (autil/reduce-form-fields
-       (fn [db child]
-         (let [id (keyword (:id child))
-               answer (get-in db [:application :answers id])]
-           (cond-> db
-             (contains? answer :values)
-             (update-in [:application :answers id :values]
-                        autil/remove-nth idx)
-             (contains? answer :value)
-             (update-in [:application :answers id :value]
-                        autil/remove-nth idx)
-             (and (contains? answer :values)
-                  (contains? answer :valid))
-             (update-in [:application :answers id]
-                        #(assoc % :valid (->> (:values %)
-                                              flatten
-                                              (every? :valid))))
-             (or (contains? answer :values)
-                 (contains? answer :value))
-             (update-in [:application :values-changed?] conj id))))
-       with-decremented-count
-       (:children field-descriptor)))))
+                                     (update-in [:application :ui id] dissoc :mouse-over-remove-button))
+          rules                  (->> (:children field-descriptor)
+                                      (map :rules)
+                                      (apply merge))]
+      (cond-> {:db (autil/reduce-form-fields
+                     (fn [db child]
+                       (let [id     (keyword (:id child))
+                             answer (get-in db [:application :answers id])]
+                         (cond-> db
+                                 (contains? answer :values)
+                                 (update-in [:application :answers id :values]
+                                            autil/remove-nth idx)
+                                 (contains? answer :value)
+                                 (update-in [:application :answers id :value]
+                                            autil/remove-nth idx)
+                                 (and (contains? answer :values)
+                                      (contains? answer :valid))
+                                 (update-in [:application :answers id]
+                                            #(assoc % :valid (->> (:values %)
+                                                                  flatten
+                                                                  (every? :valid))))
+                                 (or (contains? answer :values)
+                                     (contains? answer :value))
+                                 (update-in [:application :values-changed?] conj id))))
+                     with-decremented-count
+                     (:children field-descriptor))}
+
+              (not-empty rules)
+              (assoc :dispatch [:application/run-rule rules])))))
 
 (reg-event-fx
   :application/dropdown-change
