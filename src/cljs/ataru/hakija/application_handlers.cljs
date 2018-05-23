@@ -598,12 +598,17 @@
                                                      (not required?)
                                                      all-valid?))))
 
-(reg-event-db
+(reg-event-fx
   :application/set-repeatable-application-field-valid
-  (fn [db [_ id group-idx data-idx required? valid?]]
-    (-> db
-        (set-repeatable-application-repeated-field-valid id group-idx data-idx valid?)
-        (set-repeatable-application-field-top-level-valid id group-idx required? valid?))))
+  (fn [{:keys [db]} [_ field-descriptor group-idx data-idx required? valid?]]
+    (let [id    (keyword (:id field-descriptor))
+          rules (:rules field-descriptor)]
+      (cond-> {:db (-> db
+                       (set-repeatable-application-repeated-field-valid id group-idx data-idx valid?)
+                       (set-repeatable-application-field-top-level-valid id group-idx required? valid?))}
+              (not (empty? rules))
+              (assoc :dispatch [:application/run-rule rules])))))
+
 
 (reg-event-fx
   :application/set-repeatable-application-field
@@ -617,7 +622,7 @@
                 :editing? (get-in db [:application :editing?])
                 :on-validated (fn [[valid? errors]]
                                 (dispatch [:application/set-repeatable-application-field-valid
-                                           (keyword (:id field-descriptor))
+                                           field-descriptor
                                            question-group-idx
                                            data-idx
                                            (required? field-descriptor)
