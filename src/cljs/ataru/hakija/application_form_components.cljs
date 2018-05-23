@@ -440,21 +440,21 @@
         :required     (is-required-field? field-descriptor)
         :aria-invalid @(subscribe [:application/answer-invalid? id])}
        (doall
-        (concat
-         (when
+         (concat
+           (when
              (and
-              (nil? (:koodisto-source field-descriptor))
-              (not (:no-blank-option field-descriptor))
-              (not= "" (:value (first (:options field-descriptor)))))
-           [^{:key (str "blank-" (:id field-descriptor))} [:option {:value ""} ""]])
-         (map-indexed
-          (fn [idx option]
-            [:option {:value (:value option)
-                      :key   idx}
-             (non-blank-option-label option @lang)])
-          (cond->> (:options field-descriptor)
-            (some? (:koodisto-source field-descriptor))
-            (sort-by #(non-blank-option-label % @lang))))))]]
+               (nil? (:koodisto-source field-descriptor))
+               (not (:no-blank-option field-descriptor))
+               (not= "" (:value (first (:options field-descriptor)))))
+             [^{:key (str "blank-" (:id field-descriptor))} [:option {:value ""} ""]])
+           (map-indexed
+             (fn [idx option]
+               [:option {:value (:value option)
+                         :key   idx}
+                (non-blank-option-label option @lang)])
+             (cond->> (:options field-descriptor)
+                      (some? (:koodisto-source field-descriptor))
+                      (sort-by #(non-blank-option-label % @lang))))))]]
      (when-not idx
        (dropdown-followups field-descriptor @value))]))
 
