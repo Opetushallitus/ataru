@@ -1,9 +1,11 @@
 (ns ataru.hakija.hakija-routes-spec
   (:require [ataru.util :as util]
             [ataru.applications.application-store :as store]
+            [ataru.background-job.job :as job]
             [ataru.fixtures.application :as application-fixtures]
             [ataru.fixtures.db.unit-test-db :as db]
             [ataru.email.application-email-confirmation :as application-email]
+            [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
@@ -41,6 +43,7 @@
 
 (def handler (-> (routes/new-handler)
                  (assoc :tarjonta-service (tarjonta-service/new-tarjonta-service))
+                 (assoc :job-runner (job/new-job-runner hakija-jobs/job-definitions))
                  (assoc :organization-service (organization-service/new-organization-service))
                  (assoc :ohjausparametrit-service (ohjausparametrit-service/new-ohjausparametrit-service))
                  (assoc :person-service (person-service/new-person-service))
@@ -187,7 +190,7 @@
   (tags :unit :hakija-routes)
 
   (around [spec]
-    (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])]
+    (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _ _])]
       (spec)))
 
   (before
@@ -260,7 +263,7 @@
 
   (describe "POST application"
     (around [spec]
-      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])
+      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _ _])
                     hakuaika/get-hakuaika-info                            hakuaika-ongoing]
         (spec)))
 
@@ -302,7 +305,7 @@
 
   (describe "GET application"
     (around [spec]
-      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])
+      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _ _])
                     hakuaika/get-hakuaika-info                            hakuaika-ongoing]
         (spec)))
 
@@ -336,8 +339,8 @@
 
   (describe "PUT application"
     (around [spec]
-      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])
-                    application-email/start-email-edit-confirmation-job   (fn [_ _])
+      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _ _])
+                    application-email/start-email-edit-confirmation-job   (fn [_ _ _])
                     application-service/remove-orphan-attachments         (fn [_ _])
                     hakuaika/get-hakuaika-info                            hakuaika-ongoing]
         (spec)))
@@ -394,8 +397,8 @@
 
   (describe "PUT application after hakuaika ended"
     (around [spec]
-      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])
-                    application-email/start-email-edit-confirmation-job   (fn [_ _])
+      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _ _])
+                    application-email/start-email-edit-confirmation-job   (fn [_ _ _])
                     application-service/remove-orphan-attachments         (fn [_ _])]
         (spec)))
 
@@ -435,8 +438,8 @@
 
   (describe "Tests for a more complicated form"
     (around [spec]
-      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])
-                    application-email/start-email-edit-confirmation-job   (fn [_ _])
+      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _ _])
+                    application-email/start-email-edit-confirmation-job   (fn [_ _ _])
                     application-service/remove-orphan-attachments         (fn [_ _])
                     hakuaika/get-hakuaika-info                            hakuaika-ongoing]
         (spec)))

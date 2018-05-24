@@ -1,7 +1,7 @@
 (ns ataru.db.migrations
   (:require [ataru.application.review-states :as review-states]
             [ataru.applications.application-store :as application-store]
-            [ataru.background-job.job :as job]
+            [ataru.background-job.job-store :as job-store]
             [ataru.component-data.person-info-module :as person-info-module]
             [ataru.component-data.value-transformers :as t]
             [ataru.config.core :refer [config]]
@@ -284,9 +284,8 @@
           (migration-app-store/update-application-content (:id application) (:content application)))
         (when-let [application-id (latest-application-id applications)]
           (info (str "Starting new person service job for application " application-id " (key: " application-key ")"))
-          (job/start-job hakija-jobs/job-definitions
-                         (:type person-integration/job-definition)
-                         {:application-id application-id}))))))
+          (job-store/store-new (:type person-integration/job-definition)
+                               {:application-id application-id}))))))
 
 (defn- camel-case-content-keys []
   (doseq [application (migration-app-store/get-all-applications)]
@@ -334,9 +333,8 @@
 (defn- start-attachment-finalizer-job-for-all-applications
   []
   (doseq [application-id (migration-app-store/get-ids-of-latest-applications)]
-    (job/start-job hakija-jobs/job-definitions
-                   (:type attachment-finalizer-job/job-definition)
-                   {:application-id application-id})))
+    (job-store/store-new (:type attachment-finalizer-job/job-definition)
+                         {:application-id application-id})))
 
 (defn- update-home-town
   [new-home-town-component form]

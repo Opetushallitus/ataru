@@ -46,6 +46,7 @@
                 [:organization-service
                  :virkailija-tarjonta-service
                  :tarjonta-service
+                 :job-runner
                  :ohjausparametrit-service
                  :cache-service
                  :person-service])

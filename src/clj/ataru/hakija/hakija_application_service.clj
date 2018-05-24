@@ -187,39 +187,47 @@
         (remove-orphan-attachments final-application latest-application)
         (store-and-log final-application applied-hakukohteet store-fn form)))))
 
-(defn- start-person-creation-job [application-id]
+(defn- start-person-creation-job [job-runner application-id]
   (log/info "Started person creation job (to person service) with job id"
-            (job/start-job hakija-jobs/job-definitions
+            (job/start-job job-runner
                            (:type person-integration/job-definition)
                            {:application-id application-id})))
 
-(defn- start-attachment-finalizer-job [application-id]
+(defn- start-attachment-finalizer-job [job-runner application-id]
   (log/info "Started attachment finalizer job (to Liiteri) with job id"
-            (job/start-job hakija-jobs/job-definitions
+            (job/start-job job-runner
                            (:type attachment-finalizer-job/job-definition)
                            {:application-id application-id})))
 
-(defn- start-submit-jobs [tarjonta-service application-id]
+(defn- start-submit-jobs [tarjonta-service job-runner application-id]
   (application-email/start-email-submit-confirmation-job tarjonta-service
+                                                         job-runner
                                                          application-id)
-  (start-person-creation-job application-id)
-  (start-attachment-finalizer-job application-id)
+  (start-person-creation-job job-runner application-id)
+  (start-attachment-finalizer-job job-runner application-id)
   (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
-   hakija-jobs/job-definitions
+   job-runner
    application-id))
 
-(defn- start-virkailija-edit-jobs [virkailija-secret application-id application]
+(defn- start-virkailija-edit-jobs
+  [job-runner virkailija-secret application-id application]
   (virkailija-edit/invalidate-virkailija-update-secret virkailija-secret)
   (when (nil? (:person-oid application))
-    (start-person-creation-job application-id))
-  (start-attachment-finalizer-job application-id))
+    (start-person-creation-job job-runner application-id))
+  (start-attachment-finalizer-job job-runner application-id))
 
-(defn- start-hakija-edit-jobs [tarjonta-service application-id]
+(defn- start-hakija-edit-jobs [tarjonta-service job-runner application-id]
   (application-email/start-email-edit-confirmation-job tarjonta-service
+                                                       job-runner
                                                        application-id)
-  (start-attachment-finalizer-job application-id))
+  (start-attachment-finalizer-job job-runner application-id))
 
-(defn handle-application-submit [tarjonta-service organization-service ohjausparametrit-service application]
+(defn handle-application-submit
+  [tarjonta-service
+   job-runner
+   organization-service
+   ohjausparametrit-service
+   application]
   (log/info "Application submitted:" application)
   (let [{:keys [passed? id]
          :as   result}
@@ -228,10 +236,15 @@
     (when passed?
       (when virkailija-secret
         (virkailija-edit/invalidate-virkailija-create-secret virkailija-secret))
-      (start-submit-jobs tarjonta-service id))
+      (start-submit-jobs tarjonta-service job-runner id))
     result))
 
-(defn handle-application-edit [tarjonta-service organization-service ohjausparametrit-service application]
+(defn handle-application-edit
+  [tarjonta-service
+   job-runner
+   organization-service
+   ohjausparametrit-service
+   application]
   (log/info "Application edited:" application)
   (let [{:keys [passed? id application]
          :as   result}
@@ -239,10 +252,11 @@
         virkailija-secret (:virkailija-secret application)]
     (when passed?
       (if virkailija-secret
-        (start-virkailija-edit-jobs virkailija-secret
+        (start-virkailija-edit-jobs job-runner
+                                    virkailija-secret
                                     id
                                     application)
-        (start-hakija-edit-jobs tarjonta-service id)))
+        (start-hakija-edit-jobs tarjonta-service job-runner id)))
     result))
 
 (defn save-application-feedback

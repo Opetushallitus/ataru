@@ -171,8 +171,8 @@
                         :hakukohde   hakukohde}))))))
 
 (defn start-automatic-eligibility-if-ylioppilas-job
-  [job-definitions application-id]
-  (job/start-job job-definitions
+  [job-runner application-id]
+  (job/start-job job-runner
                  "automatic-eligibility-if-ylioppilas-job"
                  {:application-id application-id}))
 
@@ -202,3 +202,31 @@
                                application))]
         (update-application-hakukohde-review connection update))))
   {:transition {:id :final}})
+
+(defn- get-application-ids
+  [suoritukset]
+  (when-not (empty? suoritukset)
+    (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+      (->> (jdbc/query connection
+                       ["SELECT id
+                         FROM latest_applications
+                         WHERE person_oid = ANY(?)"
+                        (->> suoritukset
+                             (map :person-oid)
+                             to-array
+                             (.createArrayOf (:connection connection)
+                                             "text"))])
+           (map :id)))))
+
+(defn start-automatic-eligibility-if-ylioppilas-job-job-step
+  [{:keys [last-run-long]} job-runner]
+  (let [now         (time/now)
+        suoritukset (suoritus-service/ylioppilas-suoritukset-modified-since
+                     (:suoritus-service job-runner)
+                     (coerce/from-long last-run-long))]
+    (doseq [application-id (get-application-ids suoritukset)]
+      (start-automatic-eligibility-if-ylioppilas-job job-runner
+                                                     application-id))
+    {:transition      {:id :to-next :step :initial}
+     :updated-state   {:last-run-long (coerce/to-long now)}
+     :next-activation (time/plus now (time/days 1))}))

@@ -343,14 +343,15 @@
      from-state
      to-state)))
 
-(defn send-modify-application-link-email [application-key session organization-service tarjonta-service]
+(defn send-modify-application-link-email
+  [application-key session organization-service tarjonta-service job-runner]
   (when-let [application-id (:id (aac/get-latest-application-by-key
                                   organization-service
                                   tarjonta-service
                                   session
                                   application-key))]
     (application-store/add-new-secret-to-application application-key)
-    (email/start-email-submit-confirmation-job tarjonta-service application-id)
+    (email/start-email-submit-confirmation-job tarjonta-service job-runner application-id)
     (application-store/add-application-event {:application-key application-key
                                               :event-type      "modification-link-sent"}
                                              session)))
