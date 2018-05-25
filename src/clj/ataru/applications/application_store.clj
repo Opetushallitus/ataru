@@ -121,12 +121,10 @@
                      (followup-option-selected? field answers))))
           fields))
 
-(defn- create-application-attachment-reviews
-  [application old-answers form applied-hakukohteet update?]
+(defn create-application-attachment-reviews
+  [application old-answers flat-form-content applied-hakukohteet update?]
   (let [answers-by-key (-> application :content :answers util/answers-by-key)]
-    (->> form
-         :content
-         util/flatten-form-fields
+    (->> flat-form-content
          (filter-relevant-attachments answers-by-key)
          (mapcat (fn [attachment]
                    (let [attachment-key (-> attachment :id keyword)
@@ -139,10 +137,8 @@
                                                 (:key application)
                                                 applied-hakukohteet)))))))
 
-(defn- delete-orphan-attachment-reviews [application-key applied-hakukohteet form connection]
-  (let [field-ids          (->> form
-                                :content
-                                util/flatten-form-fields
+(defn- delete-orphan-attachment-reviews [application-key applied-hakukohteet flat-form-content connection]
+  (let [field-ids          (->> flat-form-content
                                 (filter #(= "attachment" (:fieldType %)))
                                 (map :id)
                                 set)]
@@ -152,20 +148,20 @@
                                                   connection)))
 
 (defn- create-attachment-hakukohde-reviews-for-application
-  [application applied-hakukohteet old-answers form connection]
-  (let [update? (not-empty old-answers)
-        reviews (create-application-attachment-reviews application old-answers form applied-hakukohteet update?)]
+  [application applied-hakukohteet old-answers form update? connection]
+  (let [flat-form-content (-> form :content util/flatten-form-fields)
+        reviews (create-application-attachment-reviews application old-answers flat-form-content applied-hakukohteet update?)]
     (doseq [review reviews]
       ((if (:updated? review)
          yesql-update-attachment-hakukohde-review!
          yesql-save-attachment-review!)
        (dissoc review :updated?) connection))
     (when update?
-      (delete-orphan-attachment-reviews (:key application) (map :oid applied-hakukohteet) form connection))))
+      (delete-orphan-attachment-reviews (:key application) (map :oid applied-hakukohteet) flat-form-content connection))))
 
 (defn- add-new-application-version
   "Add application and also initial metadata (event for receiving application, and initial review record)"
-  [application create-new-secret? applied-hakukohteet old-answers form conn]
+  [application create-new-secret? applied-hakukohteet old-answers form update? conn]
   (let [connection                  {:connection conn}
         answers                     (->> application
                                          :answers
@@ -185,7 +181,7 @@
         new-application             (if (contains? application :key)
                                       (yesql-add-application-version<! application-to-store connection)
                                       (yesql-add-application<! application-to-store connection))]
-    (create-attachment-hakukohde-reviews-for-application new-application applied-hakukohteet old-answers form {:connection conn})
+    (create-attachment-hakukohde-reviews-for-application new-application applied-hakukohteet old-answers form update? {:connection conn})
     (when create-new-secret?
       (yesql-add-application-secret!
         {:application_key (:key new-application)
@@ -238,7 +234,8 @@
                                                                             true
                                                                             applied-hakukohteet
                                                                             nil
-                                                                            nil
+                                                                            form
+                                                                            false
                                                                             conn)
           connection                           {:connection conn}]
       (audit-log/log {:new       new-application
@@ -289,6 +286,7 @@
                                                  applied-hakukohteet
                                                  (->  old-application :answers util/answers-by-key)
                                                  form
+                                                 true
                                                  conn)
           virkailija-oid        (when-not updated-by-applicant?
                                   (get-virkailija-oid-for-update-secret conn virkailija-secret))]

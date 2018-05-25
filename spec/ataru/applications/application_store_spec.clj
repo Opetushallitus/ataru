@@ -2,6 +2,7 @@
   (:require [ataru.applications.application-store :as store]
             [ataru.fixtures.application :as fixtures]
             [ataru.fixtures.form :as form-fixtures]
+            [ataru.util :as util]
             [clj-time.core :as c]
             [speclj.core :refer :all]
             [ataru.forms.form-store :as forms]))
@@ -141,7 +142,11 @@
                   :state           "incomplete"
                   :updated?        false
                   :hakukohde       "form"}]
-                (#'store/create-application-attachment-reviews application nil form-fixtures/attachment-test-form [] false))))
+                (store/create-application-attachment-reviews application
+                                                             nil
+                                                             (util/flatten-form-fields form-fixtures/attachment-test-form)
+                                                             []
+                                                             false))))
 
   (it "should create attachment reviews for new applcation with hakukohteet"
     (let [application (first (filter #(= "attachments" (:key %)) fixtures/applications))]
@@ -165,7 +170,11 @@
                   :state           "incomplete"
                   :updated?        false
                   :hakukohde       "hakukohde2"}]
-                (#'store/create-application-attachment-reviews application nil form-fixtures/attachment-test-form [{:oid "hakukohde1"} {:oid "hakukohde2"}] false))))
+                (store/create-application-attachment-reviews application
+                                                             nil
+                                                             (util/flatten-form-fields form-fixtures/attachment-test-form)
+                                                             [{:oid "hakukohde1"} {:oid "hakukohde2"}]
+                                                             false))))
 
   (it "should update attachment reviews for applcation without hakukohteet"
     (let [application (first (filter #(= "attachments" (:key %)) fixtures/applications))]
@@ -179,6 +188,8 @@
                   :state           "incomplete"
                   :updated?        true
                   :hakukohde       "form"}]
-                (#'store/create-application-attachment-reviews application {:att__1 {:value ["liite-id"]}
-                                                                            :att__2 {:value ["32131"]}}
-                 form-fixtures/attachment-test-form [] true)))))
+                (store/create-application-attachment-reviews application {:att__1 {:value ["liite-id"]}
+                                                                          :att__2 {:value ["32131"]}}
+                                                             (util/flatten-form-fields form-fixtures/attachment-test-form)
+                                                             []
+                                                             true)))))
