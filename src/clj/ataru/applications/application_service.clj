@@ -255,42 +255,33 @@
 
 (defn get-excel-report-of-applications-by-key
   [application-keys selected-hakukohde user-wants-to-skip-answers? session organization-service tarjonta-service ohjausparametrit-service person-service]
-  (let [applications                     (application-store/get-applications-by-keys application-keys)
-        forms                            (->> applications
-                                              (map :form-key)
-                                              (distinct))
-        allowed-forms                    (set (filter #(form-access-control/form-allowed-by-key?
-                                                         %
-                                                         session
-                                                         organization-service
-                                                         [:view-applications :edit-applications])
-                                                forms))
-        allowed-applications             (filter #(contains? allowed-forms (:form-key %)) applications)
-        application-reviews              (->> allowed-applications
-                                              (map :key)
-                                              application-store/get-application-reviews-by-keys
-                                              (reduce #(assoc %1 (:application-key %2) %2) {}))
-        onr-persons                      (->> (map :person-oid allowed-applications)
-                                              distinct
-                                              (filter some?)
-                                              (person-service/get-persons person-service))
-        applications-with-persons        (map (fn [application]
+  (when (aac/applications-access-authorized? organization-service tarjonta-service session application-keys [:view-applications :edit-applications])
+    (let [applications                     (application-store/get-applications-by-keys application-keys)
+          application-reviews              (->> applications
+                                                (map :key)
+                                                application-store/get-application-reviews-by-keys
+                                                (reduce #(assoc %1 (:application-key %2) %2) {}))
+          onr-persons                      (->> (map :person-oid applications)
+                                                distinct
+                                                (filter some?)
+                                                (person-service/get-persons person-service))
+          applications-with-persons        (map (fn [application]
                                                   (assoc application
                                                     :person (->> (:person-oid application)
                                                                  keyword
                                                                  (get onr-persons)
                                                                  (parse-person application))))
-                                              allowed-applications)
-        skip-answers-to-preserve-memory? (<= 4500 (count allowed-applications))
-        skip-answers?                    (or user-wants-to-skip-answers?
-                                             skip-answers-to-preserve-memory?)]
-    (ByteArrayInputStream. (excel/export-applications applications-with-persons
-                                                      application-reviews
-                                                      selected-hakukohde
-                                                      skip-answers?
-                                                      tarjonta-service
-                                                      organization-service
-                                                      ohjausparametrit-service))))
+                                                applications)
+          skip-answers-to-preserve-memory? (<= 4500 (count applications))
+          skip-answers?                    (or user-wants-to-skip-answers?
+                                               skip-answers-to-preserve-memory?)]
+      (ByteArrayInputStream. (excel/export-applications applications-with-persons
+                                                        application-reviews
+                                                        selected-hakukohde
+                                                        skip-answers?
+                                                        tarjonta-service
+                                                        organization-service
+                                                        ohjausparametrit-service)))))
 
 (defn- save-application-hakukohde-reviews
   [application-key hakukohde-reviews session]
