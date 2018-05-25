@@ -185,9 +185,9 @@
   {:type   (s/eq "create-move-group")
    :groups [CreateMoveElement]})
 
-(s/defschema FormDetails {
-                   :name                               LocalizedStringOptional
-                   (s/optional-key :languages)         [s/Str]})
+(s/defschema FormDetails
+  {:name                       LocalizedStringOptional
+   (s/optional-key :languages) [s/Str]})
 
 (s/defschema UpdateFormDetailsOperation
   {:type (s/eq "update-form-details")
@@ -352,6 +352,7 @@
 (s/defschema ApplicationWithPerson
   (-> Application
       (st/dissoc :person-oid)
+      (st/assoc :can-edit? s/Bool)
       (st/assoc :person Person)))
 
 (s/defschema ApplicationWithPersonAndForm

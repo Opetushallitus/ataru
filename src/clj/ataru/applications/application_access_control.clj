@@ -16,11 +16,11 @@
 (defn authorized-by-tarjoajat?
   [authorized-organization-oids application]
   (or (nil? authorized-organization-oids)
-      (not-empty
-       (clojure.set/intersection
-        authorized-organization-oids
-        (apply clojure.set/union
-               (map (comp set :tarjoajaOids) (:hakukohde application)))))))
+      (not (empty?
+             (clojure.set/intersection
+              authorized-organization-oids
+              (apply clojure.set/union
+                (map (comp set :tarjoajaOids) (:hakukohde application))))))))
 
 (defn- populate-applications-hakukohteet
   [tarjonta-service applications]
@@ -76,6 +76,20 @@
                        (partial (:predicate query) nil)
                        (application-store/get-application-heading-list query))))
 
+(defn- can-edit-application?
+  [organization-service session application]
+  (assoc application
+         :can-edit?
+         (session-orgs/run-org-authorized
+           session
+           organization-service
+           [:edit-applications]
+           (constantly false)
+           (fn [orgs]
+             (or (authorized-by-form? orgs application)
+                 (authorized-by-tarjoajat? orgs application)))
+           (constantly true))))
+
 (defn get-latest-application-by-key
   [organization-service tarjonta-service session application-key]
   (session-orgs/run-org-authorized
@@ -85,12 +99,16 @@
    (constantly nil)
    #(some->> (application-store/get-latest-application-by-key application-key)
              vector
-             (filter-authorized tarjonta-service
-                                (some-fn (partial authorized-by-form? %)
-                                         (partial authorized-by-tarjoajat? %)))
+             (populate-applications-hakukohteet tarjonta-service)
+             (filter (some-fn (partial authorized-by-form? %)
+                              (partial authorized-by-tarjoajat? %)))
+             (map (partial can-edit-application? organization-service session))
+             (map depopulate-application-hakukohteet)
+             (map remove-organization-oid)
              first)
    #(remove-organization-oid
-     (application-store/get-latest-application-by-key application-key))))
+     (assoc (application-store/get-latest-application-by-key application-key)
+            :can-edit? true))))
 
 (defn- populate-hakukohde
   [external-application]

@@ -711,11 +711,14 @@
   [readonly-contents/readonly-fields form application])
 
 (defn review-state-selected-row [on-click label]
-  (let [settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])]
+  (let [settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
+        can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])
+        enabled?          (and (not @settings-visible?) @can-edit?)]
     [:div.application-handling__review-state-row.application-handling__review-state-selected-row
-     (when-not @settings-visible?
-       {:on-click on-click
-        :class    "application-handling__review-state-row--enabled"})
+     {:on-click #(when enabled? (on-click))
+      :class    (if enabled?
+                  "application-handling__review-state-row--enabled"
+                  "application-handling__review-state-row--disabled")}
      [icon-check] label]))
 
 (defn review-state-row [state-name current-review-state [review-state-id review-state-label]]
@@ -1099,7 +1102,8 @@
         review-field->str (fn [review field] (if-let [notes (field @review)] notes ""))
         settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
         input-visible?    (subscribe [:application/review-state-setting-enabled? :score])
-        notes-count       (subscribe [:application/review-notes-count])]
+        notes-count       (subscribe [:application/review-notes-count])
+        can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
     (fn []
       [:div.application-handling__review-inputs
        (when (or @settings-visible? @input-visible?)
@@ -1113,7 +1117,7 @@
             :max-length "2"
             :size       "2"
             :value      (review-field->str review :score)
-            :disabled   @settings-visible?
+            :disabled   (or @settings-visible? (not @can-edit?))
             :on-change  (when-not @settings-visible?
                           (partial update-review-field :score (partial convert-score @review)))}]])
        [:div.application-handling__review-row--nocolumn
@@ -1126,11 +1130,12 @@
 
 (defn- application-modify-link []
   (let [application-key   (subscribe [:state-query [:application :selected-key]])
-        settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])]
+        settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
+        can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
     [:a.application-handling__link-button.application-handling__button
-     {:href   (when-not @settings-visible?
+     {:href   (when (and (not @settings-visible?) @can-edit?)
                 (str "/lomake-editori/api/applications/" @application-key "/modify"))
-      :class  (when @settings-visible?
+      :class  (when (or @settings-visible? (not @can-edit?))
                 "application-handling__button--disabled")
       :target "_blank"}
      "Muokkaa hakemusta"]))
@@ -1225,14 +1230,17 @@
 (defn- application-resend-modify-link []
   (let [recipient         (subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])
         enabled?          (subscribe [:application/resend-modify-application-link-enabled?])
-        settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])]
+        settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
+        can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
     [:button.application-handling__send-information-request-button.application-handling__button
      {:on-click #(dispatch [:application/resend-modify-application-link])
-      :disabled (or (not @enabled?) @settings-visible?)
-      :class    (str (if @enabled?
+      :disabled (or (not @enabled?)
+                    (not @can-edit?)
+                    @settings-visible?)
+      :class    (str (if (and @enabled? @can-edit?)
                        "application-handling__send-information-request-button--enabled"
                        "application-handling__send-information-request-button--disabled")
-                     (if @settings-visible?
+                     (if (or @settings-visible? (not @can-edit?))
                        " application-handling__send-information-request-button--cursor-default"
                        " application-handling__send-information-request-button--cursor-pointer"))}
      [:span "Lähetä vahvistussähköposti hakijalle"]
@@ -1251,7 +1259,8 @@
     (fn [review selected-hakukohde lang]
       (let [attachment-key (-> review :key keyword)
             selected-state (or (:state review)
-                               "not-checked")]
+                               "not-checked")
+            can-edit?      (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
         [:div.application__attachment-review-row
          [:div.application__attachment-review-row-answer-information
           [:p.application__attachment-review-row-label (some #(-> review :label % not-empty) [lang :fi :sv :en])]
@@ -1274,9 +1283,11 @@
                               (dispatch [:application/update-attachment-review attachment-key selected-hakukohde state]))
                   :key      (str attachment-key label)}
                  (when (= state selected-state) (icon-check)) label]))]
-           [:div.application-handling__review-state-row.application-handling__review-state-row--small
-            {:class    "application-handling__review-state-selected-row application-handling__review-state-row--enabled"
-             :on-click #(swap! list-opened not)}
+           [:div.application-handling__review-state-row.application-handling__review-state-row--small.application-handling__review-state-selected-row
+            {:class    (if @can-edit?
+                         "application-handling__review-state-row--enabled"
+                         "application-handling__review-state-row--disabled")
+             :on-click #(when @can-edit? (swap! list-opened not))}
             (icon-check)
             (application-states/get-review-state-label-by-name review-states/attachment-hakukohde-review-types selected-state)])]))))
 
