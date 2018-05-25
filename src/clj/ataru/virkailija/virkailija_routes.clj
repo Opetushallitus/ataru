@@ -425,10 +425,7 @@
                       {skip-answers :- s/Bool false}
                       {CSRF :- s/Str nil}]
         :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
-        {:status  200
-         :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                   "Content-Disposition" (str "attachment; filename=" (excel/create-filename filename))}
-         :body    (application-service/get-excel-report-of-applications-by-key
+        (let [xls (application-service/get-excel-report-of-applications-by-key
                     (clojure.string/split application-keys #",")
                     selected-hakukohde
                     skip-answers
@@ -436,7 +433,13 @@
                     organization-service
                     tarjonta-service
                     ohjausparametrit-service
-                    person-service)})
+                    person-service)]
+          (if xls
+            {:status  200
+             :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                       "Content-Disposition" (str "attachment; filename=" (excel/create-filename filename))}
+             :body    xls}
+            (response/bad-request))))
 
       (api/GET "/:application-key/changes" {session :session}
         :summary "Get changes made to an application in version x"
