@@ -247,7 +247,8 @@
                                       :sv "Ange land där din senaste examen avlagts. Om du ännu inte har avlagt gymnasiet/studentexamen eller yrkesinriktad examen men håller på att göra det, välj då det land där du som bäst avlägger examen i fråga. Obs: yrkesinriktad examen kan vara yrkesinriktad grundexamen, examen på skolnivå, examen på institutsnivå, yrkesinriktad examen på högre nivå, yrkesexamen eller specialyrkesexamen. Ange inte land där du avlagt högskoleexamen."}})
 
 (def higher-base-education-module-texts
-  {:completed-education                             {:en "Fill in the education that you have completed  or will complete during the admission process (autumn 2018)"
+  {:educational-background                          {:en "Your educational background" :fi "Koodistopohjainen pohjakoulutusosio" :sv "Utbildningsbakgrund"}
+   :completed-education                             {:en "Fill in the education that you have completed  or will complete during the admission process (autumn 2018)"
                                                      :fi "Ilmoita kaikki suorittamasi koulutukset. Myös ne jotka suoritat hakukautena (syksy 2018)."
                                                      :sv "Ange alla utbildningar som du har avlagt. Ange också dem som du avlägger under ansökningsperioden."}
    :marticulation-exam-in-finland                   {:en "Matriculation examination"
@@ -361,13 +362,13 @@
    :click-to-add-more                               {:en "Click ADD if you want add further qualifications."
                                                      :fi "Paina LISÄÄ jos haluat lisätä useampia tutkintoja."
                                                      :sv "Tryck på LÄGG TILL om du vill lägga till flera examina."}
-   :finnish--vocational-or-special                  {:en "Further vocational qualification or specialist vocational qualification completed in Finland"
+   :finnish-vocational-or-special                   {:en "Further vocational qualification or specialist vocational qualification completed in Finland"
                                                      :fi "Suomessa suoritettu ammatti- tai erikoisammattitutkinto"
                                                      :sv "Yrkesexamen eller specialyrkesexamen som avlagts i Finland"}
    :finnish-special-before-2018                     {:en "Have you completed you Further vocational or Specialist vocational qualification in 2018?"
                                                      :fi "Oletko suorittanut ammatti- tai erikoisammattitutkinnon vuonna 2018?"
                                                      :sv "Har du avlagt en yrkesexamen eller en specialyrkesexamen år 2018?"}
-   :finnish-special-attahcment                      {:en "Vocational or specialist vocational qualification"
+   :finnish-special-attachment                      {:en "Vocational or specialist vocational qualification"
                                                      :fi "Ammatti- tai erikoisammattitutkinto"
                                                      :sv "En yrkesexamen eller en specialyrkesexamen"}
    :finnish-higher-education                        {:en "Higher education qualification completed in Finland"
@@ -447,10 +448,10 @@
    :finnish-vocational-before-1995-degree           {:en "Write your university or university of applied sciences degree only if you have completed it before 1995. After that date the information of completed degrees will be received automatically from the higher education institutions. If you have completed a university/university of applied sciences degree or have received a study place in higher education in Finland after autumn 2014 your admission can be affected. More information on the quota for first -time applicants is available on https://studyinfo.fi/wp2/en/higher-education/applying/quota-for-first-time-applicants/"
                                                      :fi "Merkitse tähän suorittamasi korkeakoulututkinto vain siinä tapauksessa jos olet suorittanut sen ennen vuotta 1995. Sen jälkeen suoritetut tutkinnot saadaan automaattisesti korkeakouluilta. Suomessa suoritettu korkeakoulututkinto tai syksyllä 2014 tai sen jälkeen alkaneesta koulutuksesta vastaanotettu korkeakoulututkintoon johtava opiskelupaikka voivat vaikuttaa valintaan. Lue lisää [ensikertalaiskiintiöstä](https://opintopolku.fi/wp/valintojen-tuki/yhteishaku/korkeakoulujen-yhteishaku/ensikertalaiskiintio/)."
                                                      :sv "Ange här den högskoleexamen som du avlagt före år 1995. Examina som avlagts efter detta fås automatiskt av högskolorna. En högskoleexamen som avlagts i Finland eller en studieplats inom utbildning som leder till högskoleexamen som mottagits år 2014 eller senare kan inverka på antagningen. Läs mera om kvoten för förstagångssökande (https://studieinfo.fi/wp/stod-for-studievalet/gemensam-ansokan/gemensam-ansokan-till-hogskolor/kvot-for-forstagangssokande/)"}
-   :name-of-degree {:en "Name of the degree" :fi "Tutkinnon nimi" :sv "Examens namn"}
-   :other-institution {:en "Other educational institution"
-                       :fi "Jokin muu oppilaitos"
-                       :sv "Annan läroanstalt"}})
+   :name-of-degree                                  {:en "Name of the degree" :fi "Tutkinnon nimi" :sv "Examens namn"}
+   :other-institution                               {:en "Other educational institution"
+                                                     :fi "Jokin muu oppilaitos"
+                                                     :sv "Annan läroanstalt"}})
 
 (def person-info-module-texts
   {:forenames            {:fi "Etunimet"
