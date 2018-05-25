@@ -37,8 +37,26 @@
       </tr>
       {% endfor %}
       {% endif %}
+      {% if attachments-without-answer|not-empty %}
+        <tr>
+          <td style="padding-left: 20px; padding-top: 20px;">
+            Muistathan palauttaa vielä liitteet näihin kysymyksiin:
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <ul>
+              {% for attachment in attachments-without-answer %}
+                <li>
+                  {{attachment}}
+                </li>
+              {% endfor %}
+            </ul>
+          </td>
+        </tr>
+      {% endif %}
       <tr>
-        <td style="padding-left: 20px; padding-top: 40px;">
+        <td style="padding-left: 20px; padding-top: 20px;">
           <a style="color: #0093C4;" href="{{application-url|safe}}" target="_blank">{{application-url|safe}}</a>
         </td>
       </tr>
