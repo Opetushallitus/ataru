@@ -891,7 +891,22 @@
     (when (and name initials)
       [:span.application-handling__review-state-initials {:data-tooltip name} (str "(" initials ")")])))
 
-(defn event-caption [event]
+(defn- update-event-caption [text-span event show-details?]
+  [:span.application-handling__event-caption--inner
+   {:on-click #(swap! show-details? not)
+    :class    "application-handling__event-caption-modify-event"}
+   text-span
+   (if @show-details?
+     [:i.zmdi.zmdi-chevron-up.application-handling__event-caption-chevron]
+     [:i.zmdi.zmdi-chevron-down.application-handling__event-caption-chevron])
+   "|"
+   [:a.application-handling__event-caption-compare
+    {:on-click (fn [e]
+                 (.stopPropagation e)
+                 (dispatch [:application/open-application-version-history event]))}
+    "Vertaile"]])
+
+(defn event-caption [event show-details?]
   (match event
          {:event-type "review-state-change"}
          (let [label (application-states/get-review-state-label-by-name
@@ -902,16 +917,23 @@
              label))
 
          {:event-type "updated-by-applicant"}
-         (str "Hakijalta "
-              (count @(subscribe [:application/changes-made-for-event (:id event)]))
-              " muutosta")
+         (update-event-caption
+          [:span
+           "Hakijalta "
+           (count @(subscribe [:application/changes-made-for-event (:id event)]))
+           " muutosta"]
+          event
+          show-details?)
 
          {:event-type "updated-by-virkailija"}
-         [:span.application-handling__event-caption--inner
-          (virkailija-initials-span event)
-          " teki "
-          (count @(subscribe [:application/changes-made-for-event (:id event)]))
-          " muutosta"]
+         (update-event-caption
+          [:span
+           (virkailija-initials-span event)
+           " teki "
+           (count @(subscribe [:application/changes-made-for-event (:id event)]))
+           " muutosta"]
+          event
+          show-details?)
 
          {:event-type "received-from-applicant"}
          "Hakemus vastaanotettu"
@@ -968,35 +990,18 @@
          :else "Tuntematon"))
 
 (defn event-row
-  [event]
-  (let [modify-event? (cljs-util/modify-event? event)
-        modifications (when modify-event?
-                        (subscribe [:application/changes-made-for-event (:id event)]))
-        show-details? (r/atom (if (:last-modify-event? event) true false))
-        time-str      (t/time->short-str (or (:time event) (:created-time event)))]
+  [_]
+  (let [show-details? (r/atom false)]
     (fn [event]
       [:div.application-handling__event-row
-       [:span.application-handling__event-timestamp time-str]
+       [:span.application-handling__event-timestamp
+        (t/time->short-str (or (:time event) (:created-time event)))]
        [:div.application-handling__event-caption-container
         [:div.application-handling__event-caption
-         (when modify-event?
-           {:on-click #(swap! show-details? not)
-            :class    "application-handling__event-caption-modify-event"})
-         (event-caption event)
-         (when modify-event?
-           [:span
-            (if @show-details?
-              [:i.zmdi.zmdi-chevron-up.application-handling__event-caption-chevron]
-              [:i.zmdi.zmdi-chevron-down.application-handling__event-caption-chevron])
-            "|"
-            [:a.application-handling__event-caption-compare
-             {:on-click (fn [e]
-                          (.stopPropagation e)
-                          (dispatch [:application/open-application-version-history event]))}
-             "Vertaile"]])]
+         (event-caption event show-details?)]
         (when @show-details?
           [:ul.application-handling__event-row-details
-           (for [[key field] @modifications]
+           (for [[key field] @(subscribe [:application/changes-made-for-event (:id event)])]
              [:li
               {:on-click (fn [e]
                            (.stopPropagation e)
