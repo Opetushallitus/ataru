@@ -90,7 +90,8 @@
     (when (and
             (not-empty @form-element-ids)
             (not (apply distinct? @form-element-ids)))
-      (throw (Exception. (str "Duplicate element id in form: " @form-element-ids))))))
+      (throw (Exception. (str "Duplicate element id in form: " (pr-str (keep #(when (< 1 (second %)) (first %))
+                                                                             (frequencies @form-element-ids)))))))))
 
 (defn post-form [form session virkailija-tarjonta-service organization-service]
   (let [organization-oids (map :oid (get-organizations-with-edit-rights session))

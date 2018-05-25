@@ -28,7 +28,7 @@
                                                                              :options    [{:label     (:yes higher-base-education-module-texts)
                                                                                            :value     "Yes"
                                                                                            :followups [(merge (text-field metadata)
-                                                                                                              {:id         "pohjakoulutus_yo--year-of-completion"
+                                                                                                              {:id         "pohjakoulutus_yo--yes-year-of-completion"
                                                                                                                :label      (:year-of-completion higher-base-education-module-texts)
                                                                                                                :params     {:size "S" :numeric true :decimals nil}
                                                                                                                :validators ["required" "numeric"]})
@@ -37,7 +37,7 @@
                                                                                           {:label     (:no higher-base-education-module-texts)
                                                                                            :value     "No"
                                                                                            :followups [(merge (text-field metadata)
-                                                                                                              {:id         "pohjakoulutus_yo--year-of-completion"
+                                                                                                              {:id         "pohjakoulutus_yo--no-year-of-completion"
                                                                                                                :label      (:year-of-completion higher-base-education-module-texts)
                                                                                                                :params     {:size "S" :numeric true}
                                                                                                                :validators ["numeric" "required"]})
@@ -122,6 +122,7 @@
                                                                              :validators ["numeric" "required"]})
                                                                      (merge (dropdown metadata)
                                                                             {:id         "pohjakoulutus_yo_ammatillinen--scope-of-qualification-units"
+                                                                             :label      {:fi ""}
                                                                              :options    [{:label (:courses higher-base-education-module-texts)
                                                                                            :value "Courses"}
                                                                                           {:label (:ects-credits higher-base-education-module-texts)
@@ -130,7 +131,7 @@
                                                                                            :value "Study weeks"}
                                                                                           {:label (:competence-points higher-base-education-module-texts)
                                                                                            :value "Competence points"}
-                                                                                          {:label (:hours {:en "Hours" :fi "Tuntia" :sv "Timmar"})
+                                                                                          {:label (:hours higher-base-education-module-texts)
                                                                                            :value "Hours"}
                                                                                           {:label (:weekly-lessons higher-base-education-module-texts)
                                                                                            :value "Weekly lessons per year"}
@@ -180,6 +181,7 @@
                                                                                                                                   :validators ["numeric" "required"]})
                                                                                                                           (merge (dropdown metadata)
                                                                                                                                  {:id         "pohjakoulutus_am--scope-of-qualification-units"
+                                                                                                                                  :label      {:fi ""}
                                                                                                                                   :options    [{:label (:courses higher-base-education-module-texts)
                                                                                                                                                 :value "Courses"}
                                                                                                                                                {:label (:ects-credits higher-base-education-module-texts)
@@ -222,7 +224,8 @@
                                                                              :label   (:finnish-special-before-2018 higher-base-education-module-texts)
                                                                              :options [{:label     (:yes higher-base-education-module-texts)
                                                                                         :value     "Yes"
-                                                                                        :followups [{:text (:automatic-qualification-info higher-base-education-module-texts)}]}
+                                                                                        :followups [(merge (info-element metadata)
+                                                                                                           {:text (:automatic-qualification-info higher-base-education-module-texts)})]}
                                                                                        {:label     (:no higher-base-education-module-texts)
                                                                                         :value     "No"
                                                                                         :followups [(merge (question-group metadata)
@@ -239,6 +242,7 @@
                                                                                                                                :validators ["numeric" "required"]})
                                                                                                                        (merge (dropdown metadata)
                                                                                                                               {:id         "pohjakoulutus_amt--scope-of-qualification-units"
+                                                                                                                               :label      {:fi ""}
                                                                                                                                :options    [{:label (:courses higher-base-education-module-texts)
                                                                                                                                              :value "Courses"}
                                                                                                                                             {:label (:ects-credits higher-base-education-module-texts)
@@ -253,8 +257,6 @@
                                                                                                                                              :value "Weekly lessons per year"}
                                                                                                                                             {:label (:years higher-base-education-module-texts)
                                                                                                                                              :value "Years"}]
-                                                                                                                               :fieldType  "dropdown"
-                                                                                                                               :fieldClass "formField"
                                                                                                                                :validators ["required"]})
                                                                                                                        (merge (text-field metadata)
                                                                                                                               {:id         "pohjakoulutus_amt--qualification"
@@ -278,9 +280,8 @@
                                                                              :label      (:finnish-higher-education-1995-or-after higher-base-education-module-texts)
                                                                              :options    [{:label     (:yes higher-base-education-module-texts)
                                                                                            :value     "Yes"
-                                                                                           :followups [{:label     (:yes higher-base-education-module-texts)
-                                                                                                        :value     "Yes"
-                                                                                                        :followups [{:text (:automatic-higher-qualification-info higher-base-education-module-texts)}]}]}
+                                                                                           :followups [(merge (info-element metadata)
+                                                                                                              {:text (:automatic-higher-qualification-info higher-base-education-module-texts)})]}
                                                                                           {:label     (:no higher-base-education-module-texts)
                                                                                            :value     "No"
                                                                                            :followups [(merge (question-group metadata)
@@ -434,7 +435,7 @@
                                                                                                 :validators ["required"]})
                                                                                         (merge (text-field metadata)
                                                                                                {:id         "pohjakoulutus_avoin--scope"
-                                                                                                :label      (:scope-of-qualification metadata)
+                                                                                                :label      (:scope-of-qualification higher-base-education-module-texts)
                                                                                                 :params     {:size "S" :numeric true}
                                                                                                 :validators ["required" "numeric"]})
                                                                                         (merge (attachment metadata)
