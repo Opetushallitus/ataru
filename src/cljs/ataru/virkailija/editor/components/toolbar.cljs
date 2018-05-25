@@ -2,6 +2,7 @@
   (:require
    [ataru.component-data.component :as component]
    [ataru.component-data.base-education-module :as base-education-module]
+   [ataru.component-data.higher-education-base-education-module :as kk-base-education-module]
    [ataru.feature-config :as fc]
    [re-frame.core :refer [dispatch subscribe]]
    [taoensso.timbre :refer-macros [spy debug]]))
@@ -18,7 +19,8 @@
     (fc/feature-enabled? :attachment) (conj ["Liitepyyntö" component/attachment])
     (fc/feature-enabled? :question-group) (conj ["Kysymysryhmä" component/question-group])
     true (conj ["Infoteksti" component/info-element])
-    (fc/feature-enabled? :question-group) (conj ["Pohjakoulutusmoduuli" base-education-module/module])))
+    (fc/feature-enabled? :question-group) (conj ["Pohjakoulutusmoduuli" base-education-module/module])
+    (fc/feature-enabled? :question-group) (conj ["KK-Pohjakoulutusmoduuli" kk-base-education-module/module])))
 
 (def followup-toolbar-element-names
   (cond-> #{"Tekstikenttä"
@@ -58,14 +60,17 @@
 
 (defn- component-toolbar [path elements generator]
   (fn [path elements generator]
-    (let [base-education-module-exists? (subscribe [:editor/base-education-module-exists?])]
+    (let [base-education-module-exists?    (subscribe [:editor/base-education-module-exists?])
+          kk-base-education-module-exists? (subscribe [:editor/kk-base-education-module-exists?])]
       (into [:ul.form__add-component-toolbar--list]
             (for [[component-name generate-fn] elements
                   :when (and (not (and (vector? path)
                                        (= :children (second path))
                                        (= "Lomakeosio" component-name)))
                              (not (and @base-education-module-exists?
-                                       (= "Pohjakoulutusmoduuli" component-name))))]
+                                       (= "Pohjakoulutusmoduuli" component-name)))
+                             (not (and @kk-base-education-module-exists?
+                                       (= "KK-Pohjakoulutusmoduuli" component-name))))]
               [:li.form__add-component-toolbar--list-item
                [:a {:on-click (fn [evt]
                                 (.preventDefault evt)

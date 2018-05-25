@@ -42,7 +42,7 @@
                                                                :fieldClass      "formField"
                                                                :koodisto-source {:uri "tutkinto", :title "Tutkinto", :version 1}}
                                                               {:id         "higher-education-qualification-in-finland-institution"
-                                                               :label      (:higher-education-institution base-education-module-texts)
+                                                               :label      (:institution base-education-module-texts)
                                                                :params     {}
                                                                :metadata   metadata
                                                                :validators ["required"]

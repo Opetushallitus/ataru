@@ -223,6 +223,19 @@
                  "completed-base-education"))))
 
 (re-frame/reg-sub
+  :editor/kk-base-education-module-exists?
+  (fn [db _]
+    (let [selected-form-key          (-> db :editor :selected-form-key)
+          selected-form-content-keys (-> db
+                                         :editor
+                                         :forms
+                                         (get selected-form-key)
+                                         :content
+                                         keys
+                                         set)]
+      (contains? selected-form-content-keys "higher-base-education-module"))))
+
+(re-frame/reg-sub
   :editor/email-template
   (fn [db _]
     (get-in db [:editor :email-template (get-in db [:editor :selected-form-key])])))
