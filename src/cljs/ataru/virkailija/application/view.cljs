@@ -1342,7 +1342,10 @@
               (when @settings-visible
                 [review-settings-checkbox :attachment-handling])
               [:span.application-handling__attachment-review-toggle
-               (if @show-attachment-review? ">>" "<<")] " Liitepyynnöt (" (count @attachment-reviews-for-hakukohde) ")"])
+               (if @show-attachment-review?
+                 [:span [:i.zmdi.zmdi-chevron-right] [:i.zmdi.zmdi-chevron-right]]
+                 [:span [:i.zmdi.zmdi-chevron-left] [:i.zmdi.zmdi-chevron-left]])]
+              " Liitepyynnöt (" (count @attachment-reviews-for-hakukohde) ")"])
            [application-hakukohde-review-inputs review-states/hakukohde-review-types]
            (when @(subscribe [:application/show-info-request-ui?])
              [application-information-request])
