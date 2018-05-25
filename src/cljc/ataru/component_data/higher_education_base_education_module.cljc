@@ -1,6 +1,14 @@
 (ns ataru.component-data.higher-education-base-education-module
-  (:require [ataru.component-data.component :refer :all]
-            [ataru.translations.texts :refer [higher-base-education-module-texts general-texts]]))
+  (:require [ataru.component-data.component :refer [form-section
+                                                    multiple-choice
+                                                    single-choice-button
+                                                    text-field
+                                                    text-area
+                                                    info-element
+                                                    attachment
+                                                    dropdown
+                                                    question-group]]
+            [ataru.translations.texts :refer [higher-base-education-module-texts]]))
 
 (defn module [metadata]
   (merge (form-section metadata)
