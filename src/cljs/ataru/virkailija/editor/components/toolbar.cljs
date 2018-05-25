@@ -77,6 +77,7 @@
                                 (generator generate-fn))}
                 component-name]])))))
 
+
 (defn add-component [path]
   (let [form-locked (subscribe [:editor/current-form-locked])]
     [:div.editor-form__add-component-toolbar
