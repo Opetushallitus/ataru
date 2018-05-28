@@ -39,13 +39,15 @@
 (reg-event-fx
   :flasher
   (fn [{:keys [db]} [_ flash]]
-    (-> {:db db}
-        (assoc :delayed-dispatch
-          {:dispatch-vec [:state-update (fn [db]
-                                          (if (= flash (dissoc (:flash db) :expired?))
-                                            (update db :flash assoc :expired? true)))]
-           :timeout      16})
-        (assoc-in [:db :flash] (assoc flash :expired? false)))))
+    (let [template-editor-visible? (get-in db [:editor :ui :template-editor-visible?])]
+      (if (not template-editor-visible?)
+        (-> {:db db}
+            (assoc :delayed-dispatch
+                   {:dispatch-vec [:state-update (fn [db]
+                                                   (if (= flash (dissoc (:flash db) :expired?))
+                                                     (update db :flash assoc :expired? true)))]
+                    :timeout      16})
+            (assoc-in [:db :flash] (assoc flash :expired? false)))))))
 
 (reg-event-db
   :snackbar-message
