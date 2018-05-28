@@ -8,7 +8,7 @@
                                                     attachment
                                                     dropdown
                                                     question-group]]
-            [ataru.translations.texts :refer [higher-base-education-module-texts]]))
+            [ataru.translations.texts :refer [higher-base-education-module-texts general-texts]]))
 
 (defn module [metadata]
   (merge (form-section metadata)
@@ -25,7 +25,7 @@
                                                          :followups [(merge (single-choice-button metadata)
                                                                             {:id         "pohjakoulutus_yo"
                                                                              :label      (:completed-marticaulation-before-1990? higher-base-education-module-texts)
-                                                                             :options    [{:label     (:yes higher-base-education-module-texts)
+                                                                             :options    [{:label     (:yes general-texts)
                                                                                            :value     "Yes"
                                                                                            :followups [(merge (text-field metadata)
                                                                                                               {:id         "pohjakoulutus_yo--yes-year-of-completion"
@@ -34,7 +34,7 @@
                                                                                                                :validators ["required" "numeric"]})
                                                                                                        (merge (info-element metadata)
                                                                                                               {:text (:automatic-marticulation-info higher-base-education-module-texts)})]}
-                                                                                          {:label     (:no higher-base-education-module-texts)
+                                                                                          {:label     (:no general-texts)
                                                                                            :value     "No"
                                                                                            :followups [(merge (text-field metadata)
                                                                                                               {:id         "pohjakoulutus_yo--no-year-of-completion"
@@ -46,7 +46,7 @@
                                                                                                                :label      (:marticulation-exam higher-base-education-module-texts)
                                                                                                                :options    [{:label (:marticulation-and-secondary higher-base-education-module-texts)
                                                                                                                              :value "Matrculation examination and general upper secondary school syllabus"}
-                                                                                                                            {:label (:marticulation-no-secondaty higher-base-education-module-texts)
+                                                                                                                            {:label (:marticulation-no-secondary higher-base-education-module-texts)
                                                                                                                              :value "Matriculation examination without completed general upper secondary education."}]
                                                                                                                :validators ["required"]})
                                                                                                        (merge (attachment metadata)
@@ -157,11 +157,11 @@
                                                          :followups [(merge (single-choice-button metadata)
                                                                             {:id         "pohjakoulutus_am"
                                                                              :label      (:finnish-vocational-2017-or-after higher-base-education-module-texts)
-                                                                             :options    [{:label     (:yes higher-base-education-module-texts)
+                                                                             :options    [{:label     (:yes general-texts)
                                                                                            :value     "Yes"
                                                                                            :followups [(merge (info-element metadata)
                                                                                                               {:text (:automatic-qualification-info higher-base-education-module-texts)})]}
-                                                                                          {:label     (:no higher-base-education-module-texts)
+                                                                                          {:label     (:no general-texts)
                                                                                            :value     "No"
                                                                                            :followups [(merge (question-group metadata)
                                                                                                               {:id       "pohjakoulutus_am--followups"
@@ -204,9 +204,9 @@
                                                                                                                           (merge (single-choice-button metadata)
                                                                                                                                  {:id         "pohjakoulutus_am--completed"
                                                                                                                                   :label      (:finnish-vocational-completed higher-base-education-module-texts)
-                                                                                                                                  :options    [{:label (:yes higher-base-education-module-texts)
+                                                                                                                                  :options    [{:label (:yes general-texts)
                                                                                                                                                 :value "Yes"}
-                                                                                                                                               {:label (:no higher-base-education-module-texts)
+                                                                                                                                               {:label (:no general-texts)
                                                                                                                                                 :value "No"}]
                                                                                                                                   :validators ["required"]})
                                                                                                                           (merge (attachment metadata)
@@ -222,11 +222,11 @@
                                                          :followups [(merge (single-choice-button metadata)
                                                                             {:id      "pohjakoulutus_amt"
                                                                              :label   (:finnish-special-before-2018 higher-base-education-module-texts)
-                                                                             :options [{:label     (:yes higher-base-education-module-texts)
+                                                                             :options [{:label     (:yes general-texts)
                                                                                         :value     "Yes"
                                                                                         :followups [(merge (info-element metadata)
                                                                                                            {:text (:automatic-qualification-info higher-base-education-module-texts)})]}
-                                                                                       {:label     (:no higher-base-education-module-texts)
+                                                                                       {:label     (:no general-texts)
                                                                                         :value     "No"
                                                                                         :followups [(merge (question-group metadata)
                                                                                                            {:id       "pohjakoulutus_amt--followups"
@@ -278,11 +278,11 @@
                                                          :followups [(merge (single-choice-button metadata)
                                                                             {:id         "pohjakoulutus_kk"
                                                                              :label      (:finnish-higher-education-1995-or-after higher-base-education-module-texts)
-                                                                             :options    [{:label     (:yes higher-base-education-module-texts)
+                                                                             :options    [{:label     (:yes general-texts)
                                                                                            :value     "Yes"
                                                                                            :followups [(merge (info-element metadata)
                                                                                                               {:text (:automatic-higher-qualification-info higher-base-education-module-texts)})]}
-                                                                                          {:label     (:no higher-base-education-module-texts)
+                                                                                          {:label     (:no general-texts)
                                                                                            :value     "No"
                                                                                            :followups [(merge (question-group metadata)
                                                                                                               {:id       "pohjakoulutus_kk--followups"
@@ -296,7 +296,7 @@
                                                                                                                                   :label           (:finnish-higher-education-degree-level higher-base-education-module-texts)})
                                                                                                                           (merge (text-field metadata)
                                                                                                                                  {:id         "pohjakoulutus_kk--completion-date"
-                                                                                                                                  :label      (:finnish-higher-education-completion higher-base-education-module-texts)
+                                                                                                                                  :label      (:year-and-date-of-completion higher-base-education-module-texts)
                                                                                                                                   :params     {:size "S" :numeric true}
                                                                                                                                   :validators ["numeric" "required"]})
                                                                                                                           (merge (dropdown metadata)
@@ -460,7 +460,7 @@
                      (merge (single-choice-button metadata)
                             {:id         "secondary-completed-base-education"
                              :label      (:secondary-completed-base-education higher-base-education-module-texts)
-                             :options    [{:label     (:yes higher-base-education-module-texts)
+                             :options    [{:label     (:yes general-texts)
                                            :value     "Yes"
                                            :followups [(merge (dropdown metadata)
                                                               {:id              "secondary-completed-base-education--country"
@@ -468,13 +468,13 @@
                                                                :koodisto-source {:uri "maatjavaltiot2" :title "Maat ja valtiot" :version 1}
                                                                :validators      ["required"]
                                                                :label           (:choose-country higher-base-education-module-texts)})]}
-                                          {:label (:no higher-base-education-module-texts) :value "No"}]
+                                          {:label (:no general-texts) :value "No"}]
                              :validators ["required"]})
                      (merge (single-choice-button metadata)
                             {:id         "finnish-vocational-before-1995"
                              :label      (:finnish-vocational-before-1995 higher-base-education-module-texts)
                              :params     {:info-text {:label (:finnish-vocational-before-1995-degree higher-base-education-module-texts)}}
-                             :options    [{:label     (:yes higher-base-education-module-texts)
+                             :options    [{:label     (:yes general-texts)
                                            :value     "Yes"
                                            :followups [(merge (text-field metadata)
                                                               {:id         "finnish-vocational-before-1995--year-of-completion"
@@ -496,6 +496,6 @@
                                                        (merge (text-field metadata)
                                                               {:id    "finnish-vocational-before-1995--other-institution"
                                                                :label (:other-institution higher-base-education-module-texts)})]}
-                                          {:label (:no higher-base-education-module-texts) :value "No"}]
+                                          {:label (:no general-texts) :value "No"}]
                              :validators ["required"]})]}))
 

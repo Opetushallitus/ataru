@@ -140,7 +140,7 @@
                                                  :params     {}
                                                  :metadata   metadata
                                                  :children   [{:id         "other-eligibility-year-of-completion"
-                                                               :label      (:year-of-completion base-education-module-texts)
+                                                               :label      (:year-of-completion general-texts)
                                                                :params     {:size "S"}
                                                                :metadata   metadata
                                                                :validators ["required"]

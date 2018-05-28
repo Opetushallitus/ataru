@@ -180,15 +180,18 @@
    :second                                  {:fi "sekunti" :en "second" :sv "sekund"}})
 
 (def general-texts
-  {:yes      {:en "Yes"
-              :fi "Kyllä"
-              :sv "Ja"}
-   :no       {:en "No"
-              :fi "Ei"
-              :sv "Nej"}
-   :have-not {:en "No"
-              :fi "En"
-              :sv "Nej"}})
+  {:yes                {:en "Yes"
+                        :fi "Kyllä"
+                        :sv "Ja"}
+   :no                 {:en "No"
+                        :fi "Ei"
+                        :sv "Nej"}
+   :have-not           {:en "No"
+                        :fi "En"
+                        :sv "Nej"}
+   :year-of-completion {:en "Year of completion"
+                        :fi "Suoritusvuosi"
+                        :sv "Avlagd år"}})
 
 (def base-education-module-texts
   {:title                            {:fi "Koulutustausta"
@@ -233,9 +236,6 @@
    :other-eligibility                {:en "Other eligibility for higher education"
                                       :fi "Muu korkeakoulukelpoisuus"
                                       :sv "Övrig högskolebehörighet"}
-   :year-of-completion               {:en "Year of completion"
-                                      :fi "Suoritusvuosi"
-                                      :sv "Avlagd år"}
    :describe-eligibility             {:en "Describe eligibility"
                                       :fi "Kelpoisuuden kuvaus"
                                       :sv "Beskrivning av behörigheten"}
@@ -263,8 +263,6 @@
    :marticaulation-before-1990                      {:en "Matriculation examination (completed before 1990)"
                                                      :fi "Ylioppilastutkinto (ennen vuotta 1990)"
                                                      :sv "Studentexamen (före år 1990)"}
-   :yes                                             {:en "Yes" :fi "Kyllä" :sv "Ja"}
-   :no                                              {:en "No" :fi "En" :sv "Nej"}
    :year-of-completion                              {:en "Year of completion"
                                                      :fi "Suoritusvuosi"
                                                      :sv "Avlagd år"}
@@ -280,7 +278,7 @@
    :marticulation-and-secondary                     {:en "Matrculation examination and general upper secondary school syllabus"
                                                      :fi "Ylioppilastutkinto ja lukion oppimäärä"
                                                      :sv "Studentexamen och gymnasiets lärokurs"}
-   :marticulation-no-secondaty                      {:en "Matriculation examination without completed general upper secondary education."
+   :marticulation-no-secondary                      {:en "Matriculation examination without completed general upper secondary education."
                                                      :fi "Ylioppilastutkinto ilman lukion oppimäärää"
                                                      :sv "Studentexamen utan gymnasiets lärokurs"}
    :submit-your-attachments                         {:en "Submit your attachments in pdf/jpg/png -format. If you cannot submit your attachments online please contact the higher education institution in question directly. The attachments have to be submitted or returned by 26 Sept at 3 pm Finnish time at the latest."
@@ -380,9 +378,6 @@
    :finnish-higher-education-degree-level           {:en "Degree level"
                                                      :fi "Tutkintotaso"
                                                      :sv "Examensnivå"}
-   :finnish-higher-education-completion             {:en "Year and date of completion (DD.MM.YYYY)"
-                                                     :fi "Suorituspäivä- ja vuosi (pp.kk.vvvv)"
-                                                     :sv "År och datum då examen avlagts (dd.mm.åååå)"}
    :degree                                          {:en "Degree"
                                                      :fi "Tutkinto"
                                                      :sv "Examen"}
