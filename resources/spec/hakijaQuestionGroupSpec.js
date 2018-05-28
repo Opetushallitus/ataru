@@ -50,7 +50,7 @@
 
       describe('adding new question group row', function() {
         before(
-          clickElement(function() { return testFrame().find('.application__add-question-group-row a:contains("Lisää")') })
+          clickElement(function() { return testFrame().find('.application__editable-content > .application__form-field .application__add-question-group-row a:contains("Lisää")') })
         )
         it('adds new set of answers to the question group', function() {
           expect(invalidFieldsStatus().text()).to.equal('Tarkista 10 tietoa')
