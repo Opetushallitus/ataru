@@ -26,7 +26,6 @@
           var labels = _.map(personInfoModule().find('label'), function(e) { return $(e).text() })
           var expectedLabels = ["Etunimet *.","Kutsumanimi *.","Sukunimi *.","Kansalaisuus *.","Henkilötunnus *.","Sähköpostiosoite *.","Matkapuhelin *.","Asuinmaa *.","Katuosoite *.","Postinumero *.","Postitoimipaikka *.","Kotikunta *.","Äidinkieli *."]
 
-          console.log("?", labels, expectedLabels)
           expect(personInfoModule().find('.application__wrapper-heading h2').text()).to.equal('Henkilötiedot')
           expect(labels).to.eql(expectedLabels)
         })

@@ -765,7 +765,7 @@
                   :editing? (get-in db [:application :editing?])
                   :on-validated (fn [[valid? errors]]
                                   (dispatch [:application/set-repeatable-application-field-valid
-                                             id
+                                             field-descriptor
                                              question-group-idx
                                              0
                                              (required? field-descriptor)
@@ -783,7 +783,7 @@
                 :editing? (get-in db [:application :editing?])
                 :on-validated (fn [[valid? errors]]
                                 (dispatch [:application/set-repeatable-application-field-valid
-                                           (keyword (:id field-descriptor))
+                                           field-descriptor
                                            question-group-idx
                                            idx
                                            (required? field-descriptor)
