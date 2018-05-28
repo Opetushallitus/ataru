@@ -632,7 +632,7 @@
     (let [key                       (get-in db [:editor :selected-form-key])
           form                      (get-in db [:editor :forms key :content])
           update-koodisto-component (fn [component]
-                                      (assoc-in component [:options]
+                                      (assoc component :options
                                         (update-options-while-keeping-existing-followups new-koodisto (:options component))))
           find-koodisto-component   (fn [component]
                                       (if (and (= id (:id component))
