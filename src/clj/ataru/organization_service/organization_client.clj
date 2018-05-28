@@ -32,7 +32,9 @@
     (flatten (map #(recur-orgs %) (:organisaatiot hierarchy)))))
 
 (defn- get-organization-from-remote-service [organization-oid]
-  (let [response @(http/get (resolve-url :organisaatio-service.name organization-oid))]
+  (let [response @(http/get (resolve-url :organisaatio-service.name organization-oid)
+                            {:headers {"clientSubSystemCode" "ataru"
+                                       "Caller-Id"           "ataru"}})]
     (if (= 200 (:status response))
       (let [parsed-response (read-body response)
             org-count       (:numHits parsed-response)]
@@ -59,7 +61,9 @@
   "Returns a sequence of {:name <org-name> :oid <org-oid>} maps containing all suborganizations
    The root organization is the first element"
   [root-organization-oid]
-  (let [response @(http/get (resolve-url :organisaatio-service.plain-hierarchy root-organization-oid))]
+  (let [response @(http/get (resolve-url :organisaatio-service.plain-hierarchy root-organization-oid)
+                            {:headers {"clientSubSystemCode" "ataru"
+                                       "Caller-Id"           "ataru"}})]
     (if (= 200 (:status response))
       (-> response read-body get-all-organizations-as-seq)
       (throw (Exception. (str "Got status code " (:status response) " While reading organizations"))))))
@@ -68,7 +72,9 @@
   "returns a sequence of {:name <group-name> :oid <group-oid>} maps containing all the
    groups within organization service"
   []
-  (let [response @(http/get (resolve-url :organisaatio-service.groups))]
+  (let [response @(http/get (resolve-url :organisaatio-service.groups)
+                            {:headers {"clientSubSystemCode" "ataru"
+                                       "Caller-Id"           "ataru"}})]
     (if (= 200 (:status response))
       (->> response read-body (map group->map))
       (throw (Exception. (str "Got status code " (:status response) " While reading groups"))))))
@@ -77,7 +83,8 @@
   "Get organization by oid or number."
   [oid-or-number]
   (let [url                                          (resolve-url :organisaatio-service.get-by-oid oid-or-number)
-        {:keys [status headers body error] :as resp} @(http/get url)]
+        {:keys [status headers body error] :as resp} @(http/get url {:headers {"clientSubSystemCode" "ataru"
+                                                                               "Caller-Id"           "ataru"}})]
     (if (= 200 status)
       (let [body (json/parse-string body true)]
         (log/info (str "Fetched organization from URL: " url))

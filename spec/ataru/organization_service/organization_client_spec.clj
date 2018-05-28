@@ -35,11 +35,11 @@
 
 (def oph-oid "1.2.246.562.10.00000000001")
 
-(defn fake-no-organization [url]
+(defn fake-no-organization [_ _]
   (atom {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response2.json"))}))
-(defn fake-organization [url]
+(defn fake-organization [_ _]
   (atom {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response1.json"))}))
-(defn fake-groups [url]
+(defn fake-groups [_ _]
   (atom {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response-groups.json"))}))
 
 (describe "organization client"

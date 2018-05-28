@@ -1,12 +1,13 @@
 (ns ataru.organization-service.organization-service-spec
-  (:require [ataru.organization-service.organization-service :as org-service]
+  (:require [ataru.config.core :refer [config]]
+            [ataru.organization-service.ldap-client :as ataru-ldap]
             [ataru.organization-service.ldap-client-spec :refer [test-user1 test-user1-organization-oid]]
             [ataru.organization-service.organization-client-spec :refer [expected-flat-organizations]]
-            [speclj.core :refer [describe it should= tags around]]
+            [ataru.organization-service.organization-service :as org-service]
             [clj-ldap.client :as ldap]
-            [ataru.organization-service.ldap-client :as ataru-ldap]
-            [ataru.config.core :refer [config]]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [org.httpkit.client :as http]
+            [speclj.core :refer [describe it should= tags around]]))
 
 (def test-user-with-group {:employeeNumber "1.2.246.562.24.23424"
                            :description "[\"USER_jorma\", \"VIRKAILIJA\", \"LANG_fi\", \"APP_ATARU_EDITORI_CRUD_1.2.246.562.6.214933\", \"APP_ATARU_EDITORI_CRUD_1.2.246.562.28.1.2\"]"})
@@ -22,14 +23,14 @@
 
 (defn fake-create-connection [] :fake-conn)
 
-(defn fake-organization-hierarchy [call-count url]
+(defn fake-organization-hierarchy [call-count _ _]
   (swap! call-count inc)
   (atom {:status 200 :body (slurp (io/resource "organisaatio_service/organization-hierarchy1.json"))}))
 
-(defn fake-organization [url]
+(defn fake-organization [_ _]
   (atom {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response1.json"))}))
 
-(defn fake-org-and-group [url]
+(defn fake-org-and-group [url _]
   (atom
    (if (.contains url "hae/nimi")
      {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response1.json"))}
