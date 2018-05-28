@@ -292,7 +292,6 @@
                                                                                                                                                     :title   "Kk-tutkinnot"
                                                                                                                                                     :version 1}
                                                                                                                                   :validators      ["required"]
-                                                                                                                                  :fieldClass      "formField"
                                                                                                                                   :label           (:finnish-higher-education-degree-level higher-base-education-module-texts)})
                                                                                                                           (merge (text-field metadata)
                                                                                                                                  {:id         "pohjakoulutus_kk--completion-date"
@@ -305,7 +304,6 @@
                                                                                                                                                     :title   "Tutkinto"
                                                                                                                                                     :version 1}
                                                                                                                                   :validators      ["required"]
-                                                                                                                                  :fieldClass      "formField"
                                                                                                                                   :label           (:degree higher-base-education-module-texts)})
                                                                                                                           (merge (text-field metadata)
                                                                                                                                  {:id         "pohjakoulutus_kk--institution"
@@ -373,7 +371,6 @@
                                                                                                                   :title   "Maat ja valtiot"
                                                                                                                   :version 1}
                                                                                                 :validators      ["required"]
-                                                                                                :fieldClass      "formField"
                                                                                                 :label           (:country-of-completion higher-base-education-module-texts)})
                                                                                         (merge (attachment metadata)
                                                                                                {:id     "pohjakoulutus_kk_ulk--attachement"
