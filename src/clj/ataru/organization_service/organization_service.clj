@@ -4,7 +4,6 @@
    [com.stuartsierra.component :as component]
    [ataru.config.core :refer [config]]
    [ataru.organization-service.ldap-client :as ldap-client]
-   [ataru.cas.client :as cas-client]
    [clojure.core.cache :as cache]
    [medley.core :refer [map-kv]]
    [ataru.organization-service.organization-client :as org-client]))
@@ -30,13 +29,6 @@
     "Gets all hakukohde groups")
   (get-organizations-for-oids [this organization-oids]))
 
-(defn get-orgs-from-client [cas-client direct-oids]
-  (flatten (map #(org-client/get-organizations cas-client %) direct-oids)))
-
-(defn get-groups-from-client [cas-client]
-  (let [groups-as-seq (org-client/get-groups cas-client)]
-    (into {} (map (fn [group] [(:oid group) group]) groups-as-seq))))
-
 (defn get-from-cache-or-real-source [cache-instance cache-key get-from-source-fn]
   ;; According to this:
   ;; https://github.com/clojure/core.cache/wiki/Using
@@ -49,24 +41,24 @@
       (swap! cache-instance cache/miss cache-key item)
       item)))
 
-(defn get-orgs-from-cache-or-client [all-orgs-cache cas-client direct-oids]
+(defn get-orgs-from-cache-or-client [all-orgs-cache direct-oids]
   (let [cache-key (join "-" direct-oids)]
     (get-from-cache-or-real-source
      all-orgs-cache
      cache-key
-     #(get-orgs-from-client cas-client direct-oids))))
+     #(mapcat org-client/get-organizations direct-oids))))
 
-(defn get-groups-from-cache-or-client [group-cache cas-client]
+(defn get-groups-from-cache-or-client [group-cache]
   (get-from-cache-or-real-source
    group-cache
    :groups
-   #(get-groups-from-client cas-client)))
+   (fn [] (reduce #(assoc %1 (:oid %2) %2) {} (org-client/get-groups)))))
 
 (defn group-oid? [oid] (clojure.string/starts-with? oid group-oid-prefix))
 
-(defn get-group [group-cache cas-client group-oid]
+(defn get-group [group-cache group-oid]
   {:pre [(group-oid? group-oid)]}
-  (let [groups (get-groups-from-cache-or-client group-cache cas-client)]
+  (let [groups (get-groups-from-cache-or-client group-cache)]
     (get groups group-oid (unknown-group group-oid))))
 
 (defn- hakukohderyhmat-from-groups [groups]
@@ -79,10 +71,8 @@
   OrganizationService
 
   (get-hakukohde-groups [this]
-    (let [groups (vals (get-groups-from-cache-or-client
-                         (:group-cache this)
-                         (:cas-client this)))]
-    (hakukohderyhmat-from-groups groups)))
+    (let [groups (vals (get-groups-from-cache-or-client (:group-cache this)))]
+      (hakukohderyhmat-from-groups groups)))
 
   (get-direct-organizations-for-rights [this user-name rights]
     (let [direct-right-oids (ldap-client/get-right-organization-oids (:ldap-connection this) user-name rights)]
@@ -93,26 +83,19 @@
           ;; Only fetch hierarchy for actual orgs, not groups:
           flattened-hierarchy (get-orgs-from-cache-or-client
                                (:all-orgs-cache this)
-                               (:cas-client this)
                                (map :oid orgs))]
       ;; Include groups as-is in the result:
       (concat groups flattened-hierarchy)))
 
   (get-organizations-for-oids [this organization-oids]
     (let [[group-oids normal-org-oids] ((juxt filter remove) group-oid? organization-oids)
-          ;; OPH org doesn't exist in organization service, hence we'll have to filter out nil values
-          normal-orgs (remove nil? (map #(org-client/get-organization (:cas-client this) %)
-                                        normal-org-oids))
-          groups      (map (partial
-                             get-group
-                             (:group-cache this)
-                             (:cas-client this))
+          normal-orgs (map org-client/get-organization normal-org-oids)
+          groups      (map (partial get-group (:group-cache this))
                            group-oids)]
       (concat normal-orgs groups)))
 
   (start [this]
     (-> this
-        (assoc :cas-client (cas-client/new-client "/organisaatio-service"))
         (assoc :ldap-connection (ldap-client/create-ldap-connection))
         (assoc :all-orgs-cache (atom (cache/ttl-cache-factory {} :ttl all-orgs-cache-time-to-live)))
         (assoc :group-cache (atom (cache/ttl-cache-factory {} :ttl group-cache-time-to-live)))
