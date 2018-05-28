@@ -42,7 +42,7 @@
                                         :order-idx idx
                                         :label     label}
                                        (some? value)
-                                       (assoc :values [[{:value value :valid true}]]))])
+                                       (assoc :values [[{:value value :valid true}]] :value [[value]]))])
                [{:id         id
                  :fieldClass "formField"
                  :fieldType  "dropdown"
