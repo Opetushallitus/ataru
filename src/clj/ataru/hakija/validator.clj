@@ -5,7 +5,7 @@
             [clojure.set :refer [difference]]
             [clojure.core.match :refer [match]]
             [clojure.core.async :as async]
-            [taoensso.timbre :refer [spy debug warn]]
+            [taoensso.timbre :refer [spy debug warn info]]
             [ataru.koodisto.koodisto :as koodisto]))
 
 (defn allowed-values [options]
@@ -67,9 +67,6 @@
 (defn- field-belongs-to-hakukohde-or-hakukohderyhma? [field]
   (not-empty (concat (:belongs-to-hakukohderyhma field) (:belongs-to-hakukohteet field))))
 
-(defn- not-dropdown-or-multiple-choice [field]
-  (empty? (some #{(:fieldType field)} '("dropdown" "multipleChoice"))))
-
 (defn- get-followup-questions [options answers]
   (not-empty (eduction (comp
                         (filter (fn [option]
@@ -78,12 +75,21 @@
                         (mapcat :followups))
                        options)))
 
+(defn- is-question-group-answer?
+  [answer]
+  (and (or (vector? answer) (set? answer))
+       (every? vector? answer)))
+
 (defn- get-non-empty-answers [field answers]
   (set
-   (->> (if (= "multipleChoice" (:fieldType field))
-          (filter not-empty answers)
-          answers)
-        (filter (comp not clojure.string/blank?)))))
+    (if (is-question-group-answer? answers)
+      (->> answers
+           (map not-empty)
+           (filter not-empty))
+      (->> (if (= "multipleChoice" (:fieldType field))
+             (filter not-empty answers)
+             answers)
+           (filter (comp not clojure.string/blank?))))))
 
 (defn- get-allowed-values [koodisto-source options]
   (if koodisto-source
@@ -116,13 +122,11 @@
   [has-applied answers-by-key results [{:keys [id] :as field} & rest-form-fields] hakukohderyhmat]
   (let [id          (keyword id)
         answers     (wrap-coll (:value (get answers-by-key id)))
-        ; Hakukohdes selected by user
         hakukohteet (-> answers-by-key :hakukohteet :value set)]
     (into {}
           (if-let [ret (match (merge {:validators []
                                       :params     []}
                                      field)
-
                               {:exclude-from-answers true}
                               results
 
@@ -138,6 +142,11 @@
                                :children   children}
                               (concat results (build-results has-applied answers-by-key [] children hakukohderyhmat))
 
+                              {:fieldClass "questionGroup"
+                               :fieldType  "fieldset"
+                               :children   children}
+                              (concat results (build-results has-applied answers-by-key [] children hakukohderyhmat))
+
                               {:fieldClass "formField"
                                :fieldType  (:or "dropdown" "multipleChoice")
                                :validators validators
@@ -149,8 +158,11 @@
                                 (concat results
                                         {id {:passed? (if (or (not (field-belongs-to-hakukohde-or-hakukohderyhma? field))
                                                               (belongs-to-existing-hakukohde-or-hakukohderyma? field hakukohteet hakukohderyhmat))
-                                                        (and (all-answers-allowed? non-empty-answers allowed-values)
-                                                             (passes-all? has-applied validators non-empty-answers answers-by-key field))
+                                                        (if (is-question-group-answer? non-empty-answers)
+                                                          (and (every? true? (map #(all-answers-allowed? (set %) allowed-values) non-empty-answers))
+                                                               (every? true? (map #(passes-all? has-applied validators (set %) answers-by-key field) non-empty-answers)))
+                                                          (and (all-answers-allowed? non-empty-answers allowed-values)
+                                                               (passes-all? has-applied validators non-empty-answers answers-by-key field)))
                                                         (all-answers-nil? non-empty-answers answers-by-key followups))}}
                                         (when followups
                                           (build-results
@@ -166,8 +178,7 @@
                                                             (belongs-to-existing-hakukohde-or-hakukohderyma? field hakukohteet hakukohderyhmat))
                                                       (passes-all? has-applied validators answers answers-by-key field)
                                                       (every? nil? answers))}})
-
-                              :else nil)]
+                              :else (info "No valid field clause" field))]
             (build-results has-applied answers-by-key ret rest-form-fields hakukohderyhmat)
             results))))
 
