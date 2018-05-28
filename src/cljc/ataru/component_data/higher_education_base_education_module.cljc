@@ -23,7 +23,7 @@
                              :options                  [{:label     (:marticulation-exam-in-finland higher-base-education-module-texts)
                                                          :value     "pohjakoulutus_yo"
                                                          :followups [(merge (single-choice-button metadata)
-                                                                            {:id         "pohjakoulutus_yo--before-1990"
+                                                                            {:id         "pohjakoulutus_yo"
                                                                              :label      (:completed-marticaulation-before-1990? higher-base-education-module-texts)
                                                                              :options    [{:label     (:yes higher-base-education-module-texts)
                                                                                            :value     "Yes"
@@ -53,7 +53,7 @@
                                                                                                               {:params {:info-text {:value    (:submit-your-attachments higher-base-education-module-texts)
                                                                                                                                     :enabled? true}}
                                                                                                                :label  (:marticaulation-before-1990 higher-base-education-module-texts)
-                                                                                                               :id     "marticulation-before-1990-attachment"})]}]
+                                                                                                               :id     "pohjakoulutus-yo--attachment"})]}]
                                                                              :validators ["required"]})]}
                                                         {:label     (:general-upper-secondary-school higher-base-education-module-texts)
                                                          :value     "pohjakoulutus_lk"
@@ -155,7 +155,7 @@
                                                         {:label     (:finnish-vocational higher-base-education-module-texts)
                                                          :value     "pohjakoulutus_am"
                                                          :followups [(merge (single-choice-button metadata)
-                                                                            {:id         "pohjakoulutus_am--2017-or-after"
+                                                                            {:id         "pohjakoulutus_am"
                                                                              :label      (:finnish-vocational-2017-or-after higher-base-education-module-texts)
                                                                              :options    [{:label     (:yes higher-base-education-module-texts)
                                                                                            :value     "Yes"
@@ -220,7 +220,7 @@
                                                         {:label     (:finnish-vocational-or-special higher-base-education-module-texts)
                                                          :value     "pohjakoulutus_amt"
                                                          :followups [(merge (single-choice-button metadata)
-                                                                            {:id      "pohjakoulutus_amt--before-2018"
+                                                                            {:id      "pohjakoulutus_amt"
                                                                              :label   (:finnish-special-before-2018 higher-base-education-module-texts)
                                                                              :options [{:label     (:yes higher-base-education-module-texts)
                                                                                         :value     "Yes"
@@ -276,7 +276,7 @@
                                                         {:label     (:finnish-higher-education higher-base-education-module-texts)
                                                          :value     "pohjakoulutus_kk"
                                                          :followups [(merge (single-choice-button metadata)
-                                                                            {:id         "pohjakoulutus_kk--1995-or-after"
+                                                                            {:id         "pohjakoulutus_kk"
                                                                              :label      (:finnish-higher-education-1995-or-after higher-base-education-module-texts)
                                                                              :options    [{:label     (:yes higher-base-education-module-texts)
                                                                                            :value     "Yes"
