@@ -698,10 +698,13 @@
         (update-in [:application :answers :postal-office]
                    merge {:value "" :valid false}))))
 
-(reg-event-db
+(reg-event-fx
   :application/set-multiple-choice-valid
-  (fn [db [_ field-descriptor valid?]]
-    (assoc-in db [:application :answers (keyword (:id field-descriptor)) :valid] valid?)))
+  (fn [{db :db} [_ field-descriptor valid?]]
+    (let [rules (:rules field-descriptor)]
+      (cond-> {:db (assoc-in db [:application :answers (keyword (:id field-descriptor)) :valid] valid?)}
+              (not (empty? rules))
+              (assoc :dispatch [:application/run-rule rules])))))
 
 (reg-event-fx
   :application/toggle-multiple-choice-option

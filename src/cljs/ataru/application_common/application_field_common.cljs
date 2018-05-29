@@ -1,4 +1,6 @@
-(ns ataru.application-common.application-field-common)
+(ns ataru.application-common.application-field-common
+  (:require [markdown.core :refer [md->html]])
+  (:import (goog.html.sanitizer HtmlSanitizer)))
 
 (defn answer-key [field-data]
   (keyword (:id field-data)))
@@ -12,6 +14,21 @@
     "hakukohteet"
     "birthplace"})
 (def contains-required-validators? (partial contains? required-validators))
+
+(defonce builder (new HtmlSanitizer.Builder))
+(defonce html-sanitizer (.build builder))
+
+(defn- add-link-target-prop
+  [text state]
+  [(clojure.string/replace text #"<a href=([^>]+)>" "<a target=\"_blank\" href=$1>") state])
+
+(defn markdown-paragraph
+  [md-text]
+  (let [sanitized-html (as-> md-text v
+                         (md->html v :custom-transformers [add-link-target-prop])
+                         (.sanitize html-sanitizer v)
+                         (.getTypedStringValue v))]
+    [:div.application__form-info-text {:dangerouslySetInnerHTML {:__html sanitized-html}}]))
 
 (defn render-paragraphs [s]
   (->> (clojure.string/split s "\n")

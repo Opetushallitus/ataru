@@ -3,6 +3,7 @@
             [cljs.core.match :refer-macros [match]]
             [ataru.hakija.hakija-ajax :as ajax]
             [ataru.hakija.application-validators :as validators]
+            [ataru.hakija.pohjakoulutusristiriita :as pohjakoulutusristiriita]
             [ataru.preferred-name :as pn]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]))
 
@@ -216,6 +217,12 @@
       home-town-and-city
       postal-office))
 
+(defn- pohjakoulutusristiriita
+  [db _]
+  (if (empty? (pohjakoulutusristiriita/hakukohteet-wo-applicable-base-education db))
+    (assoc-in db [:application :ui :pohjakoulutusristiriita :visible?] false)
+    (assoc-in db [:application :ui :pohjakoulutusristiriita :visible?] true)))
+
 (defn- hakija-rule-to-fn [rule]
   (case rule
     :prefill-preferred-first-name
@@ -230,6 +237,8 @@
     toggle-ssn-based-fields
     :change-country-of-residence
     change-country-of-residence
+    :pohjakoulutusristiriita
+    pohjakoulutusristiriita
     nil))
 
 (defn extract-rules [content]

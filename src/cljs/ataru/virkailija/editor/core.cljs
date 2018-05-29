@@ -64,6 +64,10 @@
                    {:fieldClass "formField" :fieldType "multipleChoice"}
                    [ec/dropdown content path args]
 
+                   {:fieldClass "pohjakoulutusristiriita"
+                    :fieldType  "pohjakoulutusristiriita"}
+                   [ec/pohjakoulutusristiriita content path]
+
                    {:fieldClass "infoElement"}
                    [ec/info-element content path]
 

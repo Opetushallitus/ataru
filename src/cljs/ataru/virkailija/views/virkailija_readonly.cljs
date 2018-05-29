@@ -297,7 +297,8 @@
         [selectable content application lang group-idx])
       {:fieldClass "formField" :fieldType (:or "textField" "textArea")} (text content application lang group-idx)
       {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang group-idx]
-      {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content])))
+      {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content]
+      {:fieldClass "pohjakoulutusristiriita"} nil)))
 
 (defn- application-language [{:keys [lang]}]
   (when (some? lang)

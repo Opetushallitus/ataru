@@ -913,6 +913,28 @@
         [:div.editor-form__checkbox-wrapper]
         [belongs-to-hakukohteet path initial-content]]])))
 
+(defn pohjakoulutusristiriita
+  [initial-content path]
+  (let [languages        (subscribe [:editor/languages])
+        animation-effect (fade-out-effect path)]
+    (fn [initial-content path]
+      [:div.editor-form__component-wrapper
+       {:class @animation-effect}
+       [text-header (get-in initial-content [:label :fi]) path (:metadata initial-content)]
+       [:div.editor-form__component-row-wrapper
+        [:div.editor-form__text-field-wrapper
+         [:div.infoelement
+          (->> (input-fields-with-lang
+                (fn [lang]
+                  [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :text lang])
+                   {:value-fn (fn [component] (get-in component [:text lang]))
+                    :tag      :textarea}])
+                @languages
+                :header? true)
+               (map (fn [field]
+                      (into field [[:div.editor-form__markdown-anchor
+                                    (markdown-help)]]))))]]]])))
+
 (defn adjacent-fieldset [content path children]
   (let [languages        (subscribe [:editor/languages])
         animation-effect (fade-out-effect path)]

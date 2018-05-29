@@ -1,6 +1,7 @@
 (ns ataru.virkailija.editor.subs
   (:require-macros [reagent.ratom :refer [reaction]])
-  (:require [re-frame.core :as re-frame]
+  (:require [ataru.util :as util]
+            [re-frame.core :as re-frame]
             [taoensso.timbre :refer-macros [spy debug]]
             [markdown.core :as md]))
 
@@ -225,6 +226,13 @@
                  (map :id)
                  (concat (map :id content))
                  set)))))
+
+(re-frame/reg-sub
+  :editor/pohjakoulutusristiriita-exists?
+  (fn [db _]
+    (->> (get-selected-form-content db)
+         util/flatten-form-fields
+         (some #(= "pohjakoulutusristiriita" (:id %))))))
 
 (re-frame/reg-sub
   :editor/email-template

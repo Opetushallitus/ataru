@@ -125,3 +125,18 @@
      :metadata                       metadata
      :validators                     ["hakukohteet"]
      :exclude-from-answers-if-hidden true}))
+
+(defn pohjakoulutusristiriita [metadata]
+  {:id                   "pohjakoulutusristiriita"
+   :fieldClass           "pohjakoulutusristiriita"
+   :fieldType            "pohjakoulutusristiriita"
+   :exclude-from-answers true
+   :params               {:deny-submit false}
+   :rules                {:pohjakoulutusristiriita nil}
+   :metadata             metadata
+   :label                {:fi "Ilmoitus riittämättömästä pohjakoulutuksesta"
+                          :sv "Ilmoitus riittämättömästä pohjakoulutuksesta"
+                          :en "Ilmoitus riittämättömästä pohjakoulutuksesta"}
+   :text                 {:fi "Ilmoittamasi pohjakoulutuksen perusteella et voi tulla valituksi seuraaviin hakukohteisiin"
+                          :sv "Ilmoittamasi pohjakoulutuksen perusteella et voi tulla valituksi seuraaviin hakukohteisiin"
+                          :en "Ilmoittamasi pohjakoulutuksen perusteella et voi tulla valituksi seuraaviin hakukohteisiin"}})

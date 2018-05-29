@@ -16,11 +16,12 @@
      ["Tekstikenttä" component/text-field]
      ["Tekstialue" component/text-area]
      ["Vierekkäiset tekstikentät" component/adjacent-fieldset]]
-    (fc/feature-enabled? :attachment) (conj ["Liitepyyntö" component/attachment])
+    (fc/feature-enabled? :attachment)     (conj ["Liitepyyntö" component/attachment])
     (fc/feature-enabled? :question-group) (conj ["Kysymysryhmä" component/question-group])
-    true (conj ["Infoteksti" component/info-element])
+    true                                  (conj ["Infoteksti" component/info-element])
     (fc/feature-enabled? :question-group) (conj ["Pohjakoulutusmoduuli" base-education-module/module])
-    (fc/feature-enabled? :question-group) (conj ["Pohjakoulutusmoduuli (kk-yhteishaku)" kk-base-education-module/module])))
+    (fc/feature-enabled? :question-group) (conj ["Pohjakoulutusmoduuli (kk-yhteishaku)" kk-base-education-module/module])
+    true                                  (conj ["Ilmoitus riittämättömästä pohjakoulutuksesta" component/pohjakoulutusristiriita])))
 
 (def followup-toolbar-element-names
   (cond-> #{"Tekstikenttä"
@@ -60,14 +61,17 @@
 
 (defn- component-toolbar [path elements generator]
   (fn [path elements generator]
-    (let [base-education-module-exists? (subscribe [:editor/base-education-module-exists?])]
+    (let [base-education-module-exists?   (subscribe [:editor/base-education-module-exists?])
+          pohjakoulutusristiriita-exists? (subscribe [:editor/pohjakoulutusristiriita-exists?])]
       (into [:ul.form__add-component-toolbar--list]
             (for [[component-name generate-fn] elements
                   :when (and (not (and (vector? path)
                                        (= :children (second path))
                                        (= "Lomakeosio" component-name)))
                              (not (and @base-education-module-exists?
-                                       (contains? #{"Pohjakoulutusmoduuli" "Pohjakoulutusmoduuli (kk-yhteishaku)"} component-name))))]
+                                       (contains? #{"Pohjakoulutusmoduuli" "Pohjakoulutusmoduuli (kk-yhteishaku)"} component-name)))
+                             (not (and @pohjakoulutusristiriita-exists?
+                                       (= "Ilmoitus riittämättömästä pohjakoulutuksesta" component-name))))]
               [:li.form__add-component-toolbar--list-item
                [:a {:on-click (fn [evt]
                                 (.preventDefault evt)

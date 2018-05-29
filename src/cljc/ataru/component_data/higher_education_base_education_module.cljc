@@ -19,6 +19,7 @@
                              :koodisto-source          {:uri "pohjakoulutuskklomake" :title "Kk-pohjakoulutusvaihtoehdot" :version 1}
                              :koodisto-ordered-by-user true
                              :validators               ["required"]
+                             :rules                    {:pohjakoulutusristiriita nil}
                              :label                    (:completed-education higher-base-education-module-texts)
                              :options                  [{:label     (:marticulation-exam-in-finland higher-base-education-module-texts)
                                                          :value     "pohjakoulutus_yo"

@@ -177,7 +177,13 @@
    :seconds                                 {:fi "sekuntia" :en "seconds" :sv "sekunder"}
    :hour                                    {:fi "tunti" :en "hour" :sv "timme"}
    :minute                                  {:fi "minuutti" :en "minute" :sv "minut"}
-   :second                                  {:fi "sekunti" :en "second" :sv "sekund"}})
+   :second                                  {:fi "sekunti" :en "second" :sv "sekund"}
+   :pohjakoulutusvaatimus                   {:fi "Pohjakoulutusvaatimus"
+                                             :sv "Pohjakoulutusvaatimus"
+                                             :en "Pohjakoulutusvaatimus"}
+   :muokkaa-hakukohteita                    {:fi "Muokkaa hakukohteita"
+                                             :sv "Muokkaa hakukohteita"
+                                             :en "Muokkaa hakukohteita"}})
 
 (def general-texts
   {:yes                {:en "Yes"
