@@ -214,7 +214,10 @@
       :summary "Sends application link with fresh secret to applicant"
       :body [request {:old-secret s/Str}]
       (do
-        (hakija-application-service/create-new-secret-and-send-link tarjonta-service (:old-secret request))
+        (hakija-application-service/create-new-secret-and-send-link
+         tarjonta-service
+         job-runner
+         (:old-secret request))
         (response/ok {})))
     (api/context "/files" []
       (api/POST "/" []
