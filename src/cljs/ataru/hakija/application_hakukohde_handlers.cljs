@@ -83,7 +83,7 @@
  :application/hakukohde-add-selection
  (fn [{db :db} [_ hakukohde-oid]]
    (let [field-descriptor     (hakukohteet-field db)
-         selected-hakukohteet (get-in db [:application :answers :hakukohteet :values] [])
+         selected-hakukohteet (vec (get-in db [:application :answers :hakukohteet :values]))
          not-yet-selected?    (every? #(not= hakukohde-oid (:value %))
                                       selected-hakukohteet)
          new-hakukohde-values (cond-> selected-hakukohteet
