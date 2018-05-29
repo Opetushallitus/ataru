@@ -60,17 +60,14 @@
 
 (defn- component-toolbar [path elements generator]
   (fn [path elements generator]
-    (let [base-education-module-exists?    (subscribe [:editor/base-education-module-exists?])
-          kk-base-education-module-exists? (subscribe [:editor/kk-base-education-module-exists?])]
+    (let [base-education-module-exists? (subscribe [:editor/base-education-module-exists?])]
       (into [:ul.form__add-component-toolbar--list]
             (for [[component-name generate-fn] elements
                   :when (and (not (and (vector? path)
                                        (= :children (second path))
                                        (= "Lomakeosio" component-name)))
                              (not (and @base-education-module-exists?
-                                       (= "Pohjakoulutusmoduuli" component-name)))
-                             (not (and @kk-base-education-module-exists?
-                                       (= "KK-Pohjakoulutusmoduuli" component-name))))]
+                                       (contains? #{"Pohjakoulutusmoduuli" "KK-Pohjakoulutusmoduuli"} component-name))))]
               [:li.form__add-component-toolbar--list-item
                [:a {:on-click (fn [evt]
                                 (.preventDefault evt)

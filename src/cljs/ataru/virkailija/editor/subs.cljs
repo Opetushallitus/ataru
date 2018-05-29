@@ -207,7 +207,7 @@
               [lang any-changes?]))
           templates)))))
 
-(defn get-selected-form-content [db]
+(defn- get-selected-form-content [db]
   (let [selected-form-key (-> db :editor :selected-form-key)]
     (-> db
         :editor
@@ -218,19 +218,13 @@
 (re-frame/reg-sub
   :editor/base-education-module-exists?
   (fn [db _]
-    (contains? (->> (get-selected-form-content db)
-                    (mapcat :children)
-                    (map :id)
-                    set)
-               "completed-base-education")))
-
-(re-frame/reg-sub
-  :editor/kk-base-education-module-exists?
-  (fn [db _]
-    (contains? (->> (get-selected-form-content db)
-                    (map :id)
-                    set)
-               "higher-base-education-module")))
+    (let [content (get-selected-form-content db)]
+      (some #{"completed-base-education" "higher-base-education-module"}
+            (->> content
+                 (mapcat :children)
+                 (map :id)
+                 (concat (map :id content))
+                 set)))))
 
 (re-frame/reg-sub
   :editor/email-template
