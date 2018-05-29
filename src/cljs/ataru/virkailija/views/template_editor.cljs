@@ -70,7 +70,7 @@
                [:textarea.virkailija-email-preview__text-input
                 {:value     (:content lang-content)
                  :on-change #(dispatch [:editor/update-email-preview (name @lang) :content (.-value (.-target %))])}]
-               [:h4.virkailija-email-preview__sub-heading "Tähän tulee hakemusnumero, hakutoiveet ja muokkauslinkki"]
+               [:h4.virkailija-email-preview__sub-heading "Tähän tulee hakemusnumero, hakutoiveet, puuttuvat liitepyynnöt ja muokkauslinkki"]
                [:h4.virkailija-email-preview__sub-heading "Muokattava osuus (viestin loppu)"]
                [:textarea.virkailija-email-preview__text-input
                 {:value     (:content-ending lang-content)
