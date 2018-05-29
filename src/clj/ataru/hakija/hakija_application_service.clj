@@ -334,6 +334,9 @@
      lang-override]))
 
 (defn create-new-secret-and-send-link
-  [tarjonta-service old-secret]
+  [tarjonta-service job-runner old-secret]
   (let [application-id (application-store/add-new-secret-to-application-by-old-secret old-secret)]
-    (application-email/start-email-refresh-secret-confirmation-job tarjonta-service application-id)))
+    (application-email/start-email-refresh-secret-confirmation-job
+     tarjonta-service
+     job-runner
+     application-id)))
