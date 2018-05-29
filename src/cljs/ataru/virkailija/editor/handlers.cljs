@@ -872,10 +872,14 @@
 
 (reg-event-fx
   :editor/select-organization
-  (fn [_ [_ oid]]
+  (fn [{db :db} [_ oid]]
     {:http {:method              :post
-            :path                (str "/lomake-editori/api/organization/user-organization/" oid)
-            :handler-or-dispatch :editor/update-selected-organization}}))
+            :path                (str "/lomake-editori/api/organization/user-organization/"
+                                      oid
+                                      "?rights="
+                                      (clojure.string/join "&rights=" ["edit-applications" "view-applications" "form-edit"]))
+            :handler-or-dispatch :editor/update-selected-organization}
+     :db   (assoc-in db [:editor :organizations :rights] [:edit-applications :view-applications :form-edit])}))
 
 (reg-event-fx
   :editor/update-selected-organization
@@ -891,3 +895,20 @@
     {:http {:method              :delete
             :path                "/lomake-editori/api/organization/user-organization"
             :handler-or-dispatch :editor/update-selected-organization}}))
+
+(reg-event-fx
+  :editor/update-selected-organization-rights
+  (fn [{db :db} [_ right selected?]]
+    (let [db (if selected?
+               (update-in db [:editor :organizations :rights] conj right)
+               (update-in db [:editor :organizations :rights] (partial remove #{right})))
+          rights (->> db :editor :organizations :rights
+                      (map name)
+                      not-empty)]
+      {:db   db
+       :http {:method              :post
+              :path                (str "/lomake-editori/api/organization/user-organization/"
+                                        (-> db :editor :user-info :selected-organization :oid)
+                                        (when rights
+                                          (str "?rights=" (clojure.string/join "&rights=" rights))))
+              :handler-or-dispatch :editor/update-selected-organization}})))

@@ -43,8 +43,10 @@
 
 (defn create-org-labels [organizations]
   (map
-   (fn [org]
-     (str (get-label (:name org)) " (" (string/join ", " (map #(get right-labels (keyword %)) (:rights org))) ")"))
+    (fn [org]
+      (str (get-label (:name org))
+           (when (not-empty (:rights org))
+             (str " (" (string/join ", " (map #(get right-labels (keyword %)) (:rights org))) ")"))))
    organizations))
 
 (defn- org-label
@@ -55,6 +57,22 @@
       (zero? org-count) "Ei organisaatiota"
       (< 1 org-count) "Useita organisaatioita"
       :else (-> organizations (first) :name (get-label)))))
+
+(defn- organization-rights-select []
+  (let [rights (subscribe [:state-query [:editor :organizations :rights]])]
+    [:div.profile__organization-rights-selector
+     "Valitse käyttäjän oikeudet"
+     (doall
+            (for [[right label] [[:view-applications "Hakemusten katselu"]
+                                 [:edit-applications "Hakemusten muokkaus"]
+                                 [:form-edit "Lomakkeiden muokkaus"]]]
+              ^{:key (str "org-right-selector-for-" (name right))}
+              [:label.profile__organization-select-right
+               [:input
+                {:type      "checkbox"
+                 :checked   (contains? (set @rights) right)
+                 :on-change #(dispatch [:editor/update-selected-organization-rights right (.. % -target -checked)])}]
+               label]))]))
 
 (defn profile []
   (let [user-info             (subscribe [:state-query [:editor :user-info]])
@@ -84,7 +102,9 @@
                    (create-org-labels (or selected-organization organizations))))
                (when selected-organization
                  [:div
-                  [:a
+                  (when (:superuser? @user-info)
+                    [organization-rights-select])
+                  [:a.profile__reset-to-default-organization
                    {:on-click #(dispatch [:editor/remove-selected-organization])}
                    (str "Palauta oletusorganisaatio (" (org-label organizations nil) ")")]])
                [:h4.profile__organization-select-title "Vaihda organisaatio"]

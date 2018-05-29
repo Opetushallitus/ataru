@@ -30,8 +30,8 @@
                          (every? #(string/includes? haystack %) query-parts))))))))))
 
 (defn select-organization
-  [organization-service session organization-oid]
+  [organization-service session organization-oid rights]
   (if (-> session :identity :superuser)
     (some-> (find-first #(= (:oid %) organization-oid) (all-organizations organization-service))
-            (assoc :rights [:edit-applications :view-applications :form-edit]))
+            (assoc :rights rights))
     (get (-> session :identity :organizations) (keyword organization-oid))))
