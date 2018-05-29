@@ -16,11 +16,9 @@
     newest-options
     (let [existing-values                 (set (map :value existing-options))
           options-that-didnt-exist-before (filter #(not (contains? existing-values (:value %))) newest-options)]
-      (concat options-that-didnt-exist-before
-              (map (fn [existing-option]
-                     (if-let [new-option (first (filter #(= (:value %) (:value existing-option)) newest-options))]
-                       (if-let [existing-folluwups (:followups existing-option)]
-                         (assoc new-option :followups existing-folluwups)
-                         existing-option)
-                       existing-option))
-                   existing-options)))))
+      (vec (concat options-that-didnt-exist-before
+                   (map (fn [existing-option]
+                          (if-let [new-option (first (filter #(= (:value %) (:value existing-option)) newest-options))]
+                            (assoc existing-option :label (:label new-option))
+                            existing-option))
+                        existing-options))))))

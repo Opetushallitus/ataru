@@ -962,7 +962,7 @@ form > div > .editor-form__component-wrapper {
   border-radius: 2px;
   background-color: #F7F7F7;
   padding: 0.5em;
-  height: 43px;
+  min-height: 43px;
   color: @selected-blue;
 
   &.disabled {
@@ -976,6 +976,7 @@ form > div > .editor-form__component-wrapper {
   &:hover {
     .form__add-component-toolbar--list {
       display: block;
+      text-align: center;
     }
 
     .plus-component:not(.disabled) {

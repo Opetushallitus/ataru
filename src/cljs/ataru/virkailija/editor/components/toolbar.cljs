@@ -2,6 +2,7 @@
   (:require
    [ataru.component-data.component :as component]
    [ataru.component-data.base-education-module :as base-education-module]
+   [ataru.component-data.higher-education-base-education-module :as kk-base-education-module]
    [ataru.feature-config :as fc]
    [re-frame.core :refer [dispatch subscribe]]
    [taoensso.timbre :refer-macros [spy debug]]))
@@ -18,7 +19,8 @@
     (fc/feature-enabled? :attachment) (conj ["Liitepyyntö" component/attachment])
     (fc/feature-enabled? :question-group) (conj ["Kysymysryhmä" component/question-group])
     true (conj ["Infoteksti" component/info-element])
-    (fc/feature-enabled? :question-group) (conj ["Pohjakoulutusmoduuli" base-education-module/module])))
+    (fc/feature-enabled? :question-group) (conj ["Pohjakoulutusmoduuli" base-education-module/module])
+    (fc/feature-enabled? :question-group) (conj ["KK-Pohjakoulutusmoduuli" kk-base-education-module/module])))
 
 (def followup-toolbar-element-names
   (cond-> #{"Tekstikenttä"
@@ -65,12 +67,13 @@
                                        (= :children (second path))
                                        (= "Lomakeosio" component-name)))
                              (not (and @base-education-module-exists?
-                                       (= "Pohjakoulutusmoduuli" component-name))))]
+                                       (contains? #{"Pohjakoulutusmoduuli" "KK-Pohjakoulutusmoduuli"} component-name))))]
               [:li.form__add-component-toolbar--list-item
                [:a {:on-click (fn [evt]
                                 (.preventDefault evt)
                                 (generator generate-fn))}
                 component-name]])))))
+
 
 (defn add-component [path]
   (let [form-locked (subscribe [:editor/current-form-locked])]

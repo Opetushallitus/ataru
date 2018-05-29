@@ -49,8 +49,8 @@
   (fn [db [_ id]]
     (if-let [search-term (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term])]
       (filter-hakukohteet
-         (get-in db [:editor :used-by-haut :haut] {})
-         search-term)
+        (get-in db [:editor :used-by-haut :haut] {})
+        search-term)
       (get-in db [:editor :used-by-haut :haut] {}))))
 
 (re-frame/reg-sub
@@ -119,8 +119,8 @@
   (fn [db [_ oid]]
     (let [multiple-haku? (< 1 (count (get-in db [:editor :used-by-haut :haut] {})))
           [haku hakukohde] (find-haku-and-hakukohde
-                            (map second (get-in db [:editor :used-by-haut :haut]))
-                            oid)
+                             (map second (get-in db [:editor :used-by-haut :haut]))
+                             oid)
           hakukohde-name (some #(get (:name hakukohde) %) [:fi :sv :en])
           tarjoaja-name (some #(get (:tarjoaja-name hakukohde) %) [:fi :sv :en])
           haku-name (some #(get (:name haku) %) [:fi :sv :en])]
@@ -148,11 +148,11 @@
 (re-frame/reg-sub
   :editor/belongs-to-other-organization?
   (fn [db [_ {:keys [belongs-to-hakukohteet belongs-to-hakukohderyhma]}]]
-    (let [my-hakukohteet     (->> (get-in db [:editor :used-by-haut :haut])
-                                  vals
-                                  (mapcat :hakukohteet)
-                                  (map :oid)
-                                  set)
+    (let [my-hakukohteet (->> (get-in db [:editor :used-by-haut :haut])
+                              vals
+                              (mapcat :hakukohteet)
+                              (map :oid)
+                              set)
           my-hakukohderyhmat (->> (get-in db [:editor :used-by-haut :hakukohderyhmat])
                                   (map :oid)
                                   set)]
@@ -207,20 +207,24 @@
               [lang any-changes?]))
           templates)))))
 
+(defn- get-selected-form-content [db]
+  (let [selected-form-key (-> db :editor :selected-form-key)]
+    (-> db
+        :editor
+        :forms
+        (get selected-form-key)
+        :content)))
+
 (re-frame/reg-sub
   :editor/base-education-module-exists?
   (fn [db _]
-    (let [selected-form-key     (-> db :editor :selected-form-key)
-          selected-form-content (-> db
-                                    :editor
-                                    :forms
-                                    (get selected-form-key)
-                                    :content)]
-      (contains? (->> selected-form-content
-                      (mapcat :children)
-                      (map :id)
-                      set)
-                 "completed-base-education"))))
+    (let [content (get-selected-form-content db)]
+      (some #{"completed-base-education" "higher-base-education-module"}
+            (->> content
+                 (mapcat :children)
+                 (map :id)
+                 (concat (map :id content))
+                 set)))))
 
 (re-frame/reg-sub
   :editor/email-template

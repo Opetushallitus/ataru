@@ -573,7 +573,11 @@
     :class (when @form-locked "editor-form__multi-options-remove--cross--disabled")}
    [:i.zmdi.zmdi-delete.zmdi-hc-lg]])
 
-(defn- dropdown-option [option-index option-path path languages show-followups & {:keys [header? include-followup? editable?] :or {header? false include-followup? true editable? true} :as opts}]
+(defn- dropdown-option
+  [option-index option-path path languages show-followups &
+   {:keys [header? include-followup? editable?]
+    :or   {header? false include-followup? true editable? true}
+    :as   opts}]
   (let [multiple-languages? (< 1 (count languages))
         form-locked         (subscribe [:editor/current-form-locked])
         on-click            (fn [up? event]
@@ -583,7 +587,10 @@
                                 (dispatch [(if up?
                                              :editor/move-option-up
                                              :editor/move-option-down) path option-index])))]
-    (fn [option-index option-path path languages show-followups & {:keys [header? include-followup? editable?] :or {header? false include-followup? true editable? true} :as opts}]
+    (fn [option-index option-path path languages show-followups &
+         {:keys [header? include-followup? editable?]
+          :or   {header? false include-followup? true editable? true}
+          :as   opts}]
       [:div
        [:div.editor-form__multi-options-wrapper-outer
         [:div
