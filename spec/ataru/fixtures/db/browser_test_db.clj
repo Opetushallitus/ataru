@@ -188,7 +188,7 @@
                                  :value     "2"}
                                 {:fieldType "dropdown"
                                  :key       "nationality"
-                                 :value     "246"}]})
+                                 :value     [["246"]]}]})
 
 (def application2 {:form       1
                    :lang       "fi"
@@ -220,7 +220,7 @@
                                  :value     "1"}
                                 {:fieldType "dropdown"
                                  :key       "nationality"
-                                 :value     "246"}]})
+                                 :value     [["246"]]}]})
 
 (def application3 {:form       1
                    :lang       "fi"
@@ -252,7 +252,7 @@
                                  :value     "2"}
                                 {:fieldType "dropdown"
                                  :key       "nationality"
-                                 :value     "246"}]})
+                                 :value     [["246"]]}]})
 
 (defn init-db-fixture []
   (form-store/create-new-form! form1 (:key form1))
