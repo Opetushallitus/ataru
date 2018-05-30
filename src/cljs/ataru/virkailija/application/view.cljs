@@ -1393,14 +1393,21 @@
            (str applications-count " hakemusta")])]
        (when person-oid
          [:div.application-handling__review-area-main-heading-person-oid-row
-          [:a
-           {:href   (str "/henkilo-ui/oppija/"
-                         person-oid
-                         "?permissionCheckService=ATARU")
-            :target "_blank"}
-           [:i.zmdi.zmdi-account-circle.application-handling__review-area-main-heading-person-icon]
-           [:span.application-handling__review-area-main-heading-person-oid
-            (str "Oppija " person-oid)]]
+          [:div.application-handling__applicant-links
+           [:a
+            {:href   (str "/henkilo-ui/oppija/"
+                          person-oid
+                          "?permissionCheckService=ATARU")
+             :target "_blank"}
+            [:i.zmdi.zmdi-account-circle.application-handling__review-area-main-heading-person-icon]
+            [:span.application-handling__review-area-main-heading-person-oid
+             (str "Oppija " person-oid)]]
+           [:a
+            {:href   (str "/suoritusrekisteri/#/opiskelijat?henkilo=" person-oid)
+             :target "_blank"}
+            [:i.zmdi.zmdi-collection-text.application-handling__review-area-main-heading-person-icon]
+            [:span.application-handling__review-area-main-heading-person-oid
+             "Henkilön suoritukset"]]]
           (when-not yksiloity
             [:a.individualization
              {:href   (str "/henkilo-ui/oppija/"
