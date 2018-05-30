@@ -85,6 +85,7 @@
 (defn- is-question-group-answer?
   [answer]
   (and (or (vector? answer) (set? answer))
+       (not-empty answer)
        (every? vector? answer)))
 
 (defn- get-non-empty-answers [field answers]
