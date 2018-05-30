@@ -238,36 +238,23 @@
     :change-country-of-residence
     change-country-of-residence
     :pohjakoulutusristiriita
-    pohjakoulutusristiriita
-    nil))
+    pohjakoulutusristiriita))
 
-(defn extract-rules [content]
-  (->> (for [field content]
-         (if-let [children (:children field)]
-           (extract-rules children)
-           (:rules field)))
-       flatten
-       (filter not-empty)
-       vec))
+(defn run-rules
+  ([db rules]
+   (run-rules db rules hakija-rule-to-fn))
+  ([db rules rule-to-fn]
+   {:pre  [(map? db) (map? rules)]
+    :post [map?]}
+   (reduce-kv (fn [db rule arg]
+                (or ((rule-to-fn rule) db arg) db))
+              db
+              rules)))
 
-(defn run-rule
-  ([rule db]
-   (run-rule hakija-rule-to-fn rule db))
-  ([rule-to-fn rule db]
-   {:pre [(map? rule)
-          (map? db)]}
-   (reduce-kv
-     (fn [db-accumulator rule argument]
-       (if-let [rule-fn (rule-to-fn rule)]
-         (or (rule-fn db-accumulator argument)
-             db-accumulator)
-         db-accumulator))
-     db
-     rule)))
-
-(defn run-all-rules [db]
-  (reduce
-    (fn [db-accumulator rule]
-      (run-rule rule db-accumulator))
-    db
-    (extract-rules (-> db :form :content))))
+(defn run-all-rules
+  [db]
+  (->> (get-in db [:form :content])
+       util/flatten-form-fields
+       (map :rules)
+       (remove empty?)
+       (reduce run-rules db)))
