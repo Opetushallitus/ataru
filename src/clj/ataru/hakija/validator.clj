@@ -16,14 +16,21 @@
       []
       options)))
 
+(defn- nationalities-value-contains-finland?
+  [value]
+  (some true? (map
+                (fn [[country-code]]
+                  (= country-code "246"))
+                value)))
+
 (defn- validate-birthdate-and-gender-component
   [answers-by-key child-answers]
   (boolean
-   (and (-> child-answers :birth-date :passed?)
-        (-> child-answers :gender :passed?)
-        (or (-> child-answers :ssn :passed?)
-            (and (clojure.string/blank? (-> answers-by-key :ssn :value))
-                 (not= (-> answers-by-key :nationality :value) "246"))))))
+    (and (-> child-answers :birth-date :passed?)
+         (-> child-answers :gender :passed?)
+         (or (-> child-answers :ssn :passed?)
+             (and (clojure.string/blank? (-> answers-by-key :ssn :value))
+                  (not (nationalities-value-contains-finland? (-> answers-by-key :nationality :value))))))))
 
 (defn validator-keyword->fn [validator-keyword]
   (case (keyword validator-keyword)

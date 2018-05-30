@@ -29,17 +29,17 @@
 (def application-invalid-email-field (assoc-in application-fixtures/person-info-form-application [:answers 2 :value] "invalid@email@foo.com"))
 (def application-invalid-phone-field (assoc-in application-fixtures/person-info-form-application [:answers 5 :value] "invalid phone number"))
 (def application-invalid-ssn-field (assoc-in application-fixtures/person-info-form-application [:answers 8 :value] "010101-123M"))
-(def application-invalid-postal-code (assoc-in application-fixtures/person-info-form-application [:answers 11 :value] "0001"))
-(def application-invalid-dropdown-value (assoc-in application-fixtures/person-info-form-application [:answers 13 :value] "kuikka"))
+(def application-invalid-postal-code (assoc-in application-fixtures/person-info-form-application [:answers 10 :value] "0001"))
+(def application-invalid-dropdown-value (assoc-in application-fixtures/person-info-form-application [:answers 12 :value] "kuikka"))
 (def application-edited-email (assoc-in application-fixtures/person-info-form-application [:answers 2 :value] "edited@foo.com"))
 (def application-edited-ssn (assoc-in application-fixtures/person-info-form-application [:answers 8 :value] "020202A0202"))
 (def application-for-hakukohde-edited (-> application-fixtures/person-info-form-application-for-hakukohde
-                                          (assoc-in [:answers 12 :value] "ruotsi")
+                                          (assoc-in [:answers 11 :value] "SV")
                                           (assoc-in [:answers 2 :value] "edited@foo.com")
-                                          (assoc-in [:answers 14 :value] ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"])))
+                                          (assoc-in [:answers 16 :value] ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"])))
 (def application-for-hakukohde-hakukohde-order-edited (-> application-fixtures/person-info-form-application-for-hakukohde
                                                           (assoc :hakukohde [ "1.2.246.562.20.49028196524" "1.2.246.562.20.49028196523"])
-                                                          (assoc-in [:answers 15 :value] [ "1.2.246.562.20.49028196524" "1.2.246.562.20.49028196523"])))
+                                                          (assoc-in [:answers 17 :value] [ "1.2.246.562.20.49028196524" "1.2.246.562.20.49028196523"])))
 
 (def handler (-> (routes/new-handler)
                  (assoc :tarjonta-service (tarjonta-service/new-tarjonta-service))
@@ -201,62 +201,82 @@
       (with-haku-form-response "1.2.246.562.29.65950024186" [:hakija :with-henkilo] resp
         (should= 200 (:status resp))
         (let [fields (-> resp :body :content util/flatten-form-fields)]
-          (should= 7 (count (filter cannot-edit? fields)))
-          (should= 1 (count (filter cannot-view? fields)))))))
+          (should= (map :id (filter cannot-edit? fields))
+                   ["first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language"])
+          (should= (map :id (filter cannot-view? fields))
+                   ["ssn" "birth-date"])))))
 
   (it "should get form as virkailija"
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija :with-henkilo] resp
         (should= 200 (:status resp))
         (let [fields (-> resp :body :content util/flatten-form-fields)]
-          (should= 9 (count (remove cannot-edit? fields)))
-          (should= 7 (count (filter cannot-edit? fields)))
-          (should= 1 (count (filter cannot-view? fields)))))))
+          (should= (map :id (remove cannot-edit? fields))
+                   ["hakukohteet" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b"])
+          (should= (map :id (filter cannot-edit? fields))
+                   ["first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language"])
+          (should= (map :id (filter cannot-view? fields))
+                   ["ssn" "birth-date"])))))
 
   (it "should get form as virkailija without henkilo"
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija] resp
         (should= 200 (:status resp))
         (let [fields (-> resp :body :content util/flatten-form-fields)]
-          (should= 15 (count (remove cannot-edit? fields)))
-          (should= 1  (count (filter cannot-edit? fields)))
-          (should= 1  (count (filter cannot-view? fields)))))))
+          (should= (map :id (remove cannot-edit? fields))
+                   ["hakukohteet" "first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "gender" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "language" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b"])
+          (should= (map :id (filter cannot-edit? fields))
+                   ["ssn" "birth-date"])
+          (should= (map :id (filter cannot-view? fields))
+                   ["ssn" "birth-date"])))))
 
   (it "should get application with hakuaika ended"
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-grace-period]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:hakija :with-henkilo] resp
         (should= 200 (:status resp))
         (let [fields (-> resp :body :content util/flatten-form-fields)]
-          (should= 1  (count (remove cannot-edit? fields)))
-          (should= 15 (count (filter cannot-edit? fields)))
-          (should= 1  (count (filter cannot-view? fields)))))))
+          (should= (map :id (remove cannot-edit? fields))
+                   ["164954b5-7b23-4774-bd44-dee14071316b"])
+          (should= (map :id (filter cannot-edit? fields))
+                   ["hakukohteet" "first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "language" "b0839467-a6e8-4294-b5cc-830756bbda8a"])
+          (should= (map :id (filter cannot-view? fields))
+                   ["ssn" "birth-date"])))))
 
   (it "should get application with hakuaika ended as virkailija"
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-grace-period]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija :with-henkilo] resp
         (should= 200 (:status resp))
         (let [fields (-> resp :body :content util/flatten-form-fields)]
-          (should= 9 (count (remove cannot-edit? fields)))
-          (should= 7 (count (filter cannot-edit? fields)))
-          (should= 1 (count (filter cannot-view? fields)))))))
+          (should= (map :id (remove cannot-edit? fields))
+                   ["hakukohteet" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b"])
+          (should= (map :id (filter cannot-edit? fields))
+                   ["first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language"])
+          (should= (map :id (filter cannot-view? fields))
+                   ["ssn" "birth-date"])))))
 
   (it "should get application with hakuaika ended but hakukierros ongoing"
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:hakija :with-henkilo] resp
         (should= 200 (:status resp))
         (let [fields (-> resp :body :content util/flatten-form-fields)]
-          (should= 6 (count (remove cannot-edit? fields)))
-          (should= 10 (count (filter cannot-edit? fields)))
-          (should= 1  (count (filter cannot-view? fields)))))))
+          (should= (map :id (remove cannot-edit? fields))
+                   ["birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "home-town" "city"])
+          (should= (map :id (filter cannot-edit? fields))
+                   ["hakukohteet" "first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "postal-office" "language" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b"])
+          (should= (map :id (filter cannot-view? fields))
+                   ["ssn" "birth-date"])))))
 
   (it "should get application with hakuaika ended but hakukierros ongoing as virkailija"
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija :with-henkilo] resp
         (should= 200 (:status resp))
         (let [fields (-> resp :body :content util/flatten-form-fields)]
-          (should= 9 (count (remove cannot-edit? fields)))
-          (should= 7 (count (filter cannot-edit? fields)))
-          (should= 1 (count (filter cannot-view? fields))))))))
+          (should= (map :id (remove cannot-edit? fields))
+                   ["hakukohteet" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b"])
+          (should= (map :id (filter cannot-edit? fields))
+                   ["first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language"])
+          (should= (map :id (filter cannot-view? fields))
+                   ["ssn" "birth-date"]))))))
 
 (describe "/application"
   (tags :unit :hakija-routes)
@@ -419,7 +439,7 @@
           (should= 200 (:status resp))
           (let [id          (-> resp :body :id)
                 application (get-application-by-id id)]
-            (should= "suomi" (get-answer application "language"))
+            (should= "FI" (get-answer application "language"))
             (should= "edited@foo.com" (get-answer application "email"))
             (should= ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"]
                      (get-answer application "164954b5-7b23-4774-bd44-dee14071316b"))))))
@@ -431,7 +451,7 @@
           (should= 200 (:status resp))
           (let [id          (-> resp :body :id)
                 application (get-application-by-id id)]
-            (should= "suomi" (get-answer application "language"))
+            (should= "FI" (get-answer application "language"))
             (should= "aku@ankkalinna.com" (get-answer application "email"))
             (should= ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"]
                      (get-answer application "164954b5-7b23-4774-bd44-dee14071316b")))))))
@@ -474,13 +494,13 @@
 
     (it "should not update dropdown answer when required followups are not answered"
       (with-response :put resp (-> (merge application-fixtures/person-info-form-application-with-modified-answers {:secret "0000000031"})
-                                   (assoc-in [:answers 18 :value] "eka vaihtoehto"))
+                                   (assoc-in [:answers 20 :value] "eka vaihtoehto"))
         (should= 400 (:status resp))
         (should= {:failures {:dropdown-followup-2 {:passed? false}}} (:body resp))))
 
     (it "should update dropdown answer"
       (with-response :put resp (-> (merge application-fixtures/person-info-form-application-with-more-modified-answers {:secret "0000000031"})
-                                   (assoc-in [:answers 18 :value] "eka vaihtoehto"))
+                                   (assoc-in [:answers 20 :value] "eka vaihtoehto"))
         (should= 200 (:status resp))
         (let [id          (-> resp :body :id)
               application (get-application-by-id id)]
