@@ -355,10 +355,14 @@
        [remove-question-group-button field-descriptor idx])]))
 
 (defn question-group [field-descriptor children]
-  (let [row-count     (subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]])
+  (let [lang          @(subscribe [:application/form-language])
+        label         (get-in field-descriptor [:label lang] "")
+        row-count     (subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]])
         cannot-edits? (map #(subscribe [:application/cannot-edit? (keyword (:id %))])
                            (util/flatten-form-fields children))]
     [:div.application__question-group
+     (when-not (clojure.string/blank? label)
+       [:h3.application__question-group-heading label])
      [scroll-to-anchor field-descriptor]
      [:div
       (doall
