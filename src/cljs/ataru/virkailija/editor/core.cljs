@@ -23,30 +23,42 @@
 
 (defonce attachments-enabled? (fc/feature-enabled? :attachment))
 
-(defn soresu->reagent [content path]
-  (let [render-children (fn [children & [new-path]]
-                          (for [[index child] (map vector (range) children)]
-                            ^{:key index}
-                            [soresu->reagent child (conj (vec path) :children index) :question-group-element? (= (:fieldClass content) "questionGroup")]))]
-    (fn [content path & args]
+(defn soresu->reagent [content path & args]
+  (fn [content path & args]
+    (let [children  (map-indexed
+                     (fn [index child]
+                       ^{:key index}
+                       [soresu->reagent
+                        child
+                        (conj (vec path) :children index)
+                        :question-group-element? (= (:fieldClass content)
+                                                    "questionGroup")])
+                     (:children content))
+          followups (map-indexed
+                     (fn [option-index option]
+                       (map-indexed
+                        (fn [followup-index followup]
+                          ^{:key (str "followup-" option-index "-" followup-index)}
+                          [soresu->reagent
+                           followup
+                           (vec (concat path [:options option-index :followups followup-index]))])
+                        (:followups option)))
+                     (:options content))]
       (when-let [component
                  (match content
                    {:module module}
                    [ec/module path]
 
                    {:fieldClass "wrapperElement"
-                    :fieldType  "adjacentfieldset"
-                    :children   children}
-                   [ec/adjacent-fieldset content path (render-children children)]
+                    :fieldType  "adjacentfieldset"}
+                   [ec/adjacent-fieldset content path children]
 
-                   {:fieldClass "wrapperElement"
-                    :children   children}
-                   [ec/component-group content path (render-children children path)]
+                   {:fieldClass "wrapperElement"}
+                   [ec/component-group content path children]
 
                    {:fieldClass "questionGroup"
-                    :fieldType  "fieldset"
-                    :children   children}
-                   [ec/component-group content path (render-children children path)]
+                    :fieldType  "fieldset"}
+                   [ec/component-group content path children]
 
                    {:fieldClass "formField" :fieldType "textField"
                     :params     {:adjacent true}}
@@ -59,10 +71,10 @@
                    [ec/text-area content path]
 
                    {:fieldClass "formField" :fieldType "dropdown"}
-                   [ec/dropdown content path args]
+                   [ec/dropdown content followups path args]
 
                    {:fieldClass "formField" :fieldType "multipleChoice"}
-                   [ec/dropdown content path args]
+                   [ec/dropdown content followups path args]
 
                    {:fieldClass "pohjakoulutusristiriita"
                     :fieldType  "pohjakoulutusristiriita"}
@@ -73,7 +85,7 @@
 
                    {:fieldClass "formField"
                     :fieldType  "singleChoice"}
-                   [ec/dropdown content path args]
+                   [ec/dropdown content followups path args]
 
                    {:fieldClass "formField"
                     :fieldType  "attachment"}
