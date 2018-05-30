@@ -252,10 +252,12 @@
          :as   result}
         (validate-and-store tarjonta-service organization-service ohjausparametrit-service application false)
         virkailija-secret (:virkailija-secret application)]
-    (when passed?
-      (when virkailija-secret
-        (virkailija-edit/invalidate-virkailija-create-secret virkailija-secret))
-      (start-submit-jobs tarjonta-service job-runner id))
+    (if passed?
+      (do
+        (when virkailija-secret
+          (virkailija-edit/invalidate-virkailija-create-secret virkailija-secret))
+        (start-submit-jobs tarjonta-service job-runner id))
+      (log/warn "Application failed verification" result))
     result))
 
 (defn handle-application-edit

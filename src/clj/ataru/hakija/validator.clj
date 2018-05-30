@@ -185,7 +185,7 @@
                                                             (belongs-to-existing-hakukohde-or-hakukohderyma? field hakukohteet hakukohderyhmat))
                                                       (passes-all? has-applied validators answers answers-by-key field)
                                                       (every? nil? answers))}})
-                              :else (info "No valid field clause" field))]
+                              :else (when (some? field) (warn "Invalid field clause, not validated:" field)))]
             (build-results has-applied answers-by-key ret rest-form-fields hakukohderyhmat)
             results))))
 
