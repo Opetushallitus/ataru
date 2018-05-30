@@ -213,7 +213,7 @@
            :class    (when @form-locked "belongs-to-hakukohteet__modal-toggle--disabled")
            :on-click (when-not @form-locked
                        (if @show-modal? on-click-hide on-click-show))}
-          (if (empty? visible-to)
+          (if (and (empty? visible-to) (empty? visible-to-hakukohderyhmat))
             "näkyy kaikille"
             "vain valituille hakukohteille")]
          (when @show-modal?
