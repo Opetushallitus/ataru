@@ -1,5 +1,6 @@
 (ns ataru.component-data.component
-  (:require [ataru.util :as util]))
+  (:require [ataru.translations.texts :as texts]
+            [ataru.util :as util]))
 
 (defn text-field [metadata]
   {:fieldClass "formField"
@@ -140,3 +141,27 @@
    :text                 {:fi "Ilmoittamasi pohjakoulutuksen perusteella et voi tulla valituksi seuraaviin hakukohteisiin"
                           :sv "Ilmoittamasi pohjakoulutuksen perusteella et voi tulla valituksi seuraaviin hakukohteisiin"
                           :en "Ilmoittamasi pohjakoulutuksen perusteella et voi tulla valituksi seuraaviin hakukohteisiin"}})
+
+(defn koulutusmarkkinointilupa [metadata]
+  (assoc (single-choice-button metadata)
+         :id "koulutusmarkkinointilupa"
+         :label {:fi "Yhteystietojani saa käyttää koulutusmarkkinoinnissa?"
+                 :sv "Yhteystietojani saa käyttää koulutusmarkkinoinnissa?"
+                 :en "Yhteystietojani saa käyttää koulutusmarkkinoinnissa?"}
+         :validators ["required"]
+         :options [{:value "Kyllä"
+                    :label (:yes texts/general-texts)}
+                   {:value "Ei"
+                    :label (:no texts/general-texts)}]))
+
+(defn valintatuloksen-julkaisulupa [metadata]
+  (assoc (single-choice-button metadata)
+         :id "valintatuloksen-julkaisulupa"
+         :label {:fi "Opiskelijavalinnan tulokseni saa julkaista internetissä?"
+                 :sv "Opiskelijavalinnan tulokseni saa julkaista internetissä?"
+                 :en "Opiskelijavalinnan tulokseni saa julkaista internetissä?"}
+         :validators ["required"]
+         :options [{:value "Kyllä"
+                    :label (:yes texts/general-texts)}
+                   {:value "Ei"
+                    :label (:no texts/general-texts)}]))

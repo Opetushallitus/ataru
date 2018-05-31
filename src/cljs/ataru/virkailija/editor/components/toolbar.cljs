@@ -21,7 +21,9 @@
     true                                  (conj ["Infoteksti" component/info-element])
     (fc/feature-enabled? :question-group) (conj ["Pohjakoulutusmoduuli" base-education-module/module])
     (fc/feature-enabled? :question-group) (conj ["Pohjakoulutusmoduuli (kk-yhteishaku)" kk-base-education-module/module])
-    true                                  (conj ["Ilmoitus riittämättömästä pohjakoulutuksesta" component/pohjakoulutusristiriita])))
+    true                                  (conj ["Ilmoitus riittämättömästä pohjakoulutuksesta" component/pohjakoulutusristiriita])
+    true                                  (conj ["Koulutusmarkkinointilupa" component/koulutusmarkkinointilupa])
+    true                                  (conj ["Valintatuloksen julkaisulupa" component/valintatuloksen-julkaisulupa])))
 
 (def followup-toolbar-element-names
   (cond-> #{"Tekstikenttä"
