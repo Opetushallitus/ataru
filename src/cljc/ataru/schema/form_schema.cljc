@@ -242,6 +242,7 @@
    :haku-oid s/Str
    :name LocalizedStringOptional
    :tarjoaja-name LocalizedStringOptional
+   :tarjoaja-oids                [s/Str]
    :ryhmaliitokset [s/Str]})
 
 (s/defschema File
