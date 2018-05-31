@@ -339,10 +339,6 @@
 
 (defn- state-filter
   [states states-to-include default-state-name hakukohteet]
-  (println states)
-  (println states-to-include)
-  (println default-state-name)
-  (println hakukohteet)
   (or
     (not (empty? (clojure.set/intersection
                    states-to-include
