@@ -71,7 +71,10 @@
                           :operation audit-log/operation-login})
           (-> (resp/redirect redirect-url)
               (assoc :session {:identity {:username                 username
-                                          :first-name               (:givenName virkailija)
+                                          :first-name               (-> virkailija
+                                                                        :givenName
+                                                                        (clojure.string/split #" ")
+                                                                        first)
                                           :last-name                (:sn virkailija)
                                           :oid                      (:employeeNumber virkailija)
                                           :ticket                   ticket
