@@ -238,11 +238,11 @@
    :name LocalizedStringOptional})
 
 (s/defschema Hakukohde
-  {:oid s/Str
-   :haku-oid s/Str
-   :name LocalizedStringOptional
-   :tarjoaja-name LocalizedStringOptional
-   :tarjoaja-oids                [s/Str]
+  {:oid            s/Str
+   :haku-oid       s/Str
+   :name           LocalizedStringOptional
+   :tarjoaja-name  LocalizedStringOptional
+   :tarjoaja-oids  [s/Str]
    :ryhmaliitokset [s/Str]})
 
 (s/defschema File
