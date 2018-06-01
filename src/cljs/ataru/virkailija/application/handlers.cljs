@@ -118,17 +118,18 @@
     applications))
 
 (defn attachment-state-counts
-  [applications]
+  [applications selected-hakukohde]
   (reduce
-   (fn [acc application]
-     (merge-with (fn [prev new]
-                   (+ prev (if (not-empty new) 1 0)))
-                 acc
-                 (->> application
-                      :application-attachment-reviews
-                      (group-by :state))))
-   {"checked" 0 "not-checked" 0 "incomplete" 0}
-   applications))
+    (fn [acc application]
+      (merge-with (fn [prev new]
+                    (+ prev (if (not-empty new) 1 0)))
+                  acc
+                  (group-by :state
+                            (cond->> (:application-attachment-reviews application)
+                                     (some? selected-hakukohde)
+                                     (filter #(= (:hakukohde %) selected-hakukohde))))))
+    {"checked" 0 "not-checked" 0 "incomplete" 0}
+    applications))
 
 (defn- update-review-field-of-selected-application-in-list
   [application selected-application-key field value]
@@ -214,7 +215,8 @@
       (-> db
           (assoc-in [:application :review :attachment-reviews (keyword hakukohde-oid) attachment-key] state)
           (assoc-in [:application :applications] updated-applications)
-          (assoc-in [:application :attachment-state-counts] (attachment-state-counts updated-applications))))))
+          (assoc-in [:application :attachment-state-counts] (attachment-state-counts updated-applications
+                                                                                     (-> db :application :selected-hakukohde)))))))
 
 (defn- update-sort
   [db column-id swap-order?]
@@ -288,7 +290,8 @@
                                   (assoc-in [:application :applications] parsed-applications)
                                   (assoc-in [:application :fetching-applications] false)
                                   (assoc-in [:application :review-state-counts] (review-state-counts parsed-applications))
-                                  (assoc-in [:application :attachment-state-counts] (attachment-state-counts parsed-applications))
+                                  (assoc-in [:application :attachment-state-counts] (attachment-state-counts parsed-applications
+                                                                                                             (-> db :application :selected-hakukohde)))
                                   (assoc-in [:application :sort] application-sorting/initial-sort)
                                   (assoc-in [:application :selected-time-column] :created-time)
                                   (assoc-in [:application :information-request] nil)

@@ -355,7 +355,9 @@
   (let [states (->> (:application-attachment-reviews application)
                     (filter #(or (not selected-hakukohde) (= selected-hakukohde (:hakukohde %))))
                     (map :state))]
-    (state-filter states states-to-include default-state-name (:hakukohde application))))
+    (when (or (not-empty states)
+              (= (count review-states/attachment-hakukohde-review-types) (count states-to-include)))
+      (state-filter states states-to-include default-state-name (:hakukohde application)))))
 
 (defn- parse-enabled-filters
   [filters kw]
