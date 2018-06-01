@@ -372,10 +372,8 @@
           tarjoaja-oids-for-application (fn [hakukohde-oid]
                                           (get-in db [:hakukohteet hakukohde-oid :tarjoaja-oids]))
           only-one-tarjoaja?            (->> applications
-                                             (map :hakukohde)
-                                             (flatten)
-                                             (map tarjoaja-oids-for-application)
-                                             (flatten)
+                                             (mapcat :hakukohde)
+                                             (mapcat tarjoaja-oids-for-application)
                                              (set)
                                              (rest)
                                              (empty?))
