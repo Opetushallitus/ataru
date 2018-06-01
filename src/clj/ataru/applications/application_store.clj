@@ -311,9 +311,20 @@
 
 (defn get-application-heading-list
   [query]
-  (map ->kebab-case-kw
-       (exec-db :db yesql-get-application-list-for-virkailija
-                (select-keys query [:query_key :query_value]))))
+  (->> query
+       ->kebab-case-kw
+       (merge {:form                   nil
+               :application_oid        nil
+               :person_oid             nil
+               :name                   nil
+               :email                  nil
+               :dob                    nil
+               :ssn                    nil
+               :haku                   nil
+               :hakukohde              nil
+               :ensisijainen_hakukohde nil})
+       (exec-db :db yesql-get-application-list-for-virkailija)
+       (map ->kebab-case-kw)))
 
 (defn get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
   [person-oid]
