@@ -692,7 +692,27 @@
                                                                                                   hakukohdeOid
                                                                                                   (not-empty applicationOids))]
           (response/ok applications)
-          (response/unauthorized {:error "Unauthorized"}))))))
+          (response/unauthorized {:error "Unauthorized"})))
+
+      (api/GET "/list" {session :session}
+        :summary "List application oids and corresponding person oids"
+        :query-params [hakuOid :- s/Str
+                       name :- s/Str]
+        :return [{:oid       s/Str
+                  :personOid s/Str}]
+        (->> (application-service/->and-query
+              (application-service/->haku-query hakuOid)
+              (application-service/->name-query name))
+             (application-service/get-application-list-by-query
+              organization-service
+              person-service
+              tarjonta-service
+              session)
+             (remove #(nil? (get-in % [:person :oid])))
+             (map (fn [{:keys [key person]}]
+                    {:oid       key
+                     :personOid (:oid person)}))
+             response/ok)))))
 
 (api/defroutes resource-routes
   (api/undocumented
