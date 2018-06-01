@@ -107,8 +107,9 @@
              (map remove-organization-oid)
              first)
    #(remove-organization-oid
-     (assoc (application-store/get-latest-application-by-key application-key)
-            :can-edit? true))))
+      (can-edit-application? organization-service
+                             session
+                             (application-store/get-latest-application-by-key application-key)))))
 
 (defn- populate-hakukohde
   [external-application]

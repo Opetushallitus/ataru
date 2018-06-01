@@ -59,20 +59,20 @@
       :else (-> organizations (first) :name (get-label)))))
 
 (defn- organization-rights-select []
-  (let [rights (subscribe [:state-query [:editor :organizations :rights]])]
+  (let [rights (subscribe [:state-query [:editor :user-info :selected-organization :rights]])]
     [:div.profile__organization-rights-selector
      "Valitse käyttäjän oikeudet"
      (doall
-            (for [[right label] [[:view-applications "Hakemusten katselu"]
-                                 [:edit-applications "Hakemusten muokkaus"]
-                                 [:form-edit "Lomakkeiden muokkaus"]]]
-              ^{:key (str "org-right-selector-for-" (name right))}
-              [:label.profile__organization-select-right
-               [:input
-                {:type      "checkbox"
-                 :checked   (contains? (set @rights) right)
-                 :on-change #(dispatch [:editor/update-selected-organization-rights right (.. % -target -checked)])}]
-               label]))]))
+       (for [[right label] [["view-applications" "Hakemusten katselu"]
+                            ["edit-applications" "Hakemusten muokkaus"]
+                            ["form-edit" "Lomakkeiden muokkaus"]]]
+         ^{:key (str "org-right-selector-for-" (name right))}
+         [:label.profile__organization-select-right
+          [:input
+           {:type      "checkbox"
+            :checked   (contains? (set @rights) right)
+            :on-change #(dispatch [:editor/update-selected-organization-rights right (.. % -target -checked)])}]
+          label]))]))
 
 (defn profile []
   (let [user-info             (subscribe [:state-query [:editor :user-info]])

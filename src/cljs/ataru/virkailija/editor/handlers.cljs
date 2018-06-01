@@ -879,7 +879,7 @@
                                       "?rights="
                                       (clojure.string/join "&rights=" ["edit-applications" "view-applications" "form-edit"]))
             :handler-or-dispatch :editor/update-selected-organization}
-     :db   (assoc-in db [:editor :organizations :rights] [:edit-applications :view-applications :form-edit])}))
+     :db   (assoc-in db [:editor :user-info :selected-organization :rights] [:edit-applications :view-applications :form-edit])}))
 
 (reg-event-fx
   :editor/update-selected-organization
@@ -900,10 +900,9 @@
   :editor/update-selected-organization-rights
   (fn [{db :db} [_ right selected?]]
     (let [db (if selected?
-               (update-in db [:editor :organizations :rights] conj right)
-               (update-in db [:editor :organizations :rights] (partial remove #{right})))
-          rights (->> db :editor :organizations :rights
-                      (map name)
+               (update-in db [:editor :user-info :selected-organization :rights] conj right)
+               (update-in db [:editor :user-info :selected-organization :rights] (partial remove #{right})))
+          rights (->> db :editor :user-info :selected-organization :rights
                       not-empty)]
       {:db   db
        :http {:method              :post

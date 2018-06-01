@@ -10,13 +10,6 @@
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
    [taoensso.timbre :refer [warn]]))
 
-(defn form-allowed-by-key? [form-key session organization-service rights]
-  (session-orgs/organization-allowed?
-   session
-   organization-service
-   (fn [] (form-store/get-organization-oid-by-key form-key))
-   rights))
-
 (defn form-allowed-by-id?
   "id identifies a version of the form"
   [form-id session organization-service right]
@@ -66,7 +59,7 @@
            (not (session-orgs/organization-allowed?
                   session
                   organization-service
-                  (:organization-oid form)
+                  (constantly (:organization-oid form))
                   [:form-edit])))
       (throw (user-feedback-exception
               (str "Ei oikeutta organisaatioon "
