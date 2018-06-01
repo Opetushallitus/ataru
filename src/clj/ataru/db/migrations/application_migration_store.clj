@@ -16,6 +16,7 @@
 (sql/defqueries "sql/migration-1.90-queries.sql")
 (sql/defqueries "sql/migration-1.92-queries.sql")
 (sql/defqueries "sql/migration-1.96-queries.sql")
+(sql/defqueries "sql/migration-1.100-queries.sql")
 
 (defn get-ids-of-latest-applications
   []
@@ -113,7 +114,7 @@
   (yesql-insert-1_86-application-event<! {:application_key  (:key application)
                                           :event_type       "updated-by-virkailija"
                                           :new_review_state nil
-                                          :virkailija_oid   "1.2.246.562.24.56933707220"
+                                          :virkailija_oid   nil
                                           :hakukohde        nil
                                           :review_key       nil}
                                          {:connection connection}))
@@ -152,3 +153,25 @@
 
 (defn set-1_96-subject! [connection lang subject]
   (yesql-set-1_96-subject! {:lang lang :subject subject} {:connection connection}))
+
+(defn get-1.100-form-ids [connection]
+  (map :id (yesql-get-1_100-form-ids {} {:connection connection})))
+
+(defn get-1.100-form [connection id]
+  (first (yesql-get-1_100-form {:id id} {:connection connection})))
+
+(defn insert-1.100-form [connection form]
+  (yesql-insert-1_100-form<! form {:connection connection}))
+
+(defn get-1.100-applications [connection form-id]
+  (yesql-get-1_100-applications {:form_id form-id} {:connection connection}))
+
+(defn insert-1.100-application [connection application]
+  (yesql-insert-1_100-application! application {:connection connection})
+  (yesql-insert-1_100-application-event<! {:application_key  (:key application)
+                                          :event_type       "updated-by-virkailija"
+                                          :new_review_state nil
+                                          :virkailija_oid   nil
+                                          :hakukohde        nil
+                                          :review_key       nil}
+                                         {:connection connection}))
