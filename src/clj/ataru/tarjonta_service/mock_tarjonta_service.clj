@@ -278,6 +278,7 @@
    :haku-oid (:hakuOid hakukohde)
    :name (parse-multi-lang-text (:nimi hakukohde))
    :tarjoaja-name (:tarjoajaNimet hakukohde)
+   :tarjoaja-oids (:tarjoajaOids hakukohde)
    :ryhmaliitokset (map :ryhmaOid (:ryhmaliitokset hakukohde))})
 
 (defrecord MockTarjontaService []

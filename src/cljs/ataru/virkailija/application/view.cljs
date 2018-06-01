@@ -124,12 +124,13 @@
         submit-button-state        (r/atom :submit)
         selected-from-review-state (r/atom nil)
         selected-to-review-state   (r/atom nil)
+        massamuokkaus?             (subscribe [:application/massamuutos-enabled?])
         filtered-applications      (subscribe [:application/filtered-applications])
         haku-header                (subscribe [:application/list-heading-data-for-haku])
         all-states                 (reduce (fn [acc [state _]]
                                              (assoc acc state 0))
-                                           {}
-                                           review-states/application-hakukohde-processing-states)]
+                                     {}
+                                     review-states/application-hakukohde-processing-states)]
     (fn []
       (when-not (empty? @filtered-applications)
         (let [from-states (reduce
@@ -147,9 +148,10 @@
                             all-states
                             @filtered-applications)]
           [:span.application-handling__mass-edit-review-states-container
-           [:a.application-handling__mass-edit-review-states-link.editor-form__control-button.editor-form__control-button--enabled
-            {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state not)}
-            "Massamuutos"]
+           (when @massamuokkaus?
+             [:a.application-handling__mass-edit-review-states-link.editor-form__control-button.editor-form__control-button--enabled
+              {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state not)}
+              "Massamuutos"])
            (when @element-visible?
              [:div.application-handling__mass-edit-review-states-popup
               [:div.application-handling__popup-close-button
@@ -466,7 +468,6 @@
         date-time              (->> day-date-time (rest) (clojure.string/join " "))
         applicant              (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
         review-settings        (subscribe [:state-query [:application :review-settings :config]])
-        hakukohteet            (subscribe [:state-query [:application :hakukohteet]])
         selected-hakukohde     (subscribe [:state-query [:application :selected-review-hakukohde]])
         attachment-states      (application-attachment-states application)
         form-attachment-states (:form attachment-states)]
