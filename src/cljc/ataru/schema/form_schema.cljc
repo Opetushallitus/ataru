@@ -319,7 +319,8 @@
    :state                                           s/Str
    :score                                           (s/maybe s/Int)
    :new-application-modifications                   s/Int
-   :person                                          {:preferred-name s/Str
+   :person                                          {:oid            (s/maybe s/Str)
+                                                     :preferred-name s/Str
                                                      :last-name      s/Str
                                                      :yksiloity      s/Bool}
    :original-created-time                           org.joda.time.DateTime
