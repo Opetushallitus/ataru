@@ -90,13 +90,33 @@
         (+ (count (ataru-db/exec
                     :db
                     yesql-get-application-list-for-virkailija
-                    {:query_key   "hakukohde"
-                     :query_value (:hakukohde @form)}))
+                    (merge {:form                   nil
+                            :application_oid        nil
+                            :person_oid             nil
+                            :name                   nil
+                            :email                  nil
+                            :dob                    nil
+                            :ssn                    nil
+                            :haku                   nil
+                            :hakukohde              nil
+                            :ensisijainen_hakukohde nil}
+                           {:query_key   "hakukohde"
+                            :query_value (:hakukohde @form)})))
            (count (ataru-db/exec
                    :db
                    yesql-get-application-list-for-virkailija
-                   {:query_key   "form"
-                    :query_value (:key @form)})))]
+                   (merge {:form                   nil
+                           :application_oid        nil
+                           :person_oid             nil
+                           :name                   nil
+                           :email                  nil
+                           :dob                    nil
+                           :ssn                    nil
+                           :haku                   nil
+                           :hakukohde              nil
+                           :ensisijainen_hakukohde nil}
+                          {:query_key   "form"
+                           :query_value (:key @form)}))))]
     (< 0 app-count)))
 
 (defmacro add-failing-post-spec

@@ -71,10 +71,12 @@
                        (every-pred (partial (:predicate query) %)
                                    (some-fn (partial authorized-by-form? %)
                                             (partial authorized-by-tarjoajat? %)))
-                       (application-store/get-application-heading-list query))
+                       (application-store/get-application-heading-list
+                        (dissoc query :predicate)))
    #(filter-authorized tarjonta-service
                        (partial (:predicate query) nil)
-                       (application-store/get-application-heading-list query))))
+                       (application-store/get-application-heading-list
+                        (dissoc query :predicate)))))
 
 (defn- can-edit-application?
   [organization-service session application]
