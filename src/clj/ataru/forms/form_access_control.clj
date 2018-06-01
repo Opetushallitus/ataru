@@ -59,7 +59,7 @@
            (not (session-orgs/organization-allowed?
                   session
                   organization-service
-                  (:organization-oid form)
+                  (constantly (:organization-oid form))
                   [:form-edit])))
       (throw (user-feedback-exception
               (str "Ei oikeutta organisaatioon "

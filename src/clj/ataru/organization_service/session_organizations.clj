@@ -71,17 +71,14 @@
 
 (defn organization-allowed?
   "Parameter organization-oid-handle can be either the oid value or a function which returns the oid"
-  [session organization-service organization-oid-handle rights]
+  [session organization-service organization-oid-fn rights]
   {:pre [(right-seq? rights)]}
   (run-org-authorized
     session
     organization-service
     rights
     (fn [] false)
-    #(let [organization-oid (if (instance? clojure.lang.IFn organization-oid-handle)
-                              (organization-oid-handle)
-                              organization-oid-handle)]
-       (contains? % organization-oid))
+    (fn [organizations] (contains? organizations (organization-oid-fn)))
     (fn [] true)))
 
 (defn organization-list
