@@ -82,9 +82,7 @@
    :birth-date     (some-> person :syntymaaika bd-converter/convert-to-finnish-format)
    :gender         (-> person :sukupuoli)
    :nationality    (->> (-> person :kansalaisuus)
-                        (map #(get % :kansalaisuusKoodi "999"))
-                        (map (fn [x] [x]))
-                        (vec))})
+                        (mapv #(vector (get % :kansalaisuusKoodi "999"))))})
 
 (defn parse-person [application person-from-onr]
   (let [yksiloity       (or (-> person-from-onr :yksiloity)

@@ -84,9 +84,10 @@
 
 (defn- is-question-group-answer?
   [answer]
-  (and (or (vector? answer) (set? answer))
-       (not-empty answer)
-       (every? vector? answer)))
+  (letfn [(l? [answer] (or (vector? answer) (set? answer) (seq? answer)))]
+    (and (l? answer)
+         (not-empty answer)
+         (every? l? answer))))
 
 (defn- get-non-empty-answers [field answers]
   (set
