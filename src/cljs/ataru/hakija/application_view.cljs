@@ -5,6 +5,7 @@
             [ataru.hakija.hakija-readonly :as readonly-view]
             [ataru.cljs-util :as util :refer [get-translation]]
             [re-frame.core :refer [subscribe dispatch]]
+            [cemerick.url :as url]
             [cljs.core.match :refer-macros [match]]
             [cljs-time.core :refer [to-default-time-zone now after?]]
             [cljs-time.format :refer [unparse unparse-local formatter]]
@@ -78,7 +79,10 @@
             [:span.application__header-text
              (map-indexed (fn [idx lang]
                             (cond-> [:span {:key (name lang)}
-                                     [:a {:href (str "?lang=" (name lang))}
+                                     [:a {:href (-> (.. js/window -location -href)
+                                                    (url/url)
+                                                    (assoc-in [:query "lang"] (name lang))
+                                                    str)}
                                       (get language-names lang)]]
                               (> (dec (count languages)) idx)
                               (conj [:span.application__header-language-link-separator " | "])))
