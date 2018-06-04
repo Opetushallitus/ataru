@@ -626,6 +626,7 @@
   (let [kw    (keyword kw)
         state (keyword state)]
     [:label.application-handling__filter-checkbox-label
+     {:key (str "application-filter-" (name kw) "-" (name state))}
      [:input.application-handling__filter-checkbox
       {:type     "checkbox"
        :checked  (boolean (get-in @filters [kw state]))
@@ -643,6 +644,34 @@
        (fn [[state checkbox-label]]
          (application-filter-checkbox filters checkbox-label kw state))
        states))])
+
+(defn- application-base-education-filters
+  [filters]
+  (let [checkboxes [[:pohjakoulutus_yo "Suomessa suoritettu ylioppilastutkinto"]
+                    [:pohjakoulutus_lk "Suomessa suoritettu lukion oppimäärä ilman ylioppilastutkintoa"]
+                    [:pohjakoulutus_yo_kansainvalinen_suomessa "Suomessa suoritettu kansainvälinen ylioppilastutkinto"]
+                    [:pohjakoulutus_yo_ammatillinen "Ammatillinen perustutkinto ja ylioppilastutkinto (kaksoistutkinto)"]
+                    [:pohjakoulutus_am "Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"]
+                    [:pohjakoulutus_amt "Suomessa suoritettu ammatti- tai erikoisammattitutkinto"]
+                    [:pohjakoulutus_kk "Suomessa suoritettu korkeakoulututkinto"]
+                    [:pohjakoulutus_yo_ulkomainen "Muualla kuin Suomessa suoritettu kansainvälinen ylioppilastutkinto"]
+                    [:pohjakoulutus_kk_ulk "Muualla kuin Suomessa suoritettu korkeakoulututkinto"]
+                    [:pohjakoulutus_ulk "Muualla kuin Suomessa suoritettu muu tutkinto, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun"]
+                    [:pohjakoulutus_avoin "Korkeakoulun edellyttämät avoimen korkeakoulun opinnot"]
+                    [:pohjakoulutus_muu "Muu korkeakoulukelpoisuus"]]
+        all-filters-selected? (subscribe [:application/all-pohjakoulutus-filters-selected?])]
+    (fn []
+      [:div.application-handling__filter-group
+       [:label.application-handling__filter-checkbox-label
+        {:key (str "application-filter-pohjakoulutus-any")}
+        [:input.application-handling__filter-checkbox
+         {:type     "checkbox"
+          :checked  @all-filters-selected?
+          :on-click #(dispatch [:application/toggle-all-pohjakoulutus-filters @all-filters-selected?])}]
+        "Kaikki"]
+       (->> checkboxes
+            (map (fn [[id label]] (application-filter-checkbox filters label :base-education id)))
+            (doall))])))
 
 (defn- application-filters
   []
@@ -675,6 +704,9 @@
           [:div.application-handling__filter-group
            [application-filter-checkbox filters "Yksilöimättömät" :only-identified :unidentified]
            [application-filter-checkbox filters "Yksilöidyt" :only-identified :identified]]
+          [:h3 "Pohjakoulutus"]
+          [application-base-education-filters filters]
+
           [:h3 "Käsittelymerkinnät"]
           (when (some? @selected-hakukohde-oid)
             [:div.application-handling__filter-hakukohde-name
