@@ -336,9 +336,9 @@
                                                      :fi "Vuosiviikkotuntia"
                                                      :sv "Årsveckotimmar"}
    :years                                           {:en "Years" :fi "Vuotta" :sv "År"}
-   :finnish-vocational                              {:en "Vocational upper secondary qualification school-level qualification post-secondary level qualification or higher vocational level qualification completed in Finland"
-                                                     :fi "Suomessa suoritettu ammatillinen perustutkinto kouluasteen opistoasteen tai ammatillisen korkea-asteen tutkinto"
-                                                     :sv "Yrkesinriktad grundexamen examen på skolnivå examen på institutsnivå eller yrkesinriktad examen på högre nivå som avlagts i Finland"}
+   :finnish-vocational                              {:en "Vocational upper secondary qualification, school-level qualification, post-secondary level qualification or higher vocational level qualification completed in Finland"
+                                                     :fi "Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"
+                                                     :sv "Yrkesinriktad grundexamen, examen på skolnivå, examen på institutsnivå eller yrkesinriktad examen på högre nivå som avlagts i Finland"}
    :finnish-vocational-2017-or-after                {:en "Have you completed the qualification in 2017 or after?"
                                                      :fi "Oletko suorittanut tutkinnon vuonna 2017 tai sen jälkeen?"
                                                      :sv "Har du avlagt examen år 2017 eller senare?"}
