@@ -28,7 +28,9 @@
     [ataru.config.core :refer [config]]
     [clj-time.core :as time]
     [clj-time.coerce :as t]
-    [ataru.applications.application-service :as application-service]))
+    [ataru.applications.application-service :as application-service]
+    [ataru.log.audit-log :as audit-log]
+    [clj-time.format :as f]))
 
 (defn- store-and-log [application applied-hakukohteet form is-modify?]
   {:pre [(boolean? is-modify?)]}
@@ -116,8 +118,21 @@
       (:has-applied (application-store/has-ssn-applied haku-oid (:ssn identifier)))
       (:has-applied (application-store/has-email-applied haku-oid (:email identifier))))))
 
+(def tz (time/default-time-zone))
+
+(def ^:private modified-time-format
+  (f/formatter "dd.MM.yyyy HH:mm:ss" tz))
+
+(defn- log-late-submitted-application [application submitted-at]
+  (audit-log/log {:new       (format "Hakija yritti palauttaa hakemuksen hakuajan päätyttyä: %s. Hakemus: %s"
+                                     (f/unparse modified-time-format submitted-at)
+                                     (cheshire.core/generate-string application))
+                  :operation audit-log/operation-new
+                  :id        (util/extract-email application)}))
+
 (defn- validate-and-store [tarjonta-service organization-service ohjausparametrit-service application is-modify?]
-  (let [tarjonta-info                 (when (:haku application)
+  (let [now                           (time/now)
+        tarjonta-info                 (when (:haku application)
                                         (tarjonta-parser/parse-tarjonta-info-by-haku
                                          tarjonta-service
                                          organization-service
@@ -179,7 +194,9 @@
       (and (not is-modify?)
            (nil? virkailija-secret)
            (some #(not (:on (:hakuaika %))) applied-hakukohteet))
-      {:passed? false :failures ["Application period is not open."]}
+      (do
+        (log-late-submitted-application application now)
+        {:passed? false :failures ["Application period is not open."]})
 
       (not (:passed? validation-result))
       validation-result

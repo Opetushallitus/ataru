@@ -189,14 +189,6 @@
         connection))
     (unwrap-application new-application)))
 
-(def ^:private email-pred (comp (partial = "email") :key))
-
-(defn- extract-email [application]
-  (->> (:answers application)
-       (filter email-pred)
-       (first)
-       :value))
-
 (defn- get-latest-version-and-lock-for-update [secret lang conn]
   (if-let [application (first (yesql-get-latest-version-by-secret-lock-for-update {:secret secret} {:connection conn}))]
     (unwrap-application application)
@@ -242,7 +234,7 @@
                       :operation audit-log/operation-new
                       :id        (if (some? virkailija-oid)
                                    virkailija-oid
-                                   (extract-email new-application))})
+                                   (util/extract-email new-application))})
       (yesql-add-application-event<! {:application_key  key
                                       :event_type       (if (some? virkailija-oid)
                                                           "received-from-virkailija"
@@ -306,7 +298,7 @@
                       :old       (application->loggable-form old-application)
                       :operation audit-log/operation-modify
                       :id        (if updated-by-applicant?
-                                   (extract-email new-application)
+                                   (util/extract-email new-application)
                                    virkailija-oid)})
       id)))
 

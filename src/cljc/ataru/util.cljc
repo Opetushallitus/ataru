@@ -170,3 +170,11 @@
   (->> m
        (filter second)
        (into {})))
+
+(def ^:private email-pred (comp (partial = "email") :key))
+
+(defn extract-email [application]
+  (->> (:answers application)
+       (filter email-pred)
+       (first)
+       :value))
