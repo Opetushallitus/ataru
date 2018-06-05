@@ -354,6 +354,9 @@
    :click-to-add-more                               {:en "Click ADD if you want add further qualifications."
                                                      :fi "Paina LISÄÄ jos haluat lisätä useampia tutkintoja."
                                                      :sv "Tryck på LÄGG TILL om du vill lägga till flera examina."}
+   :click-to-add-more-qualifications                {:en "Click ADD if you want add further qualifications."
+                                                     :fi "Paina LISÄÄ jos haluat lisätä useampia opintokokonaisuuksia."
+                                                     :sv "Tryck på LÄGG TILL om du vill lägga till flera studiehelhet."}
    :finnish-vocational-or-special                   {:en "Further vocational qualification or specialist vocational qualification completed in Finland"
                                                      :fi "Suomessa suoritettu ammatti- tai erikoisammattitutkinto"
                                                      :sv "Yrkesexamen eller specialyrkesexamen som avlagts i Finland"}

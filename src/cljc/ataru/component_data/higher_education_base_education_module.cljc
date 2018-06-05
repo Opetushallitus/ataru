@@ -435,7 +435,7 @@
                                                                                                 :params {:info-text {:label    (:submit-your-attachments higher-base-education-module-texts)
                                                                                                                      :enabled? true}}})]})
                                                                      (merge (info-element metadata)
-                                                                            {:text (:click-to-add-more higher-base-education-module-texts)})]}
+                                                                            {:text (:click-to-add-more-qualifications higher-base-education-module-texts)})]}
                                                         {:label     (:base-education-other higher-base-education-module-texts)
                                                          :value     "pohjakoulutus_muu"
                                                          :followups [(merge (text-field metadata)
