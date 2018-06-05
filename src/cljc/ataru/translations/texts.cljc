@@ -275,12 +275,6 @@
    :automatic-higher-qualification-info             {:en "We will receive your degree details automatically."
                                                      :fi "Saamme korkeakoulututkintosi tiedot rekisteristämme."
                                                      :sv "Vi får uppgifterna om din högskoleexamen ur vårt register."}
-   :marticulation-and-secondary                     {:en "Matrculation examination and general upper secondary school syllabus"
-                                                     :fi "Ylioppilastutkinto ja lukion oppimäärä"
-                                                     :sv "Studentexamen och gymnasiets lärokurs"}
-   :marticulation-no-secondary                      {:en "Matriculation examination without completed general upper secondary education."
-                                                     :fi "Ylioppilastutkinto ilman lukion oppimäärää"
-                                                     :sv "Studentexamen utan gymnasiets lärokurs"}
    :submit-your-attachments                         {:en "Submit your attachments in pdf/jpg/png -format. If you cannot submit your attachments online please contact the higher education institution in question directly. The attachments have to be submitted or returned by 26 Sept at 3 pm Finnish time at the latest."
                                                      :fi "Tallenna liitteesi PDF/JPG/PNG-muodossa. Jos et voi tallentaa liitettä sähköisessä muodossa niin ota yhteyttä hakemaasi korkeakouluun joka pyytää liitettä. Liite tulee olla tallennettuna tai palautettuna viimeistään 26.9.2018 klo 15.00."
                                                      :sv "Spara dina bilagor i PDF/JPG/PNG form. Ta kontakt med den högskola som du har sökt till och som begär bilagor om du inte kan spara bilagorna i elektronisk form. Bilagorna ska vara sparade eller returnerade senast 26.9.2018 kl. 15.00."}

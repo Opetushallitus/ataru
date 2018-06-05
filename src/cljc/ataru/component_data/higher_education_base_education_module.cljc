@@ -41,14 +41,6 @@
                                                                                                                :label      (:year-of-completion higher-base-education-module-texts)
                                                                                                                :params     {:size "S" :numeric true}
                                                                                                                :validators ["numeric" "required"]})
-                                                                                                       (merge (dropdown metadata)
-                                                                                                              {:id         "pohjakoulutus_yo--marticulation-examination"
-                                                                                                               :label      (:marticulation-exam higher-base-education-module-texts)
-                                                                                                               :options    [{:label (:marticulation-and-secondary higher-base-education-module-texts)
-                                                                                                                             :value "Matrculation examination and general upper secondary school syllabus"}
-                                                                                                                            {:label (:marticulation-no-secondary higher-base-education-module-texts)
-                                                                                                                             :value "Matriculation examination without completed general upper secondary education."}]
-                                                                                                               :validators ["required"]})
                                                                                                        (merge (attachment metadata)
                                                                                                               {:params {:info-text {:value    (:submit-your-attachments higher-base-education-module-texts)
                                                                                                                                     :enabled? true}}
