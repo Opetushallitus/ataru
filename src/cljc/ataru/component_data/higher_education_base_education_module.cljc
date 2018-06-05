@@ -305,7 +305,9 @@
                                                                                                                                  {:id     "pohjakoulutus_kk--attachment"
                                                                                                                                   :label  (:higher-education-degree higher-base-education-module-texts)
                                                                                                                                   :params {:info-text {:label    (:submit-your-attachments higher-base-education-module-texts)
-                                                                                                                                                       :enabled? true}}})]})]}]
+                                                                                                                                                       :enabled? true}}})]})
+                                                                                                       (merge (info-element metadata)
+                                                                                                              {:text (:click-to-add-more higher-base-education-module-texts)})]}]
                                                                              :validators ["required"]})]}
                                                         {:label     (:international-marticulation-outside-finland higher-base-education-module-texts)
                                                          :value     "pohjakoulutus_yo_ulkomainen"
