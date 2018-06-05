@@ -446,7 +446,7 @@
                                                                              :label      (:base-education-other-description higher-base-education-module-texts)
                                                                              :params     {:max-length "500"}
                                                                              :validators ["required"]})
-                                                                     (merge (dropdown metadata)
+                                                                     (merge (attachment metadata)
                                                                             {:id     "pohjakoulutus_muu--attachment"
                                                                              :label  (:base-education-other-attachment higher-base-education-module-texts)
                                                                              :params {:info-text {:label    (:submit-your-attachments higher-base-education-module-texts)
