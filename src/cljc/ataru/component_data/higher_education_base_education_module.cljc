@@ -300,12 +300,12 @@
                                                                                                                           (merge (text-field metadata)
                                                                                                                                  {:id         "pohjakoulutus_kk--institution"
                                                                                                                                   :label      (:higher-education-institution higher-base-education-module-texts)
-                                                                                                                                  :validators ["required"]})]})
-                                                                                                       (merge (attachment metadata)
-                                                                                                              {:id     "pohjakoulutus_kk--attachment"
-                                                                                                               :label  (:higher-education-degree higher-base-education-module-texts)
-                                                                                                               :params {:info-text {:value    (:submit-your-attachments higher-base-education-module-texts)
-                                                                                                                                    :enabled? true}}})]}]
+                                                                                                                                  :validators ["required"]})
+                                                                                                                          (merge (attachment metadata)
+                                                                                                                                 {:id     "pohjakoulutus_kk--attachment"
+                                                                                                                                  :label  (:higher-education-degree higher-base-education-module-texts)
+                                                                                                                                  :params {:info-text {:value    (:submit-your-attachments higher-base-education-module-texts)
+                                                                                                                                                       :enabled? true}}})]})]}]
                                                                              :validators ["required"]})]}
                                                         {:label     (:international-marticulation-outside-finland higher-base-education-module-texts)
                                                          :value     "pohjakoulutus_yo_ulkomainen"
@@ -445,10 +445,17 @@
                                                                             {:id         "pohjakoulutus_muu--description"
                                                                              :label      (:base-education-other-description higher-base-education-module-texts)
                                                                              :params     {:max-length "500"}
-                                                                             :validators ["required"]})]}]})
+                                                                             :validators ["required"]})
+                                                                     (merge (dropdown metadata)
+                                                                            {:id     "pohjakoulutus_muu--attachment"
+                                                                             :label  (:base-education-other-attachment higher-base-education-module-texts)
+                                                                             :params {:info-text {:value    (:submit-your-attachments higher-base-education-module-texts)
+                                                                                                  :enabled? true}}})]}]})
                      (merge (single-choice-button metadata)
                             {:id         "secondary-completed-base-education"
                              :label      (:secondary-completed-base-education higher-base-education-module-texts)
+                             :params {:info-text {:value (:required-for-statistics higher-base-education-module-texts)
+                                                  :enabled? true}}
                              :options    [{:label     (:yes general-texts)
                                            :value     "Yes"
                                            :followups [(merge (dropdown metadata)
@@ -475,16 +482,10 @@
                                                                :koodisto-source {:uri "tutkinto" :title "Tutkinto" :version 1}
                                                                :validators      ["required"]
                                                                :label           (:name-of-degree higher-base-education-module-texts)})
-                                                       (merge (dropdown metadata)
-                                                              {:id              "finnish-vocational-before-1995--institution"
-                                                               :koodisto-source {:uri     "oppilaitostyyppi"
-                                                                                 :title   "Ammatilliset oppilaitokset"
-                                                                                 :version 1}
-                                                               :validators      ["required"]
-                                                               :label           (:educational-institution higher-base-education-module-texts)})
                                                        (merge (text-field metadata)
                                                               {:id    "finnish-vocational-before-1995--other-institution"
-                                                               :label (:other-institution higher-base-education-module-texts)})]}
+                                                               :label (:higher-education-institution higher-base-education-module-texts)
+                                                               :validators      ["required"]})]}
                                           {:label (:no general-texts) :value "No"}]
                              :validators ["required"]})]}))
 

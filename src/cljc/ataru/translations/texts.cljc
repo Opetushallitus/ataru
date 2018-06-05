@@ -391,15 +391,15 @@
                                                      :fi "Suoritusmaa"
                                                      :sv "Land där examen är avlagd"}
    :higher-education-outside-finland                {:en "Higher education qualification completed outside Finland"
-                                                     :fi "Muualla kuin Suomessa suoritettu korkeakoulututkinto "
+                                                     :fi "Muualla kuin Suomessa suoritettu korkeakoulututkinto"
                                                      :sv "Högskoleexamen som avlagts annanstans än i Finland"}
    :level-of-degree                                 {:en "Level of degree" :fi "Tutkintotaso" :sv "Examensnivå"}
    :year-and-date-of-completion                     {:en "Year and date of completion (DD.MM.YYYY)"
                                                      :fi "Suorituspäivämäärä - ja vuosi (pp.kk.vvvv)"
                                                      :sv "År och datum då examen avlagts (dd.mm.åååå)"}
    :other-qualification-foreign                     {:en "Other qualification completed outside Finland that provides eligibility to apply for higher education in the country in question"
-                                                     :fi "Muualla kuin Suomessa suoritettu muu tutkinto joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun"
-                                                     :sv "Övrig examen som avlagts annanstans än i Finland och ger behörighet för högskolestudier i ifrågavarande land"}
+                                                     :fi "Muualla kuin Suomessa suoritettu muu tutkinto, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun"
+                                                     :sv "Övrig examen som avlagts annanstans än i Finland, och ger behörighet för högskolestudier i ifrågavarande land"}
    :other-qualification-foreign-attachment          {:en "Request for attachment on education that provides eligibility for higher education in the awarding country."
                                                      :fi "Liitepyyntö muualla kuin Suomessa suoritetusta muusta tutkinnosta joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun"
                                                      :sv "Begäran om bilagor för examen som avlagts annanstans än i Finland och som i landet ifråga ger ansökningsbehörighet för högskola. "}
@@ -438,9 +438,12 @@
                                                      :fi "Merkitse tähän suorittamasi korkeakoulututkinto vain siinä tapauksessa jos olet suorittanut sen ennen vuotta 1995. Sen jälkeen suoritetut tutkinnot saadaan automaattisesti korkeakouluilta. Suomessa suoritettu korkeakoulututkinto tai syksyllä 2014 tai sen jälkeen alkaneesta koulutuksesta vastaanotettu korkeakoulututkintoon johtava opiskelupaikka voivat vaikuttaa valintaan. Lue lisää [ensikertalaiskiintiöstä](https://opintopolku.fi/wp/valintojen-tuki/yhteishaku/korkeakoulujen-yhteishaku/ensikertalaiskiintio/)."
                                                      :sv "Ange här den högskoleexamen som du avlagt före år 1995. Examina som avlagts efter detta fås automatiskt av högskolorna. En högskoleexamen som avlagts i Finland eller en studieplats inom utbildning som leder till högskoleexamen som mottagits år 2014 eller senare kan inverka på antagningen. Läs mera om kvoten för förstagångssökande (https://studieinfo.fi/wp/stod-for-studievalet/gemensam-ansokan/gemensam-ansokan-till-hogskolor/kvot-for-forstagangssokande/)"}
    :name-of-degree                                  {:en "Name of the degree" :fi "Tutkinnon nimi" :sv "Examens namn"}
-   :other-institution                               {:en "Other educational institution"
-                                                     :fi "Jokin muu oppilaitos"
-                                                     :sv "Annan läroanstalt"}})
+   :base-education-other-attachment                 {:en "Request for attachment on other eligibility for higher education "
+                                                     :fi "Muun korkeakoulukelpoisuuden liitepyyntö"
+                                                     :sv "Begäran om bilagor för övrig högskolebehörighet"}
+   :required-for-statistics                         {:fi "Tämä tieto kysytään tilastointia varten."
+                                                     :sv "Denna uppgift frågas för statistik."
+                                                     :en "This is required for statistical reasons"}})
 
 (def person-info-module-texts
   {:forenames            {:fi "Etunimet"
