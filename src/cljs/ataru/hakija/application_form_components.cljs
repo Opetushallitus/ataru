@@ -522,9 +522,8 @@
                               (not (:koodisto-ordered-by-user field-descriptor)))
                          (sort-by #(non-blank-option-label % @lang)))))]])))
 
-(defn- single-choice-option [option parent-id field-descriptor question-group-idx]
-  (let [lang         (subscribe [:application/form-language])
-        default-lang (subscribe [:application/default-language])
+(defn- single-choice-option [option parent-id field-descriptor question-group-idx lang use-multi-choice-style?]
+  (let [default-lang (subscribe [:application/default-language])
         cannot-edit? (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])
         label        (non-blank-val (get-in option [:label @lang])
                                     (get-in option [:label @default-lang]))
@@ -534,15 +533,18 @@
         on-change    (fn [event]
                        (let [value (.. event -target -value)]
                          (dispatch [:application/select-single-choice-button value field-descriptor question-group-idx])))]
-    (fn [option parent-id field-descriptor question-group-idx]
+    (fn [option parent-id field-descriptor question-group-idx lang use-multi-choice-style?]
       [:div.application__form-single-choice-button-inner-container {:key option-id}
-       [:input.application__form-single-choice-button
+       [:input
         (merge {:id        option-id
                 :type      "checkbox"
                 :checked   @checked?
                 :value     option-value
                 :on-change on-change
-                :role "radio"}
+                :role      "radio"
+                :class     (if use-multi-choice-style?
+                             "application__form-checkbox"
+                             "application__form-single-choice-button")}
                (when @cannot-edit? {:disabled true}))]
        [:label
         (merge {:for option-id}
@@ -551,11 +553,21 @@
        (when (and @checked?
                   (not-empty (:followups option))
                   (some (partial visible? (subscribe [:state-query [:application :ui]])) (:followups option)))
-         [:div.application__form-single-choice-followups-indicator])])))
+         (if use-multi-choice-style?
+           (multi-choice-followups (:followups option))
+           [:div.application__form-single-choice-followups-indicator]))])))
+
+(defn- use-multi-choice-style? [single-choice-field lang]
+  (or (< 3 (count (:options single-choice-field)))
+      (some (fn [option]
+              (< 50 (-> option :label lang count)))
+            (:options single-choice-field))))
 
 (defn single-choice-button [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [button-id  (answer-key field-descriptor)
-        validators (:validators field-descriptor)]
+  (let [button-id               (answer-key field-descriptor)
+        validators              (:validators field-descriptor)
+        lang                    (subscribe [:application/form-language])
+        use-multi-choice-style? (use-multi-choice-style? field-descriptor @lang)]
     (fn [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
       (let [single-choice-value (subscribe [:state-query [:application :answers (keyword (:id field-descriptor)) :value]])
             followups           (->> (:options field-descriptor)
@@ -572,13 +584,15 @@
          [:div.application__form-single-choice-button-outer-container
           {:aria-labelledby (id-for-label field-descriptor)
            :aria-invalid    @(subscribe [:application/answer-invalid? button-id])
-           :role            "radiogroup"}
+           :role            "radiogroup"
+           :class           (when use-multi-choice-style? "application__form-single-choice-button-container--column")}
           (doall
             (map-indexed (fn [option-idx option]
                            ^{:key (str "single-choice-" (when idx (str idx "-")) (:id field-descriptor) "-" option-idx)}
-                           [single-choice-option option button-id field-descriptor idx])
+                           [single-choice-option option button-id field-descriptor idx lang use-multi-choice-style?])
                          (:options field-descriptor)))]
          (when (and (not idx)
+                    (not use-multi-choice-style?)
                     (seq followups)
                     (some (partial visible? (subscribe [:state-query [:application :ui]])) followups))
            [:div.application__form-multi-choice-followups-container.animated.fadeIn
