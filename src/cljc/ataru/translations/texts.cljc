@@ -327,6 +327,9 @@
    :scope-of-qualification                          {:en "Scope of qualification"
                                                      :fi "Tutkinnon laajuus"
                                                      :sv "Examens omfattning"}
+   :scope                                           {:en "Scope of qualification"
+                                                     :fi "Laajuus"
+                                                     :sv "Omfattning"}
    :courses                                         {:en "Courses" :fi "Kurssia" :sv "Kurser"}
    :ects-credits                                    {:en "ECTS credits" :fi "Opintopistettä" :sv "Studiepoäng"}
    :study-weeks                                     {:en "Study weeks" :fi "Opintoviikkoa" :sv "Studieveckor"}

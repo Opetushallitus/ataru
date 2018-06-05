@@ -426,7 +426,7 @@
                                                                                                 :validators ["required"]})
                                                                                         (merge (text-field metadata)
                                                                                                {:id         "pohjakoulutus_avoin--scope"
-                                                                                                :label      (:scope-of-qualification higher-base-education-module-texts)
+                                                                                                :label      (:scope higher-base-education-module-texts)
                                                                                                 :params     {:size "S" :numeric true}
                                                                                                 :validators ["required" "numeric"]})
                                                                                         (merge (attachment metadata)
