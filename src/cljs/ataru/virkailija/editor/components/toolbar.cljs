@@ -20,7 +20,7 @@
     (fc/feature-enabled? :question-group) (conj ["Kysymysryhmä" component/question-group])
     true (conj ["Infoteksti" component/info-element])
     (fc/feature-enabled? :question-group) (conj ["Pohjakoulutusmoduuli" base-education-module/module])
-    (fc/feature-enabled? :question-group) (conj ["KK-Pohjakoulutusmoduuli" kk-base-education-module/module])))
+    (fc/feature-enabled? :question-group) (conj ["Pohjakoulutusmoduuli (kk-yhteishaku)" kk-base-education-module/module])))
 
 (def followup-toolbar-element-names
   (cond-> #{"Tekstikenttä"
@@ -67,7 +67,7 @@
                                        (= :children (second path))
                                        (= "Lomakeosio" component-name)))
                              (not (and @base-education-module-exists?
-                                       (contains? #{"Pohjakoulutusmoduuli" "KK-Pohjakoulutusmoduuli"} component-name))))]
+                                       (contains? #{"Pohjakoulutusmoduuli" "Pohjakoulutusmoduuli (kk-yhteishaku)"} component-name))))]
               [:li.form__add-component-toolbar--list-item
                [:a {:on-click (fn [evt]
                                 (.preventDefault evt)
