@@ -80,6 +80,9 @@ SELECT
   a.created_time,
   a.haku,
   a.hakukohde,
+  (SELECT cast(value as JSON)
+   FROM jsonb_to_recordset(a.content->'answers') x(key text, value text)
+   WHERE key = 'higher-completed-base-education') AS base_education,
   ar.state                            AS state,
   ar.score                            AS score,
   a.form_id                           AS form,
