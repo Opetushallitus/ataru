@@ -454,8 +454,8 @@
                      (merge (single-choice-button metadata)
                             {:id         "secondary-completed-base-education"
                              :label      (:secondary-completed-base-education higher-base-education-module-texts)
-                             :params {:info-text {:value (:required-for-statistics higher-base-education-module-texts)
-                                                  :enabled? true}}
+                             :params     {:info-text {:label    (:required-for-statistics higher-base-education-module-texts)
+                                                      :enabled? true}}
                              :options    [{:label     (:yes general-texts)
                                            :value     "Yes"
                                            :followups [(merge (dropdown metadata)
@@ -483,9 +483,9 @@
                                                                :validators      ["required"]
                                                                :label           (:name-of-degree higher-base-education-module-texts)})
                                                        (merge (text-field metadata)
-                                                              {:id    "finnish-vocational-before-1995--other-institution"
-                                                               :label (:higher-education-institution higher-base-education-module-texts)
-                                                               :validators      ["required"]})]}
+                                                              {:id         "finnish-vocational-before-1995--other-institution"
+                                                               :label      (:higher-education-institution higher-base-education-module-texts)
+                                                               :validators ["required"]})]}
                                           {:label (:no general-texts) :value "No"}]
                              :validators ["required"]})]}))
 
