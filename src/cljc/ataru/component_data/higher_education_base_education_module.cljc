@@ -42,7 +42,7 @@
                                                                                                                :params     {:size "S" :numeric true}
                                                                                                                :validators ["numeric" "required"]})
                                                                                                        (merge (attachment metadata)
-                                                                                                              {:params {:info-text {:value    (:submit-your-attachments higher-base-education-module-texts)
+                                                                                                              {:params {:info-text {:label    (:submit-your-attachments higher-base-education-module-texts)
                                                                                                                                     :enabled? true}}
                                                                                                                :label  (:marticaulation-before-1990 higher-base-education-module-texts)
                                                                                                                :id     "pohjakoulutus-yo--attachment"})]}]
@@ -63,7 +63,7 @@
                                                                      (merge (attachment metadata)
                                                                             {:id     "pohjakoulutus_lk--attachment"
                                                                              :label  (:upper-secondary-school-attachment higher-base-education-module-texts)
-                                                                             :params {:info-text {:value    (:submit-your-attachments higher-base-education-module-texts)
+                                                                             :params {:info-text {:label    (:submit-your-attachments higher-base-education-module-texts)
                                                                                                   :enabled? true}}})]}
                                                         {:label     (:international-marticulation-exam higher-base-education-module-texts)
                                                          :value     "pohjakoulutus_yo_kansainvalinen_suomessa"
@@ -89,7 +89,7 @@
                                                                      (merge (attachment metadata)
                                                                             {:id     "pohjakoulutus_yo_kansainvalinen_suomessa--attachment"
                                                                              :label  (:request-attachment-international-exam higher-base-education-module-texts)
-                                                                             :params {:info-text {:value    (:submit-your-attachments higher-base-education-module-texts)
+                                                                             :params {:info-text {:label    (:submit-your-attachments higher-base-education-module-texts)
                                                                                                   :enabled? true}}})]}
                                                         {:label     (:double-degree higher-base-education-module-texts)
                                                          :value     "pohjakoulutus_yo_ammatillinen"
@@ -137,12 +137,12 @@
                                                                      (merge (attachment metadata)
                                                                             {:id     "pohjakoulutus_yo_ammatillinen--vocational-attachment"
                                                                              :label  (:double-degree-vocational-attachment higher-base-education-module-texts)
-                                                                             :params {:info-text {:value    (:submit-your-attachments higher-base-education-module-texts)
+                                                                             :params {:info-text {:label    (:submit-your-attachments higher-base-education-module-texts)
                                                                                                   :enabled? true}}})
                                                                      (merge (attachment metadata)
                                                                             {:id     "pohjakoulutus_yo_ammatillinen--marticulation-attachment"
                                                                              :label  (:double-degree-marticulation-attachment higher-base-education-module-texts)
-                                                                             :params {:info-text {:value    (:submit-your-attachments higher-base-education-module-texts)
+                                                                             :params {:info-text {:label    (:submit-your-attachments higher-base-education-module-texts)
                                                                                                   :enabled? true}}})]}
                                                         {:label     (:finnish-vocational higher-base-education-module-texts)
                                                          :value     "pohjakoulutus_am"
@@ -204,7 +204,7 @@
                                                                                                                           (merge (attachment metadata)
                                                                                                                                  {:id     "pohjakoulutus_am--attachment"
                                                                                                                                   :label  (:finnish-vocational-attachment higher-base-education-module-texts)
-                                                                                                                                  :params {:info-text {:value    (:submit-your-attachments higher-base-education-module-texts)
+                                                                                                                                  :params {:info-text {:label    (:submit-your-attachments higher-base-education-module-texts)
                                                                                                                                                        :enabled? true}}})]})
                                                                                                        (merge (info-element metadata)
                                                                                                               {:text (:click-to-add-more higher-base-education-module-texts)})]}]
@@ -261,10 +261,10 @@
                                                                                                                        (merge (attachment metadata)
                                                                                                                               {:id     "pohjakoulutus_amt--attachment"
                                                                                                                                :label  (:finnish-special-attachment higher-base-education-module-texts)
-                                                                                                                               :params {:info-text {:value    (:submit-your-attachments higher-base-education-module-texts)
-                                                                                                                                                    :enabled? true}}})
-                                                                                                                       (merge (info-element metadata)
-                                                                                                                              {:text (:click-to-add-more higher-base-education-module-texts)})]})]}]})]}
+                                                                                                                               :params {:info-text {:label    (:submit-your-attachments higher-base-education-module-texts)
+                                                                                                                                                    :enabled? true}}})]})
+                                                                                                    (merge (info-element metadata)
+                                                                                                           {:text (:click-to-add-more higher-base-education-module-texts)})]}]})]}
                                                         {:label     (:finnish-higher-education higher-base-education-module-texts)
                                                          :value     "pohjakoulutus_kk"
                                                          :followups [(merge (single-choice-button metadata)
@@ -304,7 +304,7 @@
                                                                                                                           (merge (attachment metadata)
                                                                                                                                  {:id     "pohjakoulutus_kk--attachment"
                                                                                                                                   :label  (:higher-education-degree higher-base-education-module-texts)
-                                                                                                                                  :params {:info-text {:value    (:submit-your-attachments higher-base-education-module-texts)
+                                                                                                                                  :params {:info-text {:label    (:submit-your-attachments higher-base-education-module-texts)
                                                                                                                                                        :enabled? true}}})]})]}]
                                                                              :validators ["required"]})]}
                                                         {:label     (:international-marticulation-outside-finland higher-base-education-module-texts)
@@ -367,10 +367,10 @@
                                                                                         (merge (attachment metadata)
                                                                                                {:id     "pohjakoulutus_kk_ulk--attachement"
                                                                                                 :label  (:higher-education-outside-finland higher-base-education-module-texts)
-                                                                                                :params {:info-text {:value    (:submit-your-attachments higher-base-education-module-texts)
-                                                                                                                     :enabled? true}}})
-                                                                                        (merge (info-element metadata)
-                                                                                               {:text (:click-to-add-more higher-base-education-module-texts)})]})]}
+                                                                                                :params {:info-text {:label    (:submit-your-attachments higher-base-education-module-texts)
+                                                                                                                     :enabled? true}}})]})
+                                                                     (merge (info-element metadata)
+                                                                            {:text (:click-to-add-more higher-base-education-module-texts)})]}
                                                         {:label     (:other-qualification-foreign higher-base-education-module-texts)
                                                          :value     "pohjakoulutus_ulk"
                                                          :followups [(merge (question-group metadata)
@@ -398,10 +398,10 @@
                                                                                         (merge (attachment metadata)
                                                                                                {:id     "pohjakoulutus_ulk--attachment"
                                                                                                 :label  (:other-qualification-foreign-attachment higher-base-education-module-texts)
-                                                                                                :params {:info-text {:value    (:submit-your-attachments higher-base-education-module-texts)
-                                                                                                                     :enabled? true}}})
-                                                                                        (merge (info-element metadata)
-                                                                                               {:text (:click-to-add-more higher-base-education-module-texts)})]})]}
+                                                                                                :params {:info-text {:label    (:submit-your-attachments higher-base-education-module-texts)
+                                                                                                                     :enabled? true}}})]})
+                                                                     (merge (info-element metadata)
+                                                                            {:text (:click-to-add-more higher-base-education-module-texts)})]}
                                                         {:label     (:base-education-open higher-base-education-module-texts)
                                                          :value     "pohjakoulutus_avoin"
                                                          :followups [(merge (question-group metadata)
@@ -430,10 +430,10 @@
                                                                                         (merge (attachment metadata)
                                                                                                {:id     "pohjakoulutus_avoin--attachment"
                                                                                                 :label  (:base-education-open-attachment higher-base-education-module-texts)
-                                                                                                :params {:info-text {:value    (:submit-your-attachments higher-base-education-module-texts)
-                                                                                                                     :enabled? true}}})
-                                                                                        (merge (info-element metadata)
-                                                                                               {:text (:click-to-add-more higher-base-education-module-texts)})]})]}
+                                                                                                :params {:info-text {:label    (:submit-your-attachments higher-base-education-module-texts)
+                                                                                                                     :enabled? true}}})]})
+                                                                     (merge (info-element metadata)
+                                                                            {:text (:click-to-add-more higher-base-education-module-texts)})]}
                                                         {:label     (:base-education-other higher-base-education-module-texts)
                                                          :value     "pohjakoulutus_muu"
                                                          :followups [(merge (text-field metadata)
@@ -449,7 +449,7 @@
                                                                      (merge (dropdown metadata)
                                                                             {:id     "pohjakoulutus_muu--attachment"
                                                                              :label  (:base-education-other-attachment higher-base-education-module-texts)
-                                                                             :params {:info-text {:value    (:submit-your-attachments higher-base-education-module-texts)
+                                                                             :params {:info-text {:label    (:submit-your-attachments higher-base-education-module-texts)
                                                                                                   :enabled? true}}})]}]})
                      (merge (single-choice-button metadata)
                             {:id         "secondary-completed-base-education"
