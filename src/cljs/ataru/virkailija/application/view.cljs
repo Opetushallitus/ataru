@@ -1035,7 +1035,7 @@
           (virkailija-initials-span event)]
 
          {:event-type "modification-link-sent"}
-         "Hakemuksen muokkauslinkki lähetetty hakijalle"
+         "Vahvistussähköposti lähetetty hakijalle"
 
          {:subject _ :message message}
          [:div.application-handling__multi-line-event-caption
