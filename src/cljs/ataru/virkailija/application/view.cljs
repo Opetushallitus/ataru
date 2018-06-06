@@ -301,24 +301,36 @@
        (when @list-opened
          [:div.application-handling__dropdown-box-opened
           (haku-row close-list
-                    haku-oid
-                    (and (nil? selected-hakukohde-oid)
-                         (nil? selected-hakukohderyhma-oid)))
-          (doall
-           (for [hakukohde-oid hakukohde-oids]
-             ^{:key hakukohde-oid}
-             [hakukohde-row
-              close-list
-              hakukohde-oid
-              (= hakukohde-oid selected-hakukohde-oid)]))
-          (doall
-           (for [hakukohderyhma-oid hakukohderyhma-oids]
-             ^{:key hakukohderyhma-oid}
-             [hakukohderyhma-row
-              close-list
-              haku-oid
-              hakukohderyhma-oid
-              (= hakukohderyhma-oid selected-hakukohderyhma-oid)]))])
+            haku-oid
+            (and (nil? selected-hakukohde-oid)
+                 (nil? selected-hakukohderyhma-oid)))
+          (let [hakukohde-sorted-oids (->> hakukohde-oids
+                                           (map (fn [hakukohde-oid]
+                                                  [@(subscribe [:application/hakukohde-name hakukohde-oid])
+                                                   hakukohde-oid]))
+                                           (sort-by first)
+                                           (map second))]
+            (doall
+              (for [hakukohde-oid hakukohde-sorted-oids]
+                ^{:key hakukohde-oid}
+                [hakukohde-row
+                 close-list
+                 hakukohde-oid
+                 (= hakukohde-oid selected-hakukohde-oid)])))
+          (let [hakukohderyhma-sorted-oids (->> hakukohderyhma-oids
+                                                (map (fn [hakukohderyhma-oid]
+                                                       [@(subscribe [:application/hakukohderyhma-name hakukohderyhma-oid])
+                                                        hakukohderyhma-oid]))
+                                                (sort-by first)
+                                                (map second))]
+            (doall
+              (for [hakukohderyhma-oid hakukohderyhma-sorted-oids]
+                ^{:key hakukohderyhma-oid}
+                [hakukohderyhma-row
+                 close-list
+                 haku-oid
+                 hakukohderyhma-oid
+                 (= hakukohderyhma-oid selected-hakukohderyhma-oid)])))])
        (closed-row open-list
                    (cond (some? selected-hakukohde-oid)
                          @(subscribe [:application/hakukohde-name
