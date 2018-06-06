@@ -630,9 +630,9 @@
      {:key   (str "application-filter-" (name kw) "-" (name state))
       :class (when checked? "application-handling__filter-checkbox-label--checked")}
      [:input.application-handling__filter-checkbox
-      {:type            "checkbox"
-       :default-checked checked?
-       :on-change       #(dispatch [:application/toggle-filter kw state])}]
+      {:type      "checkbox"
+       :checked   checked?
+       :on-change #(dispatch [:application/toggle-filter kw state])}]
      [:span label]]))
 
 (defn- review-type-filter
@@ -668,9 +668,9 @@
         {:key   (str "application-filter-pohjakoulutus-any")
          :class (when @all-filters-selected? "application-handling__filter-checkbox-label--checked")}
         [:input.application-handling__filter-checkbox
-         {:type            "checkbox"
-          :default-checked @all-filters-selected?
-          :on-change       #(dispatch [:application/toggle-all-pohjakoulutus-filters @all-filters-selected?])}]
+         {:type      "checkbox"
+          :checked   @all-filters-selected?
+          :on-change #(dispatch [:application/toggle-all-pohjakoulutus-filters @all-filters-selected?])}]
         [:span "Kaikki"]]
        (->> checkboxes
             (map (fn [[id label]] (application-filter-checkbox filters label :base-education id)))
