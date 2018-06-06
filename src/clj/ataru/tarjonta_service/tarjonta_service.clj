@@ -58,10 +58,11 @@
 
 (defn parse-haku
   [haku]
-  {:oid (:oid haku)
-   :name (parse-multi-lang-text (:nimi haku))
+  {:oid                    (:oid haku)
+   :name                   (parse-multi-lang-text (:nimi haku))
    :prioritize-hakukohteet (:usePriority haku)
-   :hakuajat (mapv parse-hakuaika (:hakuaikas haku))})
+   :yhteishaku             (= (:hakutapaUri haku) "hakutapa_01#1")
+   :hakuajat               (mapv parse-hakuaika (:hakuaikas haku))})
 
 (defn- parse-hakukohde
   [hakukohde]
