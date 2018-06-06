@@ -737,22 +737,25 @@
 
 (defn- application-deactivate-toggle
   []
-  (let [state (subscribe [:state-query [:application :review :state]])]
+  (let [state     (subscribe [:state-query [:application :review :state]])
+        can-edit? (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
     (fn []
-      [:div.application-handling__review-deactivate-row
-       [:span.application-handling__review-deactivate-label (str "Hakemuksen tila")]
-       [:div.application-handling__review-deactivate-toggle
-        [:div.application-handling__review-deactivate-toggle-slider
-         (if (= "active" @state)
-           {:class    "application-handling__review-deactivate-toggle-slider-right"
-            :on-click #(dispatch [:application/set-application-activeness false])}
-           {:class    "application-handling__review-deactivate-toggle-slider-left"
-            :on-click #(dispatch [:application/set-application-activeness true])})
-         [:div.application-handling__review-deactivate-toggle-label-left
-          "Aktiivinen"]
-         [:div.application-handling__review-deactivate-toggle-divider]
-         [:div.application-handling__review-deactivate-toggle-label-right
-          "Passiivinen"]]]])))
+      (let [active? (= "active" @state)]
+        [:div.application-handling__review-deactivate-row
+         [:span.application-handling__review-deactivate-label (str "Hakemuksen tila")]
+         [:div.application-handling__review-deactivate-toggle
+          [:div.application-handling__review-deactivate-toggle-slider
+           {:class    (cond-> ""
+                              active? (str " application-handling__review-deactivate-toggle-slider-right")
+                              (not active?) (str " application-handling__review-deactivate-toggle-slider-left")
+                              (not @can-edit?) (str " application-handling__review-deactivate-toggle-slider--disabled"))
+            :on-click #(when @can-edit?
+                         (dispatch [:application/set-application-activeness (not active?)]))}
+           [:div.application-handling__review-deactivate-toggle-label-left
+            "Aktiivinen"]
+           [:div.application-handling__review-deactivate-toggle-divider]
+           [:div.application-handling__review-deactivate-toggle-label-right
+            "Passiivinen"]]]]))))
 
 (defn- hakukohde-name [hakukohde-oid]
   (if-let [hakukohde-name @(subscribe [:application/hakukohde-name
