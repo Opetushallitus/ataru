@@ -623,15 +623,17 @@
 
 (defn- application-filter-checkbox
   [filters label kw state]
-  (let [kw    (keyword kw)
-        state (keyword state)]
+  (let [kw       (keyword kw)
+        state    (keyword state)
+        checked? (boolean (get-in @filters [kw state]))]
     [:label.application-handling__filter-checkbox-label
-     {:key (str "application-filter-" (name kw) "-" (name state))}
+     {:key   (str "application-filter-" (name kw) "-" (name state))
+      :class (when checked? "application-handling__filter-checkbox-label--checked")}
      [:input.application-handling__filter-checkbox
-      {:type     "checkbox"
-       :checked  (boolean (get-in @filters [kw state]))
-       :on-click #(dispatch [:application/toggle-filter kw state])}]
-     label]))
+      {:type            "checkbox"
+       :default-checked checked?
+       :on-change       #(dispatch [:application/toggle-filter kw state])}]
+     [:span label]]))
 
 (defn- review-type-filter
   [filters [kw group-label states]]
@@ -662,13 +664,14 @@
         all-filters-selected? (subscribe [:application/all-pohjakoulutus-filters-selected?])]
     (fn []
       [:div.application-handling__filter-group
-       [:label.application-handling__filter-checkbox-label
-        {:key (str "application-filter-pohjakoulutus-any")}
+       [:label.application-handling__filter-checkbox-label.application-handling__filter-checkbox-label--all
+        {:key   (str "application-filter-pohjakoulutus-any")
+         :class (when @all-filters-selected? "application-handling__filter-checkbox-label--checked")}
         [:input.application-handling__filter-checkbox
-         {:type     "checkbox"
-          :checked  @all-filters-selected?
-          :on-click #(dispatch [:application/toggle-all-pohjakoulutus-filters @all-filters-selected?])}]
-        "Kaikki"]
+         {:type            "checkbox"
+          :default-checked @all-filters-selected?
+          :on-change       #(dispatch [:application/toggle-all-pohjakoulutus-filters @all-filters-selected?])}]
+        [:span "Kaikki"]]
        (->> checkboxes
             (map (fn [[id label]] (application-filter-checkbox filters label :base-education id)))
             (doall))])))
@@ -699,25 +702,26 @@
           [:div.application-handling__popup-close-button
            {:on-click #(reset! filters-visible false)}
            [:i.zmdi.zmdi-close]]
-          [:div (str "Hakemuksia näkyvillä " @filtered-application-count "/" @loaded-application-count)]
-          [:h3 "Yksilöinti"]
-          [:div.application-handling__filter-group
-           [application-filter-checkbox filters "Yksilöimättömät" :only-identified :unidentified]
-           [application-filter-checkbox filters "Yksilöidyt" :only-identified :identified]]
-          [:h3 "Pohjakoulutus"]
-          [application-base-education-filters filters]
-
-          [:h3 "Käsittelymerkinnät"]
-          (when (some? @selected-hakukohde-oid)
-            [:div.application-handling__filter-hakukohde-name
-             @(subscribe [:application/hakukohde-name @selected-hakukohde-oid])])
-          (->> review-states/hakukohde-review-types
-               (filter (fn [[kw _ _]]
-                         (and
-                           (contains? filters-to-include kw)
-                           (-> @review-settings (get kw) (false?) (not)))))
-               (map (partial review-type-filter filters))
-               (doall))])])))
+          [:div.application-handling__popup-application-count (str "Hakemuksia näkyvillä " @filtered-application-count "/" @loaded-application-count)]
+          [:div.application-handling__popup-column.application-handling__popup-column--left
+           [:h3 "Yksilöinti"]
+           [:div.application-handling__filter-group
+            [application-filter-checkbox filters "Yksilöimättömät" :only-identified :unidentified]
+            [application-filter-checkbox filters "Yksilöidyt" :only-identified :identified]]
+           [:h3 "Käsittelymerkinnät"]
+           (when (some? @selected-hakukohde-oid)
+             [:div.application-handling__filter-hakukohde-name
+              @(subscribe [:application/hakukohde-name @selected-hakukohde-oid])])
+           (->> review-states/hakukohde-review-types
+                (filter (fn [[kw _ _]]
+                          (and
+                            (contains? filters-to-include kw)
+                            (-> @review-settings (get kw) (false?) (not)))))
+                (map (partial review-type-filter filters))
+                (doall))]
+          [:div.application-handling__popup-column.application-handling__popup-column--right
+           [:h3 "Pohjakoulutus"]
+           [application-base-education-filters filters]]])])))
 
 (defn application-list [applications]
   (let [fetching        (subscribe [:state-query [:application :fetching-applications]])
