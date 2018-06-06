@@ -370,18 +370,11 @@
 (re-frame/reg-sub
   :application/massamuutos-enabled?
   (fn [db _]
-    (let [applications                  (-> db :application :applications)
-          tarjoaja-oids-for-application (fn [hakukohde-oid]
-                                          (get-in db [:hakukohteet hakukohde-oid :tarjoaja-oids]))
-          only-one-tarjoaja?            (->> applications
-                                             (mapcat :hakukohde)
-                                             (mapcat tarjoaja-oids-for-application)
-                                             (set)
-                                             (rest)
-                                             (empty?))
-          hakukohde-selected?           (-> db :application :selected-hakukohde)
-          hakukohderyhma-selected?      (-> db :application :selected-hakukohderyhma)]
-      (or only-one-tarjoaja?
+    (let [applications             (-> db :application :applications)
+          yhteishaku?              (get-in db [:haut (-> db :application :selected-haku) :yhteishaku])
+          hakukohde-selected?      (-> db :application :selected-hakukohde)
+          hakukohderyhma-selected? (-> db :application :selected-hakukohderyhma)]
+      (or (not yhteishaku?)
           hakukohde-selected?
           hakukohderyhma-selected?))))
 

@@ -229,6 +229,7 @@
 (s/defschema Haku
   {:oid                    s/Str
    :name                   LocalizedStringOptional
+   :yhteishaku             s/Bool
    :prioritize-hakukohteet s/Bool
    :hakuajat               [{:start                java.time.ZonedDateTime
                              (s/optional-key :end) java.time.ZonedDateTime}]})
