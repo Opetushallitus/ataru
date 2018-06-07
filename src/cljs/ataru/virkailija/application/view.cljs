@@ -684,6 +684,7 @@
         enabled-filter-count       (subscribe [:application/enabled-filter-count])
         review-settings            (subscribe [:state-query [:application :review-settings :config]])
         selected-hakukohde-oid     (subscribe [:state-query [:application :selected-hakukohde]])
+        has-base-education-answers (subscribe [:application/applications-have-base-education-answers])
         filters-visible            (r/atom false)
         filters-to-include         #{:language-requirement :degree-requirement :eligibility-state :payment-obligation}]
     (fn []
@@ -699,6 +700,7 @@
            {:on-click #(dispatch [:application/remove-filters])} "Poista"]])
        (when @filters-visible
          [:div.application-handling__filters-popup
+          {:class (when @has-base-education-answers "application-handling__filters-popup--two-cols")}
           [:div.application-handling__popup-close-button
            {:on-click #(reset! filters-visible false)}
            [:i.zmdi.zmdi-close]]
@@ -719,9 +721,10 @@
                             (-> @review-settings (get kw) (false?) (not)))))
                 (map (partial review-type-filter filters))
                 (doall))]
-          [:div.application-handling__popup-column.application-handling__popup-column--right
-           [:h3 "Pohjakoulutus"]
-           [application-base-education-filters filters]]])])))
+          (when @has-base-education-answers
+            [:div.application-handling__popup-column.application-handling__popup-column--right
+             [:h3 "Pohjakoulutus"]
+             [application-base-education-filters filters]])])])))
 
 (defn application-list [applications]
   (let [fetching        (subscribe [:state-query [:application :fetching-applications]])

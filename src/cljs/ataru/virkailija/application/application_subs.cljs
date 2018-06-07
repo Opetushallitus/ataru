@@ -565,3 +565,10 @@
     (->> (-> db :application :filters :base-education)
          (vals)
          (every? true?))))
+
+(re-frame/reg-sub
+  :application/applications-have-base-education-answers
+  (fn [db _]
+    (->> (-> db :application :applications)
+         (some #(not-empty (:base-education %)))
+         (boolean))))
