@@ -345,7 +345,9 @@
    :preferred-name                      s/Str
    :last-name                           s/Str
    :gender                              s/Str
-   :nationality                         s/Str
+   :nationality                         [(s/both
+                                           (s/pred #(= 1 (count %)) "multiple nationality group")
+                                           [s/Str])]
    (s/optional-key :gender-string)      s/Str
    (s/optional-key :nationality-string) s/Str
    (s/optional-key :ssn)                (s/maybe s/Str)

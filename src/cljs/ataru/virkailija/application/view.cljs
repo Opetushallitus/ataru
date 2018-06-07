@@ -947,7 +947,7 @@
          {:event-type "updated-by-virkailija"}
          (update-event-caption
           [:span
-           (virkailija-initials-span event)
+           (or (virkailija-initials-span event) "Tuntematon")
            " teki "
            (count @(subscribe [:application/changes-made-for-event (:id event)]))
            " muutosta"]

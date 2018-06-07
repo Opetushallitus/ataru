@@ -598,12 +598,17 @@
                                                      (not required?)
                                                      all-valid?))))
 
-(reg-event-db
+(reg-event-fx
   :application/set-repeatable-application-field-valid
-  (fn [db [_ id group-idx data-idx required? valid?]]
-    (-> db
-        (set-repeatable-application-repeated-field-valid id group-idx data-idx valid?)
-        (set-repeatable-application-field-top-level-valid id group-idx required? valid?))))
+  (fn [{:keys [db]} [_ field-descriptor group-idx data-idx required? valid?]]
+    (let [id    (keyword (:id field-descriptor))
+          rules (:rules field-descriptor)]
+      (cond-> {:db (-> db
+                       (set-repeatable-application-repeated-field-valid id group-idx data-idx valid?)
+                       (set-repeatable-application-field-top-level-valid id group-idx required? valid?))}
+              (not (empty? rules))
+              (assoc :dispatch [:application/run-rule rules])))))
+
 
 (reg-event-fx
   :application/set-repeatable-application-field
@@ -617,7 +622,7 @@
                 :editing? (get-in db [:application :editing?])
                 :on-validated (fn [[valid? errors]]
                                 (dispatch [:application/set-repeatable-application-field-valid
-                                           (keyword (:id field-descriptor))
+                                           field-descriptor
                                            question-group-idx
                                            data-idx
                                            (required? field-descriptor)
@@ -760,7 +765,7 @@
                   :editing? (get-in db [:application :editing?])
                   :on-validated (fn [[valid? errors]]
                                   (dispatch [:application/set-repeatable-application-field-valid
-                                             id
+                                             field-descriptor
                                              question-group-idx
                                              0
                                              (required? field-descriptor)
@@ -778,7 +783,7 @@
                 :editing? (get-in db [:application :editing?])
                 :on-validated (fn [[valid? errors]]
                                 (dispatch [:application/set-repeatable-application-field-valid
-                                           (keyword (:id field-descriptor))
+                                           field-descriptor
                                            question-group-idx
                                            idx
                                            (required? field-descriptor)
@@ -1080,35 +1085,41 @@
                (update-in [:application :ui id] dissoc :mouse-over-remove-button))
        :dispatch-n (set-empty-value-dispatches db field-descriptor-id repeat-count)})))
 
-(reg-event-db
+(reg-event-fx
   :application/remove-question-group-row
-  (fn [db [_ field-descriptor idx]]
-    (let [id (keyword (:id field-descriptor))
+  (fn [{:keys [db]} [_ field-descriptor idx]]
+    (let [id                     (keyword (:id field-descriptor))
           with-decremented-count (-> db
                                      (update-in [:application :ui id :count] dec)
-                                     (update-in [:application :ui id] dissoc :mouse-over-remove-button))]
-      (autil/reduce-form-fields
-       (fn [db child]
-         (let [id (keyword (:id child))
-               answer (get-in db [:application :answers id])]
-           (cond-> db
-             (contains? answer :values)
-             (update-in [:application :answers id :values]
-                        autil/remove-nth idx)
-             (contains? answer :value)
-             (update-in [:application :answers id :value]
-                        autil/remove-nth idx)
-             (and (contains? answer :values)
-                  (contains? answer :valid))
-             (update-in [:application :answers id]
-                        #(assoc % :valid (->> (:values %)
-                                              flatten
-                                              (every? :valid))))
-             (or (contains? answer :values)
-                 (contains? answer :value))
-             (update-in [:application :values-changed?] conj id))))
-       with-decremented-count
-       (:children field-descriptor)))))
+                                     (update-in [:application :ui id] dissoc :mouse-over-remove-button))
+          rules                  (->> (:children field-descriptor)
+                                      (map :rules)
+                                      (apply merge))]
+      (cond-> {:db (autil/reduce-form-fields
+                     (fn [db child]
+                       (let [id     (keyword (:id child))
+                             answer (get-in db [:application :answers id])]
+                         (cond-> db
+                                 (contains? answer :values)
+                                 (update-in [:application :answers id :values]
+                                            autil/remove-nth idx)
+                                 (contains? answer :value)
+                                 (update-in [:application :answers id :value]
+                                            autil/remove-nth idx)
+                                 (and (contains? answer :values)
+                                      (contains? answer :valid))
+                                 (update-in [:application :answers id]
+                                            #(assoc % :valid (->> (:values %)
+                                                                  flatten
+                                                                  (every? :valid))))
+                                 (or (contains? answer :values)
+                                     (contains? answer :value))
+                                 (update-in [:application :values-changed?] conj id))))
+                     with-decremented-count
+                     (:children field-descriptor))}
+
+              (not-empty rules)
+              (assoc :dispatch [:application/run-rule rules])))))
 
 (reg-event-fx
   :application/dropdown-change

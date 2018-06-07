@@ -39,16 +39,16 @@
 (defn- have-finnish-ssn
   ^{:dependencies [:nationality]}
   [db]
-  (let [{:keys [valid value]} (get-in db [:application :answers :nationality])]
-    (if (and valid (not-empty value) (not= value finland-country-code))
-          (-> db
-              (update-in [:application :answers :have-finnish-ssn]
-                         (fn [a]
-                           (if (= "" (:value a))
-                             (merge a {:valid true :value "true"})
-                             a)))
-              (assoc-in [:application :ui :have-finnish-ssn :visible?] true))
-          (hide-field db :have-finnish-ssn "true"))))
+  (let [values (get-in db [:application :answers :nationality :values])]
+    (if (empty? (filter (fn [[v & _]] (= (:value v) finland-country-code)) values))
+      (-> db
+          (update-in [:application :answers :have-finnish-ssn]
+                     (fn [a]
+                       (if (= "" (:value a))
+                         (merge a {:valid true :value "true"})
+                         a)))
+          (assoc-in [:application :ui :have-finnish-ssn :visible?] true))
+      (hide-field db :have-finnish-ssn "true"))))
 
 (defn- ssn
   ^{:dependencies [:have-finnish-ssn]}

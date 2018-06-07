@@ -25,7 +25,8 @@
             [taoensso.timbre :refer [spy debug info error]]
             [ataru.component-data.component :as component]
             [ataru.translations.texts :refer [email-default-texts]]
-            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service])
+            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
+            [medley.core :refer [find-first]])
   (:import (java.time ZonedDateTime ZoneId)))
 
 (def default-fetch-size 50)
@@ -507,6 +508,36 @@
                         (mapcat #(create-attachment-reviews % (:key application) hakutoiveet)))]
       (migration-app-store/insert-1.92-attachment-review connection review))))
 
+(defn- migrate-nationality-to-question-group
+  [connection]
+  (letfn [(nationality-answer? [answer]
+            (= (:key answer) "nationality"))
+          (nationality-answer->question-group [application]
+            (let [answers                     (-> application :content :answers)
+                  old-nationality-answer      (find-first nationality-answer? answers)
+                  new-nationality-answer      (assoc old-nationality-answer :value [[(:value old-nationality-answer)]])
+                  answers-without-nationality (remove nationality-answer? answers)]
+              (when old-nationality-answer
+                (assoc-in application [:content :answers] (conj answers-without-nationality new-nationality-answer)))))]
+    (let [new-person-info-module (person-info-module/person-info-module)]
+      (doseq [form-id (migration-app-store/get-1.100-form-ids connection)
+              :let [form     (migration-app-store/get-1.100-form connection form-id)
+                    new-form (update-person-info-module new-person-info-module form)]]
+        (if (= (:content new-form) (:content form))
+          (info "1.100: Not updating form" (:key form) form-id)
+          (let [{:keys [id key]} (migration-app-store/insert-1.100-form connection new-form)]
+            (info "1.100: Updating form" (:key form) form-id)
+            (doseq [application (migration-app-store/get-1.100-applications connection form-id)
+                    :let [new-application (nationality-answer->question-group application)]]
+              (if (or (not new-application)
+                      (= (:content new-application) (:content application))
+                      (not= (:form_id application) (:id form)))
+                (info "1.100: Not updating application" (:key application) (:id application))
+                (do (info "1.100: Updating application" (:key application) (:id application))
+                    (migration-app-store/insert-1.100-application
+                      connection
+                      (assoc new-application :form_id id)))))))))))
+
 (migrations/defmigration
   migrate-person-info-module "1.13"
   "Update person info module structure in existing forms"
@@ -615,6 +646,12 @@
   add-subject-and-content-finish "1.96"
   "Migrate email templates to contain subject and finishing content"
   (migrate-add-subject-and-content-finish))
+
+(migrations/defmigration
+  migrate-person-info-module "1.100"
+  "Add multiple nationality support to forms & applications"
+  (with-db-transaction [conn {:connection connection}]
+    (migrate-nationality-to-question-group conn)))
 
 (defn migrate
   []

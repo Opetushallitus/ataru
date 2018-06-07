@@ -9,45 +9,60 @@
             [cljs-time.coerce :refer [from-long]]))
 
 (defn- initial-valid-status [flattened-form-fields preselected-hakukohde]
-  (into {}
-        (map-indexed
-         (fn [idx field]
-           (match [field]
-             [{:id "hakukohteet"
-               :label label
-               :options options}]
-             (let [values (cond (= 1 (count options))
-                                [{:value (:value (first options))
-                                  :valid true}]
-                                (some? preselected-hakukohde)
-                                [{:value preselected-hakukohde
-                                  :valid true}]
-                                :else
-                                [])]
-               [:hakukohteet {:valid (not (empty? values))
-                              :order-idx idx
-                              :label label
-                              :values values}])
-             [{:id id
-               :fieldClass "formField"
-               :fieldType "dropdown"
-               :label label
-               :options options}]
-             (let [value (some #(when (:default-value %) (:value %)) options)
-                   required? (some #(contains? required-validators %)
-                                   (:validators field))]
-               [(keyword id) (cond-> {:valid (or (some? value) (not required?))
-                                      :order-idx idx
-                                      :label label}
-                               (some? value)
-                               (assoc :value value))])
-             [{:id id
-               :label label}]
-             [(keyword id) {:valid (not (some #(contains? required-validators %)
-                                              (:validators field)))
-                            :label label
-                            :order-idx idx}]))
-         flattened-form-fields)))
+  (into
+    {}
+    (map-indexed
+      (fn [idx field]
+        (match [field]
+               [{:id      "hakukohteet"
+                 :label   label
+                 :options options}]
+               (let [values (cond (= 1 (count options))
+                                  [{:value (:value (first options))
+                                    :valid true}]
+                                  (some? preselected-hakukohde)
+                                  [{:value preselected-hakukohde
+                                    :valid true}]
+                                  :else
+                                  [])]
+                 [:hakukohteet {:valid     (not (empty? values))
+                                :order-idx idx
+                                :label     label
+                                :values    values}])
+               [{:id         id
+                 :fieldClass "formField"
+                 :fieldType  "dropdown"
+                 :label      label
+                 :params     {:question-group-id _}
+                 :options    options}]
+               (let [value     (some #(when (:default-value %) (:value %)) options)
+                     required? (some #(contains? required-validators %)
+                                     (:validators field))]
+                 [(keyword id) (cond-> {:valid     (or (some? value) (not required?))
+                                        :order-idx idx
+                                        :label     label}
+                                       (some? value)
+                                       (assoc :values [[{:value value :valid true}]] :value [[value]]))])
+               [{:id         id
+                 :fieldClass "formField"
+                 :fieldType  "dropdown"
+                 :label      label
+                 :options    options}]
+               (let [value     (some #(when (:default-value %) (:value %)) options)
+                     required? (some #(contains? required-validators %)
+                                     (:validators field))]
+                 [(keyword id) (cond-> {:valid     (or (some? value) (not required?))
+                                        :order-idx idx
+                                        :label     label}
+                                       (some? value)
+                                       (assoc :value value))])
+               [{:id    id
+                 :label label}]
+               [(keyword id) {:valid     (not (some #(contains? required-validators %)
+                                                    (:validators field)))
+                              :label     label
+                              :order-idx idx}]))
+      flattened-form-fields)))
 
 (defn create-initial-answers
   "Create initial answer structure based on form structure.

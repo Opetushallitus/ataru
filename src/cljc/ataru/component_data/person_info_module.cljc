@@ -52,12 +52,15 @@
 
 (defn ^:private nationality-component
   [metadata]
-  (-> (component/dropdown metadata)
-      (merge {:label (:nationality person-info-module-texts)
-              :validators [:required]
-              :rules {:swap-ssn-birthdate-based-on-nationality [:ssn :birth-date]}
-              :id :nationality
-              :koodisto-source {:uri "maatjavaltiot2" :version 1 :default-option "Suomi"}})))
+  (-> (component/question-group metadata)
+      (merge {:label    (:nationality person-info-module-texts)
+              :children [(merge (dissoc (component/dropdown metadata) :validators)
+                                {:label           (:nationality person-info-module-texts)
+                                 :options         []
+                                 :id              :nationality
+                                 :validators      [:required]
+                                 :rules           {:swap-ssn-birthdate-based-on-nationality [:ssn :birth-date]}
+                                 :koodisto-source {:uri "maatjavaltiot2" :version 1 :default-option "Suomi"}})]})))
 
 (defn- country-of-residence-component
   [metadata]

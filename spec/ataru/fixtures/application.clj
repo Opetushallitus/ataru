@@ -219,17 +219,16 @@
                                                  :value     "050123"
                                                  :fieldType "textField"
                                                  :label     {:fi "Matkapuhelin" :sv "Mobiltelefonnummer"}}
-                                                {:key "nationality" :value "Suomi" :fieldType "dropdown" :label {:fi "Kansalaisuus" :sv "Nationalitet"}}
+                                                {:key "nationality" :value [["246"]] :fieldType "dropdown" :label {:fi "Kansalaisuus" :sv "Nationalitet"}}
                                                 {:key "country-of-residence" :value "246" :fieldType "dropdown" :label {:fi "Asuinmaa" :sv "Boningsland"}}
                                                 {:key "ssn" :value "010101A123N" :fieldType "textField" :label {:fi "Henkilötunnus" :sv "Personnummer"}}
-                                                {:key       "home-town"
-                                                 :value     "Ankkalinna"
-                                                 :fieldType "textField"
-                                                 :label     {:fi "Kotikunta" :sv "Bostadsort"}}
                                                 {:key "first-name" :value "Aku Petteri" :fieldType "textField" :label {:fi "Etunimet" :sv "Förnamn"}}
                                                 {:key "postal-code" :value "00013" :fieldType "textField" :label {:fi "Postinumero" :sv "Postnummer"}}
-                                                {:key "language" :value "suomi" :fieldType "dropdown" :label {:fi "Äidinkieli" :sv "Modersmål"}}
-                                                {:key "gender" :value "Mies" :fieldType "dropdown" :label {:fi "Sukupuoli" :sv "Kön"}}]})
+                                                {:key "postal-office" :value "Paikka" :fieldType "textField" :label {:fi "Postitoimipaikka"}}
+                                                {:key "home-town" :value "273" :fieldType "dropdown" :label {:fi "Kotikunta"}}
+                                                {:key "language" :value "FI" :fieldType "dropdown" :label {:fi "Äidinkieli" :sv "Modersmål"}}
+                                                {:key "gender" :value "1" :fieldType "dropdown" :label {:fi "Sukupuoli" :sv "Kön"}}
+                                                {:key "birth-date" :value "1.1.2001" :fieldType "textField" :label {:fi "Syntymäaika"}}]})
 
 (def person-info-form-application-with-extra-answer
   (update person-info-form-application
@@ -261,8 +260,8 @@
 
 (def person-info-form-application-with-modified-answers
   (-> person-info-form-application-with-more-answers
-      (update-in [:answers 15 :value] conj "Toistuva pakollinen 4")
-      (assoc-in [:answers 16 :value] "modified-attachment-id")
+      (update-in [:answers 17 :value] conj "Toistuva pakollinen 4")
+      (assoc-in [:answers 18 :value] "modified-attachment-id")
       (update :answers (comp vec concat) [{:key       "adjacent-answer-2"
                                            :value     "Vierekkäinen vastaus 2"
                                            :fieldType "textField"}
@@ -304,17 +303,16 @@
                 :value     "050123"
                 :fieldType "textField"
                 :label     {:fi "Matkapuhelin" :sv "Mobiltelefonnummer"}}
-               {:key "nationality" :value "Suomi" :fieldType "dropdown" :label {:fi "Kansalaisuus" :sv "Nationalitet"}}
+               {:key "nationality" :value [["246"]] :fieldType "dropdown" :label {:fi "Kansalaisuus" :sv "Nationalitet"}}
                {:key "country-of-residence" :value "246" :fieldType "dropdown" :label {:fi "Asuinmaa" :sv "Boningsland"}}
                {:key "ssn" :value "010101A123N" :fieldType "textField" :label {:fi "Henkilötunnus" :sv "Personnummer"}}
-               {:key       "home-town"
-                :value     "Ankkalinna"
-                :fieldType "textField"
-                :label     {:fi "Kotikunta" :sv "Bostadsort"}}
                {:key "first-name" :value "Aku Petteri" :fieldType "textField" :label {:fi "Etunimet" :sv "Förnamn"}}
                {:key "postal-code" :value "00013" :fieldType "textField" :label {:fi "Postinumero" :sv "Postnummer"}}
-               {:key "language" :value "suomi" :fieldType "dropdown" :label {:fi "Äidinkieli" :sv "Modersmål"}}
-               {:key "gender" :value "Mies" :fieldType "dropdown" :label {:fi "Sukupuoli" :sv "Kön"}}
+               {:key "postal-office" :value "Paikka" :fieldType "textField" :label {:fi "Postitoimipaikka"}}
+               {:key "home-town" :value "273" :fieldType "dropdown" :label {:fi "Kotikunta"}}
+               {:key "language" :value "FI" :fieldType "dropdown" :label {:fi "Äidinkieli" :sv "Modersmål"}}
+               {:key "gender" :value "1" :fieldType "dropdown" :label {:fi "Sukupuoli" :sv "Kön"}}
+               {:key "birth-date" :value "1.1.2001" :fieldType "textField" :label {:fi "Syntymäaika"}}
                {:key "164954b5-7b23-4774-bd44-dee14071316b" :value ["57af9386-d80c-4321-ab4a-d53619c14a74"] :fieldType "attachment" :label {:fi "Eka liite" :sv ""}}
                {:key       "hakukohteet"
                 :value     ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
@@ -347,7 +345,7 @@
                                                      :fieldType "textField"}
                                                     {:key       "nationality"
                                                      :label     {:en "Nationality" :fi "Kansalaisuus" :sv "Medborgarskap"}
-                                                     :value     "246"
+                                                     :value     [["246"]]
                                                      :fieldType "dropdown"}
                                                     {:key       "2b859fe1-8661-404c-8b19-bfb27604575c"
                                                      :label     {:en "Question" :fi "Pudotusvalikon kysymys" :sv ""}
@@ -380,5 +378,5 @@
                                                      :fieldType "textField"}
                                                     {:key       "home-town"
                                                      :label     {:en "Home town" :fi "Kotikunta" :sv "Hemkommun"}
-                                                     :value     "Ankkalinna"
+                                                     :value     "273"
                                                      :fieldType "textField"}]})
