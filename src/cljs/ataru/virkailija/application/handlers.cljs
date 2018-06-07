@@ -323,7 +323,8 @@
                                                                      review-states/application-hakukohde-processing-states))
                  (assoc-in [:application :selection-state-filter] (extract-unselected-review-states-from-query
                                                                     :selection-state-filter
-                                                                    review-states/application-hakukohde-selection-states)))
+                                                                    review-states/application-hakukohde-selection-states))
+                 (assoc-in [:application :filters] (get-in initial-db/default-db [:application :filters])))
    :dispatch [:application/refresh-haut-and-hakukohteet]
    :http     {:method              :get
               :path                path
