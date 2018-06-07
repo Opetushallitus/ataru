@@ -16,15 +16,14 @@
                           (some (fn [type] (= type (:fieldType %))) ["dropdown" "multipleChoice"]))
                   (let [{:keys [uri version default-option]} (:koodisto-source %)
                         empty-option               [{:value "" :label {:fi "" :sv "" :en ""}}]
-                        koodis                     (get-koodisto-options uri version)
-                        koodis-with-default-option (if default-option
-                                                     (map (fn [option] (if (=
-                                                                             default-option
-                                                                             (-> option :label :fi))
-                                                                         (merge option {:default-value true})
-                                                                         option))
-                                                          koodis)
-                                                     koodis)
+                        koodis                     (map (fn [koodi] (select-keys koodi [:value :label]))
+                                                        (get-koodisto-options uri version))
+                        koodis-with-default-option (cond->> koodis
+                                                            (some? default-option)
+                                                            (map (fn [option]
+                                                                   (cond-> option
+                                                                           (= default-option (-> option :label :fi))
+                                                                           (assoc :default-value true)))))
                         koodis-with-followups (update-options-while-keeping-existing-followups koodis-with-default-option (:options %))]
                     (assoc % :options (if (= (:fieldType %) "dropdown")
                                         (into empty-option koodis-with-followups)

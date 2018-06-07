@@ -1,6 +1,5 @@
 (ns ataru.virkailija.core
-  (:require [devtools.core :as devtools]
-            [reagent.core :as reagent]
+  (:require [reagent.core :as reagent]
             [re-frame.core :as re-frame]
             [re-frisk.core :as re-frisk]
             [ataru.virkailija.handlers]
@@ -19,10 +18,6 @@
             [ataru.virkailija.application.view :as app-handling-view]))
 
 (enable-console-print!)
-
-(when config/debug?
-  (info "dev mode")
-  (devtools/install!))
 
 (defn mount-root []
   (re-frame/clear-subscription-cache!)

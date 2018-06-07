@@ -136,10 +136,23 @@
                           (s/optional-key :belongs-to-hakukohteet) [s/Str]
                           (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
 
-(s/defschema BasicElement (s/conditional
-                            #(= "formField" (:fieldClass %)) FormField
-                            #(= "button" (:fieldClass %)) Button
-                            :else InfoElement))
+(s/defschema Pohjakoulutusristiriita
+  {:id                   s/Str
+   :fieldClass           (s/eq "pohjakoulutusristiriita")
+   :fieldType            (s/eq "pohjakoulutusristiriita")
+   :exclude-from-answers (s/eq true)
+   :metadata             ElementMetadata
+   :params               {:deny-submit s/Bool}
+   :rules                {s/Keyword s/Any}
+   :label                LocalizedStringOptional
+   :text                 LocalizedStringOptional})
+
+(s/defschema BasicElement
+  (s/conditional
+   #(= "formField" (:fieldClass %)) FormField
+   #(= "button" (:fieldClass %)) Button
+   #(= "pohjakoulutusristiriita" (:fieldClass %)) Pohjakoulutusristiriita
+   :else InfoElement))
 
 (s/defschema ChildValidator (s/enum :one-of :birthdate-and-gender-component))
 
@@ -215,7 +228,8 @@
    (s/optional-key :koulutukset) [{:oid                  s/Str
                                    :koulutuskoodi-name   LocalizedStringOptional
                                    :tutkintonimike-names [LocalizedStringOptional]
-                                   :tarkenne             (s/maybe s/Str)}]})
+                                   :tarkenne             (s/maybe s/Str)}]
+   :applicable-base-educations   [s/Str]})
 
 (s/defschema FormTarjontaMetadata
   {:hakukohteet                        [FormTarjontaHakukohde]

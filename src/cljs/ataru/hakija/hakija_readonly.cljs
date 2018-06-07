@@ -223,6 +223,7 @@
          {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children question-group-index]
          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children question-group-index]
          {:fieldClass "formField" :exclude-from-answers true} nil
+         {:fieldClass "pohjakoulutusristiriita"} nil
          {:fieldClass "infoElement"} nil
          {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")} [selectable content application lang question-group-index]
          {:fieldClass "formField" :fieldType (:or "textField" "textArea")} (text content application lang question-group-index)

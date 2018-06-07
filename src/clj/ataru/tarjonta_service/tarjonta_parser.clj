@@ -41,23 +41,40 @@
    :tutkintonimike-names (parse-tutkintonimikes response)
    :tarkenne             (:tarkenne response)})
 
+(defn- applicable-base-educations
+  [hakukohde pohjakoulutusvaatimuskorkeakoulut]
+  (mapcat (fn [uri]
+            (->> pohjakoulutusvaatimuskorkeakoulut
+                 (filter #(= uri (:uri %)))
+                 (mapcat :within)
+                 (filter #(clojure.string/starts-with? (:uri %) "pohjakoulutuskklomake_"))
+                 (map :value)))
+          (:hakukelpoisuusvaatimusUris hakukohde)))
+
 (defn- parse-hakukohde
-  [tarjonta-service hakukohderyhmat haku ohjausparametrit hakukohde]
+  [tarjonta-service
+   hakukohderyhmat
+   haku
+   ohjausparametrit
+   pohjakoulutusvaatimuskorkeakoulut
+   hakukohde]
   (when (:oid hakukohde)
-    {:oid             (:oid hakukohde)
-     :name            (->> (clojure.set/rename-keys (:hakukohteenNimet hakukohde)
-                             lang-key-renames)
-                           (remove (comp clojure.string/blank? second))
-                           (into {}))
-     :hakukohderyhmat (->> (:ryhmaliitokset hakukohde)
-                           (map :ryhmaOid)
-                           (filter #(contains? hakukohderyhmat %)))
-     :tarjoaja-name   (:tarjoajaNimet hakukohde)
-     :form-key        (:ataruLomakeAvain hakukohde)
-     :koulutukset     (->> (map :oid (:koulutukset hakukohde))
-                           (map #(tarjonta-protocol/get-koulutus tarjonta-service %))
-                           (map parse-koulutus))
-     :hakuaika        (hakuaika/get-hakuaika-info haku ohjausparametrit hakukohde)}))
+    {:oid                        (:oid hakukohde)
+     :name                       (->> (clojure.set/rename-keys (:hakukohteenNimet hakukohde)
+                                                               lang-key-renames)
+                                      (remove (comp clojure.string/blank? second))
+                                      (into {}))
+     :hakukohderyhmat            (->> (:ryhmaliitokset hakukohde)
+                                      (map :ryhmaOid)
+                                      (filter #(contains? hakukohderyhmat %)))
+     :tarjoaja-name              (:tarjoajaNimet hakukohde)
+     :form-key                   (:ataruLomakeAvain hakukohde)
+     :koulutukset                (->> (map :oid (:koulutukset hakukohde))
+                                      (map #(tarjonta-protocol/get-koulutus tarjonta-service %))
+                                      (map parse-koulutus))
+     :hakuaika                   (hakuaika/get-hakuaika-info haku ohjausparametrit hakukohde)
+     :applicable-base-educations (applicable-base-educations hakukohde
+                                                             pohjakoulutusvaatimuskorkeakoulut)}))
 
 (defn parse-tarjonta-info-by-haku
   ([tarjonta-service organization-service ohjausparametrit-service haku-oid included-hakukohde-oids]
@@ -65,34 +82,36 @@
           (some? organization-service)
           (some? ohjausparametrit-service)]}
    (when haku-oid
-     (let [hakukohderyhmat  (->> (organization-service/get-hakukohde-groups
-                                  organization-service)
-                                 (map :oid)
-                                 (set))
-           haku             (tarjonta-protocol/get-haku
-                             tarjonta-service
-                             haku-oid)
-           ohjausparametrit (ohjausparametrit-protocol/get-parametri
-                             ohjausparametrit-service
-                             haku-oid)
-           hakukohteet      (->> included-hakukohde-oids
-                                 (keep #(tarjonta-protocol/get-hakukohde
-                                         tarjonta-service
-                                         %))
-                                 (map #(parse-hakukohde tarjonta-service
-                                                        hakukohderyhmat
-                                                        haku
-                                                        ohjausparametrit
-                                                        %)))
-           max-hakukohteet  (:maxHakukohdes haku)]
+     (let [hakukohderyhmat                   (->> (organization-service/get-hakukohde-groups
+                                                   organization-service)
+                                                  (map :oid)
+                                                  (set))
+           haku                              (tarjonta-protocol/get-haku
+                                              tarjonta-service
+                                              haku-oid)
+           ohjausparametrit                  (ohjausparametrit-protocol/get-parametri
+                                              ohjausparametrit-service
+                                              haku-oid)
+           pohjakoulutusvaatimuskorkeakoulut (get-koodisto-options "pohjakoulutusvaatimuskorkeakoulut" 1)
+           hakukohteet                       (->> included-hakukohde-oids
+                                                  (keep #(tarjonta-protocol/get-hakukohde
+                                                          tarjonta-service
+                                                          %))
+                                                  (map #(parse-hakukohde tarjonta-service
+                                                                         hakukohderyhmat
+                                                                         haku
+                                                                         ohjausparametrit
+                                                                         pohjakoulutusvaatimuskorkeakoulut
+                                                                         %)))
+           max-hakukohteet                   (:maxHakukohdes haku)]
        (when (not-empty hakukohteet)
          {:tarjonta
-          {:hakukohteet      hakukohteet
-           :haku-oid         haku-oid
-           :haku-name        (-> haku :nimi (clojure.set/rename-keys lang-key-renames) localized-names)
-           :prioritize-hakukohteet (:usePriority haku)
-           :max-hakukohteet  (when (and max-hakukohteet (pos? max-hakukohteet))
-                               max-hakukohteet)
+          {:hakukohteet                      hakukohteet
+           :haku-oid                         haku-oid
+           :haku-name                        (-> haku :nimi (clojure.set/rename-keys lang-key-renames) localized-names)
+           :prioritize-hakukohteet           (:usePriority haku)
+           :max-hakukohteet                  (when (and max-hakukohteet (pos? max-hakukohteet))
+                                               max-hakukohteet)
            :can-submit-multiple-applications (:canSubmitMultipleApplications haku)}}))))
   ([tarjonta-service organization-service ohjausparametrit-service haku-oid]
    (when haku-oid
@@ -101,6 +120,6 @@
                                   ohjausparametrit-service
                                   haku-oid
                                   (or (->> haku-oid
-                                        (.get-haku tarjonta-service)
-                                        :hakukohdeOids)
+                                           (.get-haku tarjonta-service)
+                                           :hakukohdeOids)
                                       [])))))

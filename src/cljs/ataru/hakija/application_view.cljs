@@ -109,7 +109,7 @@
               @preview-enabled?)
         [readonly-fields form]
         (do
-          (dispatch [:application/run-rule])                ; wtf
+          (dispatch [:application/run-rules])                ; wtf
           (when form
             [editable-fields form submit-status]))))))
 

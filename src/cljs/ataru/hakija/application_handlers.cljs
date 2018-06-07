@@ -291,12 +291,13 @@
     (toggle-values answer (clojure.string/split value #"\s*,\s*"))
     (toggle-values answer value)))
 
-(defn- set-ssn-field-visibility [db]
-  (rules/run-rule {:toggle-ssn-based-fields "ssn"} db))
+(defn- set-ssn-field-visibility
+  [db]
+  (rules/run-rules db {:toggle-ssn-based-fields "ssn"}))
 
 (defn- set-country-specific-fields-visibility
   [db]
-  (rules/run-rule {:change-country-of-residence nil} db))
+  (rules/run-rules db {:change-country-of-residence nil}))
 
 (defonce multi-value-field-types #{"multipleChoice" "singleChoice" "textField" "attachment" "hakukohteet" "dropdown" "textArea"})
 
@@ -522,7 +523,7 @@
       {:dispatch-n (if (or (empty? (:blur-rules field))
                            (not (:valid answer)))
                      []
-                     [[:application/run-rule (:blur-rules field)]])})))
+                     [[:application/run-rules (:blur-rules field)]])})))
 
 (reg-event-fx
   :application/set-application-field-valid
@@ -533,7 +534,7 @@
                        (assoc-in [:application :answers id :valid] valid?)
                        (assoc-in [:application :answers id :errors] errors))}
         (not (empty? rules))
-        (assoc :dispatch [:application/run-rule rules])))))
+        (assoc :dispatch [:application/run-rules rules])))))
 
 (defn- transform-value [value field-descriptor]
   (let [t (case (:id field-descriptor)
@@ -607,7 +608,7 @@
                        (set-repeatable-application-repeated-field-valid id group-idx data-idx valid?)
                        (set-repeatable-application-field-top-level-valid id group-idx required? valid?))}
               (not (empty? rules))
-              (assoc :dispatch [:application/run-rule rules])))))
+              (assoc :dispatch [:application/run-rules rules])))))
 
 
 (reg-event-fx
@@ -657,17 +658,17 @@
 (defn default-error-handler [db [_ response]]
   (assoc db :error {:message "Tapahtui virhe " :detail (str response)}))
 
-(defn application-run-rule [db rule]
+(defn application-run-rules [db rule]
   (if (not-empty rule)
-    (rules/run-rule rule db)
+    (rules/run-rules db rule)
     (rules/run-all-rules db)))
 
 (reg-event-db
-  :application/run-rule
+  :application/run-rules
   (fn [db [_ rule]]
     (if (#{:submitting :submitted} (-> db :application :submit-status))
       db
-      (application-run-rule db rule))))
+      (application-run-rules db rule))))
 
 (reg-event-db
   :application/default-handle-error
@@ -698,10 +699,13 @@
         (update-in [:application :answers :postal-office]
                    merge {:value "" :valid false}))))
 
-(reg-event-db
+(reg-event-fx
   :application/set-multiple-choice-valid
-  (fn [db [_ field-descriptor valid?]]
-    (assoc-in db [:application :answers (keyword (:id field-descriptor)) :valid] valid?)))
+  (fn [{db :db} [_ field-descriptor valid?]]
+    (let [rules (:rules field-descriptor)]
+      (cond-> {:db (assoc-in db [:application :answers (keyword (:id field-descriptor)) :valid] valid?)}
+              (not (empty? rules))
+              (assoc :dispatch [:application/run-rules rules])))))
 
 (reg-event-fx
   :application/toggle-multiple-choice-option
@@ -1119,7 +1123,7 @@
                      (:children field-descriptor))}
 
               (not-empty rules)
-              (assoc :dispatch [:application/run-rule rules])))))
+              (assoc :dispatch [:application/run-rules rules])))))
 
 (reg-event-fx
   :application/dropdown-change

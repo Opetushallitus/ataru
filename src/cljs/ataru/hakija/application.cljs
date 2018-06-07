@@ -29,6 +29,11 @@
                                 :order-idx idx
                                 :label     label
                                 :values    values}])
+               [{:id    "pohjakoulutusristiriita"
+                 :label label}]
+               [:pohjakoulutusristiriita {:valid     true
+                                          :order-idx idx
+                                          :label     label}]
                [{:id         id
                  :fieldClass "formField"
                  :fieldType  "dropdown"

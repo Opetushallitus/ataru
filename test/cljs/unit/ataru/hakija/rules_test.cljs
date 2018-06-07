@@ -19,10 +19,10 @@
                                     :test-rule   rule-fn
                                     :test-rule-2 rule-fn2))
         {:keys [rule-fn-ran?
-                rule-fn2-ran?]} (rules/run-rule rule-to-fn
-                                                {:test-rule   [:argument :a :b :c]
-                                                 :test-rule-2 [:foo]}
-                                                {:this-is-a-test-db :test-db})]
+                rule-fn2-ran?]} (rules/run-rules {:this-is-a-test-db :test-db}
+                                                 {:test-rule   [:argument :a :b :c]
+                                                  :test-rule-2 [:foo]}
+                                                 rule-to-fn)]
     (is (= true rule-fn-ran?))
     (is (= true rule-fn2-ran?))))
 
@@ -93,27 +93,18 @@
   :label {:fi "Henkilötiedot", :sv "Personlig information"},
   :module "person-info"}])
 
-(deftest test-run-rules
-  (let [rules         (rules/extract-rules test-content)
-        expected      [:swap-ssn-birthdate-based-on-nationality
-                       :test-rule-for-test
-                       :test-rule-for-test-duplicate
-                       :test-rule-for-test-duplicate]
-        rule-keywords (flatten (map keys rules))]
-    (is (= expected rule-keywords))))
-
 (deftest test-run-all-rules
   (let [expected [:swap-ssn-birthdate-based-on-nationality
                   :test-rule-for-test
                   :test-rule-for-test-duplicate
                   :test-rule-for-test-duplicate]]
-    (with-redefs [rules/run-rule (fn [rule db]
-                                   (update db :rules-that-have-ran conj rule))]
+    (with-redefs [rules/run-rules (fn [db rules]
+                                    (update db :rules-that-have-ran conj rules))]
       (is (= expected
              (flatten
-               (map keys
-                    (:rules-that-have-ran
-                     (rules/run-all-rules {:form                {:content test-content}
-                                           :rules-that-have-ran []})))))))))
+              (map keys
+                   (:rules-that-have-ran
+                    (rules/run-all-rules {:form                {:content test-content}
+                                          :rules-that-have-ran []})))))))))
 
 

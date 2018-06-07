@@ -12,18 +12,16 @@
               required-hint
               scroll-to-anchor
               is-required-field?
-              group-spacer]]
+              group-spacer
+              markdown-paragraph]]
             [ataru.hakija.application-hakukohde-component :as hakukohde]
+            [ataru.hakija.pohjakoulutusristiriita :as pohjakoulutusristiriita]
             [ataru.util :as util]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]
             [clojure.string :as string]
-            [ataru.hakija.person-info-fields :refer [editing-forbidden-person-info-field-ids]])
-  (:import (goog.html.sanitizer HtmlSanitizer)))
-
-(defonce builder (new HtmlSanitizer.Builder))
-(defonce html-sanitizer (.build builder))
+            [ataru.hakija.person-info-fields :refer [editing-forbidden-person-info-field-ids]]))
 
 (declare render-field)
 
@@ -87,18 +85,6 @@
     (if (string? value)
       (not (clojure.string/blank? value))
       (not (empty? value)))))
-
-(defn- add-link-target-prop
-  [text state]
-  [(string/replace text #"<a href=([^>]+)>" "<a target=\"_blank\" href=$1>") state])
-
-(defn- markdown-paragraph
-  [md-text]
-  (let [sanitized-html (as-> md-text v
-                            (md->html v :custom-transformers [add-link-target-prop])
-                            (.sanitize html-sanitizer v)
-                            (.getTypedStringValue v))]
-    [:div.application__form-info-text {:dangerouslySetInnerHTML {:__html sanitized-html}}]))
 
 (defn info-text [field-descriptor]
   (let [language     (subscribe [:application/form-language])
@@ -817,6 +803,7 @@
                          {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor]
                          {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor]
                          {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohde/hakukohteet field-descriptor]
+                         {:fieldClass "pohjakoulutusristiriita" :fieldType "pohjakoulutusristiriita"} [pohjakoulutusristiriita/pohjakoulutusristiriita field-descriptor]
                          {:fieldClass "infoElement"} [info-element field-descriptor]
                          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor])
             (or (:idx args)
