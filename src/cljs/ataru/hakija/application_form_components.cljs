@@ -1,6 +1,7 @@
 (ns ataru.hakija.application-form-components
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+            [reagent.core :as reagent]
             [reagent.ratom :refer-macros [reaction]]
             [markdown.core :refer [md->html]]
             [cljs.core.match :refer-macros [match]]
@@ -85,6 +86,47 @@
     (if (string? value)
       (not (clojure.string/blank? value))
       (not (empty? value)))))
+
+(defn- add-link-target-prop
+  [text state]
+  [(string/replace text #"<a href=([^>]+)>" "<a target=\"_blank\" href=$1>") state])
+
+(defn- markdown-is-collapsable?
+  [component]
+  (-> component
+      (reagent/dom-node)
+      (.-clientHeight)
+      (> 200)))
+
+(defn- markdown-paragraph
+  [md-text]
+  (let [collapsable      (reagent/atom false)
+        collapsed        (reagent/atom false)]
+    (reagent/create-class
+      {:component-did-mount
+       (fn [component]
+         (let [collapsable? (markdown-is-collapsable? component)]
+           (reset! collapsable collapsable?)
+           (reset! collapsed collapsable?)))
+
+       :component-did-update
+       (fn [component]
+         (reset! collapsable (markdown-is-collapsable? component)))
+
+       :reagent-render
+       (fn []
+         (let [sanitized-html (as-> md-text v
+                                    (md->html v :custom-transformers [add-link-target-prop])
+                                    (.sanitize html-sanitizer v)
+                                    (.getTypedStringValue v))]
+           [:div
+            [:div.application__form-info-text
+             {:dangerouslySetInnerHTML {:__html sanitized-html}
+              :class                   (when @collapsed "application__form-info-text--collapsed")}]
+            (when @collapsable
+              [:div [:a {:on-click #(swap! collapsed not)}
+                     (if @collapsed "Lue lisää v"
+                                    "Sulje ^")]])]))})))
 
 (defn info-text [field-descriptor]
   (let [language     (subscribe [:application/form-language])
