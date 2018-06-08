@@ -341,7 +341,7 @@
     {:oid          key
      :haku         haku
      :form         form
-     :kansalaisuus (-> answers :nationality :value)
+     :kansalaisuus (-> answers :nationality :value (flatten) (first))
      :aidinkieli   (-> answers :language :value)
      :matkapuhelin (-> answers :phone :value)
      :email        email
