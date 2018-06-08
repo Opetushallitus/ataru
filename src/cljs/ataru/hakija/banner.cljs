@@ -4,6 +4,7 @@
             [reagent.ratom :refer [reaction]]
             [reagent.core :as r]
             [cljs.core.match :refer-macros [match]]
+            [ataru.util :as util]
             [ataru.cljs-util :refer [get-translation]]))
 
 (defn logo []
@@ -22,8 +23,7 @@
 (defn invalid-field-status []
   (let [show-details        (r/atom false)
         toggle-show-details #(do (reset! show-details (not @show-details)) nil)
-        lang                (subscribe [:application/form-language])
-        default-lang        (subscribe [:application/default-language])]
+        languages           (subscribe [:application/default-languages])]
     (fn [valid-status]
       (when (seq (:invalid-fields valid-status))
         [:div.application__invalid-field-status
@@ -40,8 +40,7 @@
                     {:on-click toggle-show-details}
                     "x"]]
                   (map (fn [field]
-                         (let [label (or (get-in field [:label @lang])
-                                         (get-in field [:label @default-lang]))]
+                         (let [label (util/non-blank-val (:label field) @languages)]
                            [:a {:href (str "#scroll-to-" (name (:key field)))} [:div label]]))
                        (:invalid-fields valid-status)))])]))))
 

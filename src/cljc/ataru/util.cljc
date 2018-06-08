@@ -178,3 +178,7 @@
        (filter email-pred)
        (first)
        :value))
+
+(defn non-blank-val [m ks]
+  (when m
+    (first (filter not-blank? (vals (select-keys m ks))))))

@@ -74,13 +74,6 @@
            (:cannot-edit field)))))
 
 (re-frame/reg-sub
-  :application/default-language
-  (fn [db]
-    (-> db
-        (get-in [:form :languages])
-        first)))
-
-(re-frame/reg-sub
   :application/get-i18n-text
   (fn [db [_ translations]]
     (get translations @(re-frame/subscribe [:application/form-language]))))
@@ -223,6 +216,13 @@
   :application/prioritize-hakukohteet?
   (fn [db _]
     (-> db :form :tarjonta :prioritize-hakukohteet)))
+
+(re-frame/reg-sub
+  :application/default-languages
+  (fn [db _]
+    (let [default-languages (get-in db [:form :languages])
+          selected-language (get-in db [:form :selected-language])]
+      (cons selected-language default-languages))))
 
 (re-frame/reg-sub
   :application/hakukohde-priority-number
