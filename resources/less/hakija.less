@@ -126,23 +126,38 @@ body {
   p {
     margin-top: 8px;
   }
+
+  transition: height 0.5s ease-in-out;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .application__form-info-text--collapsed {
-  max-height: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  height: 200px;
   position: relative;
+  margin-bottom: 5px;
 }
 
 .application__form-info-text--collapsed:after {
   content:"";
   position:absolute;
-  top:70px;
-  left:0;
+  bottom: 0;
+  left: 0;
   height:130px;
   width:100%;
   background: linear-gradient(rgba(0,0,0,0), white);
+}
+
+.application__form-info-text-collapse-button {
+  background-color: @link-color;
+  cursor: pointer;
+  border-radius: 3px;
+  color: @white;
+  padding: 5px 10px;
+  font-size: 14px;
+  border: none;
+  margin: 5px auto;
+  display: block;
 }
 
 .application__form-field-list {

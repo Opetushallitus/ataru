@@ -101,10 +101,12 @@
 (defn- markdown-paragraph
   [md-text]
   (let [collapsable      (reagent/atom false)
-        collapsed        (reagent/atom false)]
+        collapsed        (reagent/atom false)
+        actual-height    (reagent/atom nil)]
     (reagent/create-class
       {:component-did-mount
        (fn [component]
+         (reset! actual-height (-> component (reagent/dom-node) (.-scrollHeight)))
          (let [collapsable? (markdown-is-collapsable? component)]
            (reset! collapsable collapsable?)
            (reset! collapsed collapsable?)))
@@ -122,11 +124,12 @@
            [:div
             [:div.application__form-info-text
              {:dangerouslySetInnerHTML {:__html sanitized-html}
-              :class                   (when @collapsed "application__form-info-text--collapsed")}]
+              :class                   (when @collapsed "application__form-info-text--collapsed")
+              :style                   (when-not @collapsed {:height @actual-height})}]
             (when @collapsable
-              [:div [:a {:on-click #(swap! collapsed not)}
-                     (if @collapsed "Lue lisää v"
-                                    "Sulje ^")]])]))})))
+              [:div [:button.application__form-info-text-collapse-button {:on-click #(swap! collapsed not)}
+                     (if @collapsed [:span "Lue lisää " [:i.zmdi.zmdi-hc-lg.zmdi-chevron-down]]
+                                    [:span "Sulje ohje " [:i.zmdi.zmdi-hc-lg.zmdi-chevron-up]])]])]))})))
 
 (defn info-text [field-descriptor]
   (let [language     (subscribe [:application/form-language])
