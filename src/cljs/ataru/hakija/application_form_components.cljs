@@ -1,12 +1,10 @@
 (ns ataru.hakija.application-form-components
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
-            [reagent.core :as reagent]
             [reagent.ratom :refer-macros [reaction]]
             [markdown.core :refer [md->html]]
             [cljs.core.match :refer-macros [match]]
             [ataru.cljs-util :as cljs-util :refer [get-translation]]
-            [ataru.hakija.hakija-readonly :as readonly-view]
             [ataru.application-common.application-field-common
              :refer
              [answer-key
@@ -86,66 +84,6 @@
     (if (string? value)
       (not (clojure.string/blank? value))
       (not (empty? value)))))
-
-(defn- add-link-target-prop
-  [text state]
-  [(string/replace text #"<a href=([^>]+)>" "<a target=\"_blank\" href=$1>") state])
-
-(defn- markdown-is-collapsable?
-  [component]
-  (-> component
-      (reagent/dom-node)
-      (.-clientHeight)
-      (> 200)))
-
-(defn- markdown-paragraph
-  [md-text]
-  (let [collapsable          (reagent/atom false)
-        collapsed            (reagent/atom false)
-        actual-height        (reagent/atom nil)
-        timeout              (atom nil)
-        set-component-height (fn [component]
-                               (let [collapsable? (markdown-is-collapsable? component)]
-                                 (reset! collapsable collapsable?)
-                                 (reset! actual-height (-> component
-                                                           (reagent/dom-node)
-                                                           (.getElementsByClassName "application__form-info-text-inner")
-                                                           (aget 0)
-                                                           (.-scrollHeight)
-                                                           (+ 10)))))
-        debounced-resize (fn [component]
-                           (js/clearTimeout @timeout)
-                           (reset! timeout (js/setTimeout (partial set-component-height component) 200)))]
-    (reagent/create-class
-      {:component-did-mount
-       (fn [component]
-         (set-component-height component)
-         (.addEventListener js/window "resize" (partial debounced-resize component))
-         (reset! collapsed (markdown-is-collapsable? component)))
-
-       :component-will-unmount
-       (fn [component]
-         (.removeEventListener js/window "resize" (partial debounced-resize component)))
-
-       :component-did-update
-       (fn [component]
-         (reset! collapsable (markdown-is-collapsable? component)))
-
-       :reagent-render
-       (fn []
-         (let [sanitized-html (as-> md-text v
-                                    (md->html v :custom-transformers [add-link-target-prop])
-                                    (.sanitize html-sanitizer v)
-                                    (.getTypedStringValue v))]
-           [:div
-            [:div.application__form-info-text
-             {:class (when @collapsed "application__form-info-text--collapsed")
-              :style (when-not @collapsed {:height @actual-height})}
-             [:div.application__form-info-text-inner {:dangerouslySetInnerHTML {:__html sanitized-html}}]]
-            (when @collapsable
-              [:div [:button.application__form-info-text-collapse-button {:on-click (fn [] (swap! collapsed not))}
-                     (if @collapsed [:span "Lue lisää " [:i.zmdi.zmdi-hc-lg.zmdi-chevron-down]]
-                                    [:span "Sulje ohje " [:i.zmdi.zmdi-hc-lg.zmdi-chevron-up]])]])]))})))
 
 (defn info-text [field-descriptor]
   (let [language     (subscribe [:application/form-language])
