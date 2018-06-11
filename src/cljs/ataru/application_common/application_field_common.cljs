@@ -24,45 +24,44 @@
   [text state]
   [(string/replace text #"<a href=([^>]+)>" "<a target=\"_blank\" href=$1>") state])
 
-(defn- markdown-is-collapsable?
-  [component]
-  (-> component
-      (reagent/dom-node)
-      (.-clientHeight)
-      (> 200)))
+(defn- set-markdown-height
+  [component collapsable collapsed actual-height]
+  (let [new-height   (-> component
+                         (reagent/dom-node)
+                         (.getElementsByClassName "application__form-info-text-inner")
+                         (aget 0)
+                         (.-scrollHeight)
+                         (+ 10))
+        collapsable? (< 210 new-height)]
+    (reset! actual-height new-height)
+    (reset! collapsable collapsable?)
+    (if (and @collapsed (not collapsable?))
+      (reset! collapsed false))))
 
 (defn- markdown-paragraph
   [md-text]
-  (let [collapsable          (reagent/atom false)
-        collapsed            (reagent/atom false)
-        actual-height        (reagent/atom nil)
-        timeout              (atom nil)
-        set-component-height (fn [component]
-                               (let [collapsable? (markdown-is-collapsable? component)]
-                                 (reset! collapsable collapsable?)
-                                 (reset! actual-height (-> component
-                                                           (reagent/dom-node)
-                                                           (.getElementsByClassName "application__form-info-text-inner")
-                                                           (aget 0)
-                                                           (.-scrollHeight)
-                                                           (+ 10)))))
+  (let [collapsable      (reagent/atom false)
+        collapsed        (reagent/atom false)
+        actual-height    (reagent/atom nil)
+        timeout          (atom nil)
         debounced-resize (fn [component]
                            (js/clearTimeout @timeout)
-                           (reset! timeout (js/setTimeout (partial set-component-height component) 200)))]
+                           (reset!
+                             timeout
+                             (js/setTimeout #(set-markdown-height component collapsable collapsed actual-height) 200)))]
     (reagent/create-class
       {:component-did-mount
        (fn [component]
-         (set-component-height component)
-         (.addEventListener js/window "resize" (partial debounced-resize component))
-         (reset! collapsed (markdown-is-collapsable? component)))
+         (set-markdown-height component collapsable collapsed actual-height)
+         (.addEventListener js/window "resize" #(debounced-resize component)))
 
        :component-will-unmount
        (fn [component]
-         (.removeEventListener js/window "resize" (partial debounced-resize component)))
+         (.removeEventListener js/window "resize" #(debounced-resize component)))
 
        :component-did-update
        (fn [component]
-         (reset! collapsable (markdown-is-collapsable? component)))
+         (set-markdown-height component collapsable collapsed actual-height))
 
        :reagent-render
        (fn []
