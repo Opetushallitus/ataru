@@ -100,16 +100,32 @@
 
 (defn- markdown-paragraph
   [md-text]
-  (let [collapsable      (reagent/atom false)
-        collapsed        (reagent/atom false)
-        actual-height    (reagent/atom nil)]
+  (let [collapsable          (reagent/atom false)
+        collapsed            (reagent/atom false)
+        actual-height        (reagent/atom nil)
+        timeout              (atom nil)
+        set-component-height (fn [component]
+                               (let [collapsable? (markdown-is-collapsable? component)]
+                                 (reset! collapsable collapsable?)
+                                 (reset! actual-height (-> component
+                                                           (reagent/dom-node)
+                                                           (.getElementsByClassName "application__form-info-text-inner")
+                                                           (aget 0)
+                                                           (.-scrollHeight)
+                                                           (+ 10)))))
+        debounced-resize (fn [component]
+                           (js/clearTimeout @timeout)
+                           (reset! timeout (js/setTimeout (partial set-component-height component) 200)))]
     (reagent/create-class
       {:component-did-mount
        (fn [component]
-         (reset! actual-height (-> component (reagent/dom-node) (.-scrollHeight)))
-         (let [collapsable? (markdown-is-collapsable? component)]
-           (reset! collapsable collapsable?)
-           (reset! collapsed collapsable?)))
+         (set-component-height component)
+         (.addEventListener js/window "resize" (partial debounced-resize component))
+         (reset! collapsed (markdown-is-collapsable? component)))
+
+       :component-will-unmount
+       (fn [component]
+         (.removeEventListener js/window "resize" (partial debounced-resize component)))
 
        :component-did-update
        (fn [component]
@@ -123,11 +139,11 @@
                                     (.getTypedStringValue v))]
            [:div
             [:div.application__form-info-text
-             {:dangerouslySetInnerHTML {:__html sanitized-html}
-              :class                   (when @collapsed "application__form-info-text--collapsed")
-              :style                   (when-not @collapsed {:height @actual-height})}]
+             {:class (when @collapsed "application__form-info-text--collapsed")
+              :style (when-not @collapsed {:height @actual-height})}
+             [:div.application__form-info-text-inner {:dangerouslySetInnerHTML {:__html sanitized-html}}]]
             (when @collapsable
-              [:div [:button.application__form-info-text-collapse-button {:on-click #(swap! collapsed not)}
+              [:div [:button.application__form-info-text-collapse-button {:on-click (fn [] (swap! collapsed not))}
                      (if @collapsed [:span "Lue lisää " [:i.zmdi.zmdi-hc-lg.zmdi-chevron-down]]
                                     [:span "Sulje ohje " [:i.zmdi.zmdi-hc-lg.zmdi-chevron-up]])]])]))})))
 
