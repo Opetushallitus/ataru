@@ -25,6 +25,7 @@
                       :sukunimi       (extract-field application "last-name")
                       :sukupuoli      (extract-field application "gender")
                       :aidinkieli     {:kieliKoodi (clojure.string/lower-case (extract-field application "language"))}
+                      :asiointiKieli  {:kieliKoodi (:lang application)}
                       :kansalaisuus   (extract-nationalities (extract-field application "nationality"))
                       :henkiloTyyppi  "OPPIJA"}
         person-id    (extract-field application "ssn")]

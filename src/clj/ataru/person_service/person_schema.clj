@@ -7,6 +7,7 @@
    :kutsumanimi                      s/Str
    :sukunimi                         s/Str
    :aidinkieli                       {(s/required-key :kieliKoodi) s/Str}
+   :asiointiKieli                    {(s/required-key :kieliKoodi) s/Str}
    :kansalaisuus                     [{(s/required-key :kansalaisuusKoodi) s/Str}]
    :eiSuomalaistaHetua               s/Bool
    :sukupuoli                        s/Str
@@ -14,5 +15,5 @@
                                        (s/required-key :yhteystietoArvo)   s/Str}]
    (s/optional-key :syntymaaika)     (s/maybe s/Str)
    (s/optional-key :identifications) [{(s/required-key :idpEntityId) s/Str
-                                       (s/required-key :identifier) s/Str}]
+                                       (s/required-key :identifier)  s/Str}]
    :henkiloTyyppi                    s/Str})
