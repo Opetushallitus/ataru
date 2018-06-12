@@ -31,7 +31,19 @@
                                                                               :obligated     true
                                                                               :not-obligated true}
                                                        :only-identified      {:identified   true
-                                                                              :unidentified true}}}
+                                                                              :unidentified true}
+                                                       :base-education       {:pohjakoulutus_kk_ulk                     true
+                                                                              :pohjakoulutus_lk                         true
+                                                                              :pohjakoulutus_kk                         true
+                                                                              :pohjakoulutus_amt                        true
+                                                                              :pohjakoulutus_ulk                        true
+                                                                              :pohjakoulutus_muu                        true
+                                                                              :pohjakoulutus_avoin                      true
+                                                                              :pohjakoulutus_yo_ammatillinen            true
+                                                                              :pohjakoulutus_am                         true
+                                                                              :pohjakoulutus_yo_ulkomainen              true
+                                                                              :pohjakoulutus_yo                         true
+                                                                              :pohjakoulutus_yo_kansainvalinen_suomessa true}}}
    :haut                 {}
    :hakukohteet          {}
    :fetching-haut        0

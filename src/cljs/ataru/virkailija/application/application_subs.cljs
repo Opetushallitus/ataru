@@ -378,6 +378,18 @@
           hakukohde-selected?
           hakukohderyhma-selected?))))
 
+(defn- filter-by-base-education
+  [application base-education-filters]
+  (let [selected-states    (->> base-education-filters
+                                (filter (fn [[_ v]] (true? v)))
+                                (map first)
+                                (map name)
+                                (set))
+        application-states (-> application
+                               :base-education
+                               (set))]
+    (not-empty (clojure.set/intersection selected-states application-states))))
+
 (re-frame/reg-sub
   :application/filtered-applications
   (fn [db _]
@@ -391,18 +403,25 @@
           selection-states-to-include  (-> db :application :selection-state-filter set)
           filters                      (-> db :application :filters)
           identified?                  (-> db :application :filters :only-identified :identified)
-          unidentified?                (-> db :application :filters :only-identified :unidentified)]
+          unidentified?                (-> db :application :filters :only-identified :unidentified)
+          all-base-educations-enabled? @(re-frame/subscribe [:application/all-pohjakoulutus-filters-selected?])]
       (filter
         (fn [application]
           (and
             (filter-by-yksiloity application identified? unidentified?)
+            (or
+              all-base-educations-enabled?
+              (filter-by-base-education application (:base-education filters)))
             (filter-by-hakukohde-review application selected-hakukohde "processing-state" processing-states-to-include)
             (filter-by-hakukohde-review application selected-hakukohde "selection-state" selection-states-to-include)
             (filter-by-hakukohde-review application selected-hakukohde "language-requirement" (parse-enabled-filters filters :language-requirement))
             (filter-by-hakukohde-review application selected-hakukohde "degree-requirement" (parse-enabled-filters filters :degree-requirement))
             (filter-by-hakukohde-review application selected-hakukohde "eligibility-state" (parse-enabled-filters filters :eligibility-state))
             (filter-by-hakukohde-review application selected-hakukohde "payment-obligation" (parse-enabled-filters filters :payment-obligation))
-            (filter-by-attachment-review application selected-hakukohde "not-checked" attachment-states-to-include)))
+            (filter-by-attachment-review application selected-hakukohde "not-checked" attachment-states-to-include)
+            (or
+              all-base-educations-enabled?
+              (filter-by-base-education application (:base-education filters)))))
         applications))))
 
 (re-frame/reg-sub
@@ -539,3 +558,17 @@
            first
            :event-type
            (= "eligibility-state-automatically-changed")))))
+
+(re-frame/reg-sub
+  :application/all-pohjakoulutus-filters-selected?
+  (fn [db _]
+    (->> (-> db :application :filters :base-education)
+         (vals)
+         (every? true?))))
+
+(re-frame/reg-sub
+  :application/applications-have-base-education-answers
+  (fn [db _]
+    (->> (-> db :application :applications)
+         (some #(not-empty (:base-education %)))
+         (boolean))))

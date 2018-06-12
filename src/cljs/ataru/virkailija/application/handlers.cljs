@@ -323,7 +323,8 @@
                                                                      review-states/application-hakukohde-processing-states))
                  (assoc-in [:application :selection-state-filter] (extract-unselected-review-states-from-query
                                                                     :selection-state-filter
-                                                                    review-states/application-hakukohde-selection-states)))
+                                                                    review-states/application-hakukohde-selection-states))
+                 (assoc-in [:application :filters] (get-in initial-db/default-db [:application :filters])))
    :dispatch [:application/refresh-haut-and-hakukohteet]
    :http     {:method              :get
               :path                path
@@ -924,3 +925,11 @@
     (.scrollIntoView (.getElementById js/document (name field-id)) (js-obj "behavior" "smooth"))
     {:db (update-in db [:application :selected-application-and-form :highlighted-fields] conj field-id)
      :dispatch-later [{:ms 3000 :dispatch [:application/remove-field-highlight field-id]}]}))
+
+(reg-event-db
+  :application/toggle-all-pohjakoulutus-filters
+  (fn [db [_ all-enabled?]]
+    (update-in
+      db
+      [:application :filters :base-education]
+      (fn [filter-map] (reduce-kv (fn [acc k _] (assoc acc k (not all-enabled?))) {} filter-map)))))

@@ -2162,10 +2162,10 @@ th.application__readonly-adjacent--header {
 }
 
 .application-handling__filters-popup {
-  .arrow(top, white, 8px, 25%);
+  .arrow(top, white, 8px, 10%);
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.30));
   box-sizing: border-box;
-  display: block;
+  display: flex;
   border-radius: 3px;
   position: absolute;
   z-index: 10;
@@ -2173,20 +2173,59 @@ th.application__readonly-adjacent--header {
   left: -56px;
   text-align: start;
   background-color: white;
-  width: 350px;
+  width: 300px;
   padding: 15px;
   font-size: 13px;
   line-height: 21px;
   color: @text-color;
 }
 
+.application-handling__filters-popup--two-cols {
+  width: 800px;
+}
+
+.application-handling__popup-application-count {
+  position: absolute;
+}
+
+.application-handling__popup-column {
+  margin-top: 20px;
+}
+
+.application-handling__popup-column--left {
+  margin-top: 20px;
+  flex: 0 0 240px;
+}
+
+.application-handling__popup-column--right {
+  margin-top: 20px;
+  flex: 0 0 530px;
+}
+
 .application-handling__filter-checkbox-label {
   display: block;
   .light;
+  padding-left: 19px;
+  text-indent: -19px;
+  color: @gray;
+  cursor: pointer;
+  margin-bottom: 2px;
+}
+
+.application-handling__filter-checkbox-label--all {
+  margin-bottom: 5px;
+}
+
+.application-handling__filter-checkbox-label--checked {
+  color: @text-color;
 }
 
 .application-handling__filter-group {
   margin-bottom: 10px;
+}
+
+.application-handling__filter-group-title {
+  margin-bottom: 5px;
 }
 
 .application-handling__filters-count-separator {
