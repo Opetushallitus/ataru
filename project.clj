@@ -131,7 +131,7 @@
                         :source-paths ["src/cljs" "src/cljc"]
                         :figwheel     {:on-jsload "ataru.virkailija.core/mount-root"}
                         :compiler     {:main                 "ataru.virkailija.core"
-                                       :preloads             '[devtools.preload]
+                                       :preloads             [devtools.preload]
                                        :output-to            "resources/public/js/compiled/virkailija-app.js"
                                        :output-dir           "resources/public/js/compiled/out"
                                        :asset-path           "/lomake-editori/js/compiled/out"
