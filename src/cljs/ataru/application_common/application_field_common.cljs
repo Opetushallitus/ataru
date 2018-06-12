@@ -32,7 +32,7 @@
                          (aget 0)
                          (.-scrollHeight)
                          (+ 10))
-        collapsable? (< 210 new-height)]
+        collapsable? (< 140 new-height)]
     (reset! actual-height new-height)
     (reset! collapsable collapsable?)
     (if (and @collapsed (not collapsable?))
@@ -41,7 +41,7 @@
 (defn- markdown-paragraph
   [md-text]
   (let [collapsable      (reagent/atom false)
-        collapsed        (reagent/atom false)
+        collapsed        (reagent/atom true)
         actual-height    (reagent/atom nil)
         timeout          (atom nil)
         debounced-resize (fn [component]
