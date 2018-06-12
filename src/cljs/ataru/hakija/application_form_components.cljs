@@ -63,14 +63,12 @@
     (str "application-form-field-label-" (:id field-descriptor))))
 
 (defn- label [field-descriptor]
-  (let [lang         (subscribe [:application/form-language])
-        default-lang (subscribe [:application/default-language])
-        label-meta   (if-let [label-id (id-for-label field-descriptor)]
-                       {:id label-id}
-                       {:for (:id field-descriptor)})]
+  (let [languages  (subscribe [:application/default-languages])
+        label-meta (if-let [label-id (id-for-label field-descriptor)]
+                     {:id label-id}
+                     {:for (:id field-descriptor)})]
     (fn [field-descriptor]
-      (let [label (non-blank-val (get-in field-descriptor [:label @lang])
-                                 (get-in field-descriptor [:label @default-lang]))]
+      (let [label (util/non-blank-val (:label field-descriptor) @languages)]
         [:label.application__form-field-label
          label-meta
          [:span (str label (required-hint field-descriptor))]
@@ -87,11 +85,9 @@
       (not (empty? value)))))
 
 (defn info-text [field-descriptor]
-  (let [language     (subscribe [:application/form-language])
-        default-lang (subscribe [:application/default-language])]
+  (let [languages (subscribe [:application/default-languages])]
     (fn [field-descriptor]
-      (when-let [info (non-blank-val (@language (-> field-descriptor :params :info-text :label))
-                                     (@default-lang (-> field-descriptor :params :info-text :label)))]
+      (when-let [info (util/non-blank-val (-> field-descriptor :params :info-text :label) @languages)]
         [markdown-paragraph info]))))
 
 (defn question-hakukohde-names [field-descriptor]
@@ -106,8 +102,8 @@
          (when @show-hakukohde-list?
            [:ul.application__question_hakukohde_names
             (for [hakukohde selected-hakukohteet-for-field
-                  :let [name          (some (:name hakukohde) [lang :fi :sv :en])
-                        tarjoaja-name (some (:tarjoaja-name hakukohde) [lang :fi :sv :en])]]
+                  :let [name          (util/non-blank-val (:name hakukohde) [lang :fi :sv :en])
+                        tarjoaja-name (util/non-blank-val (:tarjoaja-name hakukohde) [lang :fi :sv :en])]]
               [:li {:key (str (:id field-descriptor) "-" (:oid hakukohde))}
                name " - " tarjoaja-name])])]))))
 
@@ -125,8 +121,7 @@
                        @(subscribe [:state-query
                                     (cond-> [:application :answers id]
                                       idx (concat [:values idx 0]))]))
-        lang         (subscribe [:application/form-language])
-        default-lang (subscribe [:application/default-language])
+        languages           (subscribe [:application/default-languages])
         size         (get-in field-descriptor [:params :size])
         size-class   (text-field-size->class size)
         on-blur      #(dispatch [:application/textual-field-blur field-descriptor])
@@ -147,7 +142,7 @@
        (merge {:id           id
                :type         "text"
                :placeholder  (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                               (non-blank-val (get input-hint @lang) (get input-hint @default-lang)))
+                               (util/non-blank-val input-hint @languages))
                :class        (str size-class
                                   (if show-error?
                                     " application__form-field-error"
@@ -168,15 +163,13 @@
          [:div.application__validation-error-dialog__box
           (doall
            (map-indexed (fn [idx error]
-                          (with-meta (non-blank-val (get error @lang)
-                                                    (get error @default-lang))
+                          (with-meta (util/non-blank-val error @languages)
                             {:key (str "error-" idx)}))
                         (:errors answer)))]])]]))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [id           (keyword (:id field-descriptor))
         size-class   (text-field-size->class (get-in field-descriptor [:params :size]))
-        lang         (subscribe [:application/form-language])
         cannot-edit? (subscribe [:application/cannot-edit? id])]
     (fn [field-descriptor & {div-kwd :div-kwd question-group-idx :idx :or {div-kwd :div.application__form-field}}]
       (let [values    (subscribe [:state-query [:application :answers id :values question-group-idx]])
@@ -289,18 +282,16 @@
 (declare render-field)
 
 (defn wrapper-field [field-descriptor children]
-  (let [lang         (subscribe [:application/form-language])
-        default-lang (subscribe [:application/default-language])]
+  (let [languages           (subscribe [:application/default-languages])]
     (fn [field-descriptor children]
-      (let [label (non-blank-val (get-in field-descriptor [:label @lang])
-                                 (get-in field-descriptor [:label @default-lang]))]
+      (let [label (util/non-blank-val (:label field-descriptor) @languages)]
         [:div.application__wrapper-element
          [:div.application__wrapper-heading
           [:h2 label]
           [scroll-to-anchor field-descriptor]]
          (into [:div.application__wrapper-contents]
            (for [child children]
-             [render-field child lang]))]))))
+             [render-field child]))]))))
 
 (defn- remove-question-group-button [field-descriptor idx]
   (let [mouse-over? (subscribe [:application/mouse-over-remove-question-group-button
@@ -341,11 +332,11 @@
        [remove-question-group-button field-descriptor idx])]))
 
 (defn question-group [field-descriptor children]
-  (let [lang          @(subscribe [:application/form-language])
-        label         (get-in field-descriptor [:label lang] "")
+  (let [languages     (subscribe [:application/default-languages])
+        label         (util/non-blank-val (:label field-descriptor) @languages)
         row-count     (subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]])
         cannot-edits? (map #(subscribe [:application/cannot-edit? (keyword (:id %))])
-                           (util/flatten-form-fields children))]
+                        (util/flatten-form-fields children))]
     [:div.application__question-group
      (when-not (clojure.string/blank? label)
        [:h3.application__question-group-heading label])
@@ -385,13 +376,12 @@
        ^{:key (:id followup)}
        [render-field followup])]))
 
-(defn- non-blank-option-label [option lang]
-  (some #(non-blank-val (get-in option [:label %]) nil)
-        [lang :fi :sv :en]))
+(defn- non-blank-option-label [option langs]
+  (util/non-blank-val (:label option) langs))
 
 (defn dropdown [field-descriptor & {:keys [div-kwd editing idx] :or {div-kwd :div.application__form-field editing false}}]
   (let [application  (subscribe [:state-query [:application]])
-        lang         (subscribe [:application/form-language])
+        languages    (subscribe [:application/default-languages])
         id           (keyword (:id field-descriptor))
         disabled?    @(subscribe [:application/cannot-edit? id])
         id           (answer-key field-descriptor)
@@ -440,10 +430,10 @@
              (fn [idx option]
                [:option {:value (:value option)
                          :key   idx}
-                (non-blank-option-label option @lang)])
+                (non-blank-option-label option @languages)])
              (cond->> (:options field-descriptor)
                       (some? (:koodisto-source field-descriptor))
-                      (sort-by #(non-blank-option-label % @lang))))))]]
+                      (sort-by #(non-blank-option-label % @languages))))))]]
      (when-not idx
        (dropdown-followups field-descriptor @value))]))
 
@@ -457,9 +447,8 @@
          followups)]])
 
 (defn- multiple-choice-option [field-descriptor option parent-id question-group-idx]
-  (let [lang         (subscribe [:application/form-language])
-        default-lang (subscribe [:application/default-language])
-        label        (non-blank-option-label option @lang)
+  (let [languages    (subscribe [:application/default-languages])
+        label        (non-blank-option-label option @languages)
         value        (:value option)
         option-id    (util/component-id)
         cannot-edit? (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])]
@@ -490,7 +479,7 @@
 (defn multiple-choice
   [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
   (let [id           (answer-key field-descriptor)
-        lang         (subscribe [:application/form-language])]
+        languages    (subscribe [:application/default-languages])]
     (fn [field-descriptor & {:keys [div-kwd disabled idx] :or {div-kwd :div.application__form-field disabled false}}]
       [div-kwd
        [label field-descriptor]
@@ -509,13 +498,11 @@
                        (cond->> (:options field-descriptor)
                          (and (some? (:koodisto-source field-descriptor))
                               (not (:koodisto-ordered-by-user field-descriptor)))
-                         (sort-by #(non-blank-option-label % @lang)))))]])))
+                         (sort-by #(non-blank-option-label % @languages)))))]])))
 
-(defn- single-choice-option [option parent-id field-descriptor question-group-idx lang use-multi-choice-style?]
-  (let [default-lang (subscribe [:application/default-language])
-        cannot-edit? (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])
-        label        (non-blank-val (get-in option [:label @lang])
-                                    (get-in option [:label @default-lang]))
+(defn- single-choice-option [option parent-id field-descriptor question-group-idx languages use-multi-choice-style?]
+  (let [cannot-edit? (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])
+        label        (util/non-blank-val (:label option) @languages)
         option-value (:value option)
         option-id    (util/component-id)
         checked?     (subscribe [:application/single-choice-option-checked? parent-id option-value question-group-idx])
@@ -546,17 +533,18 @@
            (multi-choice-followups (:followups option))
            [:div.application__form-single-choice-followups-indicator]))])))
 
-(defn- use-multi-choice-style? [single-choice-field lang]
+(defn- use-multi-choice-style? [single-choice-field langs]
   (or (< 3 (count (:options single-choice-field)))
       (some (fn [option]
-              (< 50 (-> option :label lang count)))
-            (:options single-choice-field))))
+              (let [label (util/non-blank-val (:label option) langs)]
+                (< 50 (count label))))
+        (:options single-choice-field))))
 
 (defn single-choice-button [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [button-id               (answer-key field-descriptor)
         validators              (:validators field-descriptor)
-        lang                    (subscribe [:application/form-language])
-        use-multi-choice-style? (use-multi-choice-style? field-descriptor @lang)]
+        languages               (subscribe [:application/default-languages])
+        use-multi-choice-style? (use-multi-choice-style? field-descriptor @languages)]
     (fn [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
       (let [single-choice-value (subscribe [:state-query [:application :answers (keyword (:id field-descriptor)) :value]])
             followups           (->> (:options field-descriptor)
@@ -578,7 +566,7 @@
           (doall
             (map-indexed (fn [option-idx option]
                            ^{:key (str "single-choice-" (when idx (str idx "-")) (:id field-descriptor) "-" option-idx)}
-                           [single-choice-option option button-id field-descriptor idx lang use-multi-choice-style?])
+                           [single-choice-option option button-id field-descriptor idx languages use-multi-choice-style?])
                          (:options field-descriptor)))]
          (when (and (not idx)
                     (not use-multi-choice-style?)
