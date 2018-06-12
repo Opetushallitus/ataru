@@ -40,3 +40,9 @@
      review-states/hakukohde-review-type-names))
   ([application]
     (get-all-reviews-for-all-requirements application nil)))
+
+(defn- attachment-reviews-with-no-requirements [application]
+  (let [reviews (:application-attachment-reviews application)
+        no-reqs (clojure.set/difference (set (:hakukohde application))
+                                        (set (map :hakukohde reviews)))]
+    (concat reviews (map (fn [oid] {:hakukohde oid :state review-states/no-attachment-requirements}) no-reqs))))

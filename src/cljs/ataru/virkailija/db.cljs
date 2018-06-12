@@ -13,7 +13,7 @@
    ; Initial active panel on page load.
    :active-panel         :editor
    :application          {:review                     {}
-                          :attachment-state-filter    (mapv first review-states/attachment-hakukohde-review-types)
+                          :attachment-state-filter    (mapv first review-states/attachment-hakukohde-review-types-with-no-requirements)
                           :processing-state-filter    (mapv first review-states/application-hakukohde-processing-states)
                           :selection-state-filter     (mapv first review-states/application-hakukohde-selection-states)
                           :sort                       application-sorting/initial-sort

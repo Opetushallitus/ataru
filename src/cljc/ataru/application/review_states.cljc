@@ -64,5 +64,11 @@
    ["checked" "Tarkistettu"]
    ["incomplete" "Puutteellinen"]])
 
+(def no-attachment-requirements "no-requirements")
+
+(def attachment-hakukohde-review-types-with-no-requirements
+  (concat attachment-hakukohde-review-types
+    [[no-attachment-requirements "Liitteettömät"]]))
+
 (def attachment-review-type-names
   (map first attachment-hakukohde-review-types))
