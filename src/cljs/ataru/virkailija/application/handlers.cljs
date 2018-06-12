@@ -423,8 +423,7 @@
       (assoc-in [:application :review :attachment-reviews] attachment-reviews)
       (update-in [:application :selected-review-hakukohde]
                  (fn [current-hakukohde]
-                   (or ((set (:hakukohde application)) current-hakukohde)
-                       ((set (:hakukohde application)) (get-in db [:application :selected-hakukohde]))
+                   (or ((set (:hakukohde application)) (get-in db [:application :selected-hakukohde]))
                        (first (:hakukohde application))
                        "form")))
       (assoc-in [:application :information-requests] information-requests)))

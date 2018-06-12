@@ -421,9 +421,7 @@
                [:span.application-handling__application-hakukohde-cell
                 {:class    (when (= selected-hakukohde hakukohde-oid)
                              "application-handling__application-hakukohde-cell--selected")
-                 :on-click (fn []
-                             (select-application (:key application))
-                             (dispatch [:state-update #(assoc-in % [:application :selected-review-hakukohde] hakukohde-oid)]))}
+                 :on-click (fn [] (select-application (:key application)))}
                 [hakukohde-and-tarjoaja-name hakukohde-oid]])
              [:span.application-handling__application-hl
               {:class (when direct-form-application? "application-handling__application-hl--direct-form")}]
