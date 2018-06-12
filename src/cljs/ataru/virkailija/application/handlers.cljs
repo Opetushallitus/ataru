@@ -421,10 +421,11 @@
       (assoc-in [:application :notes] (review-notes-by-hakukohde-and-state-name review-notes))
       (assoc-in [:application :review :hakukohde-reviews] hakukohde-reviews)
       (assoc-in [:application :review :attachment-reviews] attachment-reviews)
-      (update-in [:application :selected-review-hakukohde] (fn [current-hakukohde]
-                                                             (or
-                                                               (when (contains? (set (:hakukohde application)) current-hakukohde) current-hakukohde)
-                                                               (or (-> application :hakukohde (first)) "form"))))
+      (update-in [:application :selected-review-hakukohde]
+                 (fn [current-hakukohde]
+                   (or ((set (:hakukohde application)) (get-in db [:application :selected-hakukohde]))
+                       (first (:hakukohde application))
+                       "form")))
       (assoc-in [:application :information-requests] information-requests)))
 
 (defn review-autosave-predicate [current prev]
