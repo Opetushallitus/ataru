@@ -42,7 +42,7 @@
         attachment-state-filter (state-filter->query-param
                                  db
                                  :attachment-state-filter
-                                 review-states/attachment-hakukohde-review-types)
+                                 review-states/attachment-hakukohde-review-types-with-no-requirements)
         processing-state-filter (state-filter->query-param
                                  db
                                  :processing-state-filter
@@ -117,18 +117,19 @@
     {}
     applications))
 
+(defn- map-vals-to-zero [m]
+  (into {} (for [[k v] m] [k 0])))
+
 (defn attachment-state-counts
   [applications selected-hakukohde]
   (reduce
     (fn [acc application]
-      (merge-with (fn [prev new]
-                    (+ prev (if (not-empty new) 1 0)))
-                  acc
-                  (group-by :state
-                            (cond->> (:application-attachment-reviews application)
-                                     (some? selected-hakukohde)
-                                     (filter #(= (:hakukohde %) selected-hakukohde))))))
-    {"checked" 0 "not-checked" 0 "incomplete" 0}
+      (merge-with (fn [prev new] (+ prev (if (not-empty new) 1 0)))
+        acc
+        (group-by :state (cond->> (application-states/attachment-reviews-with-no-requirements application)
+                                  (some? selected-hakukohde)
+                                  (filter #(= (:hakukohde %) selected-hakukohde))))))
+    (map-vals-to-zero review-states/attachment-hakukohde-review-types-with-no-requirements)
     applications))
 
 (defn- update-review-field-of-selected-application-in-list
@@ -317,7 +318,7 @@
                  (assoc-in [:application :fetching-applications] true)
                  (assoc-in [:application :attachment-state-filter] (extract-unselected-review-states-from-query
                                                                      :attachment-state-filter
-                                                                     review-states/attachment-hakukohde-review-types))
+                                                                     review-states/attachment-hakukohde-review-types-with-no-requirements))
                  (assoc-in [:application :processing-state-filter] (extract-unselected-review-states-from-query
                                                                      :processing-state-filter
                                                                      review-states/application-hakukohde-processing-states))

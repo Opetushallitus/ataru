@@ -740,7 +740,7 @@
          [hakukohde-state-filter-controls
           :attachment-state-filter
           "Liitepyynnöt"
-          review-states/attachment-hakukohde-review-types
+          review-states/attachment-hakukohde-review-types-with-no-requirements
           (subscribe [:state-query [:application :attachment-state-counts]])]])
       [:span.application-handling__list-row--state
        [hakukohde-state-filter-controls

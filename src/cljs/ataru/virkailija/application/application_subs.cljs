@@ -351,13 +351,13 @@
            (count hakukohteet))))))
 
 (defn- filter-by-attachment-review
-  [application selected-hakukohde default-state-name states-to-include]
-  (let [states (->> (:application-attachment-reviews application)
-                    (filter #(or (not selected-hakukohde) (= selected-hakukohde (:hakukohde %))))
-                    (map :state))]
-    (when (or (not-empty states)
-              (= (count review-states/attachment-hakukohde-review-types) (count states-to-include)))
-      (state-filter states states-to-include default-state-name (:hakukohde application)))))
+  [application selected-hakukohde states-to-include]
+  (let [states           (->> (application-states/attachment-reviews-with-no-requirements application)
+                              (filter #(or (not selected-hakukohde) (= selected-hakukohde (:hakukohde %))))
+                              (map :state))]
+    (not (empty? (clojure.set/intersection
+                  states-to-include
+                  (set states))))))
 
 (defn- parse-enabled-filters
   [filters kw]
@@ -418,10 +418,9 @@
             (filter-by-hakukohde-review application selected-hakukohde "degree-requirement" (parse-enabled-filters filters :degree-requirement))
             (filter-by-hakukohde-review application selected-hakukohde "eligibility-state" (parse-enabled-filters filters :eligibility-state))
             (filter-by-hakukohde-review application selected-hakukohde "payment-obligation" (parse-enabled-filters filters :payment-obligation))
-            (filter-by-attachment-review application selected-hakukohde "not-checked" attachment-states-to-include)
             (or
               all-base-educations-enabled?
-              (filter-by-base-education application (:base-education filters)))))
+              (filter-by-attachment-review application selected-hakukohde attachment-states-to-include))))
         applications))))
 
 (re-frame/reg-sub
