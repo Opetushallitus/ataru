@@ -675,21 +675,27 @@
        hakukohteet-in-priority-order))
 
 (defn- unwrap-external-application
-  [{:keys [key haku organization_oid person_oid lang email hakukohde] :as application}]
-  {:oid              key
-   :hakuOid          haku
-   :organization-oid organization_oid
-   :henkiloOid       person_oid
-   :asiointikieli    lang
-   :email            email
-   :hakutoiveet      (->> (application-states/get-all-reviews-for-all-requirements
-                           (clojure.set/rename-keys application
-                                                    {:application_hakukohde_reviews :application-hakukohde-reviews})
-                           nil)
-                          (group-by :hakukohde)
-                          (requirement-names-mapped-to-states-by-hakukohde)
-                          (hakutoiveet-to-list)
-                          (hakutoiveet-priority-order hakukohde))})
+  [{:keys [key haku organization_oid person_oid lang email hakukohde content] :as application}]
+  (let [answers (answers-by-key (:answers content))]
+    {:oid              key
+     :hakuOid          haku
+     :organization-oid organization_oid
+     :henkiloOid       person_oid
+     :asiointikieli    lang
+     :email            email
+     :lahiosoite       (-> answers :address :value)
+     :postinumero      (-> answers :postal-code :value)
+     :postitoimipaikka (or (-> answers :postal-office :value)
+                           (-> answers :city :value))
+     :maa              (-> answers :country-of-residence :value)
+     :hakutoiveet      (->> (application-states/get-all-reviews-for-all-requirements
+                             (clojure.set/rename-keys application
+                                                      {:application_hakukohde_reviews :application-hakukohde-reviews})
+                             nil)
+                            (group-by :hakukohde)
+                            (requirement-names-mapped-to-states-by-hakukohde)
+                            (hakutoiveet-to-list)
+                            (hakutoiveet-priority-order hakukohde))}))
 
 (defn get-external-applications
   [haku-oid hakukohde-oid hakemus-oids]

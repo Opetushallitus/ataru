@@ -689,6 +689,7 @@ SELECT
   ssn,
   hakukohde,
   lf.organization_oid,
+  la.content,
   (SELECT json_agg(json_build_object('requirement', requirement,
                                      'state', state,
                                      'hakukohde', hakukohde))
