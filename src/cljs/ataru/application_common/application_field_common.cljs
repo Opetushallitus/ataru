@@ -1,7 +1,8 @@
 (ns ataru.application-common.application-field-common
   (:require [markdown.core :refer [md->html]]
             [reagent.core :as reagent]
-            [clojure.string :as string])
+            [clojure.string :as string]
+            [ataru.cljs-util :refer [get-translation]])
   (:import (goog.html.sanitizer HtmlSanitizer)))
 
 (defn answer-key [field-data]
@@ -76,8 +77,8 @@
              [:div.application__form-info-text-inner {:dangerouslySetInnerHTML {:__html sanitized-html}}]]
             (when @collapsable
               [:div [:button.application__form-info-text-collapse-button {:on-click (fn [] (swap! collapsed not))}
-                     (if @collapsed [:span "Lue lisää " [:i.zmdi.zmdi-hc-lg.zmdi-chevron-down]]
-                                    [:span "Sulje ohje " [:i.zmdi.zmdi-hc-lg.zmdi-chevron-up]])]])]))})))
+                     (if @collapsed [:span (str (get-translation :read-more) " ") [:i.zmdi.zmdi-hc-lg.zmdi-chevron-down]]
+                                    [:span (str (get-translation :read-less) " ") [:i.zmdi.zmdi-hc-lg.zmdi-chevron-up]])]])]))})))
 
 (defn render-paragraphs [s]
   (->> (clojure.string/split s "\n")

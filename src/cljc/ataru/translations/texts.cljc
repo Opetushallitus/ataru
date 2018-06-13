@@ -183,7 +183,13 @@
                                              :en "Pohjakoulutusvaatimus"}
    :muokkaa-hakukohteita                    {:fi "Muokkaa hakukohteita"
                                              :sv "Muokkaa hakukohteita"
-                                             :en "Muokkaa hakukohteita"}})
+                                             :en "Muokkaa hakukohteita"}
+   :read-more {:fi "Lue lisää"
+               :sv "Läs vidare"
+               :en "Read more"}
+   :read-less {:fi "Sulje ohje"
+               :sv "Dölj anvisning"
+               :en "Hide instructions"}})
 
 (def general-texts
   {:yes                {:en "Yes"
