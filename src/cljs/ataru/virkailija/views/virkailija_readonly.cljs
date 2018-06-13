@@ -214,11 +214,16 @@
           [:p.application__text-field-paragraph
            (str "Tuntematon vastausvaihtoehto " value)]]))])])
 
-(defn- haku-row [haku-name]
+(defn- haku-row [haku-name haku-oid]
   [:div.application__form-field
    [:div.application-handling__hakukohde-wrapper
     [:div.application-handling__review-area-haku-heading
-     haku-name]]])
+     (str haku-name " ")
+     (when haku-oid
+       [:a.editor-form__haku-admin-link
+        {:href   (str "/tarjonta-app/index.html#/haku/" haku-oid)
+         :target "_blank"}
+        [:i.zmdi.zmdi-open-in-new]])]]])
 
 (defn- hakukohteet-list-row [hakukohde-oid]
   [:div.application__form-field
@@ -228,7 +233,12 @@
        @(subscribe [:application/hakukohde-priority-number hakukohde-oid])])
     [:div
      [:div.application-handling__review-area-hakukohde-heading
-      @(subscribe [:application/hakukohde-label hakukohde-oid])]
+
+      (str @(subscribe [:application/hakukohde-label hakukohde-oid]) " ")
+      [:a.editor-form__haku-admin-link
+       {:href   (str "/tarjonta-app/index.html#/hakukohde/" hakukohde-oid)
+        :target "_blank"}
+       [:i.zmdi.zmdi-open-in-new]]]
      [:div.application-handling__review-area-koulutus-heading
       @(subscribe [:application/hakukohde-description hakukohde-oid])]]]])
 
@@ -242,7 +252,8 @@
       {:class (when @(subscribe [:application/field-highlighted? :hakukohteet])
                 "highlighted")
        :id    "hakukohteet"}
-      [haku-row @(subscribe [:application/selected-application-haku-name])]
+      [haku-row @(subscribe [:application/selected-application-haku-name])
+                @(subscribe [:state-query [:application :selected-application-and-form :application :haku]])]
       (for [hakukohde-oid hakukohteet]
         ^{:key (str "hakukohteet-list-row-" hakukohde-oid)}
         [hakukohteet-list-row hakukohde-oid])]]))
