@@ -142,7 +142,7 @@
    :file-type-forbidden                     {:fi "Tiedostoa ei ladattu, yritä uudelleen"
                                              :en "File failed to upload, try again"
                                              :sv "Fil inte laddat, försök igen"}
-   :question-for-hakukohde                  {:fi "Kysymys koskee hakukohteita"
+   :question-for-hakukohde                  {:fi "Kysymys kuuluu hakukohteisiin"
                                              :en "This question is for application options"
                                              :sv "Frågan är för ansökningsmålar"}
    :show-more                               {:fi "Näytä lisää.."
