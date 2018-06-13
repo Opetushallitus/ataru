@@ -9,6 +9,7 @@
                      :kutsumanimi        "Aku"
                      :sukunimi           "Ankka"
                      :aidinkieli         {:kieliKoodi "fi"}
+                     :asiointiKieli      {:kieliKoodi "fi"}
                      :kansalaisuus       [{:kansalaisuusKoodi "246"}]
                      :eiSuomalaistaHetua false
                      :sukupuoli          "2"
@@ -24,7 +25,8 @@
                                     {:key "birth-date" :value "29.10.1984"}
                                     {:key "language" :value "SV"}
                                     {:key "nationality" :value [["247"]]}
-                                    {:key "gender" :value "1"}]})
+                                    {:key "gender" :value "1"}]
+                          :lang    "sv"})
 
 (def dual-citizenship-application {:answers [{:key "email", :value "roger.moore@ankkalinna.com"}
                                              {:key "first-name" :value "Roger"}
@@ -33,12 +35,14 @@
                                              {:key "birth-date" :value "29.10.1984"}
                                              {:key "language" :value "SV"}
                                              {:key "nationality" :value [["247"] ["528"]]}
-                                             {:key "gender" :value "1"}]})
+                                             {:key "gender" :value "1"}]
+                                   :lang    "sv"})
 
 (def expected-foreign-person {:etunimet           "Roger"
                               :kutsumanimi        "Roger"
                               :sukunimi           "Moore"
                               :aidinkieli         {:kieliKoodi "sv"}
+                              :asiointiKieli      {:kieliKoodi "sv"}
                               :syntymaaika        "1984-10-29"
                               :eiSuomalaistaHetua true
                               :kansalaisuus       [{:kansalaisuusKoodi "247"}]
@@ -53,6 +57,7 @@
                                        :kutsumanimi        "Roger"
                                        :sukunimi           "Moore"
                                        :aidinkieli         {:kieliKoodi "sv"}
+                                       :asiointiKieli      {:kieliKoodi "sv"}
                                        :syntymaaika        "1984-10-29"
                                        :eiSuomalaistaHetua true
                                        :kansalaisuus       [{:kansalaisuusKoodi "247"} {:kansalaisuusKoodi "528"}]
