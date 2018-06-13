@@ -126,6 +126,38 @@ body {
   p {
     margin-top: 8px;
   }
+
+  transition: height 0.5s ease-in-out;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.application__form-info-text--collapsed {
+  height: 120px;
+  position: relative;
+  margin-bottom: 5px;
+}
+
+.application__form-info-text--collapsed:after {
+  content:"";
+  position:absolute;
+  bottom: 0;
+  left: 0;
+  height:60px;
+  width:100%;
+  background: linear-gradient(rgba(0,0,0,0), white);
+}
+
+.application__form-info-text-collapse-button {
+  color: @link-color;
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 5px 10px;
+  font-size: 14px;
+  border: none;
+  margin: 0 auto;
+  margin-bottom: 5px;
+  display: block;
 }
 
 .application__form-field-list {
