@@ -402,10 +402,11 @@
 (defn info-addon
   "Info text which is added to an existing component"
   [path]
-  (let [id        (util/new-uuid)
-        checked?  (reaction (some? @(subscribe [:editor/get-component-value path :params :info-text :label])))
-        languages (subscribe [:editor/languages])
-        form-locked (subscribe [:editor/current-form-locked])]
+  (let [id               (util/new-uuid)
+        checked?         (reaction (some? @(subscribe [:editor/get-component-value path :params :info-text :label])))
+        collapse-checked (subscribe [:editor/get-component-value path :params :info-text-collapse])
+        languages        (subscribe [:editor/languages])
+        form-locked      (subscribe [:editor/current-form-locked])]
     (fn [path]
       [:div.editor-form__info-addon-wrapper
        [:div.editor-form__info-addon-checkbox
@@ -423,6 +424,21 @@
          "Kysymys sisältää ohjetekstin"]]
        (when @checked?
          [:div.editor-form__info-addon-inputs
+          [:div.editor-form__checkbox-wrapper
+           (let [collapsed-id (util/new-uuid)]
+             [:div.editor-form__checkbox-container
+              [:input.editor-form__checkbox {:type      "checkbox"
+                                             :id        collapsed-id
+                                             :checked   (boolean @collapse-checked)
+                                             :disabled  (some? @form-locked)
+                                             :on-change (fn [event]
+                                                          (dispatch [:editor/set-component-value
+                                                                     (-> event .-target .-checked)
+                                                                     path :params :info-text-collapse]))}]
+              [:label.editor-form__checkbox-label
+               {:for   collapsed-id
+                :class (when @form-locked "editor-form__checkbox-label--disabled")}
+               "Pienennä pitkä teksti"]])]
           (->> (input-fields-with-lang
                  (fn [lang]
                    [input-field
@@ -890,7 +906,9 @@
   "Info text which is a standalone component"
   [initial-content path]
   (let [languages        (subscribe [:editor/languages])
-        animation-effect (fade-out-effect path)]
+        animation-effect (fade-out-effect path)
+        collapse-checked (subscribe [:editor/get-component-value path :params :info-text-collapse])
+        form-locked      (subscribe [:editor/current-form-locked])]
     (fn [initial-content path]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
@@ -912,10 +930,24 @@
                      :tag      :textarea}])
                  @languages
                  :header? true)
-            (map (fn [field]
-                   (into field [[:div.editor-form__markdown-anchor
-                                 (markdown-help)]]))))]]
-        [:div.editor-form__checkbox-wrapper]
+               (map (fn [field]
+                      (into field [[:div.editor-form__markdown-anchor
+                                    (markdown-help)]]))))]]
+        [:div.editor-form__checkbox-wrapper
+         (let [collapsed-id (util/new-uuid)]
+           [:div.editor-form__checkbox-container
+            [:input.editor-form__checkbox {:type      "checkbox"
+                                           :id        collapsed-id
+                                           :checked   (boolean @collapse-checked)
+                                           :disabled  (some? @form-locked)
+                                           :on-change (fn [event]
+                                                        (dispatch [:editor/set-component-value
+                                                                   (-> event .-target .-checked)
+                                                                   path :params :info-text-collapse]))}]
+            [:label.editor-form__checkbox-label
+             {:for   collapsed-id
+              :class (when @form-locked "editor-form__checkbox-label--disabled")}
+             "Pienennä pitkä teksti"]])]
         [belongs-to-hakukohteet path initial-content]]])))
 
 (defn pohjakoulutusristiriita
