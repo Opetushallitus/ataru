@@ -423,22 +423,22 @@
           :class (when (some? @form-locked) "disabled")}
          "Kysymys sisältää ohjetekstin"]]
        (when @checked?
+         (let [collapsed-id (util/new-uuid)]
+           [:div.editor-form__info-addon-checkbox
+            [:input {:type      "checkbox"
+                     :id        collapsed-id
+                     :checked   (boolean @collapse-checked)
+                     :disabled  (some? @form-locked)
+                     :on-change (fn [event]
+                                  (dispatch [:editor/set-component-value
+                                             (-> event .-target .-checked)
+                                             path :params :info-text-collapse]))}]
+            [:label
+             {:for   collapsed-id
+              :class (when @form-locked "editor-form__checkbox-label--disabled")}
+             "Pienennä pitkä ohjeteksti"]]))
+       (when @checked?
          [:div.editor-form__info-addon-inputs
-          [:div.editor-form__checkbox-wrapper
-           (let [collapsed-id (util/new-uuid)]
-             [:div.editor-form__checkbox-container
-              [:input.editor-form__checkbox {:type      "checkbox"
-                                             :id        collapsed-id
-                                             :checked   (boolean @collapse-checked)
-                                             :disabled  (some? @form-locked)
-                                             :on-change (fn [event]
-                                                          (dispatch [:editor/set-component-value
-                                                                     (-> event .-target .-checked)
-                                                                     path :params :info-text-collapse]))}]
-              [:label.editor-form__checkbox-label
-               {:for   collapsed-id
-                :class (when @form-locked "editor-form__checkbox-label--disabled")}
-               "Pienennä pitkä teksti"]])]
           (->> (input-fields-with-lang
                  (fn [lang]
                    [input-field
@@ -449,9 +449,9 @@
                                      path :params :info-text :label lang])
                     {:tag :textarea}])
                  @languages)
-            (map (fn [field]
-                   (into field [[:div.editor-form__info-addon-markdown-anchor
-                                 (markdown-help)]]))))])])))
+               (map (fn [field]
+                      (into field [[:div.editor-form__info-addon-markdown-anchor
+                                    (markdown-help)]]))))])])))
 
 (defn- get-val [event]
   (-> event .-target .-value))
@@ -947,7 +947,7 @@
             [:label.editor-form__checkbox-label
              {:for   collapsed-id
               :class (when @form-locked "editor-form__checkbox-label--disabled")}
-             "Pienennä pitkä teksti"]])]
+             "Pienennä pitkä ohjeteksti"]])]
         [belongs-to-hakukohteet path initial-content]]])))
 
 (defn pohjakoulutusristiriita

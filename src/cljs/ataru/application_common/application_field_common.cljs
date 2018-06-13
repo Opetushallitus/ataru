@@ -40,45 +40,50 @@
       (reset! collapsed false))))
 
 (defn- markdown-paragraph
-  [md-text]
-  (let [collapsable      (reagent/atom false)
-        collapsed        (reagent/atom true)
-        actual-height    (reagent/atom nil)
-        timeout          (atom nil)
-        debounced-resize (fn [component]
-                           (js/clearTimeout @timeout)
-                           (reset!
-                             timeout
-                             (js/setTimeout #(set-markdown-height component collapsable collapsed actual-height) 200)))]
-    (reagent/create-class
-      {:component-did-mount
-       (fn [component]
-         (set-markdown-height component collapsable collapsed actual-height)
-         (.addEventListener js/window "resize" #(debounced-resize component)))
+  ([md-text]
+    (markdown-paragraph md-text false))
+  ([md-text collapse-enabled?]
+   (let [collapsable      (reagent/atom false)
+         collapsed        (reagent/atom collapse-enabled?)
+         actual-height    (reagent/atom nil)
+         timeout          (atom nil)
+         debounced-resize (fn [component]
+                            (js/clearTimeout @timeout)
+                            (reset!
+                              timeout
+                              (js/setTimeout #(set-markdown-height component collapsable collapsed actual-height) 200)))]
+     (reagent/create-class
+       {:component-did-mount
+        (fn [component]
+          (when collapse-enabled?
+            (set-markdown-height component collapsable collapsed actual-height)
+            (.addEventListener js/window "resize" #(debounced-resize component))))
 
-       :component-will-unmount
-       (fn [component]
-         (.removeEventListener js/window "resize" #(debounced-resize component)))
+        :component-will-unmount
+        (fn [component]
+          (when collapse-enabled?
+            (.removeEventListener js/window "resize" #(debounced-resize component))))
 
-       :component-did-update
-       (fn [component]
-         (set-markdown-height component collapsable collapsed actual-height))
+        :component-did-update
+        (fn [component]
+          (when collapse-enabled?
+            (set-markdown-height component collapsable collapsed actual-height)))
 
-       :reagent-render
-       (fn []
-         (let [sanitized-html (as-> md-text v
-                                    (md->html v :custom-transformers [add-link-target-prop])
-                                    (.sanitize html-sanitizer v)
-                                    (.getTypedStringValue v))]
-           [:div
-            [:div.application__form-info-text
-             {:class (when @collapsed "application__form-info-text--collapsed")
-              :style (when-not @collapsed {:height @actual-height})}
-             [:div.application__form-info-text-inner {:dangerouslySetInnerHTML {:__html sanitized-html}}]]
-            (when @collapsable
-              [:div [:button.application__form-info-text-collapse-button {:on-click (fn [] (swap! collapsed not))}
-                     (if @collapsed [:span (str (get-translation :read-more) " ") [:i.zmdi.zmdi-hc-lg.zmdi-chevron-down]]
-                                    [:span (str (get-translation :read-less) " ") [:i.zmdi.zmdi-hc-lg.zmdi-chevron-up]])]])]))})))
+        :reagent-render
+        (fn []
+          (let [sanitized-html (as-> md-text v
+                                     (md->html v :custom-transformers [add-link-target-prop])
+                                     (.sanitize html-sanitizer v)
+                                     (.getTypedStringValue v))]
+            [:div
+             [:div.application__form-info-text
+              {:class (when @collapsed "application__form-info-text--collapsed")
+               :style (when (and collapse-enabled? (not @collapsed)) {:height @actual-height})}
+              [:div.application__form-info-text-inner {:dangerouslySetInnerHTML {:__html sanitized-html}}]]
+             (when (and collapse-enabled? @collapsable)
+               [:div [:button.application__form-info-text-collapse-button {:on-click (fn [] (swap! collapsed not))}
+                      (if @collapsed [:span (str (get-translation :read-more) " ") [:i.zmdi.zmdi-hc-lg.zmdi-chevron-down]]
+                                     [:span (str (get-translation :read-less) " ") [:i.zmdi.zmdi-hc-lg.zmdi-chevron-up]])]])]))}))))
 
 (defn render-paragraphs [s]
   (->> (clojure.string/split s "\n")
