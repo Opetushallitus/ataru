@@ -236,7 +236,7 @@
           (should= (map :id (filter cannot-edit? fields))
                    ["first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language"])
           (should= (map :id (filter cannot-view? fields))
-                   ["ssn" "birth-date"])))))
+                   [])))))
 
   (it "should get form as virkailija without henkilo"
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
@@ -244,11 +244,11 @@
         (should= 200 (:status resp))
         (let [fields (-> resp :body :content util/flatten-form-fields)]
           (should= (map :id (remove cannot-edit? fields))
-                   ["hakukohteet" "first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "gender" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "language" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b"])
+                   ["hakukohteet" "first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "language" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b"])
           (should= (map :id (filter cannot-edit? fields))
-                   ["ssn" "birth-date"])
+                   [])
           (should= (map :id (filter cannot-view? fields))
-                   ["ssn" "birth-date"])))))
+                   [])))))
 
   (it "should get application with hakuaika ended"
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-grace-period]
@@ -272,7 +272,7 @@
           (should= (map :id (filter cannot-edit? fields))
                    ["first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language"])
           (should= (map :id (filter cannot-view? fields))
-                   ["ssn" "birth-date"])))))
+                   [])))))
 
   (it "should get application with hakuaika ended but hakukierros ongoing"
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing]
@@ -296,7 +296,7 @@
           (should= (map :id (filter cannot-edit? fields))
                    ["first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language"])
           (should= (map :id (filter cannot-view? fields))
-                   ["ssn" "birth-date"]))))))
+                   []))))))
 
 (describe "/application"
   (tags :unit :hakija-routes)
