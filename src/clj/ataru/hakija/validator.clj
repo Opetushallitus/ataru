@@ -135,6 +135,9 @@
                               {:exclude-from-answers true}
                               results
 
+                              {:fieldClass "infoElement"}
+                              results
+
                               {:fieldClass      "wrapperElement"
                                :children        children
                                :child-validator validation-keyword}
