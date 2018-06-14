@@ -87,7 +87,7 @@
   (let [languages (subscribe [:application/default-languages])]
     (fn [field-descriptor]
       (when-let [info (util/non-blank-val (-> field-descriptor :params :info-text :label) @languages)]
-        [markdown-paragraph info]))))
+        [markdown-paragraph info (-> field-descriptor :params :info-text-collapse)]))))
 
 (defn question-hakukohde-names [field-descriptor]
   (let [show-hakukohde-list? (r/atom false)]
@@ -679,7 +679,7 @@
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [question-hakukohde-names field-descriptor])
          (when-not (clojure.string/blank? @text)
-           [markdown-paragraph @text])
+           [markdown-paragraph @text (-> field-descriptor :params :info-text-collapse)])
          (when (> @attachment-count 0)
            [:ol.application__attachment-filename-list
             (->> (range @attachment-count)
@@ -696,7 +696,7 @@
     [:div.application__form-info-element.application__form-field
      (when (not-empty header)
        [:label.application__form-field-label [:span header]])
-     [markdown-paragraph text]]))
+     [markdown-paragraph text (-> field-descriptor :params :info-text-collapse)]]))
 
 (defn- adjacent-field-input [{:keys [id] :as child} row-idx question-group-idx]
   (let [on-change (fn [evt]
@@ -733,7 +733,7 @@
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [question-hakukohde-names field-descriptor])
          (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
-           [:div.application__form-info-text [markdown-paragraph info]])
+           [:div.application__form-info-text [markdown-paragraph info (-> field-descriptor :params :info-text-collapse)]])
          [:div
           (->> (range @row-amount)
                (map (fn adjacent-text-fields-row [row-idx]
