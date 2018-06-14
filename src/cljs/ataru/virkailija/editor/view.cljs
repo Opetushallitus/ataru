@@ -241,13 +241,13 @@
             ^{:key (str "haku-" (:haku-oid haku))}
             [:li
              [:div.editor-form__used-in-haku-list-haku-name
-              [:a.editor-form__haku-admin-link
-               {:href   (str "/tarjonta-app/index.html#/haku/"
-                             (:haku-oid haku))
-                :target "_blank"}
-               [:i.zmdi.zmdi-open-in-new]]
               [:span
-               (some #(get (:haku-name haku) %) [:fi :sv :en])]]
+               (str (some #(get (:haku-name haku) %) [:fi :sv :en]) " ")
+               [:a.editor-form__haku-admin-link
+                {:href   (str "/tarjonta-app/index.html#/haku/"
+                           (:haku-oid haku))
+                 :target "_blank"}
+                [:i.zmdi.zmdi-open-in-new]]]]
              [:div.editor-form__haku-preview-link
               [:a {:href   (str "/lomake-editori/api/preview/haku/"
                                 (:haku-oid haku)
