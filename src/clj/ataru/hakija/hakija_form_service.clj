@@ -102,8 +102,9 @@
             (clojure.walk/prewalk
              (fn [field]
                (if (= "formField" (:fieldClass field))
-                 (let [cannot-view? (contains? viewing-forbidden-person-info-field-ids
-                                               (keyword (:id field)))
+                 (let [cannot-view? (and (contains? viewing-forbidden-person-info-field-ids
+                                                    (keyword (:id field)))
+                                         (not (form-role/virkailija? roles)))
                        cannot-edit? (or cannot-view?
                                         (uneditable? field hakukohteet roles application-in-processing-state?))]
                    (assoc field
