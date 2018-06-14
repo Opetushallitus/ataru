@@ -137,7 +137,6 @@
                                          organization-service
                                          ohjausparametrit-service
                                          (:haku application)))
-        haku-oid                      (get-in tarjonta-info [:tarjonta :haku-oid])
         hakukohteet                   (get-in tarjonta-info [:tarjonta :hakukohteet])
         applied-hakukohteet           (filter #(contains? (set (:hakukohde application)) (:oid %))
                                               hakukohteet)

@@ -72,9 +72,9 @@
                            first)
           editing?    (get-in db [:application :editing?])
           virkailija? (boolean (get-in db [:application :virkailija-secret]))
-          yksiloity?  (boolean (get-in db [:application :person :yksiloity]))]
+          has-person? (boolean (get-in db [:application :person :oid]))]
       (and
-        (or (not virkailija?) yksiloity?)
+        (or (not virkailija?) has-person?)
         editing?
         (:cannot-edit field)))))
 
