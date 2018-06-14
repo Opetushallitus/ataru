@@ -121,24 +121,20 @@ body {
   margin: 0;
 }
 
-.application__form-info-text {
+.application__form-info-text-inner {
+  position: relative;
   font-size: 14px;
-  p {
-    margin-top: 8px;
-  }
-
   transition: height 0.5s ease-in-out;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.application__form-info-text--collapsed {
+.application__form-info-text-inner--collapsed {
   height: 120px;
-  position: relative;
   margin-bottom: 5px;
 }
 
-.application__form-info-text--collapsed:after {
+.application__form-info-text-inner--collapsed:after {
   content:"";
   position:absolute;
   bottom: 0;
