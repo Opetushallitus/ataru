@@ -418,9 +418,7 @@
             (filter-by-hakukohde-review application selected-hakukohde "degree-requirement" (parse-enabled-filters filters :degree-requirement))
             (filter-by-hakukohde-review application selected-hakukohde "eligibility-state" (parse-enabled-filters filters :eligibility-state))
             (filter-by-hakukohde-review application selected-hakukohde "payment-obligation" (parse-enabled-filters filters :payment-obligation))
-            (or
-              all-base-educations-enabled?
-              (filter-by-attachment-review application selected-hakukohde attachment-states-to-include))))
+            (filter-by-attachment-review application selected-hakukohde attachment-states-to-include)))
         applications))))
 
 (re-frame/reg-sub
