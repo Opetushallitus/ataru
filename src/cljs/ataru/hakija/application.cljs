@@ -82,9 +82,9 @@
   (or (empty? question-ids)
       (some #{answer-key} question-ids)))
 
-(defn answers->valid-status [all-answers ui form-content]
+(defn answers->valid-status [all-answers ui flat-form-content]
   (let [answer-validity (for [[_ answers] all-answers] (:valid answers))
-        question-ids    (map #(-> % :id keyword) (util/flatten-form-fields form-content))
+        question-ids    (map #(-> % :id keyword) flat-form-content)
         invalid-fields  (for [[key answers]
                               (sort-by (fn [[_ answers]] (:order-idx answers)) all-answers)
                               :when (and key
