@@ -145,6 +145,9 @@
    :question-for-hakukohde                  {:fi "Kysymys kuuluu hakukohteisiin"
                                              :en "This question is for application options"
                                              :sv "Frågan är för ansökningsmålar"}
+   :liitepyynto-for-hakukohde               {:fi "Liitepyyntö kuuluu hakukohteisiin"
+                                             :en "Request for attachment is for application options"
+                                             :sv "Begäran om bilagor för ansökningsmålar"}
    :show-more                               {:fi "Näytä lisää.."
                                              :en "Show more.."
                                              :sv "Visa mer.."}

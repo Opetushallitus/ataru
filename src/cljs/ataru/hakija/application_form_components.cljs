@@ -89,22 +89,25 @@
       (when-let [info (util/non-blank-val (-> field-descriptor :params :info-text :label) @languages)]
         [markdown-paragraph info (-> field-descriptor :params :info-text-collapse)]))))
 
-(defn question-hakukohde-names [field-descriptor]
-  (let [show-hakukohde-list? (r/atom false)]
-    (fn [field-descriptor]
-      (let [lang                           @(subscribe [:application/form-language])
-            selected-hakukohteet-for-field @(subscribe [:application/selected-hakukohteet-for-field field-descriptor])]
-        [:div.application__question_hakukohde_names_container
-         [:a.application__question_hakukohde_names_info
-          {:on-click #(swap! show-hakukohde-list? not)}
-          (str (get-translation :question-for-hakukohde) " (" (count selected-hakukohteet-for-field) ")")]
-         (when @show-hakukohde-list?
-           [:ul.application__question_hakukohde_names
-            (for [hakukohde selected-hakukohteet-for-field
-                  :let [name          (util/non-blank-val (:name hakukohde) [lang :fi :sv :en])
-                        tarjoaja-name (util/non-blank-val (:tarjoaja-name hakukohde) [lang :fi :sv :en])]]
-              [:li {:key (str (:id field-descriptor) "-" (:oid hakukohde))}
-               name " - " tarjoaja-name])])]))))
+(defn question-hakukohde-names
+  ([field-descriptor]
+   (question-hakukohde-names field-descriptor :question-for-hakukohde))
+  ([field-descriptor translation-key]
+   (let [show-hakukohde-list? (r/atom false)]
+     (fn [field-descriptor]
+       (let [lang                           @(subscribe [:application/form-language])
+             selected-hakukohteet-for-field @(subscribe [:application/selected-hakukohteet-for-field field-descriptor])]
+         [:div.application__question_hakukohde_names_container
+          [:a.application__question_hakukohde_names_info
+           {:on-click #(swap! show-hakukohde-list? not)}
+           (str (get-translation translation-key) " (" (count selected-hakukohteet-for-field) ")")]
+          (when @show-hakukohde-list?
+            [:ul.application__question_hakukohde_names
+             (for [hakukohde selected-hakukohteet-for-field
+                   :let [name          (util/non-blank-val (:name hakukohde) [lang :fi :sv :en])
+                         tarjoaja-name (util/non-blank-val (:tarjoaja-name hakukohde) [lang :fi :sv :en])]]
+               [:li {:key (str (:id field-descriptor) "-" (:oid hakukohde))}
+                name " - " tarjoaja-name])])])))))
 
 (defn- belongs-to-hakukohde-or-ryhma? [field]
   (seq (concat (:belongs-to-hakukohteet field)
@@ -677,7 +680,7 @@
         [:div.application__form-field
          [label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
-           [question-hakukohde-names field-descriptor])
+           [question-hakukohde-names field-descriptor :liitepyynto-for-hakukohde])
          (when-not (clojure.string/blank? @text)
            [markdown-paragraph @text (-> field-descriptor :params :info-text-collapse)])
          (when (> @attachment-count 0)
