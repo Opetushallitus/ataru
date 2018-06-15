@@ -76,7 +76,7 @@
 (defn- show-text-field-error-class?
   [field-descriptor value valid?]
   (and
-    (not valid?)
+    (false? valid?)
     (or (is-required-field? field-descriptor)
         (-> field-descriptor :params :numeric))
     (if (string? value)
