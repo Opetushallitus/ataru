@@ -352,12 +352,13 @@
 
 (defn- filter-by-attachment-review
   [application selected-hakukohde states-to-include]
-  (let [states           (->> (application-states/attachment-reviews-with-no-requirements application)
-                              (filter #(or (not selected-hakukohde) (= selected-hakukohde (:hakukohde %))))
-                              (map :state))]
-    (not (empty? (clojure.set/intersection
-                  states-to-include
-                  (set states))))))
+  (or (empty? (:hakukohde application))
+      (let [states (->> (application-states/attachment-reviews-with-no-requirements application)
+                        (filter #(or (not selected-hakukohde) (= selected-hakukohde (:hakukohde %))))
+                        (map :state))]
+        (not (empty? (clojure.set/intersection
+                      states-to-include
+                      (set states)))))))
 
 (defn- parse-enabled-filters
   [filters kw]
