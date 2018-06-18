@@ -594,8 +594,7 @@
       (dispatch [:application/add-attachments field-descriptor component-id attachment-count files question-group-idx]))))
 
 (defn attachment-upload [field-descriptor component-id attachment-count question-group-idx]
-  (let [id       (str component-id (when question-group-idx "-" question-group-idx) "-upload-button")
-        language @(subscribe [:application/form-language])]
+  (let [id       (str component-id (when question-group-idx "-" question-group-idx) "-upload-button")]
     [:div.application__form-upload-attachment-container
      [:input.application__form-upload-input
       {:id           id
@@ -637,7 +636,7 @@
 
 (defn attachment-view-file-error [field-descriptor component-id attachment-idx question-group-idx]
   (let [attachment @(subscribe [:state-query [:application :answers (keyword component-id) :values question-group-idx attachment-idx]])
-        lang       @(subscribe [:application/form-language])
+        languages  @(subscribe [:application/default-languages])
         on-click   (fn remove-attachment [event]
                      (.preventDefault event)
                      (dispatch [:application/remove-attachment-error field-descriptor component-id attachment-idx question-group-idx]))]
@@ -650,7 +649,7 @@
           {:href     "#"
            :on-click on-click}
           [:i.zmdi.zmdi-close.zmdi-hc-inverse]]]]
-       [:span.application__form-attachment-error (-> attachment :error lang)]])))
+       [:span.application__form-attachment-error (util/non-blank-val (:error attachment) languages)]])))
 
 (defn attachment-deleting-file [component-id attachment-idx question-group-idx]
   [:div.application__form-filename-container
@@ -673,8 +672,8 @@
        :deleting [attachment-deleting-file component-id attachment-idx question-group-idx])]))
 
 (defn attachment [{:keys [id] :as field-descriptor} & {question-group-idx :idx}]
-  (let [language (subscribe [:application/form-language])
-        text     (reaction (get-in field-descriptor [:params :info-text :value @language]))]
+  (let [languages  (subscribe [:application/default-languages])
+        text     (reaction (util/non-blank-val (get-in field-descriptor [:params :info-text :value]) @languages))]
     (fn [{:keys [id] :as field-descriptor} & {question-group-idx :idx}]
       (let [attachment-count (reaction (count @(subscribe [:state-query [:application :answers (keyword id) :values question-group-idx]])))]
         [:div.application__form-field
@@ -693,9 +692,9 @@
            [attachment-upload field-descriptor id @attachment-count question-group-idx])]))))
 
 (defn info-element [field-descriptor]
-  (let [language (subscribe [:application/form-language])
-        header   (some-> (get-in field-descriptor [:label @language]))
-        text     (some-> (get-in field-descriptor [:text @language]))]
+  (let [languages  (subscribe [:application/default-languages])
+        header   (util/non-blank-val (:label field-descriptor) @languages)
+        text     (util/non-blank-val (:text field-descriptor) @languages)]
     [:div.application__form-info-element.application__form-field
      (when (not-empty header)
        [:label.application__form-field-label [:span header]])
@@ -719,7 +718,7 @@
                 (when @cannot-edit? {:disabled true}))]))))
 
 (defn adjacent-text-fields [field-descriptor]
-  (let [language        (subscribe [:application/form-language])
+  (let [languages  (subscribe [:application/default-languages])
         remove-on-click (fn remove-adjacent-text-field [event]
                           (let [row-idx (int (.getAttribute (.-currentTarget event) "data-row-idx"))]
                             (.preventDefault event)
@@ -735,7 +734,7 @@
          [label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [question-hakukohde-names field-descriptor])
-         (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
+         (when-let [info (util/non-blank-val (some-> field-descriptor :params :info-text :label) @languages)]
            [:div.application__form-info-text [markdown-paragraph info (-> field-descriptor :params :info-text-collapse)]])
          [:div
           (->> (range @row-amount)
