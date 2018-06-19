@@ -25,7 +25,7 @@
            :fieldType "textField",
            :label     {:fi "Matkapuhelin", :sv "Mobiltelefonnummer"}}
           {:key       "nationality",
-           :value     "Suomi",
+           :value     "FIN",
            :fieldType "dropdown",
            :label     {:fi "Kansalaisuus", :sv "Nationalitet"}}
           {:key       "ssn",
@@ -45,11 +45,11 @@
            :fieldType "textField",
            :label     {:fi "Postinumero", :sv "Postnummer"}}
           {:key       "language",
-           :value     "suomi",
+           :value     "fi",
            :fieldType "dropdown",
            :label     {:fi "Äidinkieli", :sv "Modersmål"}}
           {:key       "gender",
-           :value     "Mies",
+           :value     "1",
            :fieldType "dropdown",
            :label     {:fi "Sukupuoli", :sv "Kön"}}
           {:key       "postal-office",
