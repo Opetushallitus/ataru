@@ -190,7 +190,7 @@
                 [info-text field-descriptor]]]
           (cons
             (let [{:keys [value valid]} (first @values)]
-              [:div
+              [:div.application__form-repeatable-text-wrap.application__form-repeatable-text-wrap--padded
                [:input.application__form-text-input
                 (merge
                  {:type         "text"
@@ -202,14 +202,15 @@
                   :on-change    on-change
                   :required     (is-required-field? field-descriptor)
                   :aria-invalid @(subscribe [:application/answer-invalid? id])}
-                  (when (empty? value)
-                    {:on-blur on-blur})
-                  (when @cannot-edit?
-                    {:disabled true}))]])
+                 (when (empty? value)
+                   {:on-blur on-blur})
+                 (when @cannot-edit?
+                   {:disabled true}))]])
             (map-indexed
               (let [first-is-empty? (empty? (first (map :value @values)))]
                 (fn [idx {:keys [value last?]}]
                   [:div.application__form-repeatable-text-wrap
+                   {:class (when last? "application__form-repeatable-text-wrap--padded")}
                    [:input.application__form-text-input
                     (merge
                       {:type      "text"

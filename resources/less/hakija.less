@@ -86,6 +86,7 @@ body {
 
 .application__wrapper-contents {
   margin-top: 13px;
+  width: 100%;
 }
 .application__form-field {
   display: flex;
@@ -591,12 +592,15 @@ body {
 textarea.application__form-text-input {
   background-image: linear-gradient(-180deg, #f0f0f0  0%, #FFFFFF  4%);
 }
-
 .application__form-repeatable-text--addremove {
   margin-left: 10px;
 }
 .application__form-repeatable-text-wrap {
   margin-top: 10px;
+  display: flex;
+}
+.application__form-repeatable-text-wrap--padded {
+  padding-right: 22px;
 }
 .application__form-repeatable-text-wrap input.application__form-text-input--disabled {
   background: #fff;
