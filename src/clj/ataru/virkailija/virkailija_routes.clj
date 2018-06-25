@@ -578,18 +578,6 @@
             (:content-disposition file-response))
           (not-found))))
 
-    (api/context "/background-jobs" []
-      :tags ["background-jobs-api"]
-      (api/GET "/status" []
-        :return {s/Str {:success s/Int
-                        :fail    s/Int
-                        :error   s/Int
-                        :running s/Int}}
-        (let [status (job/status)]
-          (cond-> (dissoc status :ok)
-                  (:ok status)       response/ok
-                  (not (:ok status)) response/internal-server-error))))
-
     (api/context "/statistics" []
       :tags ["statistics-api"]
       (api/GET "/applications/:time-period" []
@@ -760,6 +748,19 @@
     (api/GET "/dashboard" []
       (selmer/render-file "templates/dashboard.html" {}))))
 
+(api/defroutes status-routes
+  (api/context "/status" []
+    :tags ["background-jobs-api"]
+    (api/GET "/background-jobs" []
+      :return {s/Str {:success s/Int
+                      :fail    s/Int
+                      :error   s/Int
+                      :running s/Int}}
+      (let [status (job/status)]
+        (cond-> (dissoc status :ok)
+                (:ok status)       response/ok
+                (not (:ok status)) response/internal-server-error)))))
+
 (defrecord Handler []
   component/Lifecycle
 
@@ -789,6 +790,7 @@
                               (api/context "/lomake-editori" []
                                 test-routes
                                 dashboard-routes
+                                status-routes
                                 (api/middleware [user-feedback/wrap-user-feedback
                                                  wrap-database-backed-session
                                                  auth-middleware/with-authentication]
