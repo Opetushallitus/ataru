@@ -7,7 +7,7 @@
    [clojure.core.match :refer [match]]
    [ataru.cas.client :as cas]
    [ataru.config.url-helper :refer [resolve-url]]
-   [ataru.person-service.person-schema :refer [Person]]
+   [ataru.person-service.person-schema :as person-schema]
    [ataru.person-service.oppijanumerorekisteri-person-extract :as orpe])
   (:import
    [java.net URLEncoder]))
@@ -107,7 +107,7 @@
 
 (s/defn ^:always-validate upsert-person :- Response
   [cas-client :- s/Any
-   person     :- Person]
+   person     :- person-schema/HenkiloPerustieto]
   (log/info "Sending person to oppijanumerorekisteri" person)
   (create-person cas-client person))
 

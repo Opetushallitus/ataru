@@ -1,7 +1,7 @@
 (ns ataru.person-service.person-schema
   (:require [schema.core :as s]))
 
-(s/defschema Person
+(s/defschema HenkiloPerustieto
   {(s/optional-key :hetu)            (s/maybe s/Str)
    :etunimet                         s/Str
    :kutsumanimi                      s/Str
