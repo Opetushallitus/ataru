@@ -15,10 +15,17 @@
 (defn throw-error [msg]
   (throw (Exception. msg)))
 
-(defn create-person [cas-client person]
+(s/defschema Response
+  {:status                   s/Keyword
+   (s/optional-key :message) (s/maybe s/Str)
+   (s/optional-key :oid)     (s/maybe s/Str)})
+
+(s/defn ^:always-validate create-person :- Response
+  [cas-client :- s/Any
+   person     :- person-schema/HenkiloPerustieto]
   (let [result (cas/cas-authenticated-post
-                 cas-client
-                 (resolve-url :oppijanumerorekisteri-service.person-create) person)]
+                cas-client
+                (resolve-url :oppijanumerorekisteri-service.person-create) person)]
     (match result
       {:status 201 :body body}
       {:status :created :oid (:oidHenkilo (json/parse-string body true))}
@@ -100,16 +107,5 @@
                               "status: " (:status result) ", "
                               "response body: " (:body result))))))
 
-(s/defschema Response
-  {:status                   s/Keyword
-   (s/optional-key :message) (s/maybe s/Str)
-   (s/optional-key :oid)     (s/maybe s/Str)})
-
-(s/defn ^:always-validate upsert-person :- Response
-  [cas-client :- s/Any
-   person     :- person-schema/HenkiloPerustieto]
-  (log/info "Sending person to oppijanumerorekisteri" person)
-  (create-person cas-client person))
-
 (defn create-or-find-person [oppijanumerorekisteri-cas-client application]
-  (upsert-person oppijanumerorekisteri-cas-client (orpe/extract-person-from-application application)))
+  (create-person oppijanumerorekisteri-cas-client (orpe/extract-person-from-application application)))
