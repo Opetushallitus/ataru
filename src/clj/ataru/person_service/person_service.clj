@@ -2,6 +2,7 @@
   (:require [taoensso.timbre :as log]
             [ataru.cas.client :as cas]
             [ataru.person-service.person-client :as person-client]
+            [ataru.person-service.oppijanumerorekisteri-person-extract :as orpe]
             [com.stuartsierra.component :as component]
             [ataru.config.core :refer [config]]
             [ataru.cache.cache-service :as cache]
@@ -35,7 +36,9 @@
   PersonService
 
   (create-or-find-person [{:keys [oppijanumerorekisteri-cas-client]} application]
-    (person-client/create-or-find-person oppijanumerorekisteri-cas-client application))
+    (person-client/create-or-find-person
+     oppijanumerorekisteri-cas-client
+     (orpe/extract-person-from-application application)))
 
   (get-persons [{:keys [oppijanumerorekisteri-cas-client]} oids]
     (if (seq oids)
