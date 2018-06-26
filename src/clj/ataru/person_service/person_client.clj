@@ -7,8 +7,7 @@
    [clojure.core.match :refer [match]]
    [ataru.cas.client :as cas]
    [ataru.config.url-helper :refer [resolve-url]]
-   [ataru.person-service.person-schema :as person-schema]
-   [ataru.person-service.oppijanumerorekisteri-person-extract :as orpe])
+   [ataru.person-service.person-schema :as person-schema])
   (:import
    [java.net URLEncoder]))
 
@@ -20,7 +19,7 @@
    (s/optional-key :message) (s/maybe s/Str)
    (s/optional-key :oid)     (s/maybe s/Str)})
 
-(s/defn ^:always-validate create-person :- Response
+(s/defn ^:always-validate create-or-find-person :- Response
   [cas-client :- s/Any
    person     :- person-schema/HenkiloPerustieto]
   (let [result (cas/cas-authenticated-post
@@ -106,6 +105,3 @@
       :else (throw-error (str "Could not get linked oids for oid " oid ", "
                               "status: " (:status result) ", "
                               "response body: " (:body result))))))
-
-(defn create-or-find-person [oppijanumerorekisteri-cas-client application]
-  (create-person oppijanumerorekisteri-cas-client (orpe/extract-person-from-application application)))
