@@ -53,8 +53,7 @@
 (defn ^:private nationality-component
   [metadata]
   (-> (component/question-group metadata)
-      (merge {:label    (:nationality person-info-module-texts)
-              :children [(merge (dissoc (component/dropdown metadata) :validators)
+      (merge {:children [(merge (dissoc (component/dropdown metadata) :validators)
                                 {:label           (:nationality person-info-module-texts)
                                  :options         []
                                  :id              :nationality
