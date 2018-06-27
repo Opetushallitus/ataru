@@ -14,12 +14,11 @@
 (defn throw-error [msg]
   (throw (Exception. msg)))
 
-(s/defschema Response
-  {:status                   s/Keyword
-   (s/optional-key :message) (s/maybe s/Str)
-   (s/optional-key :oid)     (s/maybe s/Str)})
+(s/defschema CreateOrFindResponse
+  {:status (s/enum :created :exists)
+   :oid    s/Str})
 
-(s/defn ^:always-validate create-or-find-person :- Response
+(s/defn ^:always-validate create-or-find-person :- CreateOrFindResponse
   [cas-client :- s/Any
    person     :- person-schema/HenkiloPerustieto]
   (let [result (cas/cas-authenticated-post
@@ -32,15 +31,15 @@
       {:status 200 :body body}
       {:status :exists :oid (:oidHenkilo (json/parse-string body true))}
 
-      {:status 400} ;;Request data was invalid, no reason to retry
-      {:status :failed-permanently :message (:body result)}
+      {:status 400 :body body}
+      (throw (new IllegalArgumentException
+                  (str "Could not create person, status: " 400
+                       " response body: " body)))
 
-      ;; Assume a temporary error and throw exception, the job will continue to retry
-      :else (throw-error (str
-                          "Could not create person, status: "
-                          (:status result)
-                          "response body: "
-                          (:body result))))))
+      :else
+      (throw (new RuntimeException
+                  (str "Could not create person, status: " (:status result)
+                       "response body: " (:body result)))))))
 
 (defn get-persons [cas-client oids]
   (log/info "Fetching" (count oids) "persons")
