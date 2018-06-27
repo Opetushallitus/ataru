@@ -1,9 +1,15 @@
 (ns ataru.person-service.person-integration
   (:require
+   [clj-time.format :as f]
    [clojure.core.match :refer [match]]
+   [clojure.java.jdbc :as jdbc]
    [taoensso.timbre :as log]
    [ataru.applications.application-store :as application-store]
-   [ataru.person-service.person-service :as person-service]))
+   [ataru.db.db :as db]
+   [ataru.person-service.person-service :as person-service]
+   [yesql.core :refer [defqueries]]))
+
+(defqueries "sql/person-integration-queries.sql")
 
 (defn upsert-and-log-person [person-service application-id]
   (let [application (application-store/get-application application-id)]
@@ -32,6 +38,39 @@
             application-id
             "to oppijanumerorekisteri")
   (upsert-and-log-person person-service application-id))
+
+(defn- update-person-info-as-in-person
+  [person-oid person]
+  (pos? (db/exec :db yesql-update-person-info-as-in-person!
+                 {:preferred_name (:kutsumanimi person)
+                  :last_name      (:sukunimi person)
+                  :ssn            (:hetu person)
+                  :dob            (:syntymaaika person)
+                  :person_oid     person-oid})))
+
+(defn- update-person-info-as-in-application
+  [person-oid]
+  (pos? (db/exec :db yesql-update-person-info-as-in-application!
+                 {:person_oid person-oid})))
+
+(defn- update-person-info
+  [person-service person-oid]
+  (log/info "Checking person info of" person-oid)
+  (let [person (person-service/get-person person-service person-oid)]
+    (if (or (:yksiloity person)
+            (:yksiloityVTJ person))
+      (when (update-person-info-as-in-person person-oid person)
+        (log/info "Updated person info of" person-oid
+                  "to that on oppijanumerorekisteri"))
+      (when (update-person-info-as-in-application person-oid)
+        (log/info "Updated person info of" person-oid
+                  "to that on application")))))
+
+(defn update-person-info-job-step
+  [{:keys [person-oid]}
+   {:keys [person-service]}]
+  (update-person-info person-service person-oid)
+  {:transition {:id :final}})
 
 (def job-type (str (ns-name *ns*)))
 
