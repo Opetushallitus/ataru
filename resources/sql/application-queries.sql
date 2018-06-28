@@ -139,12 +139,13 @@ SELECT
   a.haku      AS haku,
   a.email     AS email,
   a.hakukohde AS hakukohteet
-FROM latest_applications AS a
+FROM applications AS a
   JOIN application_reviews ar ON a.key = ar.application_key
   JOIN latest_application_secrets las ON a.key = las.application_key
 WHERE a.person_oid = :person_oid
       AND a.haku IS NOT NULL
       AND ar.state <> 'inactivated'
+      AND a.id = (SELECT id FROM latest_applications WHERE key = a.key)
 ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-events
