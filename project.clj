@@ -1,4 +1,9 @@
 (defproject ataru "0.1.0-SNAPSHOT"
+  :managed-dependencies [[com.fasterxml.jackson.core/jackson-core "2.9.0"]
+                         [com.fasterxml.jackson.core/jackson-databind "2.9.0"]
+                         [com.fasterxml.jackson.core/jackson-annotations "2.9.0"]
+                         [com.fasterxml.jackson.dataformat/jackson-dataformat-cbor "2.9.0"]
+                         [com.fasterxml.jackson.dataformat/jackson-dataformat-smile "2.9.0"]]
   :dependencies [[org.clojure/clojure "1.9.0"]
 
                  ; clojurescript
@@ -73,7 +78,8 @@
                  [ring/ring-mock "0.3.2"]
                  [speclj "3.3.2"]
                  [org.clojure/test.check "0.9.0"]
-                 [com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer "20180219.1" :exclusions [com.google.guava/guava]]]
+                 [com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer "20180219.1" :exclusions [com.google.guava/guava]]
+                 [com.amazonaws/aws-java-sdk "1.11.359"]]
 
   :min-lein-version "2.5.3"
 

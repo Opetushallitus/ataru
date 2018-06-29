@@ -8,6 +8,7 @@
        :schema "public"
        :minimum-idle {{ataru_db_max_pool_size}}
        :maximum-pool-size {{ataru_db_max_pool_size}}}
+ :aws {:region {{ataru_aws_region}}}
  :cache {:type {{ataru_cache_type}}}
  :redis {:uri "{{ataru_redis_uri}}"}
  :public-config {:applicant {:service_url "{{ataru_applicant_service_url}}"}

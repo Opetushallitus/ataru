@@ -6,6 +6,7 @@
                  :server-name   "localhost"
                  :port-number   5433
                  :schema        "public"}
+ :aws           {:region "eu-west-1"}
  :cache         {:type :redis}
  :redis         {:uri "redis://localhost:6380"}
  :cas           {}
