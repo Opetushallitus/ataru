@@ -1020,35 +1020,53 @@
         [belongs-to-hakukohteet path content]]])))
 
 (defn attachment-textarea [path]
-  (let [id          (util/new-uuid)
-        checked?    (subscribe [:editor/get-component-value path :params :info-text :enabled?])
+  (let [checked?    (subscribe [:editor/get-component-value path :params :info-text :enabled?])
+        collapse?   (subscribe [:editor/get-component-value path :params :info-text-collapse])
         languages   (subscribe [:editor/languages])
         form-locked (subscribe [:editor/current-form-locked])]
     (fn [path]
-      [:div.editor-form__text-field-wrapper.infoelement
-       [:div.editor-form__attachment-info-checkbox-wrapper
-        [:input {:id        id
-                 :type      "checkbox"
-                 :checked   @checked?
-                 :disabled  (some? @form-locked)
-                 :on-change (fn toggle-attachment-textarea [event]
-                              (.preventDefault event)
-                              (let [checked? (.. event -target -checked)]
-                                (dispatch [:editor/set-component-value checked? path :params :info-text :enabled?])))}]
-        [:label
-         {:for id}
-         "Liitepyyntö sisältää ohjetekstin"]]
+      [:div.editor-form__info-addon-wrapper
+       (let [id (util/new-uuid)]
+         [:div.editor-form__info-addon-checkbox
+          [:input {:id        id
+                   :type      "checkbox"
+                   :checked   @checked?
+                   :disabled  (some? @form-locked)
+                   :on-change (fn toggle-attachment-textarea [event]
+                                (.preventDefault event)
+                                (let [checked? (.. event -target -checked)]
+                                  (dispatch [:editor/set-component-value checked? path :params :info-text :enabled?])))}]
+          [:label
+           {:for   id
+            :class (when @form-locked "editor-form__checkbox-label--disabled")}
+           "Liitepyyntö sisältää ohjetekstin"]])
        (when @checked?
-         (->> (input-fields-with-lang
+         (let [id (util/new-uuid)]
+           [:div.editor-form__info-addon-checkbox
+            [:input {:id        id
+                     :type      "checkbox"
+                     :checked   (boolean @collapse?)
+                     :disabled  (some? @form-locked)
+                     :on-change (fn [event]
+                                  (dispatch [:editor/set-component-value
+                                             (-> event .-target .-checked)
+                                             path :params :info-text-collapse]))}]
+            [:label
+             {:for   id
+              :class (when @form-locked "editor-form__checkbox-label--disabled")}
+             "Pienennä pitkä ohjeteksti"]]))
+       (when @checked?
+         [:div.editor-form__info-addon-inputs
+          (->> (input-fields-with-lang
                 (fn attachment-textarea-input [lang]
                   [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :params :info-text :value lang])
                    {:value-fn #(get-in % [:params :info-text :value lang])
                     :tag      :textarea}])
                 @languages
                 :header? true)
-           (map (fn [field]
-                  (into field [[:div.editor-form__markdown-anchor
-                                (markdown-help)]])))))])))
+               (map (fn [field]
+                      (into field [[:div.editor-form__info-addon-markdown-anchor
+                                    (markdown-help)]]))))])])))
 
 (defn attachment [content path]
   (let [languages        (subscribe [:editor/languages])
