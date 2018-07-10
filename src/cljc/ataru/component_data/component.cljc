@@ -135,19 +135,13 @@
    :params               {:deny-submit false}
    :rules                {:pohjakoulutusristiriita nil}
    :metadata             metadata
-   :label                {:fi "Ilmoitus riittämättömästä pohjakoulutuksesta"
-                          :sv "Ilmoitus riittämättömästä pohjakoulutuksesta"
-                          :en "Ilmoitus riittämättömästä pohjakoulutuksesta"}
-   :text                 {:fi "Ilmoittamasi pohjakoulutuksen perusteella et voi tulla valituksi seuraaviin hakukohteisiin"
-                          :sv "Ilmoittamasi pohjakoulutuksen perusteella et voi tulla valituksi seuraaviin hakukohteisiin"
-                          :en "Ilmoittamasi pohjakoulutuksen perusteella et voi tulla valituksi seuraaviin hakukohteisiin"}})
+   :label                (:insufficient-base-education texts/translation-mapping)
+   :text                 (:not-applicable-for-hakukohteet texts/translation-mapping)})
 
 (defn koulutusmarkkinointilupa [metadata]
   (assoc (single-choice-button metadata)
          :id "koulutusmarkkinointilupa"
-         :label {:fi "Yhteystietojani saa käyttää koulutusmarkkinoinnissa?"
-                 :sv "Yhteystietojani saa käyttää koulutusmarkkinoinnissa?"
-                 :en "Yhteystietojani saa käyttää koulutusmarkkinoinnissa?"}
+         :label (:allow-use-of-contact-information texts/translation-mapping)
          :validators ["required"]
          :options [{:value "Kyllä"
                     :label (:yes texts/general-texts)}
@@ -157,9 +151,7 @@
 (defn valintatuloksen-julkaisulupa [metadata]
   (assoc (single-choice-button metadata)
          :id "valintatuloksen-julkaisulupa"
-         :label {:fi "Opiskelijavalinnan tulokseni saa julkaista internetissä?"
-                 :sv "Opiskelijavalinnan tulokseni saa julkaista internetissä?"
-                 :en "Opiskelijavalinnan tulokseni saa julkaista internetissä?"}
+         :label (:allow-publishing-of-results-online texts/translation-mapping)
          :validators ["required"]
          :options [{:value "Kyllä"
                     :label (:yes texts/general-texts)}
