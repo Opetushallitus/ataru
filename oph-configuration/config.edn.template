@@ -12,7 +12,10 @@
  :cache {:type {{ataru_cache_type}}}
  :redis {:uri "{{ataru_redis_uri}}"}
  :aws {:region "{{aws_region}}"
-       :temp-files {:bucket "{{ataru_temp_file_bucket_name}}"}}
+       :temp-files {:bucket "{{ataru_temp_file_bucket_name}}"}
+       :henkilo-modified-queue {:enabled?      {{ataru_henkilo_modified_queue_enabled}}
+                                :drain-failed? {{ataru_henkilo_modified_queue_drain_failed}}
+                                :queue-url     "{{ataru_henkilo_modified_queue_url}}"}}
  :public-config {:applicant {:service_url "{{ataru_applicant_service_url}}"}
                  :virkailija {:service_url "https://{{host_virkailija}}/lomake-editori/"}
                  :environment-name "{{ataru_environment_name}}"
