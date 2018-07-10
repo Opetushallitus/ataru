@@ -440,7 +440,7 @@
   {:oid          s/Str
    :haku         (s/maybe s/Str)
    :form         s/Str
-   :kansalaisuus s/Str
+   :kansalaisuus [s/Str]
    :aidinkieli   s/Str
    :matkapuhelin s/Str
    :email        s/Str
