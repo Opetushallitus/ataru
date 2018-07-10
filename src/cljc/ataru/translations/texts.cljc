@@ -205,9 +205,12 @@
    :allow-publishing-of-results-online      {:fi "Opiskelijavalinnan tulokseni saa julkaista internetissä?"
                                              :sv "Opiskelijavalinnan tulokseni saa julkaista internetissä?"
                                              :en "Opiskelijavalinnan tulokseni saa julkaista internetissä?"}
-   :permission-for-electronic-transactions  {:fi "Opiskelijavalinnan tulokset saa lähettää minulle säkhöisesti."
-                                             :sv "Opiskelijavalinnan tulokset saa lähettää minulle säkhöisesti."
-                                             :en "Opiskelijavalinnan tulokset saa lähettää minulle säkhöisesti."}})
+   :permission-for-electronic-transactions  {:fi "Opiskelijavalinnan tulokset saa lähettää minulle sähköisesti."
+                                             :sv "Opiskelijavalinnan tulokset saa lähettää minulle sähköisesti."
+                                             :en "Opiskelijavalinnan tulokset saa lähettää minulle sähköisesti."}
+   :contact-language                        {:fi "Asiointikieli"
+                                             :sv "Asiointikieli"
+                                             :en "Asiointikieli"}})
 
 (def general-texts
   {:yes                {:en "Yes"

@@ -24,7 +24,8 @@
            ["Ilmoitus riittämättömästä pohjakoulutuksesta" component/pohjakoulutusristiriita]
            ["Koulutusmarkkinointilupa" component/koulutusmarkkinointilupa]
            ["Valintatuloksen julkaisulupa" component/valintatuloksen-julkaisulupa]
-           ["Sähköisen asioinnin lupa" component/lupa-sahkoiseen-asiointiin]]))
+           ["Sähköisen asioinnin lupa" component/lupa-sahkoiseen-asiointiin]
+           ["Asiointikieli" component/asiointikieli]]))
 
 (def followup-toolbar-element-names
   (cond-> #{"Tekstikenttä"

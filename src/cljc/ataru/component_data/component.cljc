@@ -165,3 +165,10 @@
          :validators ["required"]
          :options [{:value "Kyllä"
                     :label (:yes texts/general-texts)}]))
+
+(defn asiointikieli [metadata]
+  (assoc (dissoc (dropdown metadata) :options)
+         :id "asiointikieli"
+         :label (:contact-language texts/translation-mapping)
+         :validators ["required"]
+         :koodisto-source {:uri "kieli" :version 1}))
