@@ -157,3 +157,11 @@
                     :label (:yes texts/general-texts)}
                    {:value "Ei"
                     :label (:no texts/general-texts)}]))
+
+(defn lupa-sahkoiseen-asiointiin [metadata]
+  (assoc (single-choice-button metadata)
+         :id "sahkoisen-asioinnin-lupa"
+         :label (:permission-for-electronic-transactions texts/translation-mapping)
+         :validators ["required"]
+         :options [{:value "Kyllä"
+                    :label (:yes texts/general-texts)}]))

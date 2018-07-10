@@ -204,7 +204,10 @@
                                              :en "Yhteystietojani saa käyttää koulutusmarkkinoinnissa?"}
    :allow-publishing-of-results-online      {:fi "Opiskelijavalinnan tulokseni saa julkaista internetissä?"
                                              :sv "Opiskelijavalinnan tulokseni saa julkaista internetissä?"
-                                             :en "Opiskelijavalinnan tulokseni saa julkaista internetissä?"}})
+                                             :en "Opiskelijavalinnan tulokseni saa julkaista internetissä?"}
+   :permission-for-electronic-transactions  {:fi "Opiskelijavalinnan tulokset saa lähettää minulle säkhöisesti."
+                                             :sv "Opiskelijavalinnan tulokset saa lähettää minulle säkhöisesti."
+                                             :en "Opiskelijavalinnan tulokset saa lähettää minulle säkhöisesti."}})
 
 (def general-texts
   {:yes                {:en "Yes"

@@ -8,22 +8,23 @@
    [taoensso.timbre :refer-macros [spy debug]]))
 
 (def ^:private toolbar-elements
-  (cond->
-    [["Lomakeosio" component/form-section]
-     ["Pudotusvalikko" component/dropdown]
-     ["Painikkeet, yksi valittavissa" component/single-choice-button]
-     ["Lista, monta valittavissa" component/multiple-choice]
-     ["Tekstikenttä" component/text-field]
-     ["Tekstialue" component/text-area]
-     ["Vierekkäiset tekstikentät" component/adjacent-fieldset]]
-    (fc/feature-enabled? :attachment)     (conj ["Liitepyyntö" component/attachment])
-    (fc/feature-enabled? :question-group) (conj ["Kysymysryhmä" component/question-group])
-    true                                  (conj ["Infoteksti" component/info-element])
-    (fc/feature-enabled? :question-group) (conj ["Pohjakoulutusmoduuli" base-education-module/module])
-    (fc/feature-enabled? :question-group) (conj ["Pohjakoulutusmoduuli (kk-yhteishaku)" kk-base-education-module/module])
-    true                                  (conj ["Ilmoitus riittämättömästä pohjakoulutuksesta" component/pohjakoulutusristiriita])
-    true                                  (conj ["Koulutusmarkkinointilupa" component/koulutusmarkkinointilupa])
-    true                                  (conj ["Valintatuloksen julkaisulupa" component/valintatuloksen-julkaisulupa])))
+  (remove nil?
+          [["Lomakeosio" component/form-section]
+           ["Pudotusvalikko" component/dropdown]
+           ["Painikkeet, yksi valittavissa" component/single-choice-button]
+           ["Lista, monta valittavissa" component/multiple-choice]
+           ["Tekstikenttä" component/text-field]
+           ["Tekstialue" component/text-area]
+           ["Vierekkäiset tekstikentät" component/adjacent-fieldset]
+           (when (fc/feature-enabled? :attachment) ["Liitepyyntö" component/attachment])
+           (when (fc/feature-enabled? :question-group) ["Kysymysryhmä" component/question-group])
+           ["Infoteksti" component/info-element]
+           (when (fc/feature-enabled? :question-group) ["Pohjakoulutusmoduuli" base-education-module/module])
+           (when (fc/feature-enabled? :question-group) ["Pohjakoulutusmoduuli (kk-yhteishaku)" kk-base-education-module/module])
+           ["Ilmoitus riittämättömästä pohjakoulutuksesta" component/pohjakoulutusristiriita]
+           ["Koulutusmarkkinointilupa" component/koulutusmarkkinointilupa]
+           ["Valintatuloksen julkaisulupa" component/valintatuloksen-julkaisulupa]
+           ["Sähköisen asioinnin lupa" component/lupa-sahkoiseen-asiointiin]]))
 
 (def followup-toolbar-element-names
   (cond-> #{"Tekstikenttä"
