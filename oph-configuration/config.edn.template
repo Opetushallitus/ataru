@@ -8,7 +8,10 @@
        :schema "public"
        :minimum-idle {{ataru_db_max_pool_size}}
        :maximum-pool-size {{ataru_db_max_pool_size}}}
- :aws {:region {{ataru_aws_region}}}
+ :aws {:region                 "{{aws_region}}"
+       :henkilo-modified-queue {:enabled?      {{ataru_henkilo_modified_queue_enabled}}
+                                :drain-failed? {{ataru_henkilo_modified_queue_drain_failed}}
+                                :queue-url     "{{ataru_henkilo_modified_queue_url}}"}}
  :cache {:type {{ataru_cache_type}}}
  :redis {:uri "{{ataru_redis_uri}}"}
  :public-config {:applicant {:service_url "{{ataru_applicant_service_url}}"}

@@ -6,7 +6,10 @@
                  :server-name   "localhost"
                  :port-number   5433
                  :schema        "public"}
- :aws           {:region "eu-west-1"}
+ :aws           {:region                 "eu-west-1"
+                 :henkilo-modified-queue {:enabled?      false
+                                          :drain-failed? false
+                                          :queue-url     ""}}
  :cache         {:type :redis}
  :redis         {:uri "redis://localhost:6380"}
  :cas           {}
