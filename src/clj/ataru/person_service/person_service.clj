@@ -12,7 +12,9 @@
     "Find multiple persons from Oppijanumerorekisteri.")
 
   (get-person [this oid]
-    "Find a person from ONR."))
+    "Find a person from ONR.")
+
+  (linked-oids [this oid]))
 
 (defrecord IntegratedPersonService []
   component/Lifecycle
@@ -36,7 +38,10 @@
     (person-client/get-persons oppijanumerorekisteri-cas-client oids))
 
   (get-person [{:keys [oppijanumerorekisteri-cas-client]} oid]
-    (person-client/get-person oppijanumerorekisteri-cas-client oid)))
+    (person-client/get-person oppijanumerorekisteri-cas-client oid))
+
+  (linked-oids [{:keys [oppijanumerorekisteri-cas-client]} oid]
+    (person-client/linked-oids oppijanumerorekisteri-cas-client oid)))
 
 (def fake-person-from-creation {:personOid    "1.2.3.4.5.6"
                   :firstName    "Foo"
@@ -81,7 +86,10 @@
                       :sukunimi    "Vatanen"
                       :hetu         "141196-933S"})
       (merge fake-onr-person
-             {:oidHenkilo oid}))))
+             {:oidHenkilo oid})))
+
+  (linked-oids [this oid]
+    {}))
 
 (defn new-person-service []
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode

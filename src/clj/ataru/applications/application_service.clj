@@ -369,3 +369,9 @@
          [application-key]
          [:view-applications :edit-applications])
     (application-store/get-application-version-changes application-key)))
+
+(defn omatsivut-applications
+  [organization-service person-service session person-oid]
+  (->> (person-service/linked-oids person-service person-oid)
+       :linked-oids
+       (mapcat #(aac/omatsivut-applications organization-service session %))))
