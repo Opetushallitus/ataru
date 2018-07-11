@@ -177,7 +177,8 @@
                                        has-applied
                                        (set-original-values latest-application final-application)
                                        form
-                                       applied-hakukohderyhmat)]
+                                       applied-hakukohderyhmat
+                                       (some? virkailija-secret))]
     (cond
       (and (some? (:virkailija-secret application))
            (nil? virkailija-secret))
