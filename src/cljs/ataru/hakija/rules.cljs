@@ -207,7 +207,7 @@
       (update-in db [:application :answers :preferred-name] merge {:value first-name :valid true})
 
       (and first-name (not (clojure.string/blank? preferred-name)))
-      (update-in db [:application :answers :preferred-name] merge {:valid (pn/main-first-name? preferred-name answers nil)})
+      (update-in db [:application :answers :preferred-name] merge {:valid (pn/main-first-name? {:value preferred-name :answers-by-key answers})})
 
       :else db)))
 

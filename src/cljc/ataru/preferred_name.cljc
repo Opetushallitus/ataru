@@ -1,7 +1,7 @@
 (ns ataru.preferred-name)
 
 (defn main-first-name?
-  [value answers-by-key _]
+  [{:keys [value answers-by-key]}]
   (let [first-names     (clojure.string/split (-> answers-by-key :first-name :value) #"[\s-]+")
         num-first-names (count first-names)
         possible-names  (set

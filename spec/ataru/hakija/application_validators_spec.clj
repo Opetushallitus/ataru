@@ -19,14 +19,14 @@
               answers-by-key
               field-descriptor))
   ([has-applied validator value answers-by-key field-descriptor]
-   (first (async/<!! (validator/validate has-applied
-                                         validator
-                                         value
-                                         answers-by-key
-                                         field-descriptor)))))
+   (first (async/<!! (validator/validate {:has-applied      has-applied
+                                          :validator        validator
+                                          :value            value
+                                          :answers-by-key   answers-by-key
+                                          :field-descriptor field-descriptor})))))
 
 (describe "required validator"
-  (tags :unit)
+  (tags :unit :validator)
 
   (it "should not allow nil"
     (should-not (validate! :required nil {} nil)))
@@ -41,7 +41,7 @@
     (should (validate! :required "a" {} nil))))
 
 (describe "ssn validator"
-  (tags :unit)
+  (tags :unit :validator)
 
   (map (fn [ssn]
          (map (fn [century-char]
@@ -77,7 +77,7 @@
                                        :haku-oid "dummy-haku-oid"}}))))
 
 (describe "email validator"
-  (tags :unit)
+  (tags :unit :validator)
 
   (mapv (fn [email]
           (let [expected (get email/email-list email)
@@ -96,7 +96,7 @@
                                        :haku-oid "dummy-haku-oid"}}))))
 
 (describe "postal code validation"
-  (tags :unit)
+  (tags :unit :validator)
 
   (mapv (fn [postal-code]
           (let [expected (get postal-code/postal-code-list postal-code)
@@ -107,7 +107,7 @@
     (keys postal-code/postal-code-list)))
 
 (describe "phone number validation"
-  (tags :unit)
+  (tags :unit :validator)
 
   (mapv (fn [number]
           (let [expected (get phone/phone-list number)
@@ -118,14 +118,14 @@
         (keys phone/phone-list)))
 
 (describe "birthdate validation"
-  (tags :unit :birthdate-validation)
+  (tags :unit :validator :birthdate-validation)
   (doall
     (for [[input expected] date/date-list]
       (it (str "should validate past-date " input " to " expected)
           (should= expected (validate! :past-date input {} nil))))))
 
 (describe "main first name validation"
-  (tags :unit)
+  (tags :unit :validator)
 
   (doall
     (for [[first main expected] first-name/first-name-list]
@@ -133,14 +133,14 @@
           (should= expected (validate! :main-first-name main {:first-name {:value first}} nil))))))
 
 (describe "hakukohde validation"
-          (tags :unit)
+          (tags :unit :validator)
           (doall
             (for [[answer field expected] hakukohde/hakukohteet]
               (it (str "should validate hakukohteet " answer " with field " field " as " expected)
                   (should= expected (validate! :hakukohteet answer nil field))))))
 
 (describe "numeric validator"
-  (tags :unit :numeric)
+  (tags :unit :validator :numeric)
   (describe "integers and floats"
     (doall
       (for [number (keys numbers)

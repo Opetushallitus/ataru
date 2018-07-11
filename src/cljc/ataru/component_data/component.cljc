@@ -162,7 +162,7 @@
   (assoc (single-choice-button metadata)
          :id "sahkoisen-asioinnin-lupa"
          :label (:permission-for-electronic-transactions texts/translation-mapping)
-         :validators ["required"]
+         :validators ["required-hakija"]
          :options [{:value "Kyllä"
                     :label (:yes texts/general-texts)}]))
 

@@ -112,12 +112,27 @@
                  field))
              content))))
 
+(s/defn ^:always-validate remove-required-hakija-validator-if-virkailija :- s/Any
+  [form :- s/Any
+   roles :- [form-role/FormRole]]
+  (if (form-role/virkailija? roles)
+    (update form :content
+            (fn [content]
+              (clojure.walk/prewalk
+                (fn [field]
+                  (if (= "formField" (:fieldClass field))
+                    (update field :validators (partial remove #{"required-hakija"}))
+                    field))
+                content)))
+    form))
+
 (s/defn ^:always-validate fetch-form-by-key :- s/Any
   [key :- s/Any
    roles :- [form-role/FormRole]]
   (when-let [form (form-store/fetch-by-key key)]
     (when (not (:deleted form))
       (-> form
+          (remove-required-hakija-validator-if-virkailija roles)
           koodisto/populate-form-koodisto-fields))))
 
 (s/defn ^:always-validate fetch-form-by-key-with-flagged-fields :- s/Any

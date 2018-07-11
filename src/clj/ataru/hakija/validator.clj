@@ -41,11 +41,11 @@
 
 (defn- passed? [has-applied answer validators answers-by-key field-descriptor]
   (every? (fn [validator]
-            (first (async/<!! (validator/validate has-applied
-                                                  validator
-                                                  answer
-                                                  answers-by-key
-                                                  field-descriptor))))
+            (first (async/<!! (validator/validate {:has-applied      has-applied
+                                                   :validator        validator
+                                                   :value            answer
+                                                   :answers-by-key   answers-by-key
+                                                   :field-descriptor field-descriptor}))))
           validators))
 
 (defn- wrap-coll [xs]
