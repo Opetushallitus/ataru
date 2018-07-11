@@ -192,6 +192,16 @@
     "avaa"]
    [:span.editor-form__fold-description-text " osiot"]])
 
+(defn- preview-link [form-key lang-kwd]
+  [:a.editor-form__preview-button-link
+   {:key    (str "preview-" (name lang-kwd))
+    :href   (str "/lomake-editori/api/preview/form/" form-key
+                 "?lang=" (name lang-kwd))
+    :target "_blank"}
+   [:i.zmdi.zmdi-open-in-new]
+   [:span.editor-form__preview-button-text
+    (clojure.string/upper-case (name lang-kwd))]])
+
 (defn- lock-form-editing []
   (let [form-locked (subscribe [:editor/current-form-locked])]
     (fn []
@@ -227,7 +237,8 @@
 
 (defn form-in-use-warning
   [form]
-  (let [forms-in-use (subscribe [:state-query [:editor :forms-in-use]])]
+  (let [forms-in-use (subscribe [:state-query [:editor :forms-in-use]])
+        languages    (subscribe [:editor/languages])]
     (fn [form]
       (if-let [form-used-in-hakus (get @forms-in-use (keyword (:key form)))]
         [:div.editor-form__form-link-container.animated.flash
@@ -269,7 +280,10 @@
                         "/hakemus/" (:key form)
                         "?lang=fi")
            :target "_blank"}
-          "Lomake"]]))))
+          "Lomake"]
+         [:span " | "]
+         [:a.editor-form__form-admin-preview-link "Testihakemus / Virkailijatäyttö:"]
+         (map (partial preview-link (:key form)) @languages)]))))
 
 (defn- close-form []
   [:a {:on-click (fn [event]
