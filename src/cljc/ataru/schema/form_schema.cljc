@@ -319,7 +319,8 @@
    :state                                           s/Str
    :score                                           (s/maybe s/Int)
    :new-application-modifications                   s/Int
-   :person                                          {:preferred-name s/Str
+   :person                                          {:oid            (s/maybe s/Str)
+                                                     :preferred-name s/Str
                                                      :last-name      s/Str
                                                      :yksiloity      s/Bool}
    :original-created-time                           org.joda.time.DateTime
@@ -399,12 +400,16 @@
    :hakukohdeOid      s/Str})
 
 (s/defschema VtsApplication
-  {:oid                s/Str ; (:key application)
-   :hakuOid            s/Str
-   :henkiloOid         s/Str
-   :asiointikieli      s/Str
-   :hakutoiveet        [Hakutoive]
-   :email              (s/maybe s/Str)})
+  {:oid              s/Str ; (:key application)
+   :hakuOid          s/Str
+   :henkiloOid       s/Str
+   :asiointikieli    s/Str
+   :lahiosoite       s/Str
+   :postinumero      s/Str
+   :postitoimipaikka s/Str
+   :maa              s/Str
+   :hakutoiveet      [Hakutoive]
+   :email            (s/maybe s/Str)})
 
 (s/defschema HakurekisteriApplication
   {:oid                 s/Str

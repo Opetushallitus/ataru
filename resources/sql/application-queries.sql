@@ -105,29 +105,16 @@ FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id
   JOIN latest_forms AS lf ON lf.key = f.key
-WHERE
-  CASE
-  WHEN :query_key = 'form'
-    THEN (lf.key = :query_value AND a.haku IS NULL)
-  WHEN :query_key = 'application-oid'
-    THEN a.key = :query_value
-  WHEN :query_key = 'person-oid'
-    THEN a.person_oid = :query_value
-  WHEN :query_key = 'name'
-    THEN to_tsvector('simple', a.preferred_name || ' ' || a.last_name) @@ to_tsquery(:query_value)
-  WHEN :query_key = 'email'
-    THEN lower(a.email) = lower(:query_value)
-  WHEN :query_key = 'dob'
-    THEN a.dob = to_date(:query_value, 'DD.MM.YYYY')
-  WHEN :query_key = 'ssn'
-    THEN a.ssn = :query_value
-  WHEN :query_key = 'haku'
-    THEN a.haku = :query_value
-  WHEN :query_key = 'hakukohde'
-    THEN :query_value = ANY (a.hakukohde)
-  WHEN :query_key = 'ensisijainen-hakukohde'
-    THEN :query_value = a.hakukohde[1]
-  END
+WHERE (:form::text IS NULL OR (lf.key = :form AND a.haku IS NULL))
+  AND (:application_oid::text IS NULL OR a.key = :application_oid)
+  AND (:person_oid::text IS NULL OR a.person_oid = :person_oid)
+  AND (:name::text IS NULL OR to_tsvector('simple', a.preferred_name || ' ' || a.last_name) @@ to_tsquery(:name))
+  AND (:email::text IS NULL OR lower(a.email) = lower(:email))
+  AND (:dob::text IS NULL OR a.dob = to_date(:dob, 'DD.MM.YYYY'))
+  AND (:ssn::text IS NULL OR a.ssn = :ssn)
+  AND (:haku::text IS NULL OR a.haku = :haku)
+  AND (:hakukohde::text IS NULL OR :hakukohde = ANY (a.hakukohde))
+  AND (:ensisijainen_hakukohde::text IS NULL OR a.hakukohde[1] = :ensisijainen_hakukohde)
 ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-list-by-person-oid-for-omatsivut
@@ -702,6 +689,7 @@ SELECT
   ssn,
   hakukohde,
   lf.organization_oid,
+  la.content,
   (SELECT json_agg(json_build_object('requirement', requirement,
                                      'state', state,
                                      'hakukohde', hakukohde))
