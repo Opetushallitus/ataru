@@ -810,32 +810,45 @@
                preference-eligibility eligibility})))
          (into {}))))
 
-(defn- flatten-question-group-answers [key group-values]
-  (->> group-values
-       (map-indexed
-        (fn [group-index values]
-          (map-indexed
-           (fn [index value]
-             [(format "%s_group%d_%d" key (inc group-index) (inc index)) value])
-           values)))
-       (apply concat))) ; Flatten only 1 level
+(defn- indexed-by-question-group [index-fn key values]
+  (apply concat (map-indexed (fn [i values]
+                               (index-fn (format "%s_group%d" key i) values))
+                             values)))
 
-(defn- flatten-sequential-answers [key values]
-  (->> values
-       (map-indexed
-        (fn [index value]
-          [(format "%s_%d" key (inc index)) value]))))
+(defn- indexed-by-values [key values]
+  (map (fn [value]
+         [(format "%s_%s" key value) value])
+       values))
+
+(defn- indexed-by-value-order [key values]
+  (map-indexed (fn [i value]
+                 [(format "%s_%d" key i) value])
+               values))
+
+(defn- not-indexed [key values]
+  [[key (first values)]])
 
 (defn- flatten-application-answers [answers]
   (reduce
-   (fn [acc answer]
-     (let [key             (:key answer)
-           value-or-values (:value answer)]
-       (if (sequential? value-or-values)
-         (if (every? sequential? value-or-values)
-           (into acc (flatten-question-group-answers key value-or-values))
-           (into acc (flatten-sequential-answers key value-or-values)))
-         (assoc acc key value-or-values))))
+   (fn [acc {:keys [key value fieldType] :as answer}]
+     (let [index-fn (cond (= "multipleChoice" fieldType)
+                          indexed-by-values
+                          (= "textField" fieldType)
+                          indexed-by-value-order
+                          :else
+                          not-indexed)]
+       (into acc (cond (and (sequential? value)
+                            (every? sequential? value))
+                       (indexed-by-question-group index-fn key value)
+                       (and (sequential? value)
+                            (contains? #{"multipleChoice" "textField"}
+                                       fieldType))
+                       (index-fn key value)
+                       (not (sequential? value))
+                       [[key value]]
+                       :else
+                       (throw (new RuntimeException
+                                   (str "Unknown answer form " answer)))))))
    {}
    answers))
 

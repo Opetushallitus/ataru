@@ -81,20 +81,10 @@
           "Pudotusvalikon 1. kysymys"
         ]
 
-        var checkboxInputValues = _.map(testFrame().find('input.application__form-checkbox:checked').not('.application__form-multi-choice-followups-container .application__form-checkbox'), function (e) {
-          return $(e).val()
-        })
-        var expectedCheckboxInputValues = ["Toinen vaihtoehto", "139"]
-
-        var followupCheckboxInputValues = _.map(testFrame().find('.application__form-multi-choice-followups-container input.application__form-checkbox:checked'), function (e) {
-          return $(e).val()
-        })
-        var expectedFollowupCheckboxInputValues = ['Jatkokysymys A', 'Jatkokysymys B']
-
         expect(textInputValues).to.eql(expectedTestInputValues)
         expect(dropdownInputValues).to.eql(expectedDropdownInputValues)
-        expect(checkboxInputValues).to.eql(expectedCheckboxInputValues)
-        expect(followupCheckboxInputValues).to.eql(expectedFollowupCheckboxInputValues)
+        expect(_.map(testFrame().find('input.application__form-checkbox:checked + label'), function (e) { return $(e).text() }))
+          .to.eql(["Toinen vaihtoehto", "Arkkitehti", "Jatkokysymys A", "Jatkokysymys B"])
       })
     })
 

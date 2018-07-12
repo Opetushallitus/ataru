@@ -45,20 +45,31 @@
       (concat further-path)
       (flatten)))
 
+(defn- set-non-koodisto-option-values
+  [field-descriptor]
+  (if (nil? (:koodisto-source field-descriptor))
+    (update field-descriptor :options
+            #(vec (map-indexed (fn [i option]
+                                 (assoc option :value (str i)))
+                               %)))
+    field-descriptor))
+
 (reg-event-db
   :editor/remove-dropdown-option
   (fn [db [_ & path]]
     (let [option-path (current-form-content-path db [path])]
-      (update-in db (drop-last option-path) util/remove-nth (last option-path)))))
+      (-> db
+          (update-in (drop-last option-path) util/remove-nth (last option-path))
+          (update-in (drop-last 2 option-path) set-non-koodisto-option-values)))))
 
 (reg-event-db
   :editor/add-dropdown-option
   (fn [db [_ & path]]
     (let [dropdown-path (current-form-content-path db [path :options])
           component     (ataru.component-data.component/dropdown-option)]
-      (->
-        (update-in db dropdown-path into [component])
-        (assoc-in [:editor :ui (:id component) :focus?] true)))))
+      (-> db
+          (update-in dropdown-path into [component])
+          (update-in (drop-last dropdown-path) set-non-koodisto-option-values)))))
 
 (reg-event-db
   :editor/set-ordered-by-user
@@ -69,13 +80,8 @@
 (reg-event-db
   :editor/set-dropdown-option-value
   (fn [db [_ value & path]]
-    (let [label-path (current-form-content-path db [path])
-          this-option-path (drop-last 2 label-path)
-          value-path (flatten [this-option-path :value])
-          option-updated-db (-> db
-                                (assoc-in label-path value)
-                                (assoc-in value-path value))]
-      option-updated-db)))
+    (let [label-path (current-form-content-path db [path])]
+      (assoc-in db label-path value))))
 
 (defn- swap-vector [v i1 i2]
   (assoc v i2 (v i1) i1 (v i2)))
@@ -86,7 +92,9 @@
     (if (= 0 index)
       db
       (let [options-path (current-form-content-path db [path :options])]
-        (update-in db options-path swap-vector index (dec index))))))
+        (-> db
+            (update-in options-path swap-vector index (dec index))
+            (update-in (drop-last options-path) set-non-koodisto-option-values))))))
 
 (reg-event-db
   :editor/move-option-down
@@ -96,7 +104,9 @@
           is-last-option? (= (inc index) (count options))]
       (if is-last-option?
         db
-        (update-in db options-path swap-vector index (inc index))))))
+        (-> db
+            (update-in options-path swap-vector index (inc index))
+            (update-in (drop-last options-path) set-non-koodisto-option-values))))))
 
 (reg-event-db
   :editor/select-custom-multi-options
@@ -631,9 +641,11 @@
   (fn [db [_ new-koodisto {:keys [id uri version]}]]
     (let [key                       (get-in db [:editor :selected-form-key])
           form                      (get-in db [:editor :forms key :content])
+          new-options               (mapv #(select-keys % [:value :label])
+                                          new-koodisto)
           update-koodisto-component (fn [component]
                                       (assoc component :options
-                                        (update-options-while-keeping-existing-followups new-koodisto (:options component))))
+                                             (update-options-while-keeping-existing-followups new-options (:options component))))
           find-koodisto-component   (fn [component]
                                       (if (and (= id (:id component))
                                                (= uri (get-in component [:koodisto-source :uri]))

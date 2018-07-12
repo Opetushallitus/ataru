@@ -9,12 +9,7 @@
             [ataru.koodisto.koodisto :as koodisto]))
 
 (defn allowed-values [options]
-  (set
-    (reduce
-      (fn [values option]
-        (concat values (vals (:label option))))
-      []
-      options)))
+  (set (map :value options)))
 
 (defn- nationalities-value-contains-finland?
   [value]

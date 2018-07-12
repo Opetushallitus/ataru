@@ -65,7 +65,7 @@
           return formFields().eq(14).find('a.application__form-repeatable-text--addremove').eq(0)
         }),
         setNthFieldValue(15, 'textarea', 'Pakollisen tekstialueen vastaus'),
-        setNthFieldOption(16, 'Kolmas vaihtoehto'),
+        setNthFieldOption(16, '2'),
         setNthFieldInputValue(17, 'Jatkokysymyksen vastaus'),
         setNthFieldOption(18, '120'),
         clickNthFieldRadio(19, 'Toinen vaihtoehto', true),
@@ -93,7 +93,7 @@
         setNthFieldSubInputValue(28, 5, 'C2'),
         setNthFieldSubInputValue(29, 0, 'Vasen vierekkäinen'),
         setNthFieldSubInputValue(29, 1, 'Oikea vierekkäinen'),
-        setNthFieldOption(30, 'Pudotusvalikon 1. kysymys'),
+        setNthFieldOption(30, '0'),
         setNthFieldSubInputValue(31, 0, 'A1'),
         setNthFieldSubInputValue(31, 1, 'B1'),
         setNthFieldSubInputValue(31, 2, 'C1'),

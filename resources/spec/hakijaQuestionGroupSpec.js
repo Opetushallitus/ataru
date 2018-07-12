@@ -40,7 +40,7 @@
     describe('question group', function() {
       describe('selecting dropdown element having question group as a followup question', function() {
         before(
-          setNthFieldOption(13, 'Päätaso: B')
+          setNthFieldOption(13, '1')
         )
         it('shows the question group as a followup element', function() {
           expect(formFields().find('.application__form-dropdown-followups .application__question-group-row').length).to.equal(1)
@@ -59,8 +59,8 @@
 
       describe('answering to a dropdown question inside a question group', function() {
         before(
-          setNthFieldOption(14, 'Pudotusvalikko: A'),
-          setNthFieldOption(22, 'Pudotusvalikko: B')
+          setNthFieldOption(14, '0'),
+          setNthFieldOption(22, '1')
         )
         it('shows the followup question as answered', function() {
           expect(formFields().eq(14).find('.application__form-select option:selected').text()).to.equal('Pudotusvalikko: A')
@@ -75,8 +75,8 @@
           clickNthFieldRadio(23, 'Painikkeet, yksi valittavissa: B')
         )
         it('shows the single-choice question as answered', function() {
-          expect(formFields().eq(15).find('.application__form-single-choice-button:checked').val()).to.equal('Painikkeet, yksi valittavissa: A')
-          expect(formFields().eq(23).find('.application__form-single-choice-button:checked').val()).to.equal('Painikkeet, yksi valittavissa: B')
+          expect(formFields().eq(15).find('.application__form-single-choice-button:checked + label').text()).to.equal('Painikkeet, yksi valittavissa: A')
+          expect(formFields().eq(23).find('.application__form-single-choice-button:checked + label').text()).to.equal('Painikkeet, yksi valittavissa: B')
           expect(invalidFieldsStatus().text()).to.equal('Tarkista 8 tietoa')
         })
       })
@@ -88,9 +88,9 @@
           clickNthFieldRadio(24, 'Lista, monta valittavissa: B')
         )
         it('shows the multi-choice question as answered', function() {
-          expect(formFields().eq(16).find('.application__form-checkbox:checked:eq(0)').val()).to.equal('Lista, monta valittavissa: A')
-          expect(formFields().eq(16).find('.application__form-checkbox:checked:eq(1)').val()).to.equal('Lista, monta valittavissa: B'),
-          expect(formFields().eq(24).find('.application__form-checkbox:checked').val()).to.equal('Lista, monta valittavissa: B')
+          expect(formFields().eq(16).find('.application__form-checkbox:checked:eq(0) + label').text()).to.equal('Lista, monta valittavissa: A')
+          expect(formFields().eq(16).find('.application__form-checkbox:checked:eq(1) + label').text()).to.equal('Lista, monta valittavissa: B'),
+          expect(formFields().eq(24).find('.application__form-checkbox:checked + label').text()).to.equal('Lista, monta valittavissa: B')
           expect(invalidFieldsStatus().text()).to.equal('Tarkista 7 tietoa')
         })
       })
