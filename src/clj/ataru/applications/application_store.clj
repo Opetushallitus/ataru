@@ -618,22 +618,24 @@
 (defn- unwrap-hakurekisteri-application
   [{:keys [key haku hakukohde person_oid lang email content]}]
   (let [answers (answers-by-key (:answers content))]
-    {:oid                      key
-     :personOid                person_oid
-     :applicationSystemId      haku
-     :kieli                    lang
-     :hakukohteet              hakukohde
-     :email                    email
-     :matkapuhelin             (-> answers :phone :value)
-     :lahiosoite               (-> answers :address :value)
-     :postinumero              (-> answers :postal-code :value)
-     :postitoimipaikka         (-> answers :postal-office :value)
-                                        ; Default asuinmaa to finland for forms that are from before
-                                        ; country-of-residence was implemented, or copied from those forms.
-     :asuinmaa                 (or (-> answers :country-of-residence :value) "246")
-     :kotikunta                (-> answers :home-town :value)
-     :kkPohjakoulutus          (kk-base-educations answers)
-     :korkeakoulututkintoVuosi (korkeakoulututkinto-vuosi answers)}))
+    {:oid                         key
+     :personOid                   person_oid
+     :applicationSystemId         haku
+     :kieli                       lang
+     :hakukohteet                 hakukohde
+     :email                       email
+     :matkapuhelin                (-> answers :phone :value)
+     :lahiosoite                  (-> answers :address :value)
+     :postinumero                 (-> answers :postal-code :value)
+     :postitoimipaikka            (-> answers :postal-office :value)
+     ; Default asuinmaa to finland for forms that are from before
+     ; country-of-residence was implemented, or copied from those forms.
+     :asuinmaa                    (or (-> answers :country-of-residence :value) "246")
+     :kotikunta                   (-> answers :home-town :value)
+     :kkPohjakoulutus             (kk-base-educations answers)
+     :sahkoisenAsioinninLupa      (= "Kyllä" (-> answers :sahkoisen-asioinnin-lupa :value))
+     :valintatuloksenJulkaisulupa (= "Kyllä" (-> answers :valintatuloksen-julkaisulupa :value))
+     :koulutusmarkkinointilupa    (= "Kyllä" (-> answers :koulutusmarkkinointilupa :value))}))
 
 (defn get-hakurekisteri-applications
   [haku-oid hakukohde-oids person-oids modified-after]

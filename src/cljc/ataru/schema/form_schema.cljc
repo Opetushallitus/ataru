@@ -410,21 +410,23 @@
    :email            (s/maybe s/Str)})
 
 (s/defschema HakurekisteriApplication
-  {:oid                      s/Str
-   :personOid                s/Str
-   :applicationSystemId      s/Str
-   :kieli                    s/Str
-   :hakukohteet              [s/Str]
-   :email                    s/Str
-   :matkapuhelin             s/Str
-   :lahiosoite               s/Str
-   :postinumero              s/Str
-   :postitoimipaikka         (s/maybe s/Str)
-   :asuinmaa                 s/Str
-   :kotikunta                (s/maybe s/Str)
-   :paymentObligations       {s/Str s/Str}
-   :kkPohjakoulutus          [s/Str]
-   :korkeakoulututkintoVuosi (s/maybe s/Int)})
+  {:oid                         s/Str
+   :personOid                   s/Str
+   :applicationSystemId         s/Str
+   :kieli                       s/Str
+   :hakukohteet                 [s/Str]
+   :email                       s/Str
+   :matkapuhelin                s/Str
+   :lahiosoite                  s/Str
+   :postinumero                 s/Str
+   :postitoimipaikka            (s/maybe s/Str)
+   :asuinmaa                    s/Str
+   :kotikunta                   (s/maybe s/Str)
+   :paymentObligations          {s/Str s/Str}
+   :kkPohjakoulutus             [s/Str]
+   :sahkoisenAsioinninLupa      s/Bool
+   :valintatuloksenJulkaisulupa s/Bool
+   :koulutusmarkkinointilupa    s/Bool})
 
 (s/defschema OnrApplication
   {:oid          s/Str
