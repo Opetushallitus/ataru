@@ -12,7 +12,8 @@
                  hakukohteet (:hakukohde application)
                  person-oid  (:person_oid application)
                  person      (get persons (keyword person-oid))]
-             (merge {:person_oid             person-oid
+             (merge {:oid                    (:key application)
+                     :person_oid             person-oid
                      :application_system_oid (:haku application)
                      :postinumero            (-> answers :postal-code :value)
                      :lahiosoite             (-> answers :address :value)
