@@ -596,10 +596,11 @@
         :summary "Get latest versions of every application belonging to a user with given person OID"
         :path-params [person-oid :- (api/describe s/Str "Person OID")]
         :return [ataru-schema/OmatsivutApplication]
-        (if-let [applications (access-controlled-application/omatsivut-applications
-                                organization-service
-                                session
-                                person-oid)]
+        (if-let [applications (application-service/omatsivut-applications
+                               organization-service
+                               person-service
+                               session
+                               person-oid)]
           (response/ok applications)
           (response/unauthorized {:error "Unauthorized"})))
       (api/GET "/onr/applications/:person-oid" {session :session}
