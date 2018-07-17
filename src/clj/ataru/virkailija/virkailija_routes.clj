@@ -661,7 +661,7 @@
           (response/ok mapping)
           (response/unauthorized {:error "Unauthorized"})))
       (api/GET "/odw" {session :session}
-        :summary "Gst odw report"
+        :summary "Get odw report"
         :query-params [fromDate :- s/Str]
         :return [{s/Keyword s/Any}]
         (if-let [applications (access-controlled-application/get-applications-for-odw
