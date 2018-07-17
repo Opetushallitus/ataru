@@ -611,24 +611,29 @@
        (remove (fn [[_ id]] (clojure.string/blank? (-> answers id :value first first))))
        (map first)))
 
+(defn- korkeakoulututkinto-vuosi [answers]
+  (when (= "Yes" (get-in answers [:finnish-vocational-before-1995 :value] "No"))
+    (Integer/valueOf (get-in answers [:finnish-vocational-before-1995--year-of-completion :value]))))
+
 (defn- unwrap-hakurekisteri-application
   [{:keys [key haku hakukohde person_oid lang email content]}]
   (let [answers (answers-by-key (:answers content))]
-    {:oid                 key
-     :personOid           person_oid
-     :applicationSystemId haku
-     :kieli               lang
-     :hakukohteet         hakukohde
-     :email               email
-     :matkapuhelin        (-> answers :phone :value)
-     :lahiosoite          (-> answers :address :value)
-     :postinumero         (-> answers :postal-code :value)
-     :postitoimipaikka    (-> answers :postal-office :value)
-     ; Default asuinmaa to finland for forms that are from before
-     ; country-of-residence was implemented, or copied from those forms.
-     :asuinmaa            (or (-> answers :country-of-residence :value) "246")
-     :kotikunta           (-> answers :home-town :value)
-     :kkPohjakoulutus     (kk-base-educations answers)}))
+    {:oid                      key
+     :personOid                person_oid
+     :applicationSystemId      haku
+     :kieli                    lang
+     :hakukohteet              hakukohde
+     :email                    email
+     :matkapuhelin             (-> answers :phone :value)
+     :lahiosoite               (-> answers :address :value)
+     :postinumero              (-> answers :postal-code :value)
+     :postitoimipaikka         (-> answers :postal-office :value)
+                                        ; Default asuinmaa to finland for forms that are from before
+                                        ; country-of-residence was implemented, or copied from those forms.
+     :asuinmaa                 (or (-> answers :country-of-residence :value) "246")
+     :kotikunta                (-> answers :home-town :value)
+     :kkPohjakoulutus          (kk-base-educations answers)
+     :korkeakoulututkintoVuosi (korkeakoulututkinto-vuosi answers)}))
 
 (defn get-hakurekisteri-applications
   [haku-oid hakukohde-oids person-oids modified-after]
