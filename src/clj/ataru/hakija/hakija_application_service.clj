@@ -49,17 +49,14 @@
                     application-in-processing?)))))
 
 (defn remove-unviewable-answers
-  [application form roles]
+  [application form]
   (let [fields-by-key (->> (:content form)
                            util/flatten-form-fields
-                           (util/group-by-first :id))
-        virkailija?   (contains? roles :virkailija)]
+                           (util/group-by-first :id))]
     (update application :answers
             (partial map (fn [answer]
                            (cond-> answer
-                                   (and
-                                     (not virkailija?)
-                                     (:cannot-view (fields-by-key (:key answer))))
+                                   (:cannot-view (fields-by-key (:key answer)))
                                    (assoc :value nil :cannot-view true)))))))
 
 (defn- merge-uneditable-answers-from-previous
@@ -342,7 +339,7 @@
                                              (application-service/get-person person-client)
                                              (dissoc :ssn :birth-date)))
         full-application           (some-> application
-                                           (remove-unviewable-answers form (set form-roles))
+                                           (remove-unviewable-answers form)
                                            attachments-metadata->answers
                                            (dissoc :person-oid :application-hakukohde-reviews)
                                            (assoc :cannot-edit-because-in-processing (and
