@@ -1,8 +1,8 @@
 (ns ataru.log.access-log
-  (:require [taoensso.timbre :as timbre]
-            [ataru.config.core :refer [config]]
-            [taoensso.timbre.appenders.3rd-party.rolling :refer [rolling-appender]]
-            [clj-time.core :as t]))
+  (:require [ataru.config.core :refer [config]]
+            [clj-time.core :as t]
+            [taoensso.timbre :as timbre]
+            [taoensso.timbre.appenders.3rd-party.rolling :refer [rolling-appender]]))
 
 (defonce audit-log-config
   (assoc timbre/example-config
@@ -40,6 +40,7 @@
                       :responseTime      totaltime
                       :requestMethod     method
                       :service           "ataru_virkailija"
+                      :environment       (-> config :public-config :environment-name)
                       :user-agent        agent
                       :caller-id         "-"
                       :clientSubsystemId "-"
