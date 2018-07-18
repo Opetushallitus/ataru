@@ -6,4 +6,5 @@
 (defn get-ohjausparametrit [haku-oid]
   (-> :ohjausparametrit-service.parametri
       (url-helper/resolve-url haku-oid)
-      (hu/do-request)))
+      (hu/do-get)
+      :body))

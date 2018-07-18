@@ -10,7 +10,7 @@
   (tags :unit)
 
   (it "should finalize attachments belonging to an application"
-    (with-redefs [http/post                         (fn [url params]
+    (with-redefs [http/request                      (fn [{:keys [url] :as params}]
                                                       (should= "/api/files/finalize" url)
                                                       (let [body (json/parse-string (:body params) true)]
                                                         (should= {:keys ["attachment-key-1"
@@ -29,7 +29,7 @@
         (should= {:transition {:id :final}} result))))
 
   (it "should not call finalize API without any attachments"
-    (with-redefs [http/post                         (fn [_ _]
+    (with-redefs [http/request                      (fn [_]
                                                       (should-fail))
                   application-store/get-application (fn [application-id]
                                                       (should= application-id 3)

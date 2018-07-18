@@ -1,9 +1,8 @@
 (ns ataru.flowdock.flowdock-client
-  (:require
-    [ataru.config.core :refer [config]]
-    [org.httpkit.client :as http]
-    [cheshire.core :as json]
-    [taoensso.timbre :as log])
+  (:require [ataru.config.core :refer [config]]
+            [ataru.util.http-util :as http-util]
+            [cheshire.core :as json]
+            [taoensso.timbre :as log])
   (:import [java.util UUID]))
 
 (def title-max-length 130)
@@ -33,9 +32,9 @@
   [feedback]
   (when-let [token (-> config :feedback :application-feedback-flow-token)]
     (log/info "Sending feedback to Flowdock" feedback)
-    @(http/post "https://api.flowdock.com/messages"
-                {:headers {"content-type" "application/json"}
-                 :body    (-> feedback
-                              (build-flowdock-request token)
-                              (json/generate-string))})))
+    (http-util/do-post "https://api.flowdock.com/messages"
+                       {:headers {"content-type" "application/json"}
+                        :body    (-> feedback
+                                     (build-flowdock-request token)
+                                     (json/generate-string))})))
 
