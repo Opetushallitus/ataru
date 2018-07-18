@@ -1,6 +1,7 @@
 (ns ataru.log.access-log
   (:require [ataru.config.core :refer [config]]
             [clj-time.core :as t]
+            [environ.core :refer [env]]
             [taoensso.timbre :as timbre]
             [taoensso.timbre.appenders.3rd-party.rolling :refer [rolling-appender]]))
 
@@ -8,9 +9,9 @@
   (assoc timbre/example-config
          :appenders {:file-appender
                      (assoc (rolling-appender {:path    (str (-> config :log :access-log-base-path)
-                                                             "_"
                                                              ; Hostname will differentiate files in actual environments
-                                                             (environ.core/env :hostname)
+                                                             (when (:hostname env)
+                                                               (str "_" (:hostname env)))
                                                              ".log")
                                                :pattern :daily})
                             :output-fn (fn [{:keys [msg_]}] (force msg_)))}))
