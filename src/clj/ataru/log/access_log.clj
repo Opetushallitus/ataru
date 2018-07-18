@@ -1,14 +1,23 @@
 (ns ataru.log.access-log
   (:require [ataru.config.core :refer [config]]
+            [ataru.util.app-utils :as app-utils]
             [clj-time.core :as t]
             [environ.core :refer [env]]
             [taoensso.timbre :as timbre]
             [taoensso.timbre.appenders.3rd-party.rolling :refer [rolling-appender]]))
 
+(defonce service-name
+  (case (app-utils/get-app-id)
+    :virkailija "ataru_virkailija"
+    :hakija "ataru_hakija"
+    nil))
+
 (defonce audit-log-config
   (assoc timbre/example-config
          :appenders {:file-appender
-                     (assoc (rolling-appender {:path    (str (-> config :log :access-log-base-path)
+                     (assoc (rolling-appender {:path    (str (-> config :log :virkailija-base-path)
+                                                             ; ^Virkailija and hakia paths are the same
+                                                             "/accesslog_" service-name
                                                              ; Hostname will differentiate files in actual environments
                                                              (when (:hostname env)
                                                                (str "_" (:hostname env)))
@@ -37,10 +46,10 @@
         log-map      {:timestamp         (.toString (t/to-time-zone (t/date-time 1986 10 22)
                                                                     (t/time-zone-for-id "Europe/Helsinki")))
                       :responseCode      status
-                      :resuest           (str method " " request-path)
+                      :request           (str method " " request-path)
                       :responseTime      totaltime
                       :requestMethod     method
-                      :service           "ataru_virkailija"
+                      :service           service-name
                       :environment       (-> config :public-config :environment-name)
                       :user-agent        agent
                       :caller-id         "-"
