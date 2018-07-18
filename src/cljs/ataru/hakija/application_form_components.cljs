@@ -763,17 +763,12 @@
             {:on-click add-on-click}
             [:i.zmdi.zmdi-plus-square] (str " " (get-translation :add-row))])]))))
 
-(defn- feature-enabled? [{:keys [fieldType]}]
-  (or (not= fieldType "attachment")
-      (fc/feature-enabled? :attachment)))
-
 (defn render-field
   [field-descriptor & args]
   (let [ui       (subscribe [:state-query [:application :ui]])
         editing? (subscribe [:state-query [:application :editing?]])]
     (fn [field-descriptor & {:keys [idx] :as args}]
-      (if (and (feature-enabled? field-descriptor)
-               (visible? ui field-descriptor))
+      (if (visible? ui field-descriptor)
         (let [disabled? (get-in @ui [(keyword (:id field-descriptor)) :disabled?] false)]
           (cond-> (match field-descriptor
                          {:fieldClass "wrapperElement"

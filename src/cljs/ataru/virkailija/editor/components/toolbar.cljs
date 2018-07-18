@@ -8,36 +8,34 @@
    [taoensso.timbre :refer-macros [spy debug]]))
 
 (def ^:private toolbar-elements
-  (remove nil?
-          [["Lomakeosio" component/form-section]
-           ["Pudotusvalikko" component/dropdown]
-           ["Painikkeet, yksi valittavissa" component/single-choice-button]
-           ["Lista, monta valittavissa" component/multiple-choice]
-           ["Tekstikenttä" component/text-field]
-           ["Tekstialue" component/text-area]
-           ["Vierekkäiset tekstikentät" component/adjacent-fieldset]
-           (when (fc/feature-enabled? :attachment) ["Liitepyyntö" component/attachment])
-           (when (fc/feature-enabled? :question-group) ["Kysymysryhmä" component/question-group])
-           ["Infoteksti" component/info-element]
-           (when (fc/feature-enabled? :question-group) ["Pohjakoulutusmoduuli" base-education-module/module])
-           (when (fc/feature-enabled? :question-group) ["Pohjakoulutusmoduuli (kk-yhteishaku)" kk-base-education-module/module])
-           ["Ilmoitus riittämättömästä pohjakoulutuksesta" component/pohjakoulutusristiriita]
-           ["Koulutusmarkkinointilupa" component/koulutusmarkkinointilupa]
-           ["Valintatuloksen julkaisulupa" component/valintatuloksen-julkaisulupa]
-           ["Sähköisen asioinnin lupa" component/lupa-sahkoiseen-asiointiin]
-           ["Asiointikieli" component/asiointikieli]]))
+  [["Lomakeosio" component/form-section]
+   ["Pudotusvalikko" component/dropdown]
+   ["Painikkeet, yksi valittavissa" component/single-choice-button]
+   ["Lista, monta valittavissa" component/multiple-choice]
+   ["Tekstikenttä" component/text-field]
+   ["Tekstialue" component/text-area]
+   ["Vierekkäiset tekstikentät" component/adjacent-fieldset]
+   ["Liitepyyntö" component/attachment]
+   ["Kysymysryhmä" component/question-group]
+   ["Infoteksti" component/info-element]
+   ["Pohjakoulutusmoduuli" base-education-module/module]
+   ["Pohjakoulutusmoduuli (kk-yhteishaku)" kk-base-education-module/module]
+   ["Ilmoitus riittämättömästä pohjakoulutuksesta" component/pohjakoulutusristiriita]
+   ["Koulutusmarkkinointilupa" component/koulutusmarkkinointilupa]
+   ["Valintatuloksen julkaisulupa" component/valintatuloksen-julkaisulupa]
+   ["Sähköisen asioinnin lupa" component/lupa-sahkoiseen-asiointiin]
+   ["Asiointikieli" component/asiointikieli]])
 
 (def followup-toolbar-element-names
-  (cond-> #{"Tekstikenttä"
-            "Tekstialue"
-            "Pudotusvalikko"
-            "Painikkeet, yksi valittavissa"
-            "Lista, monta valittavissa"
-            "Infoteksti"
-            "Liitepyyntö"
-            "Vierekkäiset tekstikentät"}
-    (fc/feature-enabled? :question-group)
-    (conj "Kysymysryhmä")))
+  #{"Tekstikenttä"
+    "Tekstialue"
+    "Pudotusvalikko"
+    "Painikkeet, yksi valittavissa"
+    "Lista, monta valittavissa"
+    "Infoteksti"
+    "Liitepyyntö"
+    "Vierekkäiset tekstikentät"
+    "Kysymysryhmä"})
 
 (def question-group-toolbar-element-names
   #{"Tekstikenttä"

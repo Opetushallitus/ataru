@@ -21,8 +21,6 @@
           [:editor :forms (-> db :editor :selected-form-key) :content]
           path)))))
 
-(defonce attachments-enabled? (fc/feature-enabled? :attachment))
-
 (defn soresu->reagent [content path & args]
   (fn [content path & args]
     (let [children  (map-indexed
@@ -89,8 +87,7 @@
 
                    {:fieldClass "formField"
                     :fieldType  "attachment"}
-                   (when attachments-enabled?
-                     [ec/attachment content path])
+                   [ec/attachment content path]
 
                    {:fieldClass "formField"
                     :fieldType  "hakukohteet"}

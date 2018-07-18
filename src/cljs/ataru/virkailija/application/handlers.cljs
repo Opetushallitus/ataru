@@ -517,8 +517,7 @@
     (let [response-with-parsed-times (parse-application-times response)
           db                         (update-application-details db response-with-parsed-times)]
       {:db         db
-       :dispatch-n [(if (and (fc/feature-enabled? :attachment)
-                             (application-has-attachments? db))
+       :dispatch-n [(if (application-has-attachments? db)
                       [:application/fetch-application-attachment-metadata]
                       [:application/start-autosave])
                     [:application/get-application-change-history (-> response :application :key)]]})))
