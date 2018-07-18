@@ -590,12 +590,12 @@
 
 (defn- set-repeatable-application-field-top-level-valid
   [db id group-idx required? valid?]
-  (let [values (get-in db [:application :answers id :values])
+  (let [values               (get-in db [:application :answers id :values])
         multi-value-answers? (some? group-idx)
-        is-empty? (if multi-value-answers?
-                    (some empty? values)
-                    (empty? values))
-        all-valid? (and (every? :valid (flatten values)) valid?)]
+        is-empty?            (if multi-value-answers?
+                               (some empty? values)
+                               (empty? values))
+        all-valid?           (and (every? :valid (flatten values)) valid?)]
     (assoc-in db [:application :answers id :valid] (if is-empty?
                                                      (not required?)
                                                      all-valid?))))
@@ -635,22 +635,25 @@
   [db field-descriptor data-idx question-group-idx]
   (let [id              (keyword (:id field-descriptor))
         raw-value-path  (cond-> [:application :answers id :values]
-                          question-group-idx (conj question-group-idx))
+                                question-group-idx (conj question-group-idx))
         disp-value-path (cond-> [:application :answers id :value]
-                          question-group-idx (conj question-group-idx))]
+                                question-group-idx (conj question-group-idx))]
     (cond-> db
-      (seq (get-in db raw-value-path))
-      (update-in raw-value-path
-                 #(autil/remove-nth % data-idx))
+            (seq (get-in db raw-value-path))
+            (update-in raw-value-path
+                       #(autil/remove-nth % data-idx))
 
-      ;; when creating application, we have the value below (and it's important). when editing, we do not.
-      ;; consider this a temporary, terrible bandaid solution
-      (seq (get-in db disp-value-path))
-      (update-in disp-value-path
-                 #(autil/remove-nth (vec %) data-idx))
+            ;; when creating application, we have the value below (and it's important). when editing, we do not.
+            ;; consider this a temporary, terrible bandaid solution
+            (seq (get-in db disp-value-path))
+            (update-in disp-value-path
+                       #(autil/remove-nth (vec %) data-idx))
 
-      true
-      (set-repeatable-field-value field-descriptor question-group-idx))))
+            true
+            (set-repeatable-field-value field-descriptor question-group-idx)
+
+            true
+            (set-repeatable-application-field-top-level-valid id question-group-idx (required? field-descriptor) true))))
 
 (reg-event-db
   :application/remove-repeatable-application-field-value
