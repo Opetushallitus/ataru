@@ -223,7 +223,7 @@
         (let [fields (-> resp :body :content util/flatten-form-fields)]
           (should= (map :id (filter cannot-edit? fields))
                    ["first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language"])
-          (should= (map :id (filter cannot-view? fields))
+           (should= (map :id (filter cannot-view? fields))
                    ["ssn" "birth-date"])))))
 
   (it "should get form as virkailija"
