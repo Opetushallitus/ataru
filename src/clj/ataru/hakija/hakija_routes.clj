@@ -316,7 +316,7 @@
                                              (when (or
                                                      (>= status 400)
                                                      (clojure.string/starts-with? uri "/hakemus/api/"))
-                                               (access-log/logger options request response totaltime))))
+                                               (access-log/log options request response totaltime))))
                             (wrap-gzip)
                             (cache-control/wrap-cache-control))))
 

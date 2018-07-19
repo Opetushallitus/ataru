@@ -828,15 +828,15 @@
                                                (update :security dissoc :content-type-options :anti-forgery)))
                             (wrap-with-logger
                               :debug identity
-                              :info  (fn [x] (access-log/info x))
-                              :warn  (fn [x] (access-log/warn x))
+                              :info (fn [x] (access-log/info x))
+                              :warn (fn [x] (access-log/warn x))
                               :error (fn [x] (access-log/error x))
                               :pre-logger (fn [_ _] nil)
                               :post-logger (fn [options {:keys [uri] :as request} {:keys [status] :as response} totaltime]
                                              (when (or
                                                      (>= status 400)
                                                      (clojure.string/starts-with? uri "/lomake-editori/api/"))
-                                               (access-log/logger options request response totaltime))))
+                                               (access-log/log options request response totaltime))))
                             (wrap-gzip)
                             (cache-control/wrap-cache-control))))
 
