@@ -42,7 +42,7 @@
 (defn- extract-session
   [request]
   (let [cookies      (s/split (extract-header request "cookie") #";")
-        ring-session (some #(when (s/starts-with? % "ring-session") %) cookies)]
+        ring-session (or (some #(when (s/starts-with? % "ring-session") %) cookies) "-")]
     (last (s/split ring-session #"="))))
 
 (defn log
