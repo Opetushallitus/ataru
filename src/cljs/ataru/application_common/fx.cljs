@@ -31,7 +31,7 @@
 
 (defn- validatep [{:keys [field-descriptor] :as params}]
   (async/merge
-   (map (fn [v] (validator/validate (assoc params :validator v)))
+   (map (fn [v] (validator/validate (assoc params :validator v :has-applied has-applied)))
         (:validators field-descriptor))))
 
 (defn- all-valid? [valid-ch]
