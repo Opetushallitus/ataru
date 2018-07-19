@@ -13,7 +13,7 @@
                  :virkailija       {:service_url "http://localhost:8350/lomake-editori/"}
                  :environment-name "test"
                  :enable-re-frisk  true
-                 :local-dev-logout  true}
+                 :local-dev-logout true}
  :dev           {:fake-dependencies true}
  :urls          {:virkailija-host "virkailija.untuvaopintopolku.fi"
                  :hakija-host     "oppija.untuvaopintopolku.fi"

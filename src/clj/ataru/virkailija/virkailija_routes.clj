@@ -1,5 +1,6 @@
 (ns ataru.virkailija.virkailija-routes
-  (:require [ataru.application.review-states :as review-states]
+  (:require [ataru.log.access-log :as access-log]
+            [ataru.application.review-states :as review-states]
             [ataru.applications.application-access-control :as access-controlled-application]
             [ataru.applications.application-service :as application-service]
             [ataru.applications.application-store :as application-store]
@@ -827,15 +828,15 @@
                                                (update :security dissoc :content-type-options :anti-forgery)))
                             (wrap-with-logger
                               :debug identity
-                              :info  (fn [x] (info x))
-                              :warn  (fn [x] (warn x))
-                              :error (fn [x] (error x))
+                              :info (fn [x] (access-log/info x))
+                              :warn (fn [x] (access-log/warn x))
+                              :error (fn [x] (access-log/error x))
                               :pre-logger (fn [_ _] nil)
                               :post-logger (fn [options {:keys [uri] :as request} {:keys [status] :as response} totaltime]
                                              (when (or
                                                      (>= status 400)
                                                      (clojure.string/starts-with? uri "/lomake-editori/api/"))
-                                               (#'middleware-logger/post-logger options request response totaltime))))
+                                               (access-log/log options request response totaltime))))
                             (wrap-gzip)
                             (cache-control/wrap-cache-control))))
 
