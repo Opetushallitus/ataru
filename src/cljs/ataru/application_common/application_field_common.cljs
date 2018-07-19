@@ -10,12 +10,14 @@
 
 (def required-validators
   #{"required"
+    "required-hakija"
     "postal-code"
     "postal-office"
     "home-town"
     "city"
     "hakukohteet"
     "birthplace"})
+
 (def contains-required-validators? (partial contains? required-validators))
 
 (defonce builder (new HtmlSanitizer.Builder))

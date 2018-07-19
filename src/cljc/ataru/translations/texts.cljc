@@ -187,12 +187,30 @@
    :muokkaa-hakukohteita                    {:fi "Muokkaa hakukohteita"
                                              :sv "Muokkaa hakukohteita"
                                              :en "Muokkaa hakukohteita"}
-   :read-more {:fi "Lue lisää"
-               :sv "Läs vidare"
-               :en "Read more"}
-   :read-less {:fi "Sulje ohje"
-               :sv "Dölj anvisning"
-               :en "Hide instructions"}})
+   :read-more                               {:fi "Lue lisää"
+                                             :sv "Läs vidare"
+                                             :en "Read more"}
+   :read-less                               {:fi "Sulje ohje"
+                                             :sv "Dölj anvisning"
+                                             :en "Hide instructions"}
+   :insufficient-base-education             {:fi "Ilmoitus riittämättömästä pohjakoulutuksesta"
+                                             :sv "Ilmoitus riittämättömästä pohjakoulutuksesta"
+                                             :en "Ilmoitus riittämättömästä pohjakoulutuksesta"}
+   :not-applicable-for-hakukohteet          {:fi "Ilmoittamasi pohjakoulutuksen perusteella et voi tulla valituksi seuraaviin hakukohteisiin"
+                                             :sv "Ilmoittamasi pohjakoulutuksen perusteella et voi tulla valituksi seuraaviin hakukohteisiin"
+                                             :en "Ilmoittamasi pohjakoulutuksen perusteella et voi tulla valituksi seuraaviin hakukohteisiin"}
+   :allow-use-of-contact-information        {:fi "Yhteystietojani saa käyttää koulutusmarkkinoinnissa?"
+                                             :sv "Yhteystietojani saa käyttää koulutusmarkkinoinnissa?"
+                                             :en "Yhteystietojani saa käyttää koulutusmarkkinoinnissa?"}
+   :allow-publishing-of-results-online      {:fi "Opiskelijavalinnan tulokseni saa julkaista internetissä?"
+                                             :sv "Opiskelijavalinnan tulokseni saa julkaista internetissä?"
+                                             :en "Opiskelijavalinnan tulokseni saa julkaista internetissä?"}
+   :permission-for-electronic-transactions  {:fi "Opiskelijavalinnan tulokset saa lähettää minulle sähköisesti."
+                                             :sv "Opiskelijavalinnan tulokset saa lähettää minulle sähköisesti."
+                                             :en "Opiskelijavalinnan tulokset saa lähettää minulle sähköisesti."}
+   :contact-language                        {:fi "Asiointikieli"
+                                             :sv "Asiointikieli"
+                                             :en "Asiointikieli"}})
 
 (def general-texts
   {:yes                {:en "Yes"

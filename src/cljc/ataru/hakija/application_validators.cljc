@@ -141,10 +141,15 @@
          institution."]]}])
 
 (defn ^:private required?
-  [value _ _]
+  [{:keys [value]}]
   (if (or (seq? value) (vector? value))
     (not (empty? value))
     (not (clojure.string/blank? value))))
+
+(defn- required-hakija?
+  [{:keys [virkailija?] :as params}]
+  (or (required? params)
+      virkailija?))
 
 (defn- residence-in-finland?
   [answers-by-key]
@@ -157,57 +162,57 @@
       (ssn/ssn? (get-in answers-by-key [:ssn :value]))))
 
 (defn- ssn?
-     [has-applied value answers-by-key field-descriptor]
-     (let [multiple? (get-in field-descriptor
-                             [:params :can-submit-multiple-applications]
-                             true)
-           haku-oid (get-in field-descriptor
-                            [:params :haku-oid])
-           preferred-name (:preferred-name answers-by-key)
-           original-value (get-in answers-by-key [(keyword (:id field-descriptor)) :original-value])
-           modifying? (some? original-value)]
-       (asyncm/go
-         (cond (not (ssn/ssn? value))
-               [false []]
-               (and (not multiple?)
-                    (not (and modifying? (= value original-value)))
-                    (async/<! (has-applied haku-oid {:ssn value})))
-               [false (ssn-applied-error (when (:valid preferred-name)
-                                           (:value preferred-name)))]
-               :else
-               [true []]))))
+  [{:keys [has-applied value answers-by-key field-descriptor]}]
+  (let [multiple?      (get-in field-descriptor
+                               [:params :can-submit-multiple-applications]
+                               true)
+        haku-oid       (get-in field-descriptor
+                               [:params :haku-oid])
+        preferred-name (:preferred-name answers-by-key)
+        original-value (get-in answers-by-key [(keyword (:id field-descriptor)) :original-value])
+        modifying?     (some? original-value)]
+    (asyncm/go
+      (cond (not (ssn/ssn? value))
+            [false []]
+            (and (not multiple?)
+                 (not (and modifying? (= value original-value)))
+                 (async/<! (has-applied haku-oid {:ssn value})))
+            [false (ssn-applied-error (when (:valid preferred-name)
+                                        (:value preferred-name)))]
+            :else
+            [true []]))))
 
 (defn- email?
-     [has-applied value answers-by-key field-descriptor]
-     (let [multiple? (get-in field-descriptor
-                             [:params :can-submit-multiple-applications]
-                             true)
-           haku-oid (get-in field-descriptor
-                            [:params :haku-oid])
-           preferred-name (:preferred-name answers-by-key)
-           ssn (get-in answers-by-key [:ssn :value])
-           original-value (get-in answers-by-key [(keyword (:id field-descriptor)) :original-value])
-           modifying? (some? original-value)]
-       (asyncm/go
-         (cond (not (email/email? value))
-               [false []]
-               (and (not multiple?)
-                    (not (and modifying? (= value original-value)))
-                    (not (and (have-finnish-ssn? answers-by-key)
-                              (async/<! (has-applied haku-oid {:ssn ssn}))))
-                    (async/<! (has-applied haku-oid {:email value})))
-               [false
-                ((if modifying?
-                   email-applied-error-when-modifying
-                   email-applied-error) value (when (:valid preferred-name)
-                                                (:value preferred-name)))]
-               :else
-               [true []]))))
+  [{:keys [has-applied value answers-by-key field-descriptor]}]
+  (let [multiple?      (get-in field-descriptor
+                               [:params :can-submit-multiple-applications]
+                               true)
+        haku-oid       (get-in field-descriptor
+                               [:params :haku-oid])
+        preferred-name (:preferred-name answers-by-key)
+        ssn            (get-in answers-by-key [:ssn :value])
+        original-value (get-in answers-by-key [(keyword (:id field-descriptor)) :original-value])
+        modifying?     (some? original-value)]
+    (asyncm/go
+      (cond (not (email/email? value))
+            [false []]
+            (and (not multiple?)
+                 (not (and modifying? (= value original-value)))
+                 (not (and (have-finnish-ssn? answers-by-key)
+                           (async/<! (has-applied haku-oid {:ssn ssn}))))
+                 (async/<! (has-applied haku-oid {:email value})))
+            [false
+             ((if modifying?
+                email-applied-error-when-modifying
+                email-applied-error) value (when (:valid preferred-name)
+                                             (:value preferred-name)))]
+            :else
+            [true []]))))
 
 (def ^:private postal-code-pattern #"^\d{5}$")
 
 (defn ^:private postal-code?
-  [value answers-by-key _]
+  [{:keys [value answers-by-key]}]
   (if (residence-in-finland? answers-by-key)
     (and (not (nil? value))
          (not (nil? (re-matches postal-code-pattern value))))
@@ -218,7 +223,7 @@
 (def ^:private finnish-date-pattern #"^\d{1,2}\.\d{1,2}\.\d{4}$")
 
 (defn ^:private phone?
-  [value _ _]
+  [{:keys [value]}]
   (if-not (nil? value)
     (let [parsed (clojure.string/replace value whitespace-pattern "")]
       (not (nil? (re-matches phone-pattern parsed))))
@@ -244,39 +249,39 @@
            nil)))))
 
 (defn ^:private date?
-  [value _ _]
+  [value]
   (boolean
     (some->>
       value
       parse-date)))
 
 (defn ^:private past-date?
-  [value _ _]
+  [{:keys [value]}]
   (boolean
-    (and (date? value _ _)
+    (and (date? value)
          (some-> (parse-date value)
                  (c/before? (c/today-at-midnight))))))
 
 (defn- postal-office?
-  [value answers-by-key _]
+  [{:keys [value answers-by-key]}]
   (if (residence-in-finland? answers-by-key)
     (not (clojure.string/blank? value))
     true))
 
 (defn- birthplace?
-  [value answers-by-key _]
+  [{:keys [value answers-by-key]}]
   (if (have-finnish-ssn? answers-by-key)
     (clojure.string/blank? value)
     (not (clojure.string/blank? value))))
 
 (defn- home-town?
-  [value answers-by-key _]
+  [{:keys [value answers-by-key]}]
   (if (residence-in-finland? answers-by-key)
     (not (clojure.string/blank? value))
     true))
 
 (defn- city?
-  [value answers-by-key _]
+  [{:keys [value answers-by-key]}]
   (if (residence-in-finland? answers-by-key)
     true
     (not (clojure.string/blank? value))))
@@ -290,7 +295,7 @@
     (every? map? value) (map :value value)))
 
 (defn- hakukohteet?
-  [value _ field-descriptor]
+  [{:keys [value field-descriptor]}]
   (let [hakukohde-options          (:options field-descriptor)
         num-answers                (count value)
         answers-subset-of-options? (clojure.set/subset? (set (parse-value value)) (set (map :value hakukohde-options)))]
@@ -303,7 +308,7 @@
 (def numeric-matcher #"[+-]?(0|[1-9][0-9]*)([,.][0-9]+)?")
 
 (defn- numeric?
-  [value _ field-descriptor]
+  [{:keys [value field-descriptor]}]
   (if (clojure.string/blank? value)
     true
     (let [[_ integer-part decimal-part] (re-matches numeric-matcher value)
@@ -323,6 +328,7 @@
         :else true))))
 
 (def pure-validators {:required        required?
+                      :required-hakija required-hakija?
                       :postal-code     postal-code?
                       :postal-office   postal-office?
                       :phone           phone?
@@ -338,10 +344,10 @@
                        :email email?})
 
 (defn validate
-  [has-applied validator value answers-by-key field-descriptor]
+  [{:keys [validator] :as params}]
   (if-let [pure-validator ((keyword validator) pure-validators)]
-    (let [valid? (pure-validator value answers-by-key field-descriptor)]
+    (let [valid? (pure-validator params)]
       (asyncm/go [valid? []]))
     (if-let [async-validator ((keyword validator) async-validators)]
-      (async-validator has-applied value answers-by-key field-descriptor)
+      (async-validator params)
       (asyncm/go [false []]))))

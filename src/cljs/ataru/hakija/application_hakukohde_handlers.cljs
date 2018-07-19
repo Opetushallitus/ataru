@@ -13,7 +13,7 @@
 
 (defn- set-values-changed
   [db]
-  (let [values (map :value (get-in db [:application :answers :hakukohteet :values] []))
+  (let [values          (map :value (get-in db [:application :answers :hakukohteet :values] []))
         original-values (get-in db [:application :answers :hakukohteet :original-value] [])]
     (update-in db [:application :values-changed?]
                (fnil (if (= original-values values) disj conj) #{})
@@ -80,56 +80,58 @@
     (assoc-in db [:application :answers :hakukohteet :valid] valid?)))
 
 (reg-event-fx
- :application/hakukohde-add-selection
- (fn [{db :db} [_ hakukohde-oid]]
-   (let [field-descriptor     (hakukohteet-field db)
-         selected-hakukohteet (vec (get-in db [:application :answers :hakukohteet :values]))
-         not-yet-selected?    (every? #(not= hakukohde-oid (:value %))
-                                      selected-hakukohteet)
-         new-hakukohde-values (cond-> selected-hakukohteet
-                                not-yet-selected?
-                                (conj {:valid true :value hakukohde-oid}))
-         max-hakukohteet      (get-in field-descriptor [:params :max-hakukohteet] nil)
-         db                   (-> db
-                                  (assoc-in [:application :answers :hakukohteet :values]
-                                            new-hakukohde-values)
-                                  set-values-changed
-                                  set-field-visibilities)]
-     {:db       (cond-> db
-                  (and (some? max-hakukohteet)
-                       (<= max-hakukohteet (count new-hakukohde-values)))
-                  toggle-hakukohde-search)
-      :validate {:value            new-hakukohde-values
-                 :answers          (get-in db [:application :answers])
-                 :field-descriptor field-descriptor
-                 :editing?         (get-in db [:application :editing?])
-                 :on-validated     (fn [[valid? errors]]
-                                     (dispatch [:application/set-hakukohde-valid
-                                                valid?]))}})))
+  :application/hakukohde-add-selection
+  (fn [{db :db} [_ hakukohde-oid]]
+    (let [field-descriptor     (hakukohteet-field db)
+          selected-hakukohteet (vec (get-in db [:application :answers :hakukohteet :values]))
+          not-yet-selected?    (every? #(not= hakukohde-oid (:value %))
+                                       selected-hakukohteet)
+          new-hakukohde-values (cond-> selected-hakukohteet
+                                       not-yet-selected?
+                                       (conj {:valid true :value hakukohde-oid}))
+          max-hakukohteet      (get-in field-descriptor [:params :max-hakukohteet] nil)
+          db                   (-> db
+                                   (assoc-in [:application :answers :hakukohteet :values]
+                                             new-hakukohde-values)
+                                   set-values-changed
+                                   set-field-visibilities)]
+      {:db       (cond-> db
+                         (and (some? max-hakukohteet)
+                              (<= max-hakukohteet (count new-hakukohde-values)))
+                         toggle-hakukohde-search)
+       :validate {:value            new-hakukohde-values
+                  :answers-by-key   (get-in db [:application :answers])
+                  :field-descriptor field-descriptor
+                  :editing?         (get-in db [:application :editing?])
+                  :virkailija?      (contains? (:application db) :virkailija-secret)
+                  :on-validated     (fn [[valid? errors]]
+                                      (dispatch [:application/set-hakukohde-valid
+                                                 valid?]))}})))
 
 (defn- remove-hakukohde-from-deleting
   [hakukohteet hakukohde]
   (remove #(= hakukohde %) hakukohteet))
 
 (reg-event-fx
- :application/hakukohde-remove
- (fn [{db :db} [_ hakukohde-oid]]
-   (let [selected-hakukohteet (get-in db [:application :answers :hakukohteet :values] [])
-         new-hakukohde-values (vec (remove #(= hakukohde-oid (:value %)) selected-hakukohteet))
-         db (-> db
-                (assoc-in [:application :answers :hakukohteet :values]
-                          new-hakukohde-values)
-                (update-in [:application :ui :hakukohteet :deleting] remove-hakukohde-from-deleting hakukohde-oid)
-                set-values-changed
-                set-field-visibilities)]
-     {:db db
-      :validate {:value new-hakukohde-values
-                 :answers (get-in db [:application :answers])
-                 :field-descriptor (hakukohteet-field db)
-                 :editing? (get-in db [:application :editing?])
-                 :on-validated (fn [[valid? errors]]
-                                 (dispatch [:application/set-hakukohde-valid
-                                            valid?]))}})))
+  :application/hakukohde-remove
+  (fn [{db :db} [_ hakukohde-oid]]
+    (let [selected-hakukohteet (get-in db [:application :answers :hakukohteet :values] [])
+          new-hakukohde-values (vec (remove #(= hakukohde-oid (:value %)) selected-hakukohteet))
+          db                   (-> db
+                                   (assoc-in [:application :answers :hakukohteet :values]
+                                             new-hakukohde-values)
+                                   (update-in [:application :ui :hakukohteet :deleting] remove-hakukohde-from-deleting hakukohde-oid)
+                                   set-values-changed
+                                   set-field-visibilities)]
+      {:db       db
+       :validate {:value            new-hakukohde-values
+                  :answers-by-key   (get-in db [:application :answers])
+                  :field-descriptor (hakukohteet-field db)
+                  :editing?         (get-in db [:application :editing?])
+                  :virkailija?      (contains? (:application db) :virkailija-secret)
+                  :on-validated     (fn [[valid? errors]]
+                                      (dispatch [:application/set-hakukohde-valid
+                                                 valid?]))}})))
 
 (reg-event-fx
   :application/hakukohde-remove-selection

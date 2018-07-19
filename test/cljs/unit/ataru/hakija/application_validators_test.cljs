@@ -18,17 +18,16 @@
            (doseq [ssn ssn/ssn-list]
              (doseq [century-char ["A"]]
                (let [ssn (str (:start ssn) century-char (:end ssn))]
-                 (is (first (async/<! (validator/validate has-never-applied "ssn" ssn {} nil)))
+                 (is (first (async/<! (validator/validate {:has-applied has-never-applied :validator "ssn" :value ssn})))
                      (str "SSN " ssn " is not valid")))))
 
-           (is (not (first (async/<! (validator/validate has-never-applied "ssn" nil {} nil)))))
-           (is (not (first (async/<! (validator/validate has-never-applied "ssn" "" {} nil)))))
-           (is (not (first (async/<! (validator/validate (fn [_ _] (asyncm/go true))
-                                                         "ssn"
-                                                         "020202A0202"
-                                                         {}
-                                                         {:params {:can-submit-multiple-applications false
-                                                                   :haku-oid "dummy-haku-oid"}})))))
+           (is (not (first (async/<! (validator/validate {:has-applied has-never-applied :validator "ssn"})))))
+           (is (not (first (async/<! (validator/validate {:has-applied has-never-applied :validator "ssn"})))))
+           (is (not (first (async/<! (validator/validate {:has-applied      (fn [_ _] (asyncm/go true))
+                                                          :validator        "ssn"
+                                                          :value            "020202A0202"
+                                                          :field-descriptor {:params {:can-submit-multiple-applications false
+                                                                                      :haku-oid                         "dummy-haku-oid"}}})))))
            (done))))
 
 (deftest email-validation
@@ -37,16 +36,15 @@
            (doseq [email (keys email/email-list)]
              (let [expected (get email/email-list email)
                    pred     (if expected true? false?)
-                   actual   (first (async/<! (validator/validate has-never-applied "email" email {} nil)))
+                   actual   (first (async/<! (validator/validate {:has-applied has-never-applied :validator "email" :value email})))
                    message  (if expected "valid" "invalid")]
                (is (pred actual)
                    (str "email " email " was not " message))))
-           (is (not (first (async/<! (validator/validate (fn [_ _] (asyncm/go true))
-                                                         "email"
-                                                         "test@example.com"
-                                                         {}
-                                                         {:params {:can-submit-multiple-applications false
-                                                                   :haku-oid "dummy-haku-oid"}})))))
+           (is (not (first (async/<! (validator/validate {:has-applied      (fn [_ _] (asyncm/go true))
+                                                          :validator        "email"
+                                                          :value            "test@example.com"
+                                                          :field-descriptor {:params {:can-submit-multiple-applications false
+                                                                                      :haku-oid                         "dummy-haku-oid"}}})))))
            (done))))
 
 (deftest postal-code-validation
@@ -55,10 +53,10 @@
            (doseq [postal-code (keys postal-code/postal-code-list)]
              (let [expected (get postal-code/postal-code-list postal-code)
                    pred     (if expected true? false?)
-                   actual   (first (async/<! (validator/validate has-never-applied "postal-code"
-                                                                 postal-code
-                                                                 {:country-of-residence {:value "246"}}
-                                                                 nil)))
+                   actual   (first (async/<! (validator/validate {:has-applied    has-never-applied
+                                                                  :validator      "postal-code"
+                                                                  :value          postal-code
+                                                                  :answers-by-key {:country-of-residence {:value "246"}}})))
                    message  (if expected "valid" "invalid")]
                (is (pred actual)
                    (str "postal code " postal-code " was not " message))))
@@ -70,7 +68,9 @@
            (doseq [number (keys phone/phone-list)]
              (let [expected (get phone/phone-list number)
                    pred     (if expected true? false?)
-                   actual   (first (async/<! (validator/validate has-never-applied "phone" number {} nil)))
+                   actual   (first (async/<! (validator/validate {:has-applied has-never-applied
+                                                                  :validator   "phone"
+                                                                  :value       number})))
                    message  (if expected "valid" "invalid")]
                (is (pred actual)
                    (str "phone number " number " was not " message))))
@@ -80,18 +80,17 @@
   (async done
          (asyncm/go
            (doseq [[input expected] date/date-list]
-             (is (= expected (first (async/<! (validator/validate has-never-applied :past-date
-                                                                  input
-                                                                  {}
-                                                                  nil))))))
+             (is (= expected (first (async/<! (validator/validate {:has-applied has-never-applied
+                                                                   :validator   "past-date"
+                                                                   :value       input}))))))
            (done))))
 
 (deftest main-first-name-validation
   (async done
          (asyncm/go
            (doseq [[first-name main-name expected] first-name/first-name-list]
-             (is (= expected (first (async/<! (validator/validate has-never-applied :main-first-name
-                                                                  main-name
-                                                                  {:first-name {:value first-name}}
-                                                                  nil))))))
+             (is (= expected (first (async/<! (validator/validate {:has-applied    has-never-applied
+                                                                   :validator      "main-first-name"
+                                                                   :value          main-name
+                                                                   :answers-by-key {:first-name {:value first-name}}}))))))
            (done))))

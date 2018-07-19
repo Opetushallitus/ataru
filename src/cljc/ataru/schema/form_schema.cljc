@@ -362,9 +362,7 @@
    :preferred-name                      s/Str
    :last-name                           s/Str
    :gender                              s/Str
-   :nationality                         [(s/both
-                                           (s/pred #(= 1 (count %)) "multiple nationality group")
-                                           [s/Str])]
+   :nationality                         [(s/constrained [s/Str] #(= 1 (count %)))]
    (s/optional-key :gender-string)      s/Str
    (s/optional-key :nationality-string) s/Str
    (s/optional-key :ssn)                (s/maybe s/Str)
@@ -412,21 +410,23 @@
    :email            (s/maybe s/Str)})
 
 (s/defschema HakurekisteriApplication
-  {:oid                      s/Str
-   :personOid                s/Str
-   :applicationSystemId      s/Str
-   :kieli                    s/Str
-   :hakukohteet              [s/Str]
-   :email                    s/Str
-   :matkapuhelin             s/Str
-   :lahiosoite               s/Str
-   :postinumero              s/Str
-   :postitoimipaikka         (s/maybe s/Str)
-   :asuinmaa                 s/Str
-   :kotikunta                (s/maybe s/Str)
-   :paymentObligations       {s/Str s/Str}
-   :kkPohjakoulutus          [s/Str]
-   :korkeakoulututkintoVuosi (s/maybe s/Int)})
+  {:oid                         s/Str
+   :personOid                   s/Str
+   :applicationSystemId         s/Str
+   :kieli                       s/Str
+   :hakukohteet                 [s/Str]
+   :email                       s/Str
+   :matkapuhelin                s/Str
+   :lahiosoite                  s/Str
+   :postinumero                 s/Str
+   :postitoimipaikka            (s/maybe s/Str)
+   :asuinmaa                    s/Str
+   :kotikunta                   (s/maybe s/Str)
+   :paymentObligations          {s/Str s/Str}
+   :kkPohjakoulutus             [s/Str]
+   :sahkoisenAsioinninLupa      s/Bool
+   :valintatuloksenJulkaisulupa s/Bool
+   :koulutusmarkkinointilupa    s/Bool})
 
 (s/defschema OnrApplication
   {:oid          s/Str

@@ -95,15 +95,14 @@
                 attachments)])
 
 (defn attachment [field-descriptor application lang group-idx]
-  (when (fc/feature-enabled? :attachment)
-    (let [answer-key (keyword (answer-key field-descriptor))
-          values     (cond-> (get-in application [:answers answer-key :values])
-                       (some? group-idx)
-                       (nth group-idx))]
-      [:div.application__form-field
-       [:label.application__form-field-label
-        (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
-       [attachment-list values]])))
+  (let [answer-key (keyword (answer-key field-descriptor))
+        values     (cond-> (get-in application [:answers answer-key :values])
+                           (some? group-idx)
+                           (nth group-idx))]
+    [:div.application__form-field
+     [:label.application__form-field-label
+      (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
+     [attachment-list values]]))
 
 (declare field)
 

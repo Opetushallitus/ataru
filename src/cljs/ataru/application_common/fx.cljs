@@ -29,9 +29,9 @@
   (fn [title]
     (aset js/document "title" title)))
 
-(defn- validatep [value answers field-descriptor]
+(defn- validatep [{:keys [field-descriptor] :as params}]
   (async/merge
-   (map (fn [v] (validator/validate has-applied v value answers field-descriptor))
+   (map (fn [v] (validator/validate (assoc params :validator v :has-applied has-applied)))
         (:validators field-descriptor))))
 
 (defn- all-valid? [valid-ch]
@@ -50,26 +50,26 @@
 
 (re-frame/reg-fx
  :validate
- (fn [{:keys [value answers field-descriptor editing? on-validated]}]
+ (fn [{:keys [field-descriptor editing? on-validated] :as params}]
    (let [id (keyword (:id field-descriptor))
          val (next-val id)]
      (if (and editing? (:cannot-edit field-descriptor))
        (on-validated [true []])
-       (async/take! (all-valid? (validatep value answers field-descriptor))
+       (async/take! (all-valid? (validatep params))
                     (fn [result]
                       (when (= val (current-val id))
                         (on-validated result))))))))
 
 (re-frame/reg-fx
  :validate-every
- (fn [{:keys [values answers field-descriptor editing? on-validated]}]
+ (fn [{:keys [values field-descriptor editing? on-validated] :as params}]
    (let [id (keyword (:id field-descriptor))
          val (next-val id)]
      (if (and editing? (:cannot-edit field-descriptor))
        (on-validated [true []])
        (async/take! (all-valid?
                      (async/merge
-                      (map (fn [value] (validatep value answers field-descriptor))
+                      (map (fn [value] (validatep (assoc params :value value)))
                            values)))
                     (fn [result]
                       (when (= val (current-val id))

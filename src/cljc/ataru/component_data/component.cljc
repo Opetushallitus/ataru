@@ -1,5 +1,6 @@
 (ns ataru.component-data.component
-  (:require [ataru.util :as util]))
+  (:require [ataru.translations.texts :as texts]
+            [ataru.util :as util]))
 
 (defn text-field [metadata]
   {:fieldClass "formField"
@@ -134,9 +135,40 @@
    :params               {:deny-submit false}
    :rules                {:pohjakoulutusristiriita nil}
    :metadata             metadata
-   :label                {:fi "Ilmoitus riittämättömästä pohjakoulutuksesta"
-                          :sv "Ilmoitus riittämättömästä pohjakoulutuksesta"
-                          :en "Ilmoitus riittämättömästä pohjakoulutuksesta"}
-   :text                 {:fi "Ilmoittamasi pohjakoulutuksen perusteella et voi tulla valituksi seuraaviin hakukohteisiin"
-                          :sv "Ilmoittamasi pohjakoulutuksen perusteella et voi tulla valituksi seuraaviin hakukohteisiin"
-                          :en "Ilmoittamasi pohjakoulutuksen perusteella et voi tulla valituksi seuraaviin hakukohteisiin"}})
+   :label                (:insufficient-base-education texts/translation-mapping)
+   :text                 (:not-applicable-for-hakukohteet texts/translation-mapping)})
+
+(defn koulutusmarkkinointilupa [metadata]
+  (assoc (single-choice-button metadata)
+         :id "koulutusmarkkinointilupa"
+         :label (:allow-use-of-contact-information texts/translation-mapping)
+         :validators ["required"]
+         :options [{:value "Kyllä"
+                    :label (:yes texts/general-texts)}
+                   {:value "Ei"
+                    :label (:no texts/general-texts)}]))
+
+(defn valintatuloksen-julkaisulupa [metadata]
+  (assoc (single-choice-button metadata)
+         :id "valintatuloksen-julkaisulupa"
+         :label (:allow-publishing-of-results-online texts/translation-mapping)
+         :validators ["required"]
+         :options [{:value "Kyllä"
+                    :label (:yes texts/general-texts)}
+                   {:value "Ei"
+                    :label (:no texts/general-texts)}]))
+
+(defn lupa-sahkoiseen-asiointiin [metadata]
+  (assoc (single-choice-button metadata)
+         :id "sahkoisen-asioinnin-lupa"
+         :label (:permission-for-electronic-transactions texts/translation-mapping)
+         :validators ["required-hakija"]
+         :options [{:value "Kyllä"
+                    :label (:yes texts/general-texts)}]))
+
+(defn asiointikieli [metadata]
+  (assoc (dissoc (dropdown metadata) :options)
+         :id "asiointikieli"
+         :label (:contact-language texts/translation-mapping)
+         :validators ["required"]
+         :koodisto-source {:uri "kieli" :version 1}))
