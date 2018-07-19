@@ -1,17 +1,18 @@
 (ns ataru.util.http-util
-  (:require [cheshire.core :as json]
-            [org.httpkit.client :as http]
+  (:require [org.httpkit.client :as http]
             [taoensso.timbre :as log]))
 
 (defn do-request
-  [{:keys [url] :as opts}]
-  (log/info "HTTP GET:" url)
-  (let [opts     (update opts :headers merge {"clientSubSystemCode" "ataru" "Caller-Id" "ataru"})
-        response @(http/request opts)
-        status   (:status response)]
-    (if (= 200 status)
-      response
-      (log/warn "HTTP GET FAILED:" url status))))
+  [{:keys [url method] :as opts}]
+  (let [opts        (update opts :headers merge {"clientSubSystemCode" "ataru" "Caller-Id" "ataru"})
+        method-name (clojure.string/upper-case (name method))
+        start       (System/currentTimeMillis)
+        response    @(http/request opts)
+        time        (- (System/currentTimeMillis) start)
+        status      (:status response 500)]
+    (when (or (<= 400 status) (< 1000 time))
+      (log/warn "HTTP" method-name url status (str time "ms")))
+    response))
 
 (defn do-get
   [url]

@@ -29,7 +29,7 @@
   (around-all [specs]
     (with-redefs [http/request (fn [{:keys [url]}]
                                  (should= url "https://virkailija.untuvaopintopolku.fi/ohjausparametrit-service/api/v1/rest/parametri/1.2.246.562.29.75477542726")
-                                 (-> ohjausparametrit-resp resp/ok future))]
+                                 (-> ohjausparametrit-resp json/generate-string resp/ok future))]
       (specs)))
 
   (it "should get ohjausparametri from ohjausparametrit-service"
