@@ -17,10 +17,6 @@
     [ataru.hakija.validator :as validator]
     [ataru.application.review-states :refer [complete-states]]
     [ataru.applications.application-store :as application-store]
-    [ataru.hakija.person-info-fields :refer [viewing-forbidden-person-info-field-ids
-                                             editing-forbidden-person-info-field-ids
-                                             editing-allowed-person-info-field-ids]]
-    [ataru.application.field-types :as types]
     [ataru.util :as util]
     [ataru.files.file-store :as file-store]
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
@@ -138,7 +134,6 @@
                                          organization-service
                                          ohjausparametrit-service
                                          (:haku application)))
-        haku-oid                      (get-in tarjonta-info [:tarjonta :haku-oid])
         hakukohteet                   (get-in tarjonta-info [:tarjonta :hakukohteet])
         applied-hakukohteet           (filter #(contains? (set (:hakukohde application)) (:oid %))
                                               hakukohteet)
@@ -310,42 +305,46 @@
 
                                    :else
                                    [:hakija nil])
-        application      (cond
-                           (and (= actor-role :virkailija) (virkailija-edit/virkailija-update-secret-valid? secret))
-                           (application-store/get-latest-application-for-virkailija-edit secret)
+        application                (cond
+                                     (and (= actor-role :virkailija) (virkailija-edit/virkailija-update-secret-valid? secret))
+                                     (application-store/get-latest-application-for-virkailija-edit secret)
 
-                           (and (= actor-role :hakija) (some? secret))
-                           (application-store/get-latest-application-by-secret secret))
-        form-roles       (cond-> [actor-role]
-                                 (some? (:person-oid application))
-                                 (conj :with-henkilo))
-        secret-expired?  (when (nil? application)
-                           (application-store/application-exists-with-secret? secret))
-        lang-override    (when secret-expired? (application-store/get-application-language-by-secret secret))
+                                     (and (= actor-role :hakija) (some? secret))
+                                     (application-store/get-latest-application-by-secret secret))
+        form-roles                 (cond-> [actor-role]
+                                           (some? (:person-oid application))
+                                           (conj :with-henkilo))
+        secret-expired?            (when (nil? application)
+                                     (application-store/application-exists-with-secret? secret))
+        lang-override              (when secret-expired? (application-store/get-application-language-by-secret secret))
         application-in-processing? (util/application-in-processing? (:application-hakukohde-reviews application))
-        form             (cond (some? (:haku application)) (hakija-form-service/fetch-form-by-haku-oid
-                                                             tarjonta-service
-                                                             organization-service
-                                                             ohjausparametrit-service
-                                                             (:haku application)
-                                                             application-in-processing?
-                                                             form-roles)
-                               (some? (:form application)) (hakija-form-service/fetch-form-by-key-with-flagged-fields
-                                                             (->> application
-                                                                  :form
-                                                                  form-store/fetch-by-id
-                                                                  :key)
-                                                             form-roles
-                                                             nil
-                                                             application-in-processing?))
-        person           (some-> application
-                                 (application-service/get-person person-client)
-                                 (dissoc :ssn :birth-date))
-        full-application (some-> application
-                                 (remove-unviewable-answers form)
-                                 attachments-metadata->answers
-                                 (dissoc :person-oid :application-hakukohde-reviews)
-                                 (assoc :cannot-edit-because-in-processing (in-processing-state? application form)))]
+        form                       (cond (some? (:haku application)) (hakija-form-service/fetch-form-by-haku-oid
+                                                                       tarjonta-service
+                                                                       organization-service
+                                                                       ohjausparametrit-service
+                                                                       (:haku application)
+                                                                       application-in-processing?
+                                                                       form-roles)
+                                         (some? (:form application)) (hakija-form-service/fetch-form-by-key-with-flagged-fields
+                                                                       (->> application
+                                                                            :form
+                                                                            form-store/fetch-by-id
+                                                                            :key)
+                                                                       form-roles
+                                                                       nil
+                                                                       application-in-processing?))
+        person                     (if (= actor-role :virkailija)
+                                     (application-service/get-person application person-client)
+                                     (some-> application
+                                             (application-service/get-person person-client)
+                                             (dissoc :ssn :birth-date)))
+        full-application           (some-> application
+                                           (remove-unviewable-answers form)
+                                           attachments-metadata->answers
+                                           (dissoc :person-oid :application-hakukohde-reviews)
+                                           (assoc :cannot-edit-because-in-processing (and
+                                                                                       (not= actor-role :virkailija)
+                                                                                       (in-processing-state? application form))))]
     [(when full-application
        {:application full-application
         :person      person

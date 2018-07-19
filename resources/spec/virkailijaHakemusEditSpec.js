@@ -40,7 +40,7 @@
           "Etunimi",
           "Sukunimi",
           "Suomi",
-          "***********",
+          "020202A0202",
           "test@example.com",
           newPhoneNumber,
           "Suomi",

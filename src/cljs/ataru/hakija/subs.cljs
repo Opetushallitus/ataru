@@ -2,7 +2,8 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :as re-frame]
             [ataru.util :as util]
-            [ataru.hakija.application :refer [answers->valid-status]]))
+            [ataru.hakija.application :refer [answers->valid-status]]
+            [ataru.hakija.person-info-fields :as person-info-fields]))
 
 (re-frame/reg-sub
   :state-query
@@ -57,21 +58,20 @@
 (re-frame/reg-sub
   :application/cannot-view?
   (fn [db [_ key]]
-    (let [field (->> (:flat-form-content db)
-                     (filter #(= (keyword key) (keyword (:id %))))
-                     first)
+    (let [field    (->> (:flat-form-content db)
+                        (filter #(= (keyword key) (keyword (:id %))))
+                        first)
           editing? (get-in db [:application :editing?])]
       (and editing? (:cannot-view field)))))
 
 (re-frame/reg-sub
   :application/cannot-edit?
   (fn [db [_ key]]
-    (let [field (->> (:flat-form-content db)
-                     (filter #(= (keyword key) (keyword (:id %))))
-                     first)
+    (let [field    (->> (:flat-form-content db)
+                        (filter #(= (keyword key) (keyword (:id %))))
+                        first)
           editing? (get-in db [:application :editing?])]
-      (and editing?
-           (:cannot-edit field)))))
+      (and editing? (:cannot-edit field)))))
 
 (re-frame/reg-sub
   :application/get-i18n-text

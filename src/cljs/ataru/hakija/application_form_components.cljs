@@ -115,8 +115,8 @@
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing idx] :or {div-kwd :div.application__form-field disabled false editing false}}]
   (let [id           (keyword (:id field-descriptor))
-        answer       (if (and @editing
-                              (contains? editing-forbidden-person-info-field-ids id))
+        answer       (if (and (contains? editing-forbidden-person-info-field-ids id)
+                              @(subscribe [:application/cannot-edit? id]))
                        {:value @(subscribe [:state-query
                                             [:application :person id]])
                         :valid true}
@@ -385,9 +385,8 @@
 (defn dropdown [field-descriptor & {:keys [div-kwd editing idx] :or {div-kwd :div.application__form-field editing false}}]
   (let [application  (subscribe [:state-query [:application]])
         languages    (subscribe [:application/default-languages])
-        id           (keyword (:id field-descriptor))
-        disabled?    @(subscribe [:application/cannot-edit? id])
         id           (answer-key field-descriptor)
+        disabled?    @(subscribe [:application/cannot-edit? id])
         use-onr-info? (contains? (:person application) id)
         value-path   (if (and @editing
                               (contains? editing-forbidden-person-info-field-ids id)
