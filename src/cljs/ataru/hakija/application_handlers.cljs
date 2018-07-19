@@ -358,11 +358,10 @@
     (merge answer {:valid true :value value})))
 
 (defn- merge-dropdown-values [value answer]
-  (if (and (vector? value)
-           (every? vector? value))
-    (let [values (mapv (partial mapv (fn [value] {:valid true :value value})) value)]
-      (merge answer {:valid true :values values}))
-    (merge answer {:valid true :value value})))
+  (cond-> (merge answer {:valid true :value value})
+          (and (vector? value) (every? vector? value))
+          (merge answer {:values (mapv (partial mapv (fn [value] {:valid true :value value}))
+                                       value)})))
 
 (defn- merge-submitted-answers [db submitted-answers]
   (-> db
