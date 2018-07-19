@@ -43,8 +43,7 @@
         request-path (str uri (when query-string (str "?" query-string)))
         agent        (get-in req [:headers "user-agent"] "-")
         size         (get-in resp [:headers "Content-Length"] "-")
-        log-map      {:timestamp         (.toString (t/to-time-zone (t/date-time 1986 10 22)
-                                                                    (t/time-zone-for-id "Europe/Helsinki")))
+        log-map      {:timestamp         (.toString (t/to-time-zone (t/now) (t/time-zone-for-id "Europe/Helsinki")))
                       :responseCode      status
                       :request           (str method " " request-path)
                       :responseTime      totaltime
