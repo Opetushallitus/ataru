@@ -96,7 +96,7 @@
   :jvm-opts ^:replace ["-Xmx2g"]
 
   :plugins [[lein-cljsbuild "1.1.7"]
-            [lein-doo "0.1.8"]
+            [lein-doo "0.1.10"]
             [lein-figwheel "0.5.14"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.14"]
@@ -104,7 +104,18 @@
             [lein-resource "17.06.1"]
             [speclj "3.3.2"]]
 
-  :doo {:paths {:phantom "./node_modules/phantomjs-prebuilt/bin/phantomjs"}}
+  :doo {:debug true
+        :karma
+               {:launchers {:headless_chrome {:plugin "karma-chrome-launcher"
+                                              :name "HeadlessChrome"}}
+                :config {
+                         "customLaunchers"
+                         {"HeadlessChrome" {"base" "Chrome"
+                                            "flags" ["--no-sandbox"
+                                                     "--disable-gpu"
+                                                     "--headless"
+                                                     "--remote-debugging-port=9222"]}}}}
+        :paths {:karma "./node_modules/karma/bin/karma"}}
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled"
                                     "resources/public/css"

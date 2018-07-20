@@ -116,7 +116,7 @@ lein spec -t unit
 ### ClojureScript unit tests
 
 ```
-lein doo phantom test once
+lein doo headless_chrome test once
 ```
 
 ### Browser tests
