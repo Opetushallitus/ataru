@@ -10,7 +10,6 @@
    [ataru.information-request.information-request-store :as information-request-store]
    [ataru.koodisto.koodisto :as koodisto]
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
-   [ataru.organization-service.ldap-client :as ldap]
    [ataru.person-service.birth-date-converter :as bd-converter]
    [ataru.person-service.person-service :as person-service]
    [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]

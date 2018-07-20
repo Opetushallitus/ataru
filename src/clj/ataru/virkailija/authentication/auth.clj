@@ -2,8 +2,8 @@
   (:require [ataru.config.core :refer [config]]
             [ataru.config.url-helper :refer [resolve-url]]
             [ataru.db.db :as db]
+            [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.log.audit-log :as audit-log]
-            [ataru.organization-service.ldap-client :as ldap]
             [ataru.organization-service.organization-client :as organization-client]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.organization-service.user-rights :as rights]
@@ -45,20 +45,24 @@
     {}
     user-right-organizations))
 
-(defn login [login-provider person-service organization-service redirect-url]
+(defn login [login-provider
+             kayttooikeus-service
+             person-service
+             organization-service
+             redirect-url]
   (try
     (if-let [[username ticket] (login-provider)]
       (do
         (cas-store/login ticket)
-        (let [virkailija                (ldap/get-virkailija-by-username username)
-              henkilo                   (person-service/get-person person-service (:employeeNumber virkailija))
-              right-organization-oids   (rights/user->right-organization-oids virkailija rights/right-names)
+        (let [virkailija                (kayttooikeus-service/virkailija-by-username kayttooikeus-service username)
+              henkilo                   (person-service/get-person person-service (:oidHenkilo virkailija))
+              right-organization-oids   (rights/virkailija->right-organization-oids virkailija rights/right-names)
               organization-oids         (-> (vals right-organization-oids) (flatten) (set))
               oph-organization-member?  (contains? organization-oids organization-client/oph-organization)
               user-right-organizations  (map-kv
-                                          (fn [right org-oids]
-                                            [right (organization-service/get-organizations-for-oids organization-service org-oids)])
-                                          right-organization-oids)
+                                         (fn [right org-oids]
+                                           [right (organization-service/get-organizations-for-oids organization-service org-oids)])
+                                         right-organization-oids)
               organizations-with-rights (->> user-right-organizations
                                              (map-kv (fn [right organizations]
                                                        [right (organization-service/get-all-organizations organization-service organizations)]))

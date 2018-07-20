@@ -818,7 +818,8 @@
                                   (api/middleware [session-timeout/wrap-idle-session-timeout]
                                     app-routes
                                     (api-routes this))
-                                  (auth-routes (:person-service this)
+                                  (auth-routes (:kayttooikeus-service this)
+                                               (:person-service this)
                                                (:organization-service this))))
                               (api/undocumented
                                 (route/not-found "Not found")))

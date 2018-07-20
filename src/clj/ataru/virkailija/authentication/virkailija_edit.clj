@@ -1,7 +1,6 @@
 (ns ataru.virkailija.authentication.virkailija-edit
   (:require [ataru.db.db :as db]
             [yesql.core :as sql]
-            [ataru.organization-service.ldap-client :as ldap]
             [ataru.config.core :refer [config]]
             [ataru.util :as u]
             [clojure.java.jdbc :as jdbc]

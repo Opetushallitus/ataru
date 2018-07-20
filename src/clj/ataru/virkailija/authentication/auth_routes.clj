@@ -26,7 +26,9 @@
             unique-ticket (str (System/currentTimeMillis) "-" (rand-int (Integer/MAX_VALUE)))]
         [username unique-ticket])))
 
-(defn auth-routes [person-service organization-service]
+(defn auth-routes [kayttooikeus-service
+                   person-service
+                   organization-service]
   (api/context "/auth" []
     (api/undocumented
       (api/GET "/cas" [ticket :as request]
@@ -37,6 +39,7 @@
                                       (fake-login-provider ticket)
                                       (cas-login ticket))]
                  (login login-provider
+                        kayttooikeus-service
                         person-service
                         organization-service
                         redirect-url)))

@@ -41,25 +41,9 @@ This will also allow you to connect to the nREPL servers of the jvm processes in
 Virkailija has a certain amount of configurations containing private
 secrets like passwords etc. To run it in full development mode, first
 check out `https://github.com/Opetushallitus/ataru-secrets` (you'll
-need privileges). You also need to forward untuva ldap to a local port:
+need privileges).
 
-```
-ssh -L31337:ldap.ldap.untuvaopintopolku.fi:389 ubuntu@bastion.untuvaopintopolku.fi
-```
-
-Or you can edit your `~/.ssh/config` file to contain a host definition like:
- 
-```
-Host bastion.untuvaopintopolku.fi
-    LocalForward 31337 ldap.ldap.untuvaopintopolku.fi:389
-    user <your username here>
-    IdentityFile <your private key file path here>
-    HostName bastion.untuvaopintopolku.fi
-```
-
-Possibly with multiple LocalForward definitions for whatever you need. Then you can simply `ssh ubuntu@bastion.untuvaopintopolku.fi`
-
-After setting up the tunnel you can run:
+Then you can run:
 
 `./bin/start-dev-build.sh`
 
