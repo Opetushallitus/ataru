@@ -52,7 +52,7 @@
         (cas-store/login ticket)
         (let [virkailija                (ldap/get-virkailija-by-username username)
               henkilo                   (person-service/get-person person-service (:employeeNumber virkailija))
-              right-organization-oids   (ldap/user->right-organization-oids virkailija rights/right-names)
+              right-organization-oids   (rights/user->right-organization-oids virkailija rights/right-names)
               organization-oids         (-> (vals right-organization-oids) (flatten) (set))
               oph-organization-member?  (contains? organization-oids organization-client/oph-organization)
               user-right-organizations  (map-kv
