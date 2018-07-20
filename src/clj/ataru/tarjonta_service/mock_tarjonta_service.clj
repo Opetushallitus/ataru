@@ -325,17 +325,16 @@
 (defrecord MockVirkailijaTarjontaService []
   VirkailijaTarjontaService
   (get-forms-in-use [_ session]
-    (let [username (-> session :identity :username)]
-      (if (= username "USER-WITH-HAKUKOHDE-ORGANIZATION")
-        {"hakukohteen-organisaatiosta-form"
-         {"1.2.246.562.29.65950024188"
-          {:haku-oid  "1.2.246.562.29.65950024188"
-           :haku-name {:fi "hakukohteen-organisaatiosta"}}}}
-        {"belongs-to-hakukohteet-test-form"
-         {(:oid base-haku)
-          {:haku-oid  (:oid base-haku)
-           :haku-name {:fi (:kieli_fi (:nimi base-haku))}}}
-         "hakija-hakukohteen-hakuaika-test-form"
-         {"1.2.246.562.29.65950024187"
-          {:haku-oid  "1.2.246.562.29.65950024187"
-           :haku-name {:fi "hakija-hakukohteen-hakuaika-haku"}}}}))))
+    (if (= (-> session :identity :oid) "1.2.246.562.11.11111111000")
+      {"hakukohteen-organisaatiosta-form"
+       {"1.2.246.562.29.65950024188"
+        {:haku-oid  "1.2.246.562.29.65950024188"
+         :haku-name {:fi "hakukohteen-organisaatiosta"}}}}
+      {"belongs-to-hakukohteet-test-form"
+       {(:oid base-haku)
+        {:haku-oid  (:oid base-haku)
+         :haku-name {:fi (:kieli_fi (:nimi base-haku))}}}
+       "hakija-hakukohteen-hakuaika-test-form"
+       {"1.2.246.562.29.65950024187"
+        {:haku-oid  "1.2.246.562.29.65950024187"
+         :haku-name {:fi "hakija-hakukohteen-hakuaika-haku"}}}})))
