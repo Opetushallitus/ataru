@@ -819,7 +819,8 @@
                                   (api/middleware [session-timeout/wrap-idle-session-timeout]
                                     app-routes
                                     (api-routes this))
-                                  (auth-routes (:organization-service this))))
+                                  (auth-routes (:person-service this)
+                                               (:organization-service this))))
                               (api/undocumented
                                 (route/not-found "Not found")))
                             (wrap-defaults (-> site-defaults

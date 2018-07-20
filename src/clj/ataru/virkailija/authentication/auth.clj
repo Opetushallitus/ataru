@@ -7,6 +7,7 @@
             [ataru.organization-service.organization-client :as organization-client]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.organization-service.user-rights :as rights]
+            [ataru.person-service.person-service :as person-service]
             [ataru.virkailija.authentication.cas-ticketstore :as cas-store]
             [ataru.util :as util]
             [clj-util.cas :as cas]
@@ -44,12 +45,13 @@
     {}
     user-right-organizations))
 
-(defn login [login-provider organization-service redirect-url]
+(defn login [login-provider person-service organization-service redirect-url]
   (try
     (if-let [[username ticket] (login-provider)]
       (do
         (cas-store/login ticket)
         (let [virkailija                (ldap/get-virkailija-by-username username)
+              henkilo                   (person-service/get-person person-service (:employeeNumber virkailija))
               right-organization-oids   (ldap/user->right-organization-oids virkailija rights/right-names)
               organization-oids         (-> (vals right-organization-oids) (flatten) (set))
               oph-organization-member?  (contains? organization-oids organization-client/oph-organization)
@@ -63,20 +65,17 @@
                                              (user-right-organizations->organization-rights)
                                              (util/group-by-first :oid))]
           (info "user" username "logged in")
-          (db/exec :db yesql-upsert-virkailija<! {:oid        (:employeeNumber virkailija)
-                                                  :first_name (:givenName virkailija)
-                                                  :last_name  (:sn virkailija)})
+          (db/exec :db yesql-upsert-virkailija<! {:oid        (:oidHenkilo henkilo)
+                                                  :first_name (:kutsumanimi henkilo)
+                                                  :last_name  (:sukunimi henkilo)})
           (audit-log/log {:new       ticket
                           :id        username
                           :operation audit-log/operation-login})
           (-> (resp/redirect redirect-url)
               (assoc :session {:identity {:username                 username
-                                          :first-name               (-> virkailija
-                                                                        :givenName
-                                                                        (clojure.string/split #" ")
-                                                                        first)
-                                          :last-name                (:sn virkailija)
-                                          :oid                      (:employeeNumber virkailija)
+                                          :first-name               (:kutsumanimi henkilo)
+                                          :last-name                (:sukunimi henkilo)
+                                          :oid                      (:oidHenkilo henkilo)
                                           :ticket                   ticket
                                           :user-right-organizations user-right-organizations
                                           :superuser                oph-organization-member?

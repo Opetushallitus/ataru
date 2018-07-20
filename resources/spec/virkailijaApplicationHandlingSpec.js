@@ -31,7 +31,7 @@
       });
       it('stores an event for review state change', function() {
         var firstEventNow = testFrame().find('.application-handling__event-caption').first().text();
-        expect(firstEventNow).to.equal('Käsittelyvaihe: Käsittelyssä (VV)')
+        expect(firstEventNow).to.equal('Käsittelyvaihe: Käsittelyssä (TI)')
       });
       it('Successfully stores notes and score for an application', function(done) {
         var scoreForVatanen = Math.floor((Math.random() * 50) + 1);
@@ -41,7 +41,7 @@
         setTextFieldValue(reviewNotes, 'Reipas kaveri')()
         .then(wait.until(function() { return reviewNotesSubmitButton().attr('disabled') !== 'disabled' }))
         .then(clickElement(reviewNotesSubmitButton))
-        .then(wait.until(function() { return testFrame().find('.application-handling__review-details-column > span:eq(0)').text() === 'Veijo Virkailija' }))
+        .then(wait.until(function() { return testFrame().find('.application-handling__review-details-column > span:eq(0)').text() === 'Testi Ihminen' }))
         .then(setTextFieldValue(score, scoreForVatanen))
         .then(clickElement(secondApplication))
         .then(wait.until(applicationHeadingIs('Kuikeloinen, Seija Susanna — 020202A0202')))
@@ -52,7 +52,7 @@
         .then(clickElement(firstApplication))
         .then(wait.until(applicationHeadingIs('Vatanen, Ari — 141196-933S')))
         .then(function () {
-          expect(testFrame().find('.application-handling__review-details-column > span:eq(0)').text()).to.equal('Veijo Virkailija');
+          expect(testFrame().find('.application-handling__review-details-column > span:eq(0)').text()).to.equal('Testi Ihminen');
           expect(score().val()).to.equal(scoreForVatanen + '');
         })
         .then(clickElement(thirdApplication))
