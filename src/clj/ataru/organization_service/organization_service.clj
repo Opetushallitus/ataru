@@ -16,13 +16,6 @@
 (defn unknown-group [oid] {:oid oid :name {:fi "Tuntematon ryhmä"} :type :group})
 
 (defprotocol OrganizationService
-  "Facade for ldap and organization clients. Is responsible
-  for passing stateful services to the stateless ldap and
-  organization clients. Can also be switched to a test-double
-  when needed."
-  (get-direct-organizations-for-rights [this user-name rights]
-    "Gets this user's direct organizations (as in get-direct-organization-oids
-     but gets organization name as well)")
   (get-all-organizations [this direct-organizations-for-user]
     "Gets a flattened organization hierarhy based on direct organizations")
   (get-hakukohde-groups [this]
@@ -74,10 +67,6 @@
     (let [groups (vals (get-groups-from-cache-or-client (:group-cache this)))]
       (hakukohderyhmat-from-groups groups)))
 
-  (get-direct-organizations-for-rights [this user-name rights]
-    (let [direct-right-oids (ldap-client/get-right-organization-oids (:ldap-connection this) user-name rights)]
-      (map-kv (fn [right org-oids] [right (get-organizations-for-oids this org-oids)]) direct-right-oids)))
-
   (get-all-organizations [this direct-organizations]
     (let [[groups orgs]       ((juxt filter remove) #(group-oid? (:oid %)) direct-organizations)
           ;; Only fetch hierarchy for actual orgs, not groups:
@@ -96,13 +85,11 @@
 
   (start [this]
     (-> this
-        (assoc :ldap-connection (ldap-client/create-ldap-connection))
         (assoc :all-orgs-cache (atom (cache/ttl-cache-factory {} :ttl all-orgs-cache-time-to-live)))
         (assoc :group-cache (atom (cache/ttl-cache-factory {} :ttl group-cache-time-to-live)))
         (assoc :org-parents-cache (atom (cache/ttl-cache-factory {} :ttl org-parents-cache-time-to-live)))))
 
   (stop [this]
-    (.close (:ldap-connection this))
     (assoc this :all-orgs-cache nil)))
 
 (defn fake-orgs-by-root-orgs [root-orgs]
@@ -121,12 +108,6 @@
        (org-client/fake-hakukohderyhma 2)
        (org-client/fake-hakukohderyhma 3)
        (org-client/fake-hakukohderyhma 4)]))
-
-  (get-direct-organizations-for-rights [this user-name rights]
-    (let [orgs (get ldap-client/fake-orgs user-name)]
-      {:form-edit         orgs
-       :view-applications orgs
-       :edit-applications orgs}))
 
   (get-all-organizations [this root-orgs]
     (fake-orgs-by-root-orgs root-orgs))

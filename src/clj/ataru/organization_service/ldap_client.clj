@@ -45,9 +45,6 @@
   (let [description-seq (get-description-seq user)]
     (into {} (map #(get-organization-oids-for-right % description-seq) rights))))
 
-(defn get-right-organization-oids [connection user-name rights]
-  (user->right-organization-oids (get-user connection user-name) rights))
-
 (def fake-org-by-oid
   {"1.2.246.562.10.11"         {:name {:fi "Lasikoulu"}, :oid "1.2.246.562.10.11", :type :organization}
    "1.2.246.562.10.22"         {:name {:fi "Omnia"}, :oid "1.2.246.562.10.22", :type :organization}
