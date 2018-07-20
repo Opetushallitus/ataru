@@ -473,14 +473,14 @@
   [review old-value session]
   (audit-log/log {:new              review
                   :old              old-value
-                  :id               (get-in session [:identity :username])
+                  :id               (get-in session [:identity :oid])
                   :operation        audit-log/operation-modify}))
 
 (defn- store-and-log-review-event
   [connection event session]
   (yesql-add-application-event<! event connection)
   (audit-log/log {:new              event
-                  :id               (get-in session [:identity :username])
+                  :id               (get-in session [:identity :oid])
                   :operation        audit-log/operation-new}))
 
 (defn save-application-review [review session]
@@ -738,7 +738,7 @@
       (unwrap-application)))
 
 (defn- update-hakukohde-process-state!
-  [connection username session hakukohde-oid from-state to-state application-key]
+  [connection session hakukohde-oid from-state to-state application-key]
   (let [application      (get-latest-application-by-key-with-hakukohde-reviews
                           connection
                           application-key)
@@ -763,9 +763,9 @@
       (yesql-upsert-application-hakukohde-review! new-review connection)
       (yesql-add-application-event<! (assoc new-event :hakukohde (:hakukohde new-review))
                                      connection))
-    {:new              new-event
-     :id               username
-     :operation        audit-log/operation-new}))
+    {:new       new-event
+     :id        (-> session :identity :oid)
+     :operation audit-log/operation-new}))
 
 (defn applications-authorization-data [application-keys]
   (map ->kebab-case-kw
@@ -780,11 +780,10 @@
 (defn mass-update-application-states
   [session application-keys hakukohde-oid from-state to-state]
   (let [audit-log-entries (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-                            (let [connection       {:connection conn}
-                                  username         (get-in session [:identity :username])]
+                            (let [connection {:connection conn}]
                               (mapv
-                                (partial update-hakukohde-process-state! connection username session hakukohde-oid from-state to-state)
-                                application-keys)))]
+                               (partial update-hakukohde-process-state! connection session hakukohde-oid from-state to-state)
+                               application-keys)))]
     (doseq [audit-log-entry audit-log-entries]
       (audit-log/log audit-log-entry))
     true))
