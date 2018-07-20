@@ -22,18 +22,18 @@
                    :ssl? (:ssl ldap-config)
                    :num-connections 4})))
 
-(defn get-description-seq [user]
+(defn- get-description-seq [user]
   (json/parse-string (:description user)))
 
-(defn get-organization-oids-from-description-seq [description-seq]
+(defn- get-organization-oids-from-description-seq [description-seq]
   (let [split-descriptions (map #(str/split % #"_") description-seq)
         last-items         (map #(last %) split-descriptions)]
     (distinct (filter #(.contains % oid-prefix) last-items))))
 
-(defn get-user [connection user-name]
+(defn- get-user [connection user-name]
   (first (ldap/search connection people-path-base {:filter (str "(uid=" user-name ")")})))
 
-(defn get-organization-oids-for-right [right description-seq]
+(defn- get-organization-oids-for-right [right description-seq]
   (let [relevant-descriptions (filter #(.contains % (user-rights/ldap-right right)) description-seq)
         oids                  (get-organization-oids-from-description-seq relevant-descriptions)]
     (when (< 0 (count oids))
