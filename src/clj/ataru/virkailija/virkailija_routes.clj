@@ -156,8 +156,7 @@
     :tags ["form-api"]
 
     (api/GET "/user-info" {session :session}
-      (ok {:username              (-> session :identity :username)
-           :organizations         (organization-list session)
+      (ok {:organizations         (organization-list session)
            :oid                   (-> session :identity :oid)
            :name                  (format "%s %s" (-> session :identity :first-name) (-> session :identity :last-name))
            :selected-organization (-> session :selected-organization)
