@@ -36,11 +36,6 @@
          "L" "application__form-text-input__size-large"
          :else "application__form-text-input__size-medium"))
 
-(defn- non-blank-val [val default]
-  (if-not (clojure.string/blank? val)
-    val
-    default))
-
 (defn- textual-field-change [field-descriptor evt]
   (let [value (-> evt .-target .-value)]
     (dispatch [:application/set-application-field field-descriptor value])))

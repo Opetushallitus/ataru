@@ -151,6 +151,9 @@
 (defn not-blank? [s]
   (not (clojure.string/blank? s)))
 
+(defn not-blank [s]
+  (when (not-blank? s) s))
+
 (defn application-in-processing? [application-hakukohde-reviews]
   (boolean (some #(and (= "processing-state" (:requirement %))
                        (not (contains? #{"unprocessed" "information-request"}
@@ -180,5 +183,4 @@
        :value))
 
 (defn non-blank-val [m ks]
-  (when m
-    (first (filter not-blank? (vals (select-keys m ks))))))
+  (some #(not-blank (get m %)) ks))

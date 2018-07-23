@@ -186,21 +186,25 @@
 (re-frame/reg-sub
   :application/hakukohde-label
   (fn [db [_ hakukohde-oid]]
-    @(re-frame/subscribe [:application/get-i18n-text
-                 (get-in @(re-frame/subscribe [:application/hakukohde-options-by-oid])
-                         [hakukohde-oid :label])])))
+    (util/non-blank-val
+     (get-in @(re-frame/subscribe [:application/hakukohde-options-by-oid])
+             [hakukohde-oid :label])
+     @(re-frame/subscribe [:application/default-languages]))))
 
 (re-frame/reg-sub
   :application/hakukohde-description
   (fn [db [_ hakukohde-oid]]
-    @(re-frame/subscribe [:application/get-i18n-text
-                 (get-in @(re-frame/subscribe [:application/hakukohde-options-by-oid])
-                         [hakukohde-oid :description])])))
+    (util/non-blank-val
+     (get-in @(re-frame/subscribe [:application/hakukohde-options-by-oid])
+             [hakukohde-oid :description])
+     @(re-frame/subscribe [:application/default-languages]))))
 
 (re-frame/reg-sub
   :application/hakukohteet-header
   (fn [db _]
-    @(re-frame/subscribe [:application/get-i18n-text (:label (hakukohteet-field db))])))
+    (util/non-blank-val
+     (:label (hakukohteet-field db))
+     @(re-frame/subscribe [:application/default-languages]))))
 
 (re-frame/reg-sub
   :application/show-hakukohde-search
@@ -220,9 +224,9 @@
 (re-frame/reg-sub
   :application/default-languages
   (fn [db _]
-    (let [default-languages (get-in db [:form :languages])
-          selected-language (get-in db [:form :selected-language])]
-      (cons selected-language default-languages))))
+    (concat [(get-in db [:form :selected-language])]
+            (get-in db [:form :languages])
+            [:fi :sv :en])))
 
 (re-frame/reg-sub
   :application/hakukohde-priority-number
