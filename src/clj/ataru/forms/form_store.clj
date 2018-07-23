@@ -137,8 +137,8 @@
                                       (update :deleted identity))
                                   conn)
                 log-id           (:created-by new-form)]
-            (audit-log/log {:new              new-form
-                            :old              latest-version
+            (audit-log/log {:new              (dissoc new-form :content)
+                            :old              (dissoc latest-version :content)
                             :id               log-id
                             :operation        (if (:deleted new-form) audit-log/operation-delete audit-log/operation-modify)
                             :organization-oid organization-oid})
@@ -146,7 +146,7 @@
     (let [new-form         (create-new-form! (dissoc form :key))
           log-id           (:created-by new-form)
           organization-oid (:organization-oid new-form)]
-      (audit-log/log {:new              new-form
+      (audit-log/log {:new              (dissoc new-form :content)
                       :id               log-id
                       :operation        audit-log/operation-new
                       :organization-oid organization-oid})
