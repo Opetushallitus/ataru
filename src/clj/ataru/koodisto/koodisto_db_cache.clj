@@ -3,10 +3,10 @@
             [ataru.db.db :as db]
             [ataru.koodisto.koodisto-codes :refer [institution-type-codes]]
             [ataru.organization-service.organization-client :as organization-client]
+            [ataru.util.http-util :as http-util]
             [cheshire.core :as cheshire]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
-            [org.httpkit.client :as http]
             [pandect.algo.sha256 :refer :all]
             [yesql.core :refer [defqueries]]))
 
@@ -15,14 +15,12 @@
 (def all-koodisto-groups-path "codes")
 (def all-koodistos-group-uri "http://kaikkikoodistot")
 
-(def koodisto-version-path "codeelement/codes/")
-
 (defqueries "sql/koodisto.sql")
 
 (defn json->map [body] (cheshire/parse-string body true))
 
 (defn- do-get [url]
-  (let [{:keys [status headers body error] :as resp} @(http/get url)]
+  (let [{:keys [status headers body error] :as resp} (http-util/do-get url)]
     (if (= 200 status)
       (let [body (json->map body)]
         (log/info (str "Fetched koodisto from URL: " url))
@@ -86,10 +84,10 @@
              :en (->> element :relationMetadata (extract-name-with-language "EN"))}})
 
 (defn list-koodistos []
-                     (->> (fetch-all-koodisto-groups)
-                          (koodisto-groups->uris-and-latest)
-                          (mapv koodisto-version->uri-and-name)
-                          (sort compare-case-insensitively)))
+  (->> (fetch-all-koodisto-groups)
+       (koodisto-groups->uris-and-latest)
+       (mapv koodisto-version->uri-and-name)
+       (sort compare-case-insensitively)))
 
 (defn- add-within
   [koodi-option]
@@ -160,13 +158,13 @@
        first))
 
 (defn get-cached-koodi-options [db-key koodisto-uri version]
-                               (if-let [cached-koodisto (get-cached-koodisto db-key koodisto-uri version nil)]
-                                 cached-koodisto
-                                 (let [koodisto (get-koodi-options koodisto-uri version)
-                                       checksum (->> (cheshire/generate-string koodisto)
-                                                     (sha256))]
-                                   (db/exec db-key yesql-create-koodisto<! {:koodisto_uri koodisto-uri
-                                                                            :version      version
-                                                                            :checksum     checksum
-                                                                            :content      [koodisto]})
-                                   (get-cached-koodisto db-key koodisto-uri version checksum))))
+  (if-let [cached-koodisto (get-cached-koodisto db-key koodisto-uri version nil)]
+    cached-koodisto
+    (let [koodisto (get-koodi-options koodisto-uri version)
+          checksum (->> (cheshire/generate-string koodisto)
+                        (sha256))]
+      (db/exec db-key yesql-create-koodisto<! {:koodisto_uri koodisto-uri
+                                               :version      version
+                                               :checksum     checksum
+                                               :content      [koodisto]})
+      (get-cached-koodisto db-key koodisto-uri version checksum))))

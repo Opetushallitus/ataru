@@ -35,17 +35,17 @@
 
 (def oph-oid "1.2.246.562.10.00000000001")
 
-(defn fake-no-organization [_ _]
+(defn fake-no-organization [_]
   (atom {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response2.json"))}))
-(defn fake-organization [_ _]
+(defn fake-organization [_]
   (atom {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response1.json"))}))
-(defn fake-groups [_ _]
+(defn fake-groups [_]
   (atom {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response-groups.json"))}))
 
 (describe "organization client"
   (tags :unit :organization)
   (around [spec]
-    (with-redefs [http/get fake-organization]
+    (with-redefs [http/request fake-organization]
       (spec)))
   (it "transforms organization hierarchy into a flat sequence"
     (let [parsed-hierarchy (json/parse-string organization-hierarchy-data true)
@@ -55,7 +55,7 @@
     (should= {:oid oph-oid :name {:fi "OPH"} :type :organization}
              (org-client/get-organization oph-oid)))
   (it "Returns nil if numHits is zero"
-    (with-redefs [http/get fake-no-organization]
+    (with-redefs [http/request fake-no-organization]
       (should= nil
                (org-client/get-organization "1.2.246.562.10.2.445.3"))))
   (it "Returns the organization in normal case (numHits 1)"
@@ -64,7 +64,7 @@
               :type :organization}
              (org-client/get-organization "1.2.246.562.10.3242342")))
   (it "Returns groups"
-    (with-redefs [http/get fake-groups]
+    (with-redefs [http/request fake-groups]
       (should= [{:name {:fi "Yhteiskäyttöryhmä"}
                  :oid  "1.2.246.562.28.1.2"
                  :type :group :hakukohderyhma? false}

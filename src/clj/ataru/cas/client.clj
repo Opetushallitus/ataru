@@ -1,20 +1,19 @@
 (ns ataru.cas.client
-  (:require
-    [org.httpkit.client :as http]
-    [clj-util.cas :as cas]
-    [ataru.config.url-helper :refer [resolve-url]]
-    [ataru.config.core :refer [config]]
-    [cheshire.core :as json]))
+  (:require [ataru.config.url-helper :refer [resolve-url]]
+            [ataru.config.core :refer [config]]
+            [ataru.util.http-util :as http-util]
+            [cheshire.core :as json]
+            [clj-util.cas :as cas]))
 
 (defn new-client [cas-uri]
   {:pre [(some? (:cas config))]}
-  (let [username           (get-in config [:cas :username])
-        password           (get-in config [:cas :password])
-        cas-url            (resolve-url :cas-client)
-        cas-params         (cas/cas-params cas-uri username password)
-        cas-client         (cas/cas-client cas-url)]
-    {:client cas-client
-     :params cas-params
+  (let [username   (get-in config [:cas :username])
+        password   (get-in config [:cas :password])
+        cas-url    (resolve-url :cas-client)
+        cas-params (cas/cas-params cas-uri username password)
+        cas-client (cas/cas-client cas-url)]
+    {:client     cas-client
+     :params     cas-params
      :session-id (atom nil)}))
 
 (defn- request-with-json-body [request body]
@@ -25,23 +24,22 @@
 (defn- create-params [cas-session-id body]
   (cond-> {:headers          {"Cookie" (str "JSESSIONID=" @cas-session-id)}
            :follow-redirects false}
-    (some? body)
-    (request-with-json-body body)))
+          (some? body)
+          (request-with-json-body body)))
 
 (defn- cas-http [client method url & [body]]
   (let [cas-client     (:client client)
         cas-params     (:params client)
-        cas-session-id (:session-id client)
-        http-fn        (case method
-                         :get http/get
-                         :post http/post)]
+        cas-session-id (:session-id client)]
     (when (nil? @cas-session-id)
       (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params))))
-    (let [resp @(http-fn url (create-params cas-session-id body))]
+    (let [resp (http-util/do-request (merge {:url url :method method}
+                                            (create-params cas-session-id body)))]
       (if (= 302 (:status resp))
         (do
           (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params)))
-          @(http-fn url (create-params cas-session-id body)))
+          (http-util/do-request (merge {:url url :method method}
+                                       (create-params cas-session-id body))))
         resp))))
 
 (defn cas-authenticated-get [client url]

@@ -23,14 +23,14 @@
 
 (defn fake-create-connection [] :fake-conn)
 
-(defn fake-organization-hierarchy [call-count _ _]
+(defn fake-organization-hierarchy [call-count _]
   (swap! call-count inc)
   (atom {:status 200 :body (slurp (io/resource "organisaatio_service/organization-hierarchy1.json"))}))
 
-(defn fake-organization [_ _]
+(defn fake-organization [_]
   (atom {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response1.json"))}))
 
-(defn fake-org-and-group [url _]
+(defn fake-org-and-group [{:keys [url]}]
   (atom
    (if (.contains url "hae/nimi")
      {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response1.json"))}
@@ -50,7 +50,7 @@
                     (spec)))
 
           (it "should use ldap module to fetch organization oids"
-              (with-redefs [http/get fake-org-and-group]
+              (with-redefs [http/request fake-org-and-group]
                 (let [org-service-instance (create-org-service-instance)]
                   (should= {:form-edit [test-user1-organization]}
                            (org-service/get-direct-organizations-for-rights
@@ -60,7 +60,7 @@
 
           (it "Should get all organizations from organization client and cache the result"
               (let [cas-get-call-count (atom 0)]
-                (with-redefs [http/get (partial fake-organization-hierarchy cas-get-call-count)]
+                (with-redefs [http/request (partial fake-organization-hierarchy cas-get-call-count)]
                   (let [org-service-instance (create-org-service-instance)]
                     (should= expected-flat-organizations
                              (.get-all-organizations org-service-instance
@@ -70,7 +70,7 @@
                     (should= 1 @cas-get-call-count)))))
 
           (it "Should get direct organizatons from organization client"
-              (with-redefs [http/get fake-organization]
+              (with-redefs [http/request fake-organization]
                 (let [org-service-instance (create-org-service-instance)]
                   (should= {:form-edit [telajarvi-org]}
                            (org-service/get-direct-organizations-for-rights
@@ -79,7 +79,7 @@
                             [:form-edit])))))
 
           (it "Should get organizations from org client, groups from org client and group dump should be cached"
-              (with-redefs [http/get    fake-org-and-group
+              (with-redefs [http/request fake-org-and-group
                             ldap/search fake-ldap-search-orgs-and-groups]
                 (let [org-service-instance (create-org-service-instance)
                       expected-group       {:name {:fi "Yhteiskäyttöryhmä"}, :oid "1.2.246.562.28.1.2", :type :group :hakukohderyhma? false}
@@ -90,7 +90,7 @@
                   (should= expected-group (get-in @(:group-cache org-service-instance) [:groups "1.2.246.562.28.1.2"])))))
 
           (it "Should get all organizations from organization client and return passed in groups as-is"
-              (with-redefs [http/get (partial fake-organization-hierarchy (atom 0))]
+              (with-redefs [http/request (partial fake-organization-hierarchy (atom 0))]
                 (let [org-service-instance (create-org-service-instance)
                       group                {:name {:fi "Ryhmä-x"} :oid "1.2.246.562.28.1.29" :type :group}]
                   (should= (into [group] expected-flat-organizations)

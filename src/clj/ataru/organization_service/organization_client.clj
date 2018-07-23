@@ -2,9 +2,9 @@
   (:require [ataru.cas.client :as cas-client]
             [ataru.config.core :refer [config]]
             [ataru.config.url-helper :refer [resolve-url]]
+            [ataru.util.http-util :as http-util]
             [cheshire.core :as json]
-            [clojure.tools.logging :as log]
-            [org.httpkit.client :as http]))
+            [clojure.tools.logging :as log]))
 
 (def oph-organization "1.2.246.562.10.00000000001")
 
@@ -32,15 +32,13 @@
     (flatten (map #(recur-orgs %) (:organisaatiot hierarchy)))))
 
 (defn- get-organization-from-remote-service [organization-oid]
-  (let [response @(http/get (resolve-url :organisaatio-service.name organization-oid)
-                            {:headers {"clientSubSystemCode" "ataru"
-                                       "Caller-Id"           "ataru"}})]
+  (let [response (http-util/do-get (resolve-url :organisaatio-service.name organization-oid))]
     (if (= 200 (:status response))
       (let [parsed-response (read-body response)
             org-count       (:numHits parsed-response)]
         (cond
           (< 1 org-count)
-                                        ; Should not happen ever, but let's make the failure very explicit and do some moves if it actually occurs:
+          ; Should not happen ever, but let's make the failure very explicit and do some moves if it actually occurs:
           (throw (Exception. (str "Got wrong number of organizations for unique oid query " org-count)))
 
           (= 0 org-count)
@@ -61,9 +59,7 @@
   "Returns a sequence of {:name <org-name> :oid <org-oid>} maps containing all suborganizations
    The root organization is the first element"
   [root-organization-oid]
-  (let [response @(http/get (resolve-url :organisaatio-service.plain-hierarchy root-organization-oid)
-                            {:headers {"clientSubSystemCode" "ataru"
-                                       "Caller-Id"           "ataru"}})]
+  (let [response (http-util/do-get (resolve-url :organisaatio-service.plain-hierarchy root-organization-oid))]
     (if (= 200 (:status response))
       (-> response read-body get-all-organizations-as-seq)
       (throw (Exception. (str "Got status code " (:status response) " While reading organizations"))))))
@@ -72,9 +68,7 @@
   "returns a sequence of {:name <group-name> :oid <group-oid>} maps containing all the
    groups within organization service"
   []
-  (let [response @(http/get (resolve-url :organisaatio-service.groups)
-                            {:headers {"clientSubSystemCode" "ataru"
-                                       "Caller-Id"           "ataru"}})]
+  (let [response (http-util/do-get (resolve-url :organisaatio-service.groups))]
     (if (= 200 (:status response))
       (->> response read-body (map group->map))
       (throw (Exception. (str "Got status code " (:status response) " While reading groups"))))))
@@ -82,9 +76,8 @@
 (defn get-organization-by-oid-or-number
   "Get organization by oid or number."
   [oid-or-number]
-  (let [url                                          (resolve-url :organisaatio-service.get-by-oid oid-or-number)
-        {:keys [status headers body error] :as resp} @(http/get url {:headers {"clientSubSystemCode" "ataru"
-                                                                               "Caller-Id"           "ataru"}})]
+  (let [url (resolve-url :organisaatio-service.get-by-oid oid-or-number)
+        {:keys [status headers body error] :as resp} (http-util/do-get url)]
     (if (= 200 status)
       (let [body (json/parse-string body true)]
         (log/info (str "Fetched organization from URL: " url))
