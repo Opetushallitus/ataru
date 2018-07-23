@@ -689,26 +689,25 @@
       [:span.application-handling__filters
        [:a
         {:on-click #(swap! filters-visible not)}
-        (str "Lisärajaimet" (when (pos? @enabled-filter-count)
-                              (str " (" @enabled-filter-count ")")))]
+        (str "Rajaa hakemuksia "
+             "(" @filtered-application-count "/" @loaded-application-count ")")]
        (when (pos? @enabled-filter-count)
          [:span
           [:span.application-handling__filters-count-separator "|"]
           [:a
-           {:on-click #(dispatch [:application/remove-filters])} "Poista"]])
+           {:on-click #(dispatch [:application/remove-filters])} "Poista rajaimet"]])
        (when @filters-visible
          [:div.application-handling__filters-popup
           {:class (when @has-base-education-answers "application-handling__filters-popup--two-cols")}
           [:div.application-handling__popup-close-button
            {:on-click #(reset! filters-visible false)}
            [:i.zmdi.zmdi-close]]
-          [:div.application-handling__popup-application-count (str "Hakemuksia näkyvillä " @filtered-application-count "/" @loaded-application-count)]
-          [:div.application-handling__popup-column.application-handling__popup-column--left
-           [:h3 "Yksilöinti"]
+          [:div.application-handling__popup-column-left
+           [:h3.application-handling__filter-group-heading "Yksilöinti"]
            [:div.application-handling__filter-group
             [application-filter-checkbox filters "Yksilöimättömät" :only-identified :unidentified]
             [application-filter-checkbox filters "Yksilöidyt" :only-identified :identified]]
-           [:h3 "Käsittelymerkinnät"]
+           [:h3.application-handling__filter-group-heading "Käsittelymerkinnät"]
            (when (some? @selected-hakukohde-oid)
              [:div.application-handling__filter-hakukohde-name
               @(subscribe [:application/hakukohde-name @selected-hakukohde-oid])])
@@ -720,8 +719,8 @@
                 (map (partial review-type-filter filters))
                 (doall))]
           (when @has-base-education-answers
-            [:div.application-handling__popup-column.application-handling__popup-column--right
-             [:h3 "Pohjakoulutus"]
+            [:div.application-handling__popup-column-right
+             [:h3.application-handling__filter-group-heading "Pohjakoulutus"]
              [application-base-education-filters filters]])])])))
 
 (defn application-list [applications]
