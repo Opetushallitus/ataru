@@ -429,7 +429,8 @@
                          :key   idx}
                 (non-blank-option-label option @languages)])
              (cond->> (:options field-descriptor)
-                      (some? (:koodisto-source field-descriptor))
+                      (and (some? (:koodisto-source field-descriptor))
+                           (not (:koodisto-ordered-by-user field-descriptor)))
                       (sort-by #(non-blank-option-label % @languages))))))]]
      (when-not idx
        (dropdown-followups field-descriptor @value))]))
