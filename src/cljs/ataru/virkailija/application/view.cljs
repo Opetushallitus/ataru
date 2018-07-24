@@ -347,7 +347,7 @@
   [haku-data list-heading]
   (if haku-data
     [haku-applications-heading haku-data]
-    [:div.application-handling__header-haku-name list-heading]))
+    [:div.application-handling__header-haku list-heading]))
 
 (defn haku-heading
   []

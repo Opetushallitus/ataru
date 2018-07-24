@@ -486,7 +486,7 @@
     }
 
     function applicationHeader() {
-      return testFrame().find('.application-handling__header-haku-name')
+      return testFrame().find('.application-handling__header-haku')
     }
 
     function form1OnList() {
