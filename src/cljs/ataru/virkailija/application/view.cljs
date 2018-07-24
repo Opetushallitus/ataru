@@ -723,38 +723,34 @@
              [:h3.application-handling__filter-group-heading "Pohjakoulutus"]
              [application-base-education-filters filters]])])])))
 
-(defn application-list [applications]
-  (let [fetching        (subscribe [:state-query [:application :fetching-applications]])
-        review-settings (subscribe [:state-query [:application :review-settings :config]])]
-    [:div
-     [:div.application-handling__list-header.application-handling__list-row
-      [:span.application-handling__list-row--applicant
-       [application-list-basic-column-header
-        :applicant-name
-        "Hakija"]
-       [application-filters]]
-      [created-time-column-header]
-      (when (:attachment-handling @review-settings true)
-        [:span.application-handling__list-row--attachment-state
-         [hakukohde-state-filter-controls
-          :attachment-state-filter
-          "Liitepyynnöt"
-          review-states/attachment-hakukohde-review-types-with-no-requirements
-          (subscribe [:state-query [:application :attachment-state-counts]])]])
-      [:span.application-handling__list-row--state
-       [hakukohde-state-filter-controls
-        :processing-state-filter
-        "Käsittelyvaihe"
-        review-states/application-hakukohde-processing-states
-        (subscribe [:state-query [:application :review-state-counts]])]]
-      (when (:selection-state @review-settings true)
-        [:span.application-handling__list-row--selection
-         [hakukohde-state-filter-controls
-          :selection-state-filter
-          "Valinta"
-          review-states/application-hakukohde-selection-states]])]
-     (when-not @fetching
-       [application-list-contents applications])]))
+(defn- application-list-header [applications]
+  (let [review-settings (subscribe [:state-query [:application :review-settings :config]])]
+    [:div.application-handling__list-header.application-handling__list-row
+     [:span.application-handling__list-row--applicant
+      [application-list-basic-column-header
+       :applicant-name
+       "Hakija"]
+      [application-filters]]
+     [created-time-column-header]
+     (when (:attachment-handling @review-settings true)
+       [:span.application-handling__list-row--attachment-state
+        [hakukohde-state-filter-controls
+         :attachment-state-filter
+         "Liitepyynnöt"
+         review-states/attachment-hakukohde-review-types-with-no-requirements
+         (subscribe [:state-query [:application :attachment-state-counts]])]])
+     [:span.application-handling__list-row--state
+      [hakukohde-state-filter-controls
+       :processing-state-filter
+       "Käsittelyvaihe"
+       review-states/application-hakukohde-processing-states
+       (subscribe [:state-query [:application :review-state-counts]])]]
+     (when (:selection-state @review-settings true)
+       [:span.application-handling__list-row--selection
+        [hakukohde-state-filter-controls
+         :selection-state-filter
+         "Valinta"
+         review-states/application-hakukohde-selection-states]])]))
 
 (defn application-contents [{:keys [form application]}]
   [readonly-contents/readonly-fields form application])
@@ -1512,14 +1508,17 @@
 
 (defn application []
   (let [search-control-all-page (subscribe [:application/search-control-all-page-view?])
-        filtered-applications   (subscribe [:application/filtered-applications])]
+        filtered-applications   (subscribe [:application/filtered-applications])
+        fetching                (subscribe [:state-query [:application :fetching-applications]])]
     [:div
      [:div.application-handling__overview
       [application-search-control]
       (when (not @search-control-all-page)
         [:div.application-handling__bottom-wrapper.select_application_list
          [haku-heading]
-         [application-list @filtered-applications]
+         [application-list-header @filtered-applications]
+         (when-not @fetching
+           [application-list-contents @filtered-applications])
          [application-list-loading-indicator]])]
      (when (not @search-control-all-page)
        [:div.application-handling__review-area-container
