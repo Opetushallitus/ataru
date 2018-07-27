@@ -409,6 +409,14 @@
    :hakutoiveet      [Hakutoive]
    :email            (s/maybe s/Str)})
 
+(s/defschema ValintaUiApplication
+  {:oid         s/Str
+   :hakuOid     s/Str
+   :personOid   s/Str
+   :lahiosoite  s/Str
+   :postinumero s/Str
+   :hakutoiveet [Hakutoive]})
+
 (s/defschema HakurekisteriApplication
   {:oid                         s/Str
    :personOid                   s/Str

@@ -92,6 +92,7 @@
                     yesql-get-application-list-for-virkailija
                     (merge {:form                   nil
                             :application_oid        nil
+                            :application_oids       nil
                             :person_oid             nil
                             :name                   nil
                             :email                  nil
@@ -107,6 +108,7 @@
                    yesql-get-application-list-for-virkailija
                    (merge {:form                   nil
                            :application_oid        nil
+                           :application_oids       nil
                            :person_oid             nil
                            :name                   nil
                            :email                  nil

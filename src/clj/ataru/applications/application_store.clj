@@ -310,25 +310,30 @@
        (clojure.string/join " & ")))
 
 (defn- query->db-query
-  [query]
-  (->> query
-       (transform-keys ->snake_case)
-       (merge {:form                   nil
-               :application_oid        nil
-               :person_oid             nil
-               :name                   nil
-               :email                  nil
-               :dob                    nil
-               :ssn                    nil
-               :haku                   nil
-               :hakukohde              nil
-               :ensisijainen_hakukohde nil})))
+  [connection query]
+  (-> (merge {:form                   nil
+              :application_oid        nil
+              :application_oids       nil
+              :person_oid             nil
+              :name                   nil
+              :email                  nil
+              :dob                    nil
+              :ssn                    nil
+              :haku                   nil
+              :hakukohde              nil
+              :ensisijainen_hakukohde nil}
+             (transform-keys ->snake_case query))
+      (update :application_oids
+              #(some->> (seq %)
+                        to-array
+                        (.createArrayOf (:connection connection) "text")))))
 
 (defn get-application-heading-list
   [query]
-  (->> (query->db-query query)
-       (exec-db :db yesql-get-application-list-for-virkailija)
-       (map ->kebab-case-kw)))
+  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+    (->> {:connection connection}
+         (yesql-get-application-list-for-virkailija (query->db-query connection query))
+         (map ->kebab-case-kw))))
 
 (defn get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
   [person-oid]
@@ -685,6 +690,17 @@
               first))
        hakukohteet-in-priority-order))
 
+(defn- unwrap-external-application-hakutoiveet
+  [application]
+  (->> (application-states/get-all-reviews-for-all-requirements
+        (clojure.set/rename-keys
+         application
+         {:application_hakukohde_reviews :application-hakukohde-reviews}))
+       (group-by :hakukohde)
+       requirement-names-mapped-to-states-by-hakukohde
+       hakutoiveet-to-list
+       (hakutoiveet-priority-order (:hakukohde application))))
+
 (defn- unwrap-external-application
   [{:keys [key haku organization_oid person_oid lang email hakukohde content] :as application}]
   (let [answers (answers-by-key (:answers content))]
@@ -699,14 +715,7 @@
      :postitoimipaikka (or (-> answers :postal-office :value)
                            (-> answers :city :value))
      :maa              (-> answers :country-of-residence :value)
-     :hakutoiveet      (->> (application-states/get-all-reviews-for-all-requirements
-                             (clojure.set/rename-keys application
-                                                      {:application_hakukohde_reviews :application-hakukohde-reviews})
-                             nil)
-                            (group-by :hakukohde)
-                            (requirement-names-mapped-to-states-by-hakukohde)
-                            (hakutoiveet-to-list)
-                            (hakutoiveet-priority-order hakukohde))}))
+     :hakutoiveet      (unwrap-external-application-hakutoiveet application)}))
 
 (defn get-external-applications
   [haku-oid hakukohde-oid hakemus-oids]
@@ -719,6 +728,21 @@
                                                        (conj hakukohde-oid))
                  :hakemus_oids                 (cons "" hakemus-oids)})
        (map unwrap-external-application)))
+
+(defn valinta-ui-applications
+  [query]
+  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+    (->> {:connection connection}
+         (yesql-valinta-ui-applications (query->db-query connection query))
+         (map #(assoc % :hakutoiveet (unwrap-external-application-hakutoiveet %)))
+         (map ->kebab-case-kw)
+         (map #(select-keys % [:oid
+                               :haku-oid
+                               :person-oid
+                               :lahiosoite
+                               :postinumero
+                               :hakutoiveet
+                               :organization-oid])))))
 
 (defn- unwrap-person-and-hakemus-oid
   [{:keys [key person_oid]}]
