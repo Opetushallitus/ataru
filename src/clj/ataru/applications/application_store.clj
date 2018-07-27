@@ -309,10 +309,10 @@
        (map #(str % ":*"))
        (clojure.string/join " & ")))
 
-(defn get-application-heading-list
+(defn- query->db-query
   [query]
   (->> query
-       ->kebab-case-kw
+       (transform-keys ->snake_case)
        (merge {:form                   nil
                :application_oid        nil
                :person_oid             nil
@@ -322,7 +322,11 @@
                :ssn                    nil
                :haku                   nil
                :hakukohde              nil
-               :ensisijainen_hakukohde nil})
+               :ensisijainen_hakukohde nil})))
+
+(defn get-application-heading-list
+  [query]
+  (->> (query->db-query query)
        (exec-db :db yesql-get-application-list-for-virkailija)
        (map ->kebab-case-kw)))
 
