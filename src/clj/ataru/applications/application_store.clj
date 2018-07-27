@@ -734,8 +734,9 @@
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
     (->> {:connection connection}
          (yesql-valinta-ui-applications (query->db-query connection query))
-         (map #(assoc % :hakutoiveet (unwrap-external-application-hakutoiveet %)))
-         (map ->kebab-case-kw)
+         (map #(assoc (->kebab-case-kw %)
+                      :hakutoiveet
+                      (unwrap-external-application-hakutoiveet %)))
          (map #(select-keys % [:oid
                                :haku-oid
                                :person-oid
