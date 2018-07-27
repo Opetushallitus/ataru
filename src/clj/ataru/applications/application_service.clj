@@ -397,10 +397,12 @@
                                   (map :personOid)
                                   distinct
                                   (person-service/get-persons person-service)
+                                  vals
                                   (remove #(or (:yksiloity %)
                                                (:yksiloityVTJ %)))
+                                  (map :oidHenkilo)
+                                  distinct
                                   seq)]
-      {:yksiloimattomat (map :oidHenkilo yksiloimattomat)}
+      {:yksiloimattomat yksiloimattomat}
       {:applications applications})
     {:unauthorized nil}))
-
