@@ -689,11 +689,19 @@
         :query-params [{hakukohdeOid :- s/Str nil}]
         :body         [applicationOids [s/Str]]
         :return [ataru-schema/ValintaApplication]
-        (if-let [applications (access-controlled-application/get-applications-for-valintalaskenta organization-service
-                                                                                                  session
-                                                                                                  hakukohdeOid
-                                                                                                  (not-empty applicationOids))]
+        (match (application-service/get-applications-for-valintalaskenta
+                organization-service
+                person-service
+                session
+                hakukohdeOid
+                (not-empty applicationOids))
+          {:applications applications}
           (response/ok applications)
+          {:yksiloimattomat yksiloimattomat}
+          (response/conflict
+           {:error      "Yksilöimättömiä hakijoita"
+            :personOids yksiloimattomat})
+          {:unauthorized _}
           (response/unauthorized {:error "Unauthorized"})))
 
       (api/GET "/list" {session :session}

@@ -375,3 +375,21 @@
   (->> (person-service/linked-oids person-service person-oid)
        :linked-oids
        (mapcat #(aac/omatsivut-applications organization-service session %))))
+
+(defn get-applications-for-valintalaskenta
+  [organization-service person-service session hakukohde-oid application-keys]
+  (if-let [applications (aac/get-applications-for-valintalaskenta
+                         organization-service
+                         session
+                         hakukohde-oid
+                         application-keys)]
+    (if-let [yksiloimattomat (->> applications
+                                  (map :personOid)
+                                  distinct
+                                  (person-service/get-persons person-service)
+                                  (remove #(or (:yksiloity %)
+                                               (:yksiloityVTJ %)))
+                                  seq)]
+      {:yksiloimattomat (map :oidHenkilo yksiloimattomat)}
+      {:applications applications})
+    {:unauthorized nil}))
