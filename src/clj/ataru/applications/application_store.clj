@@ -741,6 +741,7 @@
                                :person-oid
                                :lahiosoite
                                :postinumero
+                               :hakukohde
                                :hakutoiveet
                                :organization-oid])))))
 

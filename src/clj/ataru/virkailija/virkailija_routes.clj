@@ -678,10 +678,10 @@
                                  session
                                  (reduce application-service/->and-query queries))]
             (response/ok
-             (map #(clojure.set/rename-keys % {:haku-oid   :hakuOid
-                                               :person-oid :personOid
-                                               :hakukohde  :hakutoiveet})
-                  applications))
+             (->> applications
+                  (map #(dissoc % :hakukohde))
+                  (map #(clojure.set/rename-keys % {:haku-oid   :hakuOid
+                                                    :person-oid :personOid}))))
             (response/unauthorized {:error "Unauthorized"}))
           (response/bad-request {:error "No query parameters given"})))
       (api/GET "/persons" {session :session}
