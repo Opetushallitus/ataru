@@ -649,6 +649,41 @@
                                   hakemusOids)]
             (response/ok applications)
             (response/unauthorized {:error "Unauthorized"}))))
+      (api/GET "/valinta-ui" {session :session}
+        :summary "Applications for valinta-ui"
+        :query-params [{hakuOid :- s/Str nil}
+                       {hakukohdeOid :- s/Str nil}
+                       {hakemusOids :- [s/Str] nil}
+                       {name :- s/Str nil}]
+        :return [ataru-schema/ValintaUiApplication]
+        (if-let [queries (cond-> []
+                                 (some? hakuOid)
+                                 (conj (application-service/->haku-query
+                                        hakuOid))
+                                 (some? hakukohdeOid)
+                                 (conj (application-service/->hakukohde-query
+                                        hakukohdeOid
+                                        false))
+                                 (not-empty hakemusOids)
+                                 (conj (application-service/->application-oids-query
+                                        hakemusOids))
+                                 (some? name)
+                                 (conj (application-service/->name-query
+                                        name))
+                                 true
+                                 seq)]
+          (if-let [applications (access-controlled-application/valinta-ui-applications
+                                 organization-service
+                                 tarjonta-service
+                                 session
+                                 (reduce application-service/->and-query queries))]
+            (response/ok
+             (map #(clojure.set/rename-keys % {:haku-oid   :hakuOid
+                                               :person-oid :personOid
+                                               :hakukohde  :hakutoiveet})
+                  applications))
+            (response/unauthorized {:error "Unauthorized"}))
+          (response/bad-request {:error "No query parameters given"})))
       (api/GET "/persons" {session :session}
         :summary "Get application-oid <-> person-oid mapping for haku or hakukohdes"
         :query-params [hakuOid :- s/Str
@@ -689,11 +724,19 @@
         :query-params [{hakukohdeOid :- s/Str nil}]
         :body         [applicationOids [s/Str]]
         :return [ataru-schema/ValintaApplication]
-        (if-let [applications (access-controlled-application/get-applications-for-valintalaskenta organization-service
-                                                                                                  session
-                                                                                                  hakukohdeOid
-                                                                                                  (not-empty applicationOids))]
+        (match (application-service/get-applications-for-valintalaskenta
+                organization-service
+                person-service
+                session
+                hakukohdeOid
+                (not-empty applicationOids))
+          {:applications applications}
           (response/ok applications)
+          {:yksiloimattomat yksiloimattomat}
+          (response/conflict
+           {:error      "Yksilöimättömiä hakijoita"
+            :personOids yksiloimattomat})
+          {:unauthorized _}
           (response/unauthorized {:error "Unauthorized"})))
 
       (api/GET "/list" {session :session}

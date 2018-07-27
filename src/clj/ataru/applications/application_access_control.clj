@@ -211,3 +211,21 @@
     (constantly nil)
     (constantly nil)
     #(application-store/get-applications-for-valintalaskenta hakukohde-oid application-keys)))
+
+(defn valinta-ui-applications
+  [organization-service tarjonta-service session query]
+  (session-orgs/run-org-authorized
+   session
+   organization-service
+   [:view-applications :edit-applications]
+   (constantly nil)
+   #(filter-authorized tarjonta-service
+                       (every-pred (partial (:predicate query) %)
+                                   (some-fn (partial authorized-by-form? %)
+                                            (partial authorized-by-tarjoajat? %)))
+                       (application-store/valinta-ui-applications
+                        (dissoc query :predicate)))
+   #(filter-authorized tarjonta-service
+                       (partial (:predicate query) nil)
+                       (application-store/valinta-ui-applications
+                        (dissoc query :predicate)))))

@@ -222,10 +222,20 @@
   {:application-oid application-oid
    :predicate       (constantly true)})
 
+(defn ->application-oids-query
+  [application-oids]
+  {:application-oids application-oids
+   :predicate        (constantly true)})
+
+(defn ->empty-query
+  []
+  {:predicate (constantly true)})
+
 (defn ->and-query
-  [query other-query]
-  (assoc (merge query other-query)
-         :predicate (every-pred (:predicate query) (:predicate other-query))))
+  ([] (->empty-query))
+  ([query other-query]
+   (assoc (merge query other-query)
+          :predicate (every-pred (:predicate query) (:predicate other-query)))))
 
 (defn get-application-list-by-query
   [organization-service person-service tarjonta-service session query]
@@ -375,3 +385,22 @@
   (->> (person-service/linked-oids person-service person-oid)
        :linked-oids
        (mapcat #(aac/omatsivut-applications organization-service session %))))
+
+(defn get-applications-for-valintalaskenta
+  [organization-service person-service session hakukohde-oid application-keys]
+  (if-let [applications (aac/get-applications-for-valintalaskenta
+                         organization-service
+                         session
+                         hakukohde-oid
+                         application-keys)]
+    (if-let [yksiloimattomat (->> applications
+                                  (map :personOid)
+                                  distinct
+                                  (person-service/get-persons person-service)
+                                  (remove #(or (:yksiloity %)
+                                               (:yksiloityVTJ %)))
+                                  seq)]
+      {:yksiloimattomat (map :oidHenkilo yksiloimattomat)}
+      {:applications applications})
+    {:unauthorized nil}))
+
