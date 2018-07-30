@@ -15,6 +15,18 @@
             #?(:clj  [clojure.core.match :refer [match]]
                :cljs [cljs.core.match :refer-macros [match]])))
 
+(defn- email-check-correct-notification
+  [email]
+  [{:fi [:div
+         [:p "Lähetämme sinulle tärkeitä viestejä sähköpostilla. Varmistathan,
+         että syöttämäsi sähköpostiosoite " [:strong email] " on oikein."]]
+    :sv [:div
+         [:p "Lähetämme sinulle tärkeitä viestejä sähköpostilla. Varmistathan,
+         että syöttämäsi sähköpostiosoite " [:strong email] " on oikein."]]
+    :en [:div
+         [:p "Lähetämme sinulle tärkeitä viestejä sähköpostilla. Varmistathan,
+         että syöttämäsi sähköpostiosoite " [:strong email] " on oikein."]]}])
+
 (defn- email-applied-error
   [email preferred-name]
   [{:fi [:div
@@ -175,6 +187,8 @@
       (cond (not (ssn/ssn? value))
             [false []]
             (and (not multiple?)
+                 (not (get-in answers-by-key [:ssn :cannot-view]))
+                 (not (get-in answers-by-key [:ssn :cannot-modify]))
                  (not (and modifying? (= value original-value)))
                  (async/<! (has-applied haku-oid {:ssn value})))
             [false (ssn-applied-error (when (:valid preferred-name)
@@ -190,16 +204,14 @@
         haku-oid       (get-in field-descriptor
                                [:params :haku-oid])
         preferred-name (:preferred-name answers-by-key)
-        ssn            (get-in answers-by-key [:ssn :value])
         original-value (get-in answers-by-key [(keyword (:id field-descriptor)) :original-value])
         modifying?     (some? original-value)]
     (asyncm/go
       (cond (not (email/email? value))
             [false []]
+            (and modifying? (= value original-value))
+            [true []]
             (and (not multiple?)
-                 (not (and modifying? (= value original-value)))
-                 (not (and (have-finnish-ssn? answers-by-key)
-                           (async/<! (has-applied haku-oid {:ssn ssn}))))
                  (async/<! (has-applied haku-oid {:email value})))
             [false
              ((if modifying?
@@ -207,7 +219,7 @@
                 email-applied-error) value (when (:valid preferred-name)
                                              (:value preferred-name)))]
             :else
-            [true []]))))
+            [true (email-check-correct-notification value)]))))
 
 (def ^:private postal-code-pattern #"^\d{5}$")
 
