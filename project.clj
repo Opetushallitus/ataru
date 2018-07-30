@@ -105,16 +105,8 @@
             [speclj "3.3.2"]]
 
   :doo {:debug true
-        :karma
-               {:launchers {:headless_chrome {:plugin "karma-chrome-launcher"
-                                              :name "HeadlessChrome"}}
-                :config {
-                         "customLaunchers"
-                         {"HeadlessChrome" {"base" "Chrome"
-                                            "flags" ["--no-sandbox"
-                                                     "--disable-gpu"
-                                                     "--headless"
-                                                     "--remote-debugging-port=9222"]}}}}
+        :karma {:launchers {:chrome {:plugin "karma-chrome-launcher"
+                                     :name   "ChromeHeadless"}}}
         :paths {:karma "./node_modules/karma/bin/karma"}}
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled"
