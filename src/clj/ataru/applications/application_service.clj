@@ -271,6 +271,10 @@
                                                 (map :key)
                                                 application-store/get-application-reviews-by-keys
                                                 (reduce #(assoc %1 (:application-key %2) %2) {}))
+          application-review-notes         (->> applications
+                                                (map :key)
+                                                application-store/get-application-review-notes-by-keys
+                                                (group-by :application-key))
           onr-persons                      (->> (map :person-oid applications)
                                                 distinct
                                                 (filter some?)
@@ -287,6 +291,7 @@
                                                skip-answers-to-preserve-memory?)]
       (ByteArrayInputStream. (excel/export-applications applications-with-persons
                                                         application-reviews
+                                                        application-review-notes
                                                         selected-hakukohde
                                                         skip-answers?
                                                         tarjonta-service
