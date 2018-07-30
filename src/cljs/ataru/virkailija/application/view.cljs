@@ -347,7 +347,7 @@
   [haku-data list-heading]
   (if haku-data
     [haku-applications-heading haku-data]
-    [:div.application-handling__header-haku-name list-heading]))
+    [:div.application-handling__header-haku list-heading]))
 
 (defn haku-heading
   []
@@ -689,26 +689,25 @@
       [:span.application-handling__filters
        [:a
         {:on-click #(swap! filters-visible not)}
-        (str "Lisärajaimet" (when (pos? @enabled-filter-count)
-                              (str " (" @enabled-filter-count ")")))]
+        (str "Rajaa hakemuksia "
+             "(" @filtered-application-count "/" @loaded-application-count ")")]
        (when (pos? @enabled-filter-count)
          [:span
           [:span.application-handling__filters-count-separator "|"]
           [:a
-           {:on-click #(dispatch [:application/remove-filters])} "Poista"]])
+           {:on-click #(dispatch [:application/remove-filters])} "Poista rajaimet"]])
        (when @filters-visible
          [:div.application-handling__filters-popup
           {:class (when @has-base-education-answers "application-handling__filters-popup--two-cols")}
           [:div.application-handling__popup-close-button
            {:on-click #(reset! filters-visible false)}
            [:i.zmdi.zmdi-close]]
-          [:div.application-handling__popup-application-count (str "Hakemuksia näkyvillä " @filtered-application-count "/" @loaded-application-count)]
-          [:div.application-handling__popup-column.application-handling__popup-column--left
-           [:h3 "Yksilöinti"]
+          [:div.application-handling__popup-column-left
+           [:h3.application-handling__filter-group-heading "Yksilöinti"]
            [:div.application-handling__filter-group
             [application-filter-checkbox filters "Yksilöimättömät" :only-identified :unidentified]
             [application-filter-checkbox filters "Yksilöidyt" :only-identified :identified]]
-           [:h3 "Käsittelymerkinnät"]
+           [:h3.application-handling__filter-group-heading "Käsittelymerkinnät"]
            (when (some? @selected-hakukohde-oid)
              [:div.application-handling__filter-hakukohde-name
               @(subscribe [:application/hakukohde-name @selected-hakukohde-oid])])
@@ -720,42 +719,38 @@
                 (map (partial review-type-filter filters))
                 (doall))]
           (when @has-base-education-answers
-            [:div.application-handling__popup-column.application-handling__popup-column--right
-             [:h3 "Pohjakoulutus"]
+            [:div.application-handling__popup-column-right
+             [:h3.application-handling__filter-group-heading "Pohjakoulutus"]
              [application-base-education-filters filters]])])])))
 
-(defn application-list [applications]
-  (let [fetching        (subscribe [:state-query [:application :fetching-applications]])
-        review-settings (subscribe [:state-query [:application :review-settings :config]])]
-    [:div
-     [:div.application-handling__list-header.application-handling__list-row
-      [:span.application-handling__list-row--applicant
-       [application-list-basic-column-header
-        :applicant-name
-        "Hakija"]
-       [application-filters]]
-      [created-time-column-header]
-      (when (:attachment-handling @review-settings true)
-        [:span.application-handling__list-row--attachment-state
-         [hakukohde-state-filter-controls
-          :attachment-state-filter
-          "Liitepyynnöt"
-          review-states/attachment-hakukohde-review-types-with-no-requirements
-          (subscribe [:state-query [:application :attachment-state-counts]])]])
-      [:span.application-handling__list-row--state
-       [hakukohde-state-filter-controls
-        :processing-state-filter
-        "Käsittelyvaihe"
-        review-states/application-hakukohde-processing-states
-        (subscribe [:state-query [:application :review-state-counts]])]]
-      (when (:selection-state @review-settings true)
-        [:span.application-handling__list-row--selection
-         [hakukohde-state-filter-controls
-          :selection-state-filter
-          "Valinta"
-          review-states/application-hakukohde-selection-states]])]
-     (when-not @fetching
-       [application-list-contents applications])]))
+(defn- application-list-header [applications]
+  (let [review-settings (subscribe [:state-query [:application :review-settings :config]])]
+    [:div.application-handling__list-header.application-handling__list-row
+     [:span.application-handling__list-row--applicant
+      [application-list-basic-column-header
+       :applicant-name
+       "Hakija"]
+      [application-filters]]
+     [created-time-column-header]
+     (when (:attachment-handling @review-settings true)
+       [:span.application-handling__list-row--attachment-state
+        [hakukohde-state-filter-controls
+         :attachment-state-filter
+         "Liitepyynnöt"
+         review-states/attachment-hakukohde-review-types-with-no-requirements
+         (subscribe [:state-query [:application :attachment-state-counts]])]])
+     [:span.application-handling__list-row--state
+      [hakukohde-state-filter-controls
+       :processing-state-filter
+       "Käsittelyvaihe"
+       review-states/application-hakukohde-processing-states
+       (subscribe [:state-query [:application :review-state-counts]])]]
+     (when (:selection-state @review-settings true)
+       [:span.application-handling__list-row--selection
+        [hakukohde-state-filter-controls
+         :selection-state-filter
+         "Valinta"
+         review-states/application-hakukohde-selection-states]])]))
 
 (defn application-contents [{:keys [form application]}]
   [readonly-contents/readonly-fields form application])
@@ -1513,14 +1508,17 @@
 
 (defn application []
   (let [search-control-all-page (subscribe [:application/search-control-all-page-view?])
-        filtered-applications   (subscribe [:application/filtered-applications])]
+        filtered-applications   (subscribe [:application/filtered-applications])
+        fetching                (subscribe [:state-query [:application :fetching-applications]])]
     [:div
      [:div.application-handling__overview
       [application-search-control]
       (when (not @search-control-all-page)
         [:div.application-handling__bottom-wrapper.select_application_list
          [haku-heading]
-         [application-list @filtered-applications]
+         [application-list-header @filtered-applications]
+         (when-not @fetching
+           [application-list-contents @filtered-applications])
          [application-list-loading-indicator]])]
      (when (not @search-control-all-page)
        [:div.application-handling__review-area-container

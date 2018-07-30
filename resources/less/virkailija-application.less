@@ -40,6 +40,7 @@
 
 .application-handling__header {
   display: flex;
+  min-height: 55px;
   justify-content: space-between;
   padding-top: 0;
   -webkit-user-select: none;
@@ -59,15 +60,6 @@
 
 .application-handling__ensisijaisesti-checkbox {
   cursor: pointer;
-}
-
-.application-handling__header-haku-name {
-  font-size: 24px;
-  font-weight: 400;
-  padding: 10px 10px 10px 0;
-  display: inline-block;
-  line-height: 100%;
-  .semibold;
 }
 
 .application-handling__mass-edit-review-states-container {
@@ -2162,7 +2154,7 @@ th.application__readonly-adjacent--header {
 }
 
 .application-handling__filters-popup {
-  .arrow(top, white, 8px, 10%);
+  .arrow(top, white, 8px, 80px);
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.30));
   box-sizing: border-box;
   display: flex;
@@ -2184,21 +2176,11 @@ th.application__readonly-adjacent--header {
   width: 800px;
 }
 
-.application-handling__popup-application-count {
-  position: absolute;
-}
-
-.application-handling__popup-column {
-  margin-top: 20px;
-}
-
-.application-handling__popup-column--left {
-  margin-top: 20px;
+.application-handling__popup-column-left {
   flex: 0 0 240px;
 }
 
-.application-handling__popup-column--right {
-  margin-top: 20px;
+.application-handling__popup-column-right {
   flex: 0 0 530px;
 }
 
@@ -2222,6 +2204,10 @@ th.application__readonly-adjacent--header {
 
 .application-handling__filter-group {
   margin-bottom: 10px;
+}
+
+.application-handling__filter-group-heading:first-child {
+  margin-top: 0px;
 }
 
 .application-handling__filter-group-title {
