@@ -38,7 +38,7 @@
                                         (reduce #(assoc %1 (:key %2) fixtures/application-review)
                                                 {}
                                                 ~(second bindings))
-                                        []
+                                        fixtures/application-review-notes
                                         nil
                                         false
                                         (tarjonta-service/new-tarjonta-service)
@@ -85,7 +85,7 @@
         (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
         (verify-row metadata-sheet 2 nil)
         (verify-row application-sheet 0 ["Id" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Maksuvelvollisuus" "Valinnan tila" "Pisteet" "Hakijan henkilö-OID" "Turvakielto" "Muistiinpanot" "Kysymys 4" "Etunimi" "Kysymys 5" "Hakukohteet"])
-        (verify-row application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" "Hyväksytty" "12" "1.123.345456567123" "kyllä" nil "Vastaus 4" "Person-etunimi" "Vastaus 5" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"])
+        (verify-row application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" "Hyväksytty" "12" "1.123.345456567123" "kyllä" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari" "Vastaus 4" "Person-etunimi" "Vastaus 5" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"])
         (verify-row application-sheet 2 nil))))
 
   (it "should export applications to separate sheets, grouped by form"
@@ -102,5 +102,5 @@
         (verify-row form-application-sheet 1 ["application_9432_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelemättä" "Tarkastamatta" "Täyttyy" "Ei hakukelpoinen" "Tarkastamatta" "Kesken" "12" nil "ei" nil "Vastaus 1" "Vastaus 2" "Lomake-etunimi" "Vastaus 3"])
         (verify-row form-application-sheet 2 nil)
         (verify-row hakukohde-application-sheet 0 ["Id" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Maksuvelvollisuus" "Valinnan tila" "Pisteet" "Hakijan henkilö-OID" "Turvakielto" "Muistiinpanot" "Kysymys 4" "Etunimi" "Kysymys 5" "Hakukohteet"])
-        (verify-row hakukohde-application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" "Hyväksytty" "12" "1.123.345456567123" "kyllä" nil "Vastaus 4" "Person-etunimi" "Vastaus 5" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"])
+        (verify-row hakukohde-application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" "Hyväksytty" "12" "1.123.345456567123" "kyllä" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari" "Vastaus 4" "Person-etunimi" "Vastaus 5" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"])
         (verify-row hakukohde-application-sheet 2 nil)))))

@@ -99,3 +99,21 @@
                          :application_key "c58df586-fdb9-4ee1-b4c4-030d4cfe9f81"
                          :state           "active"
                          :score           12})
+
+(def application-review-notes
+  {"application_3424_key" [{:id              1
+                            :application-key "application_3424_key"
+                            :created-time    (c/date-time 2018 7 29 14 11 12)
+                            :notes           "Asia kunnossa"
+                            :hakukohde       nil
+                            :state-name      nil
+                            :first-name      "Virk"
+                            :last-name       "Ailija"}
+                           {:id              2
+                            :application-key "application_3424_key"
+                            :created-time    (c/date-time 2018 7 30 15 12 13)
+                            :notes           "Muikkari"
+                            :hakukohde       nil
+                            :state-name      nil
+                            :first-name      "Ajilia"
+                            :last-name       "Kriv"}]})

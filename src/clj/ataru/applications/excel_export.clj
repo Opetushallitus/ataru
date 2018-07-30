@@ -111,9 +111,9 @@
                     first-name
                     " "
                     last-name))
-                " "
                 (when hakukohde
-                  (str "(hakukohde " hakukohde "): "))
+                  (str " (hakukohde " hakukohde ")"))
+                ": "
                 notes)))
        (clojure.string/join ",\n")))
 
