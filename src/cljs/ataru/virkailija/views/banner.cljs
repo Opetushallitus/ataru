@@ -94,7 +94,7 @@
               [:div.profile__organization-select
                [:div.profile__organization-select-username-container
                 [:i.profile__organization-select-username-icon.zmdi.zmdi-account.zmdi-hc-lg]
-                [:span.profile__organization-select-username-name (str (:name @user-info) " (" (:username @user-info) ")")]]
+                [:span.profile__organization-select-username-name (str (:name @user-info) " (" (:oid @user-info) ")")]]
                (into
                  [:ul.profile__organization-select-user-orgs.zmdi-hc-ul]
                  (map

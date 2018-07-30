@@ -53,6 +53,6 @@
     (let [information-request (information-request-store/add-information-request information-request session conn)]
       (audit-log/log {:new       information-request
                       :operation audit-log/operation-new
-                      :id        (-> session :identity :username)})
+                      :id        (-> session :identity :oid)})
       (start-email-job job-runner information-request)
       information-request)))

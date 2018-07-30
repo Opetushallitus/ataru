@@ -12,8 +12,9 @@
             [ataru.forms.form-store :as store]
             [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
+            [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.koodisto.koodisto :as koodisto]
-            [ataru.organization-service.ldap-client :as ldap]
+            [ataru.person-service.person-service :as person-service]
             [ataru.person-service.person-integration :as person-integration]
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
             [ataru.util :as util]
@@ -401,14 +402,23 @@
 
 (defn- get-field-metadata
   [virkailija]
-  {:created-by  {:name (format "%s %s" (:givenName virkailija) (:sn virkailija))
-                 :oid  (:employeeNumber virkailija)
+  {:created-by  {:name (format "%s %s" (:kutsumanimi virkailija) (:sukunimi virkailija))
+                 :oid  (:oidHenkilo virkailija)
                  :date (ZonedDateTime/now (ZoneId/of "Europe/Helsinki"))}
-   :modified-by {:name (format "%s %s" (:givenName virkailija) (:sn virkailija))
-                 :oid  (:employeeNumber virkailija)
+   :modified-by {:name (format "%s %s" (:kutsumanimi virkailija) (:sukunimi virkailija))
+                 :oid  (:oidHenkilo virkailija)
                  :date (ZonedDateTime/now (ZoneId/of "Europe/Helsinki"))}})
 
-(def get-virkailija (memoize ldap/get-virkailija-by-username))
+(def get-virkailija
+  (let [kayttooikeus-service (if (-> config :dev :fake-dependencies)
+                               (kayttooikeus-service/->FakeKayttooikeusService)
+                               (kayttooikeus-service/->HttpKayttooikeusService nil))
+        person-service       (person-service/new-person-service)]
+    (memoize (fn [username]
+               (->> username
+                    (kayttooikeus-service/virkailija-by-username kayttooikeus-service)
+                    :oid
+                    (person-service/get-person person-service))))))
 
 (defn- migrate-element-metadata-to-forms
   [connection]

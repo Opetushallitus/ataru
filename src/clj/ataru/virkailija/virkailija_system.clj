@@ -1,6 +1,7 @@
 (ns ataru.virkailija.virkailija-system
   (:require [com.stuartsierra.component :as component]
             [ataru.http.server :as server]
+            [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.virkailija.virkailija-routes :as virkailija-routes]
@@ -39,6 +40,10 @@
                                  (ohjausparametrit-service/new-ohjausparametrit-service)
                                  [:cache-service])
 
+     :kayttooikeus-service (if (-> config :dev :fake-dependencies)
+                             (kayttooikeus-service/->FakeKayttooikeusService)
+                             (kayttooikeus-service/->HttpKayttooikeusService nil))
+
      :person-service (person-service/new-person-service)
 
      :handler (component/using
@@ -49,7 +54,8 @@
                  :job-runner
                  :ohjausparametrit-service
                  :cache-service
-                 :person-service])
+                 :person-service
+                 :kayttooikeus-service])
 
      :server-setup {:port      http-port
                     :repl-port repl-port}

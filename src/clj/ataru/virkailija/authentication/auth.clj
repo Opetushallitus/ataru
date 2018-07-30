@@ -2,11 +2,12 @@
   (:require [ataru.config.core :refer [config]]
             [ataru.config.url-helper :refer [resolve-url]]
             [ataru.db.db :as db]
+            [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.log.audit-log :as audit-log]
-            [ataru.organization-service.ldap-client :as ldap]
             [ataru.organization-service.organization-client :as organization-client]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.organization-service.user-rights :as rights]
+            [ataru.person-service.person-service :as person-service]
             [ataru.virkailija.authentication.cas-ticketstore :as cas-store]
             [ataru.util :as util]
             [clj-util.cas :as cas]
@@ -44,39 +45,41 @@
     {}
     user-right-organizations))
 
-(defn login [login-provider organization-service redirect-url]
+(defn login [login-provider
+             kayttooikeus-service
+             person-service
+             organization-service
+             redirect-url]
   (try
     (if-let [[username ticket] (login-provider)]
       (do
         (cas-store/login ticket)
-        (let [virkailija                (ldap/get-virkailija-by-username username)
-              right-organization-oids   (ldap/user->right-organization-oids virkailija rights/right-names)
+        (let [virkailija                (kayttooikeus-service/virkailija-by-username kayttooikeus-service username)
+              henkilo                   (person-service/get-person person-service (:oidHenkilo virkailija))
+              right-organization-oids   (rights/virkailija->right-organization-oids virkailija rights/right-names)
               organization-oids         (-> (vals right-organization-oids) (flatten) (set))
               oph-organization-member?  (contains? organization-oids organization-client/oph-organization)
               user-right-organizations  (map-kv
-                                          (fn [right org-oids]
-                                            [right (organization-service/get-organizations-for-oids organization-service org-oids)])
-                                          right-organization-oids)
+                                         (fn [right org-oids]
+                                           [right (organization-service/get-organizations-for-oids organization-service org-oids)])
+                                         right-organization-oids)
               organizations-with-rights (->> user-right-organizations
                                              (map-kv (fn [right organizations]
                                                        [right (organization-service/get-all-organizations organization-service organizations)]))
                                              (user-right-organizations->organization-rights)
                                              (util/group-by-first :oid))]
           (info "user" username "logged in")
-          (db/exec :db yesql-upsert-virkailija<! {:oid        (:employeeNumber virkailija)
-                                                  :first_name (:givenName virkailija)
-                                                  :last_name  (:sn virkailija)})
+          (db/exec :db yesql-upsert-virkailija<! {:oid        (:oidHenkilo henkilo)
+                                                  :first_name (:kutsumanimi henkilo)
+                                                  :last_name  (:sukunimi henkilo)})
           (audit-log/log {:new       ticket
                           :id        username
                           :operation audit-log/operation-login})
           (-> (resp/redirect redirect-url)
               (assoc :session {:identity {:username                 username
-                                          :first-name               (-> virkailija
-                                                                        :givenName
-                                                                        (clojure.string/split #" ")
-                                                                        first)
-                                          :last-name                (:sn virkailija)
-                                          :oid                      (:employeeNumber virkailija)
+                                          :first-name               (:kutsumanimi henkilo)
+                                          :last-name                (:sukunimi henkilo)
+                                          :oid                      (:oidHenkilo henkilo)
                                           :ticket                   ticket
                                           :user-right-organizations user-right-organizations
                                           :superuser                oph-organization-member?

@@ -1,19 +1,23 @@
 (ns ataru.organization-service.user-rights
-  (:require [schema.core :as s]
-            [ataru.config.core :refer [config]]))
+  (:require [ataru.config.core :refer [config]]
+            [schema.core :as s]))
 
 (def ^:private
-  rights
-  {:form-edit         "APP_ATARU_EDITORI_CRUD"
-   :view-applications "APP_ATARU_HAKEMUS_READ"
-   :edit-applications "APP_ATARU_HAKEMUS_CRUD"})
+  oikeus-to-right
+  {{:palvelu "ATARU_EDITORI" :oikeus "CRUD"} :form-edit
+   {:palvelu "ATARU_HAKEMUS" :oikeus "READ"} :view-applications
+   {:palvelu "ATARU_HAKEMUS" :oikeus "CRUD"} :edit-applications})
 
-(def right-names (keys rights))
+(def right-names (vals oikeus-to-right))
 
 (s/defschema Right (apply s/enum right-names))
 
-(s/defn ^:always-validate ldap-right [right :- Right]
-  (let [name-from-config (-> config :ldap :user-right-names right)]
-    (if (not (clojure.string/blank? name-from-config))
-      name-from-config
-      (right rights))))
+(defn virkailija->right-organization-oids
+  [virkailija rights]
+  {:pre [(< 0 (count rights))]}
+  (select-keys (->> (:organisaatiot virkailija)
+                    (mapcat (fn [{:keys [organisaatioOid kayttooikeudet]}]
+                              (map (fn [right] {right [organisaatioOid]})
+                                   (keep oikeus-to-right kayttooikeudet))))
+                    (reduce (partial merge-with concat) {}))
+               rights))

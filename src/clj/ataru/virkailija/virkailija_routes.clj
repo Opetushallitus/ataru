@@ -156,8 +156,7 @@
     :tags ["form-api"]
 
     (api/GET "/user-info" {session :session}
-      (ok {:username              (-> session :identity :username)
-           :organizations         (organization-list session)
+      (ok {:organizations         (organization-list session)
            :oid                   (-> session :identity :oid)
            :name                  (format "%s %s" (-> session :identity :first-name) (-> session :identity :last-name))
            :selected-organization (-> session :selected-organization)
@@ -862,7 +861,9 @@
                                   (api/middleware [session-timeout/wrap-idle-session-timeout]
                                     app-routes
                                     (api-routes this))
-                                  (auth-routes (:organization-service this))))
+                                  (auth-routes (:kayttooikeus-service this)
+                                               (:person-service this)
+                                               (:organization-service this))))
                               (api/undocumented
                                 (route/not-found "Not found")))
                             (wrap-defaults (-> site-defaults
