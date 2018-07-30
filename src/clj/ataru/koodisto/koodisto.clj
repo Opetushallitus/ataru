@@ -26,7 +26,9 @@
                                                                            (assoc :default-value true)))))
                         koodis-with-followups (update-options-while-keeping-existing-followups koodis-with-default-option (:options %))]
                     (assoc % :options (if (= (:fieldType %) "dropdown")
-                                        (into empty-option koodis-with-followups)
+                                        (->> koodis-with-followups
+                                             (remove (comp (partial = "") :value))
+                                             (into empty-option))
                                         koodis-with-followups)))
                   %)
                 (:content form))))

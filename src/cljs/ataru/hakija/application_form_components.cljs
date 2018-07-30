@@ -36,11 +36,6 @@
          "L" "application__form-text-input__size-large"
          :else "application__form-text-input__size-medium"))
 
-(defn- non-blank-val [val default]
-  (if-not (clojure.string/blank? val)
-    val
-    default))
-
 (defn- textual-field-change [field-descriptor evt]
   (let [value (-> evt .-target .-value)]
     (dispatch [:application/set-application-field field-descriptor value])))
@@ -434,7 +429,8 @@
                          :key   idx}
                 (non-blank-option-label option @languages)])
              (cond->> (:options field-descriptor)
-                      (some? (:koodisto-source field-descriptor))
+                      (and (some? (:koodisto-source field-descriptor))
+                           (not (:koodisto-ordered-by-user field-descriptor)))
                       (sort-by #(non-blank-option-label % @languages))))))]]
      (when-not idx
        (dropdown-followups field-descriptor @value))]))
