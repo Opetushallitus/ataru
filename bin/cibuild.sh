@@ -48,7 +48,7 @@ test-clojure() {
 
 test-clojurescript() {
     echo "Testing clojurescript"
-    ./bin/lein doo chrome test once
+    ./bin/lein doo chrome-headless test once
 }
 
 test-browser() {
