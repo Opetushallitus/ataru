@@ -52,7 +52,7 @@ const stopWhenFinished = () => {
     }
 };
 
-const addPhantomCookie = (page) => {
+const addCookie = (page) => {
     page.setCookie({
         'name': 'ring-session',
         'value': cookie,
@@ -104,7 +104,7 @@ puppeteer.launch().then(function(browser) {
     browser.newPage()
         .then(function(page) {
             const url = getUrl();
-            if (cookie) addPhantomCookie(page);
+            if (cookie) addCookie(page);
             console.log("running browser tests for", app, url, cookie);
             page.on('console', msg => onConsoleMessage(msg.text(), page));
             setTimeout(stopWhenFinished, 1000);

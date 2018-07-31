@@ -34,7 +34,7 @@
    timeout-secs
    (TimeUnit/SECONDS)))
 
-(defn run-phantom-test
+(defn run-karma-test
   [test-name & args]
   (let [results (apply sh-timeout 120 "/usr/local/bin/node" "bin/karma-runner.js" test-name args)]
     (println (:out results))
@@ -48,36 +48,36 @@
 
   (describe "form creation /"
     (it "is created successfully"
-      (run-phantom-test "virkailija" (last (split (utils/login) #"="))))
+      (run-karma-test "virkailija" (last (split (utils/login) #"="))))
     (it "is created with a question group successfully"
-      (run-phantom-test "virkailija-question-group" (last (split (utils/login) #"="))))
+      (run-karma-test "virkailija-question-group" (last (split (utils/login) #"="))))
     (it "is able to use lomake with hakukohde organization connection"
-        (run-phantom-test "virkailija-with-hakukohde-organization" (last (split (utils/login) #"=")))))
+        (run-karma-test "virkailija-with-hakukohde-organization" (last (split (utils/login) #"=")))))
 
   (describe "applying using a form /"
     (it "is possible to apply using a plain form"
-      (run-phantom-test "hakija-form"))
+      (run-karma-test "hakija-form"))
     (it "is possible to apply using a form for haku with single hakukohde"
-      (run-phantom-test "hakija-haku"))
+      (run-karma-test "hakija-haku"))
     (it "is possible to apply using a form for hakukohde"
-      (run-phantom-test "hakija-hakukohde"))
+      (run-karma-test "hakija-hakukohde"))
     (it "is possible to apply using a form successfully with non-finnish ssn"
-      (run-phantom-test "hakija-ssn"))
+      (run-karma-test "hakija-ssn"))
     (it "is possible to apply using a form with a question group"
-      (run-phantom-test "hakija-question-group-form"))
+      (run-karma-test "hakija-question-group-form"))
     (it "is possible to apply as virkailija"
-      (run-phantom-test "virkailija-haku")))
+      (run-karma-test "virkailija-haku")))
 
   (describe "editing a submitted application /"
     (it "is possible to edit a plain application successfully"
-      (run-phantom-test "hakija-edit"))
+      (run-karma-test "hakija-edit"))
     (it "is possible to edit an application successfully as virkailija"
-      (run-phantom-test "virkailija-hakemus-edit"))
+      (run-karma-test "virkailija-hakemus-edit"))
     (it "is taking hakuaika into account"
-      (run-phantom-test "hakija-hakukohteen-hakuaika")))
+      (run-karma-test "hakija-hakukohteen-hakuaika")))
 
   (describe "application handling /"
     (it "is possible to handle application with a question group"
-      (run-phantom-test "virkailija-question-group-application-handling" (last (split (utils/login) #"="))))))
+      (run-karma-test "virkailija-question-group-application-handling" (last (split (utils/login) #"="))))))
 
 (run-specs)
