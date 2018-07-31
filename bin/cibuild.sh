@@ -24,6 +24,7 @@ compile-less() {
 npm-dependencies() {
     echo "Installing npm dependencies"
     npm install
+    export CHROME_BIN=$(node -e "console.log(require('puppeteer').executablePath());")
 }
 
 process-resources() {
@@ -48,7 +49,7 @@ test-clojure() {
 
 test-clojurescript() {
     echo "Testing clojurescript"
-    ./bin/lein doo phantom test once
+    ./bin/lein doo chrome-headless test once
 }
 
 test-browser() {

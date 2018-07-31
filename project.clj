@@ -96,7 +96,7 @@
   :jvm-opts ^:replace ["-Xmx2g"]
 
   :plugins [[lein-cljsbuild "1.1.7"]
-            [lein-doo "0.1.8"]
+            [lein-doo "0.1.10"]
             [lein-figwheel "0.5.14"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.14"]
@@ -104,7 +104,8 @@
             [lein-resource "17.06.1"]
             [speclj "3.3.2"]]
 
-  :doo {:paths {:phantom "./node_modules/phantomjs-prebuilt/bin/phantomjs"}}
+  :doo {:debug true
+        :paths {:karma "./node_modules/karma/bin/karma"}}
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled"
                                     "resources/public/css"
@@ -208,18 +209,18 @@
                               :resource-paths ["dev-resources"]
                               :env            {:dev? "true"}}
 
-             :virkailija-dev [:dev {:figwheel {:nrepl-port  3334
-                                               :server-port 3449}
+             :virkailija-dev [:dev {:figwheel    {:nrepl-port  3334
+                                                  :server-port 3449}
                                     :target-path "target-virkailija"
-                                    :env      {:app "virkailija"}
-                                    :jvm-opts ^:replace ["-Dapp=virkailija"
-                                                         "-Duser.home=."]}]
-             :hakija-dev     [:dev {:figwheel {:nrepl-port  3336
-                                               :server-port 3450}
+                                    :env         {:app "virkailija"}
+                                    :jvm-opts    ^:replace ["-Dapp=virkailija"
+                                                            "-Duser.home=."]}]
+             :hakija-dev     [:dev {:figwheel    {:nrepl-port  3336
+                                                  :server-port 3450}
                                     :target-path "target-hakija"
-                                    :env      {:app "hakija"}
-                                    :jvm-opts ^:replace ["-Dapp=hakija"
-                                                         "-Duser.home=."]}]
+                                    :env         {:app "hakija"}
+                                    :jvm-opts    ^:replace ["-Dapp=hakija"
+                                                            "-Duser.home=."]}]
              :uberjar        {:aot            :all
                               :resource-paths ["resources"]}}
 
