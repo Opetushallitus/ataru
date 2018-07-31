@@ -36,7 +36,7 @@
 
 (defn run-karma-test
   [test-name & args]
-  (let [results (apply sh-timeout 120 "/usr/local/bin/node" "bin/karma-runner.js" test-name args)]
+  (let [results (apply sh-timeout 120 "node" "bin/karma-runner.js" test-name args)]
     (println (:out results))
     (.println System/err (:err results))
     (should= 0 (:exit results))))
