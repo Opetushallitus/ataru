@@ -14,7 +14,7 @@ const startsWith = (haystack, needle) => {
     return haystack.substring(0, needle.length) === needle
 };
 
-const takeScreenshot = (page) => {
+const takeScreenshot = page => {
     const filename = '/tmp/ataru-fail-' + new Date().getTime() + '.png';
     console.log('Taking screenshot', filename);
     page.screenshot({path: filename})
@@ -50,7 +50,7 @@ const stopWhenFinished = () => {
     }
 };
 
-const addCookie = (page) => {
+const addCookie = page => {
     page.setCookie({
         'name': 'ring-session',
         'value': cookie,
@@ -98,9 +98,9 @@ const getUrl = () => {
     }
 };
 
-puppeteer.launch().then(function(browser) {
+puppeteer.launch().then(browser => {
     browser.newPage()
-        .then(function(page) {
+        .then(page => {
             const url = getUrl();
             if (cookie) addCookie(page);
             console.log("running browser tests for", app, url, cookie);
