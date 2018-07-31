@@ -106,7 +106,12 @@
 
   :doo {:debug true
         :karma {:launchers {:chrome {:plugin "karma-chrome-launcher"
-                                     :name   "ChromeHeadless"}}}
+                                     :name   "HeadlessChrome"}}
+                :config    {"customLaunchers" {"HeadlessChrome" {"base"  "Chrome"
+                                                                 "flags" ["--no-sandbox"
+                                                                          "--disable-gpu"
+                                                                          "--headless"
+                                                                          "--remote-debugging-port=9222"]}}}}
         :paths {:karma "./node_modules/karma/bin/karma"}}
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled"
@@ -211,18 +216,18 @@
                               :resource-paths ["dev-resources"]
                               :env            {:dev? "true"}}
 
-             :virkailija-dev [:dev {:figwheel {:nrepl-port  3334
-                                               :server-port 3449}
+             :virkailija-dev [:dev {:figwheel    {:nrepl-port  3334
+                                                  :server-port 3449}
                                     :target-path "target-virkailija"
-                                    :env      {:app "virkailija"}
-                                    :jvm-opts ^:replace ["-Dapp=virkailija"
-                                                         "-Duser.home=."]}]
-             :hakija-dev     [:dev {:figwheel {:nrepl-port  3336
-                                               :server-port 3450}
+                                    :env         {:app "virkailija"}
+                                    :jvm-opts    ^:replace ["-Dapp=virkailija"
+                                                            "-Duser.home=."]}]
+             :hakija-dev     [:dev {:figwheel    {:nrepl-port  3336
+                                                  :server-port 3450}
                                     :target-path "target-hakija"
-                                    :env      {:app "hakija"}
-                                    :jvm-opts ^:replace ["-Dapp=hakija"
-                                                         "-Duser.home=."]}]
+                                    :env         {:app "hakija"}
+                                    :jvm-opts    ^:replace ["-Dapp=hakija"
+                                                            "-Duser.home=."]}]
              :uberjar        {:aot            :all
                               :resource-paths ["resources"]}}
 
