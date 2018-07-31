@@ -10,6 +10,8 @@ const timeoutMs = TIMEOUT_MINS * 60 * 1000;
 const startTime = new Date().getTime();
 let testsSuccessful = undefined;
 
+process.env.CHROME_BIN = puppeteer.executablePath()
+
 const startsWith = (haystack, needle) => {
     return haystack.substring(0, needle.length) === needle
 };
