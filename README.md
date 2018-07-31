@@ -121,7 +121,7 @@ lein doo chrome test once
 
 ### Browser tests
 
-To run only browser tests (headless, using phantomJS):
+To run only browser tests (headless, using puppeteer):
 
 ```
 lein spec -t ui
@@ -181,7 +181,6 @@ Tests assume some fixtures in db. To clear test db, run migrations and insert th
 lein doo phantom test [once|auto]
 ```
 
-The above command assumes that you have [phantomjs](https://www.npmjs.com/package/phantomjs) installed. 
 However, please note that [doo](https://github.com/bensu/doo) can be configured to run cljs.test in many other JS 
 environments (chrome, ie, safari, opera, slimer, node, rhino, or nashorn).
 
