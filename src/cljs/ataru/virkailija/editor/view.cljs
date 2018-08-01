@@ -152,35 +152,6 @@
 
 (defn- get-org-name-for-oid [oid orgs] (get-org-name (first (filter #(= oid (:oid %)) orgs))))
 
-(defn form-owner-organization [form]
-  (let [organizations (subscribe [:state-query [:editor :user-info :organizations]])
-        many-orgs     (fn [orgs] (> (count orgs) 1))
-        opened?       (r/atom false)
-        toggle-open   (fn [evt] (swap! opened? not))]
-    (fn [form]
-      (let [selected-org-name (get-org-name-for-oid (:organization-oid form) @organizations)]
-        ;; If name is not available, selected org is a suborganization. Currently it's unsure
-        ;; if we want to show the form's organization at all in that case. If we do, we'll have to pass
-        ;; organization name from server with the form and fetch it from organization service
-        ;; and probably start caching those
-        (when (not-empty selected-org-name)
-          [:div.editor-form__owner-control
-           [:span.editor-form__owner-label "Omistaja: "]
-           [:a
-            {:on-click toggle-open
-             :class (if (many-orgs @organizations) "" "editor-form__form-owner-selection-disabled-link")}
-            selected-org-name]
-           (when (and @opened? (many-orgs @organizations))
-             [:div.editor-form__form-owner-selection-anchor
-              [:div.editor-form__owner-selection-arrow-up]
-              (into [:div.editor-form__form-owner-selection--opened
-                     {:on-click toggle-open}]
-                    (map (fn [org]
-                           [:div.editor-form__owner-selection-row
-                            {:on-click (fn [evt] (dispatch [:editor/change-form-organization (:oid org)]))}
-                            (get-org-name org)])
-                         @organizations))])])))))
-
 (defn- fold-all []
   [:div
    [:span.editor-form__fold-clickable-text
