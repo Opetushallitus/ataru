@@ -569,3 +569,62 @@
     :without-application-period {:fi "Voit katsella ja muokata hakemustasi yllä olevan linkin kautta. Älä jaa linkkiä ulkopuolisille. Jos käytät yhteiskäyttöistä tietokonetta, muista kirjautua ulos sähköpostiohjelmasta.\n\nJos sinulla on verkkopankkitunnukset, mobiilivarmenne tai sähköinen henkilökortti, voit vaihtoehtoisesti kirjautua sisään [Opintopolku.fi](https://www.opintopolku.fi):ssä, ja tehdä muutoksia hakemukseesi Oma Opintopolku -palvelussa hakuaikana. Oma Opintopolku -palvelussa voit lisäksi nähdä valintojen tulokset ja ottaa opiskelupaikan vastaan.\n\nÄlä vastaa tähän viestiin - viesti on lähetetty automaattisesti.\n\nYstävällisin terveisin <br/>\nOpintopolku\n"
                                  :sv "Om du vill ändra din ansökan, kan du göra ändringar via följande länken ovan. Dela inte länken vidare till utomstående. Om du använder en offentlig dator, kom ihåg att logga ut från e-postprogrammet.\n\nOm du har nätbankskoder, mobilcertifikat eller ett elektroniskt ID-kort, kan du alternativt logga in i [Studieinfo.fi](https://www.studieinfo.fi) och under ansökningstiden göra ändringarna i tjänsten Min Studieinfo. I tjänsten kan du också, se antagningsresultaten och ta emot studieplatsen.\n\nSvara inte på detta meddelande, det har skickats automatiskt.\n\nMed vänliga hälsningar, <br/>\nStudieinfo\n"
                                  :en "If you wish to edit your application, you can use the link above and make the changes within the application period. Do not share the link with others. If you are using a public or shared computer, remember to log out of the email application.\n\nIf you have Finnish online banking credentials, an electronic\nID-card or mobile certificate, you can also log in\nat [Studyinfo.fi](https://www.studyinfo.fi) and make the\nchanges in the My Studyinfo -service within the application period. In addition to making changes to your application, if you have access to the My Studyinfo -service you can also view the admission results and confirm the study place.\n\nThis is an automatically generated email, please do not reply.\n\nBest regards, <br/>\nStudyinfo\n"}}})
+
+(def virkailija-texts
+  {:new-form              {:fi "Uusi lomake"
+                           :sv "Uusi lomake"
+                           :en "Uusi lomake"}
+   :copy-form             {:fi "Kopioi lomake"
+                           :sv "Kopioi lomake"
+                           :en "Kopioi lomake"}
+   :delete-form           {:fi "Poista lomake"
+                           :sv "Poista lomake"
+                           :en "Poista lomake"}
+   :confirm-delete        {:fi "Vahvista poisto"
+                           :sv "Vahvista poisto"
+                           :en "Vahvista poisto"}
+   :forms                 {:fi "Lomakkeet"
+                           :sv "Lomakkeet"
+                           :en "Lomakkeet"}
+   :form-name             {:fi "Lomakkeen nimi"
+                           :sv "Lomakkeen nimi"
+                           :en "Lomakkeen nimi"}
+   :group {:fi "ryhmä"
+           :sv "ryhmä"
+           :en "ryhmä"}
+   :close                 {:fi "sulje"
+                           :sv "sulje"
+                           :en "sulje"}
+   :open                  {:fi "avaa"
+                           :sv "avaa"
+                           :en "avaa"}
+   :sections              {:fi "osiot"
+                           :sv "osiot"
+                           :en "osiot"}
+   :form-locked           {:fi "Lomakkeen muokkaus on estetty"
+                           :sv "Lomakkeen muokkaus on estetty"
+                           :en "Lomakkeen muokkaus on estetty"}
+   :remove-lock           {:fi "Poista lukitus"
+                           :sv "Poista lukitus"
+                           :en "Poista lukitus"}
+   :lock-form             {:fi "Lukitse lomake"
+                           :sv "Lukitse lomake"
+                           :en "Lukitse lomake"}
+   :edit-email-templates  {:fi "Muokkaa sähköpostipohjia"
+                           :sv "Muokkaa sähköpostipohjia"
+                           :en "Muokkaa sähköpostipohjia"}
+   :used-by-haku          {:fi "Tämä lomake on haun käytössä"
+                           :sv "Tämä lomake on haun käytössä"
+                           :en "Tämä lomake on haun käytössä"}
+   :used-by-haut          {:fi "Tämä lomake on seuraavien hakujen käytössä"
+                           :sv "Tämä lomake on seuraavien hakujen käytössä"
+                           :en "Tämä lomake on seuraavien hakujen käytössä"}
+   :test-application      {:fi "Testihakemus / Virkailijatäyttö"
+                           :sv "Testihakemus / Virkailijatäyttö"
+                           :en "Testihakemus / Virkailijatäyttö"}
+   :form                  {:fi "Lomake"
+                           :sv "Lomake"
+                           :en "Lomake"}
+   :link-to-form          {:fi "Linkki lomakkeeseen"
+                           :sv "Linkki lomakkeeseen"
+                           :en "Linkki lomakkeeseen"}})

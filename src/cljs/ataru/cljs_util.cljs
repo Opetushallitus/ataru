@@ -172,5 +172,8 @@
       params)
     (translation-util/get-translation key @(subscribe [:application/form-language]))))
 
+(defn get-virkailija-translation [key]
+  (translation-util/get-virkailija-translation key @(subscribe [:editor/virkailija-lang])))
+
 (defn modify-event? [event]
   (some #{(:event-type event)} ["updated-by-applicant" "updated-by-virkailija"]))

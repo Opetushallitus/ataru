@@ -1,5 +1,5 @@
 (ns ataru.translations.translation-util
-  (:require [ataru.translations.texts :refer [translation-mapping]]))
+  (:require [ataru.translations.texts :refer [translation-mapping virkailija-texts]]))
 
 (defn get-translations [lang]
   (clojure.walk/prewalk (fn [x]
@@ -15,3 +15,6 @@
                 :sv "Översättning inte tillgänglig. Var vänlig och kontakta administrationen."
                 :en "Translation not available. Please contact an administrator."})
       (get lang)))
+
+(defn get-virkailija-translation [key lang]
+  (-> virkailija-texts key lang))
