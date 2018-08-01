@@ -1155,3 +1155,17 @@
   :application/setup-window-unload
   (fn [_ _]
     {:set-window-close-callback nil}))
+
+(reg-event-db
+  :application/validation-error-did-mount
+  (fn [db [_ id]]
+    (if (nil? (get-in db [:application :visible-validation-error]))
+      (assoc-in db [:application :visible-validation-error] id)
+      db)))
+
+(reg-event-db
+  :application/validation-error-will-unmount
+  (fn [db [_ id]]
+    (if (= id (get-in db [:application :visible-validation-error]))
+      (update db :application dissoc :visible-validation-error)
+      db)))
