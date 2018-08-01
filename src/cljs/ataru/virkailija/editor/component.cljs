@@ -20,20 +20,22 @@
 (defn- required-checkbox
   [path initial-content]
   (let [id          (util/new-uuid)
-        required?   (true? (some? ((set (map keyword (:validators initial-content))) :required)))
-        form-locked (subscribe [:editor/current-form-locked])]
+        validators  (-> initial-content :validators set)
+        form-locked (subscribe [:editor/current-form-locked])
+        disabled?   (or (some? @form-locked)
+                        (contains? validators "required-hakija"))]
     [:div.editor-form__checkbox-container
      [:input.editor-form__checkbox {:type      "checkbox"
                                     :id        id
-                                    :checked   required?
-                                    :disabled  (some? @form-locked)
+                                    :checked   (contains? validators "required")
+                                    :disabled  disabled?
                                     :on-change (fn [event]
                                                  (dispatch [(if (-> event .-target .-checked)
                                                               :editor/add-validator
                                                               :editor/remove-validator) "required" path]))}]
      [:label.editor-form__checkbox-label
       {:for   id
-       :class (when @form-locked "editor-form__checkbox-label--disabled")}
+       :class (when disabled? "editor-form__checkbox-label--disabled")}
       (get-virkailija-translation :required)]]))
 
 (defn- repeater-checkbox

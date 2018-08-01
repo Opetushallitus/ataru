@@ -162,6 +162,7 @@
   (assoc (single-choice-button metadata)
          :id "sahkoisen-asioinnin-lupa"
          :label (:permission-for-electronic-transactions texts/translation-mapping)
+         :params {:info-text {:label (:permission-for-electronic-transactions-info texts/translation-mapping)}}
          :validators ["required-hakija"]
          :options [{:value "Kyllä"
                     :label (:yes texts/general-texts)}]))
@@ -170,5 +171,20 @@
   (assoc (dissoc (dropdown metadata) :options)
          :id "asiointikieli"
          :label (:contact-language texts/translation-mapping)
+         :params {:info-text {:label (:contact-language-info texts/translation-mapping)}}
          :validators ["required"]
-         :koodisto-source {:uri "kieli" :version 1}))
+         :options [{:value "1"
+                    :label (:finnish texts/translation-mapping)}
+                   {:value "2"
+                    :label (:swedish texts/translation-mapping)}
+                   {:value "3"
+                    :label (:english texts/translation-mapping)}]))
+
+(defn lupatiedot [metadata]
+  (assoc (form-section metadata)
+         :id "lupatiedot"
+         :label (:permissions texts/translation-mapping)
+         :children [(koulutusmarkkinointilupa metadata)
+                    (valintatuloksen-julkaisulupa metadata)
+                    (asiointikieli metadata)]))
+
