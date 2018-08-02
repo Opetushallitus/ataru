@@ -38,7 +38,7 @@
 (defn- repeater-checkbox
   [path initial-content]
   (let [id          (util/new-uuid)
-        checked?    (-> initial-content :params :repeatable)
+        checked?    (-> initial-content :params :repeatable boolean)
         form-locked (subscribe [:editor/current-form-locked])]
     [:div.editor-form__checkbox-container
      [:input.editor-form__checkbox {:type      "checkbox"
@@ -445,8 +445,8 @@
                     {:tag :textarea}])
                  @languages)
                (map (fn [field]
-                      (into field [[:div.editor-form__info-addon-markdown-anchor
-                                    (markdown-help)]]))))])])))
+                      (into field [[:div.editor-form__info-addon-markdown-anchor (markdown-help)]])))
+               (doall))])])))
 
 (defn- get-val [event]
   (-> event .-target .-value))
@@ -465,9 +465,10 @@
                             value   (when (not-empty new-val)
                                       (js/parseInt new-val))]
                         (dispatch [:editor/set-component-value value path :params :decimals])))}
-        [:option {:value "" :key 0} "kokonaisluku"]
-        (for [i (range 1 5)]
-          [:option {:value i :key i} (str i " desimaalia")])]])))
+        [:option {:value "" :key 0} (get-virkailija-translation :integer)]
+        (doall
+          (for [i (range 1 5)]
+            [:option {:value i :key i} (str i " " (get-virkailija-translation :decimals))]))]])))
 
 (defn- text-component-type-selector [path radio-group-id]
   (let [id          (util/new-uuid)
