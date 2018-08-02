@@ -777,4 +777,16 @@
                             :en "Liitepyyntö"}
    :attachment-name        {:fi "Liitteen nimi"
                             :sv "Liitteen nimi"
-                            :en "Liitteen nimi"}})
+                            :en "Liitteen nimi"}
+   :checking {:fi "Tarkastetaan"
+              :sv "Tarkastetaan"
+              :en "Tarkastetaan"}
+   :virus-found {:fi "Virus löytyi"
+                 :sv "Virus löytyi"
+                 :en "Virus löytyi"}
+   :error {:fi "Virhe"
+           :sv "Virhe"
+           :en "Virhe"}
+   :unknown-option {:fi "Tuntematon vastausvaihtoehto"
+                    :sv "Tuntematon vastausvaihtoehto"
+                    :en "Tuntematon vastausvaihtoehto"}})

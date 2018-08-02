@@ -6,11 +6,7 @@
 ; in the future and already do to some extent.
 
 (ns ataru.virkailija.views.virkailija-readonly
-  (:require [clojure.string :refer [trim]]
-            [re-frame.core :refer [subscribe]]
-            [ataru.util :as util]
-            [cljs.core.match :refer-macros [match]]
-            [ataru.application-common.application-field-common :refer [answer-key
+  (:require [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
                                                                        get-value
                                                                        render-paragraphs
@@ -19,8 +15,14 @@
                                                                        scroll-to-anchor
                                                                        question-group-answer?
                                                                        answers->read-only-format]]
-            [taoensso.timbre :refer-macros [spy debug]]
-            [ataru.feature-config :as fc]))
+            [ataru.cljs-util :refer [get-virkailija-translation]]
+            [ataru.feature-config :as fc]
+            [ataru.util :as util]
+            [cljs.core.match :refer-macros [match]]
+            [clojure.string :refer [trim]]
+            [goog.string :as s]
+            [re-frame.core :refer [subscribe]]
+            [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn- belongs-to-hakukohderyhma? [field application]
   (let [hakukohteet             (-> application :hakukohde set)
@@ -80,11 +82,11 @@
                         component-key     (str "attachment-div-" idx)
                         virus-status-elem (case virus-scan-status
                                             "not_started" [:span.application__virkailija-readonly-attachment-virus-status-not-started
-                                                           " | Tarkastetaan..."]
+                                                           (s/format " | %s..." get-virkailija-translation :checking)]
                                             "failed" [:span.application__virkailija-readonly-attachment-virus-status-virus-found
-                                                      " | Virus löytyi"]
+                                                      (s/format " | %s" (get-virkailija-translation :virus-found))]
                                             "done" nil
-                                            "Virhe")]
+                                            (get-virkailija-translation :error))]
                     [:div.application__virkailija-readonly-attachment-text
                      {:key component-key}
                      (if (= virus-scan-status "done")
@@ -211,7 +213,7 @@
          ^{:key (str "unknown-option-" value)}
          [:div
           [:p.application__text-field-paragraph
-           (str "Tuntematon vastausvaihtoehto " value)]]))])])
+           (str (get-virkailija-translation :unknown-option) " " value)]]))])])
 
 (defn- haku-row [haku-name haku-oid]
   [:div.application__form-field
