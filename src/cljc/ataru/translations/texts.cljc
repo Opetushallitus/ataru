@@ -31,9 +31,6 @@
    :add-more                                {:fi "Lisää..."
                                              :sv "Lägg till..."
                                              :en "Add more..."}
-   :add-more-button                         {:fi "Lisää"
-                                             :sv "Lägg till"
-                                             :en "Add"}
    :add                                     {:fi "Lisää"
                                              :sv "Lägg till"
                                              :en "Add more"}
