@@ -12,11 +12,6 @@
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
-(defn language [lang]
-  (fn [lang]
-    [:div.language
-     [:div (clojure.string/upper-case (name lang))]]))
-
 ; IE only allows this data attribute name for drag event dataTransfer
 ; http://stackoverflow.com/questions/26213011/html5-dragdrop-issue-in-internet-explorer-datatransfer-property-access-not-pos
 (def ^:private ie-compatible-drag-data-attribute-name "Text")
