@@ -1,15 +1,16 @@
 (ns ataru.virkailija.editor.component
-  (:require [ataru.component-data.component :as component]
-            [ataru.virkailija.editor.components.toolbar :as toolbar]
-            [ataru.virkailija.editor.components.followup-question :refer [followup-question followup-question-overlay]]
-            [ataru.virkailija.temporal :as temporal]
-            [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid]]
+  (:require [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid get-virkailija-translation]]
+            [ataru.component-data.component :as component]
             [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
+            [ataru.virkailija.editor.components.followup-question :refer [followup-question followup-question-overlay]]
+            [ataru.virkailija.editor.components.toolbar :as toolbar]
+            [ataru.virkailija.temporal :as temporal]
+            [cljs.core.match :refer-macros [match]]
             [goog.dom :as gdom]
+            [goog.string :as s]
+            [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [reagent.core :as r]
             [reagent.ratom :refer-macros [reaction]]
-            [cljs.core.match :refer-macros [match]]
-            [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
 ; IE only allows this data attribute name for drag event dataTransfer
@@ -33,7 +34,7 @@
      [:label.editor-form__checkbox-label
       {:for   id
        :class (when @form-locked "editor-form__checkbox-label--disabled")}
-      "Pakollinen tieto"]]))
+      (get-virkailija-translation :required)]]))
 
 (defn- repeater-checkbox
   [path initial-content]
@@ -50,7 +51,7 @@
      [:label.editor-form__checkbox-label
       {:for   id
        :class (when @form-locked "editor-form__checkbox-label--disabled")}
-      "Vastaaja voi lisätä useita vastauksia"]]))
+      (get-virkailija-translation :multiple-answers)]]))
 
 (defn- selectable-list-item
   [path id hakukohde selected-hakukohteet get-name on-click-add on-click-remove]
@@ -112,7 +113,7 @@
             [:li.belongs-to-hakukohteet-modal__hakukohde-list-item--show-more
              {:on-click #(dispatch [:editor/belongs-to-hakukohteet-modal-show-more id (:oid haku)])}
              [:span.belongs-to-hakukohteet-modal__hakukohde-label
-              "Näytä lisää.."]])]]))))
+              (get-virkailija-translation :show-more)]])]]))))
 
 (defn- belongs-to-hakukohteet-modal
   [path id selected-hakukohteet selected-hakukohderyhmat]
@@ -148,7 +149,7 @@
          [:div.belongs-to-hakukohteet-modal__box
           [:div.belongs-to-hakukohteet-modal__no-haku-row
            [:p.belongs-to-hakukohteet-modal__no-haku
-            "Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."]
+            (get-virkailija-translation :set-haku-to-form)]
            [:button.belongs-to-hakukohteet-modal__hide
             {:on-click on-click}
             [:i.zmdi.zmdi-close.zmdi-hc-lg]]]])])))
@@ -201,7 +202,7 @@
         [:div.belongs-to-hakukohteet
          [:label.belongs-to-hakukohteet__modal-toggle-label
           {:for modal-toggle-id}
-          "Näkyvyys lomakkeella: "]
+          (str (get-virkailija-translation :visibility-on-form) " ")]
          [:button.belongs-to-hakukohteet__modal-toggle
           {:id       modal-toggle-id
            :disabled (some? @form-locked)
@@ -209,8 +210,8 @@
            :on-click (when-not @form-locked
                        (if @show-modal? on-click-hide on-click-show))}
           (if (and (empty? visible-to) (empty? visible-to-hakukohderyhmat))
-            "näkyy kaikille"
-            "vain valituille hakukohteille")]
+            (get-virkailija-translation :visible-to-all)
+            (get-virkailija-translation :visible-to-hakukohteet))]
          (when @show-modal?
            [belongs-to-hakukohteet-modal path (:id initial-content) visible-to visible-to-hakukohderyhmat])
          [:ul.belongs-to-hakukohteet__hakukohde-list
@@ -242,7 +243,7 @@
     :active
     [:button.editor-form__remove-component-button
      {:on-click #(dispatch [:editor/start-remove-component path])}
-     "Poista"]
+     (get-virkailija-translation :remove)]
     :confirm
     [:button.editor-form__remove-component-button--confirm.editor-form__remove-component-button
      {:on-click (fn [event]
@@ -254,11 +255,11 @@
                                        "editor-form__component-wrapper")))]
                     (set! (.-height (.-style target)) (str (.-offsetHeight target) "px"))
                     (dispatch [:editor/confirm-remove-component path])))}
-     "Vahvista poisto"]
+     (get-virkailija-translation :confirm-delete)]
     :disabled
     [:button.editor-form__remove-component-button--disabled.editor-form__remove-component-button
      {:disabled true}
-     "Vahvista poisto"]))
+     (get-virkailija-translation :confirm-delete)]))
 
 (defn copy [id]
   (let [copy-container (.getElementById js/document "editor-form__copy-question-id-container")]
@@ -268,18 +269,22 @@
 
 (defn- copy-link [id]
   [:a.editor-form__copy-question-id
-   {:data-tooltip "Kopioi kysymyksen tunniste leikepöydälle"
+   {:data-tooltip (get-virkailija-translation :copy-question-id)
     :on-mouse-down #(copy id)}
    "id"])
 
 (defn- header-metadata
   [metadata]
   [:span.editor-form__component-main-header-metadata
-   "Luonut " (-> metadata :created-by :name)
-   ", viimeksi muokannut " (when-not (= (-> metadata :created-by :oid)
-                                       (-> metadata :modified-by :oid))
-                             (-> metadata :modified-by :name))
-   " " (-> metadata :modified-by :date temporal/str->googdate temporal/time->date)])
+   (s/format "%s %s, %s %s %s"
+             (get-virkailija-translation :created-by)
+             (-> metadata :created-by :name)
+             (get-virkailija-translation :last-modified-by)
+             (if (= (-> metadata :created-by :oid)
+                    (-> metadata :modified-by :oid))
+               ""
+               (-> metadata :modified-by :name))
+             (-> metadata :modified-by :date temporal/str->googdate temporal/time->date))])
 
 (defn- text-header
   [label path metadata & {:keys [component-wrapped?
@@ -317,20 +322,20 @@
    [:div
     [:div.editor-form__markdown-help-arrow-left]
     [:div.editor-form__markdown-help-content
-     [:span "# otsikko (# ylin - ###### alin)"]
+     [:span (get-virkailija-translation :md-help-title)]
      [:br]
-     [:span "**lihavoitava sisältö**"]
+     [:span (get-virkailija-translation :md-help-bold)]
      [:br]
-     [:span "*kursivoitava sisältö*"]
+     [:span (get-virkailija-translation :md-help-cursive)]
      [:br]
-     [:span "[linkin teksti](http://linkin osoite)"]
+     [:span (get-virkailija-translation :md-help-link)]
      [:br]
      [:a {:href          "https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet"
           :target        "_blank"
           :on-mouse-down (fn [evt]
                            (let [url (.getAttribute (-> evt .-target) "href")]
                              (.open js/window url "_blank")))}
-      "Lisää muotoiluohjeita"]]]])
+      (get-virkailija-translation :md-help-more)]]]])
 
 (defn input-field [path lang dispatch-fn {:keys [class value-fn tag]
                                           :or   {tag :input}}]
@@ -416,7 +421,7 @@
         [:label
          {:for id
           :class (when (some? @form-locked) "disabled")}
-         "Kysymys sisältää ohjetekstin"]]
+         (get-virkailija-translation :info-addon)]]
        (when @checked?
          (let [collapsed-id (util/new-uuid)]
            [:div.editor-form__info-addon-checkbox
@@ -431,7 +436,7 @@
             [:label
              {:for   collapsed-id
               :class (when @form-locked "editor-form__checkbox-label--disabled")}
-             "Pienennä pitkä ohjeteksti"]]))
+             (get-virkailija-translation :collapse-info-text)]]))
        (when @checked?
          [:div.editor-form__info-addon-inputs
           (->> (input-fields-with-lang
@@ -456,7 +461,7 @@
         form-locked    (subscribe [:editor/current-form-locked])]
     (fn [path]
       [:div.editor-form__additional-params-container
-       [:header.editor-form__component-item-header "Muoto:"]
+       [:header.editor-form__component-item-header (get-virkailija-translation :shape)]
        [:select.editor-form__decimal-places-selector
         {:value     (or @decimal-places "")
          :disabled  (some? @form-locked)
@@ -493,7 +498,7 @@
         [:label.editor-form__checkbox-label
          {:for id
           :class (when @form-locked "editor-form__checkbox-label--disabled")}
-         "Kenttään voi täyttää vain numeroita"]]
+         (get-virkailija-translation :only-numeric)]]
        (when @checked?
          [decimal-places-selector path])])))
 
@@ -525,7 +530,7 @@
        [text-header header-label path (:metadata initial-content)]
        [:div.editor-form__component-row-wrapper
         [:div.editor-form__text-field-wrapper
-         [:header.editor-form__component-item-header "Kysymys"
+         [:header.editor-form__component-item-header (get-virkailija-translation :question)
           [copy-link (:id initial-content)]]
          (input-fields-with-lang
            (fn [lang]
@@ -556,7 +561,7 @@
                      btn-name]]))]
          (when text-area?
            [:div.editor-form__max-length-container
-            [:header.editor-form__component-item-header "Max. merkkimäärä"]
+            [:header.editor-form__component-item-header (get-virkailija-translation :max-characters)]
             [:input.editor-form__text-field.editor-form__text-field-auto-width
              {:value     @max-length
               :disabled  (some? @form-locked)
@@ -571,10 +576,14 @@
        [info-addon path]])))
 
 (defn text-field [initial-content path]
-  [text-component initial-content path :header-label "Tekstikenttä" :size-label "Tekstikentän koko"])
+  [text-component initial-content path
+   :header-label (get-virkailija-translation :text-field)
+   :size-label (get-virkailija-translation :text-field-size)])
 
 (defn text-area [initial-content path]
-  [text-component initial-content path :header-label "Tekstialue" :size-label "Tekstialueen koko"])
+  [text-component initial-content path
+   :header-label (get-virkailija-translation :text-area)
+   :size-label (get-virkailija-translation :text-area-size)])
 
 (defn- remove-dropdown-option-button [path option-index form-locked]
   [:a.editor-form__multi-options-remove--cross
@@ -631,9 +640,11 @@
 
 (defn- dropdown-multi-options [path options-koodisto]
   (let [dropdown-id                (util/new-uuid)
-        custom-button-value        "Omat vastausvaihtoehdot"
+        custom-button-value        (get-virkailija-translation :custom-choice-label)
         custom-button-id           (str dropdown-id "-custom")
-        koodisto-button-value      (reaction (str "Koodisto" (if-let [koodisto-name (:title @options-koodisto)] (str ": " koodisto-name) "")))
+        koodisto-button-value      (reaction (str (get-virkailija-translation :koodisto)
+                                                  (when-let [koodisto-name (:title @options-koodisto)]
+                                                    (str ": " koodisto-name))))
         koodisto-button-id         (str dropdown-id "-koodisto")
         koodisto-popover-expanded? (r/atom false)
         form-locked                (subscribe [:editor/current-form-locked])]
@@ -670,7 +681,7 @@
         @koodisto-button-value]
        (when @koodisto-popover-expanded?
          [:div.editor-form__koodisto-popover
-          [:div.editor-form__koodisto-popover-header "Koodisto"
+          [:div.editor-form__koodisto-popover-header (get-virkailija-translation :koodisto)
            [:a.editor-form__koodisto-popover-close
             {:on-click (fn [e]
                          (.preventDefault e)
@@ -722,12 +733,12 @@
           [:div.editor-form__show-koodisto-values
            [:a
             {:on-click show-koodisto-options}
-            [:i.zmdi.zmdi-chevron-down] " Näytä vastausvaihtoehdot"]]
+            [:i.zmdi.zmdi-chevron-down] (str " " (get-virkailija-translation :show-options))]]
           [:div
            [:div.editor-form__show-koodisto-values
             [:a
              {:on-click hide-koodisto-options}
-             [:i.zmdi.zmdi-chevron-up] " Sulje vastausvaihtoehdot"]]
+             [:i.zmdi.zmdi-chevron-up] (str " " (get-virkailija-translation :hide-options))]]
            [custom-answer-options languages (:options value) followups path question-group-element? editable? show-followups]])))))
 
 (defn dropdown [initial-content followups path]
@@ -745,14 +756,14 @@
         [:div.editor-form__component-wrapper
          {:class @animation-effect}
          (let [header (case field-type
-                        "dropdown" "Pudotusvalikko"
-                        "singleChoice" "Painikkeet, yksi valittavissa"
-                        "multipleChoice" "Lista, monta valittavissa")]
+                        "dropdown" (get-virkailija-translation :dropdown)
+                        "singleChoice" (get-virkailija-translation :single-choice)
+                        "multipleChoice" (get-virkailija-translation :multiple-choice))]
            [text-header header path (:metadata initial-content)])
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__multi-question-wrapper
            [:div.editor-form__text-field-wrapper
-            [:header.editor-form__component-item-header "Kysymys"
+            [:header.editor-form__component-item-header (get-virkailija-translation :question)
              [copy-link (:id initial-content)]]
             (input-fields-with-lang
               (fn [lang]
@@ -766,7 +777,7 @@
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__multi-options_wrapper
            [:div.editor-form--padded
-            [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
+            [:header.editor-form__component-item-header (get-virkailija-translation :options)]
             (when (some? @options-koodisto)
               [:div.editor-form__ordered-by-user-checkbox
                [:input {:id        koodisto-ordered-id
@@ -777,7 +788,7 @@
                                      (dispatch [:editor/set-ordered-by-user (-> event .-target .-checked) path]))}]
                [:label
                 {:for koodisto-ordered-id}
-                "Aakkosjärjestyksessä"]])
+                (get-virkailija-translation :alphabetically)]])
             (when-not (= field-type "singleChoice") [dropdown-multi-options path options-koodisto])]
            (if (nil? @options-koodisto)
              [custom-answer-options languages (:options @value) followups path question-group-element? true show-followups]
@@ -791,7 +802,7 @@
                               (reset! show-followups nil)
                               (dispatch [:editor/add-dropdown-option path])))
                 :class (when @form-locked "editor-form__add-dropdown-item--disabled")}
-               [:i.zmdi.zmdi-plus-square] " Lisää"]])]]]))))
+               [:i.zmdi.zmdi-plus-square] (str " " (get-virkailija-translation :add))]])]]]))))
 
 (defn drag-n-drop-spacer [path content]
   (let [expanded? (r/atom false)]
@@ -828,11 +839,11 @@
         folded?           @(subscribe [:editor/folded? id])
         animation-effect  @(fade-out-effect path)
         group-header-text (case (:fieldClass content)
-                            "wrapperElement" "Lomakeosio"
-                            "questionGroup"  "Kysymysryhmä")
+                            "wrapperElement" (get-virkailija-translation :wrapper-element)
+                            "questionGroup"  (get-virkailija-translation :question-group))
         header-label-text (case (:fieldClass content)
-                            "wrapperElement" "Osion nimi"
-                            "questionGroup"  "Kysymysryhmän otsikko")]
+                            "wrapperElement" (get-virkailija-translation :wrapper-header)
+                            "questionGroup"  (get-virkailija-translation :group-header))]
     (if folded?
       [:div.editor-form__section_wrapper
        {:class animation-effect}
@@ -874,15 +885,15 @@
 
 (defn hakukohteet-module [path]
   (let [languages (subscribe [:editor/languages])
+        virkailija-lang (subscribe [:editor/virkailija-lang])
         value     (subscribe [:editor/get-component-value path])]
     (fn [path]
       [:div.editor-form__module-wrapper
        [:header.editor-form__module-header
-        [:span.editor-form__module-header-label (get-in @value [:label :fi])]
+        [:span.editor-form__module-header-label (get-in @value [:label @virkailija-lang])]
         " "
         [:span (get-in @value [:label-amendment :fi])]]
-       [:div.editor-form__module-fields
-        "Tässä hakija voi valita hakukohteet. Hakukohteiden määrä ja priorisointi määritetään haun asetuksissa."]])))
+       [:div.editor-form__module-fields (get-virkailija-translation :hakukohde-info)]])))
 
 (defn module [path]
   (let [languages (subscribe [:editor/languages])
@@ -892,7 +903,7 @@
        [:header.editor-form__module-header
         [:span.editor-form__module-header-label (get-in @value [:label :fi])]]
        [:div.editor-form__module-fields
-        [:span.editor-form__module-fields-label "Sisältää kentät:"]
+        [:span.editor-form__module-fields-label (get-virkailija-translation :contains-fields)]
         " "
         (clojure.string/join ", " (get-leaf-component-labels @value :fi))]])))
 
@@ -906,17 +917,17 @@
     (fn [initial-content path]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header "Infoteksti" path (:metadata initial-content)]
+       [text-header (get-virkailija-translation :info-text) path (:metadata initial-content)]
        [:div.editor-form__component-row-wrapper
         [:div.editor-form__text-field-wrapper
-         [:header.editor-form__component-item-header "Otsikko"]
+         [:header.editor-form__component-item-header (get-virkailija-translation :title)]
          (input-fields-with-lang
            (fn [lang]
              [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
            @languages
            :header? true)
          [:div.infoelement
-          [:header.editor-form__component-item-header "Teksti"]
+          [:header.editor-form__component-item-header (get-virkailija-translation :text)]
           (->> (input-fields-with-lang
                  (fn [lang]
                    [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :text lang])
@@ -941,7 +952,7 @@
             [:label.editor-form__checkbox-label
              {:for   collapsed-id
               :class (when @form-locked "editor-form__checkbox-label--disabled")}
-             "Pienennä pitkä ohjeteksti"]])]
+             (get-virkailija-translation :collapse-info-text)]])]
         [belongs-to-hakukohteet path initial-content]]])))
 
 (defn pohjakoulutusristiriita
@@ -972,10 +983,10 @@
     (fn [content path children]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header "Vierekkäiset tekstikentät" path (:metadata content)]
+       [text-header (get-virkailija-translation :adjacent-text-fields) path (:metadata content)]
        [:div.editor-form__component-row-wrapper
         [:div.editor-form__text-field-wrapper
-         [:header.editor-form__component-item-header "Otsikko"]
+         [:header.editor-form__component-item-header (get-virkailija-translation :title)]
          (input-fields-with-lang
            (fn [lang]
              [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
@@ -999,10 +1010,10 @@
     (fn [content path]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header "Tekstikenttä" path (:metadata content) :draggable false]
+       [text-header (get-virkailija-translation :text-field) path (:metadata content) :draggable false]
        [:div.editor-form__component-row-wrapper
         [:div.editor-form__text-field-wrapper
-         [:header.editor-form__component-item-header "Kysymys"
+         [:header.editor-form__component-item-header (get-virkailija-translation :question)
           [copy-link (:id content)]]
          (input-fields-with-lang
            (fn [lang]
@@ -1033,7 +1044,7 @@
           [:label
            {:for   id
             :class (when @form-locked "editor-form__checkbox-label--disabled")}
-           "Liitepyyntö sisältää ohjetekstin"]])
+           (get-virkailija-translation :attachment-info-text)]])
        (when @checked?
          (let [id (util/new-uuid)]
            [:div.editor-form__info-addon-checkbox
@@ -1048,7 +1059,7 @@
             [:label
              {:for   id
               :class (when @form-locked "editor-form__checkbox-label--disabled")}
-             "Pienennä pitkä ohjeteksti"]]))
+             (get-virkailija-translation :collapse-info-text)]]))
        (when @checked?
          [:div.editor-form__info-addon-inputs
           (->> (input-fields-with-lang
@@ -1068,10 +1079,10 @@
     (fn [content path]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header "Liitepyyntö" path (:metadata content)]
+       [text-header (get-virkailija-translation :attachment) path (:metadata content)]
        [:div.editor-form__component-row-wrapper
         [:div.editor-form__text-field-wrapper
-         [:header.editor-form__component-item-header "Liitteen nimi"
+         [:header.editor-form__component-item-header (get-virkailija-translation :attachment-name)
           [copy-link (:id content)]]
          (input-fields-with-lang
            (fn attachment-file-name-input [lang]
