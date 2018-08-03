@@ -179,6 +179,13 @@ LEFT JOIN virkailija v ON rn.virkailija_oid = v.oid
 WHERE rn.application_key = :application_key AND (removed IS NULL OR removed > NOW())
 ORDER BY rn.created_time DESC;
 
+-- name: yesql-get-application-review-notes-by-keys
+SELECT rn.id, rn.created_time, rn.application_key, rn.notes, rn.hakukohde, rn.state_name, v.first_name, v.last_name
+FROM application_review_notes rn
+  LEFT JOIN virkailija v ON rn.virkailija_oid = v.oid
+WHERE rn.application_key IN (:application_keys) AND (rn.removed IS NULL OR rn.removed > NOW())
+ORDER BY rn.created_time DESC;
+
 -- name: yesql-get-applications-by-keys
 -- Get list of applications by their keys
 SELECT

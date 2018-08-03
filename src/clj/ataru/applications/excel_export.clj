@@ -99,6 +99,24 @@
                  (get-label state)))
           reviews)))))
 
+(defn- application-review-notes-formatter
+  [review-notes]
+  (->> review-notes
+       (map (fn [{:keys [created-time notes hakukohde first-name last-name]}]
+              (str
+                (time-formatter created-time)
+                " "
+                (when (and first-name last-name)
+                  (str
+                    first-name
+                    " "
+                    last-name))
+                (when hakukohde
+                  (str " (hakukohde " hakukohde ")"))
+                ": "
+                notes)))
+       (clojure.string/join ",\n")))
+
 (def ^:private form-meta-fields
   [{:label "Nimi"
     :field :name
@@ -113,18 +131,9 @@
    {:label "Viimeinen muokkaaja"
     :field :created-by}])
 
-(def ^:private answers-from-person-record
-  #{:birth-date
-    :ssn
-    :first-name
-    :preferred-name
-    :last-name
-    :gender
-    :nationality})
-
 (def ^:private application-meta-fields
-  [{:label     "Id"
-    :field     [:application :key]}
+  [{:label "Id"
+    :field [:application :key]}
    {:label     "Lähetysaika"
     :field     [:application :created-time]
     :format-fn time-formatter}
@@ -149,13 +158,16 @@
    {:label     "Valinnan tila"
     :field     [:application :application-hakukohde-reviews]
     :format-fn (partial hakukohde-review-formatter "selection-state")}
-   {:label     "Pisteet"
-    :field     [:application-review :score]}
-   {:label     "Hakijan henkilö-OID"
-    :field     [:application :person-oid]}
+   {:label "Pisteet"
+    :field [:application-review :score]}
+   {:label "Hakijan henkilö-OID"
+    :field [:application :person-oid]}
    {:label     "Turvakielto"
     :field     [:person :turvakielto]
-    :format-fn (fnil (fn [turvakielto] (if turvakielto "kyllä" "ei")) false)}])
+    :format-fn (fnil (fn [turvakielto] (if turvakielto "kyllä" "ei")) false)}
+   {:label     "Muistiinpanot"
+    :field     [:application-review-notes]
+    :format-fn application-review-notes-formatter}])
 
 (defn- create-cell-styles
   [workbook]
@@ -257,13 +269,23 @@
   (and (sequential? value-or-values)
        (all-answers-sec-or-vec? value-or-values)))
 
-(defn- write-application! [writer application application-review person headers application-meta-fields form-fields-by-key get-koodisto-options]
+(defn- write-application!
+  [writer
+   application
+   application-review
+   application-review-notes
+   person
+   headers
+   application-meta-fields
+   form-fields-by-key
+   get-koodisto-options]
   (doseq [meta-field application-meta-fields]
     (let [meta-value ((or
                         (:format-fn meta-field)
                         identity)
                       (get-in {:application application
                                :application-review application-review
+                               :application-review-notes application-review-notes
                                :person person}
                               (:field meta-field)))]
       (writer 0 (:column meta-field) meta-value)))
@@ -467,7 +489,15 @@
                                  all-reviews)]
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
-(defn export-applications [applications application-reviews selected-hakukohde skip-answers? tarjonta-service organization-service ohjausparametrit-service]
+(defn export-applications
+  [applications
+   application-reviews
+   application-review-notes
+   selected-hakukohde
+   skip-answers?
+   tarjonta-service
+   organization-service
+   ohjausparametrit-service]
   (let [[^XSSFWorkbook workbook styles] (create-workbook-and-styles)
         form-meta-fields                (indexed-meta-fields form-meta-fields)
         form-meta-sheet                 (create-form-meta-sheet workbook styles form-meta-fields)
@@ -516,12 +546,14 @@
                                (reverse)
                                (map #(merge % (get-tarjonta-info (:haku %))))
                                (map-indexed (fn [row-idx application]
-                                              (let [row-writer         (make-writer styles applications-sheet (inc row-idx))
-                                                    application-review (get application-reviews (:key application))
-                                                    person             (:person application)]
+                                              (let [row-writer                   (make-writer styles applications-sheet (inc row-idx))
+                                                    application-review           (get application-reviews (:key application))
+                                                    review-notes-for-application (get application-review-notes (:key application))
+                                                    person                       (:person application)]
                                                 (write-application! row-writer
                                                                     application
                                                                     application-review
+                                                                    review-notes-for-application
                                                                     person
                                                                     headers
                                                                     application-meta-fields
