@@ -2,6 +2,7 @@
   (:require [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]
             [ataru.cljs-util :as cljs-util :refer [get-virkailija-translation]]
+            [ataru.translations.texts :refer [virkailija-texts]]
             [ataru.util :as util]
             [ataru.virkailija.application.application-search-control :refer [application-search-control]]
             [ataru.virkailija.application.application-subs]
@@ -68,7 +69,11 @@
 
 (defn- review-state-label
   [state-name]
-  (second (first (filter #(= (first %) state-name) review-states/application-hakukohde-processing-states))))
+  (get (->> review-states/application-hakukohde-processing-states
+            (filter #(= (first %) state-name))
+            first
+            second)
+       @(subscribe [:editor/virkailija-lang])))
 
 (defn- review-label-with-count
   [label count]
@@ -375,10 +380,11 @@
                       hakukohde-reviews)))
 
 (defn review-label-for-hakukohde
-  [reviews states hakukohde-oid requirement]
+  [reviews states hakukohde-oid requirement lang]
   (application-states/get-review-state-label-by-name
     states
-    (hakukohde-review-state reviews hakukohde-oid requirement)))
+    (hakukohde-review-state reviews hakukohde-oid requirement)
+    lang))
 
 (defn- hakukohde-and-tarjoaja-name [hakukohde-oid]
   (if-let [hakukohde-and-tarjoaja-name @(subscribe [:application/hakukohde-and-tarjoaja-name
@@ -399,7 +405,8 @@
         application-hakukohde-oids    (if direct-form-application?
                                         ["form"]
                                         (:hakukohde application))
-        application-hakukohde-reviews (:application-hakukohde-reviews application)]
+        application-hakukohde-reviews (:application-hakukohde-reviews application)
+        lang                          (subscribe [:editor/virkailija-lang])]
     (into
       [:div.application-handling__list-row-hakukohteet-wrapper
        {:class (when direct-form-application? "application-handling__application-hakukohde-cell--form")}]
@@ -436,7 +443,8 @@
                    application-hakukohde-reviews
                    review-states/application-hakukohde-processing-states
                    hakukohde-oid
-                   "processing-state")
+                   "processing-state"
+                   @lang)
                  (get-virkailija-translation :unprocessed))
                (when show-state-email-icon?
                  [:i.zmdi.zmdi-email.application-handling__list-row-email-icon])]]
@@ -450,7 +458,8 @@
                      application-hakukohde-reviews
                      review-states/application-hakukohde-selection-states
                      hakukohde-oid
-                     "selection-state")
+                     "selection-state"
+                     @lang)
                    (get-virkailija-translation :incomplete))]])]))
         application-hakukohde-oids))))
 
@@ -529,7 +538,8 @@
   (let [filter-sub           (subscribe [:state-query [:application filter-kw]])
         filter-opened        (r/atom false)
         toggle-filter-opened #(swap! filter-opened not)
-        get-state-count      (fn [counts state-id] (or (get counts state-id) 0))]
+        get-state-count      (fn [counts state-id] (or (get counts state-id) 0))
+        lang                 (subscribe [:editor/virkailija-lang])]
     (fn []
       (let [all-filters-selected? (= (count @filter-sub)
                                      (count states))]
@@ -567,7 +577,7 @@
                                   :type      "checkbox"
                                   :checked   filter-selected?
                                   :on-change #(toggle-state-filter! @filter-sub states filter-kw review-state-id filter-selected?)}]
-                         [:span (str review-state-label
+                         [:span (str (get review-state-label @lang)
                                      (when state-counts-sub
                                        (str " (" (get-state-count @state-counts-sub review-state-id) ")")))]]]))
                    states)))
@@ -619,7 +629,7 @@
          [:i.zmdi.zmdi-spinner]])))
 
 (defn- application-filter-checkbox
-  [filters label kw state]
+  [filters label lang kw state]
   (let [kw       (keyword kw)
         state    (keyword state)
         checked? (boolean (get-in @filters [kw state]))]
@@ -630,10 +640,10 @@
       {:type      "checkbox"
        :checked   checked?
        :on-change #(dispatch [:application/toggle-filter kw state])}]
-     [:span label]]))
+     [:span (get label lang)]]))
 
 (defn- review-type-filter
-  [filters [kw group-label states]]
+  [filters lang [kw group-label states]]
   [:div.application-handling__filter-group
    {:key (str "application-filter-group-" kw)}
    [:div.application-handling__filter-group-title group-label]
@@ -641,11 +651,11 @@
      [:div.application-handling__filter-group-checkboxes]
      (map
        (fn [[state checkbox-label]]
-         (application-filter-checkbox filters checkbox-label kw state))
+         (application-filter-checkbox filters checkbox-label lang kw state))
        states))])
 
 (defn- application-base-education-filters
-  [filters]
+  [filters lang]
   (let [checkboxes [[:pohjakoulutus_yo (get-virkailija-translation :pohjakoulutus_yo)]
                     [:pohjakoulutus_lk (get-virkailija-translation :pohjakoulutus_lk)]
                     [:pohjakoulutus_yo_kansainvalinen_suomessa (get-virkailija-translation :pohjakoulutus_yo_kansainvalinen_suomessa)]
@@ -670,7 +680,7 @@
           :on-change #(dispatch [:application/toggle-all-pohjakoulutus-filters @all-filters-selected?])}]
         [:span "Kaikki"]]
        (->> checkboxes
-            (map (fn [[id label]] (application-filter-checkbox filters label :base-education id)))
+            (map (fn [[id label]] (application-filter-checkbox filters label lang :base-education id)))
             (doall))])))
 
 (defn- application-filters
@@ -683,7 +693,8 @@
         selected-hakukohde-oid     (subscribe [:state-query [:application :selected-hakukohde]])
         has-base-education-answers (subscribe [:application/applications-have-base-education-answers])
         filters-visible            (r/atom false)
-        filters-to-include         #{:language-requirement :degree-requirement :eligibility-state :payment-obligation}]
+        filters-to-include         #{:language-requirement :degree-requirement :eligibility-state :payment-obligation}
+        lang                       (subscribe [:editor/virkailija-lang])]
     (fn []
       [:span.application-handling__filters
        [:a
@@ -706,8 +717,8 @@
           [:div.application-handling__popup-column-left
            [:h3.application-handling__filter-group-heading (get-virkailija-translation :identifying)]
            [:div.application-handling__filter-group
-            [application-filter-checkbox filters (get-virkailija-translation :unidentified) :only-identified :unidentified]
-            [application-filter-checkbox filters (get-virkailija-translation :identified) :only-identified :identified]]
+            [application-filter-checkbox filters (:unidentified virkailija-texts) @lang :only-identified :unidentified]
+            [application-filter-checkbox filters (:identified virkailija-texts) @lang :only-identified :identified]]
            [:h3.application-handling__filter-group-heading (get-virkailija-translation :handling-notes)]
            (when (some? @selected-hakukohde-oid)
              [:div.application-handling__filter-hakukohde-name
@@ -717,12 +728,12 @@
                           (and
                             (contains? filters-to-include kw)
                             (-> @review-settings (get kw) (false?) (not)))))
-                (map (partial review-type-filter filters))
+                (map (partial review-type-filter filters @lang))
                 (doall))]
           (when @has-base-education-answers
             [:div.application-handling__popup-column-right
              [:h3.application-handling__filter-group-heading (get-virkailija-translation :base-education)]
-             [application-base-education-filters filters]])])])))
+             [application-base-education-filters filters @lang]])])])))
 
 (defn- application-list-header [applications]
   (let [review-settings (subscribe [:state-query [:application :review-settings :config]])]
@@ -767,15 +778,15 @@
                   "application-handling__review-state-row--disabled")}
      [icon-check] label]))
 
-(defn review-state-row [state-name current-review-state [review-state-id review-state-label]]
+(defn review-state-row [state-name current-review-state lang [review-state-id review-state-label]]
   (if (= current-review-state review-state-id)
-    [review-state-selected-row #() review-state-label]
+    [review-state-selected-row #() (get review-state-label lang)]
     [:div.application-handling__review-state-row
      {:on-click #(dispatch [:application/update-review-field state-name review-state-id])}
-     review-state-label]))
+     (get review-state-label lang)]))
 
-(defn opened-review-state-list [state-name current-state all-states]
-  (mapv (partial review-state-row state-name (or @current-state (ffirst all-states))) all-states))
+(defn opened-review-state-list [state-name current-state all-states lang]
+  (mapv (partial review-state-row state-name (or @current-state (ffirst all-states)) lang) all-states))
 
 (defn- toggle-review-list-visibility [list-kwd]
   (dispatch [:application/toggle-review-list-visibility list-kwd]))
@@ -895,7 +906,8 @@
         list-click                         (partial toggle-review-list-visibility kw)
         settings-visible?                  (subscribe [:state-query [:application :review-settings :visible?]])
         input-visible?                     (subscribe [:application/review-state-setting-enabled? kw])
-        eligibility-automatically-checked? (subscribe [:application/eligibility-automatically-checked?])]
+        eligibility-automatically-checked? (subscribe [:application/eligibility-automatically-checked?])
+        lang                               (subscribe [:editor/virkailija-lang])]
     (fn [_ _ _]
       (when (or @settings-visible? @input-visible?)
         (let [review-state-for-current-hakukohde (subscribe [:state-query [:application :review :hakukohde-reviews (keyword @current-hakukohde) kw]])]
@@ -914,13 +926,14 @@
              [:div.application-handling__review-state-list-opened-anchor
               (into [:div.application-handling__review-state-list-opened
                      {:on-click list-click}]
-                    (opened-review-state-list kw review-state-for-current-hakukohde states))]
+                    (opened-review-state-list kw review-state-for-current-hakukohde states @lang))]
              [:div.application-handling__review-state-selected-container
               [review-state-selected-row
                list-click
                (application-states/get-review-state-label-by-name
                 states
-                (or @review-state-for-current-hakukohde (ffirst states)))]
+                (or @review-state-for-current-hakukohde (ffirst states))
+                @lang)]
               (when (and (= :eligibility-state kw)
                          (= "uneligible" @review-state-for-current-hakukohde))
                 [review-state-comment kw (keyword @current-hakukohde)])])])))))
@@ -960,12 +973,13 @@
                  (dispatch [:application/open-application-version-history event]))}
     (get-virkailija-translation :compare)]])
 
-(defn event-caption [event show-details?]
+(defn event-caption [event show-details? lang]
   (match event
          {:event-type "review-state-change"}
          (let [label (application-states/get-review-state-label-by-name
                        review-states/application-review-states
-                       (:new-review-state event))]
+                       (:new-review-state event)
+                       lang)]
            (if (= (:new-review-state event) "information-request")
              [:span.application-handling__event-caption--inner label (virkailija-initials-span event)]
              label))
@@ -1009,7 +1023,8 @@
                       (map last)
                       (apply concat)
                       (distinct))
-                 (:new-review-state event)))
+                 (:new-review-state event)
+                 lang))
           " "
           (virkailija-initials-span event)]
 
@@ -1029,12 +1044,13 @@
 
          {:event-type "attachment-review-state-change"}
          [:span.application-handling__event-caption--inner
-          (gstring/format "%s: %s %s"
+          (gstring/format "%s: %s "
                           (get-virkailija-translation :attachment)
                           (application-states/get-review-state-label-by-name
                             review-states/attachment-hakukohde-review-types
-                            (:new-review-state event))
-                          (virkailija-initials-span event))]
+                            (:new-review-state event)
+                            lang))
+          (virkailija-initials-span event)]
 
          {:event-type "modification-link-sent"}
          (get-virkailija-translation :confirmation-sent)
@@ -1050,14 +1066,15 @@
 
 (defn event-row
   [_]
-  (let [show-details? (r/atom false)]
+  (let [show-details? (r/atom false)
+        lang (subscribe [:editor/virkailija-lang])]
     (fn [event]
       [:div.application-handling__event-row
        [:span.application-handling__event-timestamp
         (t/time->short-str (or (:time event) (:created-time event)))]
        [:div.application-handling__event-caption-container
         [:div.application-handling__event-caption
-         (event-caption event show-details?)]
+         (event-caption event show-details? @lang)]
         (when @show-details?
           [:ul.application-handling__event-row-details
            (for [[key field] @(subscribe [:application/changes-made-for-event (:id event)])]
@@ -1318,7 +1335,8 @@
       (let [attachment-key (-> review :key keyword)
             selected-state (or (:state review)
                                "not-checked")
-            can-edit?      (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
+            can-edit?      (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])
+            virkailija-lang (subscribe [:editor/virkailija-lang])]
         [:div.application__attachment-review-row
          [:div.application__attachment-review-row-answer-information
           [:p.application__attachment-review-row-label (some #(-> review :label % not-empty) [lang :fi :sv :en])]
@@ -1347,7 +1365,7 @@
                          "application-handling__review-state-row--disabled")
              :on-click #(when @can-edit? (swap! list-opened not))}
             (icon-check)
-            (application-states/get-review-state-label-by-name review-states/attachment-hakukohde-review-types selected-state)])]))))
+            (application-states/get-review-state-label-by-name review-states/attachment-hakukohde-review-types selected-state @virkailija-lang)])]))))
 
 (defn- attachment-review-area [hakukohde reviews review-positioning lang]
   (fn [hakukohde reviews review-positioning lang]

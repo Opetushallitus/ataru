@@ -219,7 +219,8 @@
             (get-virkailija-translation :used-by-haku)
             (get-virkailija-translation :used-by-haut)))]
          [:ul.editor-form__used-in-haku-list
-          (for [haku (vals form-used-in-hakus)]
+          (doall
+            (for [haku (vals form-used-in-hakus)]
             ^{:key (str "haku-" (:haku-oid haku))}
             [:li
              [:div.editor-form__used-in-haku-list-haku-name
@@ -241,7 +242,7 @@
                                 "/hakemus/haku/" (:haku-oid haku)
                                 "?lang=fi")
                    :target "_blank"}
-               (get-virkailija-translation :form)]]])]]
+               (get-virkailija-translation :form)]]]))]]
         [:div.editor-form__form-link-container
          [:h3.editor-form__form-link-heading
           [:i.zmdi.zmdi-alert-circle-o]

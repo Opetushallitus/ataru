@@ -19,4 +19,4 @@
 (defn get-virkailija-translation [key lang]
   (if (contains? virkailija-texts key)
     (-> virkailija-texts key lang)
-    (println "No key found in translations: " key)))
+    (println "No key found in translations:" key)))

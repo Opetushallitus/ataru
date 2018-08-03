@@ -928,7 +928,7 @@
    :from-applicant                           {:fi "Hakijalta"
                                               :sv "Hakijalta"
                                               :en "Hakijalta"}
-   :changes                                  {:fi "muutosta"
+   :changes                                  {:fi "muutosta"
                                               :sv "muutosta"
                                               :en "muutosta"}
    :did                                      {:fi "teki"
@@ -1015,3 +1015,150 @@
    :answers                                  {:fi "vastausta:"
                                               :sv "vastausta:"
                                               :en "vastausta:"}})
+
+(def state-translations
+  {:active               {:fi "Aktiivinen"
+                          :sv "Aktiivinen"
+                          :en "Aktiivinen"}
+   :passive              {:fi "Passiivinen"
+                          :sv "Passiivinen"
+                          :en "Passiivinen"}
+   :unprocessed          {:fi "Käsittelemättä"
+                          :sv "Käsittelemättä"
+                          :en "Käsittelemättä"}
+   :processing           {:fi "Käsittelyssä"
+                          :sv "Käsittelyssä"
+                          :en "Käsittelyssä"}
+   :invited-to-interview {:fi "Kutsuttu haast."
+                          :sv "Kutsuttu haast."
+                          :en "Kutsuttu haast."}
+   :invited-to-exam      {:fi "Kutsuttu valintak."
+                          :sv "Kutsuttu valintak."
+                          :en "Kutsuttu valintak."}
+   :evaluating           {:fi "Arvioinnissa"
+                          :sv "Arvioinnissa"
+                          :en "Arvioinnissa"}
+   :processed            {:fi "Käsitelty"
+                          :sv "Käsitelty"
+                          :en "Käsitelty"}
+   :information-request  {:fi "Täydennyspyyntö"
+                          :sv "Täydennyspyyntö"
+                          :en "Täydennyspyyntö"}
+   :incomplete           {:fi "Kesken"
+                          :sv "Kesken"
+                          :en "Kesken"}
+   :selection            {:fi "Valintaesitys"
+                          :sv "Valintaesitys"
+                          :en "Valintaesitys"}
+   :reserve              {:fi "Varalla"
+                          :sv "Varalla"
+                          :en "Varalla"}
+   :selected             {:fi "Hyväksytty"
+                          :sv "Hyväksytty"
+                          :en "Hyväksytty"}
+   :rejected             {:fi "Hylätty"
+                          :sv "Hylätty"
+                          :en "Hylätty"}
+   :unreviewed           {:fi "Tarkastamatta"
+                          :sv "Tarkastamatta"
+                          :en "Tarkastamatta"}
+   :fulfilled            {:fi "Täyttyy"
+                          :sv "Täyttyy"
+                          :en "Täyttyy"}
+   :unfulfilled          {:fi "Ei täyty"
+                          :sv "Ei täyty"
+                          :en "Ei täyty"}
+   :eligible             {:fi "Hakukelpoinen"
+                          :sv "Hakukelpoinen"
+                          :en "Hakukelpoinen"}
+   :uneligible           {:fi "Ei hakukelpoinen"
+                          :sv "Ei hakukelpoinen"
+                          :en "Ei hakukelpoinen"}
+   :obligated            {:fi "Velvollinen"
+                          :sv "Velvollinen"
+                          :en "Velvollinen"}
+   :not-obligated        {:fi "Ei velvollinen"
+                          :sv "Ei velvollinen"
+                          :en "Ei velvollinen"}
+   :processing-state     {:fi "Käsittelyvaihe"
+                          :sv "Käsittelyvaihe"
+                          :en "Käsittelyvaihe"}
+   :language-requirement {:fi "Kielitaitovaatimus"
+                          :sv "Kielitaitovaatimus"
+                          :en "Kielitaitovaatimus"}
+   :degree-requirement   {:fi "Tutkinnon kelpoisuus"
+                          :sv "Tutkinnon kelpoisuus"
+                          :en "Tutkinnon kelpoisuus"}
+   :eligibility-state    {:fi "Hakukelpoisuus"
+                          :sv "Hakukelpoisuus"
+                          :en "Hakukelpoisuus"}
+   :payment-obligation   {:fi "Maksuvelvollisuus"
+                          :sv "Maksuvelvollisuus"
+                          :en "Maksuvelvollisuus"}
+   :selection-state      {:fi "Valinta"
+                          :sv "Valinta"
+                          :en "Valinta"}
+   :not-checked          {:fi "Tarkastamatta"
+                          :sv "Tarkastamatta"
+                          :en "Tarkastamatta"}
+   :checked              {:fi "Tarkistettu"
+                          :sv "Tarkistettu"
+                          :en "Tarkistettu"}
+   :incomplete-answer    {:fi "Puutteellinen"
+                          :sv "Puutteellinen"
+                          :en "Puutteellinen"}
+   :attachmentless       {:fi "Liitteettömät"
+                          :sv "Liitteettömät"
+                          :en "Liitteettömät"}})
+
+(def excel-texts
+  {:name                     {:fi "Nimi"
+                              :sv "Nimi"
+                              :en "Nimi"}
+   :id                       {:fi "Id"
+                              :sv "Id"
+                              :en "Id"}
+   :key                      {:fi "Tunniste"
+                              :sv "Tunniste"
+                              :en "Tunniste"}
+   :created-time             {:fi "Viimeksi muokattu"
+                              :sv "Viimeksi muokattu"
+                              :en "Viimeksi muokattu"}
+   :created-by               {:fi "Viimeinen muokkaaja"
+                              :sv "Viimeinen muokkaaja"
+                              :en "Viimeinen muokkaaja"}
+   :sent-at                  {:fi "Lähetysaika"
+                              :sv "Lähetysaika"
+                              :en "Lähetysaika"}
+   :application-state        {:fi "Hakemuksen tila"
+                              :sv "Hakemuksen tila"
+                              :en "Hakemuksen tila"}
+   :hakukohde-handling-state {:fi "Hakukohteen käsittelyn tila"
+                              :sv "Hakukohteen käsittelyn tila"
+                              :en "Hakukohteen käsittelyn tila"}
+   :kielitaitovaatimus       {:fi "Kielitaitovaatimus"
+                              :sv "Kielitaitovaatimus"
+                              :en "Kielitaitovaatimus"}
+   :tutkinnon-kelpoisuus     {:fi "Tutkinnon kelpoisuus"
+                              :sv "Tutkinnon kelpoisuus"
+                              :en "Tutkinnon kelpoisuus"}
+   :hakukelpoisuus           {:fi "Hakukelpoisuus"
+                              :sv "Hakukelpoisuus"
+                              :en "Hakukelpoisuus"}
+   :maksuvelvollisuus        {:fi "Maksuvelvollisuus"
+                              :sv "Maksuvelvollisuus"
+                              :en "Maksuvelvollisuus"}
+   :valinnan-tila            {:fi "Valinnan tila"
+                              :sv "Valinnan tila"
+                              :en "Valinnan tila"}
+   :pisteet                  {:fi "Pisteet"
+                              :sv "Pisteet"
+                              :en "Pisteet"}
+   :applicant-oid            {:fi "Hakijan henkilö-OID"
+                              :sv "Hakijan henkilö-OID"
+                              :en "Hakijan henkilö-OID"}
+   :turvakielto              {:fi "Turvakielto"
+                              :sv "Turvakielto"
+                              :en "Turvakielto"}
+
+   })

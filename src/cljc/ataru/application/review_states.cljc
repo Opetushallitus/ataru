@@ -1,44 +1,45 @@
 (ns ataru.application.review-states
-  (:require [clojure.set :refer [difference]]))
+  (:require [ataru.translations.texts :refer [state-translations]]
+            [clojure.set :refer [difference]]))
 
 (def application-review-states
-  [["active" "Aktiivinen"]
-   ["inactivated" "Passiivinen"]])
+  [["active" (:active state-translations)]
+   ["inactivated" (:passice state-translations)]])
 
 (def initial-application-review-state "active")
 
 (def application-hakukohde-processing-states
-  [["unprocessed" "Käsittelemättä"]
-   ["processing" "Käsittelyssä"]
-   ["invited-to-interview" "Kutsuttu haast."]
-   ["invited-to-exam" "Kutsuttu valintak."]
-   ["evaluating" "Arvioinnissa"]
-   ["processed" "Käsitelty"]
-   ["information-request" "Täydennyspyyntö"]])
+  [["unprocessed" (:unprocessed state-translations)]
+   ["processing" (:processing state-translations)]
+   ["invited-to-interview" (:invited-to-interview state-translations)]
+   ["invited-to-exam" (:invited-to-exam state-translations)]
+   ["evaluating" (:evaluating state-translations)]
+   ["processed" (:processed state-translations)]
+   ["information-request" (:information-request state-translations)]])
 
 (def initial-application-hakukohde-processing-state "unprocessed")
 
 (def application-hakukohde-selection-states
-  [["incomplete" "Kesken"]
-   ["selection-proposal" "Valintaesitys"]
-   ["reserve" "Varalla"]
-   ["selected" "Hyväksytty"]
-   ["rejected" "Hylätty"]])
+  [["incomplete" (:incomplete state-translations)]
+   ["selection-proposal" (:selection state-translations)]
+   ["reserve" (:reserve state-translations)]
+   ["selected" (:selected state-translations)]
+   ["rejected" (:rejected state-translations)]])
 
 (def application-hakukohde-review-states
-  [["unreviewed" "Tarkastamatta"]
-   ["fulfilled" "Täyttyy"]
-   ["unfulfilled" "Ei täyty"]])
+  [["unreviewed" (:unreviewed state-translations)]
+   ["fulfilled" (:fulfilled state-translations)]
+   ["unfulfilled" (:unfulfilled state-translations)]])
 
 (def application-hakukohde-eligibility-states
-  [["unreviewed" "Tarkastamatta"]
-   ["eligible" "Hakukelpoinen"]
-   ["uneligible" "Ei hakukelpoinen"]])
+  [["unreviewed" (:unreviewed state-translations)]
+   ["eligible" (:eligible state-translations)]
+   ["uneligible" (:uneligible state-translations)]])
 
 (def application-payment-obligation-states
-  [["unreviewed" "Tarkastamatta"]
-   ["obligated" "Velvollinen"]
-   ["not-obligated" "Ei velvollinen"]])
+  [["unreviewed" (:unreviewed state-translations)]
+   ["obligated" (:obligated state-translations)]
+   ["not-obligated" (:not-obligated state-translations)]])
 
 (def hakukohde-review-types
   [[:processing-state "Käsittelyvaihe" application-hakukohde-processing-states]
@@ -57,18 +58,16 @@
 ;; States which are not considered terminal, see above for terminal states
 (def incomplete-states ["active"])
 
-(def complete-hakukohde-process-states ["processed"])
-
 (def attachment-hakukohde-review-types
-  [["not-checked" "Tarkastamatta"]
-   ["checked" "Tarkistettu"]
-   ["incomplete" "Puutteellinen"]])
+  [["not-checked" (:not-checked state-translations)]
+   ["checked" (:checked state-translations)]
+   ["incomplete" (:incomplete-answer state-translations)]])
 
 (def no-attachment-requirements "no-requirements")
 
 (def attachment-hakukohde-review-types-with-no-requirements
   (concat attachment-hakukohde-review-types
-    [[no-attachment-requirements "Liitteettömät"]]))
+          [[no-attachment-requirements (:attachmentless state-translations)]]))
 
 (def attachment-review-type-names
   (map first attachment-hakukohde-review-types))
