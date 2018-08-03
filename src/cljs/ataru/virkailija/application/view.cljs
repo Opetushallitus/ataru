@@ -1,7 +1,7 @@
 (ns ataru.virkailija.application.view
   (:require [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]
-            [ataru.cljs-util :as cljs-util]
+            [ataru.cljs-util :as cljs-util :refer [get-virkailija-translation]]
             [ataru.util :as util]
             [ataru.virkailija.application.application-search-control :refer [application-search-control]]
             [ataru.virkailija.application.application-subs]
@@ -15,7 +15,6 @@
             [cljs.core.match :refer-macros [match]]
             [clojure.string :as string]
             [goog.string :as gstring]
-            [goog.string.format]
             [medley.core :refer [find-first]]
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [reagent.core :as r]
@@ -53,7 +52,7 @@
      [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled
       {:on-click (fn [e]
                    (.submit (.getElementById js/document "excel-download-link")))}
-      "Lataa Excel"]]))
+      (get-virkailija-translation :load-excel)]]))
 
 (defn- count-for-application-state
   [from-states state]
@@ -151,19 +150,20 @@
            (when @massamuokkaus?
              [:a.application-handling__mass-edit-review-states-link.editor-form__control-button.editor-form__control-button--enabled
               {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state not)}
-              "Massamuutos"])
+              (get-virkailija-translation :mass-edit)])
            (when @element-visible?
              [:div.application-handling__mass-edit-review-states-popup
               [:div.application-handling__popup-close-button
                {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state false)}
                [:i.zmdi.zmdi-close]]
-              [:h4.application-handling__mass-edit-review-states-heading.application-handling__mass-edit-review-states-heading--title "Massamuutos"]
+              [:h4.application-handling__mass-edit-review-states-heading.application-handling__mass-edit-review-states-heading--title
+               (get-virkailija-translation :mass-edit)]
               (when-let [[haku-oid hakukohde-oid _] @haku-header]
                 [:p
                  @(subscribe [:application/haku-name haku-oid])
                  (when hakukohde-oid
                    (str ", " @(subscribe [:application/hakukohde-name hakukohde-oid])))])
-              [:h4.application-handling__mass-edit-review-states-heading "Tilasta"]
+              [:h4.application-handling__mass-edit-review-states-heading (get-virkailija-translation :from-state)]
 
               (if @from-list-open?
                 [:div.application-handling__review-state-list-opened-anchor
@@ -176,7 +176,7 @@
                     (reset! submit-button-state :submit))
                   (selected-or-default-mass-review-state-label selected-from-review-state from-states)))
 
-              [:h4.application-handling__mass-edit-review-states-heading "Muutetaan tilaan"]
+              [:h4.application-handling__mass-edit-review-states-heading (get-virkailija-translation :to-state)]
 
               (if @to-list-open?
                 [:div.application-handling__review-state-list-opened-anchor
@@ -196,7 +196,7 @@
                   [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button
                    {:on-click #(when-not button-disabled? (reset! submit-button-state :confirm))
                     :disabled button-disabled?}
-                   "Muuta"])
+                   (get-virkailija-translation :change)])
 
                 :confirm
                 [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button--confirm
@@ -213,11 +213,10 @@
                                 (toggle-mass-update-popup-visibility element-visible? submit-button-state false)
                                 (reset! from-list-open? false)
                                 (reset! to-list-open? false)))}
-                 "Vahvista muutos"]
+                 (get-virkailija-translation :confirm-change)]
 
                 [:div])])])))))
 
-(def all-hakukohteet-label "Kaikki hakukohteet")
 
 (defn- closed-row
   [on-click label]
@@ -268,7 +267,7 @@
   [close-list oid selected?]
   (row-component close-list
                  (str "/lomake-editori/applications/haku/" oid)
-                 all-hakukohteet-label
+                 (get-virkailija-translation :all-hakukohteet)
                  nil
                  selected?))
 
@@ -281,7 +280,7 @@
        :checked  ensisijaisesti?
        :on-click #(dispatch [:application/navigate-to-ensisijaisesti
                              (not ensisijaisesti?)])}]
-     "Hakenut ensisijaisesti"]))
+     (get-virkailija-translation :ensisijaisesti)]))
 
 (defn haku-applications-heading
   [_]
@@ -339,7 +338,7 @@
                          @(subscribe [:application/hakukohderyhma-name
                                       selected-hakukohderyhma-oid])
                          :else
-                         all-hakukohteet-label))
+                         (get-virkailija-translation :all-hakukohteet)))
        (when @(subscribe [:application/show-ensisijaisesti?])
          [ensisijaisesti])])))
 
@@ -438,7 +437,7 @@
                    review-states/application-hakukohde-processing-states
                    hakukohde-oid
                    "processing-state")
-                 "Käsittelemättä")
+                 (get-virkailija-translation :unprocessed))
                (when show-state-email-icon?
                  [:i.zmdi.zmdi-email.application-handling__list-row-email-icon])]]
              (when (:selection-state review-settings true)
@@ -452,7 +451,7 @@
                      review-states/application-hakukohde-selection-states
                      hakukohde-oid
                      "selection-state")
-                   "Kesken")]])]))
+                   (get-virkailija-translation :incomplete))]])]))
         application-hakukohde-oids))))
 
 (defn- application-attachment-states
@@ -489,7 +488,7 @@
                                             "application-handling__list-row--inactivated")])}
      [:div.application-handling__list-row-person-info
       [:span.application-handling__list-row--application-applicant
-       (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
+       (or applicant [:span.application-handling__list-row--applicant-unknown (get-virkailija-translation :unknown)])]
       [:span.application-handling__list-row--application-time
        [:span.application-handling__list-row--time-day day]
        [:span date-time]]
@@ -557,7 +556,7 @@
                                                                               (if all-filters-selected?
                                                                                 []
                                                                                 (map first states)))]))}]
-                    [:span "Kaikki"]]]]
+                    [:span (get-virkailija-translation :all)]]]]
                  (mapv
                    (fn [[review-state-id review-state-label]]
                      (let [filter-selected? (contains? (set @filter-sub) review-state-id)]
@@ -601,8 +600,8 @@
         [:span.application-handling__created-time-column-header
          {:on-click #(dispatch [:application/toggle-shown-time-column])}
          (if (= :created-time @selected-time-column)
-           "Viimeksi muokattu"
-           "Hakemus jätetty")]
+           (get-virkailija-translation :last-modified)
+           (get-virkailija-translation :submitted-at))]
         "|"
         [:i.zmdi
          {:on-click #(dispatch [:application/update-sort @selected-time-column])
@@ -647,18 +646,18 @@
 
 (defn- application-base-education-filters
   [filters]
-  (let [checkboxes [[:pohjakoulutus_yo "Suomessa suoritettu ylioppilastutkinto"]
-                    [:pohjakoulutus_lk "Suomessa suoritettu lukion oppimäärä ilman ylioppilastutkintoa"]
-                    [:pohjakoulutus_yo_kansainvalinen_suomessa "Suomessa suoritettu kansainvälinen ylioppilastutkinto"]
-                    [:pohjakoulutus_yo_ammatillinen "Ammatillinen perustutkinto ja ylioppilastutkinto (kaksoistutkinto)"]
-                    [:pohjakoulutus_am "Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"]
-                    [:pohjakoulutus_amt "Suomessa suoritettu ammatti- tai erikoisammattitutkinto"]
-                    [:pohjakoulutus_kk "Suomessa suoritettu korkeakoulututkinto"]
-                    [:pohjakoulutus_yo_ulkomainen "Muualla kuin Suomessa suoritettu kansainvälinen ylioppilastutkinto"]
-                    [:pohjakoulutus_kk_ulk "Muualla kuin Suomessa suoritettu korkeakoulututkinto"]
-                    [:pohjakoulutus_ulk "Muualla kuin Suomessa suoritettu muu tutkinto, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun"]
-                    [:pohjakoulutus_avoin "Korkeakoulun edellyttämät avoimen korkeakoulun opinnot"]
-                    [:pohjakoulutus_muu "Muu korkeakoulukelpoisuus"]]
+  (let [checkboxes [[:pohjakoulutus_yo (get-virkailija-translation :pohjakoulutus_yo)]
+                    [:pohjakoulutus_lk (get-virkailija-translation :pohjakoulutus_lk)]
+                    [:pohjakoulutus_yo_kansainvalinen_suomessa (get-virkailija-translation :pohjakoulutus_yo_kansainvalinen_suomessa)]
+                    [:pohjakoulutus_yo_ammatillinen (get-virkailija-translation :pohjakoulutus_yo_ammatillinen)]
+                    [:pohjakoulutus_am (get-virkailija-translation :pohjakoulutus_am)]
+                    [:pohjakoulutus_amt (get-virkailija-translation :pohjakoulutus_amt)]
+                    [:pohjakoulutus_kk (get-virkailija-translation :pohjakoulutus_kk)]
+                    [:pohjakoulutus_yo_ulkomainen (get-virkailija-translation :pohjakoulutus_yo_ulkomainen)]
+                    [:pohjakoulutus_kk_ulk (get-virkailija-translation :pohjakoulutus_kk_ulk)]
+                    [:pohjakoulutus_ulk (get-virkailija-translation :pohjakoulutus_ulk)]
+                    [:pohjakoulutus_avoin (get-virkailija-translation :pohjakoulutus_avoin)]
+                    [:pohjakoulutus_muu (get-virkailija-translation :pohjakoulutus_muu)]]
         all-filters-selected? (subscribe [:application/all-pohjakoulutus-filters-selected?])]
     (fn []
       [:div.application-handling__filter-group
@@ -689,13 +688,15 @@
       [:span.application-handling__filters
        [:a
         {:on-click #(swap! filters-visible not)}
-        (str "Rajaa hakemuksia "
-             "(" @filtered-application-count "/" @loaded-application-count ")")]
+        (gstring/format "%s (%d) / (%d)"
+                        (get-virkailija-translation :filter-applications)
+                        @filtered-application-count
+                        @loaded-application-count)]
        (when (pos? @enabled-filter-count)
          [:span
           [:span.application-handling__filters-count-separator "|"]
           [:a
-           {:on-click #(dispatch [:application/remove-filters])} "Poista rajaimet"]])
+           {:on-click #(dispatch [:application/remove-filters])} (get-virkailija-translation :remove-filters)]])
        (when @filters-visible
          [:div.application-handling__filters-popup
           {:class (when @has-base-education-answers "application-handling__filters-popup--two-cols")}
@@ -703,11 +704,11 @@
            {:on-click #(reset! filters-visible false)}
            [:i.zmdi.zmdi-close]]
           [:div.application-handling__popup-column-left
-           [:h3.application-handling__filter-group-heading "Yksilöinti"]
+           [:h3.application-handling__filter-group-heading (get-virkailija-translation :identifying)]
            [:div.application-handling__filter-group
-            [application-filter-checkbox filters "Yksilöimättömät" :only-identified :unidentified]
-            [application-filter-checkbox filters "Yksilöidyt" :only-identified :identified]]
-           [:h3.application-handling__filter-group-heading "Käsittelymerkinnät"]
+            [application-filter-checkbox filters (get-virkailija-translation :unidentified) :only-identified :unidentified]
+            [application-filter-checkbox filters (get-virkailija-translation :identified) :only-identified :identified]]
+           [:h3.application-handling__filter-group-heading (get-virkailija-translation :handling-notes)]
            (when (some? @selected-hakukohde-oid)
              [:div.application-handling__filter-hakukohde-name
               @(subscribe [:application/hakukohde-name @selected-hakukohde-oid])])
@@ -720,7 +721,7 @@
                 (doall))]
           (when @has-base-education-answers
             [:div.application-handling__popup-column-right
-             [:h3.application-handling__filter-group-heading "Pohjakoulutus"]
+             [:h3.application-handling__filter-group-heading (get-virkailija-translation :base-education)]
              [application-base-education-filters filters]])])])))
 
 (defn- application-list-header [applications]
@@ -729,27 +730,27 @@
      [:span.application-handling__list-row--applicant
       [application-list-basic-column-header
        :applicant-name
-       "Hakija"]
+       (get-virkailija-translation :applicant)]
       [application-filters]]
      [created-time-column-header]
      (when (:attachment-handling @review-settings true)
        [:span.application-handling__list-row--attachment-state
         [hakukohde-state-filter-controls
          :attachment-state-filter
-         "Liitepyynnöt"
+         (get-virkailija-translation :attachments)
          review-states/attachment-hakukohde-review-types-with-no-requirements
          (subscribe [:state-query [:application :attachment-state-counts]])]])
      [:span.application-handling__list-row--state
       [hakukohde-state-filter-controls
        :processing-state-filter
-       "Käsittelyvaihe"
+       (get-virkailija-translation :processing-state)
        review-states/application-hakukohde-processing-states
        (subscribe [:state-query [:application :review-state-counts]])]]
      (when (:selection-state @review-settings true)
        [:span.application-handling__list-row--selection
         [hakukohde-state-filter-controls
          :selection-state-filter
-         "Valinta"
+         (get-virkailija-translation :selection)
          review-states/application-hakukohde-selection-states]])]))
 
 (defn application-contents [{:keys [form application]}]
@@ -786,7 +787,7 @@
     (fn []
       (let [active? (= "active" @state)]
         [:div.application-handling__review-deactivate-row
-         [:span.application-handling__review-deactivate-label (str "Hakemuksen tila")]
+         [:span.application-handling__review-deactivate-label (get-virkailija-translation :application-state)]
          [:div.application-handling__review-deactivate-toggle
           [:div.application-handling__review-deactivate-toggle-slider
            {:class    (cond-> ""
@@ -796,10 +797,10 @@
             :on-click #(when @can-edit?
                          (dispatch [:application/set-application-activeness (not active?)]))}
            [:div.application-handling__review-deactivate-toggle-label-left
-            "Aktiivinen"]
+            (get-virkailija-translation :active)]
            [:div.application-handling__review-deactivate-toggle-divider]
            [:div.application-handling__review-deactivate-toggle-label-right
-            "Passiivinen"]]]]))))
+            (get-virkailija-translation :passive)]]]]))))
 
 (defn- hakukohde-name [hakukohde-oid]
   (if-let [hakukohde-name @(subscribe [:application/hakukohde-name
@@ -839,7 +840,9 @@
     (fn []
       (when (not-empty @application-hakukohde-oids)
         [:div.application-handling__review-state-container.application-handling__review-state-container--columnar
-         [:div.application-handling__review-header (str "Hakukohteet (" (count @application-hakukohde-oids) ")")]
+         [:div.application-handling__review-header (gstring/format "%s (%d)"
+                                                                   (get-virkailija-translation :hakukohteet)
+                                                                   (count @application-hakukohde-oids))]
          (if @list-opened
            [:div.application-handling__review-state-list-opened-anchor
             (into
@@ -872,7 +875,7 @@
       [:div.application-handling__review-state-selected-container
        [:textarea.application-handling__review-note-input.application-handling__eligibility-state-comment
         {:value       @review-note
-         :placeholder "Hylkäyksen syy.."
+         :placeholder (get-virkailija-translation :rejection-reason)
          :on-change   (fn [event]
                         (let [note (.. event -target -value)]
                           (dispatch [:state-update #(assoc-in % [:application :notes selected-hakukohde state-name] note)])))}]
@@ -883,7 +886,7 @@
          :class    (if button-enabled?
                      "application-handling__review-note-submit-button--enabled"
                      "application-handling__review-note-submit-button--disabled")}
-        "Tallenna"]])))
+        (get-virkailija-translation :rejection-reason)]])))
 
 (defn- application-hakukohde-review-input
   [label kw states]
@@ -906,7 +909,7 @@
             (when (and (= :eligibility-state kw)
                        @eligibility-automatically-checked?)
               [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
-               {:title "Hakukelpoisuus asetettu automaattisesti"}])]
+               {:title (get-virkailija-translation :eligibility-set-automatically)}])]
            (if @list-opened
              [:div.application-handling__review-state-list-opened-anchor
               (into [:div.application-handling__review-state-list-opened
@@ -955,7 +958,7 @@
     {:on-click (fn [e]
                  (.stopPropagation e)
                  (dispatch [:application/open-application-version-history event]))}
-    "Vertaile"]])
+    (get-virkailija-translation :compare)]])
 
 (defn event-caption [event show-details?]
   (match event
@@ -969,30 +972,31 @@
 
          {:event-type "updated-by-applicant"}
          (update-event-caption
-          [:span
-           "Hakijalta "
-           (count @(subscribe [:application/changes-made-for-event (:id event)]))
-           " muutosta"]
+          [:span (gstring/format "%s %d %s"
+                                 (get-virkailija-translation :from-applicant)
+                                 (count @(subscribe [:application/changes-made-for-event (:id event)]))
+                                 (get-virkailija-translation :changes))]
           event
           show-details?)
 
          {:event-type "updated-by-virkailija"}
          (update-event-caption
-          [:span
-           (or (virkailija-initials-span event) "Tuntematon")
-           " teki "
-           (count @(subscribe [:application/changes-made-for-event (:id event)]))
-           " muutosta"]
+           [:span (gstring/format "%s %s %d %s"
+                                  (or (virkailija-initials-span event) (get-virkailija-translation :unknown))
+                                  (get-virkailija-translation :did)
+                                  (count @(subscribe [:application/changes-made-for-event (:id event)]))
+                                  (get-virkailija-translation :changes))]
           event
           show-details?)
 
          {:event-type "received-from-applicant"}
-         "Hakemus vastaanotettu"
+         (get-virkailija-translation :application-received)
 
          {:event-type "received-from-virkailija"}
          [:span.application-handling__event-caption--inner
-          (virkailija-initials-span event)
-          " syötti hakemuksen"]
+          (str (virkailija-initials-span event)
+               " "
+               (get-virkailija-translation :submitted-application))]
 
          {:event-type "hakukohde-review-state-change"}
          [:span.application-handling__event-caption--inner
@@ -1012,33 +1016,37 @@
          {:event-type "eligibility-state-automatically-changed"}
          [:div.application-handling__multi-line-event-caption
           [:span.application-handling__event-caption--inner
-           (str "Hakukelpoisuus: "
+           (str (get-virkailija-translation :eligibility)
+                " "
                 (some #(when (= (:new-review-state event) (first %))
                          (second %))
                       review-states/application-hakukohde-eligibility-states))]
           [:span.application-handling__event-caption--inner.application-handling__event-caption--extra-info
-           (str "Hakukohteen \""
-                @(subscribe [:application/hakukohde-name (:hakukohde event)])
-                "\" hakukelpoisuus asetettu automaattisesti")]]
+           (gstring/format "%s \"%s\" %s"
+                           (get-virkailija-translation :of-hakukohde)
+                           @(subscribe [:application/hakukohde-name (:hakukohde event)])
+                           (.toLowerCase (get-virkailija-translation :eligibility-set-automatically)))]]
 
          {:event-type "attachment-review-state-change"}
          [:span.application-handling__event-caption--inner
-          (str "Liitepyyntö: "
-               (application-states/get-review-state-label-by-name
-                 review-states/attachment-hakukohde-review-types
-                 (:new-review-state event))
-               " ")
-          (virkailija-initials-span event)]
+          (gstring/format "%s: %s %s"
+                          (get-virkailija-translation :attachment)
+                          (application-states/get-review-state-label-by-name
+                            review-states/attachment-hakukohde-review-types
+                            (:new-review-state event))
+                          (virkailija-initials-span event))]
 
          {:event-type "modification-link-sent"}
-         "Vahvistussähköposti lähetetty hakijalle"
+         (get-virkailija-translation :confirmation-sent)
 
          {:subject _ :message message}
          [:div.application-handling__multi-line-event-caption
-          [:span.application-handling__event-caption--inner "Täydennyspyyntö lähetetty " (virkailija-initials-span event)]
+          [:span.application-handling__event-caption--inner (str (get-virkailija-translation :information-request-sent)
+                                                                 " "
+                                                                 (virkailija-initials-span event))]
           [:span.application-handling__event-caption--inner.application-handling__event-caption--extra-info (str "\"" message "\"")]]
 
-         :else "Tuntematon"))
+         :else (get-virkailija-translation :unknown)))
 
 (defn event-row
   [_]
@@ -1062,7 +1070,7 @@
 
 (defn application-review-events []
   [:div.application-handling__event-list
-   [:div.application-handling__review-header "Tapahtumat"]
+   [:div.application-handling__review-header (get-virkailija-translation :events)]
    (doall
     (map-indexed
      (fn [i event]
@@ -1109,7 +1117,7 @@
          :disabled (not @button-enabled?)
          :on-click (fn [_]
                      (dispatch [:application/add-review-note @input-value nil]))}
-        "Lisää"]])))
+        (get-virkailija-translation :add)]])))
 
 (defn- application-review-note [note-idx]
   (let [note             (subscribe [:state-query [:application :review-notes note-idx]])
@@ -1129,9 +1137,11 @@
          {:class "animated fadeIn"})
        [:span.application-handling__review-note-column
         (when (:hakukohde @note)
-          {:data-tooltip-narrow (str "Kelpoisuusmerkinnän selite"
+          {:data-tooltip-narrow (str (get-virkailija-translation :eligibility-explanation)
                                      (when (not= "form" (:hakukohde @note))
-                                       (str " hakukohteelle " @hakukohde-name)))})
+                                       (gstring/format " %s %s"
+                                                       (get-virkailija-translation :for-hakukohde)
+                                                       @hakukohde-name)))})
         @notes]
        [:div.application-handling__review-details-column
         [:span @name]
@@ -1159,7 +1169,7 @@
           (when @settings-visible?
             [review-settings-checkbox :score])
           [:div.application-handling__review-header.application-handling__review-header--points
-           "Pisteet"]
+           (get-virkailija-translation :points)]
           [:input.application-handling__score-input
            {:type       "text"
             :max-length "2"
@@ -1169,7 +1179,7 @@
             :on-change  (when-not @settings-visible?
                           (partial update-review-field :score (partial convert-score @review)))}]])
        [:div.application-handling__review-row--nocolumn
-        [:div.application-handling__review-header "Muistiinpanot"]
+        [:div.application-handling__review-header (get-virkailija-translation :notes)]
         [application-review-note-input]
         (->> (range @notes-count)
              (map (fn [idx]
@@ -1186,12 +1196,12 @@
       :class  (when (or @settings-visible? (not @can-edit?))
                 "application-handling__button--disabled")
       :target "_blank"}
-     "Muokkaa hakemusta"]))
+     (get-virkailija-translation :edit-application)]))
 
 (defn- application-information-request-recipient []
   (let [email (subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])]
     [:div.application-handling__information-request-row
-     [:div.application-handling__information-request-info-heading "Vastaanottaja:"]
+     [:div.application-handling__information-request-info-heading (get-virkailija-translation :receiver)]
      [:div @email]]))
 
 (defn- application-information-request-subject []
@@ -1219,8 +1229,8 @@
   (let [enabled?      (subscribe [:application/information-request-submit-enabled?])
         request-state (subscribe [:state-query [:application :information-request :state]])
         button-text   (reaction (if (= @request-state :submitting)
-                                  "Täydennyspyyntöä lähetetään"
-                                  "Lähetä täydennyspyyntö"))]
+                                  (get-virkailija-translation :sending-information-request)
+                                  (get-virkailija-translation :send-information-request)))]
     (fn []
       [:div.application-handling__information-request-row
        [:button.application-handling__send-information-request-button
@@ -1235,7 +1245,7 @@
 (defn- application-information-request-header []
   (let [request-state (subscribe [:state-query [:application :information-request :state]])]
     [:div.application-handling__information-request-header
-     "Lähetä täydennyspyyntö hakijalle"
+     (get-virkailija-translation :send-information-request-to-applicant)
      (when (nil? @request-state)
        [:i.zmdi.zmdi-close-circle.application-handling__information-request-close-button
         {:on-click #(dispatch [:application/set-information-request-window-visibility false])}])]))
@@ -1244,12 +1254,12 @@
   [:div.application-handling__information-request-row.application-handling__information-request-row--checkmark-container
    [:div.application-handling__information-request-submitted-loader]
    [:div.application-handling__information-request-submitted-checkmark]
-   [:span.application-handling__information-request-submitted-text "Täydennyspyyntö lähetetty"]])
+   [:span.application-handling__information-request-submitted-text (get-virkailija-translation :information-request-sent)]])
 
 (defn- application-information-request-contains-modification-link []
   [:div.application-handling__information-request-row
    [:p.application-handling__information-request-contains-modification-link
-    "Muokkauslinkki lähtee viestin mukana automaattisesti"]])
+    (get-virkailija-translation :edit-link-sent-automatically)]])
 
 (defn- application-information-request []
   (let [window-visible?      (subscribe [:state-query [:application :information-request :visible?]])
@@ -1273,7 +1283,7 @@
         [:div.application-handling__information-request-show-container-link
          [:a
           {:on-click #(dispatch [:application/set-information-request-window-visibility true])}
-          "Lähetä täydennyspyyntö hakijalle"]]))))
+          (get-virkailija-translation :send-information-request-to-applicant)]]))))
 
 (defn- application-resend-modify-link []
   (let [recipient         (subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])
@@ -1291,7 +1301,7 @@
                      (if (or @settings-visible? (not @can-edit?))
                        " application-handling__send-information-request-button--cursor-default"
                        " application-handling__send-information-request-button--cursor-pointer"))}
-     [:span "Lähetä vahvistussähköposti hakijalle"]
+     [:span (get-virkailija-translation :send-confirmation-email-to-applicant)]
      [:span.application-handling__resend-modify-application-link-email-text @recipient]]))
 
 (defn- application-resend-modify-link-confirmation []
@@ -1300,7 +1310,7 @@
       [:div.application-handling__resend-modify-link-confirmation.application-handling__button.animated.fadeIn
        {:class (when (= @state :disappearing) "animated fadeOut")}
        [:div.application-handling__resend-modify-link-confirmation-indicator]
-       "Muokkauslinkki lähetetty hakijalle sähköpostilla"])))
+       (get-virkailija-translation :send-edit-link-to-applicant)])))
 
 (defn- attachment-review-row [review selected-hakukohde lang]
   (let [list-opened (r/atom false)]
@@ -1350,8 +1360,10 @@
      (when (not-empty reviews)
        [:div
         [:p.application-handling__attachment-review-header
-         (str (if (= "form" hakukohde) "Lomakkeen" "Hakukohteen")
-              " liitepyynnöt (" (count reviews) ")")]
+         (gstring/format "%s %s (%d)"
+                         (if (= "form" hakukohde) (get-virkailija-translation :of-form) (get-virkailija-translation :of-hakukohde))
+                         (.toLowerCase (get-virkailija-translation :attachments))
+                         (count reviews))]
         (doall
           (for [attachment reviews]
             ^{:key (:id attachment)}
@@ -1383,7 +1395,7 @@
           (when (not= :fixed @review-positioning)
             [:div.application-handling__review-settings-header
              [:i.zmdi.zmdi-account.application-handling__review-settings-header-icon]
-             [:span.application-handling__review-settings-header-text "Asetukset"]])]
+             [:span.application-handling__review-settings-header-text (get-virkailija-translation :settings)]])]
          [:div.application-handling__review
           (when @show-attachment-review?
             [attachment-review-area @selected-review-hakukohde @attachment-reviews-for-hakukohde @review-positioning @lang])
@@ -1404,7 +1416,9 @@
                (if @show-attachment-review?
                  [:span [:i.zmdi.zmdi-chevron-right] [:i.zmdi.zmdi-chevron-right]]
                  [:span [:i.zmdi.zmdi-chevron-left] [:i.zmdi.zmdi-chevron-left]])]
-              " Liitepyynnöt (" (count @attachment-reviews-for-hakukohde) ")"])
+              (gstring/format " %s (%d)"
+                              (get-virkailija-translation :attachments)
+                              (count @attachment-reviews-for-hakukohde))])
            [application-hakukohde-review-inputs review-states/hakukohde-review-types]
            (when @(subscribe [:application/show-info-request-ui?])
              [application-information-request])
@@ -1438,7 +1452,7 @@
                         (dispatch [:application/navigate
                                    (str "/lomake-editori/applications/search"
                                         "?term=" (or ssn email))]))}
-           (str applications-count " hakemusta")])]
+           (str applications-count " " (get-virkailija-translation :applications))])]
        (when person-oid
          [:div.application-handling__review-area-main-heading-person-oid-row
           [:div.application-handling__applicant-links
@@ -1449,13 +1463,13 @@
              :target "_blank"}
             [:i.zmdi.zmdi-account-circle.application-handling__review-area-main-heading-person-icon]
             [:span.application-handling__review-area-main-heading-person-oid
-             (str "Oppija " person-oid)]]
+             (str (get-virkailija-translation :student) " " person-oid)]]
            [:a
             {:href   (str "/suoritusrekisteri/#/opiskelijat?henkilo=" person-oid)
              :target "_blank"}
             [:i.zmdi.zmdi-collection-text.application-handling__review-area-main-heading-person-icon]
             [:span.application-handling__review-area-main-heading-person-oid
-             "Henkilön suoritukset"]]]
+             (get-virkailija-translation :person-completed-education)]]]
           (when-not yksiloity
             [:a.individualization
              {:href   (str "/henkilo-ui/oppija/"
@@ -1463,7 +1477,7 @@
                            "/duplikaatit?permissionCheckService=ATARU")
               :target "_blank"}
              [:i.zmdi.zmdi-account-o]
-             [:span "Hakijaa ei ole yksilöity. "
+             [:span (get-virkailija-translation :person-not-individualized)
               [:span.important "Tee yksilöinti henkilöpalvelussa."]]])])]
       (when (not (contains? (:answers application) :hakukohteet))
         [:ul.application-handling__hakukohteet-list
@@ -1541,13 +1555,17 @@
   (let [event (subscribe [:application/selected-event])]
     (fn []
       (let [changed-by (if (= (:event-type @event) "updated-by-applicant")
-                         "hakija"
+                         (.toLowerCase (get-virkailija-translation :applicant))
                          (str (:first-name @event) " " (:last-name @event)))]
         [:div.application-handling__version-history-header
          [:div.application-handling__version-history-header-text
           "Vertailu muutoksesta " (t/time->short-str (or (:time @event) (:created-time @event)))]
          [:div.application-handling__version-history-header-sub-text
-          (str changed-by " muutti " changes-amount " vastausta:")]]))))
+          (gstring/format "%s %s %s %s"
+                          changed-by
+                          (get-virkailija-translation :changed)
+                          changes-amount
+                          (get-virkailija-translation :answers))]]))))
 
 (defn- application-version-history-list-value [values]
   [:ol.application-handling__version-history-list-value
@@ -1591,7 +1609,7 @@
        [:div.virkailija-modal__content
         [:a.virkailija-modal__close-link
          {:on-click #(dispatch [:application/close-application-version-history])}
-         "Sulje"]
+         (clojure.string/capitalize (get-virkailija-translation :close))]
         [application-version-history-header (count @history-items)]
         (for [[key item] @history-items]
           ^{:key (str "application-history-row-for-" key)}
