@@ -1021,9 +1021,9 @@
    :email-content                            {:fi "Sähköpostiviestin sisältö"
                                               :sv "Sähköpostiviestin sisältö"
                                               :en "Sähköpostiviestin sisältö"}
-   :applicant-will-receive-following-email   {:fi "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä '"
-                                              :sv "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä '"
-                                              :en "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä '"}
+   :applicant-will-receive-following-email   {:fi "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä"
+                                              :sv "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä"
+                                              :en "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä"}
    :editable-content-title                   {:fi "Muokattava osuus (otsikko)"
                                               :sv "Muokattava osuus (otsikko)"
                                               :en "Muokattava osuus (otsikko)"}
