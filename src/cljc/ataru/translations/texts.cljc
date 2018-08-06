@@ -727,7 +727,7 @@
    :dropdown                                 {:fi "Pudotusvalikko"
                                               :sv "Pudotusvalikko"
                                               :en "Pudotusvalikko"}
-   :single-choice                            {:fi "Painikkeet, yksi valittavissa"
+   :single-choice-button                     {:fi "Painikkeet, yksi valittavissa"
                                               :sv "Painikkeet, yksi valittavissa"
                                               :en "Painikkeet, yksi valittavissa"}
    :multiple-choice                          {:fi "Lista, monta valittavissa"
@@ -757,7 +757,7 @@
    :contains-fields                          {:fi "Sisältää kentät:"
                                               :sv "Sisältää kentät:"
                                               :en "Sisältää kentät:"}
-   :info-text                                {:fi "Infoteksti"
+   :info-element                             {:fi "Infoteksti"
                                               :sv "Infoteksti"
                                               :en "Infoteksti"}
    :title                                    {:fi "Otsikko"
@@ -766,7 +766,7 @@
    :text                                     {:fi "Teksti"
                                               :sv "Teksti"
                                               :en "Teksti"}
-   :adjacent-text-fields                     {:fi "Vierekkäiset tekstikentät"
+   :adjacent-fieldset                        {:fi "Vierekkäiset tekstikentät"
                                               :sv "Vierekkäiset tekstikentät"
                                               :en "Vierekkäiset tekstikentät"}
    :attachment-info-text                     {:fi "Liitepyyntö sisältää ohjetekstin"
@@ -1009,39 +1009,129 @@
    :person-not-individualized                {:fi "Hakijaa ei ole yksilöity."
                                               :sv "Hakijaa ei ole yksilöity."
                                               :en "Hakijaa ei ole yksilöity."}
-   :diff-from-changes {:fi "Vertailu muutoksesta"
-                       :sv "Vertailu muutoksesta"
-                       :en "Vertailu muutoksesta"}
+   :diff-from-changes                        {:fi "Vertailu muutoksesta"
+                                              :sv "Vertailu muutoksesta"
+                                              :en "Vertailu muutoksesta"}
    :changed                                  {:fi "muutti"
                                               :sv "muutti"
                                               :en "muutti"}
    :answers                                  {:fi "vastausta:"
                                               :sv "vastausta:"
                                               :en "vastausta:"}
-   :email-content {:fi "Sähköpostiviestin sisältö"
-                   :sv "Sähköpostiviestin sisältö"
-                   :en "Sähköpostiviestin sisältö"}
-   :applicant-will-receive-following-email {:fi "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä '"
-                                            :sv "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä '"
-                                            :en "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä '"}
-   :editable-content-title {:fi "Muokattava osuus (otsikko)"
-                      :sv "Muokattava osuus (otsikko)"
-                      :en "Muokattava osuus (otsikko)"}
-   :editable-content-beginning {:fi "Muokattava osuus (viestin alku)"
-                                :sv "Muokattava osuus (viestin alku)"
-                                :en "Muokattava osuus (viestin alku)"}
-   :application-oid-here {:fi "Tähän tulee hakemusnumero, hakutoiveet, puuttuvat liitepyynnöt ja muokkauslinkki"
-                          :sv "Tähän tulee hakemusnumero, hakutoiveet, puuttuvat liitepyynnöt ja muokkauslinkki"
-                          :en "Tähän tulee hakemusnumero, hakutoiveet, puuttuvat liitepyynnöt ja muokkauslinkki"}
-   :editable-content-ending {:fi "Muokattava osuus (viestin loppu)"
-                             :sv "Muokattava osuus (viestin loppu)"
-                             :en "Muokattava osuus (viestin loppu)"}
-   :message-preview {:fi "Viestin esikatselu"
-                     :sv "Viestin esikatselu"
-                     :en "Viestin esikatselu"}
-   :save-changes {:fi "Tallenna muutokset"
-                  :sv "Tallenna muutokset"
-                  :en "Tallenna muutokset"}})
+   :email-content                            {:fi "Sähköpostiviestin sisältö"
+                                              :sv "Sähköpostiviestin sisältö"
+                                              :en "Sähköpostiviestin sisältö"}
+   :applicant-will-receive-following-email   {:fi "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä '"
+                                              :sv "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä '"
+                                              :en "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä '"}
+   :editable-content-title                   {:fi "Muokattava osuus (otsikko)"
+                                              :sv "Muokattava osuus (otsikko)"
+                                              :en "Muokattava osuus (otsikko)"}
+   :editable-content-beginning               {:fi "Muokattava osuus (viestin alku)"
+                                              :sv "Muokattava osuus (viestin alku)"
+                                              :en "Muokattava osuus (viestin alku)"}
+   :application-oid-here                     {:fi "Tähän tulee hakemusnumero, hakutoiveet, puuttuvat liitepyynnöt ja muokkauslinkki"
+                                              :sv "Tähän tulee hakemusnumero, hakutoiveet, puuttuvat liitepyynnöt ja muokkauslinkki"
+                                              :en "Tähän tulee hakemusnumero, hakutoiveet, puuttuvat liitepyynnöt ja muokkauslinkki"}
+   :editable-content-ending                  {:fi "Muokattava osuus (viestin loppu)"
+                                              :sv "Muokattava osuus (viestin loppu)"
+                                              :en "Muokattava osuus (viestin loppu)"}
+   :message-preview                          {:fi "Viestin esikatselu"
+                                              :sv "Viestin esikatselu"
+                                              :en "Viestin esikatselu"}
+   :save-changes                             {:fi "Tallenna muutokset"
+                                              :sv "Tallenna muutokset"
+                                              :en "Tallenna muutokset"}
+   :forms-panel                              {:fi "Lomakkeet"
+                                              :sv "Lomakkeet"
+                                              :en "Lomakkeet"}
+   :applications-panel                       {:fi "Hakemukset"
+                                              :sv "Hakemukset"
+                                              :en "Hakemukset"}
+   :form-edit-rights-panel                   {:fi "Lomakkeiden muokkaus"
+                                              :sv "Lomakkeiden muokkaus"
+                                              :en "Lomakkeiden muokkaus"}
+   :view-applications-rights-panel           {:fi "Hakemusten katselu"
+                                              :sv "Hakemusten katselu"
+                                              :en "Hakemusten katselu"}
+   :edit-applications-rights-panel           {:fi "Hakemusten arviointi"
+                                              :sv "Hakemusten arviointi"
+                                              :en "Hakemusten arviointi"}
+   :no-organization                          {:fi "Ei organisaatiota"
+                                              :sv "Ei organisaatiota"
+                                              :en "Ei organisaatiota"}
+   :multiple-organizations                   {:fi "Useita organisaatioita"
+                                              :sv "Useita organisaatioita"
+                                              :en "Useita organisaatioita"}
+   :choose-user-rights                       {:fi "Valitse käyttäjän oikeudet"
+                                              :sv "Valitse käyttäjän oikeudet"
+                                              :en "Valitse käyttäjän oikeudet"}
+   :reset-organization                       {:fi "Palauta oletusorganisaatio"
+                                              :sv "Palauta oletusorganisaatio"
+                                              :en "Palauta oletusorganisaatio"}
+   :change-organization                      {:fi "Vaihda organisaatio"
+                                              :sv "Vaihda organisaatio"
+                                              :en "Vaihda organisaatio"}
+   :search-sub-organizations                 {:fi "Etsi aliorganisaatioita"
+                                              :sv "Etsi aliorganisaatioita"
+                                              :en "Etsi aliorganisaatioita"}
+   :more-results-refine-search               {:fi "Lisää tuloksia, tarkenna hakua"
+                                              :sv "Lisää tuloksia, tarkenna hakua"
+                                              :en "Lisää tuloksia, tarkenna hakua"}
+   :logout                                   {:fi "Kirjaudu ulos"
+                                              :sv "Kirjaudu ulos"
+                                              :en "Kirjaudu ulos"}
+   :unprocessed-haut                         {:fi "Käsittelemättä olevat haut"
+                                              :sv "Käsittelemättä olevat haut"
+                                              :en "Käsittelemättä olevat haut"}
+   :search-by-applicant-info                 {:fi "Etsi hakijan henkilötiedoilla"
+                                              :sv "Etsi hakijan henkilötiedoilla"
+                                              :en "Etsi hakijan henkilötiedoilla"}
+   :search-terms-list                        {:fi "Nimi, henkilötunnus, syntymäaika tai sähköpostiosoite"
+                                              :sv "Nimi, henkilötunnus, syntymäaika tai sähköpostiosoite"
+                                              :en "Nimi, henkilötunnus, syntymäaika tai sähköpostiosoite"}
+   :processed-haut                           {:fi "Käsitellyt haut"
+                                              :sv "Käsitellyt haut"
+                                              :en "Käsitellyt haut"}
+   :application                              {:fi "hakemus"
+                                              :sv "hakemus"
+                                              :en "hakemus"}
+   :application-options                      {:fi "hakukohdetta"
+                                              :sv "hakukohdetta"
+                                              :en "hakukohdetta"}
+   :base-education-module                    {:fi "Pohjakoulutusmoduuli"
+                                              :sv "Pohjakoulutusmoduuli"
+                                              :en "Pohjakoulutusmoduuli"}
+   :kk-base-education-module                 {:fi "Pohjakoulutusmoduuli (kk-yhteishaku)"
+                                              :sv "Pohjakoulutusmoduuli (kk-yhteishaku)"
+                                              :en "Pohjakoulutusmoduuli (kk-yhteishaku)"}
+   :pohjakoulutusristiriita                  {:fi "Pohjakoulutusristiriita"
+                                              :sv "Pohjakoulutusristiriita"
+                                              :en "Pohjakoulutusristiriita"}
+   :koulutusmarkkinointilupa                 {:fi "Koulutusmarkkinointilupa"
+                                              :sv "Koulutusmarkkinointilupa"
+                                              :en "Koulutusmarkkinointilupa"}
+   :valintatuloksen-julkaisulupa             {:fi "Valintatuloksen julkaisulupa"
+                                              :sv "Valintatuloksen julkaisulupa"
+                                              :e  "Valintatuloksen julkaisulupa"}
+   :lupa-sahkoiseen-asiointiin               {:fi "Sähköisen asioinnin lupa"
+                                              :sv "Sähköisen asioinnin lupa"
+                                              :en "Sähköisen asioinnin lupa"}
+   :asiointikieli                            {:fi "Asiointikieli"
+                                              :sv "Asiointikieli"
+                                              :en "Asiointikieli"}
+   :form-section                             {:fi "Lomakeosio"
+                                              :sv "Lomakeosio"
+                                              :en "Lomakeosio"}
+   :finnish                                  {:fi "Suomi"
+                                              :sv "Finska"
+                                              :en "Finnish"}
+   :swedish                                  {:fi "Ruotsi"
+                                              :sv "Svenska"
+                                              :en "Finska"}
+   :english                                  {:fi "Englanti"
+                                              :sv "Engelska"
+                                              :en "English"}})
 
 (def state-translations
   {:active               {:fi "Aktiivinen"

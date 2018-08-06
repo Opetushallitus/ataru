@@ -1,8 +1,8 @@
 (ns ataru.virkailija.application.application-search-control
-  (:require
-   [re-frame.core :refer [subscribe dispatch]]
-   [reagent.core :as r]
-   [ataru.virkailija.application.application-search-control-handlers]))
+  (:require [ataru.cljs-util :as util :refer [get-virkailija-translation]]
+            [ataru.virkailija.application.application-search-control-handlers]
+            [re-frame.core :refer [subscribe dispatch]]
+            [reagent.core :as r]))
 
 (defn haku-tab [tab-id selected-tab link-url label-text]
   [:div.application__search-control-tab-selector-wrapper
@@ -65,18 +65,18 @@
       :incomplete
       @selected-tab
       "/lomake-editori/applications/incomplete"
-      (str "Käsittelemättä olevat haut" (haku-count-str @incomplete-count))]
+      (str (get-virkailija-translation :unprocessed-haut) (haku-count-str @incomplete-count))]
      [search-term-tab
       :search-term
       @selected-tab
       "/lomake-editori/applications/search"
-      "Etsi hakijan henkilötiedoilla"
-      "Nimi, henkilötunnus, syntymäaika tai sähköpostiosoite"]
+      (get-virkailija-translation :search-by-applicant-info)
+      (get-virkailija-translation :search-terms-list)]
      [haku-tab
       :complete
       @selected-tab
       "/lomake-editori/applications/complete"
-      (str "Käsitellyt haut" (haku-count-str @complete-count))]]))
+      (str (get-virkailija-translation :processed-haut) (haku-count-str @complete-count))]]))
 
 (defn- hakemus-list-link
   [href title {:keys [haku-application-count application-count unprocessed processed]}]
@@ -87,7 +87,10 @@
      [:span.application__search-control-haku-hl]
      (when haku-application-count
        [:span.application__search-control-haku-count
-        (str haku-application-count " hakemus" (when (< 1 haku-application-count) "ta"))])
+        (str " "
+             (if (< 1 haku-application-count)
+               (get-virkailija-translation :applications)
+               (get-virkailija-translation :application)))])
      [:span.application-handling__count-tag.application-handling__count-tag--haku-list
       [:span.application-handling__state-label.application-handling__state-label--unprocessed]
       unprocessed]
@@ -132,7 +135,7 @@
          hakukohteet)]]
      [:div.application__search-control-hakukohteet
       [:div.application__search-control-hakukohde-count
-       (str (count hakukohteet) " hakukohdetta")]])])
+       (str (count hakukohteet) " " (get-virkailija-translation :application-options))]])])
 
 (defn tarjonta-haku [haku]
   (let [hakukohde-count    (count (:hakukohteet haku))

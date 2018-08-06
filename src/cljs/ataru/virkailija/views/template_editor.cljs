@@ -1,9 +1,9 @@
 (ns ataru.virkailija.views.template-editor
-  (:require [re-frame.core :refer [subscribe dispatch]]
-            [reagent.core :as r]
-            [goog.string :as s]
+  (:require [ataru.cljs-util :refer [wrap-scroll-to get-virkailija-translation]]
             [ataru.translations.texts :refer [email-default-texts]]
-            [ataru.cljs-util :refer [wrap-scroll-to get-virkailija-translation]]
+            [goog.string :as s]
+            [re-frame.core :refer [subscribe dispatch]]
+            [reagent.core :as r]
             [reagent.core :as reagent]))
 
 (def language-names
@@ -72,7 +72,7 @@
                 {:value     (:content lang-content)
                  :on-change #(dispatch [:editor/update-email-preview (name @lang) :content (.-value (.-target %))])}]
                [:h4.virkailija-email-preview__sub-heading (get-virkailija-translation  :application-oid-here)]
-               [:h4.virkailija-email-preview__sub-heading (get-virkailija-translation:editable-content-ending)]
+               [:h4.virkailija-email-preview__sub-heading (get-virkailija-translation :editable-content-ending)]
                [:textarea.virkailija-email-preview__text-input
                 {:value     (:content-ending lang-content)
                  :on-change #(dispatch [:editor/update-email-preview (name @lang) :content-ending (.-value (.-target %))])}]

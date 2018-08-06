@@ -757,8 +757,8 @@
          {:class @animation-effect}
          (let [header (case field-type
                         "dropdown" (get-virkailija-translation :dropdown)
-                        "singleChoice" (get-virkailija-translation :single-choice)
-                        "multipleChoice" (get-virkailija-translation :multiple-choice))]
+                        "singleChoice" (get-virkailija-translation :single-choice-button)
+                        "multipleChoice" (get-virkailija-translation :multiple-choice-button))]
            [text-header header path (:metadata initial-content)])
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__multi-question-wrapper
@@ -884,24 +884,25 @@
     (flatten (recursively-get-labels component))))
 
 (defn hakukohteet-module [path]
-  (let [languages (subscribe [:editor/languages])
+  (let [languages       (subscribe [:editor/languages])
         virkailija-lang (subscribe [:editor/virkailija-lang])
-        value     (subscribe [:editor/get-component-value path])]
+        value           (subscribe [:editor/get-component-value path])]
     (fn [path]
       [:div.editor-form__module-wrapper
        [:header.editor-form__module-header
         [:span.editor-form__module-header-label (get-in @value [:label @virkailija-lang])]
         " "
-        [:span (get-in @value [:label-amendment :fi])]]
+        [:span (get-in @value [:label-amendment :fi @virkailija-lang])]]
        [:div.editor-form__module-fields (get-virkailija-translation :hakukohde-info)]])))
 
 (defn module [path]
   (let [languages (subscribe [:editor/languages])
-        value     (subscribe [:editor/get-component-value path])]
+        value     (subscribe [:editor/get-component-value path])
+        virkailija-lang (subscribe [:editor/virkailija-lang])]
     (fn [path]
       [:div.editor-form__module-wrapper
        [:header.editor-form__module-header
-        [:span.editor-form__module-header-label (get-in @value [:label :fi])]]
+        [:span.editor-form__module-header-label (get-in @value [:label @virkailija-lang])]]
        [:div.editor-form__module-fields
         [:span.editor-form__module-fields-label (get-virkailija-translation :contains-fields)]
         " "
@@ -917,7 +918,7 @@
     (fn [initial-content path]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header (get-virkailija-translation :info-text) path (:metadata initial-content)]
+       [text-header (get-virkailija-translation :info-element) path (:metadata initial-content)]
        [:div.editor-form__component-row-wrapper
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header (get-virkailija-translation :title)]
@@ -983,7 +984,7 @@
     (fn [content path children]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header (get-virkailija-translation :adjacent-text-fields) path (:metadata content)]
+       [text-header (get-virkailija-translation :adjacent-fieldset) path (:metadata content)]
        [:div.editor-form__component-row-wrapper
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header (get-virkailija-translation :title)]

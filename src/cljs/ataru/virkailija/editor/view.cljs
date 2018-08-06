@@ -7,6 +7,7 @@
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :refer [time->str]]
             [ataru.virkailija.temporal :as temporal]
+            [ataru.translations.texts :refer [virkailija-texts]]
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]))
@@ -125,11 +126,11 @@
               [editor-name-wrapper l false true]))]))
 
 (def ^:private lang-versions
-  {:fi "Suomi"
-   :sv "Ruotsi"
-   :en "Englanti"})
+  {:fi (:finnish virkailija-texts)
+   :sv (:swedish virkailija-texts)
+   :en (:english virkailija-texts)})
 
-(defn- lang-checkbox [lang-kwd checked?]
+(defn- lang-checkbox [lang-kwd checked? virkailija-lang]
   (let [id (str "lang-checkbox-" (name lang-kwd))]
     [:div.editor-form__checkbox-with-label
      {:key id}
@@ -141,7 +142,7 @@
                     (dispatch [:editor/toggle-language lang-kwd]))}]
      [:label.editor-form__checkbox-label.editor-form__language-checkbox-label
       {:for id}
-      (get lang-versions lang-kwd)]]))
+      (-> lang-versions lang-kwd virkailija-lang)]]))
 
 (defn- get-org-name [org]
   (str (get-in org [:name :fi])
@@ -190,12 +191,13 @@
             (get-virkailija-translation :lock-form))]]))))
 
 (defn- form-toolbar [form]
-  (let [languages @(subscribe [:editor/languages])]
+  (let [languages @(subscribe [:editor/languages])
+        lang      (subscribe [:editor/virkailija-lang])]
     [:div.editor-form__toolbar
      [:div.editor-form__toolbar-left
       [:div.editor-form__language-controls
        (map (fn [lang-kwd]
-              (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages))))
+              (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages)) @lang))
             (keys lang-versions))]
       [:div.editor-form__preview-buttons
        [:a.editor-form__email-template-editor-link
