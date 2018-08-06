@@ -26,9 +26,9 @@
          kirjoitettu oikein ja se on henkilökohtainen. Lähetämme sinulle
          tärkeitä viestejä tähän sähköpostiosoitteeseen."]]
     :en [:div
-         [:p "Varmista, että antamasi sähköpostiosoite " [:strong email] " on
-         kirjoitettu oikein ja se on henkilökohtainen. Lähetämme sinulle
-         tärkeitä viestejä tähän sähköpostiosoitteeseen."]]}])
+         [:p "Please ensure that the given email address " [:strong email] " is
+         typed correctly and is your personal address. Important messages will
+         be sent to this email address."]]}])
 
 (defn- email-applied-error
   [email preferred-name]
