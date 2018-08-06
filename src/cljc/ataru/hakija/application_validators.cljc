@@ -22,9 +22,9 @@
          kirjoitettu oikein ja se on henkilökohtainen. Lähetämme sinulle
          tärkeitä viestejä tähän sähköpostiosoitteeseen."]]
     :sv [:div
-         [:p "Varmista, että antamasi sähköpostiosoite " [:strong email] " on
-         kirjoitettu oikein ja se on henkilökohtainen. Lähetämme sinulle
-         tärkeitä viestejä tähän sähköpostiosoitteeseen."]]
+         [:p "Försäkra dig om att du skrivit din e-postadress " [:strong email]
+          " rätt och att det är din personliga e-post. Vi skickar viktiga
+         meddelanden till denna e-postadress."]]
     :en [:div
          [:p "Please ensure that the given email address " [:strong email] " is
          typed correctly and is your personal address. Important messages will
