@@ -1,7 +1,9 @@
 (ns ataru.virkailija.views.template-editor
   (:require [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as r]
+            [goog.string :as s]
             [ataru.translations.texts :refer [email-default-texts]]
+            [ataru.cljs-util :refer [wrap-scroll-to get-virkailija-translation]]
             [reagent.core :as reagent]))
 
 (def language-names
@@ -27,14 +29,13 @@
          [:div.virkailija-modal__content.virkailija-email-preview__modal
           [:a.virkailija-modal__close-link
            {:on-click #(dispatch [:editor/toggle-email-template-editor])}
-           "Sulje"]
+           (clojure.string/capitalize (get-virkailija-translation :close))]
           [:div.virkailija-email-preview
-           [:h3.virkailija-email-preview__heading "Sähköpostiviestin sisältö"]
+           [:h3.virkailija-email-preview__heading (get-virkailija-translation :email-content)]
            [:div.virkailija-email-preview__info-text
-            (str
-              "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä '"
-              (get lang-content :from)
-              "'")]
+            (s/format "%s '%s'"
+                      (get-virkailija-translation :applicant-will-receive-following-email)
+                      (get lang-content :form))]
            (when (not (nil? content))
              [:div.virkailija-email-preview__tabs
               [:div.virkailija-email-preview__tab-panel
@@ -61,22 +62,22 @@
                    [:fi :sv :en]))]
               [:div.virkailija-email-preview__tab-border]
               [:div.virkailija-email-preview__tab-content
-               [:h4.virkailija-email-preview__sub-heading "Muokattava osuus (otsikko)"]
+               [:h4.virkailija-email-preview__sub-heading (get-virkailija-translation :editable-content-title)]
                [:input.virkailija-email-preview__input
                 {:value     (:subject lang-content)
                  :class     (when (clojure.string/blank? (:subject lang-content)) "virkailija-email-preview__input-field-error")
                  :on-change #(dispatch [:editor/update-email-preview (name @lang) :subject (.-value (.-target %))])}]
-               [:h4.virkailija-email-preview__sub-heading "Muokattava osuus (viestin alku)"]
+               [:h4.virkailija-email-preview__sub-heading (get-virkailija-translation :editable-content-beginning)]
                [:textarea.virkailija-email-preview__text-input
                 {:value     (:content lang-content)
                  :on-change #(dispatch [:editor/update-email-preview (name @lang) :content (.-value (.-target %))])}]
-               [:h4.virkailija-email-preview__sub-heading "Tähän tulee hakemusnumero, hakutoiveet, puuttuvat liitepyynnöt ja muokkauslinkki"]
-               [:h4.virkailija-email-preview__sub-heading "Muokattava osuus (viestin loppu)"]
+               [:h4.virkailija-email-preview__sub-heading (get-virkailija-translation  :application-oid-here)]
+               [:h4.virkailija-email-preview__sub-heading (get-virkailija-translation:editable-content-ending)]
                [:textarea.virkailija-email-preview__text-input
                 {:value     (:content-ending lang-content)
                  :on-change #(dispatch [:editor/update-email-preview (name @lang) :content-ending (.-value (.-target %))])}]
                [:div.virkailija-email-preview__preview-container
-                [:h4.virkailija-email-preview__sub-heading "Viestin esikatselu"]
+                [:h4.virkailija-email-preview__sub-heading (get-virkailija-translation :message-preview)]
                 [:iframe.virkailija-email-preview__preview-iframe
                  {:srcDoc (:body lang-content)}]
                 [:div.virkailija-email-preview__buttons
@@ -85,7 +86,7 @@
                                "editor-form__control-button--enabled"
                                "editor-form__control-button--disabled")
                    :on-click #(when (and any-changed? (not any-errors?)) (dispatch [:editor/save-email-template]))}
-                  (str "Tallenna muutokset"
+                  (str (get-virkailija-translation :save-changes)
                     (when any-changed?
                       (str
                         " ("

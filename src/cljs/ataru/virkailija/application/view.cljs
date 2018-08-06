@@ -1577,7 +1577,9 @@
                          (str (:first-name @event) " " (:last-name @event)))]
         [:div.application-handling__version-history-header
          [:div.application-handling__version-history-header-text
-          "Vertailu muutoksesta " (t/time->short-str (or (:time @event) (:created-time @event)))]
+          (str (get-virkailija-translation :diff-from-changes)
+               " "
+               (t/time->short-str (or (:time @event) (:created-time @event))))]
          [:div.application-handling__version-history-header-sub-text
           (gstring/format "%s %s %s %s"
                           changed-by

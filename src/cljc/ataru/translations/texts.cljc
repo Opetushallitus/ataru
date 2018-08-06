@@ -1009,12 +1009,39 @@
    :person-not-individualized                {:fi "Hakijaa ei ole yksilöity."
                                               :sv "Hakijaa ei ole yksilöity."
                                               :en "Hakijaa ei ole yksilöity."}
+   :diff-from-changes {:fi "Vertailu muutoksesta"
+                       :sv "Vertailu muutoksesta"
+                       :en "Vertailu muutoksesta"}
    :changed                                  {:fi "muutti"
                                               :sv "muutti"
                                               :en "muutti"}
    :answers                                  {:fi "vastausta:"
                                               :sv "vastausta:"
-                                              :en "vastausta:"}})
+                                              :en "vastausta:"}
+   :email-content {:fi "Sähköpostiviestin sisältö"
+                   :sv "Sähköpostiviestin sisältö"
+                   :en "Sähköpostiviestin sisältö"}
+   :applicant-will-receive-following-email {:fi "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä '"
+                                            :sv "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä '"
+                                            :en "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä '"}
+   :editable-content-title {:fi "Muokattava osuus (otsikko)"
+                      :sv "Muokattava osuus (otsikko)"
+                      :en "Muokattava osuus (otsikko)"}
+   :editable-content-beginning {:fi "Muokattava osuus (viestin alku)"
+                                :sv "Muokattava osuus (viestin alku)"
+                                :en "Muokattava osuus (viestin alku)"}
+   :application-oid-here {:fi "Tähän tulee hakemusnumero, hakutoiveet, puuttuvat liitepyynnöt ja muokkauslinkki"
+                          :sv "Tähän tulee hakemusnumero, hakutoiveet, puuttuvat liitepyynnöt ja muokkauslinkki"
+                          :en "Tähän tulee hakemusnumero, hakutoiveet, puuttuvat liitepyynnöt ja muokkauslinkki"}
+   :editable-content-ending {:fi "Muokattava osuus (viestin loppu)"
+                             :sv "Muokattava osuus (viestin loppu)"
+                             :en "Muokattava osuus (viestin loppu)"}
+   :message-preview {:fi "Viestin esikatselu"
+                     :sv "Viestin esikatselu"
+                     :en "Viestin esikatselu"}
+   :save-changes {:fi "Tallenna muutokset"
+                  :sv "Tallenna muutokset"
+                  :en "Tallenna muutokset"}})
 
 (def state-translations
   {:active               {:fi "Aktiivinen"
@@ -1159,6 +1186,4 @@
                               :en "Hakijan henkilö-OID"}
    :turvakielto              {:fi "Turvakielto"
                               :sv "Turvakielto"
-                              :en "Turvakielto"}
-
-   })
+                              :en "Turvakielto"}})
