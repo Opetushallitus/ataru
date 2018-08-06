@@ -18,6 +18,7 @@
                           :selection-state-filter     (mapv first review-states/application-hakukohde-selection-states)
                           :sort                       application-sorting/initial-sort
                           :application-list-expanded? true
+                          :mass-information-request   {:form-status :disabled}
                           :filters                    {:language-requirement {:unreviewed  true
                                                                               :fulfilled   true
                                                                               :unfulfilled true}

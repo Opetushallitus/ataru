@@ -104,6 +104,23 @@
         (contains? #{:selected-form-key :selected-haku :selected-hakukohde}
                    @(re-frame/subscribe [:application/application-list-selected-by])))))
 
+(defn- mass-information-request-button-enabled?
+  [db]
+  (and
+    (-> db :application :mass-information-request :subject u/not-blank?)
+    (-> db :application :mass-information-request :message u/not-blank?)))
+
+(re-frame/reg-sub
+  :application/mass-information-request-button-enabled?
+  mass-information-request-button-enabled?)
+
+(re-frame/reg-sub
+  :application/mass-information-request-form-status
+  (fn [db]
+    (if (not (mass-information-request-button-enabled? db))
+      :disabled
+      (get-in db [:application :mass-information-request :form-status]))))
+
 (defn- haku-completely-processed?
   [haku]
   (= (:processed haku) (:application-count haku)))

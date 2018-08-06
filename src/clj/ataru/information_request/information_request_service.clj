@@ -56,3 +56,19 @@
                       :id        (-> session :identity :oid)})
       (start-email-job job-runner information-request)
       information-request)))
+
+(defn mass-store
+  [information-requests session job-runner]
+  {:pre [(every? (comp u/not-blank? :subject) information-requests)
+         (every? (comp u/not-blank? :message) information-requests)
+         (every? (comp u/not-blank? :application-key) information-requests)]}
+  (let [stored-information-requests (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+                                      (mapv
+                                        #(information-request-store/add-information-request % session conn)
+                                        information-requests))]
+    (doseq [stored-information-request stored-information-requests]
+      (start-email-job job-runner stored-information-request)
+      (audit-log/log {:new       stored-information-request
+                      :operation audit-log/operation-new
+                      :id        (-> session :identity :oid)}))
+    stored-information-requests))

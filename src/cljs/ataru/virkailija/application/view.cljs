@@ -50,7 +50,7 @@
         [:input {:type  "hidden"
                  :name  "selected-hakukohde"
                  :value selected-hakukohde}])]
-     [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled
+     [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
       {:on-click (fn [e]
                    (.submit (.getElementById js/document "excel-download-link")))}
       (get-virkailija-translation :load-excel)]]))
@@ -153,7 +153,7 @@
                             @filtered-applications)]
           [:span.application-handling__mass-edit-review-states-container
            (when @massamuokkaus?
-             [:a.application-handling__mass-edit-review-states-link.editor-form__control-button.editor-form__control-button--enabled
+             [:a.application-handling__mass-edit-review-states-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
               {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state not)}
               (get-virkailija-translation :mass-edit)])
            (when @element-visible?
@@ -222,6 +222,84 @@
 
                 [:div])])])))))
 
+<<<<<<< HEAD
+=======
+(defn- application-in-information-request-state?
+  [hakukohde application]
+  (->> (:application-hakukohde-reviews application)
+       (find-first
+         (fn [application-hakukohde-review]
+           (and
+             (= (:requirement application-hakukohde-review) "processing-state")
+             (= (:state application-hakukohde-review) "information-request")
+             (or
+               (nil? hakukohde)
+               (= (:hakukohde application-hakukohde-review) hakukohde)))))))
+
+(declare application-information-request-contains-modification-link)
+
+(defn- mass-information-request-link
+  []
+  (let [element-visible?      (r/atom false)
+        subject               (subscribe [:state-query [:application :mass-information-request :subject]])
+        message               (subscribe [:state-query [:application :mass-information-request :message]])
+        form-status           (subscribe [:application/mass-information-request-form-status])
+        filtered-applications (subscribe [:application/filtered-applications])
+        button-enabled?       (subscribe [:application/mass-information-request-button-enabled?])]
+    (fn []
+      [:span.application-handling__mass-information-request-container
+       [:a.application-handling__mass-information-request-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
+        {:on-click #(swap! element-visible? not)}
+        "Massaviesti"]
+       (when @element-visible?
+         [:div.application-handling__mass-edit-review-states-popup
+          [:div.application-handling__popup-close-button
+           {:on-click #(reset! element-visible? false)}
+           [:i.zmdi.zmdi-close]]
+          [:h4.application-handling__mass-edit-review-states-heading.application-handling__mass-edit-review-states-heading--title
+           "Massaviesti"]
+          [:p "Lähetä sähköposti "
+           (count @filtered-applications)
+           " hakijalle:"]
+          [:div.application-handling__information-request-row
+           [:div.application-handling__information-request-info-heading "Aihe:"]
+           [:div.application-handling__information-request-text-input-container
+            [:input.application-handling__information-request-text-input
+             {:value     @subject
+              :maxLength 78
+              :on-change #(dispatch [:application/set-mass-information-request-subject (-> % .-target .-value)])}]]]
+          [:div.application-handling__information-request-row
+           [:textarea.application-handling__information-request-message-area
+            {:value     @message
+             :on-change #(dispatch [:application/set-mass-information-request-message (-> % .-target .-value)])}]]
+          [application-information-request-contains-modification-link]
+          [:div.application-handling__information-request-row
+           (case @form-status
+             (:disabled :enabled nil)
+             [:button.application-handling__send-information-request-button
+              {:disabled (not @button-enabled?)
+               :class    (if @button-enabled?
+                           "application-handling__send-information-request-button--enabled"
+                           "application-handling__send-information-request-button--disabled")
+               :on-click #(dispatch [:application/confirm-mass-information-request])}
+              "Lähetä"]
+
+             :confirm
+             [:button.application-handling__send-information-request-button.application-handling__send-information-request-button--confirm
+              {:on-click (fn []
+                           (dispatch [:application/submit-mass-information-request (map :key @filtered-applications)]))}
+              "Vahvista " (count @filtered-applications) " viestin lähetys"]
+
+             :submitting
+             [:div.application-handling__information-request-status
+              [:i.zmdi.zmdi-hc-lg.zmdi-spinner.spin.application-handling__information-request-status-icon] "Lähetetään viestejä..."]
+
+             :submitted
+             [:div.application-handling__information-request-status
+              [:i.zmdi.zmdi-hc-lg.zmdi-check-circle.application-handling__information-request-status-icon.application-handling__information-request-status-icon--sent] "Viestit lähetetty!"])]])])))
+
+(def all-hakukohteet-label "Kaikki hakukohteet")
+>>>>>>> Implement mass information requests
 
 (defn- closed-row
   [on-click label]
@@ -363,6 +441,8 @@
     [:div.application-handling__header
      [selected-applications-heading @haku-header @header]
      [:div.editor-form__form-controls-container
+      (when (-> @applications count pos?)
+        [mass-information-request-link])
       (when @show-mass-update-link?
         [mass-update-applications-link])
       (when @show-excel-link?

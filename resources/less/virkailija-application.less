@@ -62,6 +62,10 @@
   cursor: pointer;
 }
 
+.application-handling__mass-information-request-container {
+  position: relative;
+}
+
 .application-handling__mass-edit-review-states-container {
   position: relative;
 }
@@ -933,6 +937,18 @@ and (max-width: 1000px) {
   margin-bottom: 11px;
 }
 
+.application-handling__information-request-status {
+  font-size: 16px;
+}
+
+.application-handling__information-request-status-icon {
+  margin-right: 10px;
+}
+
+.application-handling__information-request-status-icon--sent {
+  color: @processed-green;
+}
+
 .application-handling__information-request-close-button {
   color: #C2C2C2;
   cursor: pointer;
@@ -1022,6 +1038,10 @@ and (max-width: 1000px) {
 
 .application-handling__send-information-request-button--disabled {
   background-color: @section-gray-border;
+}
+
+.application-handling__send-information-request-button--confirm {
+  background-color: @sg-color-red;
 }
 
 .application-handling__send-information-request-button--cursor-pointer {
