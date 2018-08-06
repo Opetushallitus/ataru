@@ -18,14 +18,17 @@
 (defn- email-check-correct-notification
   [email]
   [{:fi [:div
-         [:p "Lähetämme sinulle tärkeitä viestejä sähköpostilla. Varmistathan,
-         että syöttämäsi sähköpostiosoite " [:strong email] " on oikein."]]
+         [:p "Varmista, että antamasi sähköpostiosoite " [:strong email] " on
+         kirjoitettu oikein ja se on henkilökohtainen. Lähetämme sinulle
+         tärkeitä viestejä tähän sähköpostiosoitteeseen."]]
     :sv [:div
-         [:p "Lähetämme sinulle tärkeitä viestejä sähköpostilla. Varmistathan,
-         että syöttämäsi sähköpostiosoite " [:strong email] " on oikein."]]
+         [:p "Varmista, että antamasi sähköpostiosoite " [:strong email] " on
+         kirjoitettu oikein ja se on henkilökohtainen. Lähetämme sinulle
+         tärkeitä viestejä tähän sähköpostiosoitteeseen."]]
     :en [:div
-         [:p "Lähetämme sinulle tärkeitä viestejä sähköpostilla. Varmistathan,
-         että syöttämäsi sähköpostiosoite " [:strong email] " on oikein."]]}])
+         [:p "Varmista, että antamasi sähköpostiosoite " [:strong email] " on
+         kirjoitettu oikein ja se on henkilökohtainen. Lähetämme sinulle
+         tärkeitä viestejä tähän sähköpostiosoitteeseen."]]}])
 
 (defn- email-applied-error
   [email preferred-name]
