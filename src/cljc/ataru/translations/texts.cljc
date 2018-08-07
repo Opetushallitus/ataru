@@ -1276,4 +1276,7 @@
                               :en "Hakijan henkilö-OID"}
    :turvakielto              {:fi "Turvakielto"
                               :sv "Turvakielto"
-                              :en "Turvakielto"}})
+                              :en "Turvakielto"}
+   :notes                    {:fi "Muistiinpanot"
+                              :sv "Muistiinpanot"
+                              :en "Muistiinpanot"}})

@@ -176,7 +176,7 @@
    {:label     (:turvakielto excel-texts)
     :field     [:person :turvakielto]
     :format-fn (fnil (fn [turvakielto] (if turvakielto "kyllä" "ei")) false)}
-   {:label     "Muistiinpanot"
+   {:label     (:notes excel-texts)
     :field     [:application-review-notes]
     :format-fn application-review-notes-formatter}])
 
