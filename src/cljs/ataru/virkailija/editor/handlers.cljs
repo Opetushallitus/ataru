@@ -611,12 +611,6 @@
                           (toggle lang)
                           (if-empty languages)
                           (sort-by (partial index-of lang-order)))))
-        (update-in [:editor :forms selected :name]
-                   (fn [name]
-                     (->> (if (contains? name lang)
-                            (dissoc name lang)
-                            (assoc name lang ""))
-                          (if-empty name))))
         (update-in [:editor :ui]
                    (fn [ui]
                      (clojure.walk/prewalk
