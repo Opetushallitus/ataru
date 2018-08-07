@@ -2,6 +2,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]])
   (:require [ataru.cljs-util :as util :refer [get-virkailija-translation]]
+            [ataru.translations.texts :refer [virkailija-texts]]
             [ataru.virkailija.routes :as routes]
             [cljs.core.async :refer [<! timeout]]
             [cljs.core.match :refer-macros [match]]
@@ -12,24 +13,25 @@
             [taoensso.timbre :refer-macros [spy debug]]))
 
 (def panels
-  {:editor      {:text (get-virkailija-translation :forms-panel) :href "/lomake-editori/editor/"}
-   :application {:text (get-virkailija-translation :applications-panel) :href "/lomake-editori/applications/"}})
+  {:editor      {:text (:forms-panel virkailija-texts) :href "/lomake-editori/editor/"}
+   :application {:text (:applications-panel virkailija-texts) :href "/lomake-editori/applications/"}})
 
-(def right-labels {:form-edit (get-virkailija-translation :form-edit-rights-panel)
-                   :view-applications (get-virkailija-translation :view-applications-rights-panel)
-                   :edit-applications (get-virkailija-translation :edit-applications-rights-panel)})
+(def right-labels {:form-edit (:form-edit-rights-panel virkailija-texts)
+                   :view-applications (:view-applications-rights-panel virkailija-texts)
+                   :edit-applications (:edit-applications-rights-panel virkailija-texts)})
 
 (def active-section-arrow [:i.active-section-arrow.zmdi.zmdi-chevron-down.zmdi-hc-lg])
 
 (defn section-link [panel-kw]
-  (let [active-panel     (subscribe [:active-panel])
-        active?          (reaction (= @active-panel panel-kw))]
+  (let [active-panel (subscribe [:active-panel])
+        active?      (reaction (= @active-panel panel-kw))
+        lang         (subscribe [:editor/virkailija-lang])]
     (fn []
       [:div.section-link {:class (name panel-kw)}
        [:a {:href (-> panels panel-kw :href)}
         (when @active?
           active-section-arrow)
-        (-> panels panel-kw :text)]])))
+        (get-in panels [panel-kw :text @lang])]])))
 
 (defn title []
   (fn []
@@ -42,12 +44,12 @@
   [label]
   (some #(-> label %) [:fi :sv :en]))
 
-(defn create-org-labels [organizations]
+(defn create-org-labels [organizations lang]
   (map
     (fn [org]
       (str (get-label (:name org))
            (when (not-empty (:rights org))
-             (str " (" (string/join ", " (map #(get right-labels (keyword %)) (:rights org))) ")"))))
+             (str " (" (string/join ", " (map #(get-in right-labels [(keyword %) lang]) (:rights org))) ")"))))
    organizations))
 
 (defn- org-label
@@ -76,8 +78,9 @@
           label]))]))
 
 (defn profile []
-  (let [user-info             (subscribe [:state-query [:editor :user-info]])
-        org-select-visible?   (reagent/atom false)]
+  (let [user-info           (subscribe [:state-query [:editor :user-info]])
+        org-select-visible? (reagent/atom false)
+        lang                (subscribe [:editor/virkailija-lang])]
     (fn []
       (when @user-info
         (let [organizations             (:organizations @user-info)
@@ -100,7 +103,7 @@
                  [:ul.profile__organization-select-user-orgs.zmdi-hc-ul]
                  (map
                    (fn [org] [:li [:i.zmdi.zmdi-hc-li.zmdi-accounts] org])
-                   (create-org-labels (or selected-organization organizations))))
+                   (create-org-labels (or selected-organization organizations) @lang)))
                (when selected-organization
                  [:div
                   (when (:superuser? @user-info)

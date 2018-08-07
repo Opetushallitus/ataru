@@ -242,4 +242,4 @@
 (re-frame/reg-sub
   :editor/virkailija-lang
   (fn [db _]
-    (-> db :editor :user-info :lang keyword)))
+    (or (-> db :editor :user-info :lang keyword) :fi)))
