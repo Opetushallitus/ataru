@@ -30,7 +30,7 @@
   #{:text-field
     :text-area
     :dropdown
-    :single-choice
+    :single-choice-button
     :multiple-choice
     :info-element
     :attachment
@@ -41,7 +41,7 @@
   #{:text-field
     :text-area
     :dropdown
-    :single-choice
+    :single-choice-button
     :multiple-choice
     :info-element
     :attachment

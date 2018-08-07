@@ -758,7 +758,7 @@
          (let [header (case field-type
                         "dropdown" (get-virkailija-translation :dropdown)
                         "singleChoice" (get-virkailija-translation :single-choice-button)
-                        "multipleChoice" (get-virkailija-translation :multiple-choice-button))]
+                        "multipleChoice" (get-virkailija-translation :multiple-choice))]
            [text-header header path (:metadata initial-content)])
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__multi-question-wrapper

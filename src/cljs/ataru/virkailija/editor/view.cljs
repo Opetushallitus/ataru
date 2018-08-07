@@ -196,9 +196,9 @@
     [:div.editor-form__toolbar
      [:div.editor-form__toolbar-left
       [:div.editor-form__language-controls
-       (map (fn [lang-kwd]
-              (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages)) @lang))
-            (keys lang-versions))]
+       (doall (map (fn [lang-kwd]
+                     (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages)) @lang))
+                   (keys lang-versions)))]
       [:div.editor-form__preview-buttons
        [:a.editor-form__email-template-editor-link
         {:on-click #(dispatch [:editor/toggle-email-template-editor])}
