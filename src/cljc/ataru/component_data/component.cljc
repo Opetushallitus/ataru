@@ -184,7 +184,9 @@
   (assoc (form-section metadata)
          :id "lupatiedot"
          :label (:permissions texts/translation-mapping)
-         :children [(koulutusmarkkinointilupa metadata)
+         :children [(assoc (info-element metadata)
+                           :text (:lupatiedot-info texts/translation-mapping))
+                    (koulutusmarkkinointilupa metadata)
                     (valintatuloksen-julkaisulupa metadata)
                     (asiointikieli metadata)]))
 
