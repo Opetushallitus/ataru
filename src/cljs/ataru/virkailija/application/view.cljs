@@ -157,7 +157,7 @@
               {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state not)}
               (get-virkailija-translation :mass-edit)])
            (when @element-visible?
-             [:div.application-handling__mass-edit-review-states-popup
+             [:div.application-handling__mass-edit-review-states-popup.application-handling__popup
               [:div.application-handling__popup-close-button
                {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state false)}
                [:i.zmdi.zmdi-close]]
@@ -252,7 +252,7 @@
         {:on-click #(swap! element-visible? not)}
         "Massaviesti"]
        (when @element-visible?
-         [:div.application-handling__mass-edit-review-states-popup
+         [:div.application-handling__popup.application-handling__mass-information-request-popup
           [:div.application-handling__popup-close-button
            {:on-click #(reset! element-visible? false)}
            [:i.zmdi.zmdi-close]]
@@ -269,7 +269,7 @@
               :maxLength 78
               :on-change #(dispatch [:application/set-mass-information-request-subject (-> % .-target .-value)])}]]]
           [:div.application-handling__information-request-row
-           [:textarea.application-handling__information-request-message-area
+           [:textarea.application-handling__information-request-message-area.application-handling__information-request-message-area--large
             {:value     @message
              :on-change #(dispatch [:application/set-mass-information-request-message (-> % .-target .-value)])}]]
           [application-information-request-contains-modification-link]
