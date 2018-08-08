@@ -569,714 +569,714 @@
 
 (def virkailija-texts
   {:new-form                                 {:fi "Uusi lomake"
-                                              :sv "Uusi lomake"
-                                              :en "Uusi lomake"}
+                                              :sv "SV: Uusi lomake"
+                                              :en "EN: Uusi lomake"}
    :copy-form                                {:fi "Kopioi lomake"
-                                              :sv "Kopioi lomake"
-                                              :en "Kopioi lomake"}
+                                              :sv "SV: Kopioi lomake"
+                                              :en "EN: Kopioi lomake"}
    :delete-form                              {:fi "Poista lomake"
-                                              :sv "Poista lomake"
-                                              :en "Poista lomake"}
+                                              :sv "SV: Poista lomake"
+                                              :en "EN: Poista lomake"}
    :confirm-delete                           {:fi "Vahvista poisto"
-                                              :sv "Vahvista poisto"
-                                              :en "Vahvista poisto"}
+                                              :sv "SV: Vahvista poisto"
+                                              :en "EN: Vahvista poisto"}
    :forms                                    {:fi "Lomakkeet"
-                                              :sv "Lomakkeet"
-                                              :en "Lomakkeet"}
+                                              :sv "SV: Lomakkeet"
+                                              :en "EN: Lomakkeet"}
    :form-name                                {:fi "Lomakkeen nimi"
-                                              :sv "Lomakkeen nimi"
-                                              :en "Lomakkeen nimi"}
+                                              :sv "SV: Lomakkeen nimi"
+                                              :en "EN: Lomakkeen nimi"}
    :group                                    {:fi "ryhmä"
-                                              :sv "ryhmä"
-                                              :en "ryhmä"}
+                                              :sv "SV: ryhmä"
+                                              :en "EN: ryhmä"}
    :close                                    {:fi "sulje"
-                                              :sv "sulje"
-                                              :en "sulje"}
+                                              :sv "SV: sulje"
+                                              :en "EN: sulje"}
    :open                                     {:fi "avaa"
-                                              :sv "avaa"
-                                              :en "avaa"}
+                                              :sv "SV: avaa"
+                                              :en "EN: avaa"}
    :sections                                 {:fi "osiot"
-                                              :sv "osiot"
-                                              :en "osiot"}
+                                              :sv "SV: osiot"
+                                              :en "EN: osiot"}
    :form-locked                              {:fi "Lomakkeen muokkaus on estetty"
-                                              :sv "Lomakkeen muokkaus on estetty"
-                                              :en "Lomakkeen muokkaus on estetty"}
+                                              :sv "SV: Lomakkeen muokkaus on estetty"
+                                              :en "EN: Lomakkeen muokkaus on estetty"}
    :remove-lock                              {:fi "Poista lukitus"
-                                              :sv "Poista lukitus"
-                                              :en "Poista lukitus"}
+                                              :sv "SV: Poista lukitus"
+                                              :en "EN: Poista lukitus"}
    :lock-form                                {:fi "Lukitse lomake"
-                                              :sv "Lukitse lomake"
-                                              :en "Lukitse lomake"}
+                                              :sv "SV: Lukitse lomake"
+                                              :en "EN: Lukitse lomake"}
    :edit-email-templates                     {:fi "Muokkaa sähköpostipohjia"
-                                              :sv "Muokkaa sähköpostipohjia"
-                                              :en "Muokkaa sähköpostipohjia"}
+                                              :sv "SV: Muokkaa sähköpostipohjia"
+                                              :en "EN: Muokkaa sähköpostipohjia"}
    :used-by-haku                             {:fi "Tämä lomake on haun käytössä"
-                                              :sv "Tämä lomake on haun käytössä"
-                                              :en "Tämä lomake on haun käytössä"}
+                                              :sv "SV: Tämä lomake on haun käytössä"
+                                              :en "EN: Tämä lomake on haun käytössä"}
    :used-by-haut                             {:fi "Tämä lomake on seuraavien hakujen käytössä"
-                                              :sv "Tämä lomake on seuraavien hakujen käytössä"
-                                              :en "Tämä lomake on seuraavien hakujen käytössä"}
+                                              :sv "SV: Tämä lomake on seuraavien hakujen käytössä"
+                                              :en "EN: Tämä lomake on seuraavien hakujen käytössä"}
    :test-application                         {:fi "Testihakemus / Virkailijatäyttö"
-                                              :sv "Testihakemus / Virkailijatäyttö"
-                                              :en "Testihakemus / Virkailijatäyttö"}
+                                              :sv "SV: Testihakemus / Virkailijatäyttö"
+                                              :en "EN: Testihakemus / Virkailijatäyttö"}
    :form                                     {:fi "Lomake"
-                                              :sv "Lomake"
-                                              :en "Lomake"}
+                                              :sv "SV: Lomake"
+                                              :en "EN: Lomake"}
    :link-to-form                             {:fi "Linkki lomakkeeseen"
-                                              :sv "Linkki lomakkeeseen"
-                                              :en "Linkki lomakkeeseen"}
+                                              :sv "SV: Linkki lomakkeeseen"
+                                              :en "EN: Linkki lomakkeeseen"}
    :hakukohde-info                           {:fi "Tässä hakija voi valita hakukohteet. Hakukohteiden määrä ja priorisointi määritetään haun asetuksissa."
-                                              :sv "Tässä hakija voi valita hakukohteet. Hakukohteiden määrä ja priorisointi määritetään haun asetuksissa."
-                                              :en "Tässä hakija voi valita hakukohteet. Hakukohteiden määrä ja priorisointi määritetään haun asetuksissa."}
+                                              :sv "SV: Tässä hakija voi valita hakukohteet. Hakukohteiden määrä ja priorisointi määritetään haun asetuksissa."
+                                              :en "EN: Tässä hakija voi valita hakukohteet. Hakukohteiden määrä ja priorisointi määritetään haun asetuksissa."}
    :required                                 {:fi "Pakollinen tieto"
-                                              :sv "Pakollinen tieto"
-                                              :en "Pakollinen tieto"}
+                                              :sv "SV: Pakollinen tieto"
+                                              :en "EN: Pakollinen tieto"}
    :multiple-answers                         {:fi "Vastaaja voi lisätä useita vastauksia"
-                                              :sv "Vastaaja voi lisätä useita vastauksia"
-                                              :en "Vastaaja voi lisätä useita vastauksia"}
+                                              :sv "SV: Vastaaja voi lisätä useita vastauksia"
+                                              :en "EN: Vastaaja voi lisätä useita vastauksia"}
    :show-more                                {:fi "Näytä lisää.."
-                                              :sv "Näytä lisää.."
-                                              :en "Näytä lisää.."}
+                                              :sv "SV: Näytä lisää.."
+                                              :en "EN: Näytä lisää.."}
    :set-haku-to-form                         {:fi "Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."
-                                              :sv "Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."
-                                              :en "Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."}
+                                              :sv "SV: Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."
+                                              :en "EN: Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."}
    :visibility-on-form                       {:fi "Näkyvyys lomakkeella:"
-                                              :sv "Näkyvyys lomakkeella:"
-                                              :en "Näkyvyys lomakkeella:"}
+                                              :sv "SV: Näkyvyys lomakkeella:"
+                                              :en "EN: Näkyvyys lomakkeella:"}
    :visible-to-all                           {:fi "näkyy kaikille"
-                                              :sv "näkyy kaikille"
-                                              :en "näkyy kaikille"}
+                                              :sv "SV: näkyy kaikille"
+                                              :en "EN: näkyy kaikille"}
    :visible-to-hakukohteet                   {:fi "vain valituille hakukohteille"
-                                              :sv "vain valituille hakukohteille"
-                                              :en "vain valituille hakukohteille"}
+                                              :sv "SV: vain valituille hakukohteille"
+                                              :en "EN: vain valituille hakukohteille"}
    :remove                                   {:fi "Poista"
-                                              :sv "Poista"
-                                              :en "Poista"}
+                                              :sv "SV: Poista"
+                                              :en "EN: Poista"}
    :copy-question-id                         {:fi "Kopioi kysymyksen tunniste leikepöydälle"
-                                              :sv "Kopioi kysymyksen tunniste leikepöydälle"
-                                              :en "Kopioi kysymyksen tunniste leikepöydälle"}
+                                              :sv "SV: Kopioi kysymyksen tunniste leikepöydälle"
+                                              :en "EN: Kopioi kysymyksen tunniste leikepöydälle"}
    :created-by                               {:fi "Luonut"
-                                              :sv "Luonut"
-                                              :en "Luonut"}
+                                              :sv "SV: Luonut"
+                                              :en "EN: Luonut"}
    :last-modified-by                         {:fi "viimeksi muokannut"
-                                              :sv "viimeksi muokannut"
-                                              :en "viimeksi muokannut"}
+                                              :sv "SV: viimeksi muokannut"
+                                              :en "EN: viimeksi muokannut"}
    :md-help-title                            {:fi "# otsikko (# ylin - ###### alin)"
-                                              :sv "# otsikko (# högsta - ###### lägst)"
-                                              :en "# title (# highest - ###### lowest)"}
+                                              :sv "SV: # otsikko (# högsta - ###### lägst)"
+                                              :en "EN: # title (# highest - ###### lowest)"}
    :md-help-bold                             {:fi "**lihavoitava sisältö**"
-                                              :sv "**fetstil innehåll**"
-                                              :en "**bold content**"}
+                                              :sv "SV: **fetstil innehåll**"
+                                              :en "EN: **bold content**"}
    :md-help-cursive                          {:fi "*kursivoitava sisältö*"
-                                              :sv "*i kursiv stil*"
-                                              :en "*cursive content*"}
+                                              :sv "SV: *i kursiv stil*"
+                                              :en "EN: *cursive content*"}
    :md-help-link                             {:fi "[linkin teksti](http://linkin osoite)"
-                                              :sv "[länkens text](http://länkens adress)"
-                                              :en "[link text](http://link address)"}
+                                              :sv "SV: [länkens text](http://länkens adress)"
+                                              :en "EN: [link text](http://link address)"}
    :md-help-more                             {:fi "Lisää muotoiluohjeita"
-                                              :sv "Lisää muotoiluohjeita"
-                                              :en "Lisää muotoiluohjeita"}
+                                              :sv "SV: Lisää muotoiluohjeita"
+                                              :en "EN: Lisää muotoiluohjeita"}
    :info-addon                               {:fi "Kysymys sisältää ohjetekstin"
-                                              :sv "Kysymys sisältää ohjetekstin"
-                                              :en "Kysymys sisältää ohjetekstin"}
+                                              :sv "SV: Kysymys sisältää ohjetekstin"
+                                              :en "EN: Kysymys sisältää ohjetekstin"}
    :collapse-info-text                       {:fi "Pienennä pitkä ohjeteksti"
-                                              :sv "Pienennä pitkä ohjeteksti"
-                                              :en "Pienennä pitkä ohjeteksti"}
+                                              :sv "SV: Pienennä pitkä ohjeteksti"
+                                              :en "EN: Pienennä pitkä ohjeteksti"}
    :shape                                    {:fi "Muoto:"
-                                              :sv "Muoto:"
-                                              :en "Muoto:"}
+                                              :sv "SV: Muoto:"
+                                              :en "EN: Muoto:"}
    :integer                                  {:fi "kokonaisluku"
-                                              :sv "heltal"
-                                              :en "integer"}
+                                              :sv "SV: heltal"
+                                              :en "EN: integer"}
    :decimals                                 {:fi "desimaalia"
-                                              :sv "decimaler"
-                                              :en "decimals"}
+                                              :sv "SV: decimaler"
+                                              :en "EN: decimals"}
    :only-numeric                             {:fi "Kenttään voi täyttää vain numeroita"
-                                              :sv "Kenttään voi täyttää vain numeroita"
-                                              :en "Kenttään voi täyttää vain numeroita"}
+                                              :sv "SV: Kenttään voi täyttää vain numeroita"
+                                              :en "EN: Kenttään voi täyttää vain numeroita"}
    :question                                 {:fi "Kysymys"
-                                              :sv "Kysymys"
-                                              :en "Kysymys"}
+                                              :sv "SV: Kysymys"
+                                              :en "EN: Kysymys"}
    :max-characters                           {:fi "Max. merkkimäärä"
-                                              :sv "Max. merkkimäärä"
-                                              :en "Max. merkkimäärä"}
+                                              :sv "SV: Max. merkkimäärä"
+                                              :en "EN: Max. merkkimäärä"}
    :text-field                               {:fi "Tekstikenttä"
-                                              :sv "Tekstikenttä"
-                                              :en "Tekstikenttä"}
+                                              :sv "SV: Tekstikenttä"
+                                              :en "EN: Tekstikenttä"}
    :text-field-size                          {:fi "Tekstikentän koko"
-                                              :sv "Tekstikentän koko"
-                                              :en "Tekstikentän koko"}
+                                              :sv "SV: Tekstikentän koko"
+                                              :en "EN: Tekstikentän koko"}
    :text-area                                {:fi "Tekstialue"
-                                              :sv "Tekstialue"
-                                              :en "Tekstialue"}
+                                              :sv "SV: Tekstialue"
+                                              :en "EN: Tekstialue"}
    :text-area-size                           {:fi "Tekstialueen koko"
-                                              :sv "Tekstialueen koko"
-                                              :en "Tekstialueen koko"}
+                                              :sv "SV: Tekstialueen koko"
+                                              :en "EN: Tekstialueen koko"}
    :custom-choice-label                      {:fi "Omat vastausvaihtoehdot"
-                                              :sv "Omat vastausvaihtoehdot"
-                                              :en "Omat vastausvaihtoehdot"}
+                                              :sv "SV: Omat vastausvaihtoehdot"
+                                              :en "EN: Omat vastausvaihtoehdot"}
    :koodisto                                 {:fi "Koodisto"
-                                              :sv "Koodisto"
-                                              :en "Koodisto"}
+                                              :sv "SV: Koodisto"
+                                              :en "EN: Koodisto"}
    :show-options                             {:fi "Näytä vastausvaihtoehdot"
-                                              :sv "Näytä vastausvaihtoehdot"
-                                              :en "Näytä vastausvaihtoehdot"}
+                                              :sv "SV: Näytä vastausvaihtoehdot"
+                                              :en "EN: Näytä vastausvaihtoehdot"}
    :hide-options                             {:fi "Sulje vastausvaihtoehdot"
-                                              :sv "Sulje vastausvaihtoehdot"
-                                              :en "Sulje vastausvaihtoehdot"}
+                                              :sv "SV: Sulje vastausvaihtoehdot"
+                                              :en "EN: Sulje vastausvaihtoehdot"}
    :dropdown                                 {:fi "Pudotusvalikko"
-                                              :sv "Pudotusvalikko"
-                                              :en "Pudotusvalikko"}
+                                              :sv "SV: Pudotusvalikko"
+                                              :en "EN: Pudotusvalikko"}
    :single-choice-button                     {:fi "Painikkeet, yksi valittavissa"
-                                              :sv "Painikkeet, yksi valittavissa"
-                                              :en "Painikkeet, yksi valittavissa"}
+                                              :sv "SV: Painikkeet, yksi valittavissa"
+                                              :en "EN: Painikkeet, yksi valittavissa"}
    :multiple-choice                          {:fi "Lista, monta valittavissa"
-                                              :sv "Lista, monta valittavissa"
-                                              :en "Lista, monta valittavissa"}
+                                              :sv "SV: Lista, monta valittavissa"
+                                              :en "EN: Lista, monta valittavissa"}
    :options                                  {:fi "Vastausvaihtoehdot"
-                                              :sv "Vastausvaihtoehdot"
-                                              :en "Vastausvaihtoehdot"}
+                                              :sv "SV: Vastausvaihtoehdot"
+                                              :en "EN: Vastausvaihtoehdot"}
    :alphabetically                           {:fi "Aakkosjärjestyksessä"
-                                              :sv "Aakkosjärjestyksessä"
-                                              :en "Aakkosjärjestyksessä"}
+                                              :sv "SV: Aakkosjärjestyksessä"
+                                              :en "EN: Aakkosjärjestyksessä"}
    :add                                      {:fi "Lisää"
-                                              :sv "Lägg till"
-                                              :en "Add more"}
+                                              :sv "SV: Lägg till"
+                                              :en "EN: Add more"}
    :wrapper-element                          {:fi "Lomakeosio"
-                                              :sv "Lomakeosio"
-                                              :en "Lomakeosio"}
+                                              :sv "SV: Lomakeosio"
+                                              :en "EN: Lomakeosio"}
    :question-group                           {:fi "Kysymysryhmä"
-                                              :sv "Kysymysryhmä"
-                                              :en "Kysymysryhmä"}
+                                              :sv "SV: Kysymysryhmä"
+                                              :en "EN: Kysymysryhmä"}
    :wrapper-header                           {:fi "Osion nimi"
-                                              :sv "Osion nimi"
-                                              :en "Osion nimi"}
+                                              :sv "SV: Osion nimi"
+                                              :en "EN: Osion nimi"}
    :group-header                             {:fi "Kysymysryhmän otsikko"
-                                              :sv "Kysymysryhmän otsikko"
-                                              :en "Kysymysryhmän otsikko"}
+                                              :sv "SV: Kysymysryhmän otsikko"
+                                              :en "EN: Kysymysryhmän otsikko"}
    :contains-fields                          {:fi "Sisältää kentät:"
-                                              :sv "Sisältää kentät:"
-                                              :en "Sisältää kentät:"}
+                                              :sv "SV: Sisältää kentät:"
+                                              :en "EN: Sisältää kentät:"}
    :info-element                             {:fi "Infoteksti"
-                                              :sv "Infoteksti"
-                                              :en "Infoteksti"}
+                                              :sv "SV: Infoteksti"
+                                              :en "EN: Infoteksti"}
    :title                                    {:fi "Otsikko"
-                                              :sv "Otsikko"
-                                              :en "Otsikko"}
+                                              :sv "SV: Otsikko"
+                                              :en "EN: Otsikko"}
    :text                                     {:fi "Teksti"
-                                              :sv "Teksti"
-                                              :en "Teksti"}
+                                              :sv "SV: Teksti"
+                                              :en "EN: Teksti"}
    :adjacent-fieldset                        {:fi "Vierekkäiset tekstikentät"
-                                              :sv "Vierekkäiset tekstikentät"
-                                              :en "Vierekkäiset tekstikentät"}
+                                              :sv "SV: Vierekkäiset tekstikentät"
+                                              :en "EN: Vierekkäiset tekstikentät"}
    :attachment-info-text                     {:fi "Liitepyyntö sisältää ohjetekstin"
-                                              :sv "Liitepyyntö sisältää ohjetekstin"
-                                              :en "Liitepyyntö sisältää ohjetekstin"}
+                                              :sv "SV: Liitepyyntö sisältää ohjetekstin"
+                                              :en "EN: Liitepyyntö sisältää ohjetekstin"}
    :attachment                               {:fi "Liitepyyntö"
-                                              :sv "Liitepyyntö"
-                                              :en "Liitepyyntö"}
+                                              :sv "SV: Liitepyyntö"
+                                              :en "EN: Liitepyyntö"}
    :attachment-name                          {:fi "Liitteen nimi"
-                                              :sv "Liitteen nimi"
-                                              :en "Liitteen nimi"}
+                                              :sv "SV: Liitteen nimi"
+                                              :en "EN: Liitteen nimi"}
    :checking                                 {:fi "Tarkastetaan"
-                                              :sv "Tarkastetaan"
-                                              :en "Tarkastetaan"}
+                                              :sv "SV: Tarkastetaan"
+                                              :en "EN: Tarkastetaan"}
    :virus-found                              {:fi "Virus löytyi"
-                                              :sv "Virus löytyi"
-                                              :en "Virus löytyi"}
+                                              :sv "SV: Virus löytyi"
+                                              :en "EN: Virus löytyi"}
    :error                                    {:fi "Virhe"
-                                              :sv "Virhe"
-                                              :en "Virhe"}
+                                              :sv "SV: Virhe"
+                                              :en "EN: Virhe"}
    :unknown-option                           {:fi "Tuntematon vastausvaihtoehto"
-                                              :sv "Tuntematon vastausvaihtoehto"
-                                              :en "Tuntematon vastausvaihtoehto"}
+                                              :sv "SV: Tuntematon vastausvaihtoehto"
+                                              :en "EN: Tuntematon vastausvaihtoehto"}
    :load-excel                               {:fi "Lataa Excel"
-                                              :sv "Lataa Excel"
-                                              :en "Lataa Excel"}
+                                              :sv "SV: Lataa Excel"
+                                              :en "EN: Lataa Excel"}
    :mass-edit                                {:fi "Massamuutos"
-                                              :sv "Massamuutos"
-                                              :en "Massamuutos"}
+                                              :sv "SV: Massamuutos"
+                                              :en "EN: Massamuutos"}
    :from-state                               {:fi "Tilasta"
-                                              :sv "Tilasta"
-                                              :en "Tilasta"}
+                                              :sv "SV: Tilasta"
+                                              :en "EN: Tilasta"}
    :to-state                                 {:fi "Muutetaan tilaan"
-                                              :sv "Muutetaan tilaan"
-                                              :en "Muutetaan tilaan"}
+                                              :sv "SV: Muutetaan tilaan"
+                                              :en "EN: Muutetaan tilaan"}
    :change                                   {:fi "Muuta"
-                                              :sv "Muuta"
-                                              :en "Muuta"}
+                                              :sv "SV: Muuta"
+                                              :en "EN: Muuta"}
    :confirm-change                           {:fi "Vahvista muutos"
-                                              :sv "Vahvista muutos"
-                                              :en "Vahvista muutos"}
+                                              :sv "SV: Vahvista muutos"
+                                              :en "EN: Vahvista muutos"}
    :all-hakukohteet                          {:fi "Kaikki hakukohteet"
-                                              :sv "Kaikki hakukohteet"
-                                              :en "Kaikki hakukohteet"}
+                                              :sv "SV: Kaikki hakukohteet"
+                                              :en "EN: Kaikki hakukohteet"}
    :ensisijaisesti                           {:fi "Hakenut ensisijaisesti"
-                                              :sv "Hakenut ensisijaisesti"
-                                              :en "Hakenut ensisijaisesti"}
+                                              :sv "SV: Hakenut ensisijaisesti"
+                                              :en "EN: Hakenut ensisijaisesti"}
    :unprocessed                              {:fi "Käsittelemättä"
-                                              :sv "Käsittelemättä"
-                                              :en "Käsittelemättä"}
+                                              :sv "SV: Käsittelemättä"
+                                              :en "EN: Käsittelemättä"}
    :incomplete                               {:fi "Kesken"
-                                              :sv "Kesken"
-                                              :en "Kesken"}
+                                              :sv "SV: Kesken"
+                                              :en "EN: Kesken"}
    :unknown                                  {:fi "Tuntematon"
-                                              :sv "Tuntematon"
-                                              :en "Tuntematon"}
+                                              :sv "SV: Tuntematon"
+                                              :en "EN: Tuntematon"}
    :all                                      {:fi "Kaikki"
-                                              :sv "Kaikki"
-                                              :en "Kaikki"}
+                                              :sv "SV: Kaikki"
+                                              :en "EN: Kaikki"}
    :last-modified                            {:fi "Viimeksi muokattu"
-                                              :sv "Viimeksi muokattu"
-                                              :en "Viimeksi muokattu"}
+                                              :sv "SV: Viimeksi muokattu"
+                                              :en "EN: Viimeksi muokattu"}
    :submitted-at                             {:fi "Hakemus jätetty"
-                                              :sv "Hakemus jätetty"
-                                              :en "Hakemus jätetty"}
+                                              :sv "SV: Hakemus jätetty"
+                                              :en "EN: Hakemus jätetty"}
    :pohjakoulutus_yo                         {:fi "Suomessa suoritettu ylioppilastutkinto"
-                                              :sv "Suomessa suoritettu ylioppilastutkinto"
-                                              :en "Suomessa suoritettu ylioppilastutkinto"}
+                                              :sv "SV: Suomessa suoritettu ylioppilastutkinto"
+                                              :en "EN: Suomessa suoritettu ylioppilastutkinto"}
    :pohjakoulutus_lk                         {:fi "Suomessa suoritettu lukion oppimäärä ilman ylioppilastutkintoa"
-                                              :sv "Suomessa suoritettu lukion oppimäärä ilman ylioppilastutkintoa"
-                                              :en "Suomessa suoritettu lukion oppimäärä ilman ylioppilastutkintoa"}
+                                              :sv "SV: Suomessa suoritettu lukion oppimäärä ilman ylioppilastutkintoa"
+                                              :en "EN: Suomessa suoritettu lukion oppimäärä ilman ylioppilastutkintoa"}
    :pohjakoulutus_yo_kansainvalinen_suomessa {:fi "Suomessa suoritettu kansainvälinen ylioppilastutkinto"
-                                              :sv "Suomessa suoritettu kansainvälinen ylioppilastutkinto"
-                                              :en "Suomessa suoritettu kansainvälinen ylioppilastutkinto"}
+                                              :sv "SV: Suomessa suoritettu kansainvälinen ylioppilastutkinto"
+                                              :en "EN: Suomessa suoritettu kansainvälinen ylioppilastutkinto"}
    :pohjakoulutus_yo_ammatillinen            {:fi "Ammatillinen perustutkinto ja ylioppilastutkinto (kaksoistutkinto)"
-                                              :sv "Ammatillinen perustutkinto ja ylioppilastutkinto (kaksoistutkinto)"
-                                              :en "Ammatillinen perustutkinto ja ylioppilastutkinto (kaksoistutkinto)"}
+                                              :sv "SV: Ammatillinen perustutkinto ja ylioppilastutkinto (kaksoistutkinto)"
+                                              :en "EN: Ammatillinen perustutkinto ja ylioppilastutkinto (kaksoistutkinto)"}
    :pohjakoulutus_am                         {:fi "Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"
-                                              :sv "Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"
-                                              :en "Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"}
+                                              :sv "SV: Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"
+                                              :en "EN: Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"}
    :pohjakoulutus_amt                        {:fi "Suomessa suoritettu ammatti- tai erikoisammattitutkinto"
-                                              :sv "Suomessa suoritettu ammatti- tai erikoisammattitutkinto"
-                                              :en "Suomessa suoritettu ammatti- tai erikoisammattitutkinto"}
+                                              :sv "SV: Suomessa suoritettu ammatti- tai erikoisammattitutkinto"
+                                              :en "EN: Suomessa suoritettu ammatti- tai erikoisammattitutkinto"}
    :pohjakoulutus_kk                         {:fi "Suomessa suoritettu korkeakoulututkinto"
-                                              :sv "Suomessa suoritettu korkeakoulututkinto"
-                                              :en "Suomessa suoritettu korkeakoulututkinto"}
+                                              :sv "SV: Suomessa suoritettu korkeakoulututkinto"
+                                              :en "EN: Suomessa suoritettu korkeakoulututkinto"}
    :pohjakoulutus_yo_ulkomainen              {:fi "Muualla kuin Suomessa suoritettu kansainvälinen ylioppilastutkinto"
-                                              :sv "Muualla kuin Suomessa suoritettu kansainvälinen ylioppilastutkinto"
-                                              :en "Muualla kuin Suomessa suoritettu kansainvälinen ylioppilastutkinto"}
+                                              :sv "SV: Muualla kuin Suomessa suoritettu kansainvälinen ylioppilastutkinto"
+                                              :en "EN: Muualla kuin Suomessa suoritettu kansainvälinen ylioppilastutkinto"}
    :pohjakoulutus_kk_ulk                     {:fi "Muualla kuin Suomessa suoritettu korkeakoulututkinto"
-                                              :sv "Muualla kuin Suomessa suoritettu korkeakoulututkinto"
-                                              :en "Muualla kuin Suomessa suoritettu korkeakoulututkinto"}
+                                              :sv "SV: Muualla kuin Suomessa suoritettu korkeakoulututkinto"
+                                              :en "EN: Muualla kuin Suomessa suoritettu korkeakoulututkinto"}
    :pohjakoulutus_ulk                        {:fi "Muualla kuin Suomessa suoritettu muu tutkinto, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun"
-                                              :sv "Muualla kuin Suomessa suoritettu muu tutkinto, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun"
-                                              :en "Muualla kuin Suomessa suoritettu muu tutkinto, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun"}
+                                              :sv "SV: Muualla kuin Suomessa suoritettu muu tutkinto, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun"
+                                              :en "EN: Muualla kuin Suomessa suoritettu muu tutkinto, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun"}
    :pohjakoulutus_avoin                      {:fi "Korkeakoulun edellyttämät avoimen korkeakoulun opinnot"
-                                              :sv "Korkeakoulun edellyttämät avoimen korkeakoulun opinnot"
-                                              :en "Korkeakoulun edellyttämät avoimen korkeakoulun opinnot"}
+                                              :sv "SV: Korkeakoulun edellyttämät avoimen korkeakoulun opinnot"
+                                              :en "EN: Korkeakoulun edellyttämät avoimen korkeakoulun opinnot"}
    :pohjakoulutus_muu                        {:fi "Muu korkeakoulukelpoisuus"
-                                              :sv "Muu korkeakoulukelpoisuus"
-                                              :en "Muu korkeakoulukelpoisuus"}
+                                              :sv "SV: Muu korkeakoulukelpoisuus"
+                                              :en "EN: Muu korkeakoulukelpoisuus"}
    :filter-applications                      {:fi "Rajaa hakemuksia"
-                                              :sv "Rajaa hakemuksia"
-                                              :en "Rajaa hakemuksia"}
+                                              :sv "SV: Rajaa hakemuksia"
+                                              :en "EN: Rajaa hakemuksia"}
    :remove-filters                           {:fi "Poista rajaimet"
-                                              :sv "Poista rajaimet"
-                                              :en "Poista rajaimet"}
+                                              :sv "SV: Poista rajaimet"
+                                              :en "EN: Poista rajaimet"}
    :identifying                              {:fi "Yksilöinti"
-                                              :sv "Yksilöinti"
-                                              :en "Yksilöinti"}
+                                              :sv "SV: Yksilöinti"
+                                              :en "EN: Yksilöinti"}
    :unidentified                             {:fi "Yksilöimättömät"
-                                              :sv "Yksilöimättömät"
-                                              :en "Yksilöimättömät"}
+                                              :sv "SV: Yksilöimättömät"
+                                              :en "EN: Yksilöimättömät"}
    :identified                               {:fi "Yksilöidyt"
-                                              :sv "Yksilöidyt"
-                                              :en "Yksilöidyt"}
+                                              :sv "SV: Yksilöidyt"
+                                              :en "EN: Yksilöidyt"}
    :handling-notes                           {:fi "Käsittelymerkinnät"
-                                              :sv "Käsittelymerkinnät"
-                                              :en "Käsittelymerkinnät"}
+                                              :sv "SV: Käsittelymerkinnät"
+                                              :en "EN: Käsittelymerkinnät"}
    :base-education                           {:fi "Pohjakoulutus"
-                                              :sv "Pohjakoulutus"
-                                              :en "Pohjakoulutus"}
+                                              :sv "SV: Pohjakoulutus"
+                                              :en "EN: Pohjakoulutus"}
    :applicant                                {:fi "Hakija"
-                                              :sv "Hakija"
-                                              :en "Hakija"}
+                                              :sv "SV: Hakija"
+                                              :en "EN: Hakija"}
    :attachments                              {:fi "Liitepyynnöt"
-                                              :sv "Liitepyynnöt"
-                                              :en "Liitepyynnöt"}
+                                              :sv "SV: Liitepyynnöt"
+                                              :en "EN: Liitepyynnöt"}
    :processing-state                         {:fi "Käsittelyvaihe"
-                                              :sv "Käsittelyvaihe"
-                                              :en "Käsittelyvaihe"}
+                                              :sv "SV: Käsittelyvaihe"
+                                              :en "EN: Käsittelyvaihe"}
    :selection                                {:fi "Valinta"
-                                              :sv "Valinta"
-                                              :en "Valinta"}
+                                              :sv "SV: Valinta"
+                                              :en "EN: Valinta"}
    :application-state                        {:fi "Hakemuksen tila"
-                                              :sv "Hakemuksen tila"
-                                              :en "Hakemuksen tila"}
+                                              :sv "SV: Hakemuksen tila"
+                                              :en "EN: Hakemuksen tila"}
    :active                                   {:fi "Aktiivinen"
-                                              :sv "Aktiivinen"
-                                              :en "Aktiivinen"}
+                                              :sv "SV: Aktiivinen"
+                                              :en "EN: Aktiivinen"}
    :passive                                  {:fi "Passiivinen"
-                                              :sv "Passiivinen"
-                                              :en "Passiivinen"}
+                                              :sv "SV: Passiivinen"
+                                              :en "EN: Passiivinen"}
    :hakukohteet                              {:fi "Hakukohteet"
-                                              :sv "Hakukohteet"
-                                              :en "Hakukohteet"}
+                                              :sv "SV: Hakukohteet"
+                                              :en "EN: Hakukohteet"}
    :rejection-reason                         {:fi "Hylkäyksen syy.."
-                                              :sv "Hylkäyksen syy.."
-                                              :en "Hylkäyksen syy.."}
+                                              :sv "SV: Hylkäyksen syy.."
+                                              :en "EN: Hylkäyksen syy.."}
    :save                                     {:fi "Tallenna"
-                                              :sv "Tallenna"
-                                              :en "Tallenna"}
+                                              :sv "SV: Tallenna"
+                                              :en "EN: Tallenna"}
    :eligibility-set-automatically            {:fi "Hakukelpoisuus asetettu automaattisesti"
-                                              :sv "Hakukelpoisuus asetettu automaattisesti"
-                                              :en "Hakukelpoisuus asetettu automaattisesti"}
+                                              :sv "SV: Hakukelpoisuus asetettu automaattisesti"
+                                              :en "EN: Hakukelpoisuus asetettu automaattisesti"}
    :compare                                  {:fi "Vertaile"
-                                              :sv "Vertaile"
-                                              :en "Vertaile"}
+                                              :sv "SV: Vertaile"
+                                              :en "EN: Vertaile"}
    :from-applicant                           {:fi "Hakijalta"
-                                              :sv "Hakijalta"
-                                              :en "Hakijalta"}
+                                              :sv "SV: Hakijalta"
+                                              :en "EN: Hakijalta"}
    :changes                                  {:fi "muutosta"
-                                              :sv "muutosta"
-                                              :en "muutosta"}
+                                              :sv "SV: muutosta"
+                                              :en "EN: muutosta"}
    :did                                      {:fi "teki"
-                                              :sv "teki"
-                                              :en "teki"}
+                                              :sv "SV: teki"
+                                              :en "EN: teki"}
    :application-received                     {:fi "Hakemus vastaanotettu"
-                                              :sv "Hakemus vastaanotettu"
-                                              :en "Hakemus vastaanotettu"}
+                                              :sv "SV: Hakemus vastaanotettu"
+                                              :en "EN: Hakemus vastaanotettu"}
    :submitted-application                    {:fi "syötti hakemuksen"
-                                              :sv "syötti hakemuksen"
-                                              :en "syötti hakemuksen"}
+                                              :sv "SV: syötti hakemuksen"
+                                              :en "EN: syötti hakemuksen"}
    :eligibility                              {:fi "Hakukelpoisuus:"
-                                              :sv "Hakukelpoisuus:"
-                                              :en "Hakukelpoisuus:"}
+                                              :sv "SV: Hakukelpoisuus:"
+                                              :en "EN: Hakukelpoisuus:"}
    :of-hakukohde                             {:fi "Hakukohteen"
-                                              :sv "Hakukohteen"
-                                              :en "Hakukohteen"}
+                                              :sv "SV: Hakukohteen"
+                                              :en "EN: Hakukohteen"}
    :confirmation-sent                        {:fi "Vahvistussähköposti lähetetty hakijalle"
-                                              :sv "Vahvistussähköposti lähetetty hakijalle"
-                                              :en "Vahvistussähköposti lähetetty hakijalle"}
+                                              :sv "SV: Vahvistussähköposti lähetetty hakijalle"
+                                              :en "EN: Vahvistussähköposti lähetetty hakijalle"}
    :information-request-sent                 {:fi "Täydennyspyyntö lähetetty"
-                                              :sv "Täydennyspyyntö lähetetty"
-                                              :en "Täydennyspyyntö lähetetty"}
+                                              :sv "SV: Täydennyspyyntö lähetetty"
+                                              :en "EN: Täydennyspyyntö lähetetty"}
    :events                                   {:fi "Tapahtumat"
-                                              :sv "Tapahtumat"
-                                              :en "Tapahtumat"}
+                                              :sv "SV: Tapahtumat"
+                                              :en "EN: Tapahtumat"}
    :eligibility-explanation                  {:fi "Kelpoisuusmerkinnän selite"
-                                              :sv "Kelpoisuusmerkinnän selite"
-                                              :en "Kelpoisuusmerkinnän selite"}
+                                              :sv "SV: Kelpoisuusmerkinnän selite"
+                                              :en "EN: Kelpoisuusmerkinnän selite"}
    :for-hakukohde                            {:fi "hakukohteelle"
-                                              :sv "hakukohteelle"
-                                              :en "hakukohteelle"}
+                                              :sv "SV: hakukohteelle"
+                                              :en "EN: hakukohteelle"}
    :points                                   {:fi "Pisteet"
-                                              :sv "Pisteet"
-                                              :en "Pisteet"}
+                                              :sv "SV: Pisteet"
+                                              :en "EN: Pisteet"}
    :notes                                    {:fi "Muistiinpanot"
-                                              :sv "Muistiinpanot"
-                                              :en "Muistiinpanot"}
+                                              :sv "SV: Muistiinpanot"
+                                              :en "EN: Muistiinpanot"}
    :edit-application                         {:fi "Muokkaa hakemusta"
-                                              :sv "Muokkaa hakemusta"
-                                              :en "Muokkaa hakemusta"}
+                                              :sv "SV: Muokkaa hakemusta"
+                                              :en "EN: Muokkaa hakemusta"}
    :receiver                                 {:fi "Vastaanottaja:"
-                                              :sv "Vastaanottaja:"
-                                              :en "Vastaanottaja:"}
+                                              :sv "SV: Vastaanottaja:"
+                                              :en "EN: Vastaanottaja:"}
    :sending-information-request              {:fi "Täydennyspyyntöä lähetetään"
-                                              :sv "Täydennyspyyntöä lähetetään"
-                                              :en "Täydennyspyyntöä lähetetään"}
+                                              :sv "SV: Täydennyspyyntöä lähetetään"
+                                              :en "EN: Täydennyspyyntöä lähetetään"}
    :send-information-request                 {:fi "Lähetä täydennyspyyntö"
-                                              :sv "Lähetä täydennyspyyntö"
-                                              :en "Lähetä täydennyspyyntö"}
+                                              :sv "SV: Lähetä täydennyspyyntö"
+                                              :en "EN: Lähetä täydennyspyyntö"}
    :send-information-request-to-applicant    {:fi "Lähetä täydennyspyyntö hakijalle"
-                                              :sv "Lähetä täydennyspyyntö hakijalle"
-                                              :en "Lähetä täydennyspyyntö hakijalle"}
+                                              :sv "SV: Lähetä täydennyspyyntö hakijalle"
+                                              :en "EN: Lähetä täydennyspyyntö hakijalle"}
    :edit-link-sent-automatically             {:fi "Muokkauslinkki lähtee viestin mukana automaattisesti"
-                                              :sv "Muokkauslinkki lähtee viestin mukana automaattisesti"
-                                              :en "Muokkauslinkki lähtee viestin mukana automaattisesti"}
+                                              :sv "SV: Muokkauslinkki lähtee viestin mukana automaattisesti"
+                                              :en "EN: Muokkauslinkki lähtee viestin mukana automaattisesti"}
    :send-confirmation-email-to-applicant     {:fi "Lähetä vahvistussähköposti hakijalle"
-                                              :sv "Lähetä vahvistussähköposti hakijalle"
-                                              :en "Lähetä vahvistussähköposti hakijalle"}
+                                              :sv "SV: Lähetä vahvistussähköposti hakijalle"
+                                              :en "EN: Lähetä vahvistussähköposti hakijalle"}
    :send-edit-link-to-applicant              {:fi "Muokkauslinkki lähetetty hakijalle sähköpostilla"
-                                              :sv "Muokkauslinkki lähetetty hakijalle sähköpostilla"
-                                              :en "Muokkauslinkki lähetetty hakijalle sähköpostilla"}
+                                              :sv "SV: Muokkauslinkki lähetetty hakijalle sähköpostilla"
+                                              :en "EN: Muokkauslinkki lähetetty hakijalle sähköpostilla"}
    :of-form                                  {:fi "Lomakkeen"
-                                              :sv "Lomakkeen"
-                                              :en "Lomakkeen"}
+                                              :sv "SV: Lomakkeen"
+                                              :en "EN: Lomakkeen"}
    :settings                                 {:fi "Asetukset"
-                                              :sv "Asetukset"
-                                              :en "Asetukset"}
+                                              :sv "SV: Asetukset"
+                                              :en "EN: Asetukset"}
    :applications                             {:fi "hakemusta"
-                                              :sv "hakemusta"
-                                              :en "hakemusta"}
+                                              :sv "SV: hakemusta"
+                                              :en "EN: hakemusta"}
    :student                                  {:fi "Oppija"
-                                              :sv "Oppija"
-                                              :en "Oppija"}
+                                              :sv "SV: Oppija"
+                                              :en "EN: Oppija"}
    :person-completed-education               {:fi "Henkilön suoritukset"
-                                              :sv "Henkilön suoritukset"
-                                              :en "Henkilön suoritukset"}
+                                              :sv "SV: Henkilön suoritukset"
+                                              :en "EN: Henkilön suoritukset"}
    :person-not-individualized                {:fi "Hakijaa ei ole yksilöity."
-                                              :sv "Hakijaa ei ole yksilöity."
-                                              :en "Hakijaa ei ole yksilöity."}
+                                              :sv "SV: Hakijaa ei ole yksilöity."
+                                              :en "EN: Hakijaa ei ole yksilöity."}
    :diff-from-changes                        {:fi "Vertailu muutoksesta"
-                                              :sv "Vertailu muutoksesta"
-                                              :en "Vertailu muutoksesta"}
+                                              :sv "SV: Vertailu muutoksesta"
+                                              :en "EN: Vertailu muutoksesta"}
    :changed                                  {:fi "muutti"
-                                              :sv "muutti"
-                                              :en "muutti"}
+                                              :sv "SV: muutti"
+                                              :en "EN: muutti"}
    :answers                                  {:fi "vastausta:"
-                                              :sv "vastausta:"
-                                              :en "vastausta:"}
+                                              :sv "SV: vastausta:"
+                                              :en "EN: vastausta:"}
    :email-content                            {:fi "Sähköpostiviestin sisältö"
-                                              :sv "Sähköpostiviestin sisältö"
-                                              :en "Sähköpostiviestin sisältö"}
+                                              :sv "SV: Sähköpostiviestin sisältö"
+                                              :en "EN: Sähköpostiviestin sisältö"}
    :applicant-will-receive-following-email   {:fi "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä"
-                                              :sv "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä"
-                                              :en "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä"}
+                                              :sv "SV: Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä"
+                                              :en "EN: Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä"}
    :editable-content-title                   {:fi "Muokattava osuus (otsikko)"
-                                              :sv "Muokattava osuus (otsikko)"
-                                              :en "Muokattava osuus (otsikko)"}
+                                              :sv "SV: Muokattava osuus (otsikko)"
+                                              :en "EN: Muokattava osuus (otsikko)"}
    :editable-content-beginning               {:fi "Muokattava osuus (viestin alku)"
-                                              :sv "Muokattava osuus (viestin alku)"
-                                              :en "Muokattava osuus (viestin alku)"}
+                                              :sv "SV: Muokattava osuus (viestin alku)"
+                                              :en "EN: Muokattava osuus (viestin alku)"}
    :application-oid-here                     {:fi "Tähän tulee hakemusnumero, hakutoiveet, puuttuvat liitepyynnöt ja muokkauslinkki"
-                                              :sv "Tähän tulee hakemusnumero, hakutoiveet, puuttuvat liitepyynnöt ja muokkauslinkki"
-                                              :en "Tähän tulee hakemusnumero, hakutoiveet, puuttuvat liitepyynnöt ja muokkauslinkki"}
+                                              :sv "SV: Tähän tulee hakemusnumero, hakutoiveet, puuttuvat liitepyynnöt ja muokkauslinkki"
+                                              :en "EN: Tähän tulee hakemusnumero, hakutoiveet, puuttuvat liitepyynnöt ja muokkauslinkki"}
    :editable-content-ending                  {:fi "Muokattava osuus (viestin loppu)"
-                                              :sv "Muokattava osuus (viestin loppu)"
-                                              :en "Muokattava osuus (viestin loppu)"}
+                                              :sv "SV: Muokattava osuus (viestin loppu)"
+                                              :en "EN: Muokattava osuus (viestin loppu)"}
    :message-preview                          {:fi "Viestin esikatselu"
-                                              :sv "Viestin esikatselu"
-                                              :en "Viestin esikatselu"}
+                                              :sv "SV: Viestin esikatselu"
+                                              :en "EN: Viestin esikatselu"}
    :save-changes                             {:fi "Tallenna muutokset"
-                                              :sv "Tallenna muutokset"
-                                              :en "Tallenna muutokset"}
+                                              :sv "SV: Tallenna muutokset"
+                                              :en "EN: Tallenna muutokset"}
    :forms-panel                              {:fi "Lomakkeet"
-                                              :sv "Lomakkeet"
-                                              :en "Lomakkeet"}
+                                              :sv "SV: Lomakkeet"
+                                              :en "EN: Lomakkeet"}
    :applications-panel                       {:fi "Hakemukset"
-                                              :sv "Hakemukset"
-                                              :en "Hakemukset"}
+                                              :sv "SV: Hakemukset"
+                                              :en "EN: Hakemukset"}
    :form-edit-rights-panel                   {:fi "Lomakkeiden muokkaus"
-                                              :sv "Lomakkeiden muokkaus"
-                                              :en "Lomakkeiden muokkaus"}
+                                              :sv "SV: Lomakkeiden muokkaus"
+                                              :en "EN: Lomakkeiden muokkaus"}
    :view-applications-rights-panel           {:fi "Hakemusten katselu"
-                                              :sv "Hakemusten katselu"
-                                              :en "Hakemusten katselu"}
+                                              :sv "SV: Hakemusten katselu"
+                                              :en "EN: Hakemusten katselu"}
    :edit-applications-rights-panel           {:fi "Hakemusten arviointi"
-                                              :sv "Hakemusten arviointi"
-                                              :en "Hakemusten arviointi"}
+                                              :sv "SV: Hakemusten arviointi"
+                                              :en "EN: Hakemusten arviointi"}
    :no-organization                          {:fi "Ei organisaatiota"
-                                              :sv "Ei organisaatiota"
-                                              :en "Ei organisaatiota"}
+                                              :sv "SV: Ei organisaatiota"
+                                              :en "EN: Ei organisaatiota"}
    :multiple-organizations                   {:fi "Useita organisaatioita"
-                                              :sv "Useita organisaatioita"
-                                              :en "Useita organisaatioita"}
+                                              :sv "SV: Useita organisaatioita"
+                                              :en "EN: Useita organisaatioita"}
    :choose-user-rights                       {:fi "Valitse käyttäjän oikeudet"
-                                              :sv "Valitse käyttäjän oikeudet"
-                                              :en "Valitse käyttäjän oikeudet"}
+                                              :sv "SV: Valitse käyttäjän oikeudet"
+                                              :en "EN: Valitse käyttäjän oikeudet"}
    :reset-organization                       {:fi "Palauta oletusorganisaatio"
-                                              :sv "Palauta oletusorganisaatio"
-                                              :en "Palauta oletusorganisaatio"}
+                                              :sv "SV: Palauta oletusorganisaatio"
+                                              :en "EN: Palauta oletusorganisaatio"}
    :change-organization                      {:fi "Vaihda organisaatio"
-                                              :sv "Vaihda organisaatio"
-                                              :en "Vaihda organisaatio"}
+                                              :sv "SV: Vaihda organisaatio"
+                                              :en "EN: Vaihda organisaatio"}
    :search-sub-organizations                 {:fi "Etsi aliorganisaatioita"
-                                              :sv "Etsi aliorganisaatioita"
-                                              :en "Etsi aliorganisaatioita"}
+                                              :sv "SV: Etsi aliorganisaatioita"
+                                              :en "EN: Etsi aliorganisaatioita"}
    :more-results-refine-search               {:fi "Lisää tuloksia, tarkenna hakua"
-                                              :sv "Lisää tuloksia, tarkenna hakua"
-                                              :en "Lisää tuloksia, tarkenna hakua"}
+                                              :sv "SV: Lisää tuloksia, tarkenna hakua"
+                                              :en "EN: Lisää tuloksia, tarkenna hakua"}
    :logout                                   {:fi "Kirjaudu ulos"
-                                              :sv "Kirjaudu ulos"
-                                              :en "Kirjaudu ulos"}
+                                              :sv "SV: Kirjaudu ulos"
+                                              :en "EN: Kirjaudu ulos"}
    :unprocessed-haut                         {:fi "Käsittelemättä olevat haut"
-                                              :sv "Käsittelemättä olevat haut"
-                                              :en "Käsittelemättä olevat haut"}
+                                              :sv "SV: Käsittelemättä olevat haut"
+                                              :en "EN: Käsittelemättä olevat haut"}
    :search-by-applicant-info                 {:fi "Etsi hakijan henkilötiedoilla"
-                                              :sv "Etsi hakijan henkilötiedoilla"
-                                              :en "Etsi hakijan henkilötiedoilla"}
+                                              :sv "SV: Etsi hakijan henkilötiedoilla"
+                                              :en "EN: Etsi hakijan henkilötiedoilla"}
    :search-terms-list                        {:fi "Nimi, henkilötunnus, syntymäaika tai sähköpostiosoite"
-                                              :sv "Nimi, henkilötunnus, syntymäaika tai sähköpostiosoite"
-                                              :en "Nimi, henkilötunnus, syntymäaika tai sähköpostiosoite"}
+                                              :sv "SV: Nimi, henkilötunnus, syntymäaika tai sähköpostiosoite"
+                                              :en "EN: Nimi, henkilötunnus, syntymäaika tai sähköpostiosoite"}
    :processed-haut                           {:fi "Käsitellyt haut"
-                                              :sv "Käsitellyt haut"
-                                              :en "Käsitellyt haut"}
+                                              :sv "SV: Käsitellyt haut"
+                                              :en "EN: Käsitellyt haut"}
    :application                              {:fi "hakemus"
-                                              :sv "hakemus"
-                                              :en "hakemus"}
+                                              :sv "SV: hakemus"
+                                              :en "EN: hakemus"}
    :application-options                      {:fi "hakukohdetta"
-                                              :sv "hakukohdetta"
-                                              :en "hakukohdetta"}
+                                              :sv "SV: hakukohdetta"
+                                              :en "EN: hakukohdetta"}
    :base-education-module                    {:fi "Pohjakoulutusmoduuli"
-                                              :sv "Pohjakoulutusmoduuli"
-                                              :en "Pohjakoulutusmoduuli"}
+                                              :sv "SV: Pohjakoulutusmoduuli"
+                                              :en "EN: Pohjakoulutusmoduuli"}
    :kk-base-education-module                 {:fi "Pohjakoulutusmoduuli (kk-yhteishaku)"
-                                              :sv "Pohjakoulutusmoduuli (kk-yhteishaku)"
-                                              :en "Pohjakoulutusmoduuli (kk-yhteishaku)"}
+                                              :sv "SV: Pohjakoulutusmoduuli (kk-yhteishaku)"
+                                              :en "EN: Pohjakoulutusmoduuli (kk-yhteishaku)"}
    :pohjakoulutusristiriita                  {:fi "Pohjakoulutusristiriita"
-                                              :sv "Pohjakoulutusristiriita"
-                                              :en "Pohjakoulutusristiriita"}
+                                              :sv "SV: Pohjakoulutusristiriita"
+                                              :en "EN: Pohjakoulutusristiriita"}
    :koulutusmarkkinointilupa                 {:fi "Koulutusmarkkinointilupa"
-                                              :sv "Koulutusmarkkinointilupa"
-                                              :en "Koulutusmarkkinointilupa"}
+                                              :sv "SV: Koulutusmarkkinointilupa"
+                                              :en "EN: Koulutusmarkkinointilupa"}
    :valintatuloksen-julkaisulupa             {:fi "Valintatuloksen julkaisulupa"
-                                              :sv "Valintatuloksen julkaisulupa"
-                                              :e  "Valintatuloksen julkaisulupa"}
+                                              :sv "SV: Valintatuloksen julkaisulupa"
+                                              :e  "E : Valintatuloksen julkaisulupa"}
    :lupa-sahkoiseen-asiointiin               {:fi "Sähköisen asioinnin lupa"
-                                              :sv "Sähköisen asioinnin lupa"
-                                              :en "Sähköisen asioinnin lupa"}
+                                              :sv "SV: Sähköisen asioinnin lupa"
+                                              :en "EN: Sähköisen asioinnin lupa"}
    :asiointikieli                            {:fi "Asiointikieli"
-                                              :sv "Asiointikieli"
-                                              :en "Asiointikieli"}
+                                              :sv "SV: Asiointikieli"
+                                              :en "EN: Asiointikieli"}
    :form-section                             {:fi "Lomakeosio"
-                                              :sv "Lomakeosio"
-                                              :en "Lomakeosio"}
+                                              :sv "SV: Lomakeosio"
+                                              :en "EN: Lomakeosio"}
    :finnish                                  {:fi "Suomi"
-                                              :sv "Finska"
-                                              :en "Finnish"}
+                                              :sv "SV: Finska"
+                                              :en "EN: Finnish"}
    :swedish                                  {:fi "Ruotsi"
-                                              :sv "Svenska"
-                                              :en "Finska"}
+                                              :sv "SV: Svenska"
+                                              :en "EN: Finska"}
    :english                                  {:fi "Englanti"
-                                              :sv "Engelska"
-                                              :en "English"}})
+                                              :sv "SV: Engelska"
+                                              :en "EN: English"}})
 
 (def state-translations
   {:active               {:fi "Aktiivinen"
-                          :sv "Aktiivinen"
-                          :en "Aktiivinen"}
+                          :sv "SV: Aktiivinen"
+                          :en "EN: Aktiivinen"}
    :passive              {:fi "Passiivinen"
-                          :sv "Passiivinen"
-                          :en "Passiivinen"}
+                          :sv "SV: Passiivinen"
+                          :en "EN: Passiivinen"}
    :unprocessed          {:fi "Käsittelemättä"
-                          :sv "Käsittelemättä"
-                          :en "Käsittelemättä"}
+                          :sv "SV: Käsittelemättä"
+                          :en "EN: Käsittelemättä"}
    :processing           {:fi "Käsittelyssä"
-                          :sv "Käsittelyssä"
-                          :en "Käsittelyssä"}
+                          :sv "SV: Käsittelyssä"
+                          :en "EN: Käsittelyssä"}
    :invited-to-interview {:fi "Kutsuttu haast."
-                          :sv "Kutsuttu haast."
-                          :en "Kutsuttu haast."}
+                          :sv "SV: Kutsuttu haast."
+                          :en "EN: Kutsuttu haast."}
    :invited-to-exam      {:fi "Kutsuttu valintak."
-                          :sv "Kutsuttu valintak."
-                          :en "Kutsuttu valintak."}
+                          :sv "SV: Kutsuttu valintak."
+                          :en "EN: Kutsuttu valintak."}
    :evaluating           {:fi "Arvioinnissa"
-                          :sv "Arvioinnissa"
-                          :en "Arvioinnissa"}
+                          :sv "SV: Arvioinnissa"
+                          :en "EN: Arvioinnissa"}
    :processed            {:fi "Käsitelty"
-                          :sv "Käsitelty"
-                          :en "Käsitelty"}
+                          :sv "SV: Käsitelty"
+                          :en "EN: Käsitelty"}
    :information-request  {:fi "Täydennyspyyntö"
-                          :sv "Täydennyspyyntö"
-                          :en "Täydennyspyyntö"}
+                          :sv "SV: Täydennyspyyntö"
+                          :en "EN: Täydennyspyyntö"}
    :incomplete           {:fi "Kesken"
-                          :sv "Kesken"
-                          :en "Kesken"}
+                          :sv "SV: Kesken"
+                          :en "EN: Kesken"}
    :selection            {:fi "Valintaesitys"
-                          :sv "Valintaesitys"
-                          :en "Valintaesitys"}
+                          :sv "SV: Valintaesitys"
+                          :en "EN: Valintaesitys"}
    :reserve              {:fi "Varalla"
-                          :sv "Varalla"
-                          :en "Varalla"}
+                          :sv "SV: Varalla"
+                          :en "EN: Varalla"}
    :selected             {:fi "Hyväksytty"
-                          :sv "Hyväksytty"
-                          :en "Hyväksytty"}
+                          :sv "SV: Hyväksytty"
+                          :en "EN: Hyväksytty"}
    :rejected             {:fi "Hylätty"
-                          :sv "Hylätty"
-                          :en "Hylätty"}
+                          :sv "SV: Hylätty"
+                          :en "EN: Hylätty"}
    :unreviewed           {:fi "Tarkastamatta"
-                          :sv "Tarkastamatta"
-                          :en "Tarkastamatta"}
+                          :sv "SV: Tarkastamatta"
+                          :en "EN: Tarkastamatta"}
    :fulfilled            {:fi "Täyttyy"
-                          :sv "Täyttyy"
-                          :en "Täyttyy"}
+                          :sv "SV: Täyttyy"
+                          :en "EN: Täyttyy"}
    :unfulfilled          {:fi "Ei täyty"
-                          :sv "Ei täyty"
-                          :en "Ei täyty"}
+                          :sv "SV: Ei täyty"
+                          :en "EN: Ei täyty"}
    :eligible             {:fi "Hakukelpoinen"
-                          :sv "Hakukelpoinen"
-                          :en "Hakukelpoinen"}
+                          :sv "SV: Hakukelpoinen"
+                          :en "EN: Hakukelpoinen"}
    :uneligible           {:fi "Ei hakukelpoinen"
-                          :sv "Ei hakukelpoinen"
-                          :en "Ei hakukelpoinen"}
+                          :sv "SV: Ei hakukelpoinen"
+                          :en "EN: Ei hakukelpoinen"}
    :obligated            {:fi "Velvollinen"
-                          :sv "Velvollinen"
-                          :en "Velvollinen"}
+                          :sv "SV: Velvollinen"
+                          :en "EN: Velvollinen"}
    :not-obligated        {:fi "Ei velvollinen"
-                          :sv "Ei velvollinen"
-                          :en "Ei velvollinen"}
+                          :sv "SV: Ei velvollinen"
+                          :en "EN: Ei velvollinen"}
    :processing-state     {:fi "Käsittelyvaihe"
-                          :sv "Käsittelyvaihe"
-                          :en "Käsittelyvaihe"}
+                          :sv "SV: Käsittelyvaihe"
+                          :en "EN: Käsittelyvaihe"}
    :language-requirement {:fi "Kielitaitovaatimus"
-                          :sv "Kielitaitovaatimus"
-                          :en "Kielitaitovaatimus"}
+                          :sv "SV: Kielitaitovaatimus"
+                          :en "EN: Kielitaitovaatimus"}
    :degree-requirement   {:fi "Tutkinnon kelpoisuus"
-                          :sv "Tutkinnon kelpoisuus"
-                          :en "Tutkinnon kelpoisuus"}
+                          :sv "SV: Tutkinnon kelpoisuus"
+                          :en "EN: Tutkinnon kelpoisuus"}
    :eligibility-state    {:fi "Hakukelpoisuus"
-                          :sv "Hakukelpoisuus"
-                          :en "Hakukelpoisuus"}
+                          :sv "SV: Hakukelpoisuus"
+                          :en "EN: Hakukelpoisuus"}
    :payment-obligation   {:fi "Maksuvelvollisuus"
-                          :sv "Maksuvelvollisuus"
-                          :en "Maksuvelvollisuus"}
+                          :sv "SV: Maksuvelvollisuus"
+                          :en "EN: Maksuvelvollisuus"}
    :selection-state      {:fi "Valinta"
-                          :sv "Valinta"
-                          :en "Valinta"}
+                          :sv "SV: Valinta"
+                          :en "EN: Valinta"}
    :not-checked          {:fi "Tarkastamatta"
-                          :sv "Tarkastamatta"
-                          :en "Tarkastamatta"}
+                          :sv "SV: Tarkastamatta"
+                          :en "EN: Tarkastamatta"}
    :checked              {:fi "Tarkistettu"
-                          :sv "Tarkistettu"
-                          :en "Tarkistettu"}
+                          :sv "SV: Tarkistettu"
+                          :en "EN: Tarkistettu"}
    :incomplete-answer    {:fi "Puutteellinen"
-                          :sv "Puutteellinen"
-                          :en "Puutteellinen"}
+                          :sv "SV: Puutteellinen"
+                          :en "EN: Puutteellinen"}
    :attachmentless       {:fi "Liitteettömät"
-                          :sv "Liitteettömät"
-                          :en "Liitteettömät"}})
+                          :sv "SV: Liitteettömät"
+                          :en "EN: Liitteettömät"}})
 
 (def excel-texts
   {:name                     {:fi "Nimi"
-                              :sv "Nimi"
-                              :en "Nimi"}
+                              :sv "SV: Nimi"
+                              :en "EN: Nimi"}
    :id                       {:fi "Id"
-                              :sv "Id"
-                              :en "Id"}
+                              :sv "SV: Id"
+                              :en "EN: Id"}
    :key                      {:fi "Tunniste"
-                              :sv "Tunniste"
-                              :en "Tunniste"}
+                              :sv "SV: Tunniste"
+                              :en "EN: Tunniste"}
    :created-time             {:fi "Viimeksi muokattu"
-                              :sv "Viimeksi muokattu"
-                              :en "Viimeksi muokattu"}
+                              :sv "SV: Viimeksi muokattu"
+                              :en "EN: Viimeksi muokattu"}
    :created-by               {:fi "Viimeinen muokkaaja"
-                              :sv "Viimeinen muokkaaja"
-                              :en "Viimeinen muokkaaja"}
+                              :sv "SV: Viimeinen muokkaaja"
+                              :en "EN: Viimeinen muokkaaja"}
    :sent-at                  {:fi "Lähetysaika"
-                              :sv "Lähetysaika"
-                              :en "Lähetysaika"}
+                              :sv "SV: Lähetysaika"
+                              :en "EN: Lähetysaika"}
    :application-state        {:fi "Hakemuksen tila"
-                              :sv "Hakemuksen tila"
-                              :en "Hakemuksen tila"}
+                              :sv "SV: Hakemuksen tila"
+                              :en "EN: Hakemuksen tila"}
    :hakukohde-handling-state {:fi "Hakukohteen käsittelyn tila"
-                              :sv "Hakukohteen käsittelyn tila"
-                              :en "Hakukohteen käsittelyn tila"}
+                              :sv "SV: Hakukohteen käsittelyn tila"
+                              :en "EN: Hakukohteen käsittelyn tila"}
    :kielitaitovaatimus       {:fi "Kielitaitovaatimus"
-                              :sv "Kielitaitovaatimus"
-                              :en "Kielitaitovaatimus"}
+                              :sv "SV: Kielitaitovaatimus"
+                              :en "EN: Kielitaitovaatimus"}
    :tutkinnon-kelpoisuus     {:fi "Tutkinnon kelpoisuus"
-                              :sv "Tutkinnon kelpoisuus"
-                              :en "Tutkinnon kelpoisuus"}
+                              :sv "SV: Tutkinnon kelpoisuus"
+                              :en "EN: Tutkinnon kelpoisuus"}
    :hakukelpoisuus           {:fi "Hakukelpoisuus"
-                              :sv "Hakukelpoisuus"
-                              :en "Hakukelpoisuus"}
+                              :sv "SV: Hakukelpoisuus"
+                              :en "EN: Hakukelpoisuus"}
    :maksuvelvollisuus        {:fi "Maksuvelvollisuus"
-                              :sv "Maksuvelvollisuus"
-                              :en "Maksuvelvollisuus"}
+                              :sv "SV: Maksuvelvollisuus"
+                              :en "EN: Maksuvelvollisuus"}
    :valinnan-tila            {:fi "Valinnan tila"
-                              :sv "Valinnan tila"
-                              :en "Valinnan tila"}
+                              :sv "SV: Valinnan tila"
+                              :en "EN: Valinnan tila"}
    :pisteet                  {:fi "Pisteet"
-                              :sv "Pisteet"
-                              :en "Pisteet"}
+                              :sv "SV: Pisteet"
+                              :en "EN: Pisteet"}
    :applicant-oid            {:fi "Hakijan henkilö-OID"
-                              :sv "Hakijan henkilö-OID"
-                              :en "Hakijan henkilö-OID"}
+                              :sv "SV: Hakijan henkilö-OID"
+                              :en "EN: Hakijan henkilö-OID"}
    :turvakielto              {:fi "Turvakielto"
-                              :sv "Turvakielto"
-                              :en "Turvakielto"}
+                              :sv "SV: Turvakielto"
+                              :en "EN: Turvakielto"}
    :notes                    {:fi "Muistiinpanot"
-                              :sv "Muistiinpanot"
-                              :en "Muistiinpanot"}})
+                              :sv "SV: Muistiinpanot"
+                              :en "EN: Muistiinpanot"}})
