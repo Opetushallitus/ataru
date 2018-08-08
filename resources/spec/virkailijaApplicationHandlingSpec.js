@@ -437,6 +437,121 @@
       })
     })
 
+    describe('Mass send information requests', function() {
+      describe('popup', function() {
+        before(
+          navigateToApplicationHandlingForForm,
+          clickElement(function() { return testFrame().find('.application-handling__mass-information-request-link') }),
+          wait.until(function() {
+            return massInformationRequestPopup().is(':visible')
+          })
+        )
+
+        it('has expected default data', function() {
+          expect(massInformationRequestText()).to.eql('Lähetä sähköposti 3 hakijalle:')
+          expect(massInformationRequestSubject().val()).to.eql('')
+          expect(massInformationRequestContent().val()).to.eql('')
+          expect(massInformationRequestSendButton().text()).to.eql('Lähetä')
+          expect(massInformationRequestSendButton().attr('disabled')).to.eql('disabled')
+        })
+      })
+
+      describe('updating inputs', function() {
+        before(
+          setTextFieldValue(massInformationRequestSubject, "Otsikko!"),
+          setTextFieldValue(massInformationRequestContent, "Sisältöä")
+        )
+        it('enables button', function() {
+          expect(massInformationRequestSendButton().text()).to.eql('Lähetä')
+          expect(massInformationRequestSendButton().attr('disabled')).to.be.an('undefined')
+        })
+      })
+
+      describe('recipient filtering', function () {
+        before(
+          clickElement(selectionStateFilterLink),
+          wait.until(function () {
+            return includedSelectionStateFilters() === 6 && filteredApplicationsCount() === 3
+          }),
+          function () {
+            testFrame().find('.application-handling__list-row--selection .application-handling__filter-state-selected-row span:contains("Hyväksytty")').click()
+          },
+          wait.until(function () {
+            return includedSelectionStateFilters() === 4 && filteredApplicationsCount() === 2
+          })
+        )
+        it('reduces application list and recipient count', function () {
+          expect(testFrame().find('.application-handling__list-row--application-applicant:eq(0)').text()).to.equal('Vatanen, Ari')
+          expect(testFrame().find('.application-handling__list-row--application-applicant:eq(1)').text()).to.equal('Kuikeloinen, Seija Susanna')
+          expect(massInformationRequestText()).to.eql('Lähetä sähköposti 2 hakijalle:')
+        })
+      })
+
+      describe('sending messages', function () {
+        describe('first click', function() {
+          before(
+            clickElement(massInformationRequestSendButton),
+            wait.until(function() {
+              return massInformationRequestSendButton().hasClass('application-handling__send-information-request-button--confirm')
+            })
+          )
+          it('requests confirmation', function() {
+            expect(massInformationRequestSendButton().text()).to.equal('Vahvista 2 viestin lähetys')
+          })
+        })
+        describe('second click', function() {
+          before(
+            clickElement(massInformationRequestSendButton),
+            wait.until(function() {
+              return massInformationRequestSendButton().length === 0
+            })
+          )
+          it('removes button', function() {
+            expect(massInformationRequestStatusText()).to.be.oneOf(['Lähetetään viestejä...', 'Viestit lähetetty!'])
+          })
+        })
+        describe('after success', function() {
+          before(
+            wait.until(function() {
+              return massInformationRequestSendButton().length === 1
+            })
+          )
+          it('resets form', function() {
+            expect(massInformationRequestText()).to.eql('Lähetä sähköposti 2 hakijalle:')
+            expect(massInformationRequestSubject().val()).to.eql('')
+            expect(massInformationRequestContent().val()).to.eql('')
+            expect(massInformationRequestSendButton().text()).to.eql('Lähetä')
+            expect(massInformationRequestSendButton().attr('disabled')).to.eql('disabled')
+          })
+        })
+
+      })
+    })
+
+    function massInformationRequestPopup() {
+      return testFrame().find('.application-handling__mass-information-request-popup')
+    }
+
+    function massInformationRequestText() {
+      return massInformationRequestPopup().find('p').first().text()
+    }
+
+    function massInformationRequestSubject() {
+      return massInformationRequestPopup().find('input.application-handling__information-request-text-input')
+    }
+
+    function massInformationRequestContent() {
+      return massInformationRequestPopup().find('textarea.application-handling__information-request-message-area')
+    }
+
+    function massInformationRequestSendButton() {
+      return massInformationRequestPopup().find('button.application-handling__send-information-request-button')
+    }
+
+    function massInformationRequestStatusText() {
+      return massInformationRequestPopup().find('.application-handling__information-request-status').text()
+    }
+
     function massUpdateSubmitButton() {
       return massUpdatePopup().find('.application-handling__link-button')
     }
