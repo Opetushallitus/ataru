@@ -677,7 +677,7 @@
                                               :sv "SV: Lisää muotoiluohjeita"
                                               :en "EN: Lisää muotoiluohjeita"}
    :info-addon                               {:fi "Kysymys sisältää ohjetekstin"
-                                              :sv "SV: Kysymys sisältää ohjetekstin"
+                                              :sv "SV: Frågan sisältää ohjetekstin"
                                               :en "EN: Kysymys sisältää ohjetekstin"}
    :collapse-info-text                       {:fi "Pienennä pitkä ohjeteksti"
                                               :sv "SV: Pienennä pitkä ohjeteksti"
