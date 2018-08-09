@@ -13,8 +13,7 @@
     [re-frame.core :refer [subscribe dispatch dispatch-sync]]
     [reagent.core :as r]
     [reagent.ratom :refer-macros [reaction]]
-    [taoensso.timbre :refer-macros [spy debug]])
-  )
+    [taoensso.timbre :refer-macros [spy debug]]))
 
 ; IE only allows this data attribute name for drag event dataTransfer
 ; http://stackoverflow.com/questions/26213011/html5-dragdrop-issue-in-internet-explorer-datatransfer-property-access-not-pos

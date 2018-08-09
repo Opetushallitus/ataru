@@ -2,7 +2,7 @@
   (:require [markdown.core :refer [md->html]]
             [reagent.core :as reagent]
             [clojure.string :as string]
-            [ataru.cljs-util :refer [get-translation]])
+            [ataru.cljs-util :refer [get-translation get-virkailija-translation]])
   (:import (goog.html.sanitizer HtmlSanitizer)))
 
 (defn answer-key [field-data]
@@ -195,8 +195,6 @@
 
 (defn copy-link [id & {:keys [answer?]}]
   [:a.editor-form__copy-question-id
-   {:data-tooltip  (str "Kopioi "
-                        (if answer? "vastauksen" "kysymyksen")
-                        " tunniste leikepöydälle")
+   {:data-tooltip  (get-virkailija-translation (if answer? :copy-answer-id :copy-question-id))
     :on-mouse-down #(copy id)}
    "id"])
