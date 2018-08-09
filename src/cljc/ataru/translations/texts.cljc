@@ -5,19 +5,19 @@
                                              :sv "Ansökningstid"
                                              :en "Application period"}
    :not-within-application-period           {:fi "hakuaika ei ole käynnissä"
-                                             :sv "inte inom ansökningstiden"
+                                             :sv "ansökningstiden pågår inte"
                                              :en "application period currently not ongoing"}
    :not-selectable-application-period-ended {:fi "Hakuaika ei ole käynnissä"
-                                             :sv "Inte inom ansökningstiden"
+                                             :sv "Ansökningstiden pågår inte"
                                              :en "Application period not ongoing"}
    :not-editable-application-period-ended   {:fi "Tämä hakutoive ei ole muokattavissa koska sen hakuaika on päättynyt."
-                                             :sv "Tämä hakutoive ei ole muokattavissa koska sen hakuaika on päättynyt."
+                                             :sv "Ansökningsmålet kan inte bearbetas, eftersom ansökningstiden har utgått."
                                              :en "Tämä hakutoive ei ole muokattavissa koska sen hakuaika on päättynyt."}
    :application-processed-cant-modify       {:fi "Tämä hakemus on käsitelty eikä ole enää muokattavissa"
                                              :sv "Denna ansökan har behandlats och kan inte längre bearbetas"
                                              :en "This application has been processed and can no longer be modified"}
    :continuous-period                       {:fi "Jatkuva haku"
-                                             :sv "kontinuerlig ansökningstid"
+                                             :sv "Kontinuerlig ansökan"
                                              :en "Continuous application period"}
    :add-row                                 {:fi "Lisää rivi"
                                              :sv "Lägg till rad"
@@ -42,7 +42,7 @@
                                              :sv "Hej, berätta ännu vad du tyckte om ansökningsblanketten?"}
    :feedback-disclaimer                     {:fi "Yhteystietojasi ei käytetä tai yhdistetä palautteen tietoihin."
                                              :en "Your personal information is not sent or associated with the feedback given."
-                                             :sv "Dina kontaktuppgifter används inte och kopplas inte heller ihop med responsuppgifterna."}
+                                             :sv "Dina kontaktuppgifter används inte och kopplas inte heller ihop din respons."}
    :feedback-ratings                        {:fi {1 "Huono"
                                                   2 "Välttävä"
                                                   3 "Tyydyttävä"
@@ -56,7 +56,7 @@
                                              :sv {1 "Dålig"
                                                   2 "Försvarlig"
                                                   3 "Nöjaktig"
-                                                  4 "Bra"
+                                                  4 "God"
                                                   5 "Berömlig"}}
    :feedback-text-placeholder               {:fi "Anna halutessasi kommentteja hakulomakkeesta."
                                              :en "Feel free to also share your comments regarding the application form."
@@ -83,10 +83,10 @@
                                              :sv "Ändringarna har sparats"
                                              :en "The modifications have been saved"}
    :application-hakija-edit-text            {:fi "LÄHETÄ MUUTOKSET"
-                                             :sv "SCICKA FÖRÄNDRINGAR"
+                                             :sv "SKICKA FÖRÄNDRINGAR"
                                              :en "SEND MODIFICATIONS"}
    :application-virkailija-edit-text        {:fi "TALLENNA MUUTOKSET"
-                                             :sv "SPARA FÖRÄNDRINGAR"
+                                             :sv "SPARA FÖRÄNDRINGARNA"
                                              :en "SAVE MODIFICATIONS"}
    :hakija-new-text                         {:fi "LÄHETÄ HAKEMUS"
                                              :sv "SKICKA ANSÖKAN"
@@ -113,7 +113,7 @@
                                              :sv "Med vänliga hälsningar"
                                              :en "Best Regards"}
    :application-can-be-found-here           {:fi "Hakemuksesi löytyy täältä"
-                                             :sv "Din ansökan kan hittas här"
+                                             :sv "Din ansökan hittas här"
                                              :en "You can find your application here"}
    :hello-text                              {:fi "Hei"
                                              :sv "Hej"
@@ -131,20 +131,20 @@
                                              :sv "Lägg till ansökningsmål"
                                              :en "Add application option"}
    :applications_at_most                    {:fi "Tässä haussa voit hakea %s hakukohteeseen"
-                                             :sv "Tässä haussa voit hakea %s hakukohteeseen"
+                                             :sv "Du kan söka till %s ansökningsmål i denna ansökan"
                                              :en "Tässä haussa voit hakea %s hakukohteeseen"}
    :file-upload-failed                      {:fi "Tiedostoa ei ladattu, yritä uudelleen"
                                              :en "File failed to upload, try again"
-                                             :sv "Fil inte laddat, försök igen"}
+                                             :sv "Filen kunde inte laddas, försök igen"}
    :file-type-forbidden                     {:fi "Tiedostoa ei ladattu, yritä uudelleen"
                                              :en "File failed to upload, try again"
-                                             :sv "Fil inte laddat, försök igen"}
+                                             :sv "Filen kunde inte laddas, försök igen"}
    :question-for-hakukohde                  {:fi "Kysymys kuuluu hakukohteisiin"
                                              :en "This question is for application options"
-                                             :sv "Frågan är för ansökningsmålar"}
+                                             :sv "Frågan är avsedd för ansökningsmål"}
    :liitepyynto-for-hakukohde               {:fi "Liitepyyntö kuuluu hakukohteisiin"
                                              :en "Request for attachment is for application options"
-                                             :sv "Begäran om bilagor för ansökningsmålar"}
+                                             :sv "Begäran om bilagor för ansökningsmål"}
    :show-more                               {:fi "Näytä lisää.."
                                              :en "Show more.."
                                              :sv "Visa mer.."}
@@ -162,7 +162,7 @@
                                              :sv "Den nya länken har skickats!"}
    :expired-secret-contact                  {:fi "Ongelmatilanteessa ota yhteys hakemaasi oppilaitokseen."
                                              :en "If problems arise, please contact the educational organization to which you have applied."
-                                             :sv "Vid eventuella problemsituationer kontakta den läroanstalt du söker till."}
+                                             :sv "Vid eventuella problemsituationer kan du kontakta den läroanstalt som du sökt till."}
    :no-hakukohde-search-hits                {:fi "Ei hakutuloksia"
                                              :en "No search results found"
                                              :sv "Inga sökresultat"}
@@ -171,7 +171,7 @@
                                              :sv "Förhandsvisa"}
    :window-close-warning                    {:fi "Varmistathan että hakemus on lähetetty ennen sivun sulkemista."
                                              :en "Please ensure you have submitted the form before closing the page."
-                                             :sv ""}
+                                             :sv "Försäkra dig om att ansökan har skickats innan du stänger sidan"}
    :hours                                   {:fi "tuntia" :en "hours" :sv "timmar"}
    :minutes                                 {:fi "minuuttia" :en "minutes" :sv "minuter"}
    :seconds                                 {:fi "sekuntia" :en "seconds" :sv "sekunder"}
@@ -179,34 +179,34 @@
    :minute                                  {:fi "minuutti" :en "minute" :sv "minut"}
    :second                                  {:fi "sekunti" :en "second" :sv "sekund"}
    :pohjakoulutusvaatimus                   {:fi "Pohjakoulutusvaatimus"
-                                             :sv "Pohjakoulutusvaatimus"
+                                             :sv "Grundutbildningskrav"
                                              :en "Pohjakoulutusvaatimus"}
    :muokkaa-hakukohteita                    {:fi "Muokkaa hakukohteita"
-                                             :sv "Muokkaa hakukohteita"
+                                             :sv "Bearbeta ansökningsmål"
                                              :en "Muokkaa hakukohteita"}
    :read-more                               {:fi "Lue lisää"
-                                             :sv "Läs vidare"
+                                             :sv "Läs mera"
                                              :en "Read more"}
    :read-less                               {:fi "Sulje ohje"
                                              :sv "Dölj anvisning"
                                              :en "Hide instructions"}
    :insufficient-base-education             {:fi "Ilmoitus riittämättömästä pohjakoulutuksesta"
-                                             :sv "Ilmoitus riittämättömästä pohjakoulutuksesta"
+                                             :sv "Anmälan om otillräcklig grundutbildning"
                                              :en "Ilmoitus riittämättömästä pohjakoulutuksesta"}
    :not-applicable-for-hakukohteet          {:fi "Ilmoittamasi pohjakoulutuksen perusteella et voi tulla valituksi seuraaviin hakukohteisiin"
-                                             :sv "Ilmoittamasi pohjakoulutuksen perusteella et voi tulla valituksi seuraaviin hakukohteisiin"
+                                             :sv "På basis av den grundutbildning du har angett kan du inte bli antagen till följande ansökningsmål"
                                              :en "Ilmoittamasi pohjakoulutuksen perusteella et voi tulla valituksi seuraaviin hakukohteisiin"}
    :allow-use-of-contact-information        {:fi "Yhteystietojani saa käyttää koulutusmarkkinoinnissa?"
-                                             :sv "Yhteystietojani saa käyttää koulutusmarkkinoinnissa?"
+                                             :sv "Mina kontaktuppgifter får användas för utbildningsmarknadsföring?"
                                              :en "Yhteystietojani saa käyttää koulutusmarkkinoinnissa?"}
    :allow-publishing-of-results-online      {:fi "Opiskelijavalinnan tulokseni saa julkaista internetissä?"
-                                             :sv "Opiskelijavalinnan tulokseni saa julkaista internetissä?"
+                                             :sv "Mitt antagningsresultat får publiceras på internet?"
                                              :en "Opiskelijavalinnan tulokseni saa julkaista internetissä?"}
    :permission-for-electronic-transactions  {:fi "Opiskelijavalinnan tulokset saa lähettää minulle sähköisesti."
-                                             :sv "Opiskelijavalinnan tulokset saa lähettää minulle sähköisesti."
+                                             :sv "Antagningsresultatet får skickas till mig elektroniskt."
                                              :en "Opiskelijavalinnan tulokset saa lähettää minulle sähköisesti."}
    :contact-language                        {:fi "Asiointikieli"
-                                             :sv "Asiointikieli"
+                                             :sv "Ärendehanteringsspråk"
                                              :en "Asiointikieli"}})
 
 (def general-texts
@@ -274,7 +274,7 @@
                                       :sv "Har du avlagt gymnasiet/studentexamen eller yrkesinriktad examen?"}
    :choose-country                   {:en "Choose the country where you have completed your most recent qualification. If you have not yet completed a general upper secondary school syllabus/matriculation examination or vocational qualification, but are in the process of doing so, please choose the country where you will complete the qualification. NB: a vocational qualification can be a vocational upper secondary qualification, school-level qualification, post-secondary level qualification, higher vocational level qualification, further vocational qualification or specialist vocational qualification. Do not fill in the country where you have completed a higher education qualification.",
                                       :fi "Merkitse viimeisimmän tutkintosi suoritusmaa. Jos sinulla ei ole vielä lukion päättötodistusta/ylioppilastutkintoa tai ammatillista tutkintoa mutta olet suorittamassa sellaista, valitse se maa, jossa parhaillaan suoritat kyseistä tutkintoa. Huom: ammatillinen tutkinto voi olla ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto, ammatti-tai erikoisammattitutkinto. Älä merkitse tähän korkeakoulututkinnon suoritusmaata.",
-                                      :sv "Ange land där din senaste examen avlagts. Om du ännu inte har avlagt gymnasiet/studentexamen eller yrkesinriktad examen men håller på att göra det, välj då det land där du som bäst avlägger examen i fråga. Obs: yrkesinriktad examen kan vara yrkesinriktad grundexamen, examen på skolnivå, examen på institutsnivå, yrkesinriktad examen på högre nivå, yrkesexamen eller specialyrkesexamen. Ange inte land där du avlagt högskoleexamen."}})
+                                      :sv "Ange landet där du avlagt din senaste examen. Om du ännu inte har avlagt gymnasiet/studentexamen eller yrkesinriktad examen men håller på att göra det, välj då det land där du som bäst avlägger examen i fråga. Obs: yrkesinriktad examen kan vara yrkesinriktad grundexamen, examen på skolnivå, examen på institutsnivå, yrkesinriktad examen på högre nivå, yrkesexamen eller specialyrkesexamen. Ange inte landet där du avlagt högskoleexamen."}})
 
 (def higher-base-education-module-texts
   {:educational-background                                 {:en "Your educational background" :fi "Koodistopohjainen pohjakoulutusosio" :sv "Utbildningsbakgrund"}
@@ -438,7 +438,7 @@
                                                             :sv "År och datum då examen avlagts (dd.mm.åååå)"}
    :other-qualification-foreign                            {:en "Other qualification completed outside Finland that provides eligibility to apply for higher education in the country in question"
                                                             :fi "Muualla kuin Suomessa suoritettu muu tutkinto, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun"
-                                                            :sv "Övrig examen som avlagts annanstans än i Finland, och ger behörighet för högskolestudier i ifrågavarande land"}
+                                                            :sv "Övrig examen som avlagts annanstans än i Finland, som ger behörighet för högskolestudier i ifrågavarande land"}
    :other-qualification-foreign-attachment                 {:en "Request for attachment on education that provides eligibility for higher education in the awarding country."
                                                             :fi "Liitepyyntö muualla kuin Suomessa suoritetusta muusta tutkinnosta joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun"
                                                             :sv "Begäran om bilagor för examen som avlagts annanstans än i Finland och som i landet ifråga ger ansökningsbehörighet för högskola. "}
@@ -481,7 +481,7 @@
                                                             :fi "Muun korkeakoulukelpoisuuden liitepyyntö"
                                                             :sv "Begäran om bilagor för övrig högskolebehörighet"}
    :required-for-statistics                                {:fi "Tämä tieto kysytään tilastointia varten."
-                                                            :sv "Denna uppgift frågas för statistik."
+                                                            :sv "Denna uppgift behövs för statistikföring."
                                                             :en "This is required for statistical reasons"}})
 
 (def person-info-module-texts
@@ -561,10 +561,10 @@
                                  :sv "Studieinfo: Din ansökan har mottagits"
                                  :en "Studyinfo: Your application has been received"}
     :with-application-period    {:fi "Voit katsella ja muokata hakemustasi hakuaikana yllä olevan linkin kautta. Älä jaa linkkiä ulkopuolisille. Jos käytät yhteiskäyttöistä tietokonetta, muista kirjautua ulos sähköpostiohjelmasta.\n\nJos sinulla on verkkopankkitunnukset, mobiilivarmenne tai sähköinen henkilökortti, voit vaihtoehtoisesti kirjautua sisään [Opintopolku.fi](https://www.opintopolku.fi):ssä, ja tehdä muutoksia hakemukseesi Oma Opintopolku -palvelussa hakuaikana. Oma Opintopolku -palvelussa voit lisäksi nähdä valintojen tulokset ja ottaa opiskelupaikan vastaan.\n\nÄlä vastaa tähän viestiin - viesti on lähetetty automaattisesti.\n\nYstävällisin terveisin <br/>\nOpintopolku\n"
-                                 :sv "Om du vill ändra din ansökan, kan du göra ändringar via följande länken ovan under ansökningstiden. Dela inte länken vidare till utomstående. Om du använder en offentlig dator, kom ihåg att logga ut från e-postprogrammet.\n\nOm du har nätbankskoder, mobilcertifikat eller ett elektroniskt ID-kort, kan du alternativt logga in i [Studieinfo.fi](https://www.studieinfo.fi) och under ansökningstiden göra ändringarna i tjänsten Min Studieinfo. I tjänsten kan du också, se antagningsresultaten och ta emot studieplatsen.\n\nSvara inte på detta meddelande, det har skickats automatiskt.\n\nMed vänliga hälsningar, <br/>\nStudieinfo\n"
+                                 :sv "Om du vill ändra din ansökan, kan du göra ändringar via länken ovan under ansökningstiden. Dela inte länken vidare till utomstående. Om du använder en offentlig dator, kom ihåg att logga ut från e-postprogrammet.\n\nOm du har nätbankskoder, mobilcertifikat eller ett elektroniskt ID-kort, kan du alternativt logga in i [Studieinfo.fi](https://www.studieinfo.fi) och under ansökningstiden göra ändringarna i tjänsten Min Studieinfo. I tjänsten kan du också, se antagningsresultaten och ta emot studieplatsen.\n\nSvara inte på detta meddelande, det har skickats automatiskt.\n\nMed vänliga hälsningar, <br/>\nStudieinfo\n"
                                  :en "If you wish to edit your application, you can use the link above and make the changes within the application period. Do not share the link with others. If you are using a public or shared computer, remember to log out of the email application.\n\nIf you have Finnish online banking credentials, an electronic ID-card or mobile certificate, you can also log in at [Studyinfo.fi](https://www.studyinfo.fi) and make the changes in the My Studyinfo -service within the application period. In addition to making changes to your application, if you have access to the My Studyinfo -service you can also view the admission results and confirm the study place.\n\nThis is an automatically generated email, please do not reply.\n\nBest regards, <br/>\nStudyinfo\n"}
     :without-application-period {:fi "Voit katsella ja muokata hakemustasi yllä olevan linkin kautta. Älä jaa linkkiä ulkopuolisille. Jos käytät yhteiskäyttöistä tietokonetta, muista kirjautua ulos sähköpostiohjelmasta.\n\nJos sinulla on verkkopankkitunnukset, mobiilivarmenne tai sähköinen henkilökortti, voit vaihtoehtoisesti kirjautua sisään [Opintopolku.fi](https://www.opintopolku.fi):ssä, ja tehdä muutoksia hakemukseesi Oma Opintopolku -palvelussa hakuaikana. Oma Opintopolku -palvelussa voit lisäksi nähdä valintojen tulokset ja ottaa opiskelupaikan vastaan.\n\nÄlä vastaa tähän viestiin - viesti on lähetetty automaattisesti.\n\nYstävällisin terveisin <br/>\nOpintopolku\n"
-                                 :sv "Om du vill ändra din ansökan, kan du göra ändringar via följande länken ovan. Dela inte länken vidare till utomstående. Om du använder en offentlig dator, kom ihåg att logga ut från e-postprogrammet.\n\nOm du har nätbankskoder, mobilcertifikat eller ett elektroniskt ID-kort, kan du alternativt logga in i [Studieinfo.fi](https://www.studieinfo.fi) och under ansökningstiden göra ändringarna i tjänsten Min Studieinfo. I tjänsten kan du också, se antagningsresultaten och ta emot studieplatsen.\n\nSvara inte på detta meddelande, det har skickats automatiskt.\n\nMed vänliga hälsningar, <br/>\nStudieinfo\n"
+                                 :sv "Om du vill ändra din ansökan, kan du göra ändringar via länken ovan. Dela inte länken vidare till utomstående. Om du använder en offentlig dator, kom ihåg att logga ut från e-postprogrammet.\n\nOm du har nätbankskoder, mobilcertifikat eller ett elektroniskt ID-kort, kan du alternativt logga in i [Studieinfo.fi](https://www.studieinfo.fi) och under ansökningstiden göra ändringarna i tjänsten Min Studieinfo. I tjänsten kan du också, se antagningsresultaten och ta emot studieplatsen.\n\nSvara inte på detta meddelande, det har skickats automatiskt.\n\nMed vänliga hälsningar, <br/>\nStudieinfo\n"
                                  :en "If you wish to edit your application, you can use the link above and make the changes within the application period. Do not share the link with others. If you are using a public or shared computer, remember to log out of the email application.\n\nIf you have Finnish online banking credentials, an electronic\nID-card or mobile certificate, you can also log in\nat [Studyinfo.fi](https://www.studyinfo.fi) and make the\nchanges in the My Studyinfo -service within the application period. In addition to making changes to your application, if you have access to the My Studyinfo -service you can also view the admission results and confirm the study place.\n\nThis is an automatically generated email, please do not reply.\n\nBest regards, <br/>\nStudyinfo\n"}}})
 
 (def virkailija-texts
