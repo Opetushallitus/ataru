@@ -1,51 +1,51 @@
 (ns ataru.virkailija.editor.components.toolbar
-  (:require
-   [ataru.component-data.component :as component]
-   [ataru.component-data.base-education-module :as base-education-module]
-   [ataru.component-data.higher-education-base-education-module :as kk-base-education-module]
-   [ataru.feature-config :as fc]
-   [re-frame.core :refer [dispatch subscribe]]
-   [taoensso.timbre :refer-macros [spy debug]]))
+  (:require [ataru.cljs-util :as util :refer [get-virkailija-translation]]
+            [ataru.component-data.component :as component]
+            [ataru.component-data.base-education-module :as base-education-module]
+            [ataru.component-data.higher-education-base-education-module :as kk-base-education-module]
+            [ataru.feature-config :as fc]
+            [re-frame.core :refer [dispatch subscribe]]
+            [taoensso.timbre :refer-macros [spy debug]]))
 
 (def ^:private toolbar-elements
-  [["Lomakeosio" component/form-section]
-   ["Pudotusvalikko" component/dropdown]
-   ["Painikkeet, yksi valittavissa" component/single-choice-button]
-   ["Lista, monta valittavissa" component/multiple-choice]
-   ["Tekstikenttä" component/text-field]
-   ["Tekstialue" component/text-area]
-   ["Vierekkäiset tekstikentät" component/adjacent-fieldset]
-   ["Liitepyyntö" component/attachment]
-   ["Kysymysryhmä" component/question-group]
-   ["Infoteksti" component/info-element]
-   ["Pohjakoulutusmoduuli" base-education-module/module]
-   ["Pohjakoulutusmoduuli (kk-yhteishaku)" kk-base-education-module/module]
-   ["Ilmoitus riittämättömästä pohjakoulutuksesta" component/pohjakoulutusristiriita]
-   ["Koulutusmarkkinointilupa" component/koulutusmarkkinointilupa]
-   ["Valintatuloksen julkaisulupa" component/valintatuloksen-julkaisulupa]
-   ["Sähköisen asioinnin lupa" component/lupa-sahkoiseen-asiointiin]
-   ["Asiointikieli" component/asiointikieli]])
+  [[:form-section component/form-section]
+   [:dropdown component/dropdown]
+   [:single-choice-button component/single-choice-button]
+   [:multiple-choice component/multiple-choice]
+   [:text-field component/text-field]
+   [:text-area component/text-area]
+   [:adjacent-fieldset component/adjacent-fieldset]
+   [:attachment component/attachment]
+   [:question-group component/question-group]
+   [:info-element component/info-element]
+   [:base-education-module base-education-module/module]
+   [:kk-base-education-module kk-base-education-module/module]
+   [:pohjakoulutusristiriita component/pohjakoulutusristiriita]
+   [:koulutusmarkkinointilupa component/koulutusmarkkinointilupa]
+   [:valintatuloksen-julkaisulupa component/valintatuloksen-julkaisulupa]
+   [:lupa-sahkoiseen-asiointiin component/lupa-sahkoiseen-asiointiin]
+   [:asiointikieli component/asiointikieli]])
 
 (def followup-toolbar-element-names
-  #{"Tekstikenttä"
-    "Tekstialue"
-    "Pudotusvalikko"
-    "Painikkeet, yksi valittavissa"
-    "Lista, monta valittavissa"
-    "Infoteksti"
-    "Liitepyyntö"
-    "Vierekkäiset tekstikentät"
-    "Kysymysryhmä"})
+  #{:text-field
+    :text-area
+    :dropdown
+    :single-choice-button
+    :multiple-choice
+    :info-element
+    :attachment
+    :adjacent-fieldset
+    :question-group})
 
 (def question-group-toolbar-element-names
-  #{"Tekstikenttä"
-    "Tekstialue"
-    "Pudotusvalikko"
-    "Painikkeet, yksi valittavissa"
-    "Lista, monta valittavissa"
-    "Infoteksti"
-    "Liitepyyntö"
-    "Vierekkäiset tekstikentät"})
+  #{:text-field
+    :text-area
+    :dropdown
+    :single-choice-button
+    :multiple-choice
+    :info-element
+    :attachment
+    :adjacent-fieldset})
 
 (def ^:private followup-toolbar-elements
   (filter
@@ -58,7 +58,7 @@
     toolbar-elements))
 
 (def ^:private adjacent-fieldset-toolbar-elements
-  {"Tekstikenttä" (comp (fn [text-field] (assoc text-field :params {:adjacent true}))
+  {:text-field (comp (fn [text-field] (assoc text-field :params {:adjacent true}))
                     component/text-field)})
 
 (defn- component-toolbar [path elements generator]
@@ -69,16 +69,16 @@
             (for [[component-name generate-fn] elements
                   :when (and (not (and (vector? path)
                                        (= :children (second path))
-                                       (= "Lomakeosio" component-name)))
+                                       (= :form-section component-name)))
                              (not (and @base-education-module-exists?
-                                       (contains? #{"Pohjakoulutusmoduuli" "Pohjakoulutusmoduuli (kk-yhteishaku)"} component-name)))
+                                       (contains? #{:base-education-module :kk-base-education-module} component-name)))
                              (not (and @pohjakoulutusristiriita-exists?
-                                       (= "Ilmoitus riittämättömästä pohjakoulutuksesta" component-name))))]
+                                       (= :pohjakoulutusristiriita component-name))))]
               [:li.form__add-component-toolbar--list-item
                [:a {:on-click (fn [evt]
                                 (.preventDefault evt)
                                 (generator generate-fn))}
-                component-name]])))))
+                (get-virkailija-translation component-name)]])))))
 
 
 (defn add-component [path]

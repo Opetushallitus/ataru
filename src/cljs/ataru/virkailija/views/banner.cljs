@@ -1,34 +1,37 @@
 (ns ataru.virkailija.views.banner
-  (:require-macros
-            [reagent.ratom :refer [reaction]]
-            [cljs.core.async.macros :refer [go]])
-  (:require [ataru.virkailija.routes :as routes]
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [reaction]])
+  (:require [ataru.cljs-util :as util :refer [get-virkailija-translation]]
+            [ataru.translations.texts :refer [virkailija-texts]]
+            [ataru.virkailija.routes :as routes]
+            [cljs.core.async :refer [<! timeout]]
             [cljs.core.match :refer-macros [match]]
+            [clojure.string :as string]
+            [goog.string :as s]
             [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as reagent]
-            [cljs.core.async :refer  [<! timeout]]
-            [taoensso.timbre :refer-macros [spy debug]]
-            [clojure.string :as string]))
+            [taoensso.timbre :refer-macros [spy debug]]))
 
 (def panels
-  {:editor      {:text "Lomakkeet" :href "/lomake-editori/editor/"}
-   :application {:text "Hakemukset" :href "/lomake-editori/applications/"}})
+  {:editor      {:text (:forms-panel virkailija-texts) :href "/lomake-editori/editor/"}
+   :application {:text (:applications-panel virkailija-texts) :href "/lomake-editori/applications/"}})
 
-(def right-labels {:form-edit "Lomakkeen muokkaus"
-                   :view-applications "Hakemusten katselu"
-                   :edit-applications "Hakemusten arviointi"})
+(def right-labels {:form-edit (:form-edit-rights-panel virkailija-texts)
+                   :view-applications (:view-applications-rights-panel virkailija-texts)
+                   :edit-applications (:edit-applications-rights-panel virkailija-texts)})
 
 (def active-section-arrow [:i.active-section-arrow.zmdi.zmdi-chevron-down.zmdi-hc-lg])
 
 (defn section-link [panel-kw]
-  (let [active-panel     (subscribe [:active-panel])
-        active?          (reaction (= @active-panel panel-kw))]
+  (let [active-panel (subscribe [:active-panel])
+        active?      (reaction (= @active-panel panel-kw))
+        lang         (subscribe [:editor/virkailija-lang])]
     (fn []
       [:div.section-link {:class (name panel-kw)}
        [:a {:href (-> panels panel-kw :href)}
         (when @active?
           active-section-arrow)
-        (-> panels panel-kw :text)]])))
+        (get-in panels [panel-kw :text @lang])]])))
 
 (defn title []
   (fn []
@@ -41,12 +44,12 @@
   [label]
   (some #(-> label %) [:fi :sv :en]))
 
-(defn create-org-labels [organizations]
+(defn create-org-labels [organizations lang]
   (map
     (fn [org]
       (str (get-label (:name org))
            (when (not-empty (:rights org))
-             (str " (" (string/join ", " (map #(get right-labels (keyword %)) (:rights org))) ")"))))
+             (str " (" (string/join ", " (map #(get-in right-labels [(keyword %) lang]) (:rights org))) ")"))))
    organizations))
 
 (defn- org-label
@@ -54,18 +57,18 @@
   (let [org-count (count organizations)]
     (cond
       (some? selected-organization) (get-label (:name selected-organization))
-      (zero? org-count) "Ei organisaatiota"
-      (< 1 org-count) "Useita organisaatioita"
+      (zero? org-count) (get-virkailija-translation :no-organization)
+      (< 1 org-count) (get-virkailija-translation :multiple-organizations)
       :else (-> organizations (first) :name (get-label)))))
 
 (defn- organization-rights-select []
   (let [rights (subscribe [:state-query [:editor :user-info :selected-organization :rights]])]
     [:div.profile__organization-rights-selector
-     "Valitse käyttäjän oikeudet"
+     (get-virkailija-translation :choose-user-rights)
      (doall
-       (for [[right label] [["view-applications" "Hakemusten katselu"]
-                            ["edit-applications" "Hakemusten muokkaus"]
-                            ["form-edit" "Lomakkeiden muokkaus"]]]
+       (for [[right label] [["view-applications" (get-virkailija-translation :view-applications-rights-panel)]
+                            ["edit-applications" (get-virkailija-translation :edit-applications-rights-panel)]
+                            ["form-edit" (get-virkailija-translation :form-edit-rights-panel)]]]
          ^{:key (str "org-right-selector-for-" (name right))}
          [:label.profile__organization-select-right
           [:input
@@ -75,8 +78,9 @@
           label]))]))
 
 (defn profile []
-  (let [user-info             (subscribe [:state-query [:editor :user-info]])
-        org-select-visible?   (reagent/atom false)]
+  (let [user-info           (subscribe [:state-query [:editor :user-info]])
+        org-select-visible? (reagent/atom false)
+        lang                (subscribe [:editor/virkailija-lang])]
     (fn []
       (when @user-info
         (let [organizations             (:organizations @user-info)
@@ -99,18 +103,20 @@
                  [:ul.profile__organization-select-user-orgs.zmdi-hc-ul]
                  (map
                    (fn [org] [:li [:i.zmdi.zmdi-hc-li.zmdi-accounts] org])
-                   (create-org-labels (or selected-organization organizations))))
+                   (create-org-labels (or selected-organization organizations) @lang)))
                (when selected-organization
                  [:div
                   (when (:superuser? @user-info)
                     [organization-rights-select])
                   [:a.profile__reset-to-default-organization
                    {:on-click #(dispatch [:editor/remove-selected-organization])}
-                   (str "Palauta oletusorganisaatio (" (org-label organizations nil) ")")]])
-               [:h4.profile__organization-select-title "Vaihda organisaatio"]
+                   (s/format "%s (%s)"
+                             (get-virkailija-translation :reset-organization)
+                             (org-label organizations nil))]])
+               [:h4.profile__organization-select-title (get-virkailija-translation :change-organization)]
                [:input.editor-form__text-field.profile__organization-select-input
                 {:type        "text"
-                 :placeholder "Etsi aliorganisaatioita"
+                 :placeholder (get-virkailija-translation :search-sub-organizations)
                  :value       @(subscribe [:state-query [:editor :organizations :query]])
                  :on-change   #(dispatch [:editor/update-organization-select-query (.-value (.-target %))])}]
                (into
@@ -125,7 +131,7 @@
                         (get-label name)]])
                     @search-results)])
                (when (< 10 (count @search-results))
-                 [:div.profile__organization-more-results "Lisää tuloksia, tarkenna hakua"])])]])))))
+                 [:div.profile__organization-more-results (get-virkailija-translation :more-results-refine-search)])])]])))))
 
 (defn status []
   (let [flash    (subscribe [:state-query [:flash]])
@@ -163,7 +169,7 @@
 
 (defn local-dev-logout []
   [:div.local-dev-logout
-   [:a {:href "/lomake-editori/auth/logout"} "Kirjaudu ulos"]])
+   [:a {:href "/lomake-editori/auth/logout"} (get-virkailija-translation :logout)]])
 
 (defn snackbar []
   (if-let [snackbar-messages @(subscribe [:snackbar-message])]

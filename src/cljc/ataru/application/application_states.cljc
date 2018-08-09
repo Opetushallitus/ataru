@@ -2,8 +2,12 @@
   (:require [ataru.application.review-states :as review-states]))
 
 (defn get-review-state-label-by-name
-  [states name]
-  (->> states (filter #(= (first %) name)) first second))
+  [states name lang]
+  (->> states
+       (filter #(= (first %) name))
+       first
+       second
+       lang))
 
 (defn get-all-reviews-for-requirement
   "Adds default (incomplete) reviews where none have yet been created"

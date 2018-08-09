@@ -238,3 +238,8 @@
   :editor/email-template
   (fn [db _]
     (get-in db [:editor :email-template (get-in db [:editor :selected-form-key])])))
+
+(re-frame/reg-sub
+  :editor/virkailija-lang
+  (fn [db _]
+    (or (-> db :editor :user-info :lang keyword) :fi)))

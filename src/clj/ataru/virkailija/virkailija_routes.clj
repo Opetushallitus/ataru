@@ -159,7 +159,8 @@
       (ok {:organizations         (organization-list session)
            :oid                   (-> session :identity :oid)
            :name                  (format "%s %s" (-> session :identity :first-name) (-> session :identity :last-name))
-           :selected-organization (-> session :selected-organization)
+           :lang                  (-> session :identity :lang)
+           :selected-organization (:selected-organization session)
            :superuser?            (-> session :identity :superuser)}))
 
     (api/GET "/forms" {session :session}

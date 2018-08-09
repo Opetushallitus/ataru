@@ -41,6 +41,7 @@
                                         fixtures/application-review-notes
                                         nil
                                         false
+                                        :fi
                                         (tarjonta-service/new-tarjonta-service)
                                         (organization-service/new-organization-service)
                                         (ohjausparametrit-service/new-ohjausparametrit-service))

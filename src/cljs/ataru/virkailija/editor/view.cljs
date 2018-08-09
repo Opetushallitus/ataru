@@ -1,15 +1,16 @@
 (ns ataru.virkailija.editor.view
   (:require-macros [reagent.ratom :refer [reaction]])
-  (:require [re-frame.core :refer [subscribe dispatch dispatch-sync]]
-            [reagent.core :as r]
-            [ataru.cljs-util :refer [wrap-scroll-to]]
+  (:require [ataru.cljs-util :refer [wrap-scroll-to get-virkailija-translation]]
+            [ataru.component-data.component :as component]
             [ataru.virkailija.editor.core :as c]
             [ataru.virkailija.editor.subs]
-            [ataru.component-data.component :as component]
-            [ataru.virkailija.temporal :refer [time->str]]
             [ataru.virkailija.routes :as routes]
-            [taoensso.timbre :refer-macros [spy debug]]
-            [ataru.virkailija.temporal :as temporal]))
+            [ataru.virkailija.temporal :refer [time->str]]
+            [ataru.virkailija.temporal :as temporal]
+            [ataru.translations.texts :refer [virkailija-texts]]
+            [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+            [reagent.core :as r]
+            [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn form-row [form selected? used-in-haku-count]
   [:a.editor-form__row
@@ -46,7 +47,7 @@
    {:on-click (fn [evt]
                 (.preventDefault evt)
                 (dispatch [:editor/add-form]))}
-   "Uusi lomake"])
+   (get-virkailija-translation :new-form)])
 
 (defn- copy-form []
   (let [form-key    (subscribe [:state-query [:editor :selected-form-key]])
@@ -60,22 +61,22 @@
         :class    (if @disabled?
                     "editor-form__control-button--disabled"
                     "editor-form__control-button--enabled")}
-       "Kopioi lomake"])))
+       (get-virkailija-translation :copy-form)])))
 
 (defn- remove-form []
   (case @(subscribe [:editor/remove-form-button-state])
     :active
     [:button.editor-form__control-button--enabled.editor-form__control-button
      {:on-click #(dispatch [:editor/start-remove-form])}
-     "Poista lomake"]
+     (get-virkailija-translation :delete-form)]
     :confirm
     [:button.editor-form__control-button--confirm.editor-form__control-button
      {:on-click #(dispatch [:editor/confirm-remove-form])}
-     "Vahvista poisto"]
+     (get-virkailija-translation :confirm-delete)]
     :disabled
     [:button.editor-form__control-button--disabled.editor-form__control-button
      {:disabled true}
-     "Poista lomake"]))
+     (get-virkailija-translation :delete-form)]))
 
 (defn- form-controls []
   [:div.editor-form__form-controls-container
@@ -85,7 +86,7 @@
 
 (defn- form-header-row []
   [:div.editor-form__form-header-row
-   [:h1.editor-form__form-heading "Lomakkeet"]
+   [:h1.editor-form__form-heading (get-virkailija-translation :forms)]
    [form-controls]])
 
 (defn- editor-name-input [lang focus?]
@@ -103,7 +104,7 @@
                          {:type        "text"
                           :value       (get-in @form [:name lang])
                           :disabled    (some? @form-locked)
-                          :placeholder "Lomakkeen nimi"
+                          :placeholder (get-virkailija-translation :form-name)
                           :on-change   #(do (dispatch [:editor/change-form-name lang (.-value (.-target %))])
                                             (dispatch [:set-state [:editor :new-form-created?] false]))
                           :on-blur     #(dispatch [:set-state [:editor :new-form-created?] false])}])})))
@@ -125,11 +126,11 @@
               [editor-name-wrapper l false true]))]))
 
 (def ^:private lang-versions
-  {:fi "Suomi"
-   :sv "Ruotsi"
-   :en "Englanti"})
+  {:fi (:finnish virkailija-texts)
+   :sv (:swedish virkailija-texts)
+   :en (:english virkailija-texts)})
 
-(defn- lang-checkbox [lang-kwd checked?]
+(defn- lang-checkbox [lang-kwd checked? virkailija-lang]
   (let [id (str "lang-checkbox-" (name lang-kwd))]
     [:div.editor-form__checkbox-with-label
      {:key id}
@@ -141,56 +142,26 @@
                     (dispatch [:editor/toggle-language lang-kwd]))}]
      [:label.editor-form__checkbox-label.editor-form__language-checkbox-label
       {:for id}
-      (get lang-versions lang-kwd)]]))
+      (-> lang-versions lang-kwd virkailija-lang)]]))
 
 (defn- get-org-name [org]
-  (str
-   (get-in org [:name :fi])
-   (if (= "group" (:type org))
-     " (ryhmä)"
-     "")))
+  (str (get-in org [:name :fi])
+       (if (= "group" (:type org))
+         (str " (" (get-virkailija-translation :group) ")")
+         "")))
 
 (defn- get-org-name-for-oid [oid orgs] (get-org-name (first (filter #(= oid (:oid %)) orgs))))
-
-(defn form-owner-organization [form]
-  (let [organizations (subscribe [:state-query [:editor :user-info :organizations]])
-        many-orgs     (fn [orgs] (> (count orgs) 1))
-        opened?       (r/atom false)
-        toggle-open   (fn [evt] (swap! opened? not))]
-    (fn [form]
-      (let [selected-org-name (get-org-name-for-oid (:organization-oid form) @organizations)]
-        ;; If name is not available, selected org is a suborganization. Currently it's unsure
-        ;; if we want to show the form's organization at all in that case. If we do, we'll have to pass
-        ;; organization name from server with the form and fetch it from organization service
-        ;; and probably start caching those
-        (when (not-empty selected-org-name)
-          [:div.editor-form__owner-control
-           [:span.editor-form__owner-label "Omistaja: "]
-           [:a
-            {:on-click toggle-open
-             :class (if (many-orgs @organizations) "" "editor-form__form-owner-selection-disabled-link")}
-            selected-org-name]
-           (when (and @opened? (many-orgs @organizations))
-             [:div.editor-form__form-owner-selection-anchor
-              [:div.editor-form__owner-selection-arrow-up]
-              (into [:div.editor-form__form-owner-selection--opened
-                     {:on-click toggle-open}]
-                    (map (fn [org]
-                           [:div.editor-form__owner-selection-row
-                            {:on-click (fn [evt] (dispatch [:editor/change-form-organization (:oid org)]))}
-                            (get-org-name org)])
-                         @organizations))])])))))
 
 (defn- fold-all []
   [:div
    [:span.editor-form__fold-clickable-text
     {:on-click #(dispatch [:editor/fold-all])}
-    "sulje"]
+    (get-virkailija-translation :close)]
    [:span.editor-form__fold-description-text " / "]
    [:span.editor-form__fold-clickable-text
     {:on-click #(dispatch [:editor/unfold-all])}
-    "avaa"]
-   [:span.editor-form__fold-description-text " osiot"]])
+    (get-virkailija-translation :open)]
+   [:span.editor-form__fold-description-text (str " " (get-virkailija-translation :sections))]])
 
 (defn- preview-link [form-key lang-kwd]
   [:a.editor-form__preview-button-link
@@ -209,28 +180,29 @@
         [:div.editor-form__preview-buttons
          (when locked?
            [:div.editor-form__form-editing-locked
-            "Lomakkeen muokkaus on estetty "
+            (get-virkailija-translation :form-locked)
             [:i.zmdi.zmdi-lock.editor-form__form-editing-lock-icon]
             [:div.editor-form__form-editing-locked-by
              (str "(" (:locked-by @form-locked) " " (-> @form-locked :locked temporal/time->short-str) ")")]])
          [:div#lock-form.editor-form__fold-clickable-text
           {:on-click #(dispatch [:editor/toggle-form-editing-lock])}
           (if locked?
-            "Poista lukitus"
-            "Lukitse lomake")]]))))
+            (get-virkailija-translation :remove-lock)
+            (get-virkailija-translation :lock-form))]]))))
 
 (defn- form-toolbar [form]
-  (let [languages @(subscribe [:editor/languages])]
+  (let [languages @(subscribe [:editor/languages])
+        lang      (subscribe [:editor/virkailija-lang])]
     [:div.editor-form__toolbar
      [:div.editor-form__toolbar-left
       [:div.editor-form__language-controls
-       (map (fn [lang-kwd]
-              (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages))))
-            (keys lang-versions))]
+       (doall (map (fn [lang-kwd]
+                     (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages)) @lang))
+                   (keys lang-versions)))]
       [:div.editor-form__preview-buttons
        [:a.editor-form__email-template-editor-link
         {:on-click #(dispatch [:editor/toggle-email-template-editor])}
-        "Muokkaa sähköpostipohjia"]]
+        (get-virkailija-translation :edit-email-templates )]]
       [lock-form-editing]]
      [:div.editor-form__toolbar-right
       [fold-all]]]))
@@ -244,11 +216,13 @@
         [:div.editor-form__form-link-container.animated.flash
          [:h3.editor-form__form-link-heading
           [:i.zmdi.zmdi-alert-circle-o]
-          (if (empty? (rest (vals form-used-in-hakus)))
-            " Tämä lomake on haun käytössä"
-            " Tämä lomake on seuraavien hakujen käytössä")]
+          (str " "
+               (if (empty? (rest (vals form-used-in-hakus)))
+            (get-virkailija-translation :used-by-haku)
+            (get-virkailija-translation :used-by-haut)))]
          [:ul.editor-form__used-in-haku-list
-          (for [haku (vals form-used-in-hakus)]
+          (doall
+            (for [haku (vals form-used-in-hakus)]
             ^{:key (str "haku-" (:haku-oid haku))}
             [:li
              [:div.editor-form__used-in-haku-list-haku-name
@@ -264,25 +238,25 @@
                                 (:haku-oid haku)
                                 "?lang=fi")
                    :target "_blank"}
-               "Testihakemus / Virkailijatäyttö"]
+               (get-virkailija-translation :test-application)]
               [:span " | "]
               [:a {:href   (str js/config.applicant.service_url
                                 "/hakemus/haku/" (:haku-oid haku)
                                 "?lang=fi")
                    :target "_blank"}
-               "Lomake"]]])]]
+               (get-virkailija-translation :form)]]]))]]
         [:div.editor-form__form-link-container
          [:h3.editor-form__form-link-heading
           [:i.zmdi.zmdi-alert-circle-o]
-          " Linkki lomakkeeseen"]
+          (str " " (get-virkailija-translation :link-to-form))]
          [:a.editor-form__form-preview-link
           {:href   (str js/config.applicant.service_url
                         "/hakemus/" (:key form)
                         "?lang=fi")
            :target "_blank"}
-          "Lomake"]
+          (get-virkailija-translation :form)]
          [:span " | "]
-         [:a.editor-form__form-admin-preview-link "Testihakemus / Virkailijatäyttö:"]
+         [:a.editor-form__form-admin-preview-link (get-virkailija-translation :test-application)]
          (map (partial preview-link (:key form)) @languages)]))))
 
 (defn- close-form []

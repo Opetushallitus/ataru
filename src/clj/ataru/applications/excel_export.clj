@@ -10,6 +10,7 @@
             [ataru.util :as util]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
+            [ataru.translations.texts :refer [excel-texts]]
             [clj-time.core :as t]
             [clj-time.format :as f]
             [clojure.string :as string :refer [trim]]
@@ -73,14 +74,16 @@
     (time-formatter date-time modified-time-format)))
 
 (defn application-state-formatter
-  [state]
+  [state lang]
   (or
-    (->> review-states/application-review-states
-         (filter #(= (first %) state)) first second)
+    (lang (->> review-states/application-review-states
+               (filter #(= (first %) state))
+               first
+               second))
     "Tuntematon"))
 
 (defn hakukohde-review-formatter
-  [requirement-name application-hakukohde-reviews]
+  [requirement-name application-hakukohde-reviews lang]
   (let [reviews     (filter
                       #(= (:requirement %) requirement-name)
                       application-hakukohde-reviews)
@@ -89,14 +92,15 @@
                         (filter #(= (first %) (keyword requirement-name)) review-states/hakukohde-review-types)))
         get-label   (partial application-states/get-review-state-label-by-name requirement)]
     (if (= 1 (count reviews))
-      (get-label (-> (first reviews) :state))
+      (get-label (-> (first reviews) :state) lang)
       (clojure.string/join
         "\n"
         (map
           (fn [{:keys [hakukohde hakukohde-name state]}]
-            (str hakukohde-name
-                 " (" hakukohde "): "
-                 (get-label state)))
+            (format "%s (%s): %s"
+                    hakukohde-name
+                    hakukohde
+                    (get-label state lang)))
           reviews)))))
 
 (defn- application-review-notes-formatter
@@ -118,54 +122,61 @@
        (clojure.string/join ",\n")))
 
 (def ^:private form-meta-fields
-  [{:label "Nimi"
-    :field :name
+  [{:label     (:name excel-texts)
+    :field     :name
     :format-fn #(some (partial get %) [:fi :sv :en])}
-   {:label "Id"
+   {:label (:id excel-texts)
     :field :id}
-   {:label "Tunniste"
+   {:label (:key excel-texts)
     :field :key}
-   {:label "Viimeksi muokattu"
-    :field :created-time
+   {:label     (:created-time excel-texts)
+    :field     :created-time
     :format-fn time-formatter}
-   {:label "Viimeinen muokkaaja"
+   {:label (:created-by excel-texts)
     :field :created-by}])
 
 (def ^:private application-meta-fields
-  [{:label "Id"
-    :field [:application :key]}
-   {:label     "Lähetysaika"
+  [{:label     (:id excel-texts)
+    :field     [:application :key]}
+   {:label     (:sent-at excel-texts)
     :field     [:application :created-time]
     :format-fn time-formatter}
-   {:label     "Hakemuksen tila"
+   {:label     (:application-state excel-texts)
     :field     [:application :state]
+    :lang?     true
     :format-fn application-state-formatter}
-   {:label     "Hakukohteen käsittelyn tila"
+   {:label     (:hakukohde-handling-state excel-texts)
     :field     [:application :application-hakukohde-reviews]
+    :lang?     true
     :format-fn (partial hakukohde-review-formatter "processing-state")}
-   {:label     "Kielitaitovaatimus"
+   {:label     (:kielitaitovaatimus excel-texts)
     :field     [:application :application-hakukohde-reviews]
+    :lang?     true
     :format-fn (partial hakukohde-review-formatter "language-requirement")}
-   {:label     "Tutkinnon kelpoisuus"
+   {:label     (:tutkinnon-kelpoisuus excel-texts)
     :field     [:application :application-hakukohde-reviews]
+    :lang?     true
     :format-fn (partial hakukohde-review-formatter "degree-requirement")}
-   {:label     "Hakukelpoisuus"
+   {:label     (:hakukelpoisuus excel-texts)
     :field     [:application :application-hakukohde-reviews]
+    :lang?     true
     :format-fn (partial hakukohde-review-formatter "eligibility-state")}
-   {:label     "Maksuvelvollisuus"
+   {:label     (:maksuvelvollisuus excel-texts)
     :field     [:application :application-hakukohde-reviews]
+    :lang?     true
     :format-fn (partial hakukohde-review-formatter "payment-obligation")}
-   {:label     "Valinnan tila"
+   {:label     (:valinnan-tila excel-texts)
     :field     [:application :application-hakukohde-reviews]
+    :lang?     true
     :format-fn (partial hakukohde-review-formatter "selection-state")}
-   {:label "Pisteet"
-    :field [:application-review :score]}
-   {:label "Hakijan henkilö-OID"
-    :field [:application :person-oid]}
-   {:label     "Turvakielto"
+   {:label     (:pisteet excel-texts)
+    :field     [:application-review :score]}
+   {:label     (:applicant-oid excel-texts)
+    :field     [:application :person-oid]}
+   {:label     (:turvakielto excel-texts)
     :field     [:person :turvakielto]
     :format-fn (fnil (fn [turvakielto] (if turvakielto "kyllä" "ei")) false)}
-   {:label     "Muistiinpanot"
+   {:label     (:notes excel-texts)
     :field     [:application-review-notes]
     :format-fn application-review-notes-formatter}])
 
@@ -216,19 +227,24 @@
     [sheet row-offset row column value]))
 
 (defn- write-form-meta!
-  [writer form applications fields]
+  [writer form applications fields lang]
   (doseq [meta-field fields]
     (let [col        (:column meta-field)
           value-from (case (:from meta-field)
                        :applications (first applications)
                        form)
           value      ((:field meta-field) value-from)
-          formatter  (or (:format-fn meta-field) identity)]
-      (writer 0 col (formatter value)))))
+          format-fn  (:format-fn meta-field)
+          value      (if (some? format-fn)
+                       (if (:lang? meta-field)
+                         (format-fn value lang)
+                         (format-fn value))
+                       value)]
+      (writer 0 col value))))
 
-(defn- write-headers! [writer headers meta-fields]
+(defn- write-headers! [writer headers meta-fields lang]
   (doseq [meta-field meta-fields]
-    (writer 0 (:column meta-field) (:label meta-field)))
+    (writer 0 (:column meta-field) (-> meta-field :label lang)))
   (doseq [header headers]
     (writer 0 (+ (:column header) (count meta-fields)) (:decorated-header header))))
 
@@ -269,25 +285,27 @@
   (and (sequential? value-or-values)
        (all-answers-sec-or-vec? value-or-values)))
 
-(defn- write-application!
-  [writer
-   application
-   application-review
-   application-review-notes
-   person
-   headers
-   application-meta-fields
-   form-fields-by-key
-   get-koodisto-options]
+(defn- write-application! [writer application
+                           application-review
+                           application-review-notes
+                           person
+                           headers
+                           application-meta-fields
+                           form-fields-by-key
+                           get-koodisto-options
+                           lang]
   (doseq [meta-field application-meta-fields]
-    (let [meta-value ((or
-                        (:format-fn meta-field)
-                        identity)
-                      (get-in {:application application
-                               :application-review application-review
-                               :application-review-notes application-review-notes
-                               :person person}
-                              (:field meta-field)))]
+    (let [format-fn  (:format-fn meta-field)
+          field      (get-in {:application        application
+                              :application-review application-review
+                              :application-review-notes application-review-notes
+                              :person             person}
+                             (:field meta-field))
+          meta-value (if (some? format-fn)
+                       (if (:lang? meta-field)
+                         (format-fn field lang)
+                         (format-fn field))
+                       field)]
       (writer 0 (:column meta-field) meta-value)))
   (doseq [answer (:answers application)]
     (let [answer-key             (:key answer)
@@ -409,12 +427,12 @@
        :header           header
        :column           idx})))
 
-(defn- create-form-meta-sheet [workbook styles meta-fields]
+(defn- create-form-meta-sheet [workbook styles meta-fields lang]
   (let [sheet  (.createSheet workbook "Lomakkeiden tiedot")
         writer (make-writer styles sheet 0)]
     (doseq [meta-field meta-fields
             :let [column (:column meta-field)
-                  label  (:label meta-field)]]
+                  label  (-> meta-field :label lang)]]
       (writer 0 column label))
     sheet))
 
@@ -495,12 +513,13 @@
    application-review-notes
    selected-hakukohde
    skip-answers?
+   lang
    tarjonta-service
    organization-service
    ohjausparametrit-service]
   (let [[^XSSFWorkbook workbook styles] (create-workbook-and-styles)
         form-meta-fields                (indexed-meta-fields form-meta-fields)
-        form-meta-sheet                 (create-form-meta-sheet workbook styles form-meta-fields)
+        form-meta-sheet                 (create-form-meta-sheet workbook styles form-meta-fields lang)
         application-meta-fields         (indexed-meta-fields application-meta-fields)
         get-form-by-id                  (memoize form-store/fetch-by-id)
         get-latest-form-by-key          (memoize form-store/fetch-by-key)
@@ -539,8 +558,8 @@
                               form-fields-by-key (reduce #(assoc %1 (:id %2) %2)
                                                          {}
                                                          (util/flatten-form-fields (:content form)))]
-                          (write-form-meta! meta-writer form applications form-meta-fields)
-                          (write-headers! header-writer headers application-meta-fields)
+                          (write-form-meta! meta-writer form applications form-meta-fields lang)
+                          (write-headers! header-writer headers application-meta-fields lang)
                           (->> applications
                                (sort-by :created-time)
                                (reverse)
@@ -558,7 +577,8 @@
                                                                     headers
                                                                     application-meta-fields
                                                                     form-fields-by-key
-                                                                    get-koodisto-options))))
+                                                                    get-koodisto-options
+                                                                    lang))))
                                (dorun))
                           (.createFreezePane applications-sheet 0 1 0 1))))
          (dorun))

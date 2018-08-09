@@ -80,6 +80,9 @@
                                           :first-name               (:kutsumanimi henkilo)
                                           :last-name                (:sukunimi henkilo)
                                           :oid                      (:oidHenkilo henkilo)
+                                          :lang                     (or (some (-> henkilo :asiointiKieli :kieliKoodi set)
+                                                                              ["fi" "sv" "en"])
+                                                                        "fi")
                                           :ticket                   ticket
                                           :user-right-organizations user-right-organizations
                                           :superuser                oph-organization-member?
