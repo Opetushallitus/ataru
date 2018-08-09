@@ -191,3 +191,17 @@
                       (map vector (range) answers)))
             []
             (map vector (range) answers))))
+
+(defn copy [id]
+  (let [copy-container (.getElementById js/document "editor-form__copy-question-id-container")]
+    (set! (.-value copy-container) id)
+    (.select copy-container)
+    (.execCommand js/document "copy")))
+
+(defn copy-link [id & {:keys [answer?]}]
+  [:a.editor-form__copy-question-id
+   {:data-tooltip  (str "Kopioi "
+                        (if answer? "vastauksen" "kysymyksen")
+                        " tunniste leikepöydälle")
+    :on-mouse-down #(copy id)}
+   "id"])

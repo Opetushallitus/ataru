@@ -213,7 +213,7 @@
                     clickElement(function() { return formComponents().eq(3).find('.editor-form__add-dropdown-item a') }),
                     clickElement(function() { return formComponents().eq(3).find('.editor-form__info-addon-checkbox label') }),
                     setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__info-addon-inputs textarea') }, 'Kolmannen kysymyksen ohjeteksti'),
-                    clickElement(function() { return formComponents().eq(3).find('.editor-form__followup-question:eq(2) a') }),
+                    clickElement(function() { return formComponents().eq(3).find('.editor-form__followup-question:eq(2) a:contains("Lisäkysymykset")') }),
                     clickElement(function() { return formComponents().eq(3).find('.editor-form__followup-question-overlay a:contains("Tekstikenttä")') }),
                     setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__followup-question-overlay input.editor-form__text-field') }, "Jatkokysymys")
                 );
@@ -256,7 +256,7 @@
                     clickElement(function () { return formComponents().eq(5).find('.editor-form__add-dropdown-item a') }),
                     setTextFieldValue(function () { return formComponents().eq(5).find('.editor-form__text-field:last') }, 'Kolmas vaihtoehto'),
                     clickElement(function () { return formComponents().eq(5).find('.editor-form__add-dropdown-item a') }),
-                    clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question:eq(1) a') }),
+                    clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question:eq(1) a:contains("Lisäkysymykset")') }),
                     clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay a:contains("Painikkeet, yksi valittavissa")') }),
                     setTextFieldValue(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay input.editor-form__text-field') }, "Oletko punavihervärisokea?"),
                     clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__add-dropdown-item a:contains("Lisää")') }),

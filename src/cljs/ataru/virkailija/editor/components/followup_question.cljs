@@ -1,6 +1,7 @@
 (ns ataru.virkailija.editor.components.followup-question
   (:require
    [ataru.cljs-util :as util]
+   [ataru.application-common.application-field-common :refer [copy-link]]
    [ataru.component-data.component :as component]
    [ataru.virkailija.editor.components.toolbar :as toolbar]
    [cljs.core.match :refer-macros [match]]
@@ -33,13 +34,14 @@
         (fn [generate-fn]
           (dispatch [:editor/generate-followup-component generate-fn option-path]))]]]]))
 
-(defn followup-question [option-index followups option-path show-followups]
+(defn followup-question [option-index followups option-path show-followups parent-key option-value]
   (let [attrs {:on-click #(swap! show-followups
                                  (fn [v] (update v option-index not)))}]
     [:div.editor-form__followup-question
+     [copy-link (str parent-key "_" option-value) :answer? true]
      (if (empty? followups)
-       [:a attrs "Lisäkysymykset"]
-       [:a attrs
+       [:a.editor-form__followup-question-followups-link attrs "Lisäkysymykset"]
+       [:a.editor-form__followup-question-followups-link attrs
         (str "Lisäkysymykset (" (count followups) ") ")
         (if (get @show-followups option-index)
           [:i.zmdi.zmdi-chevron-up.zmdi-hc-lg]

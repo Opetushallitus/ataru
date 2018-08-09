@@ -1,17 +1,20 @@
 (ns ataru.virkailija.editor.component
-  (:require [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid get-virkailija-translation]]
-            [ataru.component-data.component :as component]
-            [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
-            [ataru.virkailija.editor.components.followup-question :refer [followup-question followup-question-overlay]]
-            [ataru.virkailija.editor.components.toolbar :as toolbar]
-            [ataru.virkailija.temporal :as temporal]
-            [cljs.core.match :refer-macros [match]]
-            [goog.dom :as gdom]
-            [goog.string :as s]
-            [re-frame.core :refer [subscribe dispatch dispatch-sync]]
-            [reagent.core :as r]
-            [reagent.ratom :refer-macros [reaction]]
-            [taoensso.timbre :refer-macros [spy debug]]))
+  (:require
+    [ataru.application-common.application-field-common :refer [copy-link]]
+    [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid get-virkailija-translation]]
+    [ataru.component-data.component :as component]
+    [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
+    [ataru.virkailija.editor.components.followup-question :refer [followup-question followup-question-overlay]]
+    [ataru.virkailija.editor.components.toolbar :as toolbar]
+    [ataru.virkailija.temporal :as temporal]
+    [cljs.core.match :refer-macros [match]]
+    [goog.dom :as gdom]
+    [goog.string :as s]
+    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+    [reagent.core :as r]
+    [reagent.ratom :refer-macros [reaction]]
+    [taoensso.timbre :refer-macros [spy debug]])
+  )
 
 ; IE only allows this data attribute name for drag event dataTransfer
 ; http://stackoverflow.com/questions/26213011/html5-dragdrop-issue-in-internet-explorer-datatransfer-property-access-not-pos
@@ -84,14 +87,14 @@
   [:li.belongs-to-hakukohteet-modal__haku-list-item
    [:ul.belongs-to-hakukohteet-modal__hakukohde-list
     (let [on-click-add    (fn [hakukohderyhma _] (dispatch [:editor/add-to-belongs-to-hakukohderyhma
-                                                       path
-                                                       (:oid hakukohderyhma)]))
+                                                            path
+                                                            (:oid hakukohderyhma)]))
           on-click-remove (fn [hakukohderyhma _] (dispatch [:editor/remove-from-belongs-to-hakukohderyhma
-                                                       path (:oid hakukohderyhma)]))
+                                                            path (:oid hakukohderyhma)]))
           get-name (fn [hakukohderyhma] @(subscribe [:editor/get-some-name hakukohderyhma]))]
-    (for [hakukohderyhma @hakukohderyhmat]
-      ^{:key (:oid hakukohderyhma)}
-      [selectable-list-item path id hakukohderyhma selected-hakukohderyhmat get-name on-click-add on-click-remove]))]])
+     (for [hakukohderyhma @hakukohderyhmat]
+       ^{:key (:oid hakukohderyhma)}
+       [selectable-list-item path id hakukohderyhma selected-hakukohderyhmat get-name on-click-add on-click-remove]))]])
 
 (defn- haku-list-item
   [path id haku selected-hakukohteet]
@@ -147,7 +150,7 @@
              [hakukohderyhma-list-item path id hakukohderyhmat selected-hakukohderyhmat]
              (for [[_ haku] @haut]
                ^{:key (:oid haku)}
-                 [haku-list-item path id haku selected-hakukohteet])])]
+                [haku-list-item path id haku selected-hakukohteet])])]
          [:div.belongs-to-hakukohteet-modal__box
           [:div.belongs-to-hakukohteet-modal__no-haku-row
            [:p.belongs-to-hakukohteet-modal__no-haku
@@ -263,18 +266,6 @@
      {:disabled true}
      (get-virkailija-translation :confirm-delete)]))
 
-(defn copy [id]
-  (let [copy-container (.getElementById js/document "editor-form__copy-question-id-container")]
-    (set! (.-value copy-container) id)
-    (.select copy-container)
-    (.execCommand js/document "copy")))
-
-(defn- copy-link [id]
-  [:a.editor-form__copy-question-id
-   {:data-tooltip (get-virkailija-translation :copy-question-id)
-    :on-mouse-down #(copy id)}
-   "id"])
-
 (defn- header-metadata
   [metadata]
   [:span.editor-form__component-main-header-metadata
@@ -290,10 +281,10 @@
 
 (defn- text-header
   [label path metadata & {:keys [component-wrapped?
-                        draggable
-                        sub-header
-                        on-fold-click]
-                 :or   {draggable true}}]
+                                 draggable
+                                 sub-header
+                                 on-fold-click]
+                          :or   {draggable true}}]
   [:div.editor-form__header-wrapper
    {:draggable     draggable
     :on-drag-start (on-drag-start path)
@@ -597,7 +588,7 @@
    [:i.zmdi.zmdi-delete.zmdi-hc-lg]])
 
 (defn- dropdown-option
-  [option-index option-path followups path languages show-followups &
+  [option-index option-path followups path languages show-followups parent-key option-value &
    {:keys [header? include-followup? editable?]
     :or   {header? false include-followup? true editable? true}
     :as   opts}]
@@ -610,7 +601,7 @@
                                 (dispatch [(if up?
                                              :editor/move-option-up
                                              :editor/move-option-down) path option-index])))]
-    (fn [option-index option-path followups path languages show-followups &
+    (fn [option-index option-path followups path languages show-followups parent-key option-value &
          {:keys [header? include-followup? editable?]
           :or   {header? false include-followup? true editable? true}
           :as   opts}]
@@ -634,7 +625,7 @@
              languages)
            [koodisto-fields-with-lang languages option-path])]
         (when include-followup?
-          [followup-question option-index followups option-path show-followups])
+          [followup-question option-index followups option-path show-followups parent-key option-value])
         (when editable?
           [remove-dropdown-option-button path option-index form-locked])]
        (when include-followup?
@@ -700,13 +691,20 @@
                                    (dispatch [:editor/select-koodisto-options uri version title path]))}
                       title]]))]])])))
 
-(defn- custom-answer-options [languages options followups path question-group-element? editable? show-followups]
+(defn- custom-answer-options [languages
+                              options
+                              followups
+                              path
+                              question-group-element?
+                              editable?
+                              show-followups
+                              parent-key]
   (fn [languages options followups path question-group-element? editable?]
     (when (or (nil? @show-followups)
               (not (= (count @show-followups) (count options))))
       (reset! show-followups (vec (replicate (count options) false))))
     [:div.editor-form__multi-options-container
-     (doall (map-indexed (fn [idx _]
+     (doall (map-indexed (fn [idx option]
                            ^{:key (str "options-" idx)}
                            [dropdown-option
                             idx
@@ -715,11 +713,13 @@
                             path
                             languages
                             show-followups
+                            parent-key
+                            (:value option)
                             :editable? editable?
                             :include-followup? (not question-group-element?)])
                          options))]))
 
-(defn koodisto-answer-options [id followups path selected-koodisto question-group-element?]
+(defn koodisto-answer-options [id followups path selected-koodisto question-group-element? parent-key]
   (let [opened? (r/atom false)]
     (fn [id followups path selected-koodisto question-group-element?]
       (let [languages             @(subscribe [:editor/languages])
@@ -741,7 +741,7 @@
             [:a
              {:on-click hide-koodisto-options}
              [:i.zmdi.zmdi-chevron-up] (str " " (get-virkailija-translation :hide-options))]]
-           [custom-answer-options languages (:options value) followups path question-group-element? editable? show-followups]])))))
+           [custom-answer-options languages (:options value) followups path question-group-element? editable? show-followups parent-key]])))))
 
 (defn dropdown [initial-content followups path]
   (let [languages                (subscribe [:editor/languages])
@@ -793,8 +793,8 @@
                 (get-virkailija-translation :alphabetically)]])
             (when-not (= field-type "singleChoice") [dropdown-multi-options path options-koodisto])]
            (if (nil? @options-koodisto)
-             [custom-answer-options languages (:options @value) followups path question-group-element? true show-followups]
-             [koodisto-answer-options (:id @value) followups path @options-koodisto question-group-element?])
+             [custom-answer-options languages (:options @value) followups path question-group-element? true show-followups (:id initial-content)]
+             [koodisto-answer-options (:id @value) followups path @options-koodisto question-group-element? (:id initial-content)])
            (when (nil? @options-koodisto)
              [:div.editor-form__add-dropdown-item
               [:a
