@@ -222,20 +222,6 @@
 
                 [:div])])])))))
 
-<<<<<<< HEAD
-=======
-(defn- application-in-information-request-state?
-  [hakukohde application]
-  (->> (:application-hakukohde-reviews application)
-       (find-first
-         (fn [application-hakukohde-review]
-           (and
-             (= (:requirement application-hakukohde-review) "processing-state")
-             (= (:state application-hakukohde-review) "information-request")
-             (or
-               (nil? hakukohde)
-               (= (:hakukohde application-hakukohde-review) hakukohde)))))))
-
 (declare application-information-request-contains-modification-link)
 
 (defn- mass-information-request-link
@@ -299,7 +285,6 @@
               [:i.zmdi.zmdi-hc-lg.zmdi-check-circle.application-handling__information-request-status-icon.application-handling__information-request-status-icon--sent] "Viestit lähetetty!"])]])])))
 
 (def all-hakukohteet-label "Kaikki hakukohteet")
->>>>>>> Implement mass information requests
 
 (defn- closed-row
   [on-click label]
