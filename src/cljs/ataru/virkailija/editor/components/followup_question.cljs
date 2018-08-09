@@ -29,7 +29,7 @@
       [:div.editor-form__followup-indicator]
       [:div.editor-form__followup-indicator-inlay]
       [:div.editor-form__followup-question-overlay
-       (into [:div] followups)
+       followups
        [toolbar/followup-toolbar option-path
         (fn [generate-fn]
           (dispatch [:editor/generate-followup-component generate-fn option-path]))]]]]))
