@@ -1003,9 +1003,9 @@
    :send-information-request-to-applicant    {:fi "Lähetä täydennyspyyntö hakijalle"
                                               :sv "SV: Lähetä täydennyspyyntö hakijalle"
                                               :en "EN: Lähetä täydennyspyyntö hakijalle"}
-   :edit-link-sent-automatically             {:fi "Muokkauslinkki lähtee viestin mukana automaattisesti"
-                                              :sv "SV: Muokkauslinkki lähtee viestin mukana automaattisesti"
-                                              :en "EN: Muokkauslinkki lähtee viestin mukana automaattisesti"}
+   :edit-link-sent-automatically             {:fi "Muokkauslinkki lähetetään viestin mukana automaattisesti"
+                                              :sv "SV: Muokkauslinkki lähetetään viestin mukana automaattisesti"
+                                              :en "EN: Muokkauslinkki lähetetään viestin mukana automaattisesti"}
    :send-confirmation-email-to-applicant     {:fi "Lähetä vahvistussähköposti hakijalle"
                                               :sv "SV: Lähetä vahvistussähköposti hakijalle"
                                               :en "EN: Lähetä vahvistussähköposti hakijalle"}
