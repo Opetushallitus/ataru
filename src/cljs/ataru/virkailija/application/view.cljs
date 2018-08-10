@@ -699,7 +699,7 @@
       [:span.application-handling__filters
        [:a
         {:on-click #(swap! filters-visible not)}
-        (gstring/format "%s (%d) / (%d)"
+        (gstring/format "%s (%d / %d)"
                         (get-virkailija-translation :filter-applications)
                         @filtered-application-count
                         @loaded-application-count)]
