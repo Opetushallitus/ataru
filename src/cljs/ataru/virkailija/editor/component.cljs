@@ -940,7 +940,8 @@
                  :header? true)
                (map (fn [field]
                       (into field [[:div.editor-form__markdown-anchor
-                                    (markdown-help)]]))))]]
+                                    (markdown-help)]])))
+               doall)]]
         [:div.editor-form__checkbox-wrapper
          (let [collapsed-id (util/new-uuid)]
            [:div.editor-form__checkbox-container
@@ -978,7 +979,8 @@
                 :header? true)
                (map (fn [field]
                       (into field [[:div.editor-form__markdown-anchor
-                                    (markdown-help)]]))))]]]])))
+                                    (markdown-help)]])))
+               doall)]]]])))
 
 (defn adjacent-fieldset [content path children]
   (let [languages        (subscribe [:editor/languages])
@@ -1074,7 +1076,8 @@
                 :header? true)
                (map (fn [field]
                       (into field [[:div.editor-form__info-addon-markdown-anchor
-                                    (markdown-help)]]))))])])))
+                                    (markdown-help)]])))
+               doall)])])))
 
 (defn attachment [content path]
   (let [languages        (subscribe [:editor/languages])
