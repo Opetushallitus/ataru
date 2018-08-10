@@ -289,7 +289,7 @@
           skip-answers-to-preserve-memory? (<= 4500 (count applications))
           skip-answers?                    (or user-wants-to-skip-answers?
                                                skip-answers-to-preserve-memory?)
-          lang (-> session :identity :lang)]
+          lang                             (keyword (or (-> session :identity :lang) :fi))]
       (ByteArrayInputStream. (excel/export-applications applications-with-persons
                                                         application-reviews
                                                         application-review-notes
