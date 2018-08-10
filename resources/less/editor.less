@@ -678,6 +678,7 @@ section.editor-form > div > .editor-form__component-wrapper {
 }
 
 .editor-form__followup-question {
+  padding: 0 20px;
   font-size: 13px;
   width: 170px;
   display: flex;
@@ -686,18 +687,19 @@ section.editor-form > div > .editor-form__component-wrapper {
   border-radius: 3px;
 }
 
-.editor-form__followup-question-followups-link {
-  margin-left: 5px;
-}
-
 .editor-form__multi-options-remove--cross {
   margin-left: 2px;
-  padding: 0 20px;
+  padding: 0 15px 0 7px;
   color: @pale-blue;
   display: flex;
   align-items: center;
   background-color: @element-header-background;
   border-radius: 3px;
+
+  .zmdi-hc-lg {
+    margin-left: 15px;
+    cursor: pointer;
+  }
 }
 
 .editor-form__multi-options-remove--cross--disabled {

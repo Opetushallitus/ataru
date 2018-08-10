@@ -577,19 +577,20 @@
    :header-label (get-virkailija-translation :text-area)
    :size-label (get-virkailija-translation :text-area-size)])
 
-(defn- remove-dropdown-option-button [path option-index form-locked]
-  [:a.editor-form__multi-options-remove--cross
-   {:on-click (fn [evt]
-                (when-not @form-locked
-                  (.preventDefault evt)
-                  (dispatch [:editor/remove-dropdown-option path :options option-index])))
-    :class (when @form-locked "editor-form__multi-options-remove--cross--disabled")}
-   [:i.zmdi.zmdi-delete.zmdi-hc-lg]])
+(defn- remove-dropdown-option-button [path option-index form-locked parent-key option-value question-group-element?]
+  [:div.editor-form__multi-options-remove--cross
+   [copy-link (str parent-key "_" (when question-group-element? "groupN_") option-value) :answer? true]
+   [:i.zmdi.zmdi-delete.zmdi-hc-lg
+    {:on-click (fn [evt]
+                 (when-not @form-locked
+                   (.preventDefault evt)
+                   (dispatch [:editor/remove-dropdown-option path :options option-index])))
+     :class    (when @form-locked "editor-form__multi-options-remove--cross--disabled")}]])
 
 (defn- dropdown-option
-  [option-index option-path followups path languages show-followups parent-key option-value &
-   {:keys [header? include-followup? editable?]
-    :or   {header? false include-followup? true editable? true}
+  [option-index option-path followups path languages show-followups parent-key option-value question-group-element? &
+   {:keys [header? editable?]
+    :or   {header? false editable? true}
     :as   opts}]
   (let [multiple-languages? (< 1 (count languages))
         form-locked         (subscribe [:editor/current-form-locked])
@@ -600,9 +601,9 @@
                                 (dispatch [(if up?
                                              :editor/move-option-up
                                              :editor/move-option-down) path option-index])))]
-    (fn [option-index option-path followups path languages show-followups parent-key option-value &
-         {:keys [header? include-followup? editable?]
-          :or   {header? false include-followup? true editable? true}
+    (fn [option-index option-path followups path languages show-followups parent-key option-value question-group-element? &
+         {:keys [header? editable?]
+          :or   {header? false editable? true}
           :as   opts}]
       [:div
        [:div.editor-form__multi-options-wrapper-outer
@@ -623,11 +624,11 @@
                [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
              languages)
            [koodisto-fields-with-lang languages option-path])]
-        (when include-followup?
-          [followup-question option-index followups option-path show-followups parent-key option-value])
+        (when (not question-group-element?)
+          [followup-question option-index followups option-path show-followups parent-key option-value question-group-element?])
         (when editable?
-          [remove-dropdown-option-button path option-index form-locked])]
-       (when include-followup?
+          [remove-dropdown-option-button path option-index form-locked parent-key option-value question-group-element?])]
+       (when (not question-group-element?)
          [followup-question-overlay option-index followups option-path show-followups])])))
 
 (defn- dropdown-multi-options [path options-koodisto]
@@ -714,8 +715,8 @@
                             show-followups
                             parent-key
                             (:value option)
-                            :editable? editable?
-                            :include-followup? (not question-group-element?)])
+                            question-group-element?
+                            :editable? editable?])
                          options))]))
 
 (defn koodisto-answer-options [id followups path selected-koodisto question-group-element? parent-key]

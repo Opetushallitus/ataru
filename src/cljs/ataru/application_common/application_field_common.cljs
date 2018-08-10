@@ -2,6 +2,7 @@
   (:require [markdown.core :refer [md->html]]
             [reagent.core :as reagent]
             [clojure.string :as string]
+            [goog.string :as s]
             [ataru.cljs-util :refer [get-translation get-virkailija-translation]])
   (:import (goog.html.sanitizer HtmlSanitizer)))
 
@@ -195,6 +196,7 @@
 
 (defn copy-link [id & {:keys [answer?]}]
   [:a.editor-form__copy-question-id
-   {:data-tooltip  (get-virkailija-translation (if answer? :copy-answer-id :copy-question-id))
+   {:data-tooltip  (s/format (get-virkailija-translation (if answer? :copy-answer-id :copy-question-id))
+                             id)
     :on-mouse-down #(copy id)}
    "id"])
