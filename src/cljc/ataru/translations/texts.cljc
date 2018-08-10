@@ -202,18 +202,18 @@
    :lupatiedot-info                             {:fi "Tarkista hakulomakkeelle täyttämäsi tiedot huolellisesti ennen hakulomakkeen lähettämistä. Opiskelijavalinta voidaan purkaa, jos olet antanut vääriä tietoja. Hakemuksesi kaikki tiedot tallennetaan opiskelijavalintarekisteriin (L 884/2017). Opintopolun tietosuojaseloste.\n\nSaat vahvistusviestin vastaanotetusta hakulomakkeesta sähköpostiisi."
                                                  :sv "Kontrollera noggrant de uppgifter som du har angett i ansökningsblanketten innan du skickar ansökningsblanketten. Antagningen av studerande kan hävas om du har gett felaktiga uppgifter. Alla uppgifter i din ansökan sparas i antagningsregistret (L 884/2017).\n\nDu får i din e-post ett bekräftelsemeddelande över att ansökningsblanketten har kommit fram."
                                                  :en "Please check all the information you have given in the application before you submit the application. If you have given false information, your admission can be withdrawn. The information you have given in this application will be stored in the student admissions register (Act 884/2017).\n\nYou will receive a confirmation of your application to your email."}
-   :allow-use-of-contact-information            {:fi "Minulle saa lähettää postia ja sähköpostia vapaista opiskelupaikoista ja muuta koulutusmarkkinointia."
-                                                 :sv "Man får skicka mig information om lediga studieplatser och annan utbildningsmarknadsföring per post och e-post."
-                                                 :en "You may send me information about vacant study places and other educational marketing by mail and e-mail."}
+   :allow-use-of-contact-information            {:fi "Nimi- ja osoitetietoni saa luovuttaa koulutustiedottamista ja -markkinointia varten ja minulle saa lähettää postia ja sähköpostia koulutustiedotuksesta ja -markkinoinnista."
+                                                 :sv "Mina namn- och adressuppgifter får överlåtas för utbildningsinformation och -marknadsföring. Man får skicka post och e-post till mig om utbildningsinformation och -marknadsföring."
+                                                 :en "My contact information can be given to third parties for the purpose of education information and marketing.  The education information and marketing will be sent to me by email or post."}
    :allow-publishing-of-results-online          {:fi "Opiskelijavalinnan tulokseni saa julkaista internetissä."
                                                  :sv "Mitt antagningsresultat får publiceras på internet."
                                                  :en "My admission results may be published online."}
-   :permission-for-electronic-transactions      {:fi "Lupa sähköiseen asiointiin."
-                                                 :sv "Medgivande till elektronisk kommunikation."
-                                                 :en "Consent for electronic communication."}
-   :permission-for-electronic-transactions-info {:fi "Täyttämällä sähköisen hakulomakkeen annat samalla luvan siihen, että opiskelijavalintaan liittyvä viestintä hoidetaan pelkästään sähköisesti. Jos et suostu näihin ehtoihin, ota yhteyttä ensisijaisen hakutoiveesi korkeakoulun hakijapalveluihin."
-                                                 :sv "Genom att fylla i denna elektroniska ansökningsblankett ger du samtidigt ditt medgivande till att kommunikationen gällande studerandeantagningen kan skötas enbart elektroniskt. Om du inte går med på dessa villkor, kontakta ansökningsservicen vid den högskola som är ditt förstahandsönskemål."
-                                                 :en "By filling in this electronic application form you also give your consent that communication regarding student admissions can be carried out only by email. If you do not agree to these terms, please contact the admissions services at the higher education institution of your first choice study programme."}
+   :permission-for-electronic-transactions      {:fi "Lupa sähköiseen asiointiin"
+                                                 :sv "Medgivande till elektronisk kommunikation"
+                                                 :en "Consent for electronic communication"}
+   :permission-for-electronic-transactions-info {:fi "Täyttämällä sähköisen hakulomakkeen annat samalla luvan siihen, että opiskelijavalintaan liittyvä viestintä hoidetaan pelkästään sähköisesti. Jos et suostu näihin ehtoihin, ota yhteyttä korkeakoulun hakijapalveluihin."
+                                                 :sv "Genom att fylla i denna elektroniska ansökningsblankett ger du samtidigt ditt medgivande till att kommunikationen gällande studerandeantagningen kan skötas enbart elektroniskt. Om du inte går med på dessa villkor, kontakta ansökningsservicen vid högskolan."
+                                                 :en "By filling in this electronic application form you also give your consent that communication regarding student admissions can be carried out only by email. If you do not agree to these terms, please contact the admissions services of the higher education institution that you are applying to."}
    :contact-language                            {:fi "Asiointikieli"
                                                  :sv "Kontaktspråk"
                                                  :en "Contact language"}
@@ -1135,6 +1135,9 @@
    :lupa-sahkoiseen-asiointiin               {:fi "Sähköisen asioinnin lupa"
                                               :sv "SV: Sähköisen asioinnin lupa"
                                               :en "EN: Sähköisen asioinnin lupa"}
+   :lupatiedot                               {:fi "Lupatiedot"
+                                              :sv "SV: Lupatiedot"
+                                              :en "EN: Lupatiedot"}
    :asiointikieli                            {:fi "Asiointikieli"
                                               :sv "SV: Asiointikieli"
                                               :en "EN: Asiointikieli"}
