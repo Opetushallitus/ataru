@@ -1,4 +1,5 @@
-(ns ataru.translations.texts)
+(ns ataru.translations.texts
+  #?(:cljs (:require [goog.string :refer [format]])))
 
 (def translation-mapping
   {:application-period                          {:fi "Hakuaika"
@@ -1151,18 +1152,18 @@
                                                  :sv "SV: Engelska"
                                                  :en "EN: English"}
    :mass-information-request                    {:fi "Massaviesti" :sv "SV-Massaviesti" :en "EN-massaviesti"}
-   :mass-information-request-email-n-recipients (fn [n] {:fi (str "Lähetä sähköposti " n " hakijalle")
-                                                         :sv (str "SV-Lähetä sähköposti " n " hakijalle")
-                                                         :en (str "EN-Lähetä sähköposti " n " hakijalle")})
+   :mass-information-request-email-n-recipients (fn [n] {:fi (format "Lähetä sähköposti %d hakijalle:" n)
+                                                         :sv (format "SV-Lähetä sähköposti %d hakijalle:" n)
+                                                         :en (format "EN-Lähetä sähköposti %d hakijalle:" n)})
    :mass-information-request-subject            {:fi "Aihe:"
                                                  :sv "SV-Aihe:"
                                                  :en "EN-Aihe:"}
    :mass-information-request-send               {:fi "Lähetä"
                                                  :sv "SV-Lähetä:"
                                                  :en "EN-Lähetä:"}
-   :mass-information-request-confirm-n-messages (fn [n] {:fi (str "Varmista " n " viestin lähetys")
-                                                         :sv (str "SV-Varmista " n " viestin lähetys")
-                                                         :en (str "EN-Varmista " n " viestin lähetys")})
+   :mass-information-request-confirm-n-messages (fn [n] {:fi (format "Varmista %d viestin lähetys" n)
+                                                         :sv (format "SV-Varmista %d viestin lähetys" n)
+                                                         :en (format "EN-Varmista %d viestin lähetys" n)})
    :mass-information-request-sending-messages   {:fi "Lähetetään viestejä..."
                                                  :sv "SV-Lähetetään viestejä..."
                                                  :en "EN-Lähetetään viestejä..."}
