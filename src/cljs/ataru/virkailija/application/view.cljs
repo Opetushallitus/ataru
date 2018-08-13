@@ -244,7 +244,7 @@
            [:i.zmdi.zmdi-close]]
           [:h4.application-handling__mass-edit-review-states-heading.application-handling__mass-edit-review-states-heading--title
            (get-virkailija-translation :mass-information-request)]
-          (get-virkailija-translation :mass-information-request-email-n-recipients (count @filtered-applications))
+          [:p (get-virkailija-translation :mass-information-request-email-n-recipients (count @filtered-applications))]
           [:div.application-handling__information-request-row
            [:div.application-handling__information-request-info-heading (get-virkailija-translation :mass-information-request-subject)]
            [:div.application-handling__information-request-text-input-container
