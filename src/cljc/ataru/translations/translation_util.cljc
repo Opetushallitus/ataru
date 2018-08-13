@@ -16,7 +16,11 @@
                 :en "Translation not available. Please contact an administrator."})
       (get lang)))
 
-(defn get-virkailija-translation [key lang]
-  (if (contains? virkailija-texts key)
-    (-> virkailija-texts key lang)
+(defn get-virkailija-translation [key lang params]
+  (if-let [text-value (get virkailija-texts key)]
+    (if (fn? text-value)
+      (-> text-value
+          (apply params)
+          (get lang))
+      (get text-value lang))
     (println "No key found in translations:" key)))
