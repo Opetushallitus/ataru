@@ -236,19 +236,17 @@
       [:span.application-handling__mass-information-request-container
        [:a.application-handling__mass-information-request-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
         {:on-click #(swap! element-visible? not)}
-        "Massaviesti"]
+        (get-virkailija-translation :mass-information-request)]
        (when @element-visible?
          [:div.application-handling__popup.application-handling__mass-information-request-popup
           [:div.application-handling__popup-close-button
            {:on-click #(reset! element-visible? false)}
            [:i.zmdi.zmdi-close]]
           [:h4.application-handling__mass-edit-review-states-heading.application-handling__mass-edit-review-states-heading--title
-           "Massaviesti"]
-          [:p "Lähetä sähköposti "
-           (count @filtered-applications)
-           " hakijalle:"]
+           (get-virkailija-translation :mass-information-request)]
+          (get-virkailija-translation :mass-information-request-email-n-recipients (count @filtered-applications))
           [:div.application-handling__information-request-row
-           [:div.application-handling__information-request-info-heading "Aihe:"]
+           [:div.application-handling__information-request-info-heading (get-virkailija-translation :mass-information-request-subject)]
            [:div.application-handling__information-request-text-input-container
             [:input.application-handling__information-request-text-input
              {:value     @subject
@@ -268,23 +266,22 @@
                            "application-handling__send-information-request-button--enabled"
                            "application-handling__send-information-request-button--disabled")
                :on-click #(dispatch [:application/confirm-mass-information-request])}
-              "Lähetä"]
+              (get-virkailija-translation :mass-information-request-send)]
 
              :confirm
              [:button.application-handling__send-information-request-button.application-handling__send-information-request-button--confirm
-              {:on-click (fn []
-                           (dispatch [:application/submit-mass-information-request (map :key @filtered-applications)]))}
-              "Vahvista " (count @filtered-applications) " viestin lähetys"]
+              {:on-click #(dispatch [:application/submit-mass-information-request (map :key @filtered-applications)])}
+              (get-virkailija-translation :mass-information-request-confirm-n-messages (count @filtered-applications))]
 
              :submitting
              [:div.application-handling__information-request-status
-              [:i.zmdi.zmdi-hc-lg.zmdi-spinner.spin.application-handling__information-request-status-icon] "Lähetetään viestejä..."]
+              [:i.zmdi.zmdi-hc-lg.zmdi-spinner.spin.application-handling__information-request-status-icon]
+              (get-virkailija-translation :mass-information-request-sending-messages)]
 
              :submitted
              [:div.application-handling__information-request-status
-              [:i.zmdi.zmdi-hc-lg.zmdi-check-circle.application-handling__information-request-status-icon.application-handling__information-request-status-icon--sent] "Viestit lähetetty!"])]])])))
-
-(def all-hakukohteet-label "Kaikki hakukohteet")
+              [:i.zmdi.zmdi-hc-lg.zmdi-check-circle.application-handling__information-request-status-icon.application-handling__information-request-status-icon--sent]
+              (get-virkailija-translation :mass-information-request-messages-sent)])]])])))
 
 (defn- closed-row
   [on-click label]
