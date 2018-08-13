@@ -995,11 +995,12 @@
 
          {:event-type "updated-by-virkailija"}
          (update-event-caption
-           [:span (gstring/format "%s %s %d %s"
-                                  (or (virkailija-initials-span event) (get-virkailija-translation :unknown))
-                                  (get-virkailija-translation :did)
-                                  (count @(subscribe [:application/changes-made-for-event (:id event)]))
-                                  (get-virkailija-translation :changes))]
+           [:span
+            (or (virkailija-initials-span event) (get-virkailija-translation :unknown))
+            (gstring/format " %s %d %s"
+                            (get-virkailija-translation :did)
+                            (count @(subscribe [:application/changes-made-for-event (:id event)]))
+                            (get-virkailija-translation :changes))]
           event
           show-details?)
 
@@ -1008,9 +1009,8 @@
 
          {:event-type "received-from-virkailija"}
          [:span.application-handling__event-caption--inner
-          (str (virkailija-initials-span event)
-               " "
-               (get-virkailija-translation :submitted-application))]
+          (virkailija-initials-span event)
+          (str " " (get-virkailija-translation :submitted-application))]
 
          {:event-type "hakukohde-review-state-change"}
          [:span.application-handling__event-caption--inner
@@ -1057,9 +1057,9 @@
 
          {:subject _ :message message}
          [:div.application-handling__multi-line-event-caption
-          [:span.application-handling__event-caption--inner (str (get-virkailija-translation :information-request-sent)
-                                                                 " "
-                                                                 (virkailija-initials-span event))]
+          [:span.application-handling__event-caption--inner
+           (str (get-virkailija-translation :information-request-sent) " ")
+           (virkailija-initials-span event)]
           [:span.application-handling__event-caption--inner.application-handling__event-caption--extra-info (str "\"" message "\"")]]
 
          :else (get-virkailija-translation :unknown)))
