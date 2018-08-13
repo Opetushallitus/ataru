@@ -1161,9 +1161,9 @@
    :mass-information-request-send               {:fi "Lähetä"
                                                  :sv "SV-Lähetä:"
                                                  :en "EN-Lähetä:"}
-   :mass-information-request-confirm-n-messages (fn [n] {:fi (format "Varmista %d viestin lähetys" n)
-                                                         :sv (format "SV-Varmista %d viestin lähetys" n)
-                                                         :en (format "EN-Varmista %d viestin lähetys" n)})
+   :mass-information-request-confirm-n-messages (fn [n] {:fi (format "Vahvista %d viestin lähetys" n)
+                                                         :sv (format "SV-Vahvista %d viestin lähetys" n)
+                                                         :en (format "EN-Vahvista %d viestin lähetys" n)})
    :mass-information-request-sending-messages   {:fi "Lähetetään viestejä..."
                                                  :sv "SV-Lähetetään viestejä..."
                                                  :en "EN-Lähetetään viestejä..."}
