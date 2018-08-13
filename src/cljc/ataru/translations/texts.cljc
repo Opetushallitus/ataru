@@ -790,6 +790,9 @@
    :unknown-option                           {:fi "Tuntematon vastausvaihtoehto"
                                               :sv "SV: Tuntematon vastausvaihtoehto"
                                               :en "EN: Tuntematon vastausvaihtoehto"}
+   :empty-option                             {:fi "Ei vastausta"
+                                              :sv "SV: Ei vastausta"
+                                              :en "EN: Ei vastausta"}
    :load-excel                               {:fi "Lataa Excel"
                                               :sv "SV: Lataa Excel"
                                               :en "EN: Lataa Excel"}
