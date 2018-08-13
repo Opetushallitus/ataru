@@ -245,3 +245,8 @@
   :application/tarjonta-hakukohteet
   (fn [db _]
     (-> db :form :tarjonta :hakukohteet)))
+
+(re-frame/reg-sub
+  :application/show-validation-error?
+  (fn [db [_ id]]
+    (= id (get-in db [:application :visible-validation-error] id))))

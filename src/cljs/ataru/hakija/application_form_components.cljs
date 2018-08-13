@@ -108,26 +108,50 @@
   (seq (concat (:belongs-to-hakukohteet field)
                (:belongs-to-hakukohderyhma field))))
 
+(defn- validation-error
+  [id errors]
+  (r/create-class
+   {:display-name
+    (str "validation-error-" id)
+    :component-did-mount
+    (fn [component]
+      (dispatch [:application/validation-error-did-mount id]))
+    :component-will-unmount
+    (fn [component]
+      (dispatch [:application/validation-error-will-unmount id]))
+    :reagent-render
+    (fn [id errors]
+      (let [languages @(subscribe [:application/default-languages])]
+        [:div.application__validation-error-dialog
+         [:div.application__validation-error-dialog__arrow]
+         [:div.application__validation-error-dialog__box
+          (doall
+           (map-indexed (fn [idx error]
+                          (with-meta (util/non-blank-val error languages)
+                            {:key (str "error-" idx)}))
+                        errors))]]))}))
+
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing idx] :or {div-kwd :div.application__form-field disabled false editing false}}]
-  (let [id           (keyword (:id field-descriptor))
-        answer       (if (and (contains? editing-forbidden-person-info-field-ids id)
-                              @(subscribe [:application/cannot-edit? id]))
-                       {:value @(subscribe [:state-query
-                                            [:application :person id]])
-                        :valid true}
-                       @(subscribe [:state-query
-                                    (cond-> [:application :answers id]
-                                      idx (concat [:values idx 0]))]))
-        languages           (subscribe [:application/default-languages])
-        size         (get-in field-descriptor [:params :size])
-        size-class   (text-field-size->class size)
-        on-blur      #(dispatch [:application/textual-field-blur field-descriptor])
-        on-change    (if idx
-                       (partial multi-value-field-change field-descriptor 0 idx)
-                       (partial textual-field-change field-descriptor))
-        show-error?  (show-text-field-error-class? field-descriptor
-                                                   (:value answer)
-                                                   (:valid answer))]
+  (let [id          (keyword (:id field-descriptor))
+        answer      (if (and (contains? editing-forbidden-person-info-field-ids id)
+                             @(subscribe [:application/cannot-edit? id]))
+                      {:value @(subscribe [:state-query
+                                           [:application :person id]])
+                       :valid true}
+                      @(subscribe [:state-query
+                                   (cond-> [:application :answers id]
+                                           idx (concat [:values idx 0]))]))
+        languages   (subscribe [:application/default-languages])
+        size        (get-in field-descriptor [:params :size])
+        size-class  (text-field-size->class size)
+        on-blur     #(dispatch [:application/textual-field-blur field-descriptor])
+        on-change   (if idx
+                      (partial multi-value-field-change field-descriptor 0 idx)
+                      (partial textual-field-change field-descriptor))
+        show-error? (show-text-field-error-class? field-descriptor
+                                                  (:value answer)
+                                                  (:valid answer))
+        show-validation-error? (subscribe [:application/show-validation-error? id])]
     [div-kwd
      [label field-descriptor]
      (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
@@ -154,15 +178,9 @@
               (when (or disabled
                         @(subscribe [:application/cannot-edit? id]))
                 {:disabled true}))]
-      (when (not-empty (:errors answer))
-        [:div.application__validation-error-dialog
-         [:div.application__validation-error-dialog__arrow]
-         [:div.application__validation-error-dialog__box
-          (doall
-           (map-indexed (fn [idx error]
-                          (with-meta (util/non-blank-val error @languages)
-                            {:key (str "error-" idx)}))
-                        (:errors answer)))]])]]))
+      (when (and (not-empty (:errors answer))
+                 @show-validation-error?)
+        [validation-error id (:errors answer)])]]))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [id           (keyword (:id field-descriptor))

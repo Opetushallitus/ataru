@@ -3,6 +3,7 @@
   (:require [clojure.string]
             [ataru.email :as email]
             [ataru.ssn :as ssn]
+            [ataru.translations.texts :as texts]
             [ataru.preferred-name :as pn]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             #?(:clj  [clojure.core.async :as async]
@@ -14,131 +15,6 @@
                :cljs [cljs-time.format :as f])
             #?(:clj  [clojure.core.match :refer [match]]
                :cljs [cljs.core.match :refer-macros [match]])))
-
-(defn- email-applied-error
-  [email preferred-name]
-  [{:fi [:div
-         [:p (if (not (clojure.string/blank? preferred-name))
-               (str "Hei " preferred-name "!")
-               "Hei!")]
-         [:p "Huomasimme, että "
-          [:strong "olet jo lähettänyt hakemuksen"]
-          " tähän hakuun ja siksi et voi lähettää toista hakemusta."]
-         [:p "Jos haluat "
-          [:strong "muuttaa hakemustasi"]
-          " niin löydät muokkauslinkin sähköpostiviestistä jonka sait
-         jättäessäsi edellisen hakemuksen."]
-         [:p "Tarkista myös, että syöttämäsi sähköpostiosoite "
-          [:strong email]
-          " on varmasti oikein."]
-         [:p "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."]]
-    :sv [:div
-         [:p (if (not (clojure.string/blank? preferred-name))
-               (str "Hej " preferred-name "!")
-               "Hej!")]
-         [:p "Vi märkte att "
-          [:strong "du redan har skickat en ansökning"]
-          " i denna ansökan och därför kan du inte skicka en annan
-          ansökning."]
-         [:p "Om du vill "
-          [:strong "ändra din ansökning"]
-          " hittar du bearbetningslänken i e-postmeddelandet som du fick när
-          du skickade din tidigare ansökning."]
-         [:p "Kontrollera även att e-postadressen du har angett "
-          [:strong email]
-          " säkert är korrekt."]
-         [:p "Vid eventuella problemsituationer kontakta den läroanstalt du
-         söker till."]]
-    :en [:div
-         [:p (if (not (clojure.string/blank? preferred-name))
-               (str "Dear " preferred-name ",")
-               "Dear applicant,")]
-         [:p "we noticed that "
-          [:strong "you have already submitted an application"]
-          " to this admission. Therefore, you cannot submit another
-          application to the same admission."]
-         [:p "If you want to "
-          [:strong "make changes"]
-          " to your previous application, you can do so by clicking the link
-          in the confirmation email you have received with your earlier
-          application."]
-         [:p "Please also check that the email address "
-          [:strong email]
-          " you have given is correct."]
-         [:p "If you have any problems, please contact the educational
-         institution."]]}])
-
-(defn- email-applied-error-when-modifying
-  [email preferred-name]
-  [{:fi [:div
-         [:p (if (not (clojure.string/blank? preferred-name))
-               (str "Hei " preferred-name "!")
-               "Hei!")]
-         [:p "Antamallasi sähköpostiosoitteella "
-          [:strong email]
-          " on jo jätetty hakemus. Tarkista, että syöttämäsi sähköpostiosoite
-          on varmasti oikein."]]
-    :sv [:div
-         [:p (if (not (clojure.string/blank? preferred-name))
-               (str "Hej " preferred-name "!")
-               "Hej!")]
-         [:p "En ansökning med den e-postadress du angett "
-          [:strong email]
-          " har redan gjorts. Kontrollera att e-postadressen du har angett
-          säkert är korrekt."]]
-    :en [:div
-         [:p (if (not (clojure.string/blank? preferred-name))
-               (str "Dear " preferred-name ",")
-               "Dear applicant,")]
-         [:p "the email address "
-          [:strong email]
-          " you have given in your application has already been used by
-          another applicant. Please check that the email address you have
-          given is correct."]]}])
-
-(defn- ssn-applied-error
-  [preferred-name]
-  [{:fi [:div
-         [:p (if (not (clojure.string/blank? preferred-name))
-               (str "Hei " preferred-name "!")
-               "Hei!")]
-         [:p "Huomasimme, että "
-          [:strong "olet jo lähettänyt hakemuksen"]
-          " tähän hakuun ja siksi et voi lähettää toista hakemusta."]
-         [:p "Jos haluat "
-          [:strong "muuttaa hakemustasi"]
-          " niin löydät muokkauslinkin sähköpostiviestistä jonka sait
-           jättäessäsi edellisen hakemuksen."]
-         [:p "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."]]
-    :sv [:div
-         [:p (if (not (clojure.string/blank? preferred-name))
-               (str "Hej " preferred-name "!")
-               "Hej!")]
-         [:p "Vi märkte att "
-          [:strong "du redan har skickat en ansökning"]
-          " i denna ansökan och därför kan du inte skicka en annan
-           ansökning."]
-         [:p "Om du vill "
-          [:strong "ändra din ansökning"]
-          " hittar du bearbetningslänken i e-postmeddelandet som du fick när
-           du skickade din tidigare ansökning."]
-         [:p "Vid eventuella problemsituationer kontakta den läroanstalt du
-         söker till."]]
-    :en [:div
-         [:p (if (not (clojure.string/blank? preferred-name))
-               (str "Dear " preferred-name ",")
-               "Dear applicant,")]
-         [:p "we noticed that "
-          [:strong "you have already submitted an application"]
-          " to this admission. Therefore, you cannot submit another
-          application to the same admission."]
-         [:p "If you want to "
-          [:strong "make changes"]
-          " to your previous application, you can do so, by clicking the link
-          in the confirmation email you have received with your earlier
-          application."]
-         [:p "If you have any problems, please contact the educational
-         institution."]]}])
 
 (defn ^:private required?
   [{:keys [value]}]
@@ -175,10 +51,12 @@
       (cond (not (ssn/ssn? value))
             [false []]
             (and (not multiple?)
+                 (not (get-in answers-by-key [:ssn :cannot-view]))
+                 (not (get-in answers-by-key [:ssn :cannot-modify]))
                  (not (and modifying? (= value original-value)))
                  (async/<! (has-applied haku-oid {:ssn value})))
-            [false (ssn-applied-error (when (:valid preferred-name)
-                                        (:value preferred-name)))]
+            [false [(texts/ssn-applied-error (when (:valid preferred-name)
+                                               (:value preferred-name)))]]
             :else
             [true []]))))
 
@@ -190,24 +68,22 @@
         haku-oid       (get-in field-descriptor
                                [:params :haku-oid])
         preferred-name (:preferred-name answers-by-key)
-        ssn            (get-in answers-by-key [:ssn :value])
         original-value (get-in answers-by-key [(keyword (:id field-descriptor)) :original-value])
         modifying?     (some? original-value)]
     (asyncm/go
       (cond (not (email/email? value))
             [false []]
+            (and modifying? (= value original-value))
+            [true []]
             (and (not multiple?)
-                 (not (and modifying? (= value original-value)))
-                 (not (and (have-finnish-ssn? answers-by-key)
-                           (async/<! (has-applied haku-oid {:ssn ssn}))))
                  (async/<! (has-applied haku-oid {:email value})))
             [false
-             ((if modifying?
-                email-applied-error-when-modifying
-                email-applied-error) value (when (:valid preferred-name)
-                                             (:value preferred-name)))]
+             [((if modifying?
+                 texts/email-applied-error-when-modifying
+                 texts/email-applied-error) value (when (:valid preferred-name)
+                                                    (:value preferred-name)))]]
             :else
-            [true []]))))
+            [true [(texts/email-check-correct-notification value)]]))))
 
 (def ^:private postal-code-pattern #"^\d{5}$")
 
