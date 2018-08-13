@@ -21,10 +21,8 @@
    [:base-education-module base-education-module/module]
    [:kk-base-education-module kk-base-education-module/module]
    [:pohjakoulutusristiriita component/pohjakoulutusristiriita]
-   [:koulutusmarkkinointilupa component/koulutusmarkkinointilupa]
-   [:valintatuloksen-julkaisulupa component/valintatuloksen-julkaisulupa]
    [:lupa-sahkoiseen-asiointiin component/lupa-sahkoiseen-asiointiin]
-   [:asiointikieli component/asiointikieli]])
+   [:lupatiedot component/lupatiedot]])
 
 (def followup-toolbar-element-names
   #{:text-field

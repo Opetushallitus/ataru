@@ -20,20 +20,22 @@
 (defn- required-checkbox
   [path initial-content]
   (let [id          (util/new-uuid)
-        required?   (true? (some? ((set (map keyword (:validators initial-content))) :required)))
-        form-locked (subscribe [:editor/current-form-locked])]
+        validators  (-> initial-content :validators set)
+        form-locked (subscribe [:editor/current-form-locked])
+        disabled?   (or (some? @form-locked)
+                        (contains? validators "required-hakija"))]
     [:div.editor-form__checkbox-container
      [:input.editor-form__checkbox {:type      "checkbox"
                                     :id        id
-                                    :checked   required?
-                                    :disabled  (some? @form-locked)
+                                    :checked   (contains? validators "required")
+                                    :disabled  disabled?
                                     :on-change (fn [event]
                                                  (dispatch [(if (-> event .-target .-checked)
                                                               :editor/add-validator
                                                               :editor/remove-validator) "required" path]))}]
      [:label.editor-form__checkbox-label
       {:for   id
-       :class (when @form-locked "editor-form__checkbox-label--disabled")}
+       :class (when disabled? "editor-form__checkbox-label--disabled")}
       (get-virkailija-translation :required)]]))
 
 (defn- repeater-checkbox
@@ -938,7 +940,8 @@
                  :header? true)
                (map (fn [field]
                       (into field [[:div.editor-form__markdown-anchor
-                                    (markdown-help)]]))))]]
+                                    (markdown-help)]])))
+               doall)]]
         [:div.editor-form__checkbox-wrapper
          (let [collapsed-id (util/new-uuid)]
            [:div.editor-form__checkbox-container
@@ -976,7 +979,8 @@
                 :header? true)
                (map (fn [field]
                       (into field [[:div.editor-form__markdown-anchor
-                                    (markdown-help)]]))))]]]])))
+                                    (markdown-help)]])))
+               doall)]]]])))
 
 (defn adjacent-fieldset [content path children]
   (let [languages        (subscribe [:editor/languages])
@@ -1072,7 +1076,8 @@
                 :header? true)
                (map (fn [field]
                       (into field [[:div.editor-form__info-addon-markdown-anchor
-                                    (markdown-help)]]))))])])))
+                                    (markdown-help)]])))
+               doall)])])))
 
 (defn attachment [content path]
   (let [languages        (subscribe [:editor/languages])
