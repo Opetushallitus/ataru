@@ -209,11 +209,13 @@
                ^{:key (:id followup)}
                [field followup application lang])])]))
       (doall
-       (for [value values-wo-option]
-         ^{:key (str "unknown-option-" value)}
-         [:div
-          [:p.application__text-field-paragraph
-           (str (get-virkailija-translation :unknown-option) " " value)]]))])])
+        (for [value values-wo-option]
+          ^{:key (str "unknown-option-" value)}
+          [:div
+           [:p.application__text-field-paragraph
+            (if value
+              (str (get-virkailija-translation :unknown-option) " " value)
+              (str (get-virkailija-translation :empty-option)))]]))])])
 
 (defn- haku-row [haku-name haku-oid]
   [:div.application__form-field
