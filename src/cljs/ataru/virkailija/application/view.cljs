@@ -702,7 +702,9 @@
       {:type      "checkbox"
        :checked   checked?
        :on-change #(dispatch [:application/toggle-filter kw state])}]
-     [:span (get label lang)]]))
+     [:span (if lang
+              (get label lang)
+              label)]]))
 
 (defn- review-type-filter
   [filters lang [kw group-label states]]
@@ -742,7 +744,7 @@
           :on-change #(dispatch [:application/toggle-all-pohjakoulutus-filters @all-filters-selected?])}]
         [:span "Kaikki"]]
        (->> checkboxes
-            (map (fn [[id label]] (application-filter-checkbox filters label lang :base-education id)))
+            (map (fn [[id label]] (application-filter-checkbox filters label nil :base-education id)))
             (doall))])))
 
 (defn- application-filters
