@@ -650,6 +650,76 @@
     (assoc-in db [:application :selected-review-hakukohde] selected-hakukohde-oid)))
 
 (reg-event-db
+  :application/set-mass-information-request-form-state
+  (fn [db [_ state]]
+    (assoc-in db [:application :mass-information-request :form-status] state)))
+
+(reg-event-fx
+  :application/cancel-mass-information-request
+  (fn [{:keys [db]} _]
+    (when (= :confirm (get-in db [:application :mass-information-request :form-status]))
+      {:dispatch [:application/set-mass-information-request-form-state :enabled]})))
+
+(reg-event-fx
+  :application/confirm-mass-information-request
+  (fn [_ _]
+    {:dispatch       [:application/set-mass-information-request-form-state :confirm]
+     :dispatch-later [{:dispatch [:application/cancel-mass-information-request]
+                       :ms       3000}]}))
+
+(reg-event-db
+  :application/set-mass-information-request-subject
+  (fn [db [_ subject]]
+    (cond-> (assoc-in db [:application :mass-information-request :subject] subject)
+            (not= :enabled (-> db :application :mass-information-request :form-status))
+            (assoc-in [:application :mass-information-request :form-status] :enabled))))
+
+(reg-event-db
+  :application/set-mass-information-request-message
+  (fn [db [_ message]]
+    (cond-> (assoc-in db [:application :mass-information-request :message] message)
+            (not= :enabled (-> db :application :mass-information-request :form-status))
+            (assoc-in [:application :mass-information-request :form-status] :enabled))))
+
+(reg-event-fx
+  :application/submit-mass-information-request
+  (fn [{:keys [db]} [_ application-keys]]
+    (let [message-and-subject (-> db :application :mass-information-request
+                                  (select-keys [:message :subject]))
+          requests            (map #(assoc message-and-subject :application-key %) application-keys)]
+      {:dispatch [:application/set-mass-information-request-form-state :submitting]
+       :http     {:method              :post
+                  :path                "/lomake-editori/api/applications/mass-information-request"
+                  :params              requests
+                  :handler-or-dispatch :application/handle-submit-mass-information-request-response}})))
+
+(reg-event-fx
+  :application/handle-submit-mass-information-request-response
+  (fn [_ _]
+    {:dispatch       [:application/set-mass-information-request-form-state :submitted]
+     :dispatch-later [{:ms       3000
+                       :dispatch [:application/reset-submit-mass-information-request-state]}]}))
+
+(reg-event-fx
+  :application/reset-submit-mass-information-request-state
+  (fn [{:keys [db]} _]
+    (let [current-application (-> db :application :selected-key)
+          application-keys    (->> @(subscribe [:application/filtered-applications])
+                                   (map :key)
+                                   set)]
+      {:dispatch-n [[:application/set-mass-information-request-message ""]
+                    [:application/set-mass-information-request-subject ""]
+                    [:application/set-mass-information-request-form-state :enabled]
+                    (when current-application [:application/fetch-application current-application])]
+       :db         (-> db
+                       (update-in
+                         [:application :applications]
+                         (partial map (fn [application]
+                                        (cond-> application
+                                                (contains? application-keys (:key application))
+                                                (assoc :new-application-modifications 0))))))})))
+
+(reg-event-db
   :application/set-information-request-subject
   (fn [db [_ subject]]
     (assoc-in db [:application :information-request :subject] subject)))

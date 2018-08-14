@@ -17,7 +17,7 @@ const startsWith = (haystack, needle) => {
 const takeScreenshot = page => {
     const filename = '/tmp/ataru-fail-' + new Date().getTime() + '.png';
     console.log('Taking screenshot', filename);
-    page.screenshot({path: filename})
+    return page.screenshot({path: filename, fullPage: true})
 };
 
 const onConsoleMessage = (message, page) => {
@@ -29,8 +29,9 @@ const onConsoleMessage = (message, page) => {
                 testsSuccessful = true;
             } else if (startsWith(message, resultPrefix + failMsg)) {
                 console.log(message);
-                takeScreenshot(page);
-                testsSuccessful = false;
+                takeScreenshot(page).then(function() {
+                  testsSuccessful = false;
+                });
             } else {
                 console.error("Unknown result:", message);
                 testsSuccessful = false;

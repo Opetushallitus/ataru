@@ -62,6 +62,10 @@
   cursor: pointer;
 }
 
+.application-handling__mass-information-request-container {
+  position: relative;
+}
+
 .application-handling__mass-edit-review-states-container {
   position: relative;
 }
@@ -71,7 +75,7 @@
   white-space: nowrap;
 }
 
-.application-handling__mass-edit-review-states-popup {
+.application-handling__popup {
   .arrow(top, white);
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.30));
   box-sizing: border-box;
@@ -87,6 +91,11 @@
   padding: 15px;
   font-size: 13px;
   line-height: 21px;
+}
+
+.application-handling__mass-information-request-popup {
+  min-width: 500px;
+  left: -180px;
 }
 
 .application-handling__popup-close-button {
@@ -933,6 +942,18 @@ and (max-width: 1000px) {
   margin-bottom: 11px;
 }
 
+.application-handling__information-request-status {
+  font-size: 16px;
+}
+
+.application-handling__information-request-status-icon {
+  margin-right: 10px;
+}
+
+.application-handling__information-request-status-icon--sent {
+  color: @processed-green;
+}
+
 .application-handling__information-request-close-button {
   color: #C2C2C2;
   cursor: pointer;
@@ -960,6 +981,10 @@ and (max-width: 1000px) {
   color: #1A1919;
   border: 1px solid #ccc;
   border-radius: 2px;
+}
+
+.application-handling__information-request-message-area--large {
+  height: 250px;
 }
 
 .application-handling__send-information-request-button {
@@ -1022,6 +1047,10 @@ and (max-width: 1000px) {
 
 .application-handling__send-information-request-button--disabled {
   background-color: @section-gray-border;
+}
+
+.application-handling__send-information-request-button--confirm {
+  background-color: @sg-color-red;
 }
 
 .application-handling__send-information-request-button--cursor-pointer {

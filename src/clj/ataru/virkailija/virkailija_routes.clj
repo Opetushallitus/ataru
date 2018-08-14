@@ -428,6 +428,12 @@
         :return ataru-schema/InformationRequest
         (ok (information-request/store information-request session job-runner)))
 
+      (api/POST "/mass-information-request" {session :session}
+        :body [information-requests [ataru-schema/NewInformationRequest]]
+        :summary "Send information requests to multiple applicants"
+        :return [ataru-schema/InformationRequest]
+        (ok (information-request/mass-store information-requests session job-runner)))
+
       (api/POST "/excel" {session :session}
         :form-params [application-keys :- s/Str
                       filename :- s/Str
