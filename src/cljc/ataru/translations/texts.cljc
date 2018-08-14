@@ -1169,7 +1169,10 @@
                                                  :en "EN-Lähetetään viestejä..."}
    :mass-information-request-messages-sent      {:fi "Viestit lähetetty!"
                                                  :sv "SV-Viestit lähetetty!"
-                                                 :en "SV-Viestit lähetetty!"}})
+                                                 :en "SV-Viestit lähetetty!"}
+   :lupatiedot                                  {:fi "Lupatiedot"
+                                                 :sv "Tilläggsuppgifter"
+                                                 :en "Permissions"}})
 
 (def state-translations
   {:active               {:fi "Aktiivinen"
