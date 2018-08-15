@@ -253,7 +253,11 @@
         (when virkailija-secret
           (virkailija-edit/invalidate-virkailija-create-secret virkailija-secret))
         (start-submit-jobs tarjonta-service job-runner id))
-      (log/warn "Application failed verification" result))
+      (do
+        (audit-log/log {:new       application
+                        :operation audit-log/operation-failed
+                        :id        (util/extract-email application)})
+        (log/warn "Application failed verification" result)))
     result))
 
 (defn handle-application-edit
