@@ -1404,7 +1404,7 @@
         [:div.application__attachment-review-row
          [:div.application__attachment-review-row-answer-information
           [:p.application__attachment-review-row-label (some #(-> review :label % not-empty) [lang :fi :sv :en])]
-          (for [attachment-file (-> review :values flatten)
+          (for [attachment-file (filter identity (-> review :values flatten))
                 :let [text (str (:filename attachment-file) " (" (util/size-bytes->str (:size attachment-file)) ")")]]
             ^{:key (:key attachment-file)}
             [:div

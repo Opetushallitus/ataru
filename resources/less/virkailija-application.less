@@ -1413,10 +1413,32 @@ and (max-width: 1000px) {
   because the layout is different
 */
 
-.application__virkailija-readonly-attachment-text {
+.application__virkailija-readonly-attachment {
   font-size: 14px;
   font-weight: 300;
   line-height: 150%;
+}
+
+.application__virkailija-readonly-attachment-area {
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+}
+
+.application__virkailija-readonly-attachment-delete {
+  .arrow(left, @pale-blue, 8px, 8px);
+  align-items: center;
+  background: @pale-blue;
+  border-radius: 3px;
+  color: white;
+  display: flex;
+  font-size: 13px;
+  margin-left: 20px;
+  padding: 4px 7px 4px 4px;
+}
+.application__virkailija-readonly-attachment-delete--confirm {
+  .arrow(left, @sg-color-red, 8px, 8px);
+  background-color: @sg-color-red;
 }
 
 .application__virkailija-readonly-attachment-virus-status-not-started {

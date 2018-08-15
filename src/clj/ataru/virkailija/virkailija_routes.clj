@@ -562,6 +562,13 @@
 
     (api/context "/files" []
       :tags ["files-api"]
+      (api/DELETE "/:key" []
+        :summary "Delete a file"
+        :path-params [key :- s/Str]
+        :return {:key s/Str}
+        (if-let [resp (file-store/delete-file key)]
+          (response/ok resp)
+          (response/bad-request {:failures (str "Failed to delete file with key " key)})))
       (api/GET "/metadata" []
         :query-params [key :- (api/describe [s/Str] "File key")]
         :summary "Get metadata for one or more files"
@@ -575,7 +582,7 @@
         :return [ataru-schema/File]
         (if-let [resp (file-store/get-metadata keys)]
           (ok resp)
-          (not-found)))
+          (ok)))
       (api/GET "/content/:key" []
         :path-params [key :- (api/describe s/Str "File key")]
         :summary "Download a file"
