@@ -613,6 +613,9 @@
            {:class (when-not all-filters-selected? "application-handling__filter-state-link-icon--enabled")}]]
          (when @filter-opened
            (into [:div.application-handling__filter-state-selection
+                  [:div.application-handling__popup-close-button
+                   {:on-click #(reset! filter-opened false)}
+                   [:i.zmdi.zmdi-close]]
                   [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selection-row--all
                    {:class (when all-filters-selected? "application-handling__filter-state-selected-row")}
                    [:label
