@@ -10,6 +10,7 @@
            [com.fasterxml.jackson.databind ObjectMapper]
            [com.github.fge.jsonpatch.diff JsonDiff]))
 
+(def operation-failed "epäonnistunut")
 (def operation-new "lisäys")
 (def operation-modify "muutos")
 (def operation-delete "poisto")
