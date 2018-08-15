@@ -18,11 +18,13 @@
             [ataru.cljs-util :refer [get-virkailija-translation]]
             [ataru.feature-config :as fc]
             [ataru.util :as util]
+            [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
             [clojure.string :refer [trim]]
             [goog.string :as s]
             [re-frame.core :refer [subscribe]]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [taoensso.timbre :refer-macros [spy debug]]
+            [reagent.core :as r]))
 
 (defn- belongs-to-hakukohderyhma? [field application]
   (let [hakukohteet             (-> application :hakukohde set)
@@ -75,6 +77,27 @@
             :else
             (render-paragraphs values))]]))
 
+(defn- attachment-item [file-key virus-scan-status virus-status-elem text are-you-sure? removing?]
+  [:div.application__virkailija-readonly-attachment-area
+   (if (= virus-scan-status "done")
+     [:a {:href (str "/lomake-editori/api/files/content/" file-key)}
+      text]
+     text)
+   (if @removing?
+     [:a.application__virkailija-readonly-attachment-delete.application__virkailija-readonly-attachment-delete--confirm
+      "Poisto käynnissä"]
+     (if @are-you-sure?
+       [:a.application__virkailija-readonly-attachment-delete.application__virkailija-readonly-attachment-delete--confirm
+        {:on-click (fn []
+                     (reset! removing? true)
+                     (dispatch [:application/remove-selected-attachment file-key]))}
+        "Vahvista poisto"]
+       [:a.application__virkailija-readonly-attachment-delete
+        {:on-click (fn []
+                     (reset! are-you-sure? true))}
+        "Poista liite"]))
+   virus-status-elem])
+
 (defn- attachment-list [attachments]
   [:div.application-handling__nested-container
    (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size virus-scan-status :virus-scan-status}]
@@ -86,15 +109,13 @@
                                             "failed" [:span.application__virkailija-readonly-attachment-virus-status-virus-found
                                                       (s/format " | %s" (get-virkailija-translation :virus-found))]
                                             "done" nil
-                                            (get-virkailija-translation :error))]
-                    [:div.application__virkailija-readonly-attachment-text
+                                            (get-virkailija-translation :error))
+                        are-you-sure?       (r/atom nil)
+                        removing?           (r/atom nil)]
+                    [:div.application__virkailija-readonly-attachment
                      {:key component-key}
-                     (if (= virus-scan-status "done")
-                       [:a {:href (str "/lomake-editori/api/files/content/" file-key)}
-                        text]
-                       text)
-                     virus-status-elem]))
-                attachments)])
+                     [attachment-item file-key virus-scan-status virus-status-elem text are-you-sure? removing?]]))
+                (filter identity attachments))])
 
 (defn attachment [field-descriptor application lang group-idx]
   (let [answer-key (keyword (answer-key field-descriptor))
