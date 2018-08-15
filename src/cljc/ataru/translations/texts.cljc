@@ -251,7 +251,13 @@
                                                  :en "Verify e-mail address"}
    :window-close-warning                        {:fi "Varmistathan että hakemus on lähetetty ennen sivun sulkemista."
                                                  :en "Please ensure you have submitted the form before closing the page."
-                                                 :sv "Försäkra dig om att du har skickat din ansökan innan du stänger sidan"}})
+                                                 :sv "Försäkra dig om att du har skickat din ansökan innan du stänger sidan"}
+   :edit-answers                                {:fi "Vastauksien muokkaus"
+                                                 :sv ""
+                                                 :en "Edit answers"}
+   :preview-answers                             {:fi "Hakemuksen esikatselu"
+                                                 :sv ""
+                                                 :en "Application preview"}})
 
 (def general-texts
   {:yes                {:en "Yes"
