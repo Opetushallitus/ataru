@@ -434,7 +434,8 @@
    :kkPohjakoulutus             [s/Str]
    :sahkoisenAsioinninLupa      s/Bool
    :valintatuloksenJulkaisulupa s/Bool
-   :koulutusmarkkinointilupa    s/Bool})
+   :koulutusmarkkinointilupa    s/Bool
+   :korkeakoulututkintoVuosi    (s/maybe s/Int)})
 
 (s/defschema OnrApplication
   {:oid          s/Str

@@ -648,7 +648,8 @@
      :kkPohjakoulutus             (kk-base-educations answers)
      :sahkoisenAsioinninLupa      (= "Kyllä" (-> answers :sahkoisen-asioinnin-lupa :value))
      :valintatuloksenJulkaisulupa (= "Kyllä" (-> answers :valintatuloksen-julkaisulupa :value))
-     :koulutusmarkkinointilupa    (= "Kyllä" (-> answers :koulutusmarkkinointilupa :value))}))
+     :koulutusmarkkinointilupa    (= "Kyllä" (-> answers :koulutusmarkkinointilupa :value))
+     :korkeakoulututkintoVuosi    (korkeakoulututkinto-vuosi answers)}))
 
 (defn get-hakurekisteri-applications
   [haku-oid hakukohde-oids person-oids modified-after]
