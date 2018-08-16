@@ -4,7 +4,7 @@
 
 (def application-review-states
   [["active" (:active state-translations)]
-   ["inactivated" (:passice state-translations)]])
+   ["inactivated" (:passive state-translations)]])
 
 (def initial-application-review-state "active")
 
