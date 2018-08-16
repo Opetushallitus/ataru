@@ -1418,14 +1418,15 @@
          (if @list-opened
            [:div.application-handling__review-state-list-opened
             (doall
-              (for [[state label] review-states/attachment-hakukohde-review-types]
-                [:div.application-handling__review-state-row.application-handling__review-state-row--small
-                 {:class    (when (= state selected-state) "application-handling__review-state-selected-row application-handling__review-state-row--enabled")
-                  :on-click (fn []
-                              (swap! list-opened not)
-                              (dispatch [:application/update-attachment-review attachment-key selected-hakukohde state]))
-                  :key      (str attachment-key label)}
-                 (when (= state selected-state) (icon-check)) label]))]
+              (for [[state labels] review-states/attachment-hakukohde-review-types]
+                (let [label (get labels lang)]
+                  [:div.application-handling__review-state-row.application-handling__review-state-row--small
+                   {:class    (when (= state selected-state) "application-handling__review-state-selected-row application-handling__review-state-row--enabled")
+                    :on-click (fn []
+                                (swap! list-opened not)
+                                (dispatch [:application/update-attachment-review attachment-key selected-hakukohde state]))
+                    :key      (str attachment-key label)}
+                   (when (= state selected-state) (icon-check)) label])))]
            [:div.application-handling__review-state-row.application-handling__review-state-row--small.application-handling__review-state-selected-row
             {:class    (if @can-edit?
                          "application-handling__review-state-row--enabled"
