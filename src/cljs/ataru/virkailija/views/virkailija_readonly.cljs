@@ -83,19 +83,6 @@
      [:a {:href (str "/lomake-editori/api/files/content/" file-key)}
       text]
      text)
-   (if @removing?
-     [:a.application__virkailija-readonly-attachment-delete.application__virkailija-readonly-attachment-delete--confirm
-      "Poisto käynnissä"]
-     (if @are-you-sure?
-       [:a.application__virkailija-readonly-attachment-delete.application__virkailija-readonly-attachment-delete--confirm
-        {:on-click (fn []
-                     (reset! removing? true)
-                     (dispatch [:application/remove-selected-attachment file-key]))}
-        "Vahvista poisto"]
-       [:a.application__virkailija-readonly-attachment-delete
-        {:on-click (fn []
-                     (reset! are-you-sure? true))}
-        "Poista liite"]))
    virus-status-elem])
 
 (defn- attachment-list [attachments]
@@ -109,12 +96,10 @@
                                             "failed" [:span.application__virkailija-readonly-attachment-virus-status-virus-found
                                                       (s/format " | %s" (get-virkailija-translation :virus-found))]
                                             "done" nil
-                                            (get-virkailija-translation :error))
-                        are-you-sure?       (r/atom nil)
-                        removing?           (r/atom nil)]
+                                            (get-virkailija-translation :error))]
                     [:div.application__virkailija-readonly-attachment
                      {:key component-key}
-                     [attachment-item file-key virus-scan-status virus-status-elem text are-you-sure? removing?]]))
+                     [attachment-item file-key virus-scan-status virus-status-elem text]]))
                 (filter identity attachments))])
 
 (defn attachment [field-descriptor application lang group-idx]
