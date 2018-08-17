@@ -921,13 +921,6 @@
                                         notes)))
      :dispatch-later [{:ms 1000 :dispatch [:application/reset-review-note-animations (:id resp)]}]}))
 
-(reg-event-fx
-  :application/remove-selected-attachment
-  (fn [{:keys [db]} [_ key]]
-    {:http {:method              :delete
-            :path                (str "/lomake-editori/api/files/" key)
-            :handler-or-dispatch :application/fetch-application-attachment-metadata}}))
-
 (reg-event-db :application/reset-review-note-animations
   (fn [db [_ note-id]]
     (update-in db [:application :review-notes]
