@@ -183,8 +183,8 @@
 
 (def numeric-matcher #"[+-]?(0|[1-9][0-9]*)([,.][0-9]+)?")
 
-(defn- numeric?
-  [{:keys [value field-descriptor]}]
+(defn- numeric-value?
+  [field-descriptor value]
   (if (clojure.string/blank? value)
     true
     (let [[_ integer-part decimal-part] (re-matches numeric-matcher value)
@@ -202,6 +202,12 @@
         false
 
         :else true))))
+
+(defn- numeric?
+  [{:keys [value field-descriptor]}]
+  (if (sequential? value)
+    (every? true? (map #(numeric? {:field-descriptor field-descriptor :value %}) value))
+    (numeric-value? field-descriptor value)))
 
 (def pure-validators {:required        required?
                       :required-hakija required-hakija?
