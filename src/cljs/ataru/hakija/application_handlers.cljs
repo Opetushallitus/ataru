@@ -360,8 +360,8 @@
 (defn- merge-dropdown-values [value answer]
   (cond-> (merge answer {:valid true :value value})
           (and (vector? value) (every? vector? value))
-          (merge answer {:values (mapv (partial mapv (fn [value] {:valid true :value value}))
-                                       value)})))
+          (merge {:values (mapv (partial mapv (fn [value] {:valid true :value value}))
+                                value)})))
 
 (defn- merge-submitted-answers [db submitted-answers]
   (-> db
