@@ -1214,7 +1214,8 @@
         animated?        (reaction (:animated? @note))
         remove-disabled? (reaction (or (-> @note :state some?)
                                        (-> @note :id not)))
-        hakukohde-name   (subscribe [:application/hakukohde-name (:hakukohde @note)])]
+        hakukohde-name   (subscribe [:application/hakukohde-name (:hakukohde @note)])
+        removing?        (r/atom true)]
     (fn [note-idx]
       [:div.application-handling__review-note
        (when @animated?
@@ -1229,14 +1230,22 @@
         @notes]
        [:div.application-handling__review-details-column
         [:span @name]
-        [:span @created-time]
-        [:a.application-handling__review-details-remove-link
-         {:href     "#"
-          :class    (when @remove-disabled? "application-handling__review-details-remove-link--disabled")
-          :on-click (fn [event]
-                      (.preventDefault event)
-                      (dispatch [:application/remove-review-note note-idx]))}
-         [:i.zmdi.zmdi-close]]]])))
+        [:span @created-time]]
+       [:a.application-handling__review-details-remove-link
+        {:href     "#"
+         :class    (when @remove-disabled? "application-handling__review-details-remove-link--disabled")
+         :on-click (fn [event]
+                     (.preventDefault event)
+                     (if @removing?
+                       (do
+                         (dispatch [:application/remove-review-note note-idx])
+                         (reset! removing? false))
+                       (do
+                         (reset! removing? true)
+                         (js/setTimeout #(reset! removing? false) 1000))))}
+        (if @removing?
+          [:span (get-virkailija-translation :confirm-delete)]
+          [:i.zmdi.zmdi-close])]])))
 
 (defn application-review-inputs []
   (let [review            (subscribe [:state-query [:application :review]])
