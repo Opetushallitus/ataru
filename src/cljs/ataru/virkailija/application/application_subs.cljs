@@ -91,6 +91,28 @@
     (get-in db [:application :ensisijaisesti?] false)))
 
 (re-frame/reg-sub
+  :application/show-rajaa-hakukohteella?
+  (fn [db]
+    (if @(re-frame/subscribe [:application/ensisijaisesti?])
+      (let [selected-by @(re-frame/subscribe [:application/application-list-selected-by])]
+        (cond (= :selected-hakukohderyhma selected-by)
+              (some->> (get-in db [:application :selected-hakukohderyhma])
+                first
+                (get (get-in db [:haut]))
+                :prioritize-hakukohteet)
+              :else
+              false)))))
+
+(re-frame/reg-sub
+  :application/selected-hakukohderyhma-hakukohteet
+  (fn [db _]
+    (if-let [[haku-oid hakukohderyhma-oid] (get-in db [:application :selected-hakukohderyhma])]
+      (map (fn [[oid _]] oid)
+        (filter (fn [[_ h]]
+                  (if-let [ryhmaliitokset (:ryhmaliitokset h)]
+                    (some #(= hakukohderyhma-oid %) ryhmaliitokset))) (get-in db [:hakukohteet]))))))
+
+(re-frame/reg-sub
  :application/show-mass-update-link?
  (fn [db]
    (and (not-empty @(re-frame/subscribe [:application/filtered-applications]))

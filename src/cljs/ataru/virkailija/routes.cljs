@@ -97,8 +97,10 @@
     (common-actions-for-applications-route)
     (dispatch [:application/close-search-control])
     (dispatch [:application/select-hakukohderyhma [haku-oid hakukohderyhma-oid]])
-    (dispatch [:application/set-ensisijaisesti
-               (= "true" (:ensisijaisesti query-params))])
+    (let [ensisijaisesti? (= "true" (:ensisijaisesti query-params))]
+      (dispatch [:application/set-ensisijaisesti ensisijaisesti?])
+      (dispatch [:application/select-ryhman-ensisijainen-hakukohde
+                 (if ensisijaisesti? (:rajaus-hakukohteella query-params) nil)]))
     (dispatch [:application/fetch-applications-by-hakukohderyhma [haku-oid hakukohderyhma-oid]]))
 
   (defroute "/lomake-editori/applications/haku/:haku-oid"

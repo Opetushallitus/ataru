@@ -351,12 +351,14 @@
   :application/fetch-applications-by-hakukohderyhma
   (fn [{:keys [db]} [_ [haku-oid hakukohderyhma-oid]]]
     (fetch-applications-fx
-     db
-     (str "/lomake-editori/api/applications/list"
-          "?hakuOid=" haku-oid
-          "&hakukohderyhmaOid=" hakukohderyhma-oid
-          (when-let [ensisijaisesti (get-in db [:application :ensisijaisesti?] false)]
-            (str "&ensisijaisesti=" ensisijaisesti))))))
+      db
+      (str "/lomake-editori/api/applications/list"
+        "?hakuOid=" haku-oid
+        "&hakukohderyhmaOid=" hakukohderyhma-oid
+        (when-let [ensisijaisesti (get-in db [:application :ensisijaisesti?] false)]
+          (str "&ensisijaisesti=" ensisijaisesti))
+        (when-let [ryhman-ensisijainen-hakukohde (get-in db [:application :selected-ryhman-ensisijainen-hakukohde] nil)]
+          (str "&rajausHakukohteella=" ryhman-ensisijainen-hakukohde))))))
 
 (reg-event-fx
   :application/fetch-applications-by-haku
@@ -552,7 +554,8 @@
           :selected-form-key
           :selected-haku
           :selected-hakukohde
-          :selected-hakukohderyhma))
+          :selected-hakukohderyhma
+          :select-ryhman-ensisijainen-hakukohde))
 
 (reg-event-fx
   :application/clear-applications-haku-and-form-selections
@@ -570,6 +573,12 @@
     (-> db
         clear-selection
         (assoc-in [:application :selected-form-key] form-key))))
+
+(reg-event-db
+  :application/select-ryhman-ensisijainen-hakukohde
+  (fn [db [_ hakukohde-oid]]
+    (-> db
+        (assoc-in [:application :selected-ryhman-ensisijainen-hakukohde] hakukohde-oid))))
 
 (reg-event-db
   :application/select-hakukohde

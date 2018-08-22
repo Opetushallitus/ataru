@@ -283,6 +283,7 @@
                        {hakukohderyhmaOid :- s/Str nil}
                        {hakuOid :- s/Str nil}
                        {ensisijaisesti :- s/Bool false}
+                       {rajausHakukohteella :- s/Str nil}
                        {ssn :- s/Str nil}
                        {dob :- s/Str nil}
                        {email :- s/Str nil}
@@ -296,7 +297,7 @@
                              (some? hakukohdeOid)
                              (application-service/->hakukohde-query hakukohdeOid ensisijaisesti)
                              (and (some? hakuOid) (some? hakukohderyhmaOid))
-                             (application-service/->hakukohderyhma-query hakuOid hakukohderyhmaOid ensisijaisesti)
+                             (application-service/->hakukohderyhma-query hakuOid hakukohderyhmaOid ensisijaisesti rajausHakukohteella)
                              (some? hakuOid)
                              (application-service/->haku-query hakuOid)
                              (some? ssn)
