@@ -92,9 +92,9 @@
                         component-key     (str "attachment-div-" idx)
                         virus-status-elem (case virus-scan-status
                                             "not_started" [:span.application__virkailija-readonly-attachment-virus-status-not-started
-                                                           (s/format " | %s..." get-virkailija-translation :checking)]
+                                                           (s/format "| %s..." (get-virkailija-translation :checking))]
                                             "failed" [:span.application__virkailija-readonly-attachment-virus-status-virus-found
-                                                      (s/format " | %s" (get-virkailija-translation :virus-found))]
+                                                      (s/format "| %s" (get-virkailija-translation :virus-found))]
                                             "done" nil
                                             (get-virkailija-translation :error))]
                     [:div.application__virkailija-readonly-attachment
