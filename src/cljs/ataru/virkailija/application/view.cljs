@@ -950,7 +950,7 @@
       :class              (when selected? "application-handling__review-state-selected-row-hakukohde")
       :on-click           #(dispatch [:application/select-review-hakukohde hakukohde-oid])}
      (when selected? [icon-check])
-     [hakukohde-name hakukohde-oid]]))
+     [hakukohde-and-tarjoaja-name hakukohde-oid]]))
 
 (defn- selected-review-hakukohde-row
   [selected-hakukohde-oid on-click application-hakukohde-oids]
@@ -963,7 +963,7 @@
       :class (str (when-not application-has-multiple-hakukohde? "application-handling__review-state-row-hakukohde--single-option")
                   (when-not @settings-visible? " application-handling__review-state-row--enabled"))}
      [icon-check]
-     [hakukohde-name selected-hakukohde-oid]]))
+     [hakukohde-and-tarjoaja-name  selected-hakukohde-oid]]))
 
 (defn- application-hakukohde-selection
   []
