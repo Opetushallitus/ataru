@@ -11,7 +11,6 @@
               required-hint
               scroll-to-anchor
               is-required-field?
-              group-spacer
               markdown-paragraph]]
             [ataru.hakija.application-hakukohde-component :as hakukohde]
             [ataru.hakija.pohjakoulutusristiriita :as pohjakoulutusristiriita]

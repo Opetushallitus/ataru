@@ -4,6 +4,7 @@
    [ataru.component-data.component :as component]
    [ataru.virkailija.editor.components.toolbar :as toolbar]
    [cljs.core.match :refer-macros [match]]
+   [goog.string :as s]
    [re-frame.core :refer [subscribe dispatch reg-sub reg-event-db reg-fx reg-event-fx]]
    [reagent.core :as r]
    [reagent.ratom :refer-macros [reaction]]
@@ -28,7 +29,7 @@
       [:div.editor-form__followup-indicator]
       [:div.editor-form__followup-indicator-inlay]
       [:div.editor-form__followup-question-overlay
-       (into [:div] followups)
+       followups
        [toolbar/followup-toolbar option-path
         (fn [generate-fn]
           (dispatch [:editor/generate-followup-component generate-fn option-path]))]]]]))
@@ -38,9 +39,11 @@
                                  (fn [v] (update v option-index not)))}]
     [:div.editor-form__followup-question
      (if (empty? followups)
-       [:a attrs "Lisäkysymykset"]
+       [:a attrs (util/get-virkailija-translation :followups)]
        [:a attrs
-        (str "Lisäkysymykset (" (count followups) ") ")
+        (s/format "%s (%d)"
+                  (util/get-virkailija-translation :followups)
+                  (count followups))
         (if (get @show-followups option-index)
           [:i.zmdi.zmdi-chevron-up.zmdi-hc-lg]
           [:i.zmdi.zmdi-chevron-down.zmdi-hc-lg])])]))

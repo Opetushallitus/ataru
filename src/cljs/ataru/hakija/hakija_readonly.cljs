@@ -18,8 +18,7 @@
                                                                        predefined-value-answer?
                                                                        scroll-to-anchor
                                                                        question-group-answer?
-                                                                       answers->read-only-format
-                                                                       group-spacer]]
+                                                                       answers->read-only-format]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn- split-if-string [s]

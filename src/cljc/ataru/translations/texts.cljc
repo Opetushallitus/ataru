@@ -720,6 +720,9 @@
    :copy-form                                   {:fi "Kopioi lomake"
                                                  :sv "Kopiera blanketten"
                                                  :en "EN: Kopioi lomake"}
+   :copy-answer-id                              {:fi "Kopioi vastauksen tunniste leikepöydälle"
+                                                 :sv "SV: Kopioi vastauksen tunniste leikepöydälle"
+                                                 :en "EN: Kopioi vastauksen tunniste leikepöydälle"}
    :copy-question-id                            {:fi "Kopioi kysymyksen tunniste leikepöydälle"
                                                  :sv "SV: Kopioi kysymyksen tunniste leikepöydälle"
                                                  :en "EN: Kopioi kysymyksen tunniste leikepöydälle"}
@@ -795,6 +798,9 @@
    :finnish                                     {:fi "Suomi"
                                                  :sv "SV: Finska"
                                                  :en "EN: Finnish"}
+   :followups                                   {:fi "Lisäkysymykset"
+                                                 :sv "Lisäkysymykset"
+                                                 :en "Lisäkysymykset"}
    :for-hakukohde                               {:fi "hakukohteelle"
                                                  :sv "SV: hakukohteelle"
                                                  :en "EN: hakukohteelle"}

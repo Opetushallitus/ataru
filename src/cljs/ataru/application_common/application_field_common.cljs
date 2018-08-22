@@ -2,7 +2,8 @@
   (:require [markdown.core :refer [md->html]]
             [reagent.core :as reagent]
             [clojure.string :as string]
-            [ataru.cljs-util :refer [get-translation]])
+            [goog.string :as s]
+            [ataru.cljs-util :refer [get-translation get-virkailija-translation]])
   (:import (goog.html.sanitizer HtmlSanitizer)))
 
 (defn answer-key [field-data]
@@ -142,11 +143,6 @@
        (some #{fieldType} ["dropdown" "singleChoice" "multipleChoice"])
        (not-empty options)))
 
-(defn group-spacer
-  [index]
-  ^{:key (str "spacer-" index)}
-  [:div.application__question-group-spacer])
-
 (defn scroll-to-anchor
   [field-descriptor]
   [:span.application__scroll-to-anchor {:id (str "scroll-to-" (:id field-descriptor))} "."])
@@ -191,3 +187,16 @@
                       (map vector (range) answers)))
             []
             (map vector (range) answers))))
+
+(defn copy [id]
+  (let [copy-container (.getElementById js/document "editor-form__copy-question-id-container")]
+    (set! (.-value copy-container) id)
+    (.select copy-container)
+    (.execCommand js/document "copy")))
+
+(defn copy-link [id & {:keys [answer?]}]
+  [:a.editor-form__copy-question-id
+   {:data-tooltip  (s/format (get-virkailija-translation (if answer? :copy-answer-id :copy-question-id))
+                             id)
+    :on-mouse-down #(copy id)}
+   "id"])
