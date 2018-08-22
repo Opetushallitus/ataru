@@ -796,47 +796,37 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review-note {
-  display: flex;
-  flex-flow: row nowrap;
-  justify-content: space-between;
   background-color: @review-note-background-color;
-  border-radius: 10px;
-  padding: 10px 20px;
+  border-radius: 5px;
+  padding: 5px 8px;
   margin-bottom: 15px;
 }
 
-.application-handling__review-note-column {
-  flex: 0 1 60%;
+.application-handling__review-note-content {
   font-style: italic;
   font-size: 14px;
+  margin-top: 5px;
 }
 
-.application-handling__review-details-column {
+.application-handling__review-note-details-row {
+  color: @gray-of-the-beast;
   display: flex;
-  flex-flow: column nowrap;
-  align-items: center;
+  font-size: 14px;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+}
+
+.application-handling__review-note-remove-link {
   color: @gray-of-the-beast;
-  position: relative;
-  font-size: 13px;
+  display: block;
+  cursor: pointer;
 }
 
-.application-handling__review-details-icon {
-  font-size: 26px;
-}
-
-.application-handling__review-details-remove-link {
-  color: @gray-of-the-beast;
-  margin-top: 10px;
-  position: absolute;
-  top: -20px;
-  right: -13px;
-}
-
-.application-handling__review-details-remove-link:hover {
+.application-handling__review-note-remove-link:hover {
   color: @link-color;
 }
 
-.application-handling__review-details-remove-link--disabled {
+.application-handling__review-note-remove-link--disabled {
   pointer-events: none;
   cursor: auto;
 }

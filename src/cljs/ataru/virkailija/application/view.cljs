@@ -1260,39 +1260,47 @@
         (get-virkailija-translation :add)]])))
 
 (defn- application-review-note [note-idx]
-  (let [note             (subscribe [:state-query [:application :review-notes note-idx]])
-        name             (reaction (if (and (:first-name @note) (:last-name @note))
-                                     (str (:first-name @note) " " (:last-name @note))
-                                     "Virkailija ei tiedossa"))
-        created-time     (reaction (when-let [created-time (:created-time @note)]
-                                     (temporal/time->short-str created-time)))
-        notes            (reaction (:notes @note))
-        animated?        (reaction (:animated? @note))
-        remove-disabled? (reaction (or (-> @note :state some?)
-                                       (-> @note :id not)))
-        hakukohde-name   (subscribe [:application/hakukohde-name (:hakukohde @note)])]
+  (let [note                (subscribe [:state-query [:application :review-notes note-idx]])
+        name                (reaction (if (and (:first-name @note) (:last-name @note))
+                                        (str (:first-name @note) " " (:last-name @note))
+                                        "Virkailija ei tiedossa"))
+        created-time        (reaction (when-let [created-time (:created-time @note)]
+                                        (temporal/time->short-str created-time)))
+        notes               (reaction (:notes @note))
+        animated?           (reaction (:animated? @note))
+        remove-disabled?    (reaction (or (-> @note :state some?)
+                                          (-> @note :id not)))
+        hakukohde-name      (subscribe [:application/hakukohde-name (:hakukohde @note)])
+        removing?           (r/atom false)
+        remove-note         (fn []
+                              (dispatch [:application/remove-review-note note-idx])
+                              (reset! removing? false))
+        start-removing-note (fn []
+                              (reset! removing? true)
+                              (js/setTimeout #(reset! removing? false) 1200))]
     (fn [note-idx]
       [:div.application-handling__review-note
        (when @animated?
          {:class "animated fadeIn"})
-       [:span.application-handling__review-note-column
+       [:div.application-handling__review-note-details-row
+        [:div (str @name " " @created-time)]
+        [:div.application-handling__review-note-remove-link
+         {:class    (when @remove-disabled? "application-handling__review-note-remove-link--disabled")
+          :on-click #(when-not @remove-disabled?
+                       (if @removing?
+                         (remove-note)
+                         (start-removing-note)))}
+         (if @removing?
+           (get-virkailija-translation :confirm-delete)
+           [:i.zmdi.zmdi-close])]]
+       [:div.application-handling__review-note-content
         (when (:hakukohde @note)
           {:data-tooltip-narrow (str (get-virkailija-translation :eligibility-explanation)
                                      (when (not= "form" (:hakukohde @note))
                                        (gstring/format " %s %s"
                                                        (get-virkailija-translation :for-hakukohde)
                                                        @hakukohde-name)))})
-        @notes]
-       [:div.application-handling__review-details-column
-        [:span @name]
-        [:span @created-time]
-        [:a.application-handling__review-details-remove-link
-         {:href     "#"
-          :class    (when @remove-disabled? "application-handling__review-details-remove-link--disabled")
-          :on-click (fn [event]
-                      (.preventDefault event)
-                      (dispatch [:application/remove-review-note note-idx]))}
-         [:i.zmdi.zmdi-close]]]])))
+        @notes]])))
 
 (defn application-review-inputs []
   (let [review            (subscribe [:state-query [:application :review]])
