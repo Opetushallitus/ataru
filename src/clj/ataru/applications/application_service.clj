@@ -145,10 +145,12 @@
         (:hakukohde application)))
 
 (defn- first-hakukohde-in-hakukohderyhma
-  [hakukohderyhma-oid application]
-  (->> (:hakukohde application)
-       (filter #(belongs-to-hakukohderyhma? hakukohderyhma-oid %))
-       first))
+  [hakukohderyhma-oid rajaus-hakukohteella application]
+  (when (or (nil? rajaus-hakukohteella)
+            (some #(= rajaus-hakukohteella (:oid %)) (:hakukohde application)))
+    (->> (:hakukohde application)
+         (filter #(belongs-to-hakukohderyhma? hakukohderyhma-oid %))
+         first)))
 
 (defn- belongs-to-some-organization?
   [authorized-organization-oids hakukohde]
@@ -158,11 +160,12 @@
     (set (:tarjoajaOids hakukohde)))))
 
 (defn- applied-ensisijaisesti-hakukohderyhmassa?
-  [hakukohderyhma-oid authorized-organization-oids application]
+  [rajaus-hakukohteella hakukohderyhma-oid authorized-organization-oids application]
   (and (some? authorized-organization-oids)
        (belongs-to-some-organization? authorized-organization-oids
                                       (first-hakukohde-in-hakukohderyhma
                                        hakukohderyhma-oid
+                                       rajaus-hakukohteella
                                        application))))
 
 (defn ->form-query
@@ -179,10 +182,10 @@
      :predicate (constantly true)}))
 
 (defn ->hakukohderyhma-query
-  [haku-oid hakukohderyhma-oid ensisijaisesti]
+  [haku-oid hakukohderyhma-oid ensisijaisesti rajaus-hakukohteella]
   {:haku      haku-oid
    :predicate (partial (if ensisijaisesti
-                         applied-ensisijaisesti-hakukohderyhmassa?
+                         (partial applied-ensisijaisesti-hakukohderyhmassa? rajaus-hakukohteella)
                          applied-to-hakukohderyhma?)
                        hakukohderyhma-oid)})
 
