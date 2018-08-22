@@ -786,6 +786,9 @@
    :ensisijaisesti                              {:fi "Hakenut ensisijaisesti"
                                                  :sv "SV: Hakenut ensisijaisesti"
                                                  :en "EN: Hakenut ensisijaisesti"}
+   :ensisijaisuus                               {:fi "Ensisijaisuus"
+                                                 :sv "SV: Ensisijaisuus"
+                                                 :en "EN: Ensisijaisuus"}
    :error                                       {:fi "Virhe"
                                                  :sv "SV: Virhe"
                                                  :en "EN: Virhe"}

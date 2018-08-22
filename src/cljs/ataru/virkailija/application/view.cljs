@@ -404,8 +404,7 @@
                                       selected-hakukohderyhma-oid])
                          :else
                          (get-virkailija-translation :all-hakukohteet)))
-       (when @(subscribe [:application/show-ensisijaisesti?])
-         [ensisijaisesti])])))
+       ])))
 
 (defn selected-applications-heading
   [haku-data list-heading]
@@ -750,6 +749,54 @@
             (map (fn [[id label]] (application-filter-checkbox filters label nil :base-education id)))
             (doall))])))
 
+(defn- rajaava-hakukohde-row
+  [close-list oid haku-oid hakukohderyhma-oid selected?]
+  (let [name        @(subscribe [:application/hakukohde-name oid])
+        description @(subscribe [:application/tarjoaja-name oid])]
+    (row-component close-list
+                   (str "/lomake-editori/applications/haku/" haku-oid "/hakukohderyhma/" hakukohderyhma-oid "?ensisijaisesti=true&rajaus-hakukohteella=" oid)
+                   name
+                   description
+                   selected?)))
+
+(defn- select-rajaava-hakukohde [opened?]
+  (if @opened?
+    (let [close                         #(reset! opened? false)
+          [haku-oid hakukohderyhma-oid] @(subscribe [:state-query [:application :selected-hakukohderyhma]])
+          ryhman-ensisijainen-hakukohde @(subscribe [:state-query [:application :selected-ryhman-ensisijainen-hakukohde]])
+          ryhman-hakukohteet            @(subscribe [:application/selected-hakukohderyhma-hakukohteet])]
+      [:div.application-handling__dropdown-box-opened.application-handling__dropdown-box-opened__rajaus-hakukohteella
+       (row-component close
+                      (str "/lomake-editori/applications/haku/" haku-oid "/hakukohderyhma/" hakukohderyhma-oid "?ensisijaisesti=true")
+                      (get-virkailija-translation :all-hakukohteet)
+                      nil
+                      (nil? ryhman-ensisijainen-hakukohde))
+       (let [hakukohde-sorted-oids (->> ryhman-hakukohteet
+                                        (map (fn [hakukohde-oid]
+                                               [@(subscribe [:application/hakukohde-name hakukohde-oid])
+                                                hakukohde-oid]))
+                                        (sort-by first)
+                                        (map second))]
+         (doall
+           (for [hakukohde-oid hakukohde-sorted-oids]
+             ^{:key hakukohde-oid}
+             [rajaava-hakukohde-row
+              close
+              hakukohde-oid
+              haku-oid
+              hakukohderyhma-oid
+              (= ryhman-ensisijainen-hakukohde hakukohde-oid)])))])
+    (let [ryhman-ensisijainen-hakukohde @(subscribe [:state-query [:application :selected-ryhman-ensisijainen-hakukohde]])
+          label                         (if (nil? ryhman-ensisijainen-hakukohde)
+                                          (get-virkailija-translation :all-hakukohteet)
+                                          @(subscribe [:application/hakukohde-name ryhman-ensisijainen-hakukohde]))]
+      [:div.application-handling__dropdown-box-closed
+       {:on-click (fn []
+                    (reset! opened? true))}
+       [:i.zmdi.zmdi-chevron-down]
+       [:p.application-handling__dropdown-box-closed-label
+        (or label [:i.zmdi.zmdi-spinner.spin])]])))
+
 (defn- application-filters
   []
   (let [filters                    (subscribe [:state-query [:application :filters]])
@@ -759,7 +806,10 @@
         review-settings            (subscribe [:state-query [:application :review-settings :config]])
         selected-hakukohde-oid     (subscribe [:state-query [:application :selected-hakukohde]])
         has-base-education-answers (subscribe [:application/applications-have-base-education-answers])
+        show-ensisijaisesti?       (subscribe [:application/show-ensisijaisesti?])
+        show-rajaa-hakukohteella?  (subscribe [:application/show-rajaa-hakukohteella?])
         filters-visible            (r/atom false)
+        rajaava-hakukohde-opened?  (r/atom false)
         filters-to-include         #{:language-requirement :degree-requirement :eligibility-state :payment-obligation}
         lang                       (subscribe [:editor/virkailija-lang])]
     (fn []
@@ -782,6 +832,12 @@
            {:on-click #(reset! filters-visible false)}
            [:i.zmdi.zmdi-close]]
           [:div.application-handling__popup-column-left
+           (when @show-ensisijaisesti?
+             [:div.application-handling__ensisijaisesti-group
+              [:h3.application-handling__filter-group-heading (get-virkailija-translation :ensisijaisuus)]
+              [ensisijaisesti]
+              (when @show-rajaa-hakukohteella?
+                [select-rajaava-hakukohde rajaava-hakukohde-opened?])])
            [:h3.application-handling__filter-group-heading (get-virkailija-translation :identifying)]
            [:div.application-handling__filter-group
             [application-filter-checkbox filters (:unidentified virkailija-texts) @lang :only-identified :unidentified]
