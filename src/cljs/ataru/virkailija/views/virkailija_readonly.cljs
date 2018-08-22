@@ -188,7 +188,7 @@
           true)))))
 
 (defn- selectable [content application lang question-group-idx]
-  [:div
+  [:div.application__form-field-label--selectable
    [:div.application__form-field-label (some (:label content) [lang :fi :sv :en])]
    (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
                                       (some? question-group-idx)
@@ -204,16 +204,16 @@
                                   values)]
      [:div.application-handling__nested-container
       (doall
-       (for [option selected-options]
-         ^{:key (:value option)}
-         [:div
-          [:p.application__text-field-paragraph
-           (some (:label option) [lang :fi :sv :en])]
-          (when (some #(visible? % application) (:followups option))
-            [:div.application-handling__nested-container
-             (for [followup (:followups option)]
-               ^{:key (:id followup)}
-               [field followup application lang])])]))
+        (for [option selected-options]
+          ^{:key (:value option)}
+          [:div
+           [:p.application__text-field-paragraph
+            (some (:label option) [lang :fi :sv :en])]
+           (when (some #(visible? % application) (:followups option))
+             [:div.application-handling__nested-container
+              (for [followup (:followups option)]
+                ^{:key (:id followup)}
+                [field followup application lang])])]))
       (doall
         (for [value values-wo-option]
           ^{:key (str "unknown-option-" value)}

@@ -1477,6 +1477,10 @@ and (max-width: 1000px) {
   max-width: 610px;
 }
 
+.application__form-field-label--selectable {
+  margin-bottom: 5px;
+}
+
 .application__form-field-value {
   color: @text-color;
   font-size: 14px;
@@ -1501,6 +1505,9 @@ and (max-width: 1000px) {
 
 .application__wrapper-heading {
   flex: 0 0 245px;
+  padding-right: 20px;
+  word-break: break-word;
+
   h2 {
     color: @text-color;
     font-size: 16px;
@@ -1565,6 +1572,7 @@ and (max-width: 1000px) {
 
 .application__question-group-repeat {
   border-left: 2px solid #d8d8d8;
+  padding-left: 5px;
 }
 
 .application__question-group-repeat .application__form-field {
@@ -2028,12 +2036,7 @@ th.application__readonly-adjacent--header {
 
 .application__text-field-paragraph {
   display: inline-block;
-  &:first-child {
-    margin-top: 0px;
-  }
-  &:last-child {
-    margin-bottom: 0px;
-  }
+  margin: 0px;
 }
 
 .application-handling__header-haku {
@@ -2193,6 +2196,10 @@ th.application__readonly-adjacent--header {
 
 .application-handling__nested-container {
   margin-left: 10px;
+
+  .application-handling__nested-container {
+    margin-top: 5px;
+  }
 }
 
 .application-handling__filters {
