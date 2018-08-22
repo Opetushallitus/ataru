@@ -316,7 +316,8 @@
      [:label.application__form-field-label
       (str (-> field :label lang) (required-hint field))]
      [:div.application__form-field-value
-      (clojure.string/join ", " values)]]))
+      [:p.application__text-field-paragraph
+       (clojure.string/join ", " values)]]]))
 
 (defn field
   [content application lang group-idx person-info-field?]
