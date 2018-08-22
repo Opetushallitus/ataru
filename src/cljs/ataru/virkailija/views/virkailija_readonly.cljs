@@ -302,13 +302,32 @@
         ^{:key (str "question-group-" (:id content) "-" idx "-" (:id child))}
         [field child application lang idx])])])
 
+(defn- nationality-field [field-descriptor application lang children]
+  (let [field            (first children)
+        id               (keyword (:id field-descriptor))
+        use-onr-info?    (contains? (:person application) id)
+        values           (flatten (replace-with-option-label (-> application :person :nationality)
+                                                             (:options field)
+                                                             lang))
+        highlight-field? (subscribe [:application/field-highlighted? id])]
+    [:div.application__form-field
+     {:class (when @highlight-field? "highlighted")
+      :id    id}
+     [:label.application__form-field-label
+      (str (-> field :label lang) (required-hint field))]
+     [:div.application__form-field-value
+      (clojure.string/join ", " values)]]))
+
 (defn field
   [content application lang group-idx person-info-field?]
   (when (visible? content application)
     (match content
       {:module "person-info"} [person-info-module content application lang]
       {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
-      {:fieldClass "questionGroup" :fieldType "fieldset" :children children} [question-group content application lang children]
+      {:fieldClass "questionGroup" :fieldType "fieldset" :children children}
+           (if person-info-field?
+             (nationality-field content application lang children)
+             [question-group content application lang children])
       {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children group-idx person-info-field?]
       {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children group-idx]
       {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")}
