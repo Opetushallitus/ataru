@@ -59,7 +59,10 @@
   "Returns a sequence of {:name <org-name> :oid <org-oid>} maps containing all suborganizations
    The root organization is the first element"
   [root-organization-oid]
-  (let [response (http-util/do-get (resolve-url :organisaatio-service.plain-hierarchy root-organization-oid))]
+  (let [url      (if (clojure.string/blank? root-organization-oid)
+                   (resolve-url :organisaatio-service.root-hierarchy)
+                   (resolve-url :organisaatio-service.plain-hierarchy root-organization-oid))
+        response (http-util/do-get url)]
     (if (= 200 (:status response))
       (-> response read-body get-all-organizations-as-seq)
       (throw (Exception. (str "Got status code " (:status response) " While reading organizations"))))))
