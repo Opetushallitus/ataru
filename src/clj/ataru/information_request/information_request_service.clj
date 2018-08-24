@@ -50,7 +50,10 @@
          (-> information-request :message u/not-blank?)
          (-> information-request :application-key u/not-blank?)]}
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [information-request (information-request-store/add-information-request information-request session conn)]
+    (let [information-request (information-request-store/add-information-request
+                                (merge information-request {:message-type "information-request"})
+                                session
+                                conn)]
       (audit-log/log {:new       information-request
                       :operation audit-log/operation-new
                       :id        (-> session :identity :oid)})
@@ -64,7 +67,10 @@
          (every? (comp u/not-blank? :application-key) information-requests)]}
   (let [stored-information-requests (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                                       (mapv
-                                        #(information-request-store/add-information-request % session conn)
+                                        #(information-request-store/add-information-request
+                                           (merge % {:message-type "mass-information-request"})
+                                           session
+                                           conn)
                                         information-requests))]
     (doseq [stored-information-request stored-information-requests]
       (start-email-job job-runner stored-information-request)

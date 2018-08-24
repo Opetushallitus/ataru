@@ -564,6 +564,7 @@
 (s/defschema InformationRequest {:subject         s/Str
                                  :message         s/Str
                                  :application-key s/Str
+                                 :message-type    s/Str
                                  :created-time    #?(:clj  org.joda.time.DateTime
                                                      :cljs s/Str)
                                  :first-name      s/Str

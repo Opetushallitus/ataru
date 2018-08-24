@@ -870,6 +870,9 @@
    :information-request-sent                    {:fi "Täydennyspyyntö lähetetty"
                                                  :sv "SV: Täydennyspyyntö lähetetty"
                                                  :en "EN: Täydennyspyyntö lähetetty"}
+   :mass-information-request-sent               {:fi "Viesti lähetetty"
+                                                 :sv "SV: Viesti lähetetty"
+                                                 :en "EN: Viesti lähetetty"}
    :integer                                     {:fi "kokonaisluku"
                                                  :sv "SV: heltal"
                                                  :en "EN: integer"}
@@ -918,15 +921,15 @@
    :mass-information-request-email-n-recipients (fn [n] {:fi (format "Lähetä sähköposti %d hakijalle:" n)
                                                          :sv (format "SV-Lähetä sähköposti %d hakijalle:" n)
                                                          :en (format "EN-Lähetä sähköposti %d hakijalle:" n)})
-   :mass-information-request-messages-sent      {:fi "Viestit lähetetty!"
-                                                 :sv "SV-Viestit lähetetty!"
-                                                 :en "SV-Viestit lähetetty!"}
+   :mass-information-request-messages-sent      {:fi "Viestit lisätty lähetysjonoon!"
+                                                 :sv "SV-Viestit lisätty lähetysjonoon!"
+                                                 :en "SV-Viestit lisätty lähetysjonoon!"}
    :mass-information-request-send               {:fi "Lähetä"
                                                  :sv "SV-Lähetä:"
                                                  :en "EN-Lähetä:"}
-   :mass-information-request-sending-messages   {:fi "Lähetetään viestejä..."
-                                                 :sv "SV-Lähetetään viestejä..."
-                                                 :en "EN-Lähetetään viestejä..."}
+   :mass-information-request-sending-messages   {:fi "Käsitellään viestejä..."
+                                                 :sv "SV-Käsitellään viestejä..."
+                                                 :en "EN-Käsitellään viestejä..."}
    :mass-information-request-subject            {:fi "Aihe:"
                                                  :sv "SV-Aihe:"
                                                  :en "EN-Aihe:"}
