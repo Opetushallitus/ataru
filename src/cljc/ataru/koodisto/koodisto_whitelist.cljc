@@ -9,4 +9,5 @@
                          {:uri "pohjakoulutuskklomake" :version 1 :title "Kk-pohjakoulutusvaihtoehdot"}
                          {:uri "kunta" :version 1 :title "Kunta"}
                          {:uri "AmmatillisetOPSperustaiset" :version 1 :title "Ammatilliset tutkinnot"}
-                         {:uri "oppilaitostyyppi" :version 1 :title "Ammatilliset oppilaitokset"}])
+                         {:uri "oppilaitostyyppi" :version 1 :title "Ammatilliset oppilaitokset"}
+                         {:uri "opiskelukieli" :version 1 :title "Opiskelukieli"}])
