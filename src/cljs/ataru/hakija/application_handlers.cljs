@@ -543,13 +543,16 @@
 
 (reg-event-fx
   :application/set-application-field
-  (fn [{db :db} [_ field value]]
+  (fn [{db :db} [_ field value input-id]]
     (let [value   (transform-value value field)
           id      (keyword (:id field))
-          answers (get-in db [:application :answers])]
+          answers (get-in db [:application :answers])
+          key     (if (= "verify-email" input-id)
+                    :verify
+                    :value)]
       {:db       (-> db
-                     (assoc-in [:application :answers id :value] value)
-                     (set-multi-value-changed id :value)
+                     (assoc-in [:application :answers id key] value)
+                     (set-multi-value-changed id key)
                      (set-field-visibility field))
        :validate {:value            value
                   :answers-by-key   answers
@@ -1139,7 +1142,7 @@
   (fn [_ [_ field-descriptor value group-idx]]
     {:dispatch (if (some? group-idx)
                  [:application/set-repeatable-application-field field-descriptor value 0 group-idx]
-                 [:application/set-application-field field-descriptor value])}))
+                 [:application/set-application-field field-descriptor value nil])}))
 
 (reg-event-db
   :application/remove-question-group-mouse-over

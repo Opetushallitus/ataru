@@ -36,8 +36,9 @@
          :else "application__form-text-input__size-medium"))
 
 (defn- textual-field-change [field-descriptor evt]
-  (let [value (-> evt .-target .-value)]
-    (dispatch [:application/set-application-field field-descriptor value])))
+  (let [value (-> evt .-target .-value)
+        id (-> evt .-target .-id)]
+    (dispatch [:application/set-application-field field-descriptor value id])))
 
 (defn- multi-value-field-change [field-descriptor data-idx question-group-idx event]
   (let [value (some-> event .-target .-value)]
@@ -143,10 +144,14 @@
         languages   (subscribe [:application/default-languages])
         size        (get-in field-descriptor [:params :size])
         size-class  (text-field-size->class size)
+        verify-email? (subscribe [:application/verify-email? id])
         on-blur     #(dispatch [:application/textual-field-blur field-descriptor])
         on-change   (if idx
                       (partial multi-value-field-change field-descriptor 0 idx)
-                      (partial textual-field-change field-descriptor))
+                      (if verify-email?
+                        (partial textual-field-change
+                          (assoc-in field-descriptor [:params :verify] (get-in answer [:verify] "")))
+                        (partial textual-field-change field-descriptor)))
         show-error? (show-text-field-error-class? field-descriptor
                                                   (:value answer)
                                                   (:valid answer))
@@ -179,7 +184,32 @@
                 {:disabled true}))]
       (when (and (not-empty (:errors answer))
                  @show-validation-error?)
-        [validation-error id (:errors answer)])]]))
+        [validation-error id (:errors answer)])]
+     (when @verify-email?
+       (let [id           :verify-email
+             verify-label (get-translation :verify-email)]
+         [:div
+          [:label.application__form-field-label
+           {:id "application-form-field-label-verify-email"
+            :for id}
+           [:span (str verify-label (required-hint field-descriptor))]]
+          ;[label field-descriptor]
+          [:div.application__form-text-input-and-validation-errors
+           [:input.application__form-text-input
+            {:id           id
+             :type         "text"
+             :required     true
+             :value        (if @(subscribe [:application/cannot-view? id])
+                             "***********"
+                             (:verify answer))
+             :on-blur      on-blur
+             :on-change    (partial textual-field-change
+                             (assoc-in field-descriptor [:params :verify] (:value answer)))
+             :class        (str size-class
+                             (if show-error?
+                               " application__form-field-error"
+                               " application__form-text-input--normal"))
+             :aria-invalid @(subscribe [:application/answer-invalid? id])}]]]))]))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [id           (keyword (:id field-descriptor))

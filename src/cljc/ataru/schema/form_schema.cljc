@@ -60,6 +60,7 @@
 
 (s/defschema Params {(s/optional-key :adjacent)                         s/Bool
                      (s/optional-key :can-submit-multiple-applications) s/Bool
+                     (s/optional-key :yhteishaku)                       (s/maybe s/Bool)
                      (s/optional-key :repeatable)                       s/Bool
                      (s/optional-key :numeric)                          s/Bool
                      (s/optional-key :decimals)                         (s/maybe s/Int)
@@ -239,6 +240,7 @@
    :prioritize-hakukohteet             s/Bool
    :max-hakukohteet                    (s/maybe s/Int)
    :can-submit-multiple-applications   s/Bool
+   :yhteishaku                         (s/maybe s/Bool)
    (s/optional-key :default-hakukohde) FormTarjontaHakukohde})
 
 (s/defschema Haku
