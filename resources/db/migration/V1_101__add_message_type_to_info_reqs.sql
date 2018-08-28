@@ -1,2 +1,2 @@
 ALTER TABLE information_requests
-  ADD COLUMN message_type TEXT DEFAULT 'information_request';
+  ADD COLUMN message_type TEXT NOT NULL DEFAULT 'information_request';
