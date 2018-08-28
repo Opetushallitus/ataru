@@ -13,7 +13,7 @@
                                                  :sv "Ladda upp bilagan..."}
    :add-more                                    {:fi "Lisää..."
                                                  :sv "Lägg till..."
-                                                 :en "Add more..."}
+                                                 :en "Add..."}
    :add-more-button                             {:fi "Lisää"
                                                  :sv "Lägg till"
                                                  :en "Add"}
