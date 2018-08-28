@@ -507,7 +507,7 @@
             })
           )
           it('removes button', function() {
-            expect(massInformationRequestStatusText()).to.be.oneOf(['Lähetetään viestejä...', 'Viestit lähetetty!'])
+            expect(massInformationRequestStatusText()).to.be.oneOf(['Lähetetään viestejä...', 'Viestit lisätty lähetysjonoon!'])
           })
         })
         describe('after success', function() {
