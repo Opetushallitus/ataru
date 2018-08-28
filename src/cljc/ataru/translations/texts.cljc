@@ -65,7 +65,7 @@
    :applications_at_most                        {:fi "Tässä haussa voit hakea %s hakukohteeseen"
                                                  :sv "I denna ansökan kan du söka till %s ansökningsmål"
                                                  :en "In this application you can apply to %s options "}
-   :best-regards                                {:fi "terveisin"
+   :best-regards                                {:fi "Ystävällisin terveisin"
                                                  :sv "Med vänliga hälsningar"
                                                  :en "Best Regards"}
    :check-answers                               {:fi ["Tarkista " " tietoa"], :sv ["Kontrollera " " uppgifter"], :en ["Check " " answers"]}
@@ -76,7 +76,7 @@
                                                  :sv "Välj det språk på vilket du vill få information om studerandeantagningen. Ditt önskemål tas i beaktande om möjligt."
                                                  :en "Choose the language in which you wish to receive information regarding the student selection. Your choice will be taken into consideration if possible."}
    :continuous-period                           {:fi "Jatkuva haku"
-                                                 :sv "kontinuerlig ansökningstid"
+                                                 :sv "Kontinuerlig ansökningstid"
                                                  :en "Continuous application period"}
    :do-not-share-warning-text                   {:fi "Älä jaa linkkiä ulkopuolisille. Jos käytät yhteiskäyttöistä tietokonetta, muista kirjautua ulos sähköpostiohjelmasta."
                                                  :en "Do not share the link with others. If you are using a public or shared computer, remember to log out of the email application."
@@ -155,7 +155,7 @@
                                                  :sv "timmar"}
    :insufficient-base-education                 {:fi "Ilmoitus riittämättömästä pohjakoulutuksesta"
                                                  :sv "Meddelande om otillräcklig grundutbildning"
-                                                 :en "Ilmoitus riittämättömästä pohjakoulutuksesta"}
+                                                 :en "Insufficient educational background"}
    :liitepyynto-for-hakukohde                   {:fi "Liitepyyntö kuuluu hakukohteisiin"
                                                  :en "Request for attachment is for application options"
                                                  :sv "Begäran om bilagor berör ansökningsmål"}
@@ -182,16 +182,16 @@
                                                  :sv "Du kan se och redigera din ansökan via länken ovan."}
    :muokkaa-hakukohteita                        {:fi "Muokkaa hakukohteita"
                                                  :sv "Bearbeta ansökningsmål"
-                                                 :en "Muokkaa hakukohteita"}
+                                                 :en "Modify your application options"}
    :no-hakukohde-search-hits                    {:fi "Ei hakutuloksia"
                                                  :en "No search results found"
                                                  :sv "Inga sökresultat"}
    :not-applicable-for-hakukohteet              {:fi "Ilmoittamasi pohjakoulutuksen perusteella et voi tulla valituksi seuraaviin hakukohteisiin"
                                                  :sv "På basis av den grundutbildning u har angett, kan du inte antas till följande ansökningsmål"
-                                                 :en "Ilmoittamasi pohjakoulutuksen perusteella et voi tulla valituksi seuraaviin hakukohteisiin"}
+                                                 :en "You cannot be admitted to the following programmes on the basis of your educational background"}
    :not-editable-application-period-ended       {:fi "Tämä hakutoive ei ole muokattavissa koska sen hakuaika on päättynyt."
                                                  :sv "Ansökningsmålet kan inte bearbetas eftersom ansökningstiden har utgått."
-                                                 :en "Tämä hakutoive ei ole muokattavissa koska sen hakuaika on päättynyt."}
+                                                 :en "You can't modify this application option because the application period has ended."}
    :not-selectable-application-period-ended     {:fi "Hakuaika ei ole käynnissä"
                                                  :sv "Ingen pågående ansökningstid"
                                                  :en "Application period not ongoing"}
@@ -212,7 +212,7 @@
                                                  :en "Permissions"}
    :pohjakoulutusvaatimus                       {:fi "Pohjakoulutusvaatimus"
                                                  :sv "Grundutbildningskrav"
-                                                 :en "Pohjakoulutusvaatimus"}
+                                                 :en "Educational background restrictions"}
    :preview                                     {:fi "Esikatselu"
                                                  :en "Preview"
                                                  :sv "Förhandsvisa"}
