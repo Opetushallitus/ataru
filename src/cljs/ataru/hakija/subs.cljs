@@ -250,3 +250,10 @@
   :application/show-validation-error?
   (fn [db [_ id]]
     (= id (get-in db [:application :visible-validation-error] id))))
+
+(re-frame/reg-sub
+  :application/verify-email?
+  (fn [db [_ id]]
+    (and (= :email id)
+         (nil? (get-in db [:application :virkailija-secret]))
+         (-> db :form :tarjonta :yhteishaku))))

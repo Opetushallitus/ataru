@@ -56,12 +56,15 @@
     (contains? hakuaika :loppuPvm)
     (assoc :end (epoch-millis->zoned-date-time (:loppuPvm hakuaika)))))
 
+(defn yhteishaku? [haku]
+  (= (:hakutapaUri haku) "hakutapa_01#1"))
+
 (defn parse-haku
   [haku]
   {:oid                    (:oid haku)
    :name                   (parse-multi-lang-text (:nimi haku))
    :prioritize-hakukohteet (:usePriority haku)
-   :yhteishaku             (= (:hakutapaUri haku) "hakutapa_01#1")
+   :yhteishaku             (yhteishaku? haku)
    :hakuajat               (mapv parse-hakuaika (:hakuaikas haku))})
 
 (defn- parse-hakukohde

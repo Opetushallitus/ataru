@@ -62,16 +62,18 @@
 
 (defn- email?
   [{:keys [has-applied value answers-by-key field-descriptor]}]
-  (let [multiple?      (get-in field-descriptor
-                               [:params :can-submit-multiple-applications]
-                               true)
-        haku-oid       (get-in field-descriptor
-                               [:params :haku-oid])
+  (let [multiple?      (get-in field-descriptor [:params :can-submit-multiple-applications] true)
+        haku-oid       (get-in field-descriptor [:params :haku-oid])
+        yhteishaku?    (get-in field-descriptor [:params :yhteishaku] false)
         preferred-name (:preferred-name answers-by-key)
         original-value (get-in answers-by-key [(keyword (:id field-descriptor)) :original-value])
-        modifying?     (some? original-value)]
+        modifying?     (some? original-value)
+        verify-value   (get-in field-descriptor [:params :verify])]
     (asyncm/go
-      (cond (not (email/email? value))
+      (cond (or (not (email/email? value))
+                (and yhteishaku?
+                     verify-value
+                     (not= verify-value value)))
             [false []]
             (and modifying? (= value original-value))
             [true []]
