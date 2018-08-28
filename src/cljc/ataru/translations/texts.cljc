@@ -64,7 +64,7 @@
                                                  :en "SAVE MODIFICATIONS"}
    :applications_at_most                        {:fi "Tässä haussa voit hakea %s hakukohteeseen"
                                                  :sv "I denna ansökan kan du söka till %s ansökningsmål"
-                                                 :en "Tässä haussa voit hakea %s hakukohteeseen"}
+                                                 :en "In this application you can apply to %s options "}
    :best-regards                                {:fi "terveisin"
                                                  :sv "Med vänliga hälsningar"
                                                  :en "Best Regards"}
