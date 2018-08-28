@@ -1,6 +1,7 @@
 (ns ataru.tarjonta-service.tarjonta-parser
   (:require [taoensso.timbre :as log]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
+            [ataru.tarjonta-service.tarjonta-service :refer [yhteishaku?]]
             [ataru.koodisto.koodisto :refer [get-koodisto-options]]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
@@ -83,26 +84,26 @@
           (some? ohjausparametrit-service)]}
    (when haku-oid
      (let [hakukohderyhmat                   (->> (organization-service/get-hakukohde-groups
-                                                   organization-service)
+                                                    organization-service)
                                                   (map :oid)
                                                   (set))
            haku                              (tarjonta-protocol/get-haku
-                                              tarjonta-service
-                                              haku-oid)
+                                               tarjonta-service
+                                               haku-oid)
            ohjausparametrit                  (ohjausparametrit-protocol/get-parametri
-                                              ohjausparametrit-service
-                                              haku-oid)
+                                               ohjausparametrit-service
+                                               haku-oid)
            pohjakoulutusvaatimuskorkeakoulut (get-koodisto-options "pohjakoulutusvaatimuskorkeakoulut" 1)
            hakukohteet                       (->> included-hakukohde-oids
                                                   (keep #(tarjonta-protocol/get-hakukohde
-                                                          tarjonta-service
-                                                          %))
+                                                           tarjonta-service
+                                                           %))
                                                   (map #(parse-hakukohde tarjonta-service
-                                                                         hakukohderyhmat
-                                                                         haku
-                                                                         ohjausparametrit
-                                                                         pohjakoulutusvaatimuskorkeakoulut
-                                                                         %)))
+                                                          hakukohderyhmat
+                                                          haku
+                                                          ohjausparametrit
+                                                          pohjakoulutusvaatimuskorkeakoulut
+                                                          %)))
            max-hakukohteet                   (:maxHakukohdes haku)]
        (when (not-empty hakukohteet)
          {:tarjonta
@@ -112,7 +113,8 @@
            :prioritize-hakukohteet           (:usePriority haku)
            :max-hakukohteet                  (when (and max-hakukohteet (pos? max-hakukohteet))
                                                max-hakukohteet)
-           :can-submit-multiple-applications (:canSubmitMultipleApplications haku)}}))))
+           :can-submit-multiple-applications (:canSubmitMultipleApplications haku)
+           :yhteishaku                       (yhteishaku? haku)}}))))
   ([tarjonta-service organization-service ohjausparametrit-service haku-oid]
    (when haku-oid
      (parse-tarjonta-info-by-haku tarjonta-service

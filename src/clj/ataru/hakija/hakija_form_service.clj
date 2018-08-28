@@ -14,10 +14,12 @@
             [ataru.hakija.form-role :as form-role]
             [ataru.component-data.component :as component]))
 
-(defn- set-can-submit-multiple-applications
-  [multiple? haku-oid field]
-  (cond-> (assoc-in field [:params :can-submit-multiple-applications] multiple?)
-    (not multiple?) (assoc-in [:params :haku-oid] haku-oid)))
+(defn- set-can-submit-multiple-applications-and-yhteishaku
+  [multiple? yhteishaku? haku-oid field]
+  (-> field
+      (assoc-in [:params :can-submit-multiple-applications] multiple?)
+      (assoc-in [:params :yhteishaku] yhteishaku?)
+      (cond-> (not multiple?) (assoc-in [:params :haku-oid] haku-oid))))
 
 (defn- map-if-ssn-or-email
   [f field]
@@ -29,13 +31,14 @@
 (defn populate-can-submit-multiple-applications
   [form tarjonta-info]
   (let [multiple? (get-in tarjonta-info [:tarjonta :can-submit-multiple-applications] true)
+        yhteishaku? (get-in tarjonta-info [:tarjonta :yhteishaku] false)
         haku-oid  (get-in tarjonta-info [:tarjonta :haku-oid])]
     (update form :content
       (fn [content]
         (clojure.walk/prewalk
           (partial map-if-ssn-or-email
-            (partial set-can-submit-multiple-applications
-              multiple? haku-oid))
+            (partial set-can-submit-multiple-applications-and-yhteishaku
+              multiple? yhteishaku? haku-oid))
           content)))))
 
 (defn- attachment-modify-grace-period
