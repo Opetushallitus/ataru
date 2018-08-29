@@ -29,9 +29,9 @@
 
 (defn- hakukohde->option
   [{:keys [oid name koulutukset tarjoaja-name]}]
-  (let [labels-with-fi-ensured (distinct (concat [:fi] (keys name) (keys tarjoaja-name)))]
+  (let [langs (distinct (concat [:fi] (keys name) (keys tarjoaja-name)))]
     {:value       oid
-     :label       (into {} (map (partial as-hakukohde-name name tarjoaja-name) labels-with-fi-ensured))
+     :label       (into {} (map (partial as-hakukohde-name name tarjoaja-name) langs))
      :description (ensure-finnish (koulutukset->str koulutukset))}))
 
 (defn- populate-hakukohteet-field
