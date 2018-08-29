@@ -143,7 +143,7 @@
                                                  :en "Finnish"}
    :hakija-new-text                             {:fi "LÄHETÄ HAKEMUS"
                                                  :sv "SKICKA ANSÖKAN"
-                                                 :en "SEND APPLICATION"}
+                                                 :en "SUBMIT APPLICATION"}
    :hello-text                                  {:fi "Hei"
                                                  :sv "Hej"
                                                  :en "Hi"}
