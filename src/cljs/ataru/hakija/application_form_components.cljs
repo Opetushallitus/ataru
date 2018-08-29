@@ -179,6 +179,9 @@
                :on-change    on-change
                :required     (is-required-field? field-descriptor)
                :aria-invalid @(subscribe [:application/answer-invalid? id])}
+              (when (and verify-email? (= id :email))
+                {:on-paste     (fn [event]
+                                (.preventDefault event))})
               (when (or disabled
                         @(subscribe [:application/cannot-edit? id]))
                 {:disabled true}))]
@@ -202,6 +205,8 @@
                              "***********"
                              (:verify answer))
              :on-blur      on-blur
+             :on-paste     (fn [event]
+                             (.preventDefault event))
              :on-change    (partial textual-field-change
                              (assoc-in field-descriptor [:params :verify] (:value answer)))
              :class        (str size-class
