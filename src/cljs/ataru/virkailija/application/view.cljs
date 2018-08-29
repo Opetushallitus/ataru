@@ -422,7 +422,7 @@
     [:div.application-handling__header
      [selected-applications-heading @haku-header @header]
      [:div.editor-form__form-controls-container
-      (when (-> @applications count pos?)
+      (when false ; Disabled for production (-> @applications count pos?)
         [mass-information-request-link])
       (when @show-mass-update-link?
         [mass-update-applications-link])
