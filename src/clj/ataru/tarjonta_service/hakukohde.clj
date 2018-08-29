@@ -1,5 +1,5 @@
 (ns ataru.tarjonta-service.hakukohde
-  (:require [ataru.util :refer [koulutus->str]]
+  (:require [ataru.util :refer [koulutus->str non-blank-val]]
             [clojure.string :refer [join blank?]]))
 
 (defn- koulutus->str-map
@@ -23,13 +23,16 @@
   [m]
   (assoc m :fi (or (:fi m) (:en m) (:sv m))))
 
+(defn- as-hakukohde-name [name tarjoaja-name lang]
+  (let [ks [lang :fi :en :sv]]
+    [lang (str (non-blank-val name ks) " – " (non-blank-val tarjoaja-name ks))]))
+
 (defn- hakukohde->option
   [{:keys [oid name koulutukset tarjoaja-name]}]
-  {:value       oid
-   :label       (merge-with #(str %1 " – " %2)
-                            (ensure-finnish name)
-                            (ensure-finnish tarjoaja-name))
-   :description (ensure-finnish (koulutukset->str koulutukset))})
+  (let [labels-with-fi-ensured (distinct (concat [:fi] (keys name) (keys tarjoaja-name)))]
+    {:value       oid
+     :label       (into {} (map (partial as-hakukohde-name name tarjoaja-name) labels-with-fi-ensured))
+     :description (ensure-finnish (koulutukset->str koulutukset))}))
 
 (defn- populate-hakukohteet-field
   [field tarjonta-info]
