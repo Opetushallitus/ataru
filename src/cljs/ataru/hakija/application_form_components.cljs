@@ -132,29 +132,29 @@
                         errors))]]))}))
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing idx] :or {div-kwd :div.application__form-field disabled false editing false}}]
-  (let [id          (keyword (:id field-descriptor))
-        answer      (if (and (contains? editing-forbidden-person-info-field-ids id)
-                             @(subscribe [:application/cannot-edit? id]))
-                      {:value @(subscribe [:state-query
-                                           [:application :person id]])
-                       :valid true}
-                      @(subscribe [:state-query
-                                   (cond-> [:application :answers id]
-                                           idx (concat [:values idx 0]))]))
-        languages   (subscribe [:application/default-languages])
-        size        (get-in field-descriptor [:params :size])
-        size-class  (text-field-size->class size)
-        verify-email? (subscribe [:application/verify-email? id])
-        on-blur     #(dispatch [:application/textual-field-blur field-descriptor])
-        on-change   (if idx
-                      (partial multi-value-field-change field-descriptor 0 idx)
-                      (if verify-email?
-                        (partial textual-field-change
-                          (assoc-in field-descriptor [:params :verify] (get-in answer [:verify] "")))
-                        (partial textual-field-change field-descriptor)))
-        show-error? (show-text-field-error-class? field-descriptor
-                                                  (:value answer)
-                                                  (:valid answer))
+  (let [id                     (keyword (:id field-descriptor))
+        answer                 (if (and (contains? editing-forbidden-person-info-field-ids id)
+                                        @(subscribe [:application/cannot-edit? id]))
+                                 {:value @(subscribe [:state-query
+                                                      [:application :person id]])
+                                  :valid true}
+                                 @(subscribe [:state-query
+                                              (cond-> [:application :answers id]
+                                                idx (concat [:values idx 0]))]))
+        languages              (subscribe [:application/default-languages])
+        size                   (get-in field-descriptor [:params :size])
+        size-class             (text-field-size->class size)
+        verify-email?          (subscribe [:application/verify-email? id])
+        on-blur                #(dispatch [:application/textual-field-blur field-descriptor])
+        on-change              (if idx
+                                 (partial multi-value-field-change field-descriptor 0 idx)
+                                 (if verify-email?
+                                   (partial textual-field-change
+                                     (assoc-in field-descriptor [:params :verify] (get-in answer [:verify] "")))
+                                   (partial textual-field-change field-descriptor)))
+        show-error?            (show-text-field-error-class? field-descriptor
+                                 (:value answer)
+                                 (:valid answer))
         show-validation-error? (subscribe [:application/show-validation-error? id])]
     [div-kwd
      [label field-descriptor]
@@ -193,7 +193,6 @@
            {:id "application-form-field-label-verify-email"
             :for id}
            [:span (str verify-label (required-hint field-descriptor))]]
-          ;[label field-descriptor]
           [:div.application__form-text-input-and-validation-errors
            [:input.application__form-text-input
             {:id           id
