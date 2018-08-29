@@ -87,7 +87,8 @@
      [:span.application__search-control-haku-hl]
      (when haku-application-count
        [:span.application__search-control-haku-count
-        (str " "
+        (str haku-application-count
+             " "
              (if (< 1 haku-application-count)
                (get-virkailija-translation :applications)
                (get-virkailija-translation :application)))])
