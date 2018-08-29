@@ -27,14 +27,13 @@
   :application/hakukohde-search-toggle
   (fn [db _] (toggle-hakukohde-search db)))
 
-
 (reg-event-db
   :application/hakukohde-query-process
   (fn [db [_ hakukohde-query]]
     (if (= hakukohde-query (get-in db [:application :hakukohde-query]))
       (let [lang              (-> db :form :selected-language)
             order-by-hakuaika (fn [hk] (not @(subscribe [:application/hakukohde-editable? (:value hk)])))
-            order-by-name     #(get-in % [:label lang])
+            order-by-name     #(util/non-blank-val (:label %) [lang :fi :sv :en])
             hakukohde-options (->> (hakukohteet-field db)
                                    :options
                                    (sort-by (juxt order-by-hakuaika
