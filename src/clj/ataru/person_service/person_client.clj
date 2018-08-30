@@ -37,17 +37,24 @@
                           (:body result))))))
 
 (defn get-persons [cas-client oids]
-  (let [result (cas/cas-authenticated-post
-                 cas-client
-                 (resolve-url :oppijanumerorekisteri-service.get-persons) oids)]
-    (match result
-      {:status 200 :body body}
-      (json/parse-string body true)
+  (let [partitions (partition 5000 5000 nil oids)
+        results    (map
+                     #(cas/cas-authenticated-post
+                        cas-client
+                        (resolve-url :oppijanumerorekisteri-service.get-persons) %)
+                     partitions)]
+    (reduce
+      (fn [acc result]
+        (match result
+               {:status 200 :body body}
+               (merge acc (json/parse-string body true))
 
-      :else (throw-error (str "Could not get persons by oids, status: "
-                              (:status result)
-                              "response body: "
-                              (:body result))))))
+               :else (throw-error (str "Could not get persons by oids, status: "
+                                       (:status result)
+                                       "response body: "
+                                       (:body result)))))
+      {}
+      results)))
 
 (defn get-person [cas-client oid]
   (let [result (cas/cas-authenticated-get
