@@ -695,7 +695,8 @@
   :application/handle-postal-code-input
   (fn [db [_ postal-office-name]]
     (update-in db [:application :answers :postal-office]
-               merge {:value (:fi postal-office-name) :valid true})))
+               merge {:value (autil/non-blank-val postal-office-name [(-> db :form :selected-language) :fi])
+                      :valid true})))
 
 (reg-event-db
   :application/handle-postal-code-error
