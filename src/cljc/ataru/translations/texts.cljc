@@ -59,6 +59,12 @@
    :application-sent                            {:fi "Hakemus lähetetty"
                                                  :sv "Ansökan har skickats"
                                                  :en "The application has been sent"}
+   :application-submitted                       {:fi "Hakemuksesi on vastaanotettu!"
+                                                 :sv "Din ansökan har tagits emot!"
+                                                 :en "Your application has been received!"}
+   :application-submitted-ok                    {:fi "OK"
+                                                 :sv "OK"
+                                                 :en "OK"}
    :application-virkailija-edit-text            {:fi "TALLENNA MUUTOKSET"
                                                  :sv "SPARA FÖRÄNDRINGARNA"
                                                  :en "SAVE MODIFICATIONS"}
@@ -102,9 +108,9 @@
    :feedback-disclaimer                         {:fi "Yhteystietojasi ei käytetä tai yhdistetä palautteen tietoihin."
                                                  :en "Your personal information is not sent or associated with the feedback given."
                                                  :sv "Dina kontaktuppgifter används inte och kopplas inte heller ihop med responsuppgifterna."}
-   :feedback-header                             {:fi "Hei, kerro vielä mitä pidit hakulomakkeesta!"
-                                                 :en "Hi! Care to take a moment to rate our application form?"
-                                                 :sv "Hej, berätta ännu vad du tyckte om ansökningsblanketten?"}
+   :feedback-header                             {:fi "Kerro vielä mitä pidit hakulomakkeesta"
+                                                 :en "Care to take a moment to rate our application form?"
+                                                 :sv "Berätta ännu vad du tyckte om ansökningsblanketten"}
    :feedback-ratings                            {:fi {1 "Huono"
                                                       2 "Välttävä"
                                                       3 "Tyydyttävä"
