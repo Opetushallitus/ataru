@@ -144,13 +144,14 @@
         languages              (subscribe [:application/default-languages])
         size                   (get-in field-descriptor [:params :size])
         size-class             (text-field-size->class size)
-        verify-email?          (subscribe [:application/verify-email? id])
+        verify-email?          @(subscribe [:application/verify-email? id])
+        on-change-email        (partial textual-field-change
+                                 (assoc-in field-descriptor [:params :verify] (get-in answer [:verify] "")))
         on-blur                #(dispatch [:application/textual-field-blur field-descriptor])
         on-change              (if idx
                                  (partial multi-value-field-change field-descriptor 0 idx)
                                  (if verify-email?
-                                   (partial textual-field-change
-                                     (assoc-in field-descriptor [:params :verify] (get-in answer [:verify] "")))
+                                   on-change-email
                                    (partial textual-field-change field-descriptor)))
         show-error?            (show-text-field-error-class? field-descriptor
                                  (:value answer)
@@ -179,7 +180,7 @@
                :on-change    on-change
                :required     (is-required-field? field-descriptor)
                :aria-invalid @(subscribe [:application/answer-invalid? id])}
-              (when (and verify-email? (= id :email))
+              (when verify-email?
                 {:on-paste     (fn [event]
                                 (.preventDefault event))})
               (when (or disabled
@@ -188,7 +189,7 @@
       (when (and (not-empty (:errors answer))
                  @show-validation-error?)
         [validation-error id (:errors answer)])]
-     (when @verify-email?
+     (when verify-email?
        (let [id           :verify-email
              verify-label (get-translation :verify-email)]
          [:div
