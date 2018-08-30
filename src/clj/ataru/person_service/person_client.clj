@@ -37,9 +37,14 @@
                           (:body result))))))
 
 (defn get-persons [cas-client oids]
-  (let [result (cas/cas-authenticated-post
-                 cas-client
-                 (resolve-url :oppijanumerorekisteri-service.get-persons) oids)]
+  (let [batches (partition-all 5000 oids)
+        fetch (fn [batch]
+                  (cas/cas-authenticated-post
+                    cas-client
+                    (resolve-url :oppijanumerorekisteri-service.get-persons) oids))
+        result (-> batches
+                   (fetch)
+                   (flatten))]
     (match result
       {:status 200 :body body}
       (json/parse-string body true)
