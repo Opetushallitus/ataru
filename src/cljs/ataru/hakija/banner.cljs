@@ -91,15 +91,15 @@
   [submit-status enabled?]
   (let [toggle-fn (fn [_] (dispatch [:state-update #(update-in % [:application :preview-enabled] not)]))]
     (when (not submit-status)
-      [:a.application__preview-link
-       {:on-click toggle-fn}
-       (if enabled?
-         [:span
-          [:i.zmdi.zmdi-edit]
-          (get-translation :edit-answers)]
-         [:span
-          [:i.zmdi.zmdi-eye]
-          (get-translation :preview-answers)])])))
+      [:div.application__preview-toggle-container
+       [:a.application__preview-link
+        {:class (when enabled? "application__preview-link--disabled")
+         :on-click toggle-fn}
+        (get-translation :edit-answers)]
+       [:a.application__preview-link
+        {:class (when-not enabled? "application__preview-link--disabled")
+         :on-click toggle-fn}
+        (get-translation :preview-answers)]])))
 
 (defn- seconds-text [seconds]
   (when (pos? seconds)
