@@ -4,12 +4,14 @@ INSERT INTO information_requests (
   application_key,
   subject,
   message,
-  virkailija_oid
+  virkailija_oid,
+  message_type
 ) VALUES (
   :application_key,
   :subject,
   :message,
-  :virkailija_oid
+  :virkailija_oid,
+  :message_type
 );
 
 -- name: yesql-get-information-requests
@@ -19,6 +21,7 @@ SELECT
   ir.subject,
   ir.message,
   ir.created_time,
+  ir.message_type,
   v.first_name,
   v.last_name
 FROM information_requests ir

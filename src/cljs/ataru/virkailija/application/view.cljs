@@ -1178,10 +1178,14 @@
          {:event-type "modification-link-sent"}
          (get-virkailija-translation :confirmation-sent)
 
-         {:subject _ :message message}
+         {:subject _ :message message :message-type message-type}
          [:div.application-handling__multi-line-event-caption
           [:span.application-handling__event-caption--inner
-           (str (get-virkailija-translation :information-request-sent) " ")
+           (str
+             (if (= message-type "mass-information-request")
+               (get-virkailija-translation :mass-information-request-sent)
+               (get-virkailija-translation :information-request-sent))
+             " ")
            (virkailija-initials-span event)]
           [:span.application-handling__event-caption--inner.application-handling__event-caption--extra-info (str "\"" message "\"")]]
 
