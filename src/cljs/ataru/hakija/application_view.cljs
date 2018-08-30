@@ -148,19 +148,30 @@
       (aget "target" "dataset" "starN")
       (js/parseInt 10)))
 
+(defn- submit-notification
+  [hidden?]
+  (fn []
+    [:div.application__submitted-submit-notification
+     [:div.application__submitted-submit-notification-inner
+      [:h1.application__submitted-submit-notification-heading
+       (get-translation :application-submitted)]]
+     [:div.application__submitted-submit-notification-inner
+      [:button.application__send-feedback-button.application__send-feedback-button--enabled
+       {:on-click #(reset! hidden? true)}
+       (get-translation :application-submitted-ok)]]]))
+
 (defn feedback-form
-  []
-  (let [submit-status  (subscribe [:state-query [:application :submit-status]])
-        star-hovered   (subscribe [:state-query [:application :feedback :star-hovered]])
-        stars          (subscribe [:state-query [:application :feedback :stars]])
-        hidden?        (subscribe [:state-query [:application :feedback :hidden?]])
-        rating-status  (subscribe [:state-query [:application :feedback :status]])
+  [feedback-hidden?]
+  (let [submit-status     (subscribe [:state-query [:application :submit-status]])
+        star-hovered      (subscribe [:state-query [:application :feedback :star-hovered]])
+        stars             (subscribe [:state-query [:application :feedback :stars]])
+        rating-status     (subscribe [:state-query [:application :feedback :status]])
         virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])
-        show-feedback? (reaction (and (= :submitted @submit-status)
-                                      (not @hidden?)))]
+        show-feedback?    (reaction (and (= :submitted @submit-status)
+                                         (not @feedback-hidden?)))]
     (fn []
-      (let [rated?       (= :rating-given @rating-status)
-            submitted?   (= :feedback-submitted @rating-status)]
+      (let [rated?     (= :rating-given @rating-status)
+            submitted? (= :feedback-submitted @rating-status)]
         (when (and @show-feedback? (nil? @virkailija-secret))
           [:div.application-feedback-form
            [:a.application-feedback-form__close-button
@@ -196,7 +207,7 @@
                  :placeholder (get-translation :feedback-text-placeholder)
                  :max-length  2000}]])
             (when (and (not submitted?)
-                     rated?)
+                       rated?)
               [:a.application__send-feedback-button.application__send-feedback-button--enabled
                {:on-click (fn [evt]
                             (.preventDefault evt)
@@ -213,6 +224,19 @@
                [:i.zmdi.zmdi-thumb-up.application__thanks-icon]
                [:span.application__thanks-text (get-translation :feedback-thanks)]])]])))))
 
+(defn- submitted-overlay
+  []
+  (let [submit-status               (subscribe [:state-query [:application :submit-status]])
+        submit-notification-hidden? (r/atom false)
+        feedback-hidden?            (subscribe [:state-query [:application :feedback :hidden?]])]
+    (fn []
+      (when (and (= :submitted @submit-status)
+                 (or (not @feedback-hidden?)
+                     (not @submit-notification-hidden?)))
+        [:div.application__submitted-overlay
+         (when (not @feedback-hidden?) [feedback-form feedback-hidden?])
+         (when (not @submit-notification-hidden?) [submit-notification submit-notification-hidden?])]))))
+
 (defn error-display []
   (let [error-message (subscribe [:state-query [:error :message]])
         detail (subscribe [:state-query [:error :detail]])]
@@ -225,4 +249,4 @@
    [banner]
    [error-display]
    [application-contents]
-   [feedback-form]])
+   [submitted-overlay]])
