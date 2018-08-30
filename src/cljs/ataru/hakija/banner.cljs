@@ -89,15 +89,17 @@
 
 (defn- preview-toggle
   [submit-status enabled?]
-  (when (not submit-status)
-    [:div.toggle-switch__row
-     [:div.toggle-switch
-      [:div.toggle-switch__slider
-       {:on-click (fn [_] (dispatch [:state-update #(update-in % [:application :preview-enabled] not)]))
-        :class    (if enabled? "toggle-switch__slider--right" "toggle-switch__slider--left")}
-       [:div.toggle-switch__label-left (get-translation :preview)]
-       [:div.toggle-switch__label-divider]
-       [:div.toggle-switch__label-right (get-translation :preview)]]]]))
+  (let [toggle-fn (fn [_] (dispatch [:state-update #(update-in % [:application :preview-enabled] not)]))]
+    (when (not submit-status)
+      [:div.application__preview-toggle-container
+       [:a.application__preview-link
+        {:class (when enabled? "application__preview-link--disabled")
+         :on-click toggle-fn}
+        (get-translation :edit-answers)]
+       [:a.application__preview-link
+        {:class (when-not enabled? "application__preview-link--disabled")
+         :on-click toggle-fn}
+        (get-translation :preview-answers)]])))
 
 (defn- seconds-text [seconds]
   (when (pos? seconds)
