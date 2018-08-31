@@ -36,11 +36,11 @@
          :else "application__form-text-input__size-medium"))
 
 (defn- email-verify-field-change [field-descriptor answer evt]
-  (let [id (-> evt .-target .-id)
-        value (clojure.string/trim (or (-> evt .-target .-value) ""))
-        verify? (= (keyword id) :verify-email)
+  (let [id        (-> evt .-target .-id)
+        value     (clojure.string/trim (or (-> evt .-target .-value) ""))
+        verify?   (= (keyword id) :verify-email)
         value-key (if verify? :verify :value)
-        verify (clojure.string/trim (get answer (if verify? :value :verify) ""))]
+        verify    (clojure.string/trim (get answer (if verify? :value :verify) ""))]
     (dispatch [:application/set-application-field
                (assoc-in field-descriptor [:params :verify] verify) value value-key])))
 
