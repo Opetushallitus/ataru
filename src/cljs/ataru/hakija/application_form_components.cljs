@@ -36,8 +36,10 @@
          :else "application__form-text-input__size-medium"))
 
 (defn- textual-field-change [field-descriptor evt]
-  (let [value (-> evt .-target .-value)
-        id (-> evt .-target .-id)]
+  (let [id (-> evt .-target .-id)
+        value (if (or (= id "email") (= id "verify-email"))
+                (clojure.string/trim (if-let [v (-> evt .-target .-value)] v ""))
+                (-> evt .-target .-value))]
     (dispatch [:application/set-application-field field-descriptor value id])))
 
 (defn- multi-value-field-change [field-descriptor data-idx question-group-idx event]
@@ -146,7 +148,11 @@
         size-class             (text-field-size->class size)
         verify-email?          @(subscribe [:application/verify-email? id])
         on-change-email        (partial textual-field-change
-                                 (assoc-in field-descriptor [:params :verify] (get-in answer [:verify] "")))
+                                 (assoc-in field-descriptor [:params :verify]
+                                   (clojure.string/trim (get answer :verify ""))))
+        on-change-verify       (partial textual-field-change
+                                 (assoc-in field-descriptor [:params :verify]
+                                   (clojure.string/trim (get answer :value ""))))
         on-blur                #(dispatch [:application/textual-field-blur field-descriptor])
         on-change              (if idx
                                  (partial multi-value-field-change field-descriptor 0 idx)
@@ -208,8 +214,7 @@
              :on-blur      on-blur
              :on-paste     (fn [event]
                              (.preventDefault event))
-             :on-change    (partial textual-field-change
-                             (assoc-in field-descriptor [:params :verify] (:value answer)))
+             :on-change    on-change-verify
              :class        (str size-class
                              (if show-error?
                                " application__form-field-error"
