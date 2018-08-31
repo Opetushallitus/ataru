@@ -46,7 +46,7 @@
                                      (filter
                                        (fn [option]
                                          (let [haystack (string/lower-case
-                                                          (str (get-in option [:label lang] "")
+                                                          (str (get-in option [:label lang] (get-in option [:label :fi] ""))
                                                                (get-in option [:description lang] "")))]
                                            (every? #(string/includes? haystack %) query-parts))))
                                      (map :value)))
