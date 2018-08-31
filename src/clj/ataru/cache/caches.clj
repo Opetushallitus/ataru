@@ -28,6 +28,9 @@
       :fetch  tarjonta-client/get-koulutus
       :ttl    [3 TimeUnit/DAYS]
       :period [15 TimeUnit/MINUTES]})
+   (redis/map->MappedCache
+     {:name "henkilo"
+      :ttl  [1 TimeUnit/HOURS]})
    (redis/map->BasicCache
      {:name  "statistics-month"
       :fetch s/get-and-parse-application-stats

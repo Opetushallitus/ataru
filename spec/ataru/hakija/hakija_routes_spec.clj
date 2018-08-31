@@ -46,7 +46,7 @@
                  (assoc :job-runner (job/new-job-runner hakija-jobs/job-definitions))
                  (assoc :organization-service (organization-service/new-organization-service))
                  (assoc :ohjausparametrit-service (ohjausparametrit-service/new-ohjausparametrit-service))
-                 (assoc :person-service (person-service/new-person-service))
+                 (assoc :person-service (person-service/new-person-service nil))
                  .start
                  :routes))
 

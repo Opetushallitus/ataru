@@ -1,8 +1,11 @@
 (ns ataru.person-service.person-service
-  (:require [ataru.cas.client :as cas]
+  (:require [taoensso.timbre :as log]
+            [ataru.cas.client :as cas]
             [ataru.person-service.person-client :as person-client]
             [com.stuartsierra.component :as component]
-            [ataru.config.core :refer [config]]))
+            [ataru.config.core :refer [config]]
+            [ataru.cache.cache-service :as cache]
+            [ataru.util :as util]))
 
 (defprotocol PersonService
   (create-or-find-person [this person]
@@ -16,7 +19,7 @@
 
   (linked-oids [this oid]))
 
-(defrecord IntegratedPersonService []
+(defrecord IntegratedPersonService [cache-service]
   component/Lifecycle
 
   (start [this]
@@ -35,10 +38,22 @@
     (person-client/create-or-find-person oppijanumerorekisteri-cas-client application))
 
   (get-persons [{:keys [oppijanumerorekisteri-cas-client]} oids]
-    (person-client/get-persons oppijanumerorekisteri-cas-client oids))
+    (let [persons-from-cache  (cache/cache-get-many cache-service :henkilo oids)
+          uncached-oids       (clojure.set/difference
+                                (set oids)
+                                (set (keys persons-from-cache)))
+          persons-from-client (person-client/get-persons oppijanumerorekisteri-cas-client uncached-oids)]
+      (log/info "Using" (count persons-from-cache) "persons from cache")
+      (when (not-empty persons-from-client)
+        (log/info "Caching" (count persons-from-client) "persons")
+        (cache/cache-put-many cache-service :henkilo persons-from-client))
+      (into (vals persons-from-cache) persons-from-client)))
 
   (get-person [{:keys [oppijanumerorekisteri-cas-client]} oid]
-    (person-client/get-person oppijanumerorekisteri-cas-client oid))
+    (cache/cache-get-from-or-fetch
+      cache-service
+      :henkilo
+      (partial person-client/get-person oppijanumerorekisteri-cas-client) oid))
 
   (linked-oids [{:keys [oppijanumerorekisteri-cas-client]} oid]
     (person-client/linked-oids oppijanumerorekisteri-cas-client oid)))
@@ -94,4 +109,4 @@
 (defn new-person-service []
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode
     (->FakePersonService)
-    (->IntegratedPersonService)))
+    (->IntegratedPersonService nil)))
