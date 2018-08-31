@@ -197,7 +197,7 @@
        (let [id           :verify-email
              verify-label (get-translation :verify-email)]
          [:div
-          [:label.application__form-field-label
+          [:label.application__form-field-label.label.application__form-field-label--verify-email
            {:id "application-form-field-label-verify-email"
             :for id}
            [:span (str verify-label (required-hint field-descriptor))]]
