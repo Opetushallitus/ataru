@@ -32,6 +32,10 @@
      {:name "henkilo"
       :ttl  [1 TimeUnit/HOURS]})
    (redis/map->BasicCache
+     {:name  "hakukohde-search"
+      :fetch tarjonta-client/hakukohde-search
+      :ttl   [1 TimeUnit/HOURS]})
+   (redis/map->BasicCache
      {:name  "statistics-month"
       :fetch s/get-and-parse-application-stats
       :ttl   [10 TimeUnit/HOURS]})

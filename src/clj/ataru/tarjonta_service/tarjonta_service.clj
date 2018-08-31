@@ -106,7 +106,11 @@
       (parse-multi-lang-text (:hakukohteenNimet hakukohde))))
 
   (hakukohde-search [this haku-oid organization-oid]
-    (some->> (client/hakukohde-search haku-oid organization-oid)
+    (some->> (cache/cache-get
+               cache-service
+               :hakukohde-search
+               {:haku-oid         haku-oid
+                :organization-oid organization-oid})
              parse-search-result
              (map :oid)
              (.get-hakukohteet this)
