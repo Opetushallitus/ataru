@@ -25,8 +25,10 @@
                   (.getElementById js/document "app")))
 
 (defn init-scroll-listeners []
+  ; TODO debounce scroll-events
   (.addEventListener js/window "scroll" (banner/create-banner-position-handler))
-  (.addEventListener js/window "scroll" (app-handling-view/create-review-position-handler)))
+  (.addEventListener js/window "scroll" (app-handling-view/create-review-position-handler))
+  (.addEventListener js/window "scroll" (app-handling-view/create-application-paging-scroll-handler)))
 
 (defn ^:export init []
   (set-global-error-handler! #(post "/lomake-editori/api/client-error" % identity))

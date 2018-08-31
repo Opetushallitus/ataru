@@ -1674,23 +1674,40 @@
             (when (= :fixed @review-positioning) [floating-application-review-placeholder])
             [application-review]]])))))
 
+
+(defn create-application-paging-scroll-handler
+  []
+  (fn [_]
+    (when-let [end-of-list-element (.getElementById js/document "application-handling__end-of-list-element")]
+      (let [element-offset  (-> end-of-list-element .getBoundingClientRect .-bottom)
+            viewport-offset (.-innerHeight js/window)]
+        (when (< element-offset viewport-offset)
+          (dispatch [:state-update #(update-in % [:application :application-list-page] inc)]))))))
+
 (defn application []
   (let [search-control-all-page (subscribe [:application/search-control-all-page-view?])
         filtered-applications   (subscribe [:application/filtered-applications])
-        fetching                (subscribe [:state-query [:application :fetching-applications]])]
-    [:div
-     [:div.application-handling__overview
-      [application-search-control]
-      (when (not @search-control-all-page)
-        [:div.application-handling__bottom-wrapper.select_application_list
-         [haku-heading]
-         [application-list-header @filtered-applications]
-         (when-not @fetching
-           [application-list-contents @filtered-applications])
-         [application-list-loading-indicator]])]
-     (when (not @search-control-all-page)
-       [:div.application-handling__review-area-container
-        [application-review-area @filtered-applications]])]))
+        fetching                (subscribe [:state-query [:application :fetching-applications]])
+        page-size               50
+        page                    (subscribe [:state-query [:application :application-list-page]])]
+    (fn []
+      (let [paged-applications (take (* @page page-size) @filtered-applications)
+            has-more?          (< (count paged-applications) (count @filtered-applications))]
+        [:div
+         [:div.application-handling__overview
+          [application-search-control]
+          (when (not @search-control-all-page)
+            [:div.application-handling__bottom-wrapper.select_application_list
+             [haku-heading]
+             [application-list-header @filtered-applications]
+             (when-not @fetching
+               [application-list-contents paged-applications has-more?])
+             (when has-more?
+               [:div#application-handling__end-of-list-element])
+             [application-list-loading-indicator]])]
+         (when (not @search-control-all-page)
+           [:div.application-handling__review-area-container
+            [application-review-area @filtered-applications]])]))))
 
 (defn create-review-position-handler []
   (let [review-canary-visible        (atom true)
