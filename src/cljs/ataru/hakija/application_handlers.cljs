@@ -543,13 +543,11 @@
 
 (reg-event-fx
   :application/set-application-field
-  (fn [{db :db} [_ field value input-id]]
+  (fn [{db :db} [_ field value value-key]]
     (let [value   (transform-value value field)
           id      (keyword (:id field))
           answers (get-in db [:application :answers])
-          key     (if (= "verify-email" input-id)
-                    :verify
-                    :value)]
+          key     (or value-key :value)]
       {:db       (-> db
                      (assoc-in [:application :answers id key] value)
                      (set-multi-value-changed id key)
