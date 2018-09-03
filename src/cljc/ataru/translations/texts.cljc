@@ -337,7 +337,7 @@
    :completed-education                                    {:en "Fill in the education that you have completed  or will complete during the admission process (autumn 2018)"
                                                             :fi "Ilmoita kaikki suorittamasi koulutukset. Myös ne jotka suoritat hakukautena (syksy 2018)."
                                                             :sv "Ange alla utbildningar som du har avlagt. Ange också dem som du avlägger under ansökningsperioden (hösten 2018)."}
-   :marticulation-exam-in-finland                          {:en "Matriculation examination"
+   :matriculation-exam-in-finland                          {:en "Matriculation examination completed in Finland"
                                                             :fi "Suomessa suoritettu ylioppilastutkinto"
                                                             :sv "Studentexamen som avlagts i Finland"}
    :marticulation-exam                                     {:en "Matriculation examination"

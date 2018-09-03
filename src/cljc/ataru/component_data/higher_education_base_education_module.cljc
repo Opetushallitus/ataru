@@ -21,7 +21,7 @@
                              :validators               ["required"]
                              :rules                    {:pohjakoulutusristiriita nil}
                              :label                    (:completed-education higher-base-education-module-texts)
-                             :options                  [{:label     (:marticulation-exam-in-finland higher-base-education-module-texts)
+                             :options                  [{:label     (:matriculation-exam-in-finland higher-base-education-module-texts)
                                                          :value     "pohjakoulutus_yo"
                                                          :followups [(merge (single-choice-button metadata)
                                                                             {:id         "pohjakoulutus_yo"
