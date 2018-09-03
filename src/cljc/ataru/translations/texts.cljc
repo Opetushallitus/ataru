@@ -4,7 +4,7 @@
 (def translation-mapping
   {:add                                         {:fi "Lisää"
                                                  :sv "Lägg till"
-                                                 :en "Add more"}
+                                                 :en "Add"}
    :add-application-option                      {:fi "Lisää hakukohde"
                                                  :sv "Lägg till ansökningsmål"
                                                  :en "Add application option"}
