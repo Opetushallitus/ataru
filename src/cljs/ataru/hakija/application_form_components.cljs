@@ -35,10 +35,18 @@
          "L" "application__form-text-input__size-large"
          :else "application__form-text-input__size-medium"))
 
+(defn- email-verify-field-change [field-descriptor answer evt]
+  (let [id        (-> evt .-target .-id)
+        value     (clojure.string/trim (or (-> evt .-target .-value) ""))
+        verify?   (= (keyword id) :verify-email)
+        value-key (if verify? :verify :value)
+        verify    (clojure.string/trim (get answer (if verify? :value :verify) ""))]
+    (dispatch [:application/set-application-field
+               (assoc-in field-descriptor [:params :verify] verify) value value-key])))
+
 (defn- textual-field-change [field-descriptor evt]
-  (let [value (-> evt .-target .-value)
-        id (-> evt .-target .-id)]
-    (dispatch [:application/set-application-field field-descriptor value id])))
+  (let [value (-> evt .-target .-value)]
+    (dispatch [:application/set-application-field field-descriptor value nil])))
 
 (defn- multi-value-field-change [field-descriptor data-idx question-group-idx event]
   (let [value (some-> event .-target .-value)]
@@ -145,14 +153,10 @@
         size                   (get-in field-descriptor [:params :size])
         size-class             (text-field-size->class size)
         verify-email?          @(subscribe [:application/verify-email? id])
-        on-change-email        (partial textual-field-change
-                                 (assoc-in field-descriptor [:params :verify] (get-in answer [:verify] "")))
         on-blur                #(dispatch [:application/textual-field-blur field-descriptor])
-        on-change              (if idx
-                                 (partial multi-value-field-change field-descriptor 0 idx)
-                                 (if verify-email?
-                                   on-change-email
-                                   (partial textual-field-change field-descriptor)))
+        on-change              (cond verify-email? (partial email-verify-field-change field-descriptor answer)
+                                     idx (partial multi-value-field-change field-descriptor 0 idx)
+                                     :else (partial textual-field-change field-descriptor))
         show-error?            (show-text-field-error-class? field-descriptor
                                  (:value answer)
                                  (:valid answer))
@@ -193,7 +197,7 @@
        (let [id           :verify-email
              verify-label (get-translation :verify-email)]
          [:div
-          [:label.application__form-field-label
+          [:label.application__form-field-label.label.application__form-field-label--verify-email
            {:id "application-form-field-label-verify-email"
             :for id}
            [:span (str verify-label (required-hint field-descriptor))]]
@@ -208,8 +212,7 @@
              :on-blur      on-blur
              :on-paste     (fn [event]
                              (.preventDefault event))
-             :on-change    (partial textual-field-change
-                             (assoc-in field-descriptor [:params :verify] (:value answer)))
+             :on-change    on-change
              :class        (str size-class
                              (if show-error?
                                " application__form-field-error"
