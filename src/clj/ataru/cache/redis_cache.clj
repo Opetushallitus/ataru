@@ -147,47 +147,53 @@
   (clear-all [_] (cache/clear-all cache)))
 
 (defrecord MappedCache
-  [redis cache-name ttl]
+  [redis name ttl]
   cache/MappedCache
   (get-from-or-fetch [this fetch-fn key]
     (when key
-      (if-let [value (wcar (:connection-opts redis) (car/get (str cache-name "_" key)))]
+      (if-let [value (wcar (:connection-opts redis) (car/get (str name "_" key)))]
         value
         (:result
-          (carlocks/with-lock (:connection-opts redis) (str cache-name "-fetch-lock") 10000 5000
-                              (if-let [value (wcar (:connection-opts redis) (car/get (str cache-name "_" key)))]
+          (carlocks/with-lock (:connection-opts redis) (str name "-fetch-lock") 10000 5000
+                              (if-let [value (wcar (:connection-opts redis) (car/get (str name "_" key)))]
                                 value
                                 (when-let [new-value (fetch-fn key)]
                                   (cache/put-to this key new-value)
                                   new-value)))))))
+
   (put-many-to [_ key-values]
     (when (not-empty key-values)
-      (wcar (:connection-opts redis)
-            (apply car/mset (flatten (map (fn [[k v]] [(str cache-name "_" (name k)) v]) key-values))))))
+      (let [key-value-flattened (->> key-values
+                                     (map (fn [[k v]] [(str name "_" (clojure.core/name k)) v]))
+                                     (filter (fn [[_ v]] (some? v))))
+            [ttl timeunit] ttl
+            ttl-ms              (.toMillis timeunit ttl)]
+        (wcar (:connection-opts redis)
+              (mapv (fn [[k v]] (car/set k v :px ttl-ms)) key-value-flattened)))))
 
   cache/Cache
   (get-from [_ key]
     (throw (RuntimeException. "Not implemented")))
   (remove-from [_ key]
     (wcar (:connection-opts redis)
-          (car/del (str cache-name "_" key))))
-  (get-many-from [this keys]
+          (car/del (str name "_" key))))
+  (get-many-from [_ keys]
     (if (empty? keys)
       []
       (into {}
             (map (fn [key value] (when (some? value) [key value]))
                  keys
                  (wcar (:connection-opts redis)
-                       (apply car/mget (map #(str cache-name "_" %) keys)))))))
+                       (apply car/mget (map #(str name "_" %) keys)))))))
   (put-to [_ key value]
     (let [[ttl timeunit] ttl]
       (wcar (:connection-opts redis)
-            (car/set (str cache-name "_" key) value :px (.toMillis timeunit ttl)))))
+            (car/set (str name "_" key) value :px (.toMillis timeunit ttl)))))
   (clear-all [_]
     (loop [[cursor keys] (wcar (:connection-opts redis)
-                               (car/scan 0 :match (str cache-name "_*")))]
+                               (car/scan 0 :match (str name "_*")))]
       (wcar (:connection-opts redis)
             (mapv car/del keys))
       (when (not= "0" cursor)
         (recur (wcar (:connection-opts redis)
-                     (car/scan cursor :match (str cache-name "_*"))))))))
+                     (car/scan cursor :match (str name "_*"))))))))
