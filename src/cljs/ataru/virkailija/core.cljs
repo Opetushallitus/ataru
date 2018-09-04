@@ -24,17 +24,15 @@
   (reagent/render [views/main-panel]
                   (.getElementById js/document "app")))
 
-
-
 (defn init-scroll-listeners []
   (let [debounces (atom {})
-        debounce  (fn [id ms fn]
+        debounce  (fn [ms id fn]
                     (js/clearTimeout (@debounces id))
                     (swap! debounces assoc id (js/setTimeout
                                                 fn
                                                 ms)))]
-    (.addEventListener js/window "scroll" #(debounce 100 :banner (banner/create-banner-position-handler)))
-    (.addEventListener js/window "scroll" #(debounce 100 :review (app-handling-view/create-review-position-handler)))
+    (.addEventListener js/window "scroll" (banner/create-banner-position-handler))
+    (.addEventListener js/window "scroll" (app-handling-view/create-review-position-handler))
     (.addEventListener js/window "scroll" #(debounce 500 :paging (app-handling-view/create-application-paging-scroll-handler)))))
 
 (defn ^:export init []
