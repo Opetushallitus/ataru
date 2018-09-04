@@ -189,11 +189,13 @@
      (if is-hakukohde-review?
        (-> db
            (assoc-in [:application :review :hakukohde-reviews (keyword selected-hakukohde-oid) field] value)
-           (assoc-in [:application :applications] updated-applications))
+           (assoc-in [:application :applications] updated-applications)
+           (filter-applications))
        (-> db
            (update-in [:application :review] assoc field value)
            (assoc-in [:application :applications] updated-applications)
-           (assoc-in [:application :review-state-counts] (review-state-counts updated-applications)))))))
+           (assoc-in [:application :review-state-counts] (review-state-counts updated-applications))
+           (filter-applications))))))
 
 (defn- update-attachment-hakukohde-review-field-of-selected-application-in-list
   [application selected-application-key hakukohde attachment-key state]
