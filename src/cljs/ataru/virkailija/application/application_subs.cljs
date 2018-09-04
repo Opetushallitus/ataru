@@ -4,9 +4,7 @@
             [re-frame.core :as re-frame]
             [medley.core :refer [find-first]]
             [ataru.util :as u]
-            [ataru.application.review-states :as review-states]
-            [ataru.cljs-util :as util]
-            [ataru.application.application-states :as application-states]))
+            [ataru.cljs-util :as util]))
 
 (defn- from-multi-lang [text lang]
   (some #(get text %) [lang :fi :sv :en]))
@@ -360,61 +358,6 @@
   (fn [db _]
     (-> db :application :modify-application-link :state nil?)))
 
-(defn- filter-by-yksiloity
-  [application identified? unidentified?]
-  (match [identified? unidentified?]
-         [true true] true
-         [false false] false
-         [false true] (-> application :person :yksiloity (not))
-         [true false] (-> application :person :yksiloity)))
-
-(defn- filter-by-hakukohde-review
-  [application selected-hakukohde requirement-name states-to-include]
-  (let [all-states-count (-> review-states/hakukohde-review-types-map
-                             (get (keyword requirement-name))
-                             (last)
-                             (count))
-        selected-count   (count states-to-include)]
-    (if (= all-states-count selected-count)
-      true
-      (let [relevant-states  (->> (:application-hakukohde-reviews application)
-                                  (filter #(and (= requirement-name (:requirement %))
-                                                (or (not selected-hakukohde) (= selected-hakukohde (:hakukohde %)))))
-                                  (map :state)
-                                  (set))]
-        (not (empty? (clojure.set/intersection states-to-include relevant-states)))))))
-
-(defn- state-filter
-  [states states-to-include default-state-name hakukohteet]
-  (or
-    (not (empty? (clojure.set/intersection
-                   states-to-include
-                   (set states))))
-    (and
-      (contains? states-to-include default-state-name)
-      (or
-        (empty? states)
-        (< (count states)
-           (count hakukohteet))))))
-
-(defn- filter-by-attachment-review
-  [application selected-hakukohde states-to-include]
-  (or (empty? (:hakukohde application))
-      (let [states (->> (application-states/attachment-reviews-with-no-requirements application)
-                        (filter #(or (not selected-hakukohde) (= selected-hakukohde (:hakukohde %))))
-                        (map :state))]
-        (not (empty? (clojure.set/intersection
-                      states-to-include
-                      (set states)))))))
-
-(defn- parse-enabled-filters
-  [filters kw]
-  (->> (get filters kw)
-       (filter second)
-       (map first)
-       (map name)
-       (set)))
-
 (re-frame/reg-sub
   :application/massamuutos-enabled?
   (fn [db _]
@@ -426,48 +369,10 @@
           hakukohde-selected?
           hakukohderyhma-selected?))))
 
-(defn- filter-by-base-education
-  [application base-education-filters]
-  (let [selected-states    (->> base-education-filters
-                                (filter (fn [[_ v]] (true? v)))
-                                (map first)
-                                (map name)
-                                (set))
-        application-states (-> application
-                               :base-education
-                               (set))]
-    (not-empty (clojure.set/intersection selected-states application-states))))
-
 (re-frame/reg-sub
   :application/filtered-applications
   (fn [db _]
-    (let [applications                 (-> db :application :applications)
-          selected-hakukohde           (cond
-                                         (-> db :application :selected-hakukohde) (-> db :application :selected-hakukohde)
-                                         (-> db :application :selected-form-key) "form"
-                                         :else nil)
-          attachment-states-to-include (-> db :application :attachment-state-filter set)
-          processing-states-to-include (-> db :application :processing-state-filter set)
-          selection-states-to-include  (-> db :application :selection-state-filter set)
-          filters                      (-> db :application :filters)
-          identified?                  (-> db :application :filters :only-identified :identified)
-          unidentified?                (-> db :application :filters :only-identified :unidentified)
-          all-base-educations-enabled? @(re-frame/subscribe [:application/all-pohjakoulutus-filters-selected?])]
-      (filter
-        (fn [application]
-          (and
-            (filter-by-yksiloity application identified? unidentified?)
-            (or
-              all-base-educations-enabled?
-              (filter-by-base-education application (:base-education filters)))
-            (filter-by-hakukohde-review application selected-hakukohde "processing-state" processing-states-to-include)
-            (filter-by-hakukohde-review application selected-hakukohde "selection-state" selection-states-to-include)
-            (filter-by-hakukohde-review application selected-hakukohde "language-requirement" (parse-enabled-filters filters :language-requirement))
-            (filter-by-hakukohde-review application selected-hakukohde "degree-requirement" (parse-enabled-filters filters :degree-requirement))
-            (filter-by-hakukohde-review application selected-hakukohde "eligibility-state" (parse-enabled-filters filters :eligibility-state))
-            (filter-by-hakukohde-review application selected-hakukohde "payment-obligation" (parse-enabled-filters filters :payment-obligation))
-            (filter-by-attachment-review application selected-hakukohde attachment-states-to-include)))
-        applications))))
+    (-> db :application :filtered-applications)))
 
 (re-frame/reg-sub
   :application/filtered-applications-count

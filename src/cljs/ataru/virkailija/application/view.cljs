@@ -592,7 +592,8 @@
                                       (cljs-util/get-unselected-review-states
                                         new-filter
                                         states))})
-    (dispatch [:state-update #(assoc-in % [:application filter-kw] new-filter)])))
+    (dispatch [:state-update #(assoc-in % [:application filter-kw] new-filter)])
+    (dispatch [:application/filter-applications])))
 
 (defn hakukohde-state-filter-controls
   [filter-kw title states state-counts-sub]
@@ -629,7 +630,8 @@
                                           (dispatch [:state-update #(assoc-in % [:application filter-kw]
                                                                               (if all-filters-selected?
                                                                                 []
-                                                                                (map first states)))]))}]
+                                                                                (map first states)))])
+                                          (dispatch [:application/filter-applications]))}]
                     [:span (get-virkailija-translation :all)]]]]
                  (mapv
                    (fn [[review-state-id review-state-label]]
