@@ -1690,6 +1690,7 @@
   (let [search-control-all-page (subscribe [:application/search-control-all-page-view?])
         filtered-applications   (subscribe [:application/filtered-applications])
         fetching                (subscribe [:state-query [:application :fetching-applications]])
+        expanded                (subscribe [:state-query [:application :application-list-expanded?]])
         page-size               100
         page                    (subscribe [:state-query [:application :application-list-page]])]
     (fn []
@@ -1704,7 +1705,7 @@
              [application-list-header @filtered-applications]
              (when-not @fetching
                [application-list-contents paged-applications])
-             (when (and has-more? (not @fetching))
+             (when (and has-more? @expanded (not @fetching))
                [:div#application-handling__end-of-list-element
                 [:i.application-handling__end-of-list-element-spinner.zmdi.zmdi-spinner.spin]])
              [application-list-loading-indicator]])]

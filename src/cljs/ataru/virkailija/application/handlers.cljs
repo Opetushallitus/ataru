@@ -1022,10 +1022,10 @@
 (reg-event-db
   :application/toggle-all-pohjakoulutus-filters
   (fn [db [_ all-enabled?]]
-    (update-in
-      db
-      [:application :filters :base-education]
-      (fn [filter-map] (reduce-kv (fn [acc k _] (assoc acc k (not all-enabled?))) {} filter-map)))))
+    (-> db
+        (update-in [:application :filters :base-education]
+          (fn [filter-map] (reduce-kv (fn [acc k _] (assoc acc k (not all-enabled?))) {} filter-map)))
+        (filter-applications))))
 
 (defn- filter-by-attachment-review
   [application selected-hakukohde states-to-include]
@@ -1108,7 +1108,9 @@
         filters                      (-> db :application :filters)
         identified?                  (-> db :application :filters :only-identified :identified)
         unidentified?                (-> db :application :filters :only-identified :unidentified)
-        all-base-educations-enabled? @(re-frame/subscribe [:application/all-pohjakoulutus-filters-selected?])]
+        all-base-educations-enabled? (->> (-> db :application :filters :base-education)
+                                          (vals)
+                                          (every? true?))]
     (assoc-in
       db
       [:application :filtered-applications]
