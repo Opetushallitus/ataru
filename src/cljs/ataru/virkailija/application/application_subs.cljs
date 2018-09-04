@@ -2,6 +2,7 @@
   (:require [clojure.core.match :refer [match]]
             [cljs-time.core :as t]
             [re-frame.core :as re-frame]
+            [medley.core :refer [find-first]]
             [ataru.util :as u]
             [ataru.application.review-states :as review-states]
             [ataru.cljs-util :as util]
@@ -369,12 +370,19 @@
 
 (defn- filter-by-hakukohde-review
   [application selected-hakukohde requirement-name states-to-include]
-  (let [relevant-states (->> (:application-hakukohde-reviews application)
-                             (filter #(and (= requirement-name (:requirement %))
-                                           (or (not selected-hakukohde) (= selected-hakukohde (:hakukohde %)))))
-                             (map :state)
-                             (set))]
-    (not-empty (clojure.set/intersection states-to-include relevant-states))))
+  (let [all-states-count (-> review-states/hakukohde-review-types-map
+                             (get (keyword requirement-name))
+                             (last)
+                             (count))
+        selected-count   (count states-to-include)]
+    (if (= all-states-count selected-count)
+      true
+      (let [relevant-states  (->> (:application-hakukohde-reviews application)
+                                  (filter #(and (= requirement-name (:requirement %))
+                                                (or (not selected-hakukohde) (= selected-hakukohde (:hakukohde %)))))
+                                  (map :state)
+                                  (set))]
+        (not (empty? (clojure.set/intersection states-to-include relevant-states)))))))
 
 (defn- state-filter
   [states states-to-include default-state-name hakukohteet]

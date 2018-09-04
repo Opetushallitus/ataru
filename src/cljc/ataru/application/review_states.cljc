@@ -1,5 +1,6 @@
 (ns ataru.application.review-states
   (:require [ataru.translations.texts :refer [state-translations]]
+            [ataru.util :as util]
             [clojure.set :refer [difference]]))
 
 (def application-review-states
@@ -48,6 +49,9 @@
    [:eligibility-state "Hakukelpoisuus" application-hakukohde-eligibility-states]
    [:payment-obligation "Maksuvelvollisuus" application-payment-obligation-states]
    [:selection-state "Valinta" application-hakukohde-selection-states]])
+
+(def hakukohde-review-types-map
+  (util/group-by-first first hakukohde-review-types))
 
 (def hakukohde-review-type-names
   (map (comp name first) hakukohde-review-types))
