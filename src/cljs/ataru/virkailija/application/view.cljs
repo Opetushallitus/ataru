@@ -1701,9 +1701,10 @@
              [haku-heading]
              [application-list-header @filtered-applications]
              (when-not @fetching
-               [application-list-contents paged-applications has-more?])
-             (when has-more?
-               [:div#application-handling__end-of-list-element])
+               [application-list-contents paged-applications])
+             (when (and has-more? (not @fetching))
+               [:div#application-handling__end-of-list-element
+                [:i.application-handling__end-of-list-element-spinner.zmdi.zmdi-spinner.spin]])
              [application-list-loading-indicator]])]
          (when (not @search-control-all-page)
            [:div.application-handling__review-area-container
