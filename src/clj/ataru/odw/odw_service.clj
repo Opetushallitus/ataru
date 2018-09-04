@@ -37,7 +37,7 @@
                      :SahkoinenViestintaLupa nil}
                     (into {}
                           (for [index (range 1 7) ; Hard-coded amount in ODW 1-6
-                                :let [hakukohde-oid (nth hakukohteet index nil)
+                                :let [hakukohde-oid (nth hakukohteet (dec index) nil)
                                       hakukohde     (when hakukohde-oid (tarjonta-client/get-hakukohde hakukohde-oid))
                                       tarjoaja-oid  (-> hakukohde :tarjoajaOids first)]]
                             {(keyword (str "pref" index "_hakukohde_oid"))     hakukohde-oid
