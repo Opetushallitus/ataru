@@ -1688,7 +1688,7 @@
   (let [search-control-all-page (subscribe [:application/search-control-all-page-view?])
         filtered-applications   (subscribe [:application/filtered-applications])
         fetching                (subscribe [:state-query [:application :fetching-applications]])
-        page-size               50
+        page-size               100
         page                    (subscribe [:state-query [:application :application-list-page]])]
     (fn []
       (let [paged-applications (take (* @page page-size) @filtered-applications)

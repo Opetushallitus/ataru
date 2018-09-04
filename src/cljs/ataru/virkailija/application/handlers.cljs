@@ -296,6 +296,7 @@
                                   (assoc-in [:application :sort] application-sorting/initial-sort)
                                   (assoc-in [:application :selected-time-column] :created-time)
                                   (assoc-in [:application :information-request] nil)
+                                  (assoc-in [:application :application-list-page] 1)
                                   (update-sort (:column application-sorting/initial-sort) false))
           application-key     (if (= 1 (count parsed-applications))
                                 (-> parsed-applications first :key)
