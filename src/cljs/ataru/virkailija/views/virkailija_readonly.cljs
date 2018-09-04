@@ -92,9 +92,9 @@
                         component-key     (str "attachment-div-" idx)
                         virus-status-elem (case virus-scan-status
                                             "not_started" [:span.application__virkailija-readonly-attachment-virus-status-not-started
-                                                           (s/format " | %s..." get-virkailija-translation :checking)]
+                                                           (s/format "| %s..." (get-virkailija-translation :checking))]
                                             "failed" [:span.application__virkailija-readonly-attachment-virus-status-virus-found
-                                                      (s/format " | %s" (get-virkailija-translation :virus-found))]
+                                                      (s/format "| %s" (get-virkailija-translation :virus-found))]
                                             "done" nil
                                             (get-virkailija-translation :error))]
                     [:div.application__virkailija-readonly-attachment
@@ -188,7 +188,7 @@
           true)))))
 
 (defn- selectable [content application lang question-group-idx]
-  [:div
+  [:div.application__form-field-label--selectable
    [:div.application__form-field-label (some (:label content) [lang :fi :sv :en])]
    (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
                                       (some? question-group-idx)
@@ -204,16 +204,16 @@
                                   values)]
      [:div.application-handling__nested-container
       (doall
-       (for [option selected-options]
-         ^{:key (:value option)}
-         [:div
-          [:p.application__text-field-paragraph
-           (some (:label option) [lang :fi :sv :en])]
-          (when (some #(visible? % application) (:followups option))
-            [:div.application-handling__nested-container
-             (for [followup (:followups option)]
-               ^{:key (:id followup)}
-               [field followup application lang])])]))
+        (for [option selected-options]
+          ^{:key (:value option)}
+          [:div
+           [:p.application__text-field-paragraph
+            (some (:label option) [lang :fi :sv :en])]
+           (when (some #(visible? % application) (:followups option))
+             [:div.application-handling__nested-container
+              (for [followup (:followups option)]
+                ^{:key (:id followup)}
+                [field followup application lang])])]))
       (doall
         (for [value values-wo-option]
           ^{:key (str "unknown-option-" value)}
@@ -302,13 +302,33 @@
         ^{:key (str "question-group-" (:id content) "-" idx "-" (:id child))}
         [field child application lang idx])])])
 
+(defn- nationality-field [field-descriptor application lang children]
+  (let [field            (first children)
+        id               (keyword (:id field-descriptor))
+        use-onr-info?    (contains? (:person application) id)
+        values           (flatten (replace-with-option-label (-> application :person :nationality)
+                                                             (:options field)
+                                                             lang))
+        highlight-field? (subscribe [:application/field-highlighted? id])]
+    [:div.application__form-field
+     {:class (when @highlight-field? "highlighted")
+      :id    id}
+     [:label.application__form-field-label
+      (str (-> field :label lang) (required-hint field))]
+     [:div.application__form-field-value
+      [:p.application__text-field-paragraph
+       (clojure.string/join ", " values)]]]))
+
 (defn field
   [content application lang group-idx person-info-field?]
   (when (visible? content application)
     (match content
       {:module "person-info"} [person-info-module content application lang]
       {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
-      {:fieldClass "questionGroup" :fieldType "fieldset" :children children} [question-group content application lang children]
+      {:fieldClass "questionGroup" :fieldType "fieldset" :children children}
+           (if person-info-field?
+             (nationality-field content application lang children)
+             [question-group content application lang children])
       {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children group-idx person-info-field?]
       {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children group-idx]
       {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")}

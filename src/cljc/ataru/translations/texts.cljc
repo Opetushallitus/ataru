@@ -795,6 +795,9 @@
    :email-content                               {:fi "Sähköpostiviestin sisältö"
                                                  :sv "SV: Sähköpostiviestin sisältö"
                                                  :en "EN: Sähköpostiviestin sisältö"}
+   :empty-option                                {:fi "Ei vastausta"
+                                                 :sv "SV: Ei vastausta"
+                                                 :en "EN: Ei vastausta"}
    :english                                     {:fi "Englanti"
                                                  :sv "SV: Engelska"
                                                  :en "EN: English"}
