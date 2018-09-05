@@ -1711,6 +1711,11 @@ th.application__readonly-adjacent--header {
 .application__status-controls {
   border-left: 1px solid fade(@white, 33%);
   padding-left: 20px;
+
+  @media only screen and (max-width: @desktop-content-width) {
+    border-left: none;
+    padding-left: 0;
+  }
 }
 
 .application__status-controls-container {
@@ -1720,7 +1725,17 @@ th.application__readonly-adjacent--header {
 }
 
 .application__preview-control {
+  flex: 1 0 auto;
   padding: 20px 18px;
+
+  @media only screen and (max-width: @desktop-content-width) {
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+}
+
+.application__preview-toggle-container {
+  float: right;
 }
 
 .application__preview-link {
@@ -1737,6 +1752,19 @@ th.application__readonly-adjacent--header {
   cursor: pointer;
   text-transform: uppercase;
   user-select: none;
+
+  @media only screen and (max-width: @desktop-content-width) {
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+
+  @media only screen and (max-width: 500px) {
+    padding: 5px 10px;
+    font-size: 10px;
+    display: block;
+    height: auto;
+    width: auto;
+  }
 }
 
 .application__preview-link--disabled {
@@ -1747,6 +1775,11 @@ th.application__readonly-adjacent--header {
 .application__hakuaika-left {
   flex-grow: 1;
   margin-left: 25px;
+
+  @media only screen and (max-width: @desktop-content-width) {
+    font-size: 12px;
+    margin-left: 10px;
+  }
 }
 
 @toggle-switch-height: 18px;
