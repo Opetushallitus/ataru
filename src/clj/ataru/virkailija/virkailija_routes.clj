@@ -711,6 +711,7 @@
                                 organization-service
                                 session
                                 person-service
+                                tarjonta-service
                                 fromDate)]
           (response/ok applications)
           (response/unauthorized {:error "Unauthorized"})))

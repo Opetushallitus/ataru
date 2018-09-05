@@ -1,10 +1,10 @@
 (ns ataru.odw.odw-service
   (:require [ataru.applications.application-store :as application-store]
             [ataru.util :as util]
-            [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
-            [ataru.person-service.person-service :as person-service]))
+            [ataru.person-service.person-service :as person-service]
+            [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]))
 
-(defn get-applications-for-odw [person-service date]
+(defn get-applications-for-odw [person-service tarjonta-service date]
   (let [applications (application-store/get-applications-newer-than date)
         persons      (person-service/get-persons person-service (distinct (keep :person_oid applications)))]
     (map (fn [application]
@@ -38,7 +38,8 @@
                     (into {}
                           (for [index (range 1 7) ; Hard-coded amount in ODW 1-6
                                 :let [hakukohde-oid (nth hakukohteet (dec index) nil)
-                                      hakukohde     (when hakukohde-oid (tarjonta-client/get-hakukohde hakukohde-oid))
+                                      hakukohde     (when hakukohde-oid
+                                                      (tarjonta-protocol/get-hakukohde tarjonta-service hakukohde-oid))
                                       tarjoaja-oid  (-> hakukohde :tarjoajaOids first)]]
                             {(keyword (str "pref" index "_hakukohde_oid"))     hakukohde-oid
                              (keyword (str "pref" index "_opetuspiste_oid"))   tarjoaja-oid
