@@ -1157,7 +1157,7 @@
            (str (get-virkailija-translation :eligibility)
                 " "
                 (some #(when (= (:new-review-state event) (first %))
-                         (second %))
+                         (get (second %) lang))
                       review-states/application-hakukohde-eligibility-states))]
           [:span.application-handling__event-caption--inner.application-handling__event-caption--extra-info
            (gstring/format "%s \"%s\" %s"
