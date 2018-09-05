@@ -42,6 +42,7 @@
   ([md-text collapse-enabled?]
    (let [collapsed        (reagent/atom true)
          scroll-height    (reagent/atom nil)
+         listener         (reagent/atom nil)
          timeout          (atom nil)
          debounced-resize (fn [component]
                             (js/clearTimeout @timeout)
@@ -52,11 +53,12 @@
       {:component-did-mount
        (fn [component]
          (set-markdown-height component scroll-height)
-         (.addEventListener js/window "resize" #(debounced-resize component)))
+         (reset! listener #(debounced-resize component))
+         (.addEventListener js/window "resize" @listener))
 
        :component-will-unmount
        (fn [component]
-         (.removeEventListener js/window "resize" #(debounced-resize component)))
+         (.removeEventListener js/window "resize" @listener))
 
        :component-did-update
        (fn [component]
