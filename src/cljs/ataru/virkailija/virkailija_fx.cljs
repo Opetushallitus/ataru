@@ -13,20 +13,23 @@
                params
                handler-or-dispatch
                skip-parse-times?
-               handler-args]}]
+               handler-args
+               cache-ttl]}]
     (case method
       :post
       (http/post path
                  params
                  handler-or-dispatch
                  :skip-parse-times? skip-parse-times?
-                 :handler-args handler-args)
+                 :handler-args handler-args
+                 :cache-ttl cache-ttl)
 
       (http/http method
                  path
                  handler-or-dispatch
                  :skip-parse-times? skip-parse-times?
-                 :handler-args handler-args))))
+                 :handler-args handler-args
+                 :cache-ttl cache-ttl))))
 
 (re-frame/reg-fx :stop-autosave
   (fn stop-autosave [autosave-fn]
