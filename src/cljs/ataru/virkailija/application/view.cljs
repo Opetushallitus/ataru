@@ -592,7 +592,8 @@
                                       (cljs-util/get-unselected-review-states
                                         new-filter
                                         states))})
-    (dispatch [:state-update #(assoc-in % [:application filter-kw] new-filter)])))
+    (dispatch [:state-update #(assoc-in % [:application filter-kw] new-filter)])
+    (dispatch [:application/filter-applications])))
 
 (defn hakukohde-state-filter-controls
   [filter-kw title states state-counts-sub]
@@ -629,7 +630,8 @@
                                           (dispatch [:state-update #(assoc-in % [:application filter-kw]
                                                                               (if all-filters-selected?
                                                                                 []
-                                                                                (map first states)))]))}]
+                                                                                (map first states)))])
+                                          (dispatch [:application/filter-applications]))}]
                     [:span (get-virkailija-translation :all)]]]]
                  (mapv
                    (fn [[review-state-id review-state-label]]
@@ -1674,23 +1676,42 @@
             (when (= :fixed @review-positioning) [floating-application-review-placeholder])
             [application-review]]])))))
 
+
+(defn create-application-paging-scroll-handler
+  []
+  (fn [_]
+    (when-let [end-of-list-element (.getElementById js/document "application-handling__end-of-list-element")]
+      (let [element-offset  (-> end-of-list-element .getBoundingClientRect .-bottom)
+            viewport-offset (.-innerHeight js/window)]
+        (when (< element-offset viewport-offset)
+          (dispatch [:state-update #(update-in % [:application :application-list-page] inc)]))))))
+
 (defn application []
   (let [search-control-all-page (subscribe [:application/search-control-all-page-view?])
         filtered-applications   (subscribe [:application/filtered-applications])
-        fetching                (subscribe [:state-query [:application :fetching-applications]])]
-    [:div
-     [:div.application-handling__overview
-      [application-search-control]
-      (when (not @search-control-all-page)
-        [:div.application-handling__bottom-wrapper.select_application_list
-         [haku-heading]
-         [application-list-header @filtered-applications]
-         (when-not @fetching
-           [application-list-contents @filtered-applications])
-         [application-list-loading-indicator]])]
-     (when (not @search-control-all-page)
-       [:div.application-handling__review-area-container
-        [application-review-area @filtered-applications]])]))
+        fetching                (subscribe [:state-query [:application :fetching-applications]])
+        expanded                (subscribe [:state-query [:application :application-list-expanded?]])
+        page-size               100
+        page                    (subscribe [:state-query [:application :application-list-page]])]
+    (fn []
+      (let [paged-applications (take (* @page page-size) @filtered-applications)
+            has-more?          (< (count paged-applications) (count @filtered-applications))]
+        [:div
+         [:div.application-handling__overview
+          [application-search-control]
+          (when (not @search-control-all-page)
+            [:div.application-handling__bottom-wrapper.select_application_list
+             [haku-heading]
+             [application-list-header @filtered-applications]
+             (when-not @fetching
+               [application-list-contents paged-applications])
+             (when (and has-more? @expanded (not @fetching))
+               [:div#application-handling__end-of-list-element
+                [:i.application-handling__end-of-list-element-spinner.zmdi.zmdi-spinner.spin]])
+             [application-list-loading-indicator]])]
+         (when (not @search-control-all-page)
+           [:div.application-handling__review-area-container
+            [application-review-area @filtered-applications]])]))))
 
 (defn create-review-position-handler []
   (let [review-canary-visible        (atom true)

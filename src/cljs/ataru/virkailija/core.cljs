@@ -25,8 +25,15 @@
                   (.getElementById js/document "app")))
 
 (defn init-scroll-listeners []
-  (.addEventListener js/window "scroll" (banner/create-banner-position-handler))
-  (.addEventListener js/window "scroll" (app-handling-view/create-review-position-handler)))
+  (let [debounces (atom {})
+        debounce  (fn [ms id fn]
+                    (js/clearTimeout (@debounces id))
+                    (swap! debounces assoc id (js/setTimeout
+                                                fn
+                                                ms)))]
+    (.addEventListener js/window "scroll" (banner/create-banner-position-handler))
+    (.addEventListener js/window "scroll" (app-handling-view/create-review-position-handler))
+    (.addEventListener js/window "scroll" #(debounce 500 :paging (app-handling-view/create-application-paging-scroll-handler)))))
 
 (defn ^:export init []
   (set-global-error-handler! #(post "/lomake-editori/api/client-error" % identity))

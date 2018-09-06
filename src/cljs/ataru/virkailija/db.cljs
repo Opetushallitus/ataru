@@ -19,6 +19,7 @@
                           :sort                       application-sorting/initial-sort
                           :application-list-expanded? true
                           :mass-information-request   {:form-status :disabled}
+                          :application-list-page      1     ; TODO reset on filter/application load
                           :filters                    {:language-requirement {:unreviewed  true
                                                                               :fulfilled   true
                                                                               :unfulfilled true}

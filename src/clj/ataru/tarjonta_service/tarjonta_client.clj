@@ -19,7 +19,7 @@
       try-get-result))
 
 (defn hakukohde-search
-  [haku-oid organization-oid]
+  [{:keys [haku-oid organization-oid]}]
   (-> :tarjonta-service.hakukohde.search
       (resolve-url (cond-> {"hakuOid"         haku-oid
                             "defaultTarjoaja" organization-oid}

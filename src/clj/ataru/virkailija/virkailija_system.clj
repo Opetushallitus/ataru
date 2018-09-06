@@ -20,7 +20,8 @@
      (Integer/parseInt (get env :ataru-http-port "8350"))
      (Integer/parseInt (get env :ataru-repl-port "3333"))))
   ([http-port repl-port]
-   (apply component/system-map
+   (apply
+     component/system-map
 
      :organization-service (component/using
                              (organization-service/new-organization-service)
@@ -44,7 +45,9 @@
                              (kayttooikeus-service/->FakeKayttooikeusService)
                              (kayttooikeus-service/->HttpKayttooikeusService nil))
 
-     :person-service (person-service/new-person-service)
+     :person-service (component/using
+                       (person-service/new-person-service)
+                       [:cache-service])
 
      :handler (component/using
                 (virkailija-routes/new-handler)

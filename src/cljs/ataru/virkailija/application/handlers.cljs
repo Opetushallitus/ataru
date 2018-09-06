@@ -16,7 +16,13 @@
             [camel-snake-kebab.core :as c]
             [camel-snake-kebab.extras :as ce]
             [cljs-time.core :as t]
+            [ataru.application.application-states :as application-states]
+            [re-frame.core :as re-frame]
+            [clojure.core.match :refer [match]]
+            [ataru.application.review-states :as review-states]
             [ataru.application.application-states :as application-states]))
+
+(declare filter-applications)
 
 (defn- state-filter->query-param
   [db filter all-states]
@@ -183,11 +189,13 @@
      (if is-hakukohde-review?
        (-> db
            (assoc-in [:application :review :hakukohde-reviews (keyword selected-hakukohde-oid) field] value)
-           (assoc-in [:application :applications] updated-applications))
+           (assoc-in [:application :applications] updated-applications)
+           (filter-applications))
        (-> db
            (update-in [:application :review] assoc field value)
            (assoc-in [:application :applications] updated-applications)
-           (assoc-in [:application :review-state-counts] (review-state-counts updated-applications)))))))
+           (assoc-in [:application :review-state-counts] (review-state-counts updated-applications))
+           (filter-applications))))))
 
 (defn- update-attachment-hakukohde-review-field-of-selected-application-in-list
   [application selected-application-key hakukohde attachment-key state]
@@ -249,11 +257,9 @@
 (reg-event-db
   :application/toggle-filter
   (fn [db [_ filter-id state]]
-    (if state
-      (update-in
-        db
-        [:application :filters filter-id state]
-        not))))
+    (-> db
+        (update-in [:application :filters filter-id state] not)
+        (filter-applications))))
 
 (reg-event-db
   :application/toggle-shown-time-column
@@ -263,17 +269,22 @@
                       :created-time)]
       (-> db
           (assoc-in [:application :selected-time-column] new-value)
-          (update-sort new-value true)))))
+          (update-sort new-value true)
+          (filter-applications)))))
 
 (reg-event-db
   :application/remove-filters
   (fn [db _]
-    (assoc-in db [:application :filters] (get-in initial-db/default-db [:application :filters]))))
+    (-> db
+        (assoc-in [:application :filters] (get-in initial-db/default-db [:application :filters]))
+        (filter-applications))))
 
 (reg-event-db
  :application/update-sort
  (fn [db [_ column-id]]
-   (update-sort db column-id true)))
+   (-> db
+       (update-sort column-id true)
+       (filter-applications))))
 
 (defn- parse-application-time
   [application]
@@ -296,15 +307,17 @@
                                   (assoc-in [:application :sort] application-sorting/initial-sort)
                                   (assoc-in [:application :selected-time-column] :created-time)
                                   (assoc-in [:application :information-request] nil)
+                                  (assoc-in [:application :application-list-page] 1)
                                   (update-sort (:column application-sorting/initial-sort) false))
           application-key     (if (= 1 (count parsed-applications))
                                 (-> parsed-applications first :key)
                                 (when-let [query-key (:application-key (cljs-util/extract-query-params))]
                                   (some #{query-key} (map :key parsed-applications))))]
-      {:db       db
-       :dispatch (if application-key
-                   [:application/select-application application-key]
-                   [:application/close-application])})))
+      {:db         db
+       :dispatch-n [[:application/filter-applications]
+                    (if application-key
+                      [:application/select-application application-key]
+                      [:application/close-application])]})))
 
 (defn- extract-unselected-review-states-from-query
   [query-param states]
@@ -1010,7 +1023,115 @@
 (reg-event-db
   :application/toggle-all-pohjakoulutus-filters
   (fn [db [_ all-enabled?]]
-    (update-in
+    (-> db
+        (update-in [:application :filters :base-education]
+          (fn [filter-map] (reduce-kv (fn [acc k _] (assoc acc k (not all-enabled?))) {} filter-map)))
+        (filter-applications))))
+
+(defn- filter-by-attachment-review
+  [application selected-hakukohde states-to-include]
+  (or (empty? (:hakukohde application))
+      (let [states (->> (application-states/attachment-reviews-with-no-requirements application)
+                        (filter #(or (not selected-hakukohde) (= selected-hakukohde (:hakukohde %))))
+                        (map :state))]
+        (not (empty? (clojure.set/intersection
+                       states-to-include
+                       (set states)))))))
+
+(defn- parse-enabled-filters
+  [filters kw]
+  (->> (get filters kw)
+       (filter second)
+       (map first)
+       (map name)
+       (set)))
+
+(defn- filter-by-yksiloity
+  [application identified? unidentified?]
+  (match [identified? unidentified?]
+         [true true] true
+         [false false] false
+         [false true] (-> application :person :yksiloity (not))
+         [true false] (-> application :person :yksiloity)))
+
+(defn- filter-by-hakukohde-review
+  [application selected-hakukohde requirement-name states-to-include]
+  (let [all-states-count (-> review-states/hakukohde-review-types-map
+                             (get (keyword requirement-name))
+                             (last)
+                             (count))
+        selected-count   (count states-to-include)]
+    (if (= all-states-count selected-count)
+      true
+      (let [relevant-states  (->> (:application-hakukohde-reviews application)
+                                  (filter #(and (= requirement-name (:requirement %))
+                                                (or (not selected-hakukohde) (= selected-hakukohde (:hakukohde %)))))
+                                  (map :state)
+                                  (set))]
+        (not (empty? (clojure.set/intersection states-to-include relevant-states)))))))
+
+(defn- state-filter
+  [states states-to-include default-state-name hakukohteet]
+  (or
+    (not (empty? (clojure.set/intersection
+                   states-to-include
+                   (set states))))
+    (and
+      (contains? states-to-include default-state-name)
+      (or
+        (empty? states)
+        (< (count states)
+           (count hakukohteet))))))
+
+
+(defn- filter-by-base-education
+  [application base-education-filters]
+  (let [selected-states    (->> base-education-filters
+                                (filter (fn [[_ v]] (true? v)))
+                                (map first)
+                                (map name)
+                                (set))
+        application-states (-> application
+                               :base-education
+                               (set))]
+    (not-empty (clojure.set/intersection selected-states application-states))))
+
+(defn- filter-applications
+  [db]
+  (let [applications                 (-> db :application :applications)
+        selected-hakukohde           (cond
+                                       (-> db :application :selected-hakukohde) (-> db :application :selected-hakukohde)
+                                       (-> db :application :selected-form-key) "form"
+                                       :else nil)
+        attachment-states-to-include (-> db :application :attachment-state-filter set)
+        processing-states-to-include (-> db :application :processing-state-filter set)
+        selection-states-to-include  (-> db :application :selection-state-filter set)
+        filters                      (-> db :application :filters)
+        identified?                  (-> db :application :filters :only-identified :identified)
+        unidentified?                (-> db :application :filters :only-identified :unidentified)
+        all-base-educations-enabled? (->> (-> db :application :filters :base-education)
+                                          (vals)
+                                          (every? true?))]
+    (assoc-in
       db
-      [:application :filters :base-education]
-      (fn [filter-map] (reduce-kv (fn [acc k _] (assoc acc k (not all-enabled?))) {} filter-map)))))
+      [:application :filtered-applications]
+      (filter
+        (fn [application]
+          (and
+            (filter-by-yksiloity application identified? unidentified?)
+            (or
+              all-base-educations-enabled?
+              (filter-by-base-education application (:base-education filters)))
+            (filter-by-hakukohde-review application selected-hakukohde "processing-state" processing-states-to-include)
+            (filter-by-hakukohde-review application selected-hakukohde "selection-state" selection-states-to-include)
+            (filter-by-hakukohde-review application selected-hakukohde "language-requirement" (parse-enabled-filters filters :language-requirement))
+            (filter-by-hakukohde-review application selected-hakukohde "degree-requirement" (parse-enabled-filters filters :degree-requirement))
+            (filter-by-hakukohde-review application selected-hakukohde "eligibility-state" (parse-enabled-filters filters :eligibility-state))
+            (filter-by-hakukohde-review application selected-hakukohde "payment-obligation" (parse-enabled-filters filters :payment-obligation))
+            (filter-by-attachment-review application selected-hakukohde attachment-states-to-include)))
+        applications))))
+
+(reg-event-db
+  :application/filter-applications
+  (fn [db _]
+    (filter-applications db)))

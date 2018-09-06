@@ -37,6 +37,7 @@
                           (:body result))))))
 
 (defn get-persons [cas-client oids]
+  (log/info "Fetching" (count oids) "persons")
   (let [partitions (partition 5000 5000 nil oids)
         results    (map
                      #(cas/cas-authenticated-post
