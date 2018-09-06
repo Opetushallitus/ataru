@@ -152,20 +152,17 @@
           [:div.application__hakuaika-left
            (str "Hakuaikaa jäljellä " time-left-text)])))))
 
-(defn status-controls []
-  (let [valid-status  (subscribe [:application/valid-status])
-        submit-status (subscribe [:state-query [:application :submit-status]])
-        can-apply?    (subscribe [:application/can-apply?])
-        editing?      (subscribe [:state-query [:application :editing?]])
-        preview-enabled? (subscribe [:state-query [:application :preview-enabled]])]
-    (when (or @can-apply? @editing?)
-      [:div.application__status-controls-container
-       [:div.application__preview-control
-        [preview-toggle @submit-status @preview-enabled?]]
-       [:div.application__status-controls
-        [send-button-or-placeholder @valid-status @submit-status]
-        [invalid-field-status @valid-status]
-        [sent-indicator @submit-status]]])))
+(defn status-controls [submit-status]
+  (let [valid-status (subscribe [:application/valid-status])
+        can-apply?   (subscribe [:application/can-apply?])
+        editing?     (subscribe [:state-query [:application :editing?]])]
+    (fn []
+      (when (or @can-apply? @editing?)
+        [:div.application__status-controls-container
+         [:div.application__status-controls
+          [send-button-or-placeholder @valid-status @submit-status]
+          [invalid-field-status @valid-status]
+          [sent-indicator @submit-status]]]))))
 
 (defn virkailija-fill-ribbon
   []
@@ -174,10 +171,16 @@
     [:div.application__virkailija-fill-ribbon
      "Testihakemus / Virkailijatäyttö"]))
 
-(defn banner [] [:div.application__banner-container
-                 [virkailija-fill-ribbon]
-                 [:div.application__top-banner-container
-                  [:div.application-top-banner
-                   [logo]
-                   [hakuaika-left]
-                   [status-controls]]]])
+(defn banner []
+  (let [submit-status    (subscribe [:state-query [:application :submit-status]])
+        preview-enabled? (subscribe [:state-query [:application :preview-enabled]])]
+    (fn []
+      [:div.application__banner-container
+       [virkailija-fill-ribbon]
+       [:div.application__top-banner-container
+        [:div.application-top-banner
+         [logo]
+         [hakuaika-left]
+         [:div.application__preview-control
+          [preview-toggle @submit-status @preview-enabled?]]
+         [status-controls submit-status]]]])))
