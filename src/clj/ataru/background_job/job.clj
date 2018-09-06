@@ -13,7 +13,11 @@
           ; FIXME temporarily disabled due to weirdness with job
           ;(= 1 (get-in status ["start-automatic-eligibility-if-ylioppilas-job-job"
           ;                        :running]))
-             (every? #(= 0 (:error %)) (vals status)))
+             (every? (fn [[job status]]
+                       (if (= job "automatic-eligibility-if-ylioppilas-job")
+                         (> 10 (:error status)))
+                         (= 0 (:error status)))
+                     status))
       (assoc status :ok true)
       (assoc status :ok false))))
 
