@@ -203,5 +203,7 @@ Swagger specs for the APIs can be found at the following locations:
 Application data can be anonymized as follows:
 
 ```
-CONFIG=path-to-application-config.edn lein anonymize-data
+CONFIG=path-to-application-config.edn 
+
+lein anonymize-data fake-person-file.txt
 ```
