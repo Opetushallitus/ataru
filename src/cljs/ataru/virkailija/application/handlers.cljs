@@ -639,7 +639,8 @@
      :http {:method              :get
             :path                "/lomake-editori/api/haut"
             :handler-or-dispatch :editor/handle-refresh-haut-and-hakukohteet
-            :skip-parse-times?   true}}))
+            :skip-parse-times?   true
+            :cache-ttl          (* 1000 60 5)}}))
 
 (reg-event-fx
   :application/navigate
