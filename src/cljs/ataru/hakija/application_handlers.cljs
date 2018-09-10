@@ -94,7 +94,7 @@
 (reg-event-fx
   :application/get-latest-form-by-hakukohde
   (fn [{:keys [db]} [_ hakukohde-oid virkailija-secret]]
-    {:db   (cond-> (assoc-in db [:application :preselected-hakukohde] hakukohde-oid)
+    {:db   (cond-> (assoc-in db [:application :preselected-hakukohde-oids] [hakukohde-oid])
                    (some? virkailija-secret)
                    (assoc-in [:application :virkailija-secret] virkailija-secret))
      :http {:method  :get
@@ -107,8 +107,8 @@
 
 (reg-event-fx
   :application/get-latest-form-by-haku
-  (fn [{:keys [db]} [_ haku-oid virkailija-secret]]
-    {:db   (cond-> db
+  (fn [{:keys [db]} [_ haku-oid hakukohde-oids virkailija-secret]]
+    {:db   (cond-> (assoc-in db [:application :preselected-hakukohde-oids] hakukohde-oids)
                    (some? virkailija-secret)
                    (assoc-in [:application :virkailija-secret] virkailija-secret))
      :http {:method  :get
@@ -444,24 +444,28 @@
        (update :options (partial map update-followups))))))
 
 (defn- handle-form [db answers form]
-  (let [form                  (-> (languages->kwd form)
-                                  (set-form-language)
-                                  (update :content (partial map set-question-group-id))
-                                  (assoc :hakuaika-end (->> form :tarjonta :hakukohteet
-                                                            (map :hakuaika)
-                                                            (filter :on)
-                                                            (sort-by :end >)
-                                                            first
-                                                            :end))
-                                  (assoc :time-delta-from-server (- (-> form :load-time) (.getTime (js/Date.)))))
-        preselected-hakukohde (-> db :application :preselected-hakukohde)]
+  (let [form                       (-> (languages->kwd form)
+                                       (set-form-language)
+                                       (update :content (partial map set-question-group-id))
+                                       (assoc :hakuaika-end (->> form :tarjonta :hakukohteet
+                                                                 (map :hakuaika)
+                                                                 (filter :on)
+                                                                 (sort-by :end >)
+                                                                 first
+                                                                 :end))
+                                       (assoc :time-delta-from-server (- (-> form :load-time) (.getTime (js/Date.)))))
+        valid-hakukohde-oids       (set (->> form :tarjonta :hakukohteet
+                                        (filter #(get-in % [:hakuaika :on]))
+                                        (map :oid)))
+        preselected-hakukohde-oids (->> db :application :preselected-hakukohde-oids
+                                        (filter #(contains? valid-hakukohde-oids %)))]
     (-> db
         (update :form (fn [{:keys [selected-language]}]
                         (cond-> form
                                 (some? selected-language)
                                 (assoc :selected-language selected-language))))
         (assoc :flat-form-content (autil/flatten-form-fields (:content form)))
-        (assoc-in [:application :answers] (create-initial-answers form preselected-hakukohde))
+        (assoc-in [:application :answers] (create-initial-answers form preselected-hakukohde-oids))
         (assoc-in [:application :show-hakukohde-search] false)
         (assoc :wrapper-sections (extract-wrapper-sections form))
         (merge-submitted-answers answers)

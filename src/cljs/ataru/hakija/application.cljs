@@ -8,7 +8,7 @@
             [cljs-time.core :as time]
             [cljs-time.coerce :refer [from-long]]))
 
-(defn- initial-valid-status [flattened-form-fields preselected-hakukohde]
+(defn- initial-valid-status [flattened-form-fields preselected-hakukohteet]
   (into
     {}
     (map-indexed
@@ -20,9 +20,8 @@
                (let [values (cond (= 1 (count options))
                                   [{:value (:value (first options))
                                     :valid true}]
-                                  (some? preselected-hakukohde)
-                                  [{:value preselected-hakukohde
-                                    :valid true}]
+                                  (some? preselected-hakukohteet)
+                                  (map (fn [oid] {:value oid :valid true}) preselected-hakukohteet)
                                   :else
                                   [])]
                  [:hakukohteet {:valid     (not (empty? values))
@@ -72,8 +71,8 @@
 (defn create-initial-answers
   "Create initial answer structure based on form structure.
   Validity, dropdown default value and default hakukohde for now."
-  [form preselected-hakukohde]
-  (initial-valid-status (util/flatten-form-fields (:content form)) preselected-hakukohde))
+  [form preselected-hakukohde-oids]
+  (initial-valid-status (util/flatten-form-fields (:content form)) preselected-hakukohde-oids))
 
 (defn not-extra-answer? [answer-key question-ids]
   "Check that the answer (key) has a corresponding quesiton in the form.
