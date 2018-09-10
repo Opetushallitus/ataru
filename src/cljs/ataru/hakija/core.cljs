@@ -29,13 +29,14 @@
         form-key          (path-match path #"/hakemus/(.+)/?")
         query-params      (cljs-util/extract-query-params)
         hakija-secret     (:modify query-params)
-        virkailija-secret (:virkailija-secret query-params)]
+        virkailija-secret (:virkailija-secret query-params)
+        hakukohteet       (clojure.string/split (:hakukohteet query-params) #",")]
     (cond
       (u/not-blank? hakukohde-oid)
       (re-frame/dispatch [:application/get-latest-form-by-hakukohde hakukohde-oid virkailija-secret])
 
       (u/not-blank? haku-oid)
-      (re-frame/dispatch [:application/get-latest-form-by-haku haku-oid virkailija-secret])
+      (re-frame/dispatch [:application/get-latest-form-by-haku haku-oid hakukohteet virkailija-secret])
 
       (u/not-blank? form-key)
       (re-frame/dispatch [:application/get-latest-form-by-key form-key virkailija-secret])
