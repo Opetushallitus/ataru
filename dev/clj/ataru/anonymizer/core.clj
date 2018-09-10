@@ -4,8 +4,8 @@
             [taoensso.timbre :as log]
             [ataru.anonymizer.ssn-generator :as ssn-gen]))
 
-(defn- anonymize [fake-persons applications {:keys [key preferred_name last_name content] :as application}]
-  (if-let [fake-person (get fake-persons key)]
+(defn- anonymize [fake-persons applications {:keys [key preferred_name last_name content person_oid] :as application}]
+  (if-let [fake-person (get fake-persons person_oid)]
     (let [{:keys [gender first-name last-name address fake-ssn phone email postal-code]} (first fake-person)
           anonymize-answer (fn [{:keys [key value] :as answer}]
                                (let [value (case key
@@ -51,9 +51,9 @@
                                          hetu
                                          etunimi
                                          puhelinnumero
-                                         oidhenkilo
+                                         personOid
                                          lahiosoite]}]
-  {:person-oid  oidhenkilo
+  {:person-oid  personOid
    :fake-ssn    hetu
    :address     lahiosoite
    :email       sahkopostiosoite
