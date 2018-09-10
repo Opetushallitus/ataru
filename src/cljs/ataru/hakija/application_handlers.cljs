@@ -444,11 +444,6 @@
        (update :options (partial map update-followups))))))
 
 (defn- handle-form [db answers form]
-  (comment
-
-    (->> (get-in db [:form :tarjonta :hakukohteet])
-         (filter #(contains? selected-hakukohteet (:oid %)))
-         (mapcat :hakukohderyhmat)))
   (let [form                       (-> (languages->kwd form)
                                        (set-form-language)
                                        (update :content (partial map set-question-group-id))
