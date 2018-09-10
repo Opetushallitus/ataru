@@ -144,13 +144,18 @@
   (some #(belongs-to-hakukohderyhma? hakukohderyhma-oid %)
         (:hakukohde application)))
 
+(defn- filter-with-hakukohde [hakukohde-oid hakukohde]
+  (if hakukohde-oid
+    (when (= hakukohde-oid (:oid hakukohde))
+      hakukohde)
+    hakukohde))
+
 (defn- first-hakukohde-in-hakukohderyhma
   [hakukohderyhma-oid rajaus-hakukohteella application]
-  (when (or (nil? rajaus-hakukohteella)
-            (some #(= rajaus-hakukohteella (:oid %)) (:hakukohde application)))
-    (->> (:hakukohde application)
-         (filter #(belongs-to-hakukohderyhma? hakukohderyhma-oid %))
-         first)))
+  (->> (:hakukohde application)
+       (filter #(belongs-to-hakukohderyhma? hakukohderyhma-oid %))
+       first
+       (filter-with-hakukohde rajaus-hakukohteella)))
 
 (defn- belongs-to-some-organization?
   [authorized-organization-oids hakukohde]
