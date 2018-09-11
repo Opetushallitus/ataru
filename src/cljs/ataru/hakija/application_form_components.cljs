@@ -141,149 +141,149 @@
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing idx] :or {div-kwd :div.application__form-field disabled false editing false}}]
   (let [id                     (keyword (:id field-descriptor))
-        answer                 (if (and (contains? editing-forbidden-person-info-field-ids id)
-                                        @(subscribe [:application/cannot-edit? id]))
-                                 {:value @(subscribe [:state-query
-                                                      [:application :person id]])
-                                  :valid true}
-                                 @(subscribe [:state-query
-                                              (cond-> [:application :answers id]
-                                                idx (concat [:values idx 0]))]))
         languages              (subscribe [:application/default-languages])
         size                   (get-in field-descriptor [:params :size])
         size-class             (text-field-size->class size)
-        verify-email?          @(subscribe [:application/verify-email? id])
         on-blur                #(dispatch [:application/textual-field-blur field-descriptor])
-        on-change              (cond verify-email? (partial email-verify-field-change field-descriptor answer)
-                                     idx (partial multi-value-field-change field-descriptor 0 idx)
-                                     :else (partial textual-field-change field-descriptor))
-        show-error?            (show-text-field-error-class? field-descriptor
-                                 (:value answer)
-                                 (:valid answer))
-        show-validation-error? (subscribe [:application/show-validation-error? id])]
-    [div-kwd
-     [label field-descriptor]
-     (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
-       [question-hakukohde-names field-descriptor])
-     [:div.application__form-text-input-info-text
-      [info-text field-descriptor]]
-     [:div.application__form-text-input-and-validation-errors
-      [:input.application__form-text-input
-       (merge {:id           id
-               :type         "text"
-               :placeholder  (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                               (util/non-blank-val input-hint @languages))
-               :class        (str size-class
-                                  (if show-error?
-                                    " application__form-field-error"
-                                    " application__form-text-input--normal"))
-               :value        (if @(subscribe [:application/cannot-view? id])
-                               "***********"
-                               (:value answer))
-               :on-blur      on-blur
-               :on-change    on-change
-               :required     (is-required-field? field-descriptor)
-               :aria-invalid @(subscribe [:application/answer-invalid? id])}
-              (when verify-email?
-                {:on-paste     (fn [event]
-                                (.preventDefault event))})
-              (when (or disabled
-                        @(subscribe [:application/cannot-edit? id]))
-                {:disabled true}))]
-      (when (and (not-empty (:errors answer))
-                 @show-validation-error?)
-        [validation-error id (:errors answer)])]
-     (when verify-email?
-       (let [id           :verify-email
-             verify-label (get-translation :verify-email)]
-         [:div
-          [:label.application__form-field-label.label.application__form-field-label--verify-email
-           {:id "application-form-field-label-verify-email"
-            :for id}
-           [:span (str verify-label (required-hint field-descriptor))]]
-          [:div.application__form-text-input-and-validation-errors
-           [:input.application__form-text-input
-            {:id           id
-             :type         "text"
-             :required     true
-             :value        (if @(subscribe [:application/cannot-view? id])
-                             "***********"
-                             (:verify answer))
-             :on-blur      on-blur
-             :on-paste     (fn [event]
-                             (.preventDefault event))
-             :on-change    on-change
-             :class        (str size-class
-                             (if show-error?
-                               " application__form-field-error"
-                               " application__form-text-input--normal"))
-             :aria-invalid @(subscribe [:application/answer-invalid? id])}]]]))]))
+        edit-forbidden?        (contains? editing-forbidden-person-info-field-ids id)
+        show-validation-error? (subscribe [:application/show-validation-error? id])
+        verify-email?          (subscribe [:application/verify-email? id])]
+    (fn []
+      (let [answer      (if (and @editing edit-forbidden?)
+                          {:value @(subscribe [:state-query [:application :person id]])
+                           :valid true}
+                          @(subscribe [:state-query
+                                       (cond-> [:application :answers id]
+                                               idx (concat [:values idx 0]))]))
+            on-change   (cond @verify-email? (partial email-verify-field-change field-descriptor answer)
+                              idx (partial multi-value-field-change field-descriptor 0 idx)
+                              :else (partial textual-field-change field-descriptor))
+            show-error? (show-text-field-error-class? field-descriptor
+                                                      (:value answer)
+                                                      (:valid answer))]
+        [div-kwd
+         [label field-descriptor]
+         (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
+           [question-hakukohde-names field-descriptor])
+         [:div.application__form-text-input-info-text
+          [info-text field-descriptor]]
+         [:div.application__form-text-input-and-validation-errors
+          [:input.application__form-text-input
+           (merge {:id           id
+                   :type         "text"
+                   :placeholder  (when-let [input-hint (-> field-descriptor :params :placeholder)]
+                                   (util/non-blank-val input-hint @languages))
+                   :class        (str size-class
+                                      (if show-error?
+                                        " application__form-field-error"
+                                        " application__form-text-input--normal"))
+                   :value        (if @(subscribe [:application/cannot-view? id])
+                                   "***********"
+                                   (:value answer))
+                   :on-blur      on-blur
+                   :on-change    on-change
+                   :required     (is-required-field? field-descriptor)
+                   :aria-invalid @(subscribe [:application/answer-invalid? id])}
+                  (when @verify-email?
+                    {:on-paste     (fn [event]
+                                     (.preventDefault event))})
+                  (when (or disabled
+                            @(subscribe [:application/cannot-edit? id]))
+                    {:disabled true}))]
+          (when (and (not-empty (:errors answer))
+                     @show-validation-error?)
+            [validation-error id (:errors answer)])]
+         (when @verify-email?
+           (let [id           :verify-email
+                 verify-label (get-translation :verify-email)]
+             [:div
+              [:label.application__form-field-label.label.application__form-field-label--verify-email
+               {:id "application-form-field-label-verify-email"
+                :for id}
+               [:span (str verify-label (required-hint field-descriptor))]]
+              [:div.application__form-text-input-and-validation-errors
+               [:input.application__form-text-input
+                {:id           id
+                 :type         "text"
+                 :required     true
+                 :value        (if @(subscribe [:application/cannot-view? id])
+                                 "***********"
+                                 (:verify answer))
+                 :on-blur      on-blur
+                 :on-paste     (fn [event]
+                                 (.preventDefault event))
+                 :on-change    on-change
+                 :class        (str size-class
+                                    (if show-error?
+                                      " application__form-field-error"
+                                      " application__form-text-input--normal"))
+                 :aria-invalid @(subscribe [:application/answer-invalid? id])}]]]))]))))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [id           (keyword (:id field-descriptor))
         size-class   (text-field-size->class (get-in field-descriptor [:params :size]))
         cannot-edit? (subscribe [:application/cannot-edit? id])]
     (fn [field-descriptor & {div-kwd :div-kwd question-group-idx :idx :or {div-kwd :div.application__form-field}}]
-      (let [values    (subscribe [:state-query [:application :answers id :values question-group-idx]])
-            on-blur   (fn [evt]
-                        (let [data-idx (int (.getAttribute (.-target evt) "data-idx"))]
-                          (dispatch [:application/remove-repeatable-application-field-value field-descriptor data-idx question-group-idx])))
-            on-change (fn [evt]
-                        (let [value    (some-> evt .-target .-value)
-                              data-idx (int (.getAttribute (.-target evt) "data-idx"))]
-                          (dispatch [:application/set-repeatable-application-field field-descriptor value data-idx question-group-idx])))]
+      (let [values       (subscribe [:state-query [:application :answers id :values question-group-idx]])
+            remove-field (fn [evt]
+                           (let [data-idx (int (.getAttribute (.-target evt) "data-idx"))]
+                             (dispatch [:application/remove-repeatable-application-field-value field-descriptor data-idx question-group-idx])))
+            on-change    (fn [evt]
+                           (let [value    (some-> evt .-target .-value)
+                                 data-idx (int (.getAttribute (.-target evt) "data-idx"))]
+                             (dispatch [:application/set-repeatable-application-field field-descriptor value data-idx question-group-idx])))]
         (into [div-kwd
                [label field-descriptor]
                (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
                  [question-hakukohde-names field-descriptor])
                [:div.application__form-text-input-info-text
                 [info-text field-descriptor]]]
-          (cons
-            (let [{:keys [value valid]} (first @values)]
-              [:div.application__form-repeatable-text-wrap.application__form-repeatable-text-wrap--padded
-               [:input.application__form-text-input
-                (merge
-                 {:type         "text"
-                  :class        (str size-class (if (show-text-field-error-class? field-descriptor value valid)
-                                                  " application__form-field-error"
-                                                  " application__form-text-input--normal"))
-                  :value        value
-                  :data-idx     0
-                  :on-change    on-change
-                  :required     (is-required-field? field-descriptor)
-                  :aria-invalid @(subscribe [:application/answer-invalid? id])}
-                 (when (empty? value)
-                   {:on-blur on-blur})
-                 (when @cannot-edit?
-                   {:disabled true}))]])
-            (map-indexed
-              (let [first-is-empty? (empty? (first (map :value @values)))]
-                (fn [idx {:keys [value last?]}]
-                  [:div.application__form-repeatable-text-wrap
-                   {:class (when last? "application__form-repeatable-text-wrap--padded")}
+              (cons
+                (let [{:keys [value valid]} (first @values)]
+                  [:div.application__form-repeatable-text-wrap.application__form-repeatable-text-wrap--padded
                    [:input.application__form-text-input
                     (merge
-                      {:type      "text"
-                       :class     (str
-                                    size-class " application__form-text-input--normal"
-                                    (when-not value " application__form-text-input--disabled"))
-                       :value     value
-                       :data-idx  (inc idx)
-                       :on-change on-change}
-                      (when (and (not last?) (empty? value))
-                        {:on-blur on-blur})
-                      (when last?
-                        {:placeholder (get-translation :add-more)})
-                      (when (or @cannot-edit?
-                                (and last? first-is-empty?))
-                        {:disabled true}))]
-                   (when (and value (not @cannot-edit?))
-                     [:a.application__form-repeatable-text--addremove
-                      [:i.zmdi.zmdi-close.zmdi-hc-lg
-                       {:data-idx (inc idx)
-                        :on-click on-blur}]])]))
-              (concat (rest @values)
-                      [{:value nil :valid true :last? true}]))))))))
+                      {:type         "text"
+                       :class        (str size-class (if (show-text-field-error-class? field-descriptor value valid)
+                                                       " application__form-field-error"
+                                                       " application__form-text-input--normal"))
+                       :value        value
+                       :data-idx     0
+                       :on-change    on-change
+                       :required     (is-required-field? field-descriptor)
+                       :aria-invalid @(subscribe [:application/answer-invalid? id])}
+                      (when (empty? value)
+                        {:on-blur remove-field})
+                      (when @cannot-edit?
+                        {:disabled true}))]])
+                (map-indexed
+                  (let [first-is-empty? (empty? (first (map :value @values)))]
+                    (fn [idx {:keys [value last?]}]
+                      [:div.application__form-repeatable-text-wrap
+                       {:class (when last? "application__form-repeatable-text-wrap--padded")}
+                       [:input.application__form-text-input
+                        (merge
+                          {:type      "text"
+                           :class     (str
+                                        size-class " application__form-text-input--normal"
+                                        (when-not value " application__form-text-input--disabled"))
+                           :value     value
+                           :data-idx  (inc idx)
+                           :on-change on-change}
+                          (when (and (not last?) (empty? value))
+                            {:on-blur remove-field})
+                          (when last?
+                            {:placeholder (get-translation :add-more)})
+                          (when (or @cannot-edit?
+                                    (and last? first-is-empty?))
+                            {:disabled true}))]
+                       (when (and value (not @cannot-edit?))
+                         [:a.application__form-repeatable-text--addremove
+                          [:i.zmdi.zmdi-close.zmdi-hc-lg
+                           {:data-idx (inc idx)
+                            :on-click remove-field}]])]))
+                  (concat (rest @values)
+                          [{:value nil :valid true :last? true}]))))))))
 
 (defn- text-area-size->class [size]
   (match size
@@ -298,18 +298,17 @@
       max-length)))
 
 (defn text-area [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [application  (subscribe [:state-query [:application]])
-        size         (-> field-descriptor :params :size)
+  (let [size         (-> field-descriptor :params :size)
         max-length   (parse-max-length field-descriptor)
         cannot-edit? (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])]
     (fn [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
       (let [value-path (cond-> [:application :answers (-> field-descriptor :id keyword)]
-                         idx (conj :values idx 0)
-                         true (conj :value))
-            value     (subscribe [:state-query value-path])
-            on-change (if idx
-                        (partial multi-value-field-change field-descriptor 0 idx)
-                        (partial textual-field-change field-descriptor))]
+                               idx (conj :values idx 0)
+                               true (conj :value))
+            value      (subscribe [:state-query value-path])
+            on-change  (if idx
+                         (partial multi-value-field-change field-descriptor 0 idx)
+                         (partial textual-field-change field-descriptor))]
         [div-kwd
          [label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
@@ -773,6 +772,7 @@
         remove-on-click (fn remove-adjacent-text-field [event]
                           (let [row-idx (int (.getAttribute (.-currentTarget event) "data-row-idx"))]
                             (.preventDefault event)
+                            (cljs.pprint/pprint field-descriptor)
                             (dispatch [:application/remove-adjacent-field field-descriptor row-idx])))
         cannot-edits?   (map #(subscribe [:application/cannot-edit? (keyword (:id %))])
                              (util/flatten-form-fields (:children field-descriptor)))]

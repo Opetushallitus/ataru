@@ -35,6 +35,7 @@
         before(
           setNthFieldInputValue(0, 'Etunimi Tokanimi'),
           selectNthField(1),
+          selectNthField(2),
           setNthFieldInputValue(2, 'Sukunimi'),
           setNthFieldInputValue(4, '020202A0202'),
           setNthFieldInputValue(5, 'test@example.com'),
@@ -44,12 +45,16 @@
           setNthFieldOption(11, '179'),
           wait.until(function() {
             return formFields().eq(10).find('input').val() !== ''
-          })
+          }),
+          wait.forMilliseconds(600),
+          clickElement(invalidFieldsStatus)
         )
         it('works and validates correctly', function() {
+          expect(formFields().eq(1).find('input').val()).to.equal('Etunimi')
           expect(formFields().eq(3).find('select').val()).to.equal('246')
           expect(formFields().eq(10).find('input').val()).to.equal('JYVÄSKYLÄ')
           expect(formFields().eq(12).find('select').val()).to.equal('FI')
+          expect(invalidFieldNames().join(";")).to.equal("Toinen kysymys;Osiokysymys;Lyhyen listan kysymys")
           expect(invalidFieldsStatus().text()).to.equal('Tarkista 3 tietoa')
         })
       })
@@ -102,9 +107,11 @@
         }),
         setNthFieldSubInputValue(31, 3, 'A2'),
         setNthFieldSubInputValue(31, 5, 'C2'),
-        setNthFieldInputValue(32, "1,323")
+        setNthFieldInputValue(32, "1,323"),
+        wait.until(function() { return !submitButton().prop('disabled') })
       )
       it('works and validates correctly', function() {
+        expect(invalidFieldNames().join(";")).to.equal("")
         expect(invalidFieldsStatus().length).to.equal(0)
         expect(submitButton().prop('disabled')).to.equal(false)
       })

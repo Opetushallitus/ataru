@@ -73,10 +73,12 @@
           (assoc-in [:application :remaining-hakukohde-search-results] rest-results)
           (update-in [:application :hakukohde-hits] concat more-hits)))))
 
-(reg-event-db
+(reg-event-fx
   :application/set-hakukohde-valid
-  (fn [db [_ valid?]]
-    (assoc-in db [:application :answers :hakukohteet :valid] valid?)))
+  (fn [{:keys [db]} [_ valid?]]
+    {:db         (assoc-in db [:application :answers :hakukohteet :valid] valid?)
+     :dispatch-n [[:application/update-answers-validity]
+                  [:application/set-validator-processed :hakukohteet]]}))
 
 (reg-event-fx
   :application/hakukohde-add-selection
@@ -94,18 +96,19 @@
                                              new-hakukohde-values)
                                    set-values-changed
                                    set-field-visibilities)]
-      {:db       (cond-> db
-                         (and (some? max-hakukohteet)
-                              (<= max-hakukohteet (count new-hakukohde-values)))
-                         toggle-hakukohde-search)
-       :validate {:value            new-hakukohde-values
-                  :answers-by-key   (get-in db [:application :answers])
-                  :field-descriptor field-descriptor
-                  :editing?         (get-in db [:application :editing?])
-                  :virkailija?      (contains? (:application db) :virkailija-secret)
-                  :on-validated     (fn [[valid? errors]]
-                                      (dispatch [:application/set-hakukohde-valid
-                                                 valid?]))}})))
+      {:db                 (cond-> db
+                                   (and (some? max-hakukohteet)
+                                        (<= max-hakukohteet (count new-hakukohde-values)))
+                                   toggle-hakukohde-search)
+       :validate-debounced {:value             new-hakukohde-values
+                            :answers-by-key    (get-in db [:application :answers])
+                            :field-descriptor  field-descriptor
+                            :editing?          (get-in db [:application :editing?])
+                            :virkailija?       (contains? (:application db) :virkailija-secret)
+                            :before-validation #(dispatch [:application/set-validator-processing (keyword (:id field-descriptor))])
+                            :on-validated      (fn [[valid? errors]]
+                                                 (dispatch [:application/set-hakukohde-valid
+                                                            valid?]))}})))
 
 (defn- remove-hakukohde-from-deleting
   [hakukohteet hakukohde]
@@ -114,7 +117,8 @@
 (reg-event-fx
   :application/hakukohde-remove
   (fn [{db :db} [_ hakukohde-oid]]
-    (let [selected-hakukohteet (get-in db [:application :answers :hakukohteet :values] [])
+    (let [field-descriptor     (hakukohteet-field db)
+          selected-hakukohteet (get-in db [:application :answers :hakukohteet :values] [])
           new-hakukohde-values (vec (remove #(= hakukohde-oid (:value %)) selected-hakukohteet))
           db                   (-> db
                                    (assoc-in [:application :answers :hakukohteet :values]
@@ -122,15 +126,15 @@
                                    (update-in [:application :ui :hakukohteet :deleting] remove-hakukohde-from-deleting hakukohde-oid)
                                    set-values-changed
                                    set-field-visibilities)]
-      {:db       db
-       :validate {:value            new-hakukohde-values
-                  :answers-by-key   (get-in db [:application :answers])
-                  :field-descriptor (hakukohteet-field db)
-                  :editing?         (get-in db [:application :editing?])
-                  :virkailija?      (contains? (:application db) :virkailija-secret)
-                  :on-validated     (fn [[valid? errors]]
-                                      (dispatch [:application/set-hakukohde-valid
-                                                 valid?]))}})))
+      {:db                 db
+       :validate-debounced {:value             new-hakukohde-values
+                            :answers-by-key    (get-in db [:application :answers])
+                            :field-descriptor  field-descriptor
+                            :editing?          (get-in db [:application :editing?])
+                            :before-validation #(dispatch [:application/set-validator-processing (keyword (:id field-descriptor))])
+                            :on-validated      (fn [[valid? errors]]
+                                                 (dispatch [:application/set-hakukohde-valid
+                                                            valid?]))}})))
 
 (reg-event-fx
   :application/hakukohde-remove-selection

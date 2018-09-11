@@ -107,11 +107,17 @@
                             (if-let [parent (find-parent-field-descriptor nil content (name key))]
                               (assoc (select-keys parent [:label]) :key key)
                               (assoc (select-keys answers [:label]) :key key)) ; <- should never happen
-                            (assoc (select-keys answers [:label]) :key key)))]
+                            ))]
     {:invalid-fields invalid-fields
      :valid          (if (empty? answer-validity)
                        false
                        (= 0 (count invalid-fields)))}))
+
+(defn db->valid-status [db]
+  (answers->valid-status (-> db :application :answers)
+                         (-> db :application :ui)
+                         (-> db :flat-form-content)
+                         (-> db :form :content)))
 
 (defn form->flat-form-map [form]
   (into {}

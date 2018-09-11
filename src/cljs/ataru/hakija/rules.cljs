@@ -5,7 +5,8 @@
             [ataru.hakija.application-validators :as validators]
             [ataru.hakija.pohjakoulutusristiriita :as pohjakoulutusristiriita]
             [ataru.preferred-name :as pn]
-            [ataru.koodisto.koodisto-codes :refer [finland-country-code]]))
+            [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
+            [ataru.hakija.application :refer [db->valid-status]]))
 
 (def ^:private no-required-answer {:valid false :value ""})
 
@@ -167,8 +168,7 @@
                         (clojure.string/blank? country))
         postal-code (-> answers :postal-code)
         auto-input? (and is-finland?
-                         (not (clojure.string/blank? (:value postal-code)))
-                         (:valid postal-code))]
+                         (= 5 (count (:value postal-code))))]
     (when auto-input?
       (ajax/get (str "/hakemus/api/postal-codes/" (:value postal-code))
                 :application/handle-postal-code-input
@@ -246,10 +246,11 @@
   ([db rules rule-to-fn]
    {:pre  [(map? db) (map? rules)]
     :post [map?]}
-   (reduce-kv (fn [db rule arg]
-                (or ((rule-to-fn rule) db arg) db))
-              db
-              rules)))
+   (let [db-after-rules (reduce-kv (fn [db rule arg]
+                                     (or ((rule-to-fn rule) db arg) db))
+                                   db
+                                   rules)]
+     (assoc-in db-after-rules [:application :answers-validity] (db->valid-status db-after-rules)))))
 
 (defn run-all-rules
   [db]

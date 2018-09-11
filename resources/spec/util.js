@@ -40,6 +40,10 @@ var isRadioButton = function($e) {
   return $e.attr('for') && $e.parent().find("#" + $e.attr('for')) !== null
 }
 
+var blurField = function(n) {
+
+}
+
 var clickElement = function(selectFn, infoText) {
   return wait.until(function () {
     $e = selectFn()
