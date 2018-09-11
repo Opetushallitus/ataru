@@ -625,19 +625,19 @@
 
 (def virkailija-texts
   {:active                                      {:fi "Aktiivinen"
-                                                 :sv "SV: Aktiivinen"
+                                                 :sv "Aktiv"
                                                  :en "EN: Aktiivinen"}
    :add                                         {:fi "Lisää"
-                                                 :sv "SV: Lägg till"
+                                                 :sv "Lägg till"
                                                  :en "EN: Add more"}
    :adjacent-fieldset                           {:fi "Vierekkäiset tekstikentät"
-                                                 :sv "SV: Vierekkäiset tekstikentät"
+                                                 :sv "Parallella textfält"
                                                  :en "EN: Vierekkäiset tekstikentät"}
    :all                                         {:fi "Kaikki"
-                                                 :sv "SV: Kaikki"
+                                                 :sv "Alla"
                                                  :en "EN: Kaikki"}
    :all-hakukohteet                             {:fi "Kaikki hakukohteet"
-                                                 :sv "SV: Kaikki hakukohteet"
+                                                 :sv "Alla ansökningsmål"
                                                  :en "EN: Kaikki hakukohteet"}
    :alphabetically                              {:fi "Aakkosjärjestyksessä"
                                                  :sv "SV: Aakkosjärjestyksessä"
