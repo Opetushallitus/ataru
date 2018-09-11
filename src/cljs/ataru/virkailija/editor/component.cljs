@@ -881,6 +881,7 @@
 (defn get-leaf-component-labels [component lang]
   (letfn [(recursively-get-labels [component]
             (match (:fieldClass component)
+              "questionGroup" (map #(recursively-get-labels %) (:children component))
               "wrapperElement" (map #(recursively-get-labels %) (:children component))
               :else (-> component :label lang)))]
     (flatten (recursively-get-labels component))))
