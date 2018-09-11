@@ -20,6 +20,7 @@
     describe('person info module', function() {
       before(
         setNthFieldInputValue(0, 'Etunimi Tokanimi'),
+        blurField(function () { return formFields().eq(0).find('input') }),
         setNthFieldInputValue(2, 'Sukunimi'),
         setNthFieldInputValue(4, '020202A0202'),
         setNthFieldInputValue(5, 'test@example.com'),
@@ -76,7 +77,6 @@
           clickNthFieldRadio(15, 'Painikkeet, yksi valittavissa: A'),
           clickNthFieldRadio(23, 'Painikkeet, yksi valittavissa: B'),
           wait.until(function () {
-            console.log("single-choice-bork??", invalidFieldsStatus().text())
             return invalidFieldsStatus().text() == 'Tarkista 8 tietoa'
           })
         )

@@ -14,15 +14,25 @@
 
 (defonce debounces (atom {}))
 
+(defn- debounce-dispatch
+  [{:keys [id dispatch timeout]}]
+  (js/clearTimeout (@debounces id))
+  (swap! debounces assoc id (js/setTimeout
+                              (fn []
+                                (re-frame/dispatch dispatch)
+                                (swap! debounces dissoc id))
+                              timeout)))
+
+(re-frame/reg-fx
+  :dispatch-debounced-n
+  (fn [dispatches]
+    (doseq [dispatch dispatches]
+      (debounce-dispatch dispatch))))
+
 (re-frame/reg-fx
   :dispatch-debounced
-  (fn [{:keys [id dispatch timeout]}]
-    (js/clearTimeout (@debounces id))
-    (swap! debounces assoc id (js/setTimeout
-                                (fn []
-                                  (re-frame/dispatch dispatch)
-                                  (swap! debounces dissoc id))
-                                timeout))))
+  (fn [dispatch]
+    (debounce-dispatch dispatch)))
 
 (re-frame/reg-fx
   :set-page-title
@@ -72,7 +82,7 @@
       (js/clearTimeout (@validation-debounces debounce-id))
       (swap! validation-debounces assoc debounce-id
              (js/setTimeout
-               #(async-validate-value (merge params {:debounce-id debounce-id}))
+               #(async-validate-value params)
                validation-debounce-ms)))))
 
 (re-frame/reg-fx

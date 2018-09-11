@@ -58,11 +58,13 @@
 
 (reg-event-fx
   :application/hakukohde-query-change
-  (fn [{db :db} [_ hakukohde-query timeout]]
-    {:db                 (assoc-in db [:application :hakukohde-query] hakukohde-query)
-     :dispatch-debounced {:timeout  (or timeout 500)
-                          :id       :hakukohde-query
-                          :dispatch [:application/hakukohde-query-process hakukohde-query]}}))
+  (fn [_ [_ hakukohde-query timeout]]
+    {:dispatch-debounced-n [{:timeout  (or timeout 500)
+                             :dispatch [:application/hakukohde-query-set hakukohde-query]
+                             :id       :hakukohde-query-set}
+                            {:timeout  (or timeout 500)
+                             :id       :hakukohde-query
+                             :dispatch [:application/hakukohde-query-process hakukohde-query]}]}))
 
 (reg-event-db
   :application/show-more-hakukohdes
@@ -72,6 +74,11 @@
       (-> db
           (assoc-in [:application :remaining-hakukohde-search-results] rest-results)
           (update-in [:application :hakukohde-hits] concat more-hits)))))
+
+(reg-event-db
+  :application/hakukohde-query-set
+  (fn [db [_ query]]
+    (assoc-in db [:application :hakukohde-query] query)))
 
 (reg-event-fx
   :application/set-hakukohde-valid

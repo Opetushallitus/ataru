@@ -66,10 +66,10 @@
         (get-translation :hakija-new-text)))
 
 (defn send-button-or-placeholder [valid-status submit-status]
-  (let [secret            (subscribe [:state-query [:application :secret]])
-        virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])
-        editing           (subscribe [:state-query [:application :editing?]])
-        values-changed?   (subscribe [:state-query [:application :values-changed?]])
+  (let [secret                (subscribe [:state-query [:application :secret]])
+        virkailija-secret     (subscribe [:state-query [:application :virkailija-secret]])
+        editing               (subscribe [:state-query [:application :editing?]])
+        values-changed?       (subscribe [:state-query [:application :values-changed?]])
         validators-processing (subscribe [:state-query [:application :validators-processing]])]
     (fn [valid-status submit-status]
       (match submit-status

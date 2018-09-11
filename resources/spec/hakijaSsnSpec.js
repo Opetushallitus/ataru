@@ -65,6 +65,7 @@
     describe('Filling out non-Finnish ssn info', function() {
       before(
         setNthFieldInputValue(0, 'Etunimi Tokanimi'),
+        blurField(function () { return formFields().eq(0).find('input') }),
         focusInput(2),
         wait.until(function() {
           return formFields().eq(1).find('input').val() !== ''

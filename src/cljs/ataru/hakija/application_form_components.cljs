@@ -44,6 +44,11 @@
     (dispatch [:application/set-application-field
                (assoc-in field-descriptor [:params :verify] verify) value value-key])))
 
+(defn- uncontrolled-textual-field-change
+  [field-descriptor evt]
+  (let [value (-> evt .-target .-value)]
+    (dispatch [:application/set-uncontrolled-application-field field-descriptor value nil])))
+
 (defn- textual-field-change [field-descriptor evt]
   (let [value (-> evt .-target .-value)]
     (dispatch [:application/set-application-field field-descriptor value nil])))
@@ -77,14 +82,15 @@
          [scroll-to-anchor field-descriptor]]))))
 
 (defn- show-text-field-error-class?
-  [field-descriptor value valid?]
+  [field-descriptor validators-processing value valid?]
   (and
     (false? valid?)
     (or (is-required-field? field-descriptor)
         (-> field-descriptor :params :numeric))
     (if (string? value)
       (not (clojure.string/blank? value))
-      (not (empty? value)))))
+      (not (empty? value)))
+    (not (contains? validators-processing (keyword (:id field-descriptor))))))
 
 (defn info-text [field-descriptor]
   (let [languages (subscribe [:application/default-languages])]
@@ -139,15 +145,15 @@
                             {:key (str "error-" idx)}))
                         errors))]]))}))
 
-(defn text-field [field-descriptor & {:keys [div-kwd disabled editing idx] :or {div-kwd :div.application__form-field disabled false editing false}}]
+(defn text-field [field-descriptor & {:keys [div-kwd disabled editing idx controlled?] :or {div-kwd :div.application__form-field disabled false editing false controlled? true}}]
   (let [id                     (keyword (:id field-descriptor))
         languages              (subscribe [:application/default-languages])
         size                   (get-in field-descriptor [:params :size])
         size-class             (text-field-size->class size)
-        on-blur                #(dispatch [:application/textual-field-blur field-descriptor])
+        validators-processing  (subscribe [:state-query [:application :validators-processing]])
+        verify-email?          (subscribe [:application/verify-email? id])
         edit-forbidden?        (contains? editing-forbidden-person-info-field-ids id)
-        show-validation-error? (subscribe [:application/show-validation-error? id])
-        verify-email?          (subscribe [:application/verify-email? id])]
+        show-validation-error? (subscribe [:application/show-validation-error? id])]
     (fn []
       (let [answer      (if (and @editing edit-forbidden?)
                           {:value @(subscribe [:state-query [:application :person id]])
@@ -157,8 +163,17 @@
                                                idx (concat [:values idx 0]))]))
             on-change   (cond @verify-email? (partial email-verify-field-change field-descriptor answer)
                               idx (partial multi-value-field-change field-descriptor 0 idx)
-                              :else (partial textual-field-change field-descriptor))
+                              controlled? (partial textual-field-change field-descriptor)
+                              :else (partial uncontrolled-textual-field-change field-descriptor))
+            on-blur     (fn [evt]
+                          (when-not controlled?
+                            ; immediate update on blur
+                            (if idx
+                              (multi-value-field-change field-descriptor 0 idx evt)
+                              (textual-field-change field-descriptor evt)))
+                          (dispatch [:application/textual-field-blur field-descriptor]))
             show-error? (show-text-field-error-class? field-descriptor
+                                                      @validators-processing
                                                       (:value answer)
                                                       (:valid answer))]
         [div-kwd
@@ -177,16 +192,21 @@
                                       (if show-error?
                                         " application__form-field-error"
                                         " application__form-text-input--normal"))
-                   :value        (if @(subscribe [:application/cannot-view? id])
-                                   "***********"
-                                   (:value answer))
                    :on-blur      on-blur
                    :on-change    on-change
                    :required     (is-required-field? field-descriptor)
                    :aria-invalid @(subscribe [:application/answer-invalid? id])}
+                  (when-not controlled?
+                    {:default-value (if @(subscribe [:application/cannot-view? id])
+                                      "***********"
+                                      (:value answer))})
+                  (when controlled?
+                    {:value (if @(subscribe [:application/cannot-view? id])
+                              "***********"
+                              (:value answer))})
                   (when @verify-email?
-                    {:on-paste     (fn [event]
-                                     (.preventDefault event))})
+                    {:on-paste (fn [event]
+                                 (.preventDefault event))})
                   (when (or disabled
                             @(subscribe [:application/cannot-edit? id]))
                     {:disabled true}))]
@@ -198,7 +218,7 @@
                  verify-label (get-translation :verify-email)]
              [:div
               [:label.application__form-field-label.label.application__form-field-label--verify-email
-               {:id "application-form-field-label-verify-email"
+               {:id  "application-form-field-label-verify-email"
                 :for id}
                [:span (str verify-label (required-hint field-descriptor))]]
               [:div.application__form-text-input-and-validation-errors
@@ -220,9 +240,10 @@
                  :aria-invalid @(subscribe [:application/answer-invalid? id])}]]]))]))))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [id           (keyword (:id field-descriptor))
-        size-class   (text-field-size->class (get-in field-descriptor [:params :size]))
-        cannot-edit? (subscribe [:application/cannot-edit? id])]
+  (let [id                    (keyword (:id field-descriptor))
+        size-class            (text-field-size->class (get-in field-descriptor [:params :size]))
+        cannot-edit?          (subscribe [:application/cannot-edit? id])
+        validators-processing (subscribe [:state-query [:application :validators-processing]])]
     (fn [field-descriptor & {div-kwd :div-kwd question-group-idx :idx :or {div-kwd :div.application__form-field}}]
       (let [values       (subscribe [:state-query [:application :answers id :values question-group-idx]])
             remove-field (fn [evt]
@@ -243,15 +264,15 @@
                   [:div.application__form-repeatable-text-wrap.application__form-repeatable-text-wrap--padded
                    [:input.application__form-text-input
                     (merge
-                      {:type         "text"
-                       :class        (str size-class (if (show-text-field-error-class? field-descriptor value valid)
-                                                       " application__form-field-error"
-                                                       " application__form-text-input--normal"))
-                       :value        value
-                       :data-idx     0
-                       :on-change    on-change
-                       :required     (is-required-field? field-descriptor)
-                       :aria-invalid @(subscribe [:application/answer-invalid? id])}
+                      {:type          "text"
+                       :class         (str size-class (if (show-text-field-error-class? field-descriptor @validators-processing value valid)
+                                                        " application__form-field-error"
+                                                        " application__form-text-input--normal"))
+                       :default-value value
+                       :data-idx      0
+                       :on-change     on-change
+                       :required      (is-required-field? field-descriptor)
+                       :aria-invalid  @(subscribe [:application/answer-invalid? id])}
                       (when (empty? value)
                         {:on-blur remove-field})
                       (when @cannot-edit?
@@ -263,13 +284,13 @@
                        {:class (when last? "application__form-repeatable-text-wrap--padded")}
                        [:input.application__form-text-input
                         (merge
-                          {:type      "text"
-                           :class     (str
-                                        size-class " application__form-text-input--normal"
-                                        (when-not value " application__form-text-input--disabled"))
-                           :value     value
-                           :data-idx  (inc idx)
-                           :on-change on-change}
+                          {:type          "text"
+                           :class         (str
+                                            size-class " application__form-text-input--normal"
+                                            (when-not value " application__form-text-input--disabled"))
+                           :default-value value
+                           :data-idx      (inc idx)
+                           :on-change     on-change}
                           (when (and (not last?) (empty? value))
                             {:on-blur remove-field})
                           (when last?
@@ -300,15 +321,20 @@
 (defn text-area [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [size         (-> field-descriptor :params :size)
         max-length   (parse-max-length field-descriptor)
-        cannot-edit? (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])]
+        cannot-edit? (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])
+        invalid      (subscribe [:application/answer-invalid? (-> field-descriptor :id keyword)])
+        value-path   (cond-> [:application :answers (-> field-descriptor :id keyword)]
+                             idx (conj :values idx 0)
+                             true (conj :value))
+        value        (subscribe [:state-query value-path])]
     (fn [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
-      (let [value-path (cond-> [:application :answers (-> field-descriptor :id keyword)]
-                               idx (conj :values idx 0)
-                               true (conj :value))
-            value      (subscribe [:state-query value-path])
-            on-change  (if idx
-                         (partial multi-value-field-change field-descriptor 0 idx)
-                         (partial textual-field-change field-descriptor))]
+      (let [on-change (if idx
+                        (partial multi-value-field-change field-descriptor 0 idx)
+                        (partial uncontrolled-textual-field-change field-descriptor))
+            on-blur   (fn [evt]
+                        (if idx
+                          (multi-value-field-change field-descriptor 0 idx evt)
+                          (textual-field-change field-descriptor evt)))]
         [div-kwd
          [label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
@@ -319,13 +345,11 @@
           (merge {:id            (:id field-descriptor)
                   :class         (text-area-size->class size)
                   :maxLength     max-length
-                  ; default-value because IE11 will "flicker" on input fields. This has side-effect of NOT showing any
-                  ; dynamically made changes to the text-field value.
                   :default-value @value
                   :on-change     on-change
-                  :value         @value
+                  :on-blur       on-blur
                   :required      (is-required-field? field-descriptor)
-                  :aria-invalid  @(subscribe [:application/answer-invalid? (-> field-descriptor :id keyword)])}
+                  :aria-invalid  @invalid}
                  (when @cannot-edit?
                    {:disabled true}))]
          (when max-length
@@ -761,10 +785,10 @@
                                            [:values question-group-idx row-idx :value]
                                            [:values row-idx :value]))]
         [:input.application__form-text-input.application__form-text-input--normal
-         (merge {:id        (str id "-" row-idx)
-                 :type      "text"
-                 :value     value
-                 :on-change on-change}
+         (merge {:id            (str id "-" row-idx)
+                 :type          "text"
+                 :default-value value
+                 :on-change     on-change}
                 (when @cannot-edit? {:disabled true}))]))))
 
 (defn adjacent-text-fields [field-descriptor]
@@ -813,6 +837,9 @@
             {:on-click add-on-click}
             [:i.zmdi.zmdi-plus-square] (str " " (get-translation :add-row))])]))))
 
+(def controlled-text-fields
+  #{"preferred-name" "postal-office"})
+
 (defn render-field
   [field-descriptor & args]
   (let [ui       (subscribe [:state-query [:application :ui]])
@@ -831,7 +858,7 @@
                           :fieldType  "rowcontainer"
                           :children   children} [row-wrapper children]
                          {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor]
-                         {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor :disabled disabled? :editing editing?]
+                         {:fieldClass "formField" :fieldType "textField" :id id} [text-field field-descriptor :disabled disabled? :editing editing? :controlled? (contains? controlled-text-fields id)]
                          {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
                          {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor :editing editing?]
                          {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]

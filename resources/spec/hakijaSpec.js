@@ -34,8 +34,7 @@
       describe('filling out', function() {
         before(
           setNthFieldInputValue(0, 'Etunimi Tokanimi'),
-          selectNthField(1),
-          selectNthField(2),
+          blurField(function () { return formFields().eq(0).find('input') }),
           setNthFieldInputValue(2, 'Sukunimi'),
           setNthFieldInputValue(4, '020202A0202'),
           setNthFieldInputValue(5, 'test@example.com'),

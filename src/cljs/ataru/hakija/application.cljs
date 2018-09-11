@@ -107,7 +107,7 @@
                             (if-let [parent (find-parent-field-descriptor nil content (name key))]
                               (assoc (select-keys parent [:label]) :key key)
                               (assoc (select-keys answers [:label]) :key key)) ; <- should never happen
-                            ))]
+                            (assoc (select-keys answers [:label]) :key key)))]
     {:invalid-fields invalid-fields
      :valid          (if (empty? answer-validity)
                        false
