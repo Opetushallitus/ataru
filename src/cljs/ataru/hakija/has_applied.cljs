@@ -16,9 +16,7 @@
     (GET url
          {:handler #(send (:has-applied %))
           :error-handler (fn [response]
-                           (condp <= (:status response)
-                                  500 (send false)
-                                  (send true)))
+                           (send false))
           :format :json
           :response-format :json
           :keywords? true})
