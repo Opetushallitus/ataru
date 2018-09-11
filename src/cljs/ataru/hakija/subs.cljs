@@ -15,7 +15,8 @@
   (fn [db]
     (answers->valid-status (-> db :application :answers)
                            (-> db :application :ui)
-                           (-> db :flat-form-content))))
+                           (-> db :flat-form-content)
+                           (-> db :form :content))))
 
 (re-frame/reg-sub
  :application/can-apply?

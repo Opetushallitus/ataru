@@ -81,7 +81,20 @@
   (or (empty? question-ids)
       (some #{answer-key} question-ids)))
 
-(defn answers->valid-status [all-answers ui flat-form-content]
+(defn contains-id? [content id]
+  (contains? (set (map :id content)) id))
+
+(defn find-parent-field-descriptor [parent content id]
+  (if (contains-id? content id)
+    parent
+    (let [wrappers (->> content
+                        (filter :children))]
+      (->> wrappers
+           (map (fn [wrapper] (find-parent-field-descriptor wrapper (:children wrapper) id)))
+           (filter some?)
+           first))))
+
+(defn answers->valid-status [all-answers ui flat-form-content content]
   (let [answer-validity (for [[_ answers] all-answers] (:valid answers))
         question-ids    (map #(-> % :id keyword) flat-form-content)
         invalid-fields  (for [[key answers]
@@ -90,7 +103,11 @@
                                          (not (:valid answers))
                                          (get-in ui [key :visible?] true)
                                          (not-extra-answer? key question-ids))]
-                          (assoc (select-keys answers [:label]) :key key))]
+                          (if (->> answers :label vals (filter not-empty) empty?)
+                            (if-let [parent (find-parent-field-descriptor nil content (name key))]
+                              (assoc (select-keys parent [:label]) :key key)
+                              (assoc (select-keys answers [:label]) :key key)) ; <- should never happen
+                            (assoc (select-keys answers [:label]) :key key)))]
     {:invalid-fields invalid-fields
      :valid          (if (empty? answer-validity)
                        false
