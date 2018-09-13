@@ -79,17 +79,24 @@
 
 (reg-event-fx
   :application/select-application
-  (fn [{:keys [db]} [_ application-key]]
+  (fn [{:keys [db]} [_ application-key selected-hakukohde-oid]]
     (if (not= application-key (get-in db [:application :selected-key]))
       (let [db (-> db
                    (assoc-in [:application :selected-key] application-key)
                    (assoc-in [:application :selected-application-and-form] nil)
                    (assoc-in [:application :review-comment] nil)
                    (assoc-in [:application :application-list-expanded?] false)
-                   (assoc-in [:application :information-request] nil))]
+                   (assoc-in [:application :information-request] nil))
+            db (if selected-hakukohde-oid
+                 (assoc-in db [:application :selected-review-hakukohde] selected-hakukohde-oid)
+                 db)]
         {:db         db
          :dispatch-n [[:application/stop-autosave]
-                      [:application/fetch-application application-key]]}))))
+                      [:application/fetch-application application-key]]})
+      (when selected-hakukohde-oid
+        {:db       (-> db
+                       (assoc-in [:application :selected-review-hakukohde] selected-hakukohde-oid))
+         :dispatch [:application/select-review-hakukohde selected-hakukohde-oid]}))))
 
 (defn close-application [db]
   (cljs-util/update-url-with-query-params {:application-key nil})
@@ -316,7 +323,7 @@
       {:db         db
        :dispatch-n [[:application/filter-applications]
                     (if application-key
-                      [:application/select-application application-key]
+                      [:application/select-application application-key nil]
                       [:application/close-application])]})))
 
 (defn- extract-unselected-review-states-from-query
@@ -437,12 +444,12 @@
       (assoc-in [:application :notes] (review-notes-by-hakukohde-and-state-name review-notes))
       (assoc-in [:application :review :hakukohde-reviews] hakukohde-reviews)
       (assoc-in [:application :review :attachment-reviews] attachment-reviews)
+      (assoc-in [:application :information-requests] information-requests)
       (update-in [:application :selected-review-hakukohde]
-                 (fn [current-hakukohde]
-                   (or ((set (:hakukohde application)) (get-in db [:application :selected-hakukohde]))
-                       (first (:hakukohde application))
-                       "form")))
-      (assoc-in [:application :information-requests] information-requests)))
+        (fn [current-hakukohde]
+          (if (contains? (set (:hakukohde application)) current-hakukohde)
+            current-hakukohde
+            (or (first (:hakukohde application)) "form"))))))
 
 (defn review-autosave-predicate [current prev]
   (if (not= (:id current) (:id prev))
