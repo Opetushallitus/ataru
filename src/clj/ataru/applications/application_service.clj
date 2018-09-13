@@ -403,20 +403,23 @@
 (defn get-applications-for-valintalaskenta
   [organization-service person-service session hakukohde-oid application-keys]
   (if-let [applications (aac/get-applications-for-valintalaskenta
-                         organization-service
-                         session
-                         hakukohde-oid
-                         application-keys)]
-    (if-let [yksiloimattomat (->> applications
-                                  (map :personOid)
-                                  distinct
-                                  (person-service/get-persons person-service)
-                                  vals
-                                  (remove #(or (:yksiloity %)
-                                               (:yksiloityVTJ %)))
-                                  (map :oidHenkilo)
-                                  distinct
-                                  seq)]
-      {:yksiloimattomat yksiloimattomat}
-      {:applications applications})
+                          organization-service
+                          session
+                          hakukohde-oid
+                          application-keys)]
+    (if-let [person-oids (->> applications
+                              (map :personOid)
+                              distinct
+                              seq)]
+      (if-let [yksiloimattomat (->> person-oids
+                                    (person-service/get-persons person-service)
+                                    vals
+                                    (remove #(or (:yksiloity %)
+                                                 (:yksiloityVTJ %)))
+                                    (map :oidHenkilo)
+                                    distinct
+                                    seq)]
+        {:yksiloimattomat yksiloimattomat}
+        {:applications applications})
+      {:applications []})
     {:unauthorized nil}))
