@@ -47,7 +47,7 @@
       (when (not-empty persons-from-client)
         (log/info "Caching" (count persons-from-client) "persons")
         (cache/cache-put-many cache-service :henkilo persons-from-client))
-      (into (vals persons-from-cache) persons-from-client)))
+      (clojure.walk/keywordize-keys (merge persons-from-cache persons-from-client))))
 
   (get-person [{:keys [oppijanumerorekisteri-cas-client]} oid]
     (cache/cache-get-from-or-fetch
