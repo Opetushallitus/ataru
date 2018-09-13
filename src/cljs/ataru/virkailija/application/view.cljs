@@ -231,7 +231,9 @@
         message               (subscribe [:state-query [:application :mass-information-request :message]])
         form-status           (subscribe [:application/mass-information-request-form-status])
         filtered-applications (subscribe [:application/filtered-applications])
-        button-enabled?       (subscribe [:application/mass-information-request-button-enabled?])]
+        button-enabled?       (subscribe [:application/mass-information-request-button-enabled?])
+        update-subject        #(dispatch [:application/set-mass-information-request-subject (-> % .-target .-value)])
+        update-message        #(dispatch [:application/set-mass-information-request-message (-> % .-target .-value)])]
     (fn []
       [:span.application-handling__mass-information-request-container
        [:a.application-handling__mass-information-request-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
@@ -249,13 +251,15 @@
            [:div.application-handling__information-request-info-heading (get-virkailija-translation :mass-information-request-subject)]
            [:div.application-handling__information-request-text-input-container
             [:input.application-handling__information-request-text-input
-             {:value     @subject
-              :maxLength 78
-              :on-change #(dispatch [:application/set-mass-information-request-subject (-> % .-target .-value)])}]]]
+             {:maxLength     78
+              :default-value @subject
+              :on-blur       update-subject
+              :on-change     update-subject}]]]
           [:div.application-handling__information-request-row
            [:textarea.application-handling__information-request-message-area.application-handling__information-request-message-area--large
-            {:value     @message
-             :on-change #(dispatch [:application/set-mass-information-request-message (-> % .-target .-value)])}]]
+            {:default-value @message
+             :on-blur       update-message
+             :on-change     update-message}]]
           [application-information-request-contains-modification-link]
           [:div.application-handling__information-request-row
            (case @form-status
