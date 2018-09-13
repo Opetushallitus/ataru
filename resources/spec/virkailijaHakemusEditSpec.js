@@ -10,7 +10,7 @@
     describe('shows application with secret', function () {
       before(
         wait.until(function () {
-          return formSections().length == 2
+          return formSections().length == 2 && formFields().length == 31
         })
       )
       it('with complete form', function () {
@@ -23,9 +23,10 @@
     describe('change values and save', function () {
       before(
         setNthFieldInputValue(6, newPhoneNumber),
-        clickElement(function () {
-          return submitButton()
+        wait.until(function () {
+          return !submitButton().prop('disabled')
         }),
+        clickElement(submitButton),
         wait.until(function () {
           return testFrame().find('.application__sent-placeholder-text').length == 1
         })

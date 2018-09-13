@@ -2,7 +2,8 @@
   (:require
     [re-frame.core :refer [subscribe dispatch dispatch-sync]]
     [ataru.application-common.application-field-common :refer [scroll-to-anchor]]
-    [ataru.cljs-util :refer [get-translation]]))
+    [ataru.cljs-util :refer [get-translation]]
+    [reagent.core :as r]))
 
 (defn- should-search? [search-term]
   (> (count search-term) 1))
@@ -205,40 +206,42 @@
 
 (defn- hakukohde-selection-search
   []
-  (let [hakukohde-query @(subscribe [:application/hakukohde-query])
-        hakukohde-hits @(subscribe [:application/hakukohde-hits])]
-    [:div.application__hakukohde-selection
-     [:div.application__hakukohde-selection-search-arrow-up
-      {:class (when @(subscribe [:application/prioritize-hakukohteet?])
-                "application__hakukohde-selection-search-arrow-up--prioritized")}]
-     [:div.application__hakukohde-selection-search-container
-      [:div.application__hakukohde-selection-search-close-button
-       [:a {:on-click hakukohde-search-toggle-event-handler}
-        [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
-      [:div.application__hakukohde-selection-search-input.application__form-text-input-box
-       [:input.application__form-text-input-in-box
-        {:on-change   hakukohde-query-change-event-handler
-         :title (get-translation :search-application-options)
-         :placeholder (get-translation :search-application-options)
-         :value       hakukohde-query}]
-       (when (not (empty? hakukohde-query))
-         [:div.application__form-clear-text-input-in-box
-          [:a
-           {:on-click hakukohde-query-clear-event-handler}
-           [:i.zmdi.zmdi-close]]])]
-      [:div.application__hakukohde-selection-search-results
-       (if (and
-             (empty? hakukohde-hits)
-             (not (clojure.string/blank? hakukohde-query)))
-         [:div.application__hakukohde-selection-search-no-hits (get-translation :no-hakukohde-search-hits)]
-         (for [hakukohde-oid hakukohde-hits]
-           ^{:key (str "found-hakukohde-row-" hakukohde-oid)}
-           [search-hit-hakukohde-row hakukohde-oid]))]
-      (when @(subscribe [:application/show-more-hakukohdes?])
-        [:div.application__show_more_hakukohdes_container
-         [:span.application__show_more_hakukohdes
-          {:on-click #(dispatch [:application/show-more-hakukohdes])}
-          (get-translation :show-more)]])]]))
+  (let [hakukohde-query        (subscribe [:application/hakukohde-query])
+        hakukohde-hits         (subscribe [:application/hakukohde-hits])
+        prioritize-hakukohteet (subscribe [:application/prioritize-hakukohteet?])]
+    (fn []
+      [:div.application__hakukohde-selection
+       [:div.application__hakukohde-selection-search-arrow-up
+        {:class (when @prioritize-hakukohteet
+                  "application__hakukohde-selection-search-arrow-up--prioritized")}]
+       [:div.application__hakukohde-selection-search-container
+        [:div.application__hakukohde-selection-search-close-button
+         [:a {:on-click hakukohde-search-toggle-event-handler}
+          [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
+        [:div.application__hakukohde-selection-search-input.application__form-text-input-box
+         [:input.application__form-text-input-in-box
+          {:on-change     hakukohde-query-change-event-handler
+           :title         (get-translation :search-application-options)
+           :placeholder   (get-translation :search-application-options)
+           :default-value @hakukohde-query}]
+         (when (not (empty? @hakukohde-query))
+           [:div.application__form-clear-text-input-in-box
+            [:a
+             {:on-click hakukohde-query-clear-event-handler}
+             [:i.zmdi.zmdi-close]]])]
+        [:div.application__hakukohde-selection-search-results
+         (if (and
+               (empty? @hakukohde-hits)
+               (not (clojure.string/blank? @hakukohde-query)))
+           [:div.application__hakukohde-selection-search-no-hits (get-translation :no-hakukohde-search-hits)]
+           (for [hakukohde-oid @hakukohde-hits]
+             ^{:key (str "found-hakukohde-row-" hakukohde-oid)}
+             [search-hit-hakukohde-row hakukohde-oid]))]
+        (when @(subscribe [:application/show-more-hakukohdes?])
+          [:div.application__show_more_hakukohdes_container
+           [:span.application__show_more_hakukohdes
+            {:on-click #(dispatch [:application/show-more-hakukohdes])}
+            (get-translation :show-more)]])]])))
 
 (defn- hakukohde-selection-header
   [field-descriptor]

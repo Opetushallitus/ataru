@@ -50,6 +50,10 @@ function invalidFieldsStatus() {
   return testFrame().find('.application__invalid-field-status-title')
 }
 
+function invalidFieldNames() {
+  return _.map(testFrame().find('.application__invalid-fields > a > div'), function (e) { return $(e).text() })
+}
+
 function selectedHakukohteet() {
   return testFrame().find('.application__hakukohde-selected-list').find('.application__hakukohde-row')
 }
@@ -89,10 +93,15 @@ function setNthFieldSubInputValue(n, sub, value) {
 }
 
 function setNthFieldOption(n, value) {
-  return function() {
-    formFields().eq(n).find('option[value="'+value+'"]').prop('selected', true)
-    triggerEvent(formFields().eq(n).find('select'), 'change')
-  }
+  return wait.until(function() {
+    var $option = formFields().eq(n).find('option[value="'+value+'"]')
+    var $select = formFields().eq(n).find('select')
+    if (elementExists($option) && elementExists($select)) {
+      $option.prop('selected', true)
+      triggerEvent($select, 'change')
+      return true
+    }
+  })
 }
 
 function clickNthFieldRadio(n, value) {
@@ -192,4 +201,12 @@ function readonlyAnswer(index) {
 
 function adjacentReadonlyAnswer(index) {
   return testFrame().find('.application__readonly-adjacent-cell:eq(' + index + ')').text()
+}
+
+function submitButtonEnabled() {
+  return !submitButton().prop('disabled')
+}
+
+function submitButtonDisabled() {
+  return !submitButtonEnabled()
 }

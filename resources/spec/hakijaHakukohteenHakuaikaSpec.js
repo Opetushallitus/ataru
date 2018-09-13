@@ -28,6 +28,7 @@
                 wait.until(function() {
                     return formFields().eq(11).find('input').val() !== ''
                 }),
+                wait.until(submitButtonEnabled),
                 clickElement(function() { return submitButton() }),
                 wait.until(function() {
                     return testFrame().find('.application__sent-placeholder-text').length == 1

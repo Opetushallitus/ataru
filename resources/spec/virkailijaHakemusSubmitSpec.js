@@ -37,10 +37,10 @@
         setNthFieldInputValue(10, '00100'),
         setNthFieldOption(12, '091'),
         setNthFieldInputValue(14, '55cm'),
-        wait.until(function () { return formFields().eq(11).find('input').val() !== '' })
+        wait.until(function () { return formFields().eq(11).find('input').val() !== '' }),
+        wait.until(function() { return !submitButton().prop('disabled') })
       )
       it('validates and shows form correctly', function () {
-        expect(submitButton().prop('disabled')).to.equal(false)
         expect(selectedHakukohteet().length).to.equal(1)
         expect(invalidFieldsStatus().length).to.equal(0)
       })
@@ -48,6 +48,7 @@
 
     describe('submitting form and viewing results', function () {
       before(
+        wait.until(function() { return !submitButton().prop('disabled') }),
         clickElement(function () { return submitButton() }),
         wait.until(function () {
           return testFrame().find('.application__sent-placeholder-text').length == 1

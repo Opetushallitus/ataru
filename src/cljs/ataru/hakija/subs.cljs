@@ -13,10 +13,7 @@
 (re-frame/reg-sub
   :application/valid-status
   (fn [db]
-    (answers->valid-status (-> db :application :answers)
-                           (-> db :application :ui)
-                           (-> db :flat-form-content)
-                           (-> db :form :content))))
+    (-> db :application :answers-validity)))
 
 (re-frame/reg-sub
  :application/can-apply?

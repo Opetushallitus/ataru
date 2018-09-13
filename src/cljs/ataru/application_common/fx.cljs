@@ -14,15 +14,25 @@
 
 (defonce debounces (atom {}))
 
+(defn- debounce-dispatch
+  [{:keys [id dispatch timeout]}]
+  (js/clearTimeout (@debounces id))
+  (swap! debounces assoc id (js/setTimeout
+                              (fn []
+                                (re-frame/dispatch dispatch)
+                                (swap! debounces dissoc id))
+                              timeout)))
+
+(re-frame/reg-fx
+  :dispatch-debounced-n
+  (fn [dispatches]
+    (doseq [dispatch dispatches]
+      (debounce-dispatch dispatch))))
+
 (re-frame/reg-fx
   :dispatch-debounced
-  (fn [{:keys [id dispatch timeout]}]
-    (js/clearTimeout (@debounces id))
-    (swap! debounces assoc id (js/setTimeout
-                                (fn []
-                                  (re-frame/dispatch dispatch)
-                                  (swap! debounces dissoc id))
-                                timeout))))
+  (fn [dispatch]
+    (debounce-dispatch dispatch)))
 
 (re-frame/reg-fx
   :set-page-title
@@ -40,40 +50,52 @@
                 [true []]
                 valid-ch))
 
-(defonce validation-sequences (atom {}))
+(def validation-debounces (atom {}))
 
-(defn- next-val [id]
-  (get (swap! validation-sequences update id (fnil inc 0)) id))
+(def validation-debounce-ms 500)
 
-(defn- current-val [id]
-  (get @validation-sequences id))
+(defn- async-validate-value
+  [{:keys [field-descriptor editing? on-validated] :as params}]
+  (if (and editing? (:cannot-edit field-descriptor))
+    (on-validated [true []])
+    (async/take! (all-valid? (validatep params))
+                 (fn [result]
+                   (on-validated result)))))
+
+(defn- async-validate-values
+  [{:keys [field-descriptor editing? on-validated values] :as params}]
+  (if (and editing? (:cannot-edit field-descriptor))
+    (on-validated [true []])
+    (async/take! (all-valid?
+                   (async/merge
+                     (map (fn [value] (validatep (merge params {:value value})))
+                          values)))
+                 (fn [result]
+                   (on-validated result)))))
 
 (re-frame/reg-fx
- :validate
- (fn [{:keys [field-descriptor editing? on-validated] :as params}]
-   (let [id (keyword (:id field-descriptor))
-         val (next-val id)]
-     (if (and editing? (:cannot-edit field-descriptor))
-       (on-validated [true []])
-       (async/take! (all-valid? (validatep params))
-                    (fn [result]
-                      (when (= val (current-val id))
-                        (on-validated result))))))))
+  :validate-debounced
+  (fn [{:keys [field-descriptor before-validation field-idx group-idx] :as params}]
+    (let [id          (keyword (:id field-descriptor))
+          debounce-id (keyword (str (name id) "-" field-idx "-" group-idx))]
+      (before-validation)
+      (js/clearTimeout (@validation-debounces debounce-id))
+      (swap! validation-debounces assoc debounce-id
+             (js/setTimeout
+               #(async-validate-value params)
+               validation-debounce-ms)))))
 
 (re-frame/reg-fx
- :validate-every
- (fn [{:keys [values field-descriptor editing? on-validated] :as params}]
-   (let [id (keyword (:id field-descriptor))
-         val (next-val id)]
-     (if (and editing? (:cannot-edit field-descriptor))
-       (on-validated [true []])
-       (async/take! (all-valid?
-                     (async/merge
-                      (map (fn [value] (validatep (assoc params :value value)))
-                           values)))
-                    (fn [result]
-                      (when (= val (current-val id))
-                        (on-validated result))))))))
+  :validate-every-debounced
+  (fn [{:keys [field-descriptor before-validation field-idx group-idx] :as params}]
+    (let [id          (keyword (:id field-descriptor))
+          debounce-id (keyword (str (name id) "-" field-idx "-" group-idx))]
+      (before-validation)
+      (js/clearTimeout (@validation-debounces debounce-id))
+      (swap! validation-debounces assoc debounce-id
+             (js/setTimeout
+               #(async-validate-values params)
+               validation-debounce-ms)))))
 
 (defn- confirm-window-close!
   [event]
