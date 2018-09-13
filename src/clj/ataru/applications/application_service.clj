@@ -251,11 +251,11 @@
                       tarjonta-service
                       session
                       query)
-        persons      (util/group-by-first :oidHenkilo (person-service/get-persons
-                                                        person-service
-                                                        (distinct (keep :person-oid applications))))]
+        persons      (person-service/get-persons
+                      person-service
+                      (distinct (keep :person-oid applications)))]
     (map (fn [application]
-           (let [onr-person (get persons (:person-oid application))
+           (let [onr-person (get persons (keyword (:person-oid application)))
                  person     (if (or (:yksiloity onr-person)
                                     (:yksiloityVTJ onr-person))
                               {:oid            (:oidHenkilo onr-person)
