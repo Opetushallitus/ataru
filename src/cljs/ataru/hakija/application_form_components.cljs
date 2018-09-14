@@ -44,11 +44,6 @@
     (dispatch [:application/set-application-field
                (assoc-in field-descriptor [:params :verify] verify) value value-key])))
 
-(defn- uncontrolled-textual-field-change
-  [field-descriptor evt]
-  (let [value (-> evt .-target .-value)]
-    (dispatch [:application/set-uncontrolled-application-field field-descriptor value nil])))
-
 (defn- textual-field-change [field-descriptor evt]
   (let [value (-> evt .-target .-value)]
     (dispatch [:application/set-application-field field-descriptor value nil])))
@@ -163,8 +158,7 @@
                                                idx (concat [:values idx 0]))]))
             on-change   (cond @verify-email? (partial email-verify-field-change field-descriptor answer)
                               idx (partial multi-value-field-change field-descriptor 0 idx)
-                              controlled? (partial textual-field-change field-descriptor)
-                              :else (partial uncontrolled-textual-field-change field-descriptor))
+                              :else (partial textual-field-change field-descriptor))
             on-blur     (fn [evt]
                           (when-not controlled?
                             ; immediate update on blur
@@ -330,7 +324,7 @@
     (fn [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
       (let [on-change (if idx
                         (partial multi-value-field-change field-descriptor 0 idx)
-                        (partial uncontrolled-textual-field-change field-descriptor))
+                        (partial textual-field-change field-descriptor))
             on-blur   (fn [evt]
                         (if idx
                           (multi-value-field-change field-descriptor 0 idx evt)

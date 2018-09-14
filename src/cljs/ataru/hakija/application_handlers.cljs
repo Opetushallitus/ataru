@@ -571,31 +571,6 @@
     (or (t value) value)))
 
 (reg-event-fx
-  :application/set-uncontrolled-application-field
-  (fn [{:keys [db]} [_ field value value-key]]
-    (let [value   (transform-value value field)
-          id      (keyword (:id field))
-          answers (get-in db [:application :answers])
-          key     (or value-key :value)]
-      {:dispatch-debounced {:id       (keyword (str "set-answer-" id "-" key))
-                            :dispatch [:state-update (fn [db]
-                                                       (-> db
-                                                           (assoc-in [:application :answers id key] value)
-                                                           (set-multi-value-changed id key)
-                                                           (set-field-visibility field)))]
-                            ; this should always be shorter than the validation debounce:
-                            :timeout  300}
-       :validate-debounced {:value             value
-                            :answers-by-key    answers
-                            :field-descriptor  field
-                            :editing?          (get-in db [:application :editing?])
-                            :before-validation #(dispatch [:application/set-validator-processing id])
-                            :virkailija?       (contains? (:application db) :virkailija-secret)
-                            :on-validated      (fn [[valid? errors]]
-                                                 (dispatch [:application/set-application-field-valid
-                                                            field valid? errors]))}})))
-
-(reg-event-fx
   :application/set-application-field
   (fn [{db :db} [_ field value value-key]]
     (let [value   (transform-value value field)
