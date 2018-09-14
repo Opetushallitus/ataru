@@ -274,7 +274,7 @@
          applications)))
 
 (defn get-excel-report-of-applications-by-key
-  [application-keys selected-hakukohde user-wants-to-skip-answers? session organization-service tarjonta-service ohjausparametrit-service person-service]
+  [application-keys selected-hakukohde selected-hakukohderyhma user-wants-to-skip-answers? session organization-service tarjonta-service ohjausparametrit-service person-service]
   (when (aac/applications-access-authorized? organization-service tarjonta-service session application-keys [:view-applications :edit-applications])
     (let [applications                     (application-store/get-applications-by-keys application-keys)
           application-reviews              (->> applications
@@ -304,6 +304,7 @@
                                                         application-reviews
                                                         application-review-notes
                                                         selected-hakukohde
+                                                        selected-hakukohderyhma
                                                         skip-answers?
                                                         lang
                                                         tarjonta-service

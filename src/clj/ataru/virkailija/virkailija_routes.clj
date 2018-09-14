@@ -439,12 +439,14 @@
         :form-params [application-keys :- s/Str
                       filename :- s/Str
                       {selected-hakukohde :- s/Str nil}
+                      {selected-hakukohderyhma :- s/Str nil}
                       {skip-answers :- s/Bool false}
                       {CSRF :- s/Str nil}]
         :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
         (let [xls (application-service/get-excel-report-of-applications-by-key
                     (clojure.string/split application-keys #",")
                     selected-hakukohde
+                    selected-hakukohderyhma
                     skip-answers
                     session
                     organization-service

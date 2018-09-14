@@ -27,7 +27,7 @@
    {:src "/lomake-editori/images/icon_check.png"}])
 
 (defn excel-download-link
-  [applications selected-hakukohde filename]
+  [applications selected-hakukohde selected-hakukohderyhma filename]
   (when (not-empty applications)
     [:div
      [:form#excel-download-link
@@ -49,7 +49,11 @@
       (when selected-hakukohde
         [:input {:type  "hidden"
                  :name  "selected-hakukohde"
-                 :value selected-hakukohde}])]
+                 :value selected-hakukohde}])
+      (when selected-hakukohderyhma
+        [:input {:type  "hidden"
+                 :name  "selected-hakukohderyhma"
+                 :value selected-hakukohderyhma}])]
      [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
       {:on-click (fn [e]
                    (.submit (.getElementById js/document "excel-download-link")))}
@@ -427,7 +431,7 @@
       (when @show-mass-update-link?
         [mass-update-applications-link])
       (when @show-excel-link?
-        [excel-download-link @applications (second @haku-header) @header])]]))
+        [excel-download-link @applications (second @haku-header) (nth @haku-header 2) @header])]]))
 
 (defn- select-application
   [application-key selected-hakukohde-oid]

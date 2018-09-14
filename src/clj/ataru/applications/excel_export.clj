@@ -512,6 +512,7 @@
    application-reviews
    application-review-notes
    selected-hakukohde
+   selected-hakukohderyhma
    skip-answers?
    lang
    tarjonta-service
