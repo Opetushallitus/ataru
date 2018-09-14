@@ -318,7 +318,7 @@
     (when-not (or (empty? max-length) (= "0" max-length))
       max-length)))
 
-(defn text-area [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
+(defn text-area [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
   (let [size         (-> field-descriptor :params :size)
         max-length   (parse-max-length field-descriptor)
         cannot-edit? (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])
