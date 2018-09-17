@@ -430,9 +430,9 @@
         [excel-download-link @applications (second @haku-header) @header])]]))
 
 (defn- select-application
-  [application-key]
+  [application-key selected-hakukohde-oid]
   (cljs-util/update-url-with-query-params {:application-key application-key})
-  (dispatch [:application/select-application application-key]))
+  (dispatch [:application/select-application application-key selected-hakukohde-oid]))
 
 (defn hakukohde-review-state
   [hakukohde-reviews hakukohde-oid requirement]
@@ -488,7 +488,9 @@
                [:span.application-handling__application-hakukohde-cell
                 {:class    (when (= selected-hakukohde hakukohde-oid)
                              "application-handling__application-hakukohde-cell--selected")
-                 :on-click (fn [] (select-application (:key application)))}
+                 :on-click (fn [evt]
+                             (.preventDefault evt)
+                             (select-application (:key application) hakukohde-oid))}
                 [hakukohde-and-tarjoaja-name hakukohde-oid]])
              [:span.application-handling__application-hl
               {:class (when direct-form-application? "application-handling__application-hl--direct-form")}]
@@ -551,7 +553,7 @@
         attachment-states      (application-attachment-states application)
         form-attachment-states (:form attachment-states)]
     [:div.application-handling__list-row
-     {:on-click #(select-application (:key application))
+     {:on-click #(select-application (:key application) nil)
       :class    (clojure.string/join " " [(when selected?
                                             "application-handling__list-row--selected")
                                           (when (= "inactivated" (:state application))
