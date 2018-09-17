@@ -947,22 +947,24 @@
       {:db         db
        :dispatch-n dispatch-list})))
 
-(reg-event-db
+(reg-event-fx
   :application/set-attachment-valid
-  (fn [db [_ id required? valid?]]
-    (let [answer (get-in db [:application :answers id])
+  (fn [{:keys [db]} [_ id required? valid?]]
+    (let [answer                 (get-in db [:application :answers id])
           question-group-answer? (and (vector? (:values answer))
                                       (not (empty? (:values answer)))
-                                      (every? vector? (:values answer)))]
-      (assoc-in db [:application :answers id :valid]
-                (and (if question-group-answer?
-                       (every? (partial every? :valid) (:values answer))
-                       (every? :valid (:values answer)))
-                     (not (and required?
-                               (if question-group-answer?
-                                 (some empty? (:values answer))
-                                 (empty? (:values answer)))))
-                     valid?)))))
+                                      (every? vector? (:values answer)))
+          new-db                 (assoc-in db [:application :answers id :valid]
+                                           (and (if question-group-answer?
+                                                  (every? (partial every? :valid) (:values answer))
+                                                  (every? :valid (:values answer)))
+                                                (not (and required?
+                                                          (if question-group-answer?
+                                                            (some empty? (:values answer))
+                                                            (empty? (:values answer)))))
+                                                valid?))]
+      {:db       new-db
+       :dispatch [:application/set-validator-processed id]})))
 
 (reg-event-fx
   :application/handle-attachment-upload
