@@ -74,33 +74,39 @@
       secret
       (recur (crypto/url-part 34)))))
 
+(defn- intersect?
+  [set1 set2]
+  (not-empty (clojure.set/intersection set1 set2)))
+
+(defn- hakukohde-oids-for-attachment-review
+  [attachment-field hakutoiveet]
+  (let [belongs-to-hakukohteet    (set (:belongs-to-hakukohteet attachment-field))
+        belongs-to-hakukohderyhma (set (:belongs-to-hakukohderyhma attachment-field))]
+    (cond
+      (or (not-empty belongs-to-hakukohteet)
+          (not-empty belongs-to-hakukohderyhma))
+      (->> hakutoiveet
+           (filter #(or (contains? belongs-to-hakukohteet (:oid %))
+                        (intersect? belongs-to-hakukohderyhma (set (:hakukohderyhmat %)))))
+           (map :oid))
+
+      (not-empty hakutoiveet)
+      (map :oid hakutoiveet)
+
+      :else ["form"])))
+
 (defn- create-attachment-reviews
   [attachment-field answer old-answer update? application-key hakutoiveet]
-  (let [value-changed?                     (and update?
-                                                (not= old-answer answer))
-        review-base                        {:application_key application-key
-                                            :attachment_key  (:id attachment-field)
-                                            :state           (if (empty? answer)
-                                                               "incomplete"
-                                                               "not-checked")
-                                            :updated?        value-changed?}
-        relevant-field-hakukohde-oids      (clojure.set/intersection (set (map :oid hakutoiveet))
-                                                                     (-> attachment-field :belongs-to-hakukohteet set))
-        relevant-field-hakukohderyhma-oids (->> hakutoiveet
-                                                (filter #(not-empty (clojure.set/intersection (-> attachment-field :belongs-to-hakukohderyhma set)
-                                                                                              (-> % :hakukohderyhmat set))))
-                                                (map :oid))
-        hakukohde-oids                     (concat relevant-field-hakukohde-oids relevant-field-hakukohderyhma-oids)]
+  (let [value-changed? (and update?
+                            (not= old-answer answer))
+        review-base    {:application_key application-key
+                        :attachment_key  (:id attachment-field)
+                        :state           (if (empty? answer)
+                                           "incomplete"
+                                           "not-checked")
+                        :updated?        value-changed?}]
     (map #(assoc review-base :hakukohde %)
-         (cond
-           (or (-> attachment-field :belongs-to-hakukohderyhma not-empty)
-               (-> attachment-field :belongs-to-hakukohteet not-empty))
-           hakukohde-oids
-
-           (not-empty hakutoiveet)
-           (map :oid hakutoiveet)
-
-           :else ["form"]))))
+         (hakukohde-oids-for-attachment-review attachment-field hakutoiveet))))
 
 (defn- followup-option-selected?
   [field answers]
