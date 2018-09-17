@@ -1046,6 +1046,14 @@
        (map name)
        (set)))
 
+(defn- filter-by-ssn
+  [application with-ssn? without-ssn?]
+  (match [with-ssn? without-ssn?]
+    [true true] true
+    [false false] false
+    [false true] (-> application :person :ssn (not))
+    [true false] (-> application :person :ssn)))
+
 (defn- filter-by-yksiloity
   [application identified? unidentified?]
   (match [identified? unidentified?]
@@ -1107,6 +1115,8 @@
         processing-states-to-include (-> db :application :processing-state-filter set)
         selection-states-to-include  (-> db :application :selection-state-filter set)
         filters                      (-> db :application :filters)
+        with-ssn?                    (-> db :application :filters :only-ssn :with-ssn)
+        without-ssn?                 (-> db :application :filters :only-ssn :without-ssn)
         identified?                  (-> db :application :filters :only-identified :identified)
         unidentified?                (-> db :application :filters :only-identified :unidentified)
         all-base-educations-enabled? (->> (-> db :application :filters :base-education)
@@ -1118,6 +1128,7 @@
       (filter
         (fn [application]
           (and
+            (filter-by-ssn application with-ssn? without-ssn?)
             (filter-by-yksiloity application identified? unidentified?)
             (or
               all-base-educations-enabled?

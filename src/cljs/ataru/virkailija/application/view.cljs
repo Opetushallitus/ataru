@@ -840,6 +840,10 @@
               [ensisijaisesti]
               (when @show-rajaa-hakukohteella?
                 [select-rajaava-hakukohde rajaava-hakukohde-opened?])])
+           [:h3.application-handling__filter-group-heading (get-virkailija-translation :ssn)]
+           [:div.application-handling__filter-group
+            [application-filter-checkbox filters (:without-ssn virkailija-texts) @lang :only-ssn :without-ssn]
+            [application-filter-checkbox filters (:with-ssn virkailija-texts) @lang :only-ssn :with-ssn]]
            [:h3.application-handling__filter-group-heading (get-virkailija-translation :identifying)]
            [:div.application-handling__filter-group
             [application-filter-checkbox filters (:unidentified virkailija-texts) @lang :only-identified :unidentified]
