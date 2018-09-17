@@ -156,7 +156,7 @@
       [:h1.application__submitted-submit-notification-heading
        (get-translation :application-submitted)]]
      [:div.application__submitted-submit-notification-inner
-      [:button.application__send-feedback-button.application__send-feedback-button--enabled
+      [:a.application__send-feedback-button.application__send-feedback-button--enabled
        {:on-click #(reset! hidden? true)}
        (get-translation :application-submitted-ok)]]]))
 
