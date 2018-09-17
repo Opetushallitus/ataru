@@ -1069,6 +1069,14 @@
          [false true] (-> application :person :yksiloity (not))
          [true false] (-> application :person :yksiloity)))
 
+(defn- filter-by-active
+  [application active? passive?]
+  (match [active? passive?]
+         [true true] true
+         [false false] false
+         [true false] (= (:state application) "active")
+         [false true] (= (:state application) "passive")))
+
 (defn- filter-by-hakukohde-review
   [application selected-hakukohde requirement-name states-to-include]
   (let [all-states-count (-> review-states/hakukohde-review-types-map
@@ -1122,11 +1130,13 @@
         processing-states-to-include (-> db :application :processing-state-filter set)
         selection-states-to-include  (-> db :application :selection-state-filter set)
         filters                      (-> db :application :filters)
-        with-ssn?                    (-> db :application :filters :only-ssn :with-ssn)
-        without-ssn?                 (-> db :application :filters :only-ssn :without-ssn)
-        identified?                  (-> db :application :filters :only-identified :identified)
-        unidentified?                (-> db :application :filters :only-identified :unidentified)
-        all-base-educations-enabled? (->> (-> db :application :filters :base-education)
+        with-ssn?                    (-> filters :only-ssn :with-ssn)
+        without-ssn?                 (-> filters :only-ssn :without-ssn)
+        identified?                  (-> filters :only-identified :identified)
+        unidentified?                (-> filters :only-identified :unidentified)
+        active?                      (-> filters :active-status :active)
+        passive?                     (-> filters :active-status :passive)
+        all-base-educations-enabled? (->> (-> filters :base-education)
                                           (vals)
                                           (every? true?))]
     (assoc-in
@@ -1137,6 +1147,7 @@
           (and
             (filter-by-ssn application with-ssn? without-ssn?)
             (filter-by-yksiloity application identified? unidentified?)
+            (filter-by-active application active? passive?)
             (or
               all-base-educations-enabled?
               (filter-by-base-education application (:base-education filters)))
