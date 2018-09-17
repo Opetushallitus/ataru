@@ -116,8 +116,12 @@
                           ohjausparametrit-service
                           (:haku application)
                           (:hakukohde application))
-          form          (-> (:form application)
-                            form-store/fetch-by-id
+          form-key      (->> (-> tarjonta-info :tarjonta :hakukohteet)
+                             (map :form-key)
+                             (distinct)
+                             (remove nil?)
+                             first)
+          form          (-> (if form-key (form-store/fetch-by-key form-key) (form-store/fetch-by-id (:form application)))
                             koodisto/populate-form-koodisto-fields
                             (populate-hakukohde-answer-options tarjonta-info)
                             (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))]
