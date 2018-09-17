@@ -254,7 +254,6 @@
         persons      (person-service/get-persons
                       person-service
                       (distinct (keep :person-oid applications)))]
-    (clojure.pprint/pprint persons)
     (map (fn [application]
            (let [onr-person (get persons (keyword (:person-oid application)))
                  person     (if (or (:yksiloity onr-person)
