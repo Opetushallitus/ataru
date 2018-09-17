@@ -10,14 +10,13 @@
 (defn status []
   (let [status (job-store/get-status)]
     (if (and
-          ; FIXME temporarily disabled due to weirdness with job
-          ;(= 1 (get-in status ["start-automatic-eligibility-if-ylioppilas-job-job"
-          ;                        :running]))
-             (every? (fn [[job status]]
-                       (if (= job "automatic-eligibility-if-ylioppilas-job")
-                         (> 10 (:error status)))
-                         (= 0 (:error status)))
-                     status))
+         (= 1 (get-in status ["start-automatic-eligibility-if-ylioppilas-job-job"
+                              :running]))
+         (every? (fn [[job status]]
+                   (if (= job "automatic-eligibility-if-ylioppilas-job")
+                     (> 10 (:error status))
+                     (= 0 (:error status))))
+                 status))
       (assoc status :ok true)
       (assoc status :ok false))))
 
