@@ -34,6 +34,8 @@
                                                                               :not-obligated true}
                                                        :only-identified      {:identified   true
                                                                               :unidentified true}
+                                                       :only-ssn             {:with-ssn    true
+                                                                              :without-ssn true}
                                                        :base-education       {:pohjakoulutus_kk_ulk                     true
                                                                               :pohjakoulutus_lk                         true
                                                                               :pohjakoulutus_kk                         true

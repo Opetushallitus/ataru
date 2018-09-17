@@ -1146,6 +1146,15 @@
    :single-choice-button                        {:fi "Painikkeet, yksi valittavissa"
                                                  :sv "SV: Painikkeet, yksi valittavissa"
                                                  :en "EN: Painikkeet, yksi valittavissa"}
+   :ssn                                         {:fi "Henkilötunnus"
+                                                 :sv "Personbeteckning"
+                                                 :en "Personal identity code"}
+   :with-ssn                                    {:fi "Henkilötunnuksellinen"
+                                                 :sv "SV: Henkilötunnuksellinen"
+                                                 :en "EN: Henkilötunnuksellinen"}
+   :without-ssn                                 {:fi "Henkilötunnukseton"
+                                                 :sv "SV: Henkilötunnukseton"
+                                                 :en "EN: Henkilötunnukseton"}
    :student                                     {:fi "Oppija"
                                                  :sv "SV: Oppija"
                                                  :en "EN: Oppija"}
