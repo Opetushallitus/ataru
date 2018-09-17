@@ -254,6 +254,7 @@
         persons      (person-service/get-persons
                       person-service
                       (distinct (keep :person-oid applications)))]
+    (clojure.pprint/pprint persons)
     (map (fn [application]
            (let [onr-person (get persons (keyword (:person-oid application)))
                  person     (if (or (:yksiloity onr-person)
@@ -261,14 +262,16 @@
                               {:oid            (:oidHenkilo onr-person)
                                :preferred-name (:kutsumanimi onr-person)
                                :last-name      (:sukunimi onr-person)
-                               :yksiloity      true}
+                               :yksiloity      true
+                               :ssn            (boolean (:hetu onr-person))}
                               {:oid            (:person-oid application)
                                :preferred-name (:preferred-name application)
                                :last-name      (:last-name application)
-                               :yksiloity      false})]
+                               :yksiloity      false
+                               :ssn            (boolean (:ssn application))})]
              (-> application
                  (assoc :person person)
-                 (dissoc :person-oid :preferred-name :last-name))))
+                 (dissoc :ssn :person-oid :preferred-name :last-name))))
          applications)))
 
 (defn get-excel-report-of-applications-by-key

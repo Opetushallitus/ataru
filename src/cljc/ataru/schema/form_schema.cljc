@@ -324,7 +324,8 @@
    :person                                          {:oid            (s/maybe s/Str)
                                                      :preferred-name s/Str
                                                      :last-name      s/Str
-                                                     :yksiloity      s/Bool}
+                                                     :yksiloity      s/Bool
+                                                     :ssn            s/Bool}
    :original-created-time                           org.joda.time.DateTime
    :base-education                                  [s/Str]
    (s/optional-key :form)                           s/Int
