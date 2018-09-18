@@ -332,14 +332,15 @@
       (api/GET "/:application-key" {session :session}
         :path-params [application-key :- String]
         :summary "Return application details needed for application review, including events and review data"
-        :return {:application          ataru-schema/ApplicationWithPerson
-                 :events               [ataru-schema/Event]
-                 :review               ataru-schema/Review
-                 :review-notes         [ataru-schema/ReviewNote]
-                 :attachment-reviews   ataru-schema/AttachmentReviews
-                 :hakukohde-reviews    ataru-schema/HakukohdeReviews
-                 :form                 ataru-schema/FormWithContent
-                 :information-requests [ataru-schema/InformationRequest]}
+        :return {:application                  ataru-schema/ApplicationWithPerson
+                 :events                       [ataru-schema/Event]
+                 :review                       ataru-schema/Review
+                 :review-notes                 [ataru-schema/ReviewNote]
+                 :attachment-reviews           ataru-schema/AttachmentReviews
+                 :hakukohde-reviews            ataru-schema/HakukohdeReviews
+                 :form                         ataru-schema/FormWithContent
+                 (s/optional-key :newest-form) ataru-schema/Form
+                 :information-requests         [ataru-schema/InformationRequest]}
         (if-let [application (application-service/get-application-with-human-readable-koodis
                               application-key
                               session
