@@ -19,7 +19,7 @@
                           :sort                       application-sorting/initial-sort
                           :application-list-expanded? true
                           :mass-information-request   {:form-status :disabled}
-                          :application-list-page      1     ; TODO reset on filter/application load
+                          :application-list-page      1
                           :filters                    {:language-requirement {:unreviewed  true
                                                                               :fulfilled   true
                                                                               :unfulfilled true}
@@ -36,6 +36,8 @@
                                                                               :unidentified true}
                                                        :only-ssn             {:with-ssn    true
                                                                               :without-ssn true}
+                                                       :active-status        {:active  true
+                                                                              :passive false}
                                                        :base-education       {:pohjakoulutus_kk_ulk                     true
                                                                               :pohjakoulutus_lk                         true
                                                                               :pohjakoulutus_kk                         true

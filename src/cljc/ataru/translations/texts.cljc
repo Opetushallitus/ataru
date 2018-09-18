@@ -1236,7 +1236,16 @@
                                                  :en "EN: Lomakeosio"}
    :wrapper-header                              {:fi "Osion nimi"
                                                  :sv "SV: Osion nimi"
-                                                 :en "EN: Osion nimi"}})
+                                                 :en "EN: Osion nimi"}
+   :active-status                               {:fi "Aktiivisuus"
+                                                 :sv "SV: Aktiivisuus"
+                                                 :en "EN: Aktiivisuus"}
+   :active-status-active                        {:fi "Aktiiviset"
+                                                 :sv "SV: Aktiiviset"
+                                                 :en "EN: Aktiiviset"}
+   :active-status-passive                       {:fi "Passivoidut"
+                                                 :sv "SV: Passivoidut"
+                                                 :en "EN: Passivoidut"}})
 
 (def state-translations
   {:active               {:fi "Aktiivinen"

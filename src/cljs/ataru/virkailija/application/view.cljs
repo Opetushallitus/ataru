@@ -850,6 +850,10 @@
            [:div.application-handling__filter-group
             [application-filter-checkbox filters (:unidentified virkailija-texts) @lang :only-identified :unidentified]
             [application-filter-checkbox filters (:identified virkailija-texts) @lang :only-identified :identified]]
+           [:h3.application-handling__filter-group-heading (get-virkailija-translation :active-status)]
+           [:div.application-handling__filter-group
+            [application-filter-checkbox filters (:active-status-active virkailija-texts) @lang :active-status :active]
+            [application-filter-checkbox filters (:active-status-passive virkailija-texts) @lang :active-status :passive]]
            [:h3.application-handling__filter-group-heading (get-virkailija-translation :handling-notes)]
            (when (some? @selected-hakukohde-oid)
              [:div.application-handling__filter-hakukohde-name
