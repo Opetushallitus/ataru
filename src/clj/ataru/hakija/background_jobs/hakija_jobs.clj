@@ -7,6 +7,8 @@
 (def job-definitions
   {(:type email-job/job-definition)                    email-job/job-definition
    person-integration/job-type                         person-integration/job-definition
+   "update-person-info-job"                            {:steps {:initial person-integration/update-person-info-job-step}
+                                                        :type  "update-person-info-job"}
    (:type attachment-finalizer-job/job-definition)     attachment-finalizer-job/job-definition
    "automatic-eligibility-if-ylioppilas-job"           {:steps {:initial automatic-eligibility/automatic-eligibility-if-ylioppilas-job-step}
                                                         :type  "automatic-eligibility-if-ylioppilas-job"}
