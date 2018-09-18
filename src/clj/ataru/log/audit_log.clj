@@ -81,7 +81,11 @@
              (and (map-or-vec? old)
                   (map-or-vec? new)))
          (not-blank? id)
-         (some #{operation} [operation-new operation-modify operation-delete operation-login])]}
+         (some #{operation} [operation-failed
+                             operation-new
+                             operation-modify
+                             operation-delete
+                             operation-login])]}
   (let [message (get-message (transform-values date->str new)
                              (transform-values date->str old))
         log-map (cond-> {CommonLogMessageFields/ID        id
