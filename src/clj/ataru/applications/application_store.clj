@@ -119,7 +119,7 @@
                        set)]
     (contains? answers (:option-value field))))
 
-(defn- filter-visible-attachments
+(defn filter-visible-attachments
   [answers fields]
   (filter (fn [field]
             (and (= "attachment" (:fieldType field))

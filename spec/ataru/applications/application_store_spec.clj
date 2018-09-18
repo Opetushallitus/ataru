@@ -130,8 +130,10 @@
 (describe "creating application attachment reviews"
   (tags :unit :attachments)
 
-  (it "should create attachment reviews for new applcation without hakukohteet"
-    (let [application (first (filter #(= "attachments" (:key %)) fixtures/applications))]
+  (it "should create attachment reviews for new application without hakukohteet"
+    (let [application       (first (filter #(= "attachments" (:key %)) fixtures/applications))
+          flat-form-content (util/flatten-form-fields form-fixtures/attachment-test-form)
+          answers-by-key    (-> application :content :answers util/answers-by-key)]
       (should== [{:application_key "attachments"
                   :attachment_key  "att__1"
                   :state           "not-checked"
@@ -142,14 +144,19 @@
                   :state           "incomplete"
                   :updated?        false
                   :hakukohde       "form"}]
-                (store/create-application-attachment-reviews application
-                                                             nil
-                                                             (util/flatten-form-fields form-fixtures/attachment-test-form)
-                                                             []
-                                                             false))))
+                (store/create-application-attachment-reviews
+                 (:key application)
+                 (store/filter-visible-attachments answers-by-key
+                                                   flat-form-content)
+                 answers-by-key
+                 nil
+                 []
+                 false))))
 
-  (it "should create attachment reviews for new applcation with hakukohteet"
-    (let [application (first (filter #(= "attachments" (:key %)) fixtures/applications))]
+  (it "should create attachment reviews for new application with hakukohteet"
+    (let [application       (first (filter #(= "attachments" (:key %)) fixtures/applications))
+          flat-form-content (util/flatten-form-fields form-fixtures/attachment-test-form)
+          answers-by-key    (-> application :content :answers util/answers-by-key)]
       (should== [{:application_key "attachments"
                   :attachment_key  "att__1"
                   :state           "not-checked"
@@ -170,14 +177,19 @@
                   :state           "incomplete"
                   :updated?        false
                   :hakukohde       "hakukohde2"}]
-                (store/create-application-attachment-reviews application
-                                                             nil
-                                                             (util/flatten-form-fields form-fixtures/attachment-test-form)
-                                                             [{:oid "hakukohde1"} {:oid "hakukohde2"}]
-                                                             false))))
+                (store/create-application-attachment-reviews
+                 (:key application)
+                 (store/filter-visible-attachments answers-by-key
+                                                   flat-form-content)
+                 answers-by-key
+                 nil
+                 [{:oid "hakukohde1"} {:oid "hakukohde2"}]
+                 false))))
 
-  (it "should update attachment reviews for applcation without hakukohteet"
-    (let [application (first (filter #(= "attachments" (:key %)) fixtures/applications))]
+  (it "should update attachment reviews for application without hakukohteet"
+    (let [application       (first (filter #(= "attachments" (:key %)) fixtures/applications))
+          flat-form-content (util/flatten-form-fields form-fixtures/attachment-test-form)
+          answers-by-key    (-> application :content :answers util/answers-by-key)]
       (should== [{:application_key "attachments"
                   :attachment_key  "att__1"
                   :state           "not-checked"
@@ -188,8 +200,12 @@
                   :state           "incomplete"
                   :updated?        true
                   :hakukohde       "form"}]
-                (store/create-application-attachment-reviews application {:att__1 {:value ["liite-id"]}
-                                                                          :att__2 {:value ["32131"]}}
-                                                             (util/flatten-form-fields form-fixtures/attachment-test-form)
-                                                             []
-                                                             true)))))
+                (store/create-application-attachment-reviews
+                 (:key application)
+                 (store/filter-visible-attachments answers-by-key
+                                                   flat-form-content)
+                 answers-by-key
+                 {:att__1 {:value ["liite-id"]}
+                  :att__2 {:value ["32131"]}}
+                 []
+                 true)))))
