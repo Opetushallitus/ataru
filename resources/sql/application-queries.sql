@@ -779,12 +779,19 @@ WHERE person_oid IS NOT NULL
   AND state <> 'inactivated'
 ORDER BY created_time DESC;
 
---name: yesql-get-applciations-by-created-time
-SELECT key, haku, hakukohde, person_oid, content
+--name: yesql-get-applications-by-created-time
+SELECT
+  key,
+  haku,
+  hakukohde,
+  person_oid,
+  content
 FROM latest_applications
-WHERE created_time > :date::DATE
-AND person_oid IS NOT NULL
-ORDER BY created_time DESC;
+WHERE created_time > :date :: DATE
+      AND person_oid IS NOT NULL
+ORDER BY created_time DESC
+LIMIT :limit
+OFFSET :offset;
 
 --name: yesql-onr-applications
 SELECT a.key AS key,

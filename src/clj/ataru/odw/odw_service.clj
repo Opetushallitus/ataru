@@ -4,8 +4,8 @@
             [ataru.person-service.person-service :as person-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]))
 
-(defn get-applications-for-odw [person-service tarjonta-service date]
-  (let [applications (application-store/get-applications-newer-than date)
+(defn get-applications-for-odw [person-service tarjonta-service date limit offset]
+  (let [applications (application-store/get-applications-newer-than date limit offset)
         persons      (person-service/get-persons person-service (distinct (keep :person_oid applications)))]
     (map (fn [application]
            (let [answers     (-> application :content :answers util/answers-by-key)

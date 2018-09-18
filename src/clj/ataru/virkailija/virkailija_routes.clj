@@ -708,14 +708,18 @@
           (response/unauthorized {:error "Unauthorized"})))
       (api/GET "/odw" {session :session}
         :summary "Get odw report"
-        :query-params [fromDate :- s/Str]
+        :query-params [fromDate :- s/Str
+                       {offset :- s/Int nil}
+                       {limit :- s/Int nil}]
         :return [{s/Keyword s/Any}]
         (if-let [applications (access-controlled-application/get-applications-for-odw
                                 organization-service
                                 session
                                 person-service
                                 tarjonta-service
-                                fromDate)]
+                                fromDate
+                                limit
+                                offset)]
           (response/ok applications)
           (response/unauthorized {:error "Unauthorized"})))
       (api/GET "/tilastokeskus" {session :session}
