@@ -122,7 +122,7 @@
  :application/show-excel-link?
  (fn [db]
    (and (not-empty @(re-frame/subscribe [:application/filtered-applications]))
-        (contains? #{:selected-form-key :selected-haku :selected-hakukohde}
+        (contains? #{:selected-form-key :selected-haku :selected-hakukohde :selected-hakukohderyhma}
                    @(re-frame/subscribe [:application/application-list-selected-by])))))
 
 (defn- mass-information-request-button-enabled?

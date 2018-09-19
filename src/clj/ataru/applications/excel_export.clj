@@ -486,13 +486,13 @@
                            answer)))))
 
 (defn- add-all-hakukohde-reviews
-  [get-hakukohde selected-hakukohde application]
+  [get-hakukohde selected-hakukohde-oids application]
   (let [active-hakukohteet (set (or
                                   (not-empty (:hakukohde application))
                                   ["form"]))
         all-reviews            (->> (application-states/get-all-reviews-for-all-requirements
                                       application
-                                      selected-hakukohde)
+                                      selected-hakukohde-oids)
                                     (filter
                                       #(contains? active-hakukohteet (:hakukohde %))))
         all-reviews-with-names (map
@@ -507,38 +507,50 @@
                                  all-reviews)]
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
+(defn hakukohderyhma-to-hakukohde-oids [applications get-hakukohde selected-hakukohderyhma]
+  (if selected-hakukohderyhma
+    (let [haku           (:haku (first applications))
+          hakukohde-oids (set (mapcat :hakukohde applications))]
+      (->> hakukohde-oids
+           (map (partial get-hakukohde haku))
+           (filter #(contains? (set (:hakukohderyhmat %)) selected-hakukohderyhma))
+           (map :oid)))))
+
 (defn export-applications
   [applications
    application-reviews
    application-review-notes
    selected-hakukohde
+   selected-hakukohderyhma
    skip-answers?
    lang
    tarjonta-service
    organization-service
    ohjausparametrit-service]
   (let [[^XSSFWorkbook workbook styles] (create-workbook-and-styles)
-        form-meta-fields                (indexed-meta-fields form-meta-fields)
-        form-meta-sheet                 (create-form-meta-sheet workbook styles form-meta-fields lang)
-        application-meta-fields         (indexed-meta-fields application-meta-fields)
-        get-form-by-id                  (memoize form-store/fetch-by-id)
-        get-latest-form-by-key          (memoize form-store/fetch-by-key)
-        get-koodisto-options            (memoize koodisto/get-koodisto-options)
-        get-tarjonta-info               (memoize (fn [haku-oid]
-                                                   (tarjonta-parser/parse-tarjonta-info-by-haku
-                                                    tarjonta-service
-                                                    organization-service
-                                                    ohjausparametrit-service
-                                                    haku-oid)))
-        get-hakukohde                   (memoize (fn [haku-oid hakukohde-oid]
-                                                   (->> (get-tarjonta-info haku-oid)
-                                                        :tarjonta
-                                                        :hakukohteet
-                                                        (some #(when (= hakukohde-oid (:oid %)) %)))))]
+        form-meta-fields        (indexed-meta-fields form-meta-fields)
+        form-meta-sheet         (create-form-meta-sheet workbook styles form-meta-fields lang)
+        application-meta-fields (indexed-meta-fields application-meta-fields)
+        get-form-by-id          (memoize form-store/fetch-by-id)
+        get-latest-form-by-key  (memoize form-store/fetch-by-key)
+        get-koodisto-options    (memoize koodisto/get-koodisto-options)
+        get-tarjonta-info       (memoize (fn [haku-oid]
+                                             (tarjonta-parser/parse-tarjonta-info-by-haku
+                                              tarjonta-service
+                                              organization-service
+                                              ohjausparametrit-service
+                                              haku-oid)))
+        get-hakukohde           (memoize (fn [haku-oid hakukohde-oid]
+                                             (->> (get-tarjonta-info haku-oid)
+                                                  :tarjonta
+                                                  :hakukohteet
+                                                  (some #(when (= hakukohde-oid (:oid %)) %)))))
+        selected-hakukohde-oids (concat (hakukohderyhma-to-hakukohde-oids applications get-hakukohde selected-hakukohderyhma)
+                                        (seq selected-hakukohde))]
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
          (map (partial add-hakukohde-names get-tarjonta-info get-hakukohde))
-         (map (partial add-all-hakukohde-reviews get-hakukohde selected-hakukohde))
+         (map (partial add-all-hakukohde-reviews get-hakukohde selected-hakukohde-oids))
          (reduce (fn [result {:keys [form] :as application}]
                    (let [form-key (:key (get-form-by-id form))
                          form     (get-latest-form-by-key form-key)]
