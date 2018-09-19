@@ -11,18 +11,19 @@
 
 (defn get-all-reviews-for-requirement
   "Adds default (incomplete) reviews where none have yet been created"
-  [review-requirement-name application selected-hakukohde-oid]
+  [review-requirement-name application selected-hakukohde-oids]
   (let [application-hakukohteet (set (:hakukohde application))
+        hakukohde-filter        (set selected-hakukohde-oids)
         has-hakukohteet?        (not (empty? application-hakukohteet))
         review-targets          (cond
-                                  (some? selected-hakukohde-oid) #{selected-hakukohde-oid}
+                                  (some? selected-hakukohde-oids) hakukohde-filter
                                   has-hakukohteet? application-hakukohteet
                                   :else #{"form"})
         relevant-states         (filter #(and
                                            (= (:requirement %) review-requirement-name)
                                            (= has-hakukohteet? (not= (:hakukohde %) "form"))
-                                           (or (nil? selected-hakukohde-oid)
-                                               (= (:hakukohde %) selected-hakukohde-oid)))
+                                           (or (empty? hakukohde-filter)
+                                               (contains? hakukohde-filter (:hakukohde %))))
                                         (:application-hakukohde-reviews application))
         unreviewed-targets      (clojure.set/difference review-targets (set (map :hakukohde relevant-states)))
         default-state-name      (-> (filter #(= (keyword review-requirement-name) (first %))
@@ -38,9 +39,9 @@
                             unreviewed-targets))))
 
 (defn get-all-reviews-for-all-requirements
-  ([application selected-hakukohde-oid]
+  ([application selected-hakukohde-oids]
    (mapcat
-     #(get-all-reviews-for-requirement % application selected-hakukohde-oid)
+     #(get-all-reviews-for-requirement % application selected-hakukohde-oids)
      review-states/hakukohde-review-type-names))
   ([application]
     (get-all-reviews-for-all-requirements application nil)))

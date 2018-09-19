@@ -152,7 +152,7 @@
                                          #(= "processing-state" (:requirement %))
                                          (application-states/get-all-reviews-for-all-requirements
                                           application
-                                          (second @haku-header)))))))
+                                          (seq (second @haku-header))))))))
                             all-states
                             @filtered-applications)]
           [:span.application-handling__mass-edit-review-states-container
