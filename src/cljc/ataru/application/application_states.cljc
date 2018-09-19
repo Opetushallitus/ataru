@@ -16,7 +16,7 @@
         hakukohde-filter        (set selected-hakukohde-oids)
         has-hakukohteet?        (not (empty? application-hakukohteet))
         review-targets          (cond
-                                  (some? selected-hakukohde-oids) hakukohde-filter
+                                  (not-empty selected-hakukohde-oids) hakukohde-filter
                                   has-hakukohteet? application-hakukohteet
                                   :else #{"form"})
         relevant-states         (filter #(and
