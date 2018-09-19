@@ -40,6 +40,7 @@
                                                 ~(second bindings))
                                         fixtures/application-review-notes
                                         nil
+                                        nil
                                         false
                                         :fi
                                         (tarjonta-service/new-tarjonta-service)
