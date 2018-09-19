@@ -60,16 +60,6 @@ INSERT INTO applications (
 INSERT INTO application_secrets (application_key, secret) VALUES (:application_key, :secret);
 
 -- name: yesql-get-application-list-for-virkailija
-WITH latest_information_request_event AS (
-    SELECT DISTINCT ON (application_key) * FROM application_events WHERE new_review_state = 'information-request' ORDER BY application_key, time DESC
-), latest_modification_by_applicant AS (
-    SELECT * FROM application_events WHERE event_type = 'updated-by-applicant' ORDER BY application_key, time DESC
-), new_application_modifications AS (
-    SELECT up.application_key
-    FROM latest_information_request_event ir
-      JOIN latest_modification_by_applicant up ON ir.application_key = up.application_key
-    WHERE ir.time < up.time
-)
 SELECT
   a.id,
   a.person_oid,
@@ -98,9 +88,14 @@ SELECT
                                      'hakukohde', hakukohde))
    FROM application_hakukohde_attachment_reviews aar
    WHERE aar.application_key = a.key) AS application_attachment_reviews,
-  (SELECT COUNT(*)
-   FROM new_application_modifications am
-   WHERE am.application_key = a.key)  AS new_application_modifications,
+  (SELECT count(*)
+   FROM application_events AS ae
+   WHERE ae.application_key = a.key AND
+         ae.event_type = 'updated-by-applicant' AND
+         ae.time > (SELECT max(time)
+                    FROM application_events
+                    WHERE application_key = ae.application_key AND
+                          new_review_state = 'information-request') IS NOT DISTINCT FROM true) AS new_application_modifications,
   (SELECT min(created_time) FROM applications WHERE a.key = key) AS original_created_time
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
