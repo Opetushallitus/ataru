@@ -1671,7 +1671,8 @@
         selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
         belongs-to-current-form       (fn [key applications] (first (filter #(= key (:key %)) applications)))
         expanded?                     (subscribe [:state-query [:application :application-list-expanded?]])
-        review-positioning            (subscribe [:state-query [:application :review-positioning]])]
+        review-positioning            (subscribe [:state-query [:application :review-positioning]])
+        newest-form                   (subscribe [:state-query [:application :newest-form]])]
     (fn [applications]
       (let [application        (:application @selected-application-and-form)]
         (when (and (belongs-to-current-form @selected-key applications)
@@ -1681,6 +1682,8 @@
            [application-heading application]
            [:div.application-handling__review-area
             [:div.application-handling__application-contents
+             (when @newest-form
+              [:div.application-handling__form-outdated (get-virkailija-translation :form-outdated)])
              [application-contents @selected-application-and-form]]
             [:span#application-handling__review-position-canary]
             (when (= :fixed @review-positioning) [floating-application-review-placeholder])

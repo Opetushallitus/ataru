@@ -427,6 +427,7 @@
                notes-by-hakukohde)))
 
 (defn update-application-details [db {:keys [form
+                                             newest-form
                                              application
                                              events
                                              review
@@ -438,6 +439,7 @@
       (assoc-in [:application :selected-application-and-form]
         {:form        form
          :application (answers-indexed application)})
+      (assoc-in [:application :newest-form] newest-form)
       (assoc-in [:application :events] events)
       (assoc-in [:application :review] review)
       (assoc-in [:application :review-notes] review-notes)
