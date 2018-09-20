@@ -754,7 +754,7 @@
                                                  :sv "SV: Ta bort blanketten"
                                                  :en "EN: Poista lomake"}
    :did                                         {:fi "teki"
-                                                 :sv "SV: teki"
+                                                 :sv "har gjort"
                                                  :en "EN: teki"}
    :diff-from-changes                           {:fi "Vertailu muutoksesta"
                                                  :sv "SV: Vertailu muutoksesta"
@@ -937,7 +937,7 @@
                                                  :sv "SV-Massaviesti"
                                                  :en "EN-massaviesti"}
    :mass-information-request-confirm-n-messages (fn [n] {:fi (format "Vahvista %d viestin lähetys" n)
-                                                         :sv (format "SV-Vahvista %d viestin lähetys" n)
+                                                         :sv (format "Bekräfta att %d meddelanden har sänts" n)
                                                          :en (format "EN-Vahvista %d viestin lähetys" n)})
    :mass-information-request-email-n-recipients (fn [n] {:fi (format "Lähetä sähköposti %d hakijalle:" n)
                                                          :sv (format "SV-Lähetä sähköposti %d hakijalle:" n)
