@@ -508,85 +508,34 @@ WHERE key IN (select key from applications where id = :id)
       AND id >= :id;
 
 -- name: yesql-get-haut-and-hakukohteet-from-applications
-WITH filtered_applications AS (
-    SELECT
-      a.key       AS key,
-      a.haku      AS haku,
-      a.hakukohde AS hakukohde,
-      ar.state    AS state
-    FROM latest_applications AS a
-      JOIN application_reviews AS ar ON a.key = ar.application_key
-    WHERE a.haku IS NOT NULL
-), unnested_hakukohde AS (
-    SELECT
-      key,
-      haku,
-      unnest(hakukohde) AS hakukohde,
-      state
-    FROM filtered_applications
-), haku_counts AS (
-    SELECT
-      haku,
-      count(key) AS application_count
-    FROM filtered_applications
-    GROUP BY haku
-), unnested_hakukohde_with_processing_states AS (
-    SELECT
-      key,
-      haku,
-      unnested_hakukohde.hakukohde              AS hakukohde,
-      unnested_hakukohde.state                  AS application_state,
-      application_hakukohde_reviews.requirement AS hakukohde_review_requirement,
-      application_hakukohde_reviews.state       AS hakukohde_review_state
-    FROM unnested_hakukohde
-      LEFT JOIN application_hakukohde_reviews
-        ON unnested_hakukohde.key = application_hakukohde_reviews.application_key AND
-           unnested_hakukohde.hakukohde = application_hakukohde_reviews.hakukohde AND
-           application_hakukohde_reviews.requirement = 'processing-state'
-), haku_review_complete_counts AS (
-    SELECT
-      haku,
-      hakukohde,
-      count(DISTINCT (key)) AS processed
-    FROM unnested_hakukohde_with_processing_states
-    WHERE
-      hakukohde_review_state = 'processed'
-      OR application_state = 'inactivated'
-    GROUP BY haku, hakukohde
-), haku_review_processing_counts AS (
-    SELECT
-      haku,
-      hakukohde,
-      count(DISTINCT (key)) AS processing
-    FROM unnested_hakukohde_with_processing_states
-    WHERE hakukohde_review_state NOT IN ('unprocessed', 'processed') AND
-          application_state != 'inactivated'
-    GROUP BY haku, hakukohde
-), haku_organization_oid AS (
-    SELECT hfi.haku            AS haku,
-           lf.organization_oid AS organization_oid
-    FROM latest_forms AS lf
-    JOIN forms AS f ON f.key = lf.key
-    JOIN (SELECT haku, max(form_id) AS form_id
-          FROM latest_applications
-          WHERE haku IS NOT NULL
-          GROUP BY haku) AS hfi ON hfi.form_id = f.id
-)
-SELECT
-  unnested_hakukohde.haku,
-  unnested_hakukohde.hakukohde,
-  (SELECT organization_oid
-   FROM haku_organization_oid
-   WHERE haku = unnested_hakukohde.haku)                     AS organization_oid,
-  max(haku_counts.application_count)                         AS haku_application_count,
-  count(DISTINCT (unnested_hakukohde.key))                   AS application_count,
-  coalesce(max(haku_review_complete_counts.processed), 0)    AS processed,
-  coalesce(max(haku_review_processing_counts.processing), 0) AS processing
-FROM unnested_hakukohde
-  JOIN haku_counts ON haku_counts.haku = unnested_hakukohde.haku
-  LEFT JOIN haku_review_complete_counts ON haku_review_complete_counts.hakukohde = unnested_hakukohde.hakukohde
-  LEFT JOIN haku_review_processing_counts ON haku_review_processing_counts.hakukohde = unnested_hakukohde.hakukohde
-GROUP BY unnested_hakukohde.haku, unnested_hakukohde.hakukohde;
+SELECT a.haku,
+       a.hakukohde,
+       max(lf.organization_oid) AS organization_oid,
+       max(haku_application_count.n) AS haku_application_count,
+       count(*) AS application_count,
+       count(*) FILTER (WHERE ar.state = 'inactivated' OR
+                              ahr.state IS NOT DISTINCT FROM 'processed') AS processed,
+       count(*) FILTER (WHERE ar.state != 'inactivated' AND
+                              ahr.state IS NOT NULL AND
+                              ahr.state NOT IN ('unprocessed', 'processed')) AS processing
+FROM (SELECT key, form_id, haku, unnest(hakukohde) AS hakukohde
+      FROM latest_applications
+      WHERE haku IS NOT NULL) AS a
+JOIN forms AS f
+  ON f.id = a.form_id
+JOIN latest_forms AS lf
+  ON lf.key = f.key
+JOIN (SELECT haku, count(*) AS n
+      FROM latest_applications
+      GROUP BY haku) AS haku_application_count
+  ON haku_application_count.haku = a.haku
+JOIN application_reviews AS ar
+  ON ar.application_key = a.key
+LEFT JOIN application_hakukohde_reviews AS ahr
+  ON ahr.application_key = a.key AND
+     ahr.hakukohde = a.hakukohde AND
+     ahr.requirement = 'processing-state'
+GROUP BY a.haku, a.hakukohde;
 
 -- name: yesql-get-direct-form-haut
 SELECT
