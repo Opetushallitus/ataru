@@ -398,6 +398,11 @@
                                                                {:valid  true
                                                                 :values (parse-values (:value answer))}))
 
+                                                     {:key "email"}
+                                                     (if (-> db :form :tarjonta :yhteishaku)
+                                                       (update answers answer-key merge {:valid true :value value :verify value})
+                                                       (update answers answer-key merge {:valid true :value value}))
+
                                                      :else
                                                      (update answers answer-key merge {:valid true :value value}))]
                                    (assoc-in answer [answer-key :cannot-view] cannot-view))
