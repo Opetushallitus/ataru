@@ -902,6 +902,8 @@
                             (contains? #{"multipleChoice" "textField"}
                                        fieldType))
                        (index-fn key value)
+                       (= "attachment" fieldType)
+                       nil
                        (not (sequential? value))
                        [[key value]]
                        :else
