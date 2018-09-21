@@ -577,7 +577,7 @@
           :selected-haku
           :selected-hakukohde
           :selected-hakukohderyhma
-          :select-ryhman-ensisijainen-hakukohde))
+          :selected-ryhman-ensisijainen-hakukohde))
 
 (reg-event-fx
   :application/clear-applications-haku-and-form-selections
