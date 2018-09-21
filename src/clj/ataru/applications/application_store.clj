@@ -893,17 +893,17 @@
                           indexed-by-values
                           (= "textField" fieldType)
                           indexed-by-value-order
-                          (= "attachment" fieldType)
-                          nil
                           :else
                           not-indexed)]
        (into acc (cond (and (sequential? value)
                             (every? sequential? value))
                        (indexed-by-question-group index-fn key value)
                        (and (sequential? value)
-                            (contains? #{"multipleChoice" "textField" "attachment"}
+                            (contains? #{"multipleChoice" "textField"}
                                        fieldType))
                        (index-fn key value)
+                       (= "attachment" fieldType)
+                       nil
                        (not (sequential? value))
                        [[key value]]
                        :else
