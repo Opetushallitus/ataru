@@ -5,7 +5,6 @@
             [ataru.virkailija.editor.core :as c]
             [ataru.virkailija.editor.subs]
             [ataru.virkailija.routes :as routes]
-            [ataru.virkailija.temporal :refer [time->str]]
             [ataru.virkailija.temporal :as temporal]
             [ataru.translations.texts :refer [virkailija-texts]]
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
@@ -18,7 +17,7 @@
     :on-click (partial routes/navigate-to-click-handler (str "/lomake-editori/editor/" (:key form)))}
    [:span.editor-form__list-form-name (some #(get-in form [:name %])
                                             [:fi :sv :en])]
-   [:span.editor-form__list-form-time (time->str (:created-time form))]
+   [:span.editor-form__list-form-time (temporal/time->str (:created-time form))]
    [:span.editor-form__list-form-editor (:created-by form)]
    (when (:locked form)
      [:i.zmdi.zmdi-lock.editor-form__list-form-locked])
