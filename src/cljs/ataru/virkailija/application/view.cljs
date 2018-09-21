@@ -1670,29 +1670,25 @@
   []
   [:div.application-handling__floating-application-review-placeholder])
 
-(defn application-review-area [applications]
-  (let [selected-key                  (subscribe [:state-query [:application :selected-key]])
-        selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
-        belongs-to-current-form       (fn [key applications] (first (filter #(= key (:key %)) applications)))
+(defn application-review-area []
+  (let [selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
         expanded?                     (subscribe [:state-query [:application :application-list-expanded?]])
         review-positioning            (subscribe [:state-query [:application :review-positioning]])
         newest-form                   (subscribe [:state-query [:application :newest-form]])]
-    (fn [applications]
-      (let [application        (:application @selected-application-and-form)]
-        (when (and (belongs-to-current-form @selected-key applications)
-                   (not @expanded?))
+    (fn []
+      (let [application (:application @selected-application-and-form)]
+        (when-not @expanded?
           [:div.application-handling__detail-container
            [close-application]
            [application-heading application]
            [:div.application-handling__review-area
             [:div.application-handling__application-contents
              (when @newest-form
-              [:div.application-handling__form-outdated (get-virkailija-translation :form-outdated)])
+               [:div.application-handling__form-outdated (get-virkailija-translation :form-outdated)])
              [application-contents @selected-application-and-form]]
             [:span#application-handling__review-position-canary]
             (when (= :fixed @review-positioning) [floating-application-review-placeholder])
             [application-review]]])))))
-
 
 (defn create-application-paging-scroll-handler
   []
@@ -1728,7 +1724,7 @@
              [application-list-loading-indicator]])]
          (when (not @search-control-all-page)
            [:div.application-handling__review-area-container
-            [application-review-area @filtered-applications]])]))))
+            [application-review-area]])]))))
 
 (defn create-review-position-handler []
   (let [review-canary-visible        (atom true)
