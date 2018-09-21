@@ -1186,31 +1186,31 @@
           rules                  (->> (:children field-descriptor)
                                       (map :rules)
                                       (apply merge))]
-      (cond-> {:db (autil/reduce-form-fields
-                     (fn [db child]
-                       (let [id     (keyword (:id child))
-                             answer (get-in db [:application :answers id])]
-                         (cond-> db
-                                 (contains? answer :values)
-                                 (update-in [:application :answers id :values]
-                                            autil/remove-nth idx)
-                                 (contains? answer :value)
-                                 (update-in [:application :answers id :value]
-                                            autil/remove-nth idx)
-                                 (and (contains? answer :values)
-                                      (contains? answer :valid))
-                                 (update-in [:application :answers id]
-                                            #(assoc % :valid (->> (:values %)
-                                                                  flatten
-                                                                  (every? :valid))))
-                                 (or (contains? answer :values)
-                                     (contains? answer :value))
-                                 (update-in [:application :values-changed?] conj id))))
-                     with-decremented-count
-                     (:children field-descriptor))}
-
-              (not-empty rules)
-              (assoc :dispatch [:application/run-rules rules])))))
+      {:db         (autil/reduce-form-fields
+                    (fn [db child]
+                      (let [id     (keyword (:id child))
+                            answer (get-in db [:application :answers id])]
+                        (cond-> db
+                                (contains? answer :values)
+                                (update-in [:application :answers id :values]
+                                           autil/remove-nth idx)
+                                (contains? answer :value)
+                                (update-in [:application :answers id :value]
+                                           autil/remove-nth idx)
+                                (and (contains? answer :values)
+                                     (contains? answer :valid))
+                                (update-in [:application :answers id]
+                                           #(assoc % :valid (->> (:values %)
+                                                                 flatten
+                                                                 (every? :valid))))
+                                (or (contains? answer :values)
+                                    (contains? answer :value))
+                                (update-in [:application :values-changed?] conj id))))
+                    with-decremented-count
+                    (:children field-descriptor))
+       :dispatch-n (cond-> [[:application/update-answers-validity]]
+                           (not-empty rules)
+                           (conj [:application/run-rules rules]))})))
 
 (reg-event-fx
   :application/dropdown-change
