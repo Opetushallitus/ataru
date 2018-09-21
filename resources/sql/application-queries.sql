@@ -779,18 +779,18 @@ WHERE person_oid IS NOT NULL
   AND state <> 'inactivated'
 ORDER BY created_time DESC;
 
---name: yesql-get-active-applications-by-created-time
+--name: yesql-get-applications-by-created-time
 SELECT
   key,
   haku,
   hakukohde,
   person_oid,
-  content
+  content,
+  application_reviews.state
 FROM latest_applications
   LEFT JOIN application_reviews ON latest_applications.key = application_reviews.application_key
 WHERE created_time > :date :: DATE
       AND person_oid IS NOT NULL
-      AND application_reviews.state != 'inactivated'
 ORDER BY created_time DESC
 LIMIT :limit
 OFFSET :offset;
