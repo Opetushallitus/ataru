@@ -5,13 +5,14 @@
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]))
 
 (defn get-applications-for-odw [person-service tarjonta-service date limit offset]
-  (let [applications (application-store/get-active-applications-newer-than date limit offset)
+  (let [applications (application-store/get-applications-newer-than date limit offset)
         persons      (person-service/get-persons person-service (distinct (keep :person_oid applications)))]
     (map (fn [application]
            (let [answers     (-> application :content :answers util/answers-by-key)
                  hakukohteet (:hakukohde application)
                  person-oid  (:person_oid application)
-                 person      (get persons (keyword person-oid))]
+                 person      (get persons (keyword person-oid))
+                 state       (:state application)]
              (merge {:oid                    (:key application)
                      :person_oid             person-oid
                      :application_system_oid (:haku application)
@@ -34,7 +35,10 @@
                      :Ulk_postiosoite        nil
                      :Ulk_postinumero        nil
                      :Ulk_kunta              nil
-                     :SahkoinenViestintaLupa nil}
+                     :SahkoinenViestintaLupa nil
+                     :state                  (if (= state "inactivated")
+                                               "PASSIVE"
+                                               "ACTIVE")}
                     (into {}
                           (for [index (range 1 7) ; Hard-coded amount in ODW 1-6
                                 :let [hakukohde-oid (nth hakukohteet (dec index) nil)

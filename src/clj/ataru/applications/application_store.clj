@@ -837,8 +837,8 @@
           (merge (select-keys (:identity session) [:first-name :last-name]))
           (->kebab-case-kw)))))
 
-(defn get-active-applications-newer-than [date limit offset]
-  (exec-db :db yesql-get-active-applications-by-created-time {:date date :limit limit :offset (or offset 0)}))
+(defn get-applications-newer-than [date limit offset]
+  (exec-db :db yesql-get-applications-by-created-time {:date date :limit limit :offset (or offset 0)}))
 
 (defn add-review-note [note session]
   {:pre [(-> note :application-key clojure.string/blank? not)
