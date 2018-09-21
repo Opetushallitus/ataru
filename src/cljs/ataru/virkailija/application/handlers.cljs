@@ -1077,7 +1077,7 @@
          [true true] true
          [false false] false
          [true false] (= (:state application) "active")
-         [false true] (= (:state application) "passive")))
+         [false true] (= (:state application) "inactivated")))
 
 (defn- filter-by-hakukohde-review
   [application selected-hakukohde requirement-name states-to-include]
