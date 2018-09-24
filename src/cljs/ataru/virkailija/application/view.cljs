@@ -465,7 +465,7 @@
      [:span.application-handling_list-row-attachment-state-counts.unchecked (:unchecked states)])])
 
 (defn applications-hakukohde-rows
-  [review-settings application selected-hakukohde attachment-states]
+  [review-settings application selected-hakukohde filtered-hakukohde attachment-states]
   (let [direct-form-application?      (empty? (:hakukohde application))
         application-hakukohde-oids    (if direct-form-application?
                                         ["form"]
@@ -494,7 +494,8 @@
                              "application-handling__application-hakukohde-cell--selected")
                  :on-click (fn [evt]
                              (.preventDefault evt)
-                             (select-application (:key application) hakukohde-oid))}
+                             (select-application (:key application) (or filtered-hakukohde
+                                                                        hakukohde-oid)))}
                 [hakukohde-and-tarjoaja-name hakukohde-oid]])
              [:span.application-handling__application-hl
               {:class (when direct-form-application? "application-handling__application-hl--direct-form")}]
@@ -554,10 +555,11 @@
         applicant              (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
         review-settings        (subscribe [:state-query [:application :review-settings :config]])
         selected-hakukohde     (subscribe [:state-query [:application :selected-review-hakukohde]])
+        filtered-hakukohde     (subscribe [:state-query [:application :selected-hakukohde]])
         attachment-states      (application-attachment-states application)
         form-attachment-states (:form attachment-states)]
     [:div.application-handling__list-row
-     {:on-click #(select-application (:key application) nil)
+     {:on-click #(select-application (:key application) @filtered-hakukohde)
       :class    (clojure.string/join " " [(when selected?
                                             "application-handling__list-row--selected")
                                           (when (= "inactivated" (:state application))
@@ -573,7 +575,7 @@
       [:span.application-handling__list-row--state]
       (when (:selection-state @review-settings true)
         [:span.application-handling__hakukohde-selection-cell])]
-     [applications-hakukohde-rows @review-settings application @selected-hakukohde attachment-states]]))
+     [applications-hakukohde-rows @review-settings application @selected-hakukohde @filtered-hakukohde attachment-states]]))
 
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
