@@ -7,18 +7,23 @@
    [clojure.core.match :refer [match]]
    [ataru.cas.client :as cas]
    [ataru.config.url-helper :refer [resolve-url]]
-   [ataru.person-service.person-schema :refer [Person]]
-   [ataru.person-service.oppijanumerorekisteri-person-extract :as orpe])
+   [ataru.person-service.person-schema :as person-schema])
   (:import
    [java.net URLEncoder]))
 
 (defn throw-error [msg]
   (throw (Exception. msg)))
 
-(defn create-person [cas-client person]
+(s/defschema CreateOrFindResponse
+  {:status (s/enum :created :exists)
+   :oid    s/Str})
+
+(s/defn ^:always-validate create-or-find-person :- CreateOrFindResponse
+  [cas-client :- s/Any
+   person     :- person-schema/HenkiloPerustieto]
   (let [result (cas/cas-authenticated-post
-                 cas-client
-                 (resolve-url :oppijanumerorekisteri-service.person-create) person)]
+                cas-client
+                (resolve-url :oppijanumerorekisteri-service.person-create) person)]
     (match result
       {:status 201 :body body}
       {:status :created :oid (:oidHenkilo (json/parse-string body true))}
@@ -26,15 +31,15 @@
       {:status 200 :body body}
       {:status :exists :oid (:oidHenkilo (json/parse-string body true))}
 
-      {:status 400} ;;Request data was invalid, no reason to retry
-      {:status :failed-permanently :message (:body result)}
+      {:status 400 :body body}
+      (throw (new IllegalArgumentException
+                  (str "Could not create person, status: " 400
+                       " response body: " body)))
 
-      ;; Assume a temporary error and throw exception, the job will continue to retry
-      :else (throw-error (str
-                          "Could not create person, status: "
-                          (:status result)
-                          "response body: "
-                          (:body result))))))
+      :else
+      (throw (new RuntimeException
+                  (str "Could not create person, status: " (:status result)
+                       "response body: " (:body result)))))))
 
 (defn get-persons [cas-client oids]
   (log/info "Fetching" (count oids) "persons")
@@ -99,17 +104,3 @@
       :else (throw-error (str "Could not get linked oids for oid " oid ", "
                               "status: " (:status result) ", "
                               "response body: " (:body result))))))
-
-(s/defschema Response
-  {:status                   s/Keyword
-   (s/optional-key :message) (s/maybe s/Str)
-   (s/optional-key :oid)     (s/maybe s/Str)})
-
-(s/defn ^:always-validate upsert-person :- Response
-  [cas-client :- s/Any
-   person     :- Person]
-  (log/info "Sending person to oppijanumerorekisteri" person)
-  (create-person cas-client person))
-
-(defn create-or-find-person [oppijanumerorekisteri-cas-client application]
-  (upsert-person oppijanumerorekisteri-cas-client (orpe/extract-person-from-application application)))
