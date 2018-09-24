@@ -577,7 +577,7 @@
           :selected-haku
           :selected-hakukohde
           :selected-hakukohderyhma
-          :select-ryhman-ensisijainen-hakukohde))
+          :selected-ryhman-ensisijainen-hakukohde))
 
 (reg-event-fx
   :application/clear-applications-haku-and-form-selections
@@ -1125,9 +1125,14 @@
   [db]
   (let [applications                 (-> db :application :applications)
         selected-hakukohde           (cond
-                                       (-> db :application :selected-hakukohde) (-> db :application :selected-hakukohde)
-                                       (-> db :application :selected-form-key) "form"
-                                       :else nil)
+                                       (some? (-> db :application :selected-hakukohde))
+                                       (-> db :application :selected-hakukohde)
+                                       (some? (-> db :application :selected-ryhman-ensisijainen-hakukohde))
+                                       (-> db :application :selected-ryhman-ensisijainen-hakukohde)
+                                       (some? (-> db :application :selected-form-key))
+                                       "form"
+                                       :else
+                                       nil)
         attachment-states-to-include (-> db :application :attachment-state-filter set)
         processing-states-to-include (-> db :application :processing-state-filter set)
         selection-states-to-include  (-> db :application :selection-state-filter set)
