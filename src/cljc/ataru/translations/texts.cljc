@@ -1435,7 +1435,7 @@
               (str "Hej " preferred-name "!")
               "Hej!")]
         [:p "Vi märkte att "
-         [:strong "du redan har skickat en ansökning"
+         [:strong "du redan har skickat en ansökning"]
          " i denna ansökan och därför kan du inte skicka en annan
           ansökning."]
         [:p "Om du vill "
