@@ -80,20 +80,20 @@
 (reg-event-fx
   :application/select-application
   (fn [{:keys [db]} [_ application-key selected-hakukohde-oid with-newest-form?]]
-    (if (not= application-key (get-in db [:application :selected-key]))
-      (let [db (-> db
-                   (assoc-in [:application :selected-key] application-key)
-                   (assoc-in [:application :selected-application-and-form] nil)
-                   (assoc-in [:application :review-comment] nil)
-                   (assoc-in [:application :application-list-expanded?] false)
-                   (assoc-in [:application :information-request] nil))
-            db (if selected-hakukohde-oid
-                 (assoc-in db [:application :selected-review-hakukohde] selected-hakukohde-oid)
-                 db)]
-        {:db         db
-         :dispatch-n [[:application/stop-autosave]
-                      [:application/fetch-application application-key]]})
+    (let [different-application? (not= application-key (get-in db [:application :selected-key]))]
       (cond
+       different-application? (let [db (-> db
+                                           (assoc-in [:application :selected-key] application-key)
+                                           (assoc-in [:application :selected-application-and-form] nil)
+                                           (assoc-in [:application :review-comment] nil)
+                                           (assoc-in [:application :application-list-expanded?] false)
+                                           (assoc-in [:application :information-request] nil))
+                                    db (if selected-hakukohde-oid
+                                         (assoc-in db [:application :selected-review-hakukohde] selected-hakukohde-oid)
+                                         db)]
+                                {:db         db
+                                 :dispatch-n [[:application/stop-autosave]
+                                              [:application/fetch-application application-key]]})
        with-newest-form? {:db         (-> db
                                           (assoc-in [:application :selected-application-and-form] nil)
                                           (assoc-in [:application :alternative-form] nil)
