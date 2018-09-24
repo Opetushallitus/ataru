@@ -1564,10 +1564,28 @@ and (max-width: 1000px) {
     text-decoration: underline;
   }
 }
-.application-handling__form-outdated {
-  margin: 10px 0px 25px 0px;
-  font-weight: 600;
+
+.application-handling__form-outdated--disclaimer {
 }
+.application-handling__form-outdated {
+  display: flex;
+  margin: 10px 0px 25px 0px;
+}
+
+.application-handling__form-outdated--button {
+  background-color: @link-color;
+  border-radius: 3px;
+  color: @white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  padding: 0 5px;
+  font-size: 12px;
+  margin-left: 10px;
+  .arrow(left, @pale-blue, 5px, 5px);
+}
+
 .application__wrapper-element {
   display: flex;
 }

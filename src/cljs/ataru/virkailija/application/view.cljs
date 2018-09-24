@@ -434,9 +434,11 @@
         [excel-download-link @applications (second @haku-header) (nth @haku-header 2) @header])]]))
 
 (defn- select-application
-  [application-key selected-hakukohde-oid]
-  (cljs-util/update-url-with-query-params {:application-key application-key})
-  (dispatch [:application/select-application application-key selected-hakukohde-oid]))
+  ([application-key selected-hakukohde-oid]
+   (select-application application-key selected-hakukohde-oid nil))
+  ([application-key selected-hakukohde-oid with-newest-form?]
+   (cljs-util/update-url-with-query-params {:application-key application-key})
+   (dispatch [:application/select-application application-key selected-hakukohde-oid with-newest-form?])))
 
 (defn hakukohde-review-state
   [hakukohde-reviews hakukohde-oid requirement]
@@ -1676,17 +1678,24 @@
   (let [selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
         expanded?                     (subscribe [:state-query [:application :application-list-expanded?]])
         review-positioning            (subscribe [:state-query [:application :review-positioning]])
-        newest-form                   (subscribe [:state-query [:application :newest-form]])]
+        alternative-form              (subscribe [:state-query [:application :alternative-form]])
+        selected-review-hakukohde     (subscribe [:state-query [:application :selected-review-hakukohde]])]
     (fn []
-      (let [application (:application @selected-application-and-form)]
+      (let [application        (:application @selected-application-and-form)]
         (when-not @expanded?
           [:div.application-handling__detail-container
            [close-application]
            [application-heading application]
            [:div.application-handling__review-area
             [:div.application-handling__application-contents
-             (when @newest-form
-               [:div.application-handling__form-outdated (get-virkailija-translation :form-outdated)])
+             (when @alternative-form
+              [:div.application-handling__form-outdated
+               [:div.application-handling__form-outdated--disclaimer (get-virkailija-translation :form-outdated)]
+               [:a.application-handling__form-outdated--button.application-handling__button
+                {:on-click (fn [evt]
+                             (.preventDefault evt)
+                             (select-application (:key application) @selected-review-hakukohde true))}
+                [:span (get-virkailija-translation :show-newest-version)]]])
              [application-contents @selected-application-and-form]]
             [:span#application-handling__review-position-canary]
             (when (= :fixed @review-positioning) [floating-application-review-placeholder])

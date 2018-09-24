@@ -79,7 +79,7 @@
 
 (reg-event-fx
   :application/select-application
-  (fn [{:keys [db]} [_ application-key selected-hakukohde-oid]]
+  (fn [{:keys [db]} [_ application-key selected-hakukohde-oid with-newest-form?]]
     (if (not= application-key (get-in db [:application :selected-key]))
       (let [db (-> db
                    (assoc-in [:application :selected-key] application-key)
@@ -93,10 +93,18 @@
         {:db         db
          :dispatch-n [[:application/stop-autosave]
                       [:application/fetch-application application-key]]})
-      (when selected-hakukohde-oid
-        {:db       (-> db
-                       (assoc-in [:application :selected-review-hakukohde] selected-hakukohde-oid))
-         :dispatch [:application/select-review-hakukohde selected-hakukohde-oid]}))))
+      (cond
+       with-newest-form? {:db         (-> db
+                                          (assoc-in [:application :newest-form] with-newest-form?)
+                                          (assoc-in [:application :selected-application-and-form] nil)
+                                          (assoc-in [:application :alternative-form] nil)
+                                          (assoc-in [:application :selected-review-hakukohde] selected-hakukohde-oid))
+                          :dispatch-n [[:application/select-review-hakukohde selected-hakukohde-oid]
+                                       [:application/fetch-application application-key]]}
+       selected-hakukohde-oid {:db         (-> db
+                                               (assoc-in [:application :selected-review-hakukohde] selected-hakukohde-oid))
+                               :dispatch-n [[:application/select-review-hakukohde selected-hakukohde-oid]]}
+       :else nil))))
 
 (defn close-application [db]
   (cljs-util/update-url-with-query-params {:application-key nil})
@@ -427,7 +435,7 @@
                notes-by-hakukohde)))
 
 (defn update-application-details [db {:keys [form
-                                             newest-form
+                                             alternative-form
                                              application
                                              events
                                              review
@@ -439,7 +447,7 @@
       (assoc-in [:application :selected-application-and-form]
         {:form        form
          :application (answers-indexed application)})
-      (assoc-in [:application :newest-form] newest-form)
+      (assoc-in [:application :alternative-form] alternative-form)
       (assoc-in [:application :events] events)
       (assoc-in [:application :review] review)
       (assoc-in [:application :review-notes] review-notes)
@@ -554,7 +562,7 @@
     (let [db (assoc-in db [:application :review-autosave] nil)]
       {:db   db
        :http {:method              :get
-              :path                (str "/lomake-editori/api/applications/" application-id)
+              :path                (str "/lomake-editori/api/applications/" application-id "?newest-form=" (boolean (get-in db [:application :newest-form])))
               :handler-or-dispatch :application/handle-fetch-application
               :skip-parse-times?   true}})))
 
