@@ -95,12 +95,11 @@
                       [:application/fetch-application application-key]]})
       (cond
        with-newest-form? {:db         (-> db
-                                          (assoc-in [:application :newest-form] with-newest-form?)
                                           (assoc-in [:application :selected-application-and-form] nil)
                                           (assoc-in [:application :alternative-form] nil)
                                           (assoc-in [:application :selected-review-hakukohde] selected-hakukohde-oid))
                           :dispatch-n [[:application/select-review-hakukohde selected-hakukohde-oid]
-                                       [:application/fetch-application application-key]]}
+                                       [:application/fetch-application application-key true]]}
        selected-hakukohde-oid {:db         (-> db
                                                (assoc-in [:application :selected-review-hakukohde] selected-hakukohde-oid))
                                :dispatch-n [[:application/select-review-hakukohde selected-hakukohde-oid]]}
@@ -556,13 +555,14 @@
 
 (reg-event-fx
   :application/fetch-application
-  (fn [{:keys [db]} [_ application-id]]
+  (fn [{:keys [db]} [_ application-id newest-form?]]
     (when-let [autosave (get-in db [:application :review-autosave])]
       (autosave/stop-autosave! autosave))
     (let [db (assoc-in db [:application :review-autosave] nil)]
       {:db   db
        :http {:method              :get
-              :path                (str "/lomake-editori/api/applications/" application-id "?newest-form=" (boolean (get-in db [:application :newest-form])))
+              :path                (str "/lomake-editori/api/applications/" application-id
+                                     (when  newest-form? "?newest-form=true"))
               :handler-or-dispatch :application/handle-fetch-application
               :skip-parse-times?   true}})))
 

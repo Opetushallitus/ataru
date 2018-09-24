@@ -122,17 +122,16 @@
                                 (remove nil?)
                                 first)
           applied-form     #(-> (:form application)
-                               form-store/fetch-by-id)
+                                form-store/fetch-by-id)
           newest-form      (some-> form-key form-store/fetch-by-key)
-          form             (-> (if with-newest-form?
-                                 (or newest-form
-                                     (applied-form))
+          form             (-> (if (and newest-form with-newest-form?)
+                                 newest-form
                                  (applied-form))
                                koodisto/populate-form-koodisto-fields
                                (populate-hakukohde-answer-options tarjonta-info)
                                (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))
-          alternative-form (some-> (if (and newest-form with-newest-form?)
-                                     nil
+          alternative-form (some-> (when (and (not with-newest-form?)
+                                              (not= (:id form) (:id newest-form)))
                                      newest-form)
                                    (assoc :content []) (dissoc :organization-oid))]
       (util/remove-nil-values {:application          (-> application
@@ -140,7 +139,7 @@
                                                          (assoc :person (get-person application person-client))
                                                          (merge tarjonta-info))
                                :form                 form
-                               :alternative-form     (when (not= (:id form) (:id alternative-form)) alternative-form)
+                               :alternative-form     alternative-form
                                :hakukohde-reviews    (parse-application-hakukohde-reviews application-key)
                                :attachment-reviews   (parse-application-attachment-reviews application-key)
                                :events               (application-store/get-application-events application-key)
