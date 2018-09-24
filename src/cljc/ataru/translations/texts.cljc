@@ -840,9 +840,12 @@
    :form-section                                {:fi "Lomakeosio"
                                                  :sv "Blankettdel"
                                                  :en "EN: Lomakeosio"}
-   :form-outdated                               {:fi "Hakijan täyttämästä lomakkeesta on uudempi versio! Näet päivitetyn lomakkeen hakemusta muokkaamalla."
-                                                 :sv "Det finns en ny version av sökandens blankett! Du kan se den uppdaterade blanketten när du bearbetar blanketten"
-                                                 :en "EN: Hakijan täyttämästä lomakkeesta on uudempi versio! Näet päivitetyn lomakkeen hakemusta muokkaamalla."}
+   :form-outdated                               {:fi "Hakijan täyttämästä lomakkeesta on uudempi versio!"
+                                                 :sv "Det finns en ny version av sökandens blankett!"
+                                                 :en "EN: Hakijan täyttämästä lomakkeesta on uudempi versio!"}
+   :show-newest-version                         {:fi "Näytä lomake uusimmalla versiolla"
+                                                 :sv "SV: Näytä lomake uusimmalla versiolla"
+                                                 :en "EN: Näytä lomake uusimmalla versiolla"}
    :forms                                       {:fi "Lomakkeet"
                                                  :sv "Blanketter"
                                                  :en "EN: Lomakkeet"}

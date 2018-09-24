@@ -79,24 +79,31 @@
 
 (reg-event-fx
   :application/select-application
-  (fn [{:keys [db]} [_ application-key selected-hakukohde-oid]]
-    (if (not= application-key (get-in db [:application :selected-key]))
-      (let [db (-> db
-                   (assoc-in [:application :selected-key] application-key)
-                   (assoc-in [:application :selected-application-and-form] nil)
-                   (assoc-in [:application :review-comment] nil)
-                   (assoc-in [:application :application-list-expanded?] false)
-                   (assoc-in [:application :information-request] nil))
-            db (if selected-hakukohde-oid
-                 (assoc-in db [:application :selected-review-hakukohde] selected-hakukohde-oid)
-                 db)]
-        {:db         db
-         :dispatch-n [[:application/stop-autosave]
-                      [:application/fetch-application application-key]]})
-      (when selected-hakukohde-oid
-        {:db       (-> db
-                       (assoc-in [:application :selected-review-hakukohde] selected-hakukohde-oid))
-         :dispatch [:application/select-review-hakukohde selected-hakukohde-oid]}))))
+  (fn [{:keys [db]} [_ application-key selected-hakukohde-oid with-newest-form?]]
+    (let [different-application? (not= application-key (get-in db [:application :selected-key]))]
+      (cond
+       different-application? (let [db (-> db
+                                           (assoc-in [:application :selected-key] application-key)
+                                           (assoc-in [:application :selected-application-and-form] nil)
+                                           (assoc-in [:application :review-comment] nil)
+                                           (assoc-in [:application :application-list-expanded?] false)
+                                           (assoc-in [:application :information-request] nil))
+                                    db (if selected-hakukohde-oid
+                                         (assoc-in db [:application :selected-review-hakukohde] selected-hakukohde-oid)
+                                         db)]
+                                {:db         db
+                                 :dispatch-n [[:application/stop-autosave]
+                                              [:application/fetch-application application-key]]})
+       with-newest-form? {:db         (-> db
+                                          (assoc-in [:application :selected-application-and-form] nil)
+                                          (assoc-in [:application :alternative-form] nil)
+                                          (assoc-in [:application :selected-review-hakukohde] selected-hakukohde-oid))
+                          :dispatch-n [[:application/select-review-hakukohde selected-hakukohde-oid]
+                                       [:application/fetch-application application-key true]]}
+       selected-hakukohde-oid {:db         (-> db
+                                               (assoc-in [:application :selected-review-hakukohde] selected-hakukohde-oid))
+                               :dispatch-n [[:application/select-review-hakukohde selected-hakukohde-oid]]}
+       :else nil))))
 
 (defn close-application [db]
   (cljs-util/update-url-with-query-params {:application-key nil})
@@ -427,7 +434,7 @@
                notes-by-hakukohde)))
 
 (defn update-application-details [db {:keys [form
-                                             newest-form
+                                             alternative-form
                                              application
                                              events
                                              review
@@ -439,7 +446,7 @@
       (assoc-in [:application :selected-application-and-form]
         {:form        form
          :application (answers-indexed application)})
-      (assoc-in [:application :newest-form] newest-form)
+      (assoc-in [:application :alternative-form] alternative-form)
       (assoc-in [:application :events] events)
       (assoc-in [:application :review] review)
       (assoc-in [:application :review-notes] review-notes)
@@ -548,13 +555,14 @@
 
 (reg-event-fx
   :application/fetch-application
-  (fn [{:keys [db]} [_ application-id]]
+  (fn [{:keys [db]} [_ application-id newest-form?]]
     (when-let [autosave (get-in db [:application :review-autosave])]
       (autosave/stop-autosave! autosave))
     (let [db (assoc-in db [:application :review-autosave] nil)]
       {:db   db
        :http {:method              :get
-              :path                (str "/lomake-editori/api/applications/" application-id)
+              :path                (str "/lomake-editori/api/applications/" application-id
+                                     (when  newest-form? "?newest-form=true"))
               :handler-or-dispatch :application/handle-fetch-application
               :skip-parse-times?   true}})))
 
