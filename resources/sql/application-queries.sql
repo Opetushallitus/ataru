@@ -513,10 +513,8 @@ SELECT a.haku,
        max(lf.organization_oid) AS organization_oid,
        max(haku_application_count.n) AS haku_application_count,
        count(*) AS application_count,
-       count(*) FILTER (WHERE ar.state = 'inactivated' OR
-                              ahr.state IS NOT DISTINCT FROM 'processed') AS processed,
-       count(*) FILTER (WHERE ar.state != 'inactivated' AND
-                              ahr.state IS NOT NULL AND
+       count(*) FILTER (WHERE ahr.state IS NOT DISTINCT FROM 'processed') AS processed,
+       count(*) FILTER (WHERE ahr.state IS NOT NULL AND
                               ahr.state NOT IN ('unprocessed', 'processed')) AS processing
 FROM (SELECT key, form_id, haku, unnest(hakukohde) AS hakukohde
       FROM latest_applications
@@ -526,7 +524,10 @@ JOIN forms AS f
 JOIN latest_forms AS lf
   ON lf.key = f.key
 JOIN (SELECT haku, count(*) AS n
-      FROM latest_applications
+      FROM latest_applications AS a
+      JOIN application_reviews AS ar
+        ON ar.application_key = a.key
+      WHERE ar.state != 'inactivated'
       GROUP BY haku) AS haku_application_count
   ON haku_application_count.haku = a.haku
 JOIN application_reviews AS ar
@@ -535,6 +536,7 @@ LEFT JOIN application_hakukohde_reviews AS ahr
   ON ahr.application_key = a.key AND
      ahr.hakukohde = a.hakukohde AND
      ahr.requirement = 'processing-state'
+WHERE ar.state != 'inactivated'
 GROUP BY a.haku, a.hakukohde;
 
 -- name: yesql-get-direct-form-haut
