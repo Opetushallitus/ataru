@@ -73,7 +73,7 @@
   :application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
   (fn [db]
     (let [selected-by (application-list-selected-by db)
-          oid-or-oids (-> db :application selected-by)]
+          oid-or-oids (when selected-by (-> db :application selected-by))]
       (case selected-by
         :selected-hakukohde #{oid-or-oids}
         :selected-hakukohderyma (set oid-or-oids)

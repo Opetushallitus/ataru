@@ -1052,10 +1052,10 @@
         (filter-applications))))
 
 (defn- filter-by-attachment-review
-  [application selected-hakukohde states-to-include]
+  [application selected-hakukohteet states-to-include]
   (or (empty? (:hakukohde application))
       (let [states (->> (application-states/attachment-reviews-with-no-requirements application)
-                        (filter #(or (not selected-hakukohde) (= selected-hakukohde (:hakukohde %))))
+                        (filter #(or (not selected-hakukohteet) (contains? selected-hakukohteet (:hakukohde %))))
                         (map :state))]
         (not (empty? (clojure.set/intersection
                        states-to-include
@@ -1094,7 +1094,7 @@
          [false true] (= (:state application) "inactivated")))
 
 (defn- filter-by-hakukohde-review
-  [application selected-hakukohde requirement-name states-to-include]
+  [application selected-hakukohteet requirement-name states-to-include]
   (let [all-states-count (-> review-states/hakukohde-review-types-map
                              (get (keyword requirement-name))
                              (last)
@@ -1104,7 +1104,7 @@
       true
       (let [relevant-states  (->> (:application-hakukohde-reviews application)
                                   (filter #(and (= requirement-name (:requirement %))
-                                                (or (not selected-hakukohde) (= selected-hakukohde (:hakukohde %)))))
+                                                (or (not selected-hakukohteet) (contains? selected-hakukohteet (:hakukohde %)))))
                                   (map :state)
                                   (set))]
         (not (empty? (clojure.set/intersection states-to-include relevant-states)))))))
@@ -1137,29 +1137,30 @@
 
 (defn- filter-applications
   [db]
-  (let [applications                 (-> db :application :applications)
-        selected-hakukohde           (cond
-                                       (some? (-> db :application :selected-hakukohde))
-                                       (-> db :application :selected-hakukohde)
-                                       (some? (-> db :application :selected-ryhman-ensisijainen-hakukohde))
-                                       (-> db :application :selected-ryhman-ensisijainen-hakukohde)
-                                       (some? (-> db :application :selected-form-key))
-                                       "form"
-                                       :else
-                                       nil)
-        attachment-states-to-include (-> db :application :attachment-state-filter set)
-        processing-states-to-include (-> db :application :processing-state-filter set)
-        selection-states-to-include  (-> db :application :selection-state-filter set)
-        filters                      (-> db :application :filters)
-        with-ssn?                    (-> filters :only-ssn :with-ssn)
-        without-ssn?                 (-> filters :only-ssn :without-ssn)
-        identified?                  (-> filters :only-identified :identified)
-        unidentified?                (-> filters :only-identified :unidentified)
-        active?                      (-> filters :active-status :active)
-        passive?                     (-> filters :active-status :passive)
-        all-base-educations-enabled? (->> (-> filters :base-education)
-                                          (vals)
-                                          (every? true?))]
+  (let [applications                           (-> db :application :applications)
+        hakukohde-oids-from-hakukohde-or-ryhma @(subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])
+        selected-hakukohteet-set               (cond
+                                                 (some? hakukohde-oids-from-hakukohde-or-ryhma)
+                                                 hakukohde-oids-from-hakukohde-or-ryhma
+                                                 (some? (-> db :application :selected-ryhman-ensisijainen-hakukohde))
+                                                 #{(-> db :application :selected-ryhman-ensisijainen-hakukohde)}
+                                                 (some? (-> db :application :selected-form-key))
+                                                 #{"form"}
+                                                 :else
+                                                 nil)
+        attachment-states-to-include           (-> db :application :attachment-state-filter set)
+        processing-states-to-include           (-> db :application :processing-state-filter set)
+        selection-states-to-include            (-> db :application :selection-state-filter set)
+        filters                                (-> db :application :filters)
+        with-ssn?                              (-> filters :only-ssn :with-ssn)
+        without-ssn?                           (-> filters :only-ssn :without-ssn)
+        identified?                            (-> filters :only-identified :identified)
+        unidentified?                          (-> filters :only-identified :unidentified)
+        active?                                (-> filters :active-status :active)
+        passive?                               (-> filters :active-status :passive)
+        all-base-educations-enabled?           (->> (-> filters :base-education)
+                                                    (vals)
+                                                    (every? true?))]
     (assoc-in
       db
       [:application :filtered-applications]
@@ -1172,13 +1173,13 @@
             (or
               all-base-educations-enabled?
               (filter-by-base-education application (:base-education filters)))
-            (filter-by-hakukohde-review application selected-hakukohde "processing-state" processing-states-to-include)
-            (filter-by-hakukohde-review application selected-hakukohde "selection-state" selection-states-to-include)
-            (filter-by-hakukohde-review application selected-hakukohde "language-requirement" (parse-enabled-filters filters :language-requirement))
-            (filter-by-hakukohde-review application selected-hakukohde "degree-requirement" (parse-enabled-filters filters :degree-requirement))
-            (filter-by-hakukohde-review application selected-hakukohde "eligibility-state" (parse-enabled-filters filters :eligibility-state))
-            (filter-by-hakukohde-review application selected-hakukohde "payment-obligation" (parse-enabled-filters filters :payment-obligation))
-            (filter-by-attachment-review application selected-hakukohde attachment-states-to-include)))
+            (filter-by-hakukohde-review application selected-hakukohteet-set "processing-state" processing-states-to-include)
+            (filter-by-hakukohde-review application selected-hakukohteet-set "selection-state" selection-states-to-include)
+            (filter-by-hakukohde-review application selected-hakukohteet-set "language-requirement" (parse-enabled-filters filters :language-requirement))
+            (filter-by-hakukohde-review application selected-hakukohteet-set "degree-requirement" (parse-enabled-filters filters :degree-requirement))
+            (filter-by-hakukohde-review application selected-hakukohteet-set "eligibility-state" (parse-enabled-filters filters :eligibility-state))
+            (filter-by-hakukohde-review application selected-hakukohteet-set "payment-obligation" (parse-enabled-filters filters :payment-obligation))
+            (filter-by-attachment-review application selected-hakukohteet-set attachment-states-to-include)))
         applications))))
 
 (reg-event-db
