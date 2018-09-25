@@ -48,9 +48,28 @@
   (let [value (-> evt .-target .-value)]
     (dispatch [:application/set-application-field field-descriptor value nil])))
 
+(def ->textual-field-change
+  (memoize (fn [field-descriptor]
+             (fn [evt]
+               (let [value (-> evt .-target .-value)]
+                 (dispatch [:application/set-application-field
+                            field-descriptor
+                            value
+                            nil]))))))
+
 (defn- multi-value-field-change [field-descriptor data-idx question-group-idx event]
   (let [value (some-> event .-target .-value)]
     (dispatch [:application/set-repeatable-application-field field-descriptor value data-idx question-group-idx])))
+
+(def ->multi-value-field-change
+  (memoize (fn [field-descriptor data-idx question-group-idx]
+             (fn [evt]
+               (let [value (some-> evt .-target .-value)]
+                 (dispatch [:application/set-repeatable-application-field
+                            field-descriptor
+                            value
+                            data-idx
+                            question-group-idx]))))))
 
 (defn- field-id [field-descriptor]
   (str "field-" (:id field-descriptor)))
@@ -252,8 +271,8 @@
         cannot-view?           @(subscribe [:application/cannot-view? id])
         cannot-edit?           @(subscribe [:application/cannot-edit? id])
         on-change              (if idx
-                                 (partial multi-value-field-change field-descriptor 0 idx)
-                                 (partial textual-field-change field-descriptor))
+                                 (->multi-value-field-change field-descriptor 0 idx)
+                                 (->textual-field-change field-descriptor))
         on-blur                (fn [evt]
                                  (when-not controlled?
                                         ; immediate update on blur
