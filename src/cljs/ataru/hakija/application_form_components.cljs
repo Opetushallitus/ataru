@@ -248,9 +248,8 @@
                                       " application__form-text-input--normal"))
                  :aria-invalid @(subscribe [:application/answer-invalid? id])}]]]))]))))
 
-(defn text-field [field-descriptor & {:keys [div-kwd idx controlled?]
-                                      :or   {div-kwd     :div.application__form-field
-                                             controlled? true}}]
+(defn text-field [field-descriptor & {:keys [div-kwd idx]
+                                      :or   {div-kwd :div.application__form-field}}]
   (let [id                     (keyword (:id field-descriptor))
         languages              @(subscribe [:application/default-languages])
         size                   (get-in field-descriptor [:params :size])
@@ -274,11 +273,6 @@
                                  (->multi-value-field-change field-descriptor 0 idx)
                                  (->textual-field-change field-descriptor))
         on-blur                (fn [evt]
-                                 (when-not controlled?
-                                        ; immediate update on blur
-                                   (if idx
-                                     (multi-value-field-change field-descriptor 0 idx evt)
-                                     (textual-field-change field-descriptor evt)))
                                  (dispatch [:application/textual-field-blur field-descriptor]))
         show-error?            (show-text-field-error-class? field-descriptor
                                                              validators-processing
@@ -303,15 +297,10 @@
                :on-blur      on-blur
                :on-change    on-change
                :required     (is-required-field? field-descriptor)
-               :aria-invalid answer-invalid?}
-              (when-not controlled?
-                {:default-value (if cannot-view?
-                                  "***********"
-                                  (:value answer))})
-              (when controlled?
-                {:value (if cannot-view?
-                          "***********"
-                          (:value answer))})
+               :aria-invalid answer-invalid?
+               :value        (if cannot-view?
+                               "***********"
+                               (:value answer))}
               (when (or disabled? cannot-edit?)
                 {:disabled true}))]
       (when (and (not-empty (:errors answer))
@@ -915,9 +904,6 @@
             {:on-click add-on-click}
             [:i.zmdi.zmdi-plus-square] (str " " (get-translation :add-row))])]))))
 
-(def controlled-text-fields
-  #{"preferred-name" "postal-office"})
-
 (defn render-field
   [field-descriptor & args]
   (let [ui       (subscribe [:state-query [:application :ui]])
@@ -939,7 +925,7 @@
                           :fieldType  "rowcontainer"
                           :children   children} [row-wrapper children]
                          {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor]
-                         {:fieldClass "formField" :fieldType "textField" :id id} [text-field field-descriptor :controlled? (contains? controlled-text-fields id)]
+                         {:fieldClass "formField" :fieldType "textField" :id id} [text-field field-descriptor]
                          {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
                          {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor :editing editing?]
                          {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]
