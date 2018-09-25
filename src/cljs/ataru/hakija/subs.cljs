@@ -11,9 +11,28 @@
     (:form db)))
 
 (re-frame/reg-sub
+  :application/flat-form-content
+  (fn [db _]
+    (:flat-form-content db)))
+
+(re-frame/reg-sub
+  :application/form-field
+  (fn [_ _]
+    (re-frame/subscribe [:application/flat-form-content]))
+  (fn [flat-form-content [_ id]]
+    (first (filter #(= (keyword id) (keyword (:id %))) flat-form-content))))
+
+(re-frame/reg-sub
   :application/application
   (fn [db _]
     (:application db)))
+
+(re-frame/reg-sub
+  :application/editing?
+  (fn [_ _]
+    (re-frame/subscribe [:application/application]))
+  (fn [application _]
+    (:editing? application)))
 
 (re-frame/reg-sub
   :application/answers
@@ -95,21 +114,19 @@
 
 (re-frame/reg-sub
   :application/cannot-view?
-  (fn [db [_ key]]
-    (let [field    (->> (:flat-form-content db)
-                        (filter #(= (keyword key) (keyword (:id %))))
-                        first)
-          editing? (get-in db [:application :editing?])]
-      (and editing? (:cannot-view field)))))
+  (fn [[_ id] _]
+    [(re-frame/subscribe [:application/form-field id])
+     (re-frame/subscribe [:application/editing?])])
+  (fn [[field editing?] _]
+    (and editing? (:cannot-view field))))
 
 (re-frame/reg-sub
   :application/cannot-edit?
-  (fn [db [_ key]]
-    (let [field    (->> (:flat-form-content db)
-                        (filter #(= (keyword key) (keyword (:id %))))
-                        first)
-          editing? (get-in db [:application :editing?])]
-      (and editing? (:cannot-edit field)))))
+  (fn [[_ id] _]
+    [(re-frame/subscribe [:application/form-field id])
+     (re-frame/subscribe [:application/editing?])])
+  (fn [[field editing?] _]
+    (and editing? (:cannot-edit field))))
 
 (re-frame/reg-sub
   :application/get-i18n-text
