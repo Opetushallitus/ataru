@@ -29,72 +29,71 @@
     (unparse-local date-format)))
 
 (defn application-header [form]
-  (let [selected-lang     (or (:selected-language form) :fi)
-        languages         (filter
-                            (partial not= selected-lang)
-                            (:languages form))
-        submit-status     (subscribe [:state-query [:application :submit-status]])
-        application       (subscribe [:state-query [:application]])
-        secret            (:modify (util/extract-query-params))
-        virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])]
-    (fn [form]
-      (let [hakutoiveet         (set (:hakukohde @application))
-            applied-hakukohteet (filter #(contains? hakutoiveet (:oid %))
-                                        (get-in form [:tarjonta :hakukohteet]))
-            longest-open        (->> (get-in form [:tarjonta :hakukohteet])
-                                     (map :hakuaika)
-                                     (filter :on)
-                                     (sort-by :end >)
-                                     first)
-            next-open           (->> (get-in form [:tarjonta :hakukohteet])
-                                     (map :hakuaika)
-                                     (remove :on)
-                                     (filter #(after? (from-long (:start %)) (now)))
-                                     (sort-by :start <)
-                                     first)
-            last-open           (->> (get-in form [:tarjonta :hakukohteet])
-                                     (map :hakuaika)
-                                     (sort-by :end >)
-                                     first)
-            apply-dates         (when-let [hakuaika (or longest-open
-                                                        next-open
-                                                        last-open)]
-                                  (if (:jatkuva-haku? hakuaika)
-                                    (get-translation :continuous-period)
-                                    (str (get-translation :application-period)
-                                         " "
-                                         (millis->str (:start hakuaika))
-                                         " - "
-                                         (millis->str (:end hakuaika))
-                                         (when (and (not (:on hakuaika))
-                                                    (nil? @virkailija-secret))
-                                           (str " (" (get-translation :not-within-application-period) ")")))))]
-        [:div
-         [:div.application__header-container
-          [:span.application__header (or (-> form :tarjonta :haku-name selected-lang)
-                                         (-> form :name selected-lang))]
-          (when (and (not= :submitted @submit-status)
-                     (> (count languages) 0)
-                     (nil? secret))
-            [:span.application__header-text
-             (map-indexed (fn [idx lang]
-                            (cond-> [:span {:key (name lang)}
-                                     [:a {:href (-> (.. js/window -location -href)
-                                                    (url/url)
-                                                    (assoc-in [:query "lang"] (name lang))
-                                                    str)}
-                                      (get language-names lang)]]
-                              (> (dec (count languages)) idx)
-                              (conj [:span.application__header-language-link-separator " | "])))
-                          languages)])]
-         (when (not-empty apply-dates)
-           [:div.application__sub-header-container
-            [:span.application__sub-header-dates apply-dates]])
-         (when (and (:cannot-edit-because-in-processing @application)
-                    (not @virkailija-secret))
-           [:div.application__sub-header-container
-            [:span.application__sub-header-modifying-prevented
-             (get-translation :application-processed-cant-modify)]])]))))
+  (let [selected-lang       (or (:selected-language form) :fi)
+        languages           (filter
+                             (partial not= selected-lang)
+                             (:languages form))
+        submit-status       (subscribe [:state-query [:application :submit-status]])
+        application         (subscribe [:state-query [:application]])
+        secret              (:modify (util/extract-query-params))
+        virkailija-secret   (subscribe [:state-query [:application :virkailija-secret]])
+        hakutoiveet         (set (:hakukohde @application))
+        applied-hakukohteet (filter #(contains? hakutoiveet (:oid %))
+                                    (get-in form [:tarjonta :hakukohteet]))
+        longest-open        (->> (get-in form [:tarjonta :hakukohteet])
+                                 (map :hakuaika)
+                                 (filter :on)
+                                 (sort-by :end >)
+                                 first)
+        next-open           (->> (get-in form [:tarjonta :hakukohteet])
+                                 (map :hakuaika)
+                                 (remove :on)
+                                 (filter #(after? (from-long (:start %)) (now)))
+                                 (sort-by :start <)
+                                 first)
+        last-open           (->> (get-in form [:tarjonta :hakukohteet])
+                                 (map :hakuaika)
+                                 (sort-by :end >)
+                                 first)
+        apply-dates         (when-let [hakuaika (or longest-open
+                                                    next-open
+                                                    last-open)]
+                              (if (:jatkuva-haku? hakuaika)
+                                (get-translation :continuous-period)
+                                (str (get-translation :application-period)
+                                     " "
+                                     (millis->str (:start hakuaika))
+                                     " - "
+                                     (millis->str (:end hakuaika))
+                                     (when (and (not (:on hakuaika))
+                                                (nil? @virkailija-secret))
+                                       (str " (" (get-translation :not-within-application-period) ")")))))]
+    [:div
+     [:div.application__header-container
+      [:span.application__header (or (-> form :tarjonta :haku-name selected-lang)
+                                     (-> form :name selected-lang))]
+      (when (and (not= :submitted @submit-status)
+                 (> (count languages) 0)
+                 (nil? secret))
+        [:span.application__header-text
+         (map-indexed (fn [idx lang]
+                        (cond-> [:span {:key (name lang)}
+                                 [:a {:href (-> (.. js/window -location -href)
+                                                (url/url)
+                                                (assoc-in [:query "lang"] (name lang))
+                                                str)}
+                                  (get language-names lang)]]
+                                (> (dec (count languages)) idx)
+                                (conj [:span.application__header-language-link-separator " | "])))
+                      languages)])]
+     (when (not-empty apply-dates)
+       [:div.application__sub-header-container
+        [:span.application__sub-header-dates apply-dates]])
+     (when (and (:cannot-edit-because-in-processing @application)
+                (not @virkailija-secret))
+       [:div.application__sub-header-container
+        [:span.application__sub-header-modifying-prevented
+         (get-translation :application-processed-cant-modify)]])]))
 
 (defn readonly-fields [form]
   (let [application (subscribe [:state-query [:application]])]
