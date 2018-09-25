@@ -259,7 +259,6 @@
         languages              @(subscribe [:application/default-languages])
         size                   (get-in field-descriptor [:params :size])
         size-class             (text-field-size->class size)
-        validators-processing  @(subscribe [:state-query [:application :validators-processing]])
         show-validation-error? @(subscribe [:application/show-validation-error? id])
         editing?               @(subscribe [:application/editing?])
         disabled?              @(subscribe [:application/disabled? id])
@@ -268,14 +267,11 @@
         errors                 @(subscribe [:application/answer-errors id idx])
         cannot-view?           @(subscribe [:application/cannot-view? id])
         cannot-edit?           @(subscribe [:application/cannot-edit? id])
+        show-error?            @(subscribe [:application/show-validation-error-class? id idx])
         on-change              (if idx
                                  (->multi-value-field-change field-descriptor 0 idx)
                                  (->textual-field-change field-descriptor))
-        on-blur                (->textual-field-blur field-descriptor)
-        show-error?            (show-text-field-error-class? field-descriptor
-                                                             validators-processing
-                                                             value
-                                                             valid?)]
+        on-blur                (->textual-field-blur field-descriptor)]
     [div-kwd
      [label field-descriptor]
      (when (belongs-to-hakukohde-or-ryhma? field-descriptor)

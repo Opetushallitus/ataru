@@ -2,6 +2,7 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :as re-frame]
             [ataru.util :as util]
+            [ataru.application-common.application-field-common :as afc]
             [ataru.hakija.application :refer [answers->valid-status]]
             [ataru.hakija.person-info-fields :as person-info-fields]))
 
@@ -372,6 +373,36 @@
     (re-frame/subscribe [:application/application]))
   (fn [application _]
     (:visible-validation-error application)))
+
+(re-frame/reg-sub
+  :application/validators-processing
+  (fn [_ _]
+    (re-frame/subscribe [:application/application]))
+  (fn [application _]
+    (:validators-processing application)))
+
+(re-frame/reg-sub
+  :application/validator-processing?
+  (fn [_ _]
+    (re-frame/subscribe [:application/validators-processing]))
+  (fn [validators-processing [_ id]]
+    (contains? validators-processing (keyword id))))
+
+(re-frame/reg-sub
+  :application/show-validation-error-class?
+  (fn [[_ id idx] _]
+    [(re-frame/subscribe [:application/form-field id])
+     (re-frame/subscribe [:application/answer-value id idx])
+     (re-frame/subscribe [:application/answer-valid? id idx])
+     (re-frame/subscribe [:application/validator-processing? id])])
+  (fn [[field value valid? validator-processing?] _]
+    (and (not valid?)
+         (or (afc/is-required-field? field)
+             (-> field :params :numeric))
+         (if (string? value)
+           (not (clojure.string/blank? value))
+           (not (empty? value)))
+         (not validator-processing?))))
 
 (re-frame/reg-sub
   :application/show-validation-error?
