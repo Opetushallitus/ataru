@@ -93,12 +93,15 @@
                (get-virkailija-translation :applications)
                (get-virkailija-translation :application)))])
      [:span.application-handling__count-tag.application-handling__count-tag--haku-list
+      {:data-tooltip (get-virkailija-translation :application-count-unprocessed)}
       [:span.application-handling__state-label.application-handling__state-label--unprocessed]
       unprocessed]
      [:span.application-handling__count-tag.application-handling__count-tag--haku-list
+      {:data-tooltip (get-virkailija-translation :application-count-processing)}
       [:span.application-handling__state-label.application-handling__state-label--processing]
       processing]
      [:span.application-handling__count-tag.application-handling__count-tag--haku-list
+      {:data-tooltip (get-virkailija-translation :application-count-processed)}
       [:span.application-handling__state-label.application-handling__state-label--processed]
       processed]]))
 

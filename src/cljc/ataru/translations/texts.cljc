@@ -1250,7 +1250,16 @@
                                                  :en "EN: Aktiiviset"}
    :active-status-passive                       {:fi "Passivoidut"
                                                  :sv "Passiverade"
-                                                 :en "EN: Passivoidut"}})
+                                                 :en "EN: Passivoidut"}
+   :application-count-unprocessed               {:fi "Käsittelemättä"
+                                                 :sv "SV: Käsittelemättä"
+                                                 :en "Unprocessed"}
+   :application-count-processing                {:fi "Käsittely on kesken"
+                                                 :sv "SV: Käsittely on kesken"
+                                                 :en "In process"}
+   :application-count-processed                 {:fi "Käsitelty"
+                                                 :sv "SV: Käsitelty"
+                                                 :en "Processed"}})
 
 (def state-translations
   {:active               {:fi "Aktiivinen"
