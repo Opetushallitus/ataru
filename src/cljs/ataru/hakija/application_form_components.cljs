@@ -263,7 +263,7 @@
         edit-forbidden?        (contains? editing-forbidden-person-info-field-ids id)
         show-validation-error? @(subscribe [:application/show-validation-error? id])
         answer-invalid?        @(subscribe [:application/answer-invalid? id])
-        editing?               @(subscribe [:state-query [:application :editing?]])
+        editing?               @(subscribe [:application/editing?])
         ui                     @(subscribe [:state-query [:application :ui]])
         disabled?              (get-in ui [id :disabled?] false)
         answer                 (if (and editing? edit-forbidden?)
