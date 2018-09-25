@@ -28,8 +28,9 @@
     (to-default-time-zone)
     (unparse-local date-format)))
 
-(defn application-header [form]
-  (let [selected-lang       (or (:selected-language form) :fi)
+(defn application-header []
+  (let [form                @(subscribe [:application/form])
+        selected-lang       (or (:selected-language form) :fi)
         languages           (filter
                              (partial not= selected-lang)
                              (:languages form))
@@ -135,7 +136,7 @@
           [:p (get-translation :expired-secret-contact)]])
 
        ^{:key (:id @form)}
-       [application-header @form]
+       [application-header]
 
        (when (or @can-apply? @editing?)
          ^{:key "form-fields"}
