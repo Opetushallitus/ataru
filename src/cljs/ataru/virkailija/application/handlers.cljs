@@ -119,36 +119,40 @@
    (close-application db)))
 
 (defn- processing-state-counts-for-application
-  [{:keys [application-hakukohde-reviews]}]
-  (frequencies
-    (map
-      :state
-      (or
-        (->> application-hakukohde-reviews
-             (filter #(= "processing-state" (:requirement %)))
-             (not-empty))
-        [{:requirement "processing-state" :state review-states/initial-application-hakukohde-processing-state}]))))
+  [{:keys [application-hakukohde-reviews]} included-hakukohde-oid-set]
+  (->> (or
+         (->> application-hakukohde-reviews
+              (filter (fn [review]
+                        (and
+                          (= "processing-state" (:requirement review))
+                          (or (nil? included-hakukohde-oid-set)
+                              (contains? included-hakukohde-oid-set (:hakukohde review))))))
+              (not-empty))
+         [{:requirement "processing-state" :state review-states/initial-application-hakukohde-processing-state}])
+       (map :state)
+       (frequencies)))
 
 (defn review-state-counts
   [applications]
-  (reduce
-    (fn [acc application]
-      (merge-with + acc (processing-state-counts-for-application application)))
-    {}
-    applications))
+  (let [included-hakukohde-oid-set @(subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])]
+    (reduce
+      (fn [acc application]
+        (merge-with + acc (processing-state-counts-for-application application included-hakukohde-oid-set)))
+      {}
+      applications)))
 
 (defn- map-vals-to-zero [m]
   (into {} (for [[k v] m] [k 0])))
 
 (defn attachment-state-counts
-  [applications selected-hakukohde]
+  [applications included-hakukohde-oid-set]
   (reduce
     (fn [acc application]
       (merge-with (fn [prev new] (+ prev (if (not-empty new) 1 0)))
         acc
         (group-by :state (cond->> (application-states/attachment-reviews-with-no-requirements application)
-                                  (some? selected-hakukohde)
-                                  (filter #(= (:hakukohde %) selected-hakukohde))))))
+                                  (some? included-hakukohde-oid-set)
+                                  (filter #(contains? included-hakukohde-oid-set (:hakukohde %)))))))
     (map-vals-to-zero review-states/attachment-hakukohde-review-types-with-no-requirements)
     applications))
 
@@ -238,8 +242,9 @@
       (-> db
           (assoc-in [:application :review :attachment-reviews (keyword hakukohde-oid) attachment-key] state)
           (assoc-in [:application :applications] updated-applications)
-          (assoc-in [:application :attachment-state-counts] (attachment-state-counts updated-applications
-                                                                                     (-> db :application :selected-hakukohde)))))))
+          (assoc-in [:application :attachment-state-counts] (attachment-state-counts
+                                                              updated-applications
+                                                              @(subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])))))))
 
 (defn- update-sort
   [db column-id swap-order?]
@@ -316,8 +321,9 @@
                                   (assoc-in [:application :applications] parsed-applications)
                                   (assoc-in [:application :fetching-applications] false)
                                   (assoc-in [:application :review-state-counts] (review-state-counts parsed-applications))
-                                  (assoc-in [:application :attachment-state-counts] (attachment-state-counts parsed-applications
-                                                                                                             (-> db :application :selected-hakukohde)))
+                                  (assoc-in [:application :attachment-state-counts] (attachment-state-counts
+                                                                                      parsed-applications
+                                                                                      @(subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])))
                                   (assoc-in [:application :sort] application-sorting/initial-sort)
                                   (assoc-in [:application :selected-time-column] :created-time)
                                   (assoc-in [:application :information-request] nil)
