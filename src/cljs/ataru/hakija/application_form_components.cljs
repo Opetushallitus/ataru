@@ -214,7 +214,7 @@
                    :on-blur       on-blur
                    :on-change     on-change
                    :required      (is-required-field? field-descriptor)
-                   :aria-invalid  @(subscribe [:application/answer-invalid? id])
+                   :aria-invalid  (not @(subscribe [:application/answer-valid? id idx]))
                    :default-value (if @(subscribe [:application/cannot-view? id])
                                     "***********"
                                     (:value answer))}
@@ -251,7 +251,7 @@
                                     (if show-error?
                                       " application__form-field-error"
                                       " application__form-text-input--normal"))
-                 :aria-invalid @(subscribe [:application/answer-invalid? id])}]]]))]))))
+                 :aria-invalid (not @(subscribe [:application/answer-valid? id idx]))}]]]))]))))
 
 (defn text-field [field-descriptor & {:keys [div-kwd idx]
                                       :or   {div-kwd :div.application__form-field}}]
@@ -262,7 +262,6 @@
         validators-processing  @(subscribe [:state-query [:application :validators-processing]])
         edit-forbidden?        (contains? editing-forbidden-person-info-field-ids id)
         show-validation-error? @(subscribe [:application/show-validation-error? id])
-        answer-invalid?        @(subscribe [:application/answer-invalid? id])
         editing?               @(subscribe [:application/editing?])
         disabled?              @(subscribe [:application/disabled? id])
         answer                 (if (and editing? edit-forbidden?)
@@ -272,6 +271,7 @@
                                               (cond-> [:application :answers id]
                                                       idx (concat [:values idx 0]))]))
         value                  @(subscribe [:application/answer-value id idx])
+        valid?                 @(subscribe [:application/answer-valid? id idx])
         cannot-view?           @(subscribe [:application/cannot-view? id])
         cannot-edit?           @(subscribe [:application/cannot-edit? id])
         on-change              (if idx
@@ -281,7 +281,7 @@
         show-error?            (show-text-field-error-class? field-descriptor
                                                              validators-processing
                                                              value
-                                                             (:valid answer))]
+                                                             valid?)]
     [div-kwd
      [label field-descriptor]
      (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
@@ -301,7 +301,7 @@
                :on-blur      on-blur
                :on-change    on-change
                :required     (is-required-field? field-descriptor)
-               :aria-invalid answer-invalid?
+               :aria-invalid (not valid?)
                :value        (if cannot-view?
                                "***********"
                                value)}
@@ -344,7 +344,7 @@
                        :data-idx      0
                        :on-change     on-change
                        :required      (is-required-field? field-descriptor)
-                       :aria-invalid  @(subscribe [:application/answer-invalid? id])}
+                       :aria-invalid  (not @(subscribe [:application/answer-valid? id question-group-idx]))}
                       (when (empty? value)
                         {:on-blur remove-field})
                       (when @cannot-edit?
@@ -394,7 +394,7 @@
   (let [size         (-> field-descriptor :params :size)
         max-length   (parse-max-length field-descriptor)
         cannot-edit? (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])
-        invalid      (subscribe [:application/answer-invalid? (-> field-descriptor :id keyword)])
+        valid      (subscribe [:application/answer-valid? (-> field-descriptor :id keyword) idx])
         value-path   (cond-> [:application :answers (-> field-descriptor :id keyword)]
                              idx (conj :values idx 0)
                              true (conj :value))
@@ -421,7 +421,7 @@
                   :on-change     on-change
                   :on-blur       on-blur
                   :required      (is-required-field? field-descriptor)
-                  :aria-invalid  @invalid}
+                  :aria-invalid  (not @valid)}
                  (when @cannot-edit?
                    {:disabled true}))]
          (when max-length
@@ -564,7 +564,7 @@
         :on-change    on-change
         :disabled     disabled?
         :required     (is-required-field? field-descriptor)
-        :aria-invalid @(subscribe [:application/answer-invalid? id])}
+        :aria-invalid (not @(subscribe [:application/answer-valid? id idx]))}
        (doall
          (concat
            (when
@@ -637,7 +637,7 @@
         [info-text field-descriptor]]
        [:div.application__form-outer-checkbox-container
         {:aria-labelledby (id-for-label field-descriptor)
-         :aria-invalid    @(subscribe [:application/answer-invalid? id])
+         :aria-invalid    (not @(subscribe [:application/answer-valid? id idx]))
          :role       "listbox"}
         (doall
           (map-indexed (fn [option-idx option]
@@ -708,7 +708,7 @@
           [info-text field-descriptor]]
          [:div.application__form-single-choice-button-outer-container
           {:aria-labelledby (id-for-label field-descriptor)
-           :aria-invalid    @(subscribe [:application/answer-invalid? button-id])
+           :aria-invalid    (not @(subscribe [:application/answer-valid? button-id idx]))
            :role            "radiogroup"
            :class           (when use-multi-choice-style? "application__form-single-choice-button-container--column")}
           (doall
@@ -749,7 +749,7 @@
        :key          (str "upload-button-" component-id "-" attachment-count)
        :on-change    (partial upload-attachment field-descriptor component-id attachment-count question-group-idx)
        :required     (is-required-field? field-descriptor)
-       :aria-invalid @(subscribe [:application/answer-invalid? id])}]
+       :aria-invalid (not @(subscribe [:application/answer-valid? id question-group-idx]))}]
      [:label.application__form-upload-label
       {:for id}
       [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]

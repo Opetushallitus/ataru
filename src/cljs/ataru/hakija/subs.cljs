@@ -72,6 +72,20 @@
             (:value answer)))))
 
 (re-frame/reg-sub
+  :application/answer-valid?
+  (fn [[_ id _] _]
+    [(re-frame/subscribe [:application/answer id])
+     (re-frame/subscribe [:application/editing?])])
+  (fn [[answer editing?] [_ id idx]]
+    (cond (and editing?
+               (contains? person-info-fields/editing-forbidden-person-info-field-ids (keyword id)))
+          true
+          (some? idx)
+          (get-in answer [:values idx 0 :valid])
+          :else
+          (:valid answer))))
+
+(re-frame/reg-sub
   :application/ui
   (fn [_ _]
     (re-frame/subscribe [:application/application]))
@@ -337,13 +351,6 @@
          (keep-indexed #(when (= hakukohde-oid (:value %2))
                           (inc %1)))
          first)))
-
-(re-frame/reg-sub
-  :application/answer-invalid?
-  (fn [[_ id] _]
-    (re-frame/subscribe [:application/answer id]))
-  (fn [answer _]
-    (not (:valid answer))))
 
 (re-frame/reg-sub
   :application/tarjonta-hakukohteet
