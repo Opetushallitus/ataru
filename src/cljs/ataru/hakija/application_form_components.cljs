@@ -235,18 +235,21 @@
                                              editing     false
                                              controlled? true}}]
   (let [id                     (keyword (:id field-descriptor))
-        languages              (subscribe [:application/default-languages])
+        languages              @(subscribe [:application/default-languages])
         size                   (get-in field-descriptor [:params :size])
         size-class             (text-field-size->class size)
-        validators-processing  (subscribe [:state-query [:application :validators-processing]])
+        validators-processing  @(subscribe [:state-query [:application :validators-processing]])
         edit-forbidden?        (contains? editing-forbidden-person-info-field-ids id)
-        show-validation-error? (subscribe [:application/show-validation-error? id])
+        show-validation-error? @(subscribe [:application/show-validation-error? id])
+        answer-invalid?        @(subscribe [:application/answer-invalid? id])
         answer                 (if (and @editing edit-forbidden?)
                                  {:value @(subscribe [:state-query [:application :person id]])
                                   :valid true}
                                  @(subscribe [:state-query
                                               (cond-> [:application :answers id]
                                                       idx (concat [:values idx 0]))]))
+        cannot-view?           @(subscribe [:application/cannot-view? id])
+        cannot-edit?           @(subscribe [:application/cannot-edit? id])
         on-change              (if idx
                                  (partial multi-value-field-change field-descriptor 0 idx)
                                  (partial textual-field-change field-descriptor))
@@ -258,7 +261,7 @@
                                      (textual-field-change field-descriptor evt)))
                                  (dispatch [:application/textual-field-blur field-descriptor]))
         show-error?            (show-text-field-error-class? field-descriptor
-                                                             @validators-processing
+                                                             validators-processing
                                                              (:value answer)
                                                              (:valid answer))]
     [div-kwd
@@ -272,7 +275,7 @@
        (merge {:id           id
                :type         "text"
                :placeholder  (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                               (util/non-blank-val input-hint @languages))
+                               (util/non-blank-val input-hint languages))
                :class        (str size-class
                                   (if show-error?
                                     " application__form-field-error"
@@ -280,20 +283,19 @@
                :on-blur      on-blur
                :on-change    on-change
                :required     (is-required-field? field-descriptor)
-               :aria-invalid @(subscribe [:application/answer-invalid? id])}
+               :aria-invalid answer-invalid?}
               (when-not controlled?
-                {:default-value (if @(subscribe [:application/cannot-view? id])
+                {:default-value (if cannot-view?
                                   "***********"
                                   (:value answer))})
               (when controlled?
-                {:value (if @(subscribe [:application/cannot-view? id])
+                {:value (if cannot-view?
                           "***********"
                           (:value answer))})
-              (when (or disabled
-                        @(subscribe [:application/cannot-edit? id]))
+              (when (or disabled cannot-edit?)
                 {:disabled true}))]
       (when (and (not-empty (:errors answer))
-                 @show-validation-error?)
+                 show-validation-error?)
         [validation-error id (:errors answer)])]]))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
