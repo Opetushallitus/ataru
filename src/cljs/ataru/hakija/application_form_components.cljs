@@ -229,10 +229,9 @@
                                       " application__form-text-input--normal"))
                  :aria-invalid @(subscribe [:application/answer-invalid? id])}]]]))]))))
 
-(defn text-field [field-descriptor & {:keys [div-kwd disabled editing idx controlled?]
+(defn text-field [field-descriptor & {:keys [div-kwd disabled idx controlled?]
                                       :or   {div-kwd     :div.application__form-field
                                              disabled    false
-                                             editing     false
                                              controlled? true}}]
   (let [id                     (keyword (:id field-descriptor))
         languages              @(subscribe [:application/default-languages])
@@ -242,7 +241,8 @@
         edit-forbidden?        (contains? editing-forbidden-person-info-field-ids id)
         show-validation-error? @(subscribe [:application/show-validation-error? id])
         answer-invalid?        @(subscribe [:application/answer-invalid? id])
-        answer                 (if (and @editing edit-forbidden?)
+        editing?               @(subscribe [:state-query [:application :editing?]])
+        answer                 (if (and editing? edit-forbidden?)
                                  {:value @(subscribe [:state-query [:application :person id]])
                                   :valid true}
                                  @(subscribe [:state-query
@@ -919,7 +919,7 @@
                           :fieldType  "rowcontainer"
                           :children   children} [row-wrapper children]
                          {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor]
-                         {:fieldClass "formField" :fieldType "textField" :id id} [text-field field-descriptor :disabled disabled? :editing editing? :controlled? (contains? controlled-text-fields id)]
+                         {:fieldClass "formField" :fieldType "textField" :id id} [text-field field-descriptor :disabled disabled? :controlled? (contains? controlled-text-fields id)]
                          {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
                          {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor :editing editing?]
                          {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]
