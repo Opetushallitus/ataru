@@ -11,6 +11,11 @@
     (:form db)))
 
 (re-frame/reg-sub
+  :application/application
+  (fn [db _]
+    (:application db)))
+
+(re-frame/reg-sub
   :state-query
   (fn [db [_ path]]
     (get-in db (remove nil? path))))
@@ -269,9 +274,18 @@
     (-> db :form :tarjonta :hakukohteet)))
 
 (re-frame/reg-sub
+  :application/visible-validation-error
+  (fn [_ _]
+    (re-frame/subscribe [:application/application]))
+  (fn [application _]
+    (:visible-validation-error application)))
+
+(re-frame/reg-sub
   :application/show-validation-error?
-  (fn [db [_ id]]
-    (= id (get-in db [:application :visible-validation-error] id))))
+  (fn [_ _]
+    (re-frame/subscribe [:application/visible-validation-error]))
+  (fn [visible-validation-error [_ id]]
+    (or (nil? visible-validation-error) (= id visible-validation-error))))
 
 (re-frame/reg-sub
   :application/verify-email?
