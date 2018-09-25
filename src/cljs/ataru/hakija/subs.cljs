@@ -16,6 +16,20 @@
     (:application db)))
 
 (re-frame/reg-sub
+  :application/answers
+  (fn [_ _]
+    (re-frame/subscribe [:application/application]))
+  (fn [application _]
+    (:answers application)))
+
+(re-frame/reg-sub
+  :application/answer
+  (fn [_ _]
+    (re-frame/subscribe [:application/answers]))
+  (fn [answers [_ id]]
+    (get answers (keyword id))))
+
+(re-frame/reg-sub
   :state-query
   (fn [db [_ path]]
     (get-in db (remove nil? path))))
@@ -265,8 +279,10 @@
 
 (re-frame/reg-sub
   :application/answer-invalid?
-  (fn [db [_ key]]
-    (-> db :application :answers (get key) :valid not)))
+  (fn [[_ id] _]
+    (re-frame/subscribe [:application/answer id]))
+  (fn [answer _]
+    (not (:valid answer))))
 
 (re-frame/reg-sub
   :application/tarjonta-hakukohteet
