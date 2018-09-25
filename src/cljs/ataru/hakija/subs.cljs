@@ -49,6 +49,29 @@
     (get answers (keyword id))))
 
 (re-frame/reg-sub
+  :application/person
+  (fn [_ _]
+    (re-frame/subscribe [:application/application]))
+  (fn [application _]
+    (:person application)))
+
+(re-frame/reg-sub
+  :application/answer-value
+  (fn [[_ id _] _]
+    [(re-frame/subscribe [:application/answer id])
+     (re-frame/subscribe [:application/person])
+     (re-frame/subscribe [:application/editing?])])
+  (fn [[answer person editing?] [_ id idx]]
+    (let [id (keyword id)]
+      (cond (and editing?
+                 (contains? person-info-fields/editing-forbidden-person-info-field-ids id))
+            (get person id)
+            (some? idx)
+            (get-in answer [:values idx 0 :value])
+            :else
+            (:value answer)))))
+
+(re-frame/reg-sub
   :application/ui
   (fn [_ _]
     (re-frame/subscribe [:application/application]))

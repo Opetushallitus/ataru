@@ -271,6 +271,7 @@
                                  @(subscribe [:state-query
                                               (cond-> [:application :answers id]
                                                       idx (concat [:values idx 0]))]))
+        value                  @(subscribe [:application/answer-value id idx])
         cannot-view?           @(subscribe [:application/cannot-view? id])
         cannot-edit?           @(subscribe [:application/cannot-edit? id])
         on-change              (if idx
@@ -279,7 +280,7 @@
         on-blur                (->textual-field-blur field-descriptor)
         show-error?            (show-text-field-error-class? field-descriptor
                                                              validators-processing
-                                                             (:value answer)
+                                                             value
                                                              (:valid answer))]
     [div-kwd
      [label field-descriptor]
@@ -303,7 +304,7 @@
                :aria-invalid answer-invalid?
                :value        (if cannot-view?
                                "***********"
-                               (:value answer))}
+                               value)}
               (when (or disabled? cannot-edit?)
                 {:disabled true}))]
       (when (and (not-empty (:errors answer))
