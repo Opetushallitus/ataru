@@ -260,16 +260,9 @@
         size                   (get-in field-descriptor [:params :size])
         size-class             (text-field-size->class size)
         validators-processing  @(subscribe [:state-query [:application :validators-processing]])
-        edit-forbidden?        (contains? editing-forbidden-person-info-field-ids id)
         show-validation-error? @(subscribe [:application/show-validation-error? id])
         editing?               @(subscribe [:application/editing?])
         disabled?              @(subscribe [:application/disabled? id])
-        answer                 (if (and editing? edit-forbidden?)
-                                 {:value @(subscribe [:state-query [:application :person id]])
-                                  :valid true}
-                                 @(subscribe [:state-query
-                                              (cond-> [:application :answers id]
-                                                      idx (concat [:values idx 0]))]))
         value                  @(subscribe [:application/answer-value id idx])
         valid?                 @(subscribe [:application/answer-valid? id idx])
         errors                 @(subscribe [:application/answer-errors id idx])
