@@ -37,7 +37,7 @@
         submitted?                         @(subscribe [:application/submitted?])
         cannot-edit-because-in-processing? @(subscribe [:application/cannot-edit-because-in-processing?])
         secret                             (:modify (util/extract-query-params))
-        virkailija-secret                  (subscribe [:state-query [:application :virkailija-secret]])
+        virkailija?                        @(subscribe [:application/virkailija?])
         longest-open                       (->> (get-in form [:tarjonta :hakukohteet])
                                                 (map :hakuaika)
                                                 (filter :on)
@@ -64,7 +64,7 @@
                                                     " - "
                                                     (millis->str (:end hakuaika))
                                                     (when (and (not (:on hakuaika))
-                                                               (nil? @virkailija-secret))
+                                                               (not virkailija?))
                                                       (str " (" (get-translation :not-within-application-period) ")")))))]
     [:div
      [:div.application__header-container
@@ -88,7 +88,7 @@
        [:div.application__sub-header-container
         [:span.application__sub-header-dates apply-dates]])
      (when (and cannot-edit-because-in-processing?
-                (not @virkailija-secret))
+                (not virkailija?))
        [:div.application__sub-header-container
         [:span.application__sub-header-modifying-prevented
          (get-translation :application-processed-cant-modify)]])]))

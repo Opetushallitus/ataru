@@ -110,6 +110,13 @@
     (:cannot-edit-because-in-processing application)))
 
 (re-frame/reg-sub
+  :application/virkailija?
+  (fn [_ _]
+    (re-frame/subscribe [:application/application]))
+  (fn [application _]
+    (some? (:virkailija-secret application))))
+
+(re-frame/reg-sub
   :application/ui
   (fn [_ _]
     (re-frame/subscribe [:application/application]))
