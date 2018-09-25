@@ -240,62 +240,61 @@
         size-class             (text-field-size->class size)
         validators-processing  (subscribe [:state-query [:application :validators-processing]])
         edit-forbidden?        (contains? editing-forbidden-person-info-field-ids id)
-        show-validation-error? (subscribe [:application/show-validation-error? id])]
-    (fn []
-      (let [answer      (if (and @editing edit-forbidden?)
-                          {:value @(subscribe [:state-query [:application :person id]])
-                           :valid true}
-                          @(subscribe [:state-query
-                                       (cond-> [:application :answers id]
-                                               idx (concat [:values idx 0]))]))
-            on-change   (if idx
-                          (partial multi-value-field-change field-descriptor 0 idx)
-                          (partial textual-field-change field-descriptor))
-            on-blur     (fn [evt]
-                          (when-not controlled?
+        show-validation-error? (subscribe [:application/show-validation-error? id])
+        answer                 (if (and @editing edit-forbidden?)
+                                 {:value @(subscribe [:state-query [:application :person id]])
+                                  :valid true}
+                                 @(subscribe [:state-query
+                                              (cond-> [:application :answers id]
+                                                      idx (concat [:values idx 0]))]))
+        on-change              (if idx
+                                 (partial multi-value-field-change field-descriptor 0 idx)
+                                 (partial textual-field-change field-descriptor))
+        on-blur                (fn [evt]
+                                 (when-not controlled?
                                         ; immediate update on blur
-                            (if idx
-                              (multi-value-field-change field-descriptor 0 idx evt)
-                              (textual-field-change field-descriptor evt)))
-                          (dispatch [:application/textual-field-blur field-descriptor]))
-            show-error? (show-text-field-error-class? field-descriptor
-                                                      @validators-processing
-                                                      (:value answer)
-                                                      (:valid answer))]
-        [div-kwd
-         [label field-descriptor]
-         (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
-           [question-hakukohde-names field-descriptor])
-         [:div.application__form-text-input-info-text
-          [info-text field-descriptor]]
-         [:div.application__form-text-input-and-validation-errors
-          [:input.application__form-text-input
-           (merge {:id           id
-                   :type         "text"
-                   :placeholder  (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                                   (util/non-blank-val input-hint @languages))
-                   :class        (str size-class
-                                      (if show-error?
-                                        " application__form-field-error"
-                                        " application__form-text-input--normal"))
-                   :on-blur      on-blur
-                   :on-change    on-change
-                   :required     (is-required-field? field-descriptor)
-                   :aria-invalid @(subscribe [:application/answer-invalid? id])}
-                  (when-not controlled?
-                    {:default-value (if @(subscribe [:application/cannot-view? id])
-                                      "***********"
-                                      (:value answer))})
-                  (when controlled?
-                    {:value (if @(subscribe [:application/cannot-view? id])
-                              "***********"
-                              (:value answer))})
-                  (when (or disabled
-                            @(subscribe [:application/cannot-edit? id]))
-                    {:disabled true}))]
-          (when (and (not-empty (:errors answer))
-                     @show-validation-error?)
-            [validation-error id (:errors answer)])]]))))
+                                   (if idx
+                                     (multi-value-field-change field-descriptor 0 idx evt)
+                                     (textual-field-change field-descriptor evt)))
+                                 (dispatch [:application/textual-field-blur field-descriptor]))
+        show-error?            (show-text-field-error-class? field-descriptor
+                                                             @validators-processing
+                                                             (:value answer)
+                                                             (:valid answer))]
+    [div-kwd
+     [label field-descriptor]
+     (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
+       [question-hakukohde-names field-descriptor])
+     [:div.application__form-text-input-info-text
+      [info-text field-descriptor]]
+     [:div.application__form-text-input-and-validation-errors
+      [:input.application__form-text-input
+       (merge {:id           id
+               :type         "text"
+               :placeholder  (when-let [input-hint (-> field-descriptor :params :placeholder)]
+                               (util/non-blank-val input-hint @languages))
+               :class        (str size-class
+                                  (if show-error?
+                                    " application__form-field-error"
+                                    " application__form-text-input--normal"))
+               :on-blur      on-blur
+               :on-change    on-change
+               :required     (is-required-field? field-descriptor)
+               :aria-invalid @(subscribe [:application/answer-invalid? id])}
+              (when-not controlled?
+                {:default-value (if @(subscribe [:application/cannot-view? id])
+                                  "***********"
+                                  (:value answer))})
+              (when controlled?
+                {:value (if @(subscribe [:application/cannot-view? id])
+                          "***********"
+                          (:value answer))})
+              (when (or disabled
+                        @(subscribe [:application/cannot-edit? id]))
+                {:disabled true}))]
+      (when (and (not-empty (:errors answer))
+                 @show-validation-error?)
+        [validation-error id (:errors answer)])]]))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [id                    (keyword (:id field-descriptor))
