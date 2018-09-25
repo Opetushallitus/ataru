@@ -264,8 +264,7 @@
         show-validation-error? @(subscribe [:application/show-validation-error? id])
         answer-invalid?        @(subscribe [:application/answer-invalid? id])
         editing?               @(subscribe [:application/editing?])
-        ui                     @(subscribe [:state-query [:application :ui]])
-        disabled?              (get-in ui [id :disabled?] false)
+        disabled?              @(subscribe [:application/disabled? id])
         answer                 (if (and editing? edit-forbidden?)
                                  {:value @(subscribe [:state-query [:application :person id]])
                                   :valid true}

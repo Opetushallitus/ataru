@@ -49,6 +49,20 @@
     (get answers (keyword id))))
 
 (re-frame/reg-sub
+  :application/ui
+  (fn [_ _]
+    (re-frame/subscribe [:application/application]))
+  (fn [application _]
+    (:ui application)))
+
+(re-frame/reg-sub
+  :application/ui-of
+  (fn [_ _]
+    (re-frame/subscribe [:application/ui]))
+  (fn [ui [_ id]]
+    (get ui (keyword id))))
+
+(re-frame/reg-sub
   :state-query
   (fn [db [_ path]]
     (get-in db (remove nil? path))))
@@ -127,6 +141,13 @@
      (re-frame/subscribe [:application/editing?])])
   (fn [[field editing?] _]
     (and editing? (:cannot-edit field))))
+
+(re-frame/reg-sub
+  :application/disabled?
+  (fn [[_ id] _]
+    (re-frame/subscribe [:application/ui-of id]))
+  (fn [ui _]
+    (get ui :disabled? false)))
 
 (re-frame/reg-sub
   :application/get-i18n-text
