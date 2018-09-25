@@ -294,9 +294,11 @@
 (reg-event-db
   :application/remove-filters
   (fn [db _]
-    (-> db
-        (assoc-in [:application :filters] (get-in initial-db/default-db [:application :filters]))
-        (filter-applications))))
+    (let [initial-filters     (get-in initial-db/default-db [:application :filters])
+          all-enabled-filters (clojure.walk/postwalk #(if (boolean? %) true %) initial-filters)]
+      (-> db
+          (assoc-in [:application :filters] all-enabled-filters)
+          (filter-applications)))))
 
 (reg-event-db
  :application/update-sort
