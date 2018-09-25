@@ -272,6 +272,7 @@
                                                       idx (concat [:values idx 0]))]))
         value                  @(subscribe [:application/answer-value id idx])
         valid?                 @(subscribe [:application/answer-valid? id idx])
+        errors                 @(subscribe [:application/answer-errors id idx])
         cannot-view?           @(subscribe [:application/cannot-view? id])
         cannot-edit?           @(subscribe [:application/cannot-edit? id])
         on-change              (if idx
@@ -307,9 +308,9 @@
                                value)}
               (when (or disabled? cannot-edit?)
                 {:disabled true}))]
-      (when (and (not-empty (:errors answer))
+      (when (and (not-empty errors)
                  show-validation-error?)
-        [validation-error id (:errors answer)])]]))
+        [validation-error id errors])]]))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [id                    (keyword (:id field-descriptor))

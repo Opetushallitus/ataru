@@ -86,6 +86,15 @@
           (:valid answer))))
 
 (re-frame/reg-sub
+  :application/answer-errors
+  (fn [[_ id _] _]
+    (re-frame/subscribe [:application/answer id]))
+  (fn [answer [_ _ idx]]
+    (if (some? idx)
+      (get-in answer [:values idx 0 :errors])
+      (:errors answer))))
+
+(re-frame/reg-sub
   :application/ui
   (fn [_ _]
     (re-frame/subscribe [:application/application]))
