@@ -83,47 +83,46 @@ body {
   padding: 16px 64px;
 }
 
-[data-tooltip],[data-tooltip-narrow] {
-  display: inline-block;
-  position: relative;
-  cursor: help;
-  color: @pale-blue;
+[data-tooltip]:hover::after,[data-tooltip]:hover::before {
+  opacity: 1;
+  transition-delay: 0.5s;
+  transition-duration: 0.2s;
 }
 
 [data-tooltip] {
-  white-space: nowrap;
+  position: relative;
+  cursor: help;
+  text-transform: none;
 }
 
-[data-tooltip]:before,[data-tooltip-narrow]:before {
-  display: none;
+[data-tooltip]::before {
+  content: "";
   position: absolute;
-  background: @banner-blue;
-  color: @white;
-  padding: 4px 8px;
-  font-size: 14px;
-  text-align: center;
-  border-radius: 2px;
+  top: -6px;
   left: 50%;
-  bottom: 100%;
-  margin-bottom: 6px;
-  -ms-transform: translateX(-50%);
-  -moz-transform: translateX(-50%);
-  -webkit-transform: translateX(-50%);
   transform: translateX(-50%);
+  border-width: 4px 6px 0 6px;
+  border-style: solid;
+  border-color: @opaque-grey transparent transparent transparent;
+  z-index: 100;
+  opacity: 0;
 }
 
-[data-tooltip]:before {
-  content: attr(data-tooltip);
-}
-
-[data-tooltip-narrow]:before {
-  content: attr(data-tooltip-narrow);
-}
-
-[data-tooltip]:hover:before, [data-tooltip]:hover:after,
-[data-tooltip-narrow]:hover:before, [data-tooltip-narrow]:hover:after{
-  display: block;
-  z-index: 5;
+[data-tooltip]::after {
+  content: attr(data-tooltip2);
+  position: absolute;
+  left: 50%;
+  top: -6px;
+  transform: translateX(-50%) translateY(-100%);
+  background: @opaque-grey;
+  color: @white;
+  text-align: center;
+  padding: 7px 10px;
+  font-size: 12px;
+  min-width: 80px;
+  border-radius: 5px;
+  pointer-events: none;
+  opacity: 0;
 }
 
 .virkailija-modal__container {
