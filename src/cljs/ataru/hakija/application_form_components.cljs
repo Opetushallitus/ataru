@@ -57,6 +57,11 @@
                             value
                             nil]))))))
 
+(def ->textual-field-blur
+  (memoize (fn [field-descriptor]
+             (fn [_]
+               (dispatch [:application/textual-field-blur field-descriptor])))))
+
 (defn- multi-value-field-change [field-descriptor data-idx question-group-idx event]
   (let [value (some-> event .-target .-value)]
     (dispatch [:application/set-repeatable-application-field field-descriptor value data-idx question-group-idx])))
@@ -272,8 +277,7 @@
         on-change              (if idx
                                  (->multi-value-field-change field-descriptor 0 idx)
                                  (->textual-field-change field-descriptor))
-        on-blur                (fn [evt]
-                                 (dispatch [:application/textual-field-blur field-descriptor]))
+        on-blur                (->textual-field-blur field-descriptor)
         show-error?            (show-text-field-error-class? field-descriptor
                                                              validators-processing
                                                              (:value answer)
