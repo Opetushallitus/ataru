@@ -96,6 +96,13 @@
       (:errors answer))))
 
 (re-frame/reg-sub
+  :application/submitted?
+  (fn [_ _]
+    (re-frame/subscribe [:application/application]))
+  (fn [application _]
+    (= :submitted (:submit-status application))))
+
+(re-frame/reg-sub
   :application/ui
   (fn [_ _]
     (re-frame/subscribe [:application/application]))

@@ -34,7 +34,7 @@
         languages           (filter
                              (partial not= selected-lang)
                              (:languages form))
-        submit-status       (subscribe [:state-query [:application :submit-status]])
+        submitted?          @(subscribe [:application/submitted?])
         application         (subscribe [:state-query [:application]])
         secret              (:modify (util/extract-query-params))
         virkailija-secret   (subscribe [:state-query [:application :virkailija-secret]])
@@ -73,7 +73,7 @@
      [:div.application__header-container
       [:span.application__header (or (-> form :tarjonta :haku-name selected-lang)
                                      (-> form :name selected-lang))]
-      (when (and (not= :submitted @submit-status)
+      (when (and (not submitted?)
                  (> (count languages) 0)
                  (nil? secret))
         [:span.application__header-text
