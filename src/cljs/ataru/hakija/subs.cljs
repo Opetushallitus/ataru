@@ -6,6 +6,11 @@
             [ataru.hakija.person-info-fields :as person-info-fields]))
 
 (re-frame/reg-sub
+  :application/form
+  (fn [db _]
+    (:form db)))
+
+(re-frame/reg-sub
   :state-query
   (fn [db [_ path]]
     (get-in db (remove nil? path))))
@@ -29,11 +34,27 @@
     (count (-> db :tarjonta :hakukohteet))))
 
 (re-frame/reg-sub
+  :application/selected-language
+  (fn [_ _]
+    (re-frame/subscribe [:application/form]))
+  (fn [form _]
+    (:selected-language form)))
+
+(re-frame/reg-sub
+  :application/languages
+  (fn [_ _]
+    (re-frame/subscribe [:application/form]))
+  (fn [form _]
+    (:languages form)))
+
+(re-frame/reg-sub
   :application/form-language
-  (fn [db]
-    (or
-      (get-in db [:form :selected-language])
-      :fi))) ; When user lands on the page, there isn't any language set until the form is loaded)
+  (fn [_ _]
+    (re-frame/subscribe [:application/selected-language]))
+  (fn [selected-language _]
+    ;; When user lands on the page, there isn't any language set until the
+    ;; form is loaded
+    (or selected-language :fi)))
 
 (defn- selected-hakukohteet [db]
   (map :value (get-in db [:application :answers :hakukohteet :values] [])))
@@ -182,6 +203,16 @@
       false)))
 
 (re-frame/reg-sub
+  :application/default-languages
+  (fn [_ _]
+    [(re-frame/subscribe [:application/selected-language])
+     (re-frame/subscribe [:application/languages])])
+  (fn [[selected-language languages] _]
+    (concat [selected-language]
+            languages
+            [:fi :sv :en])))
+
+(re-frame/reg-sub
   :application/hakukohde-label
   (fn [db [_ hakukohde-oid]]
     (util/non-blank-val
@@ -218,13 +249,6 @@
   :application/prioritize-hakukohteet?
   (fn [db _]
     (-> db :form :tarjonta :prioritize-hakukohteet)))
-
-(re-frame/reg-sub
-  :application/default-languages
-  (fn [db _]
-    (concat [(get-in db [:form :selected-language])]
-            (get-in db [:form :languages])
-            [:fi :sv :en])))
 
 (re-frame/reg-sub
   :application/hakukohde-priority-number
