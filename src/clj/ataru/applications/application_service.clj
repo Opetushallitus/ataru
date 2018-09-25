@@ -18,7 +18,7 @@
    [ataru.util :as util]
    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
    [medley.core :refer [filter-vals]]
-   [taoensso.timbre :refer [spy debug]])
+   [taoensso.timbre :refer [spy debug warn]])
   (:import [java.io ByteArrayInputStream]))
 
 (defn- extract-koodisto-fields [field-descriptor-list]
@@ -424,16 +424,17 @@
                          session
                          hakukohde-oid
                          application-keys)]
-    (if-let [yksiloimattomat (->> applications
-                                  (map :personOid)
-                                  distinct
-                                  (person-service/get-persons person-service)
-                                  vals
-                                  (remove #(or (:yksiloity %)
-                                               (:yksiloityVTJ %)))
-                                  (map :oidHenkilo)
-                                  distinct
-                                  seq)]
-      {:yksiloimattomat yksiloimattomat}
-      {:applications applications})
+    (do (when-let [yksiloimattomat (->> applications
+                                        (map :personOid)
+                                        distinct
+                                        (person-service/get-persons person-service)
+                                        vals
+                                        (remove #(or (:yksiloity %)
+                                                     (:yksiloityVTJ %)))
+                                        (map :oidHenkilo)
+                                        distinct
+                                        seq)]
+          (warn (str "Yksilöimättömiä hakijoita: "
+                     (clojure.string/join ", " yksiloimattomat))))
+        {:applications applications})
     {:unauthorized nil}))
