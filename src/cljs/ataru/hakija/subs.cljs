@@ -103,6 +103,13 @@
     (= :submitted (:submit-status application))))
 
 (re-frame/reg-sub
+  :application/cannot-edit-because-in-processing?
+  (fn [_ _]
+    (re-frame/subscribe [:application/application]))
+  (fn [application _]
+    (:cannot-edit-because-in-processing application)))
+
+(re-frame/reg-sub
   :application/ui
   (fn [_ _]
     (re-frame/subscribe [:application/application]))
