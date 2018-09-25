@@ -83,6 +83,18 @@
 
 (def allowed-hakukohde-tilas #{"VALMIS" "JULKAISTU"})
 
+(defn fetch-or-cached-hakukohde-search [cache-service haku-oid organization-oid]
+  (some->> (cache/cache-get
+             cache-service
+             :hakukohde-search
+             {:haku-oid         haku-oid
+              :organization-oid organization-oid})
+           parse-search-result))
+
+(defn stamp-user-organization [is-user-organization-fn hakukohde]
+  (merge hakukohde
+         {:user-organization? (boolean (is-user-organization-fn (:oid hakukohde)))}))
+
 (defrecord CachedTarjontaService [cache-service]
   TarjontaService
   (get-hakukohde [this hakukohde-oid]
@@ -106,15 +118,21 @@
       (parse-multi-lang-text (:hakukohteenNimet hakukohde))))
 
   (hakukohde-search [this haku-oid organization-oid]
-    (some->> (cache/cache-get
-               cache-service
-               :hakukohde-search
-               {:haku-oid         haku-oid
-                :organization-oid organization-oid})
-             parse-search-result
-             (map :oid)
-             (.get-hakukohteet this)
-             (mapv parse-hakukohde)))
+    (let [result                  (some->> (fetch-or-cached-hakukohde-search cache-service haku-oid oph-organization)
+                                           (map :oid)
+                                           (.get-hakukohteet this)
+                                           (mapv parse-hakukohde))
+          user-organization-oids  (memoize (fn [] (some->> (fetch-or-cached-hakukohde-search cache-service
+                                                                                             haku-oid
+                                                                                             organization-oid)
+                                                           (map :oid)
+                                                           (set))))
+          oph-organization?       (= oph-organization organization-oid)
+          is-user-organization-fn (if oph-organization?
+                                    (constantly true)
+                                    #(contains? (user-organization-oids) %))]
+      (some->> result
+               (map #(stamp-user-organization is-user-organization-fn %)))))
 
   (get-haku [this haku-oid]
     ;; Serialization breaks boxed booleans, as it doesn't return the
