@@ -397,6 +397,7 @@ and (max-width: 1000px) {
   flex: 1 3 450px;
   display: inline-block;
   color: @pale-blue;
+  padding-left: 12px;
 }
 
 .application-handling__list-row--application-time {
@@ -1859,6 +1860,9 @@ th.application__readonly-adjacent--header {
   z-index: 1;
   border-radius: 3px;
 }
+.application-handling__list-row-hakukohde:hover {
+  background-color: @application-form-list-background-color;
+}
 
 .application__search-control-hakukohde:hover > .application__search-control-haku-hover-highlight {
   background-color: @application-form-list-background-color;
@@ -1871,6 +1875,10 @@ th.application__readonly-adjacent--header {
 .application__search-control-haku-title {
   flex: 0 1 auto;
   max-width: 650px;
+}
+.application__search-control-haku-title--hakukohde {
+  color: @gray-of-the-beast;
+  .light;
 }
 
 .application__search-control-haku-hl {
@@ -1991,10 +1999,7 @@ th.application__readonly-adjacent--header {
   width: auto;
   flex: 0 1 auto;
   margin-top: 3px;
-}
-
-.application-handling__application-hakukohde-cell:hover {
-  color: black;
+  padding-left: 12px;
 }
 
 .application-handling__application-hakukohde-cell--form {
