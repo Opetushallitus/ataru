@@ -38,13 +38,16 @@
 
 (defn- get-application
   [secret tarjonta-service organization-service ohjausparametrit-service person-client]
-  (let [[application-form-and-person secret-expired? lang-override]
+  (let [[application-form-and-person secret-expired? lang-override inactivated?]
         (hakija-application-service/get-latest-application-by-secret secret
                                                                      tarjonta-service
                                                                      organization-service
                                                                      ohjausparametrit-service
                                                                      person-client)]
-    (cond (some? application-form-and-person)
+    (cond inactivated?
+          (response/bad-request {:error "Inactivated"})
+
+          (some? application-form-and-person)
           (response/ok application-form-and-person)
 
           secret-expired?
