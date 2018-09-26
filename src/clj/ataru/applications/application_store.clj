@@ -895,7 +895,9 @@
                           indexed-by-value-order
                           :else
                           not-indexed)]
-       (into acc (cond (and (sequential? value)
+       (into acc (cond (= "attahcment" fieldType)
+                       nil
+                       (and (sequential? value)
                             (every? sequential? value))
                        (indexed-by-question-group index-fn key value)
                        (and (sequential? value)
