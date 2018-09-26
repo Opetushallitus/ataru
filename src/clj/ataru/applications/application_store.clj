@@ -553,7 +553,7 @@
                                  :hakukohde        (:hakukohde review-to-store)
                                  :virkailija_oid   (-> session :identity :oid)}]
             (store-and-log-review-event connection hakukohde-event session)))
-        (throw (new IllegalStateException (str "No existing attahcment review found for " review-to-store)))))))
+        (throw (new IllegalStateException (str "No existing attachment review found for " review-to-store)))))))
 
 (s/defn get-applications-for-form :- [schema/Application]
   [form-key :- s/Str filtered-states :- [s/Str]]
@@ -895,7 +895,7 @@
                           indexed-by-value-order
                           :else
                           not-indexed)]
-       (into acc (cond (= "attahcment" fieldType)
+       (into acc (cond (= "attachment" fieldType)
                        nil
                        (and (sequential? value)
                             (every? sequential? value))
