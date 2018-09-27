@@ -18,7 +18,8 @@
    [ataru.util :as util]
    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
    [medley.core :refer [filter-vals]]
-   [taoensso.timbre :refer [spy debug]])
+   [taoensso.timbre :refer [spy debug]]
+   [clojure.core.async :refer [chan <! <!! >! go]])
   (:import [java.io ByteArrayInputStream]))
 
 (defn- extract-koodisto-fields [field-descriptor-list]
@@ -108,6 +109,17 @@
       (populate-hakukohde-answer-options tarjonta-info)
       (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)))
 
+(defn- perform-async
+  [fn]
+  (let [c (chan)]
+    (go
+      (>! c (fn)))
+    c))
+
+(defn- read-async
+  [c]
+  (<!! (go (<! c))))
+
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
@@ -117,38 +129,44 @@
                            tarjonta-service
                            session
                            application-key)]
-    (let [tarjonta-info    (tarjonta-parser/parse-tarjonta-info-by-haku
-                             tarjonta-service
-                             organization-service
-                             ohjausparametrit-service
-                             (:haku application)
-                             (:hakukohde application))
-          form-key         (->> (-> tarjonta-info :tarjonta :hakukohteet)
-                                (map :form-key)
-                                (distinct)
-                                (remove nil?)
-                                first)
-          newest-form      (some-> form-key form-store/fetch-by-key)
-          form-to-use      (if (and newest-form with-newest-form?)
-                             newest-form
-                             (form-store/fetch-by-id (:form application)))
-          form             (populate-form-fields form-to-use tarjonta-info)
-          alternative-form (some-> (when (and (not with-newest-form?)
-                                              (not= (:id form) (:id newest-form)))
-                                     newest-form)
-                                   (assoc :content []) (dissoc :organization-oid))]
+    (let [tarjonta-info        (tarjonta-parser/parse-tarjonta-info-by-haku
+                                 tarjonta-service
+                                 organization-service
+                                 ohjausparametrit-service
+                                 (:haku application)
+                                 (:hakukohde application))
+          form-key             (->> (-> tarjonta-info :tarjonta :hakukohteet)
+                                    (map :form-key)
+                                    (distinct)
+                                    (remove nil?)
+                                    first)
+          newest-form          (some-> form-key form-store/fetch-by-key)
+          form-to-use          (if (and newest-form with-newest-form?)
+                                 newest-form
+                                 (form-store/fetch-by-id (:form application)))
+          form                 (populate-form-fields form-to-use tarjonta-info)
+          alternative-form     (some-> (when (and (not with-newest-form?)
+                                                  (not= (:id form) (:id newest-form)))
+                                         newest-form)
+                                       (assoc :content []) (dissoc :organization-oid))
+          hakukohde-reviews    (perform-async #(parse-application-hakukohde-reviews application-key))
+          attachment-reviews   (perform-async #(parse-application-attachment-reviews application-key))
+          events               (perform-async #(application-store/get-application-events application-key))
+          review               (perform-async #(application-store/get-application-review application-key))
+          review-notes         (perform-async #(application-store/get-application-review-notes application-key))
+          information-requests (perform-async #(information-request-store/get-information-requests application-key))]
       (util/remove-nil-values {:application          (-> application
                                                          (dissoc :person-oid)
                                                          (assoc :person (get-person application person-client))
                                                          (merge tarjonta-info))
                                :form                 form
                                :alternative-form     alternative-form
-                               :hakukohde-reviews    (parse-application-hakukohde-reviews application-key)
-                               :attachment-reviews   (parse-application-attachment-reviews application-key)
-                               :events               (application-store/get-application-events application-key)
-                               :review               (application-store/get-application-review application-key)
-                               :review-notes         (application-store/get-application-review-notes application-key)
-                               :information-requests (information-request-store/get-information-requests application-key)}))))
+                               :hakukohde-reviews    (read-async hakukohde-reviews)
+                               :attachment-reviews   (read-async attachment-reviews)
+                               :events               (read-async events)
+                               :review               (read-async review)
+                               :review-notes         (read-async review-notes)
+                               :information-requests (read-async information-requests)}))))
 
 (defn- belongs-to-hakukohderyhma?
   [hakukohderyhma-oid hakukohde]
