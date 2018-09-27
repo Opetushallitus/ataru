@@ -263,7 +263,8 @@
         editing?               (subscribe [:application/editing?])
         disabled?              (subscribe [:application/disabled? id])
         cannot-view?           (subscribe [:application/cannot-view? id])
-        cannot-edit?           (subscribe [:application/cannot-edit? id])]
+        cannot-edit?           (subscribe [:application/cannot-edit? id])
+        local-state            (r/atom {:focused? false :value nil})]
     (fn [field-descriptor & {:keys [div-kwd idx]
                              :or   {div-kwd :div.application__form-field}}]
       (let [languages              @languages
@@ -296,13 +297,23 @@
                                       (if show-error?
                                         " application__form-field-error"
                                         " application__form-text-input--normal"))
-                   :on-blur      on-blur
-                   :on-change    on-change
+                   :on-blur      (fn [evt]
+                                   (swap! local-state assoc
+                                          :focused? false)
+                                   (on-blur evt))
+                   :on-change    (fn [evt]
+                                   (swap! local-state assoc
+                                          :focused? true
+                                          :value (-> evt .-target .-value))
+                                   (on-change evt))
                    :required     (is-required-field? field-descriptor)
                    :aria-invalid (not valid?)
-                   :value        (if cannot-view?
-                                   "***********"
-                                   value)}
+                   :value        (cond cannot-view?
+                                       "***********"
+                                       (:focused? @local-state)
+                                       (:value @local-state)
+                                       :else
+                                       value)}
                   (when (or disabled? cannot-edit?)
                     {:disabled true}))]
           (when (and (not-empty errors)
