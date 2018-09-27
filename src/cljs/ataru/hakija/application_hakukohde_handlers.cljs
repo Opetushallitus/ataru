@@ -87,6 +87,10 @@
      :dispatch-n [[:application/update-answers-validity]
                   [:application/set-validator-processed :hakukohteet]]}))
 
+(defn- set-validator-processing
+  [db id]
+  (update-in db [:application :validators-processing] conj id))
+
 (reg-event-fx
   :application/hakukohde-add-selection
   (fn [{db :db} [_ hakukohde-oid]]
@@ -101,6 +105,7 @@
           db                   (-> db
                                    (assoc-in [:application :answers :hakukohteet :values]
                                              new-hakukohde-values)
+                                   (set-validator-processing :hakukohteet)
                                    set-values-changed
                                    set-field-visibilities)]
       {:db                 (cond-> db
@@ -112,7 +117,6 @@
                             :field-descriptor  field-descriptor
                             :editing?          (get-in db [:application :editing?])
                             :virkailija?       (contains? (:application db) :virkailija-secret)
-                            :before-validation #(dispatch [:application/set-validator-processing (keyword (:id field-descriptor))])
                             :on-validated      (fn [[valid? errors]]
                                                  (dispatch [:application/set-hakukohde-valid
                                                             valid?]))}})))
@@ -131,6 +135,7 @@
                                    (assoc-in [:application :answers :hakukohteet :values]
                                              new-hakukohde-values)
                                    (update-in [:application :ui :hakukohteet :deleting] remove-hakukohde-from-deleting hakukohde-oid)
+                                   (set-validator-processing :hakukohteet)
                                    set-values-changed
                                    set-field-visibilities)]
       {:db                 db
@@ -138,7 +143,6 @@
                             :answers-by-key    (get-in db [:application :answers])
                             :field-descriptor  field-descriptor
                             :editing?          (get-in db [:application :editing?])
-                            :before-validation #(dispatch [:application/set-validator-processing (keyword (:id field-descriptor))])
                             :on-validated      (fn [[valid? errors]]
                                                  (dispatch [:application/set-hakukohde-valid
                                                             valid?]))}})))

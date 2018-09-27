@@ -75,10 +75,9 @@
 
 (re-frame/reg-fx
   :validate-debounced
-  (fn [{:keys [field-descriptor before-validation field-idx group-idx] :as params}]
+  (fn [{:keys [field-descriptor field-idx group-idx] :as params}]
     (let [id          (keyword (:id field-descriptor))
           debounce-id (keyword (str (name id) "-" field-idx "-" group-idx))]
-      (before-validation)
       (js/clearTimeout (@validation-debounces debounce-id))
       (swap! validation-debounces assoc debounce-id
              (js/setTimeout
@@ -87,10 +86,9 @@
 
 (re-frame/reg-fx
   :validate-every-debounced
-  (fn [{:keys [field-descriptor before-validation field-idx group-idx] :as params}]
+  (fn [{:keys [field-descriptor field-idx group-idx] :as params}]
     (let [id          (keyword (:id field-descriptor))
           debounce-id (keyword (str (name id) "-" field-idx "-" group-idx))]
-      (before-validation)
       (js/clearTimeout (@validation-debounces debounce-id))
       (swap! validation-debounces assoc debounce-id
              (js/setTimeout
