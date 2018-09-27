@@ -554,24 +554,34 @@
   :application/handle-fetch-application
   (fn [{:keys [db]} [_ response]]
     (let [response-with-parsed-times (parse-application-times response)
-          db                         (update-application-details db response-with-parsed-times)]
+          db                         (-> db
+                                         (update-application-details response-with-parsed-times)
+                                         (assoc-in [:application :loading?] false))]
       {:db         db
        :dispatch-n [(if (application-has-attachments? db)
                       [:application/fetch-application-attachment-metadata]
                       [:application/start-autosave])
                     [:application/get-application-change-history (-> response :application :key)]]})))
 
+(reg-event-db
+  :application/handle-fetch-application-error
+  (fn [db _]
+    (assoc-in db [:application :loading?] false)))
+
 (reg-event-fx
   :application/fetch-application
   (fn [{:keys [db]} [_ application-id newest-form?]]
     (when-let [autosave (get-in db [:application :review-autosave])]
       (autosave/stop-autosave! autosave))
-    (let [db (assoc-in db [:application :review-autosave] nil)]
+    (let [db (-> db
+                 (assoc-in [:application :review-autosave] nil)
+                 (assoc-in [:application :loading?] true))]
       {:db   db
        :http {:method              :get
               :path                (str "/lomake-editori/api/applications/" application-id
-                                     (when  newest-form? "?newest-form=true"))
+                                        (when newest-form? "?newest-form=true"))
               :handler-or-dispatch :application/handle-fetch-application
+              :override-args       {:error-handler #(dispatch [:application/handle-fetch-application-error])}
               :skip-parse-times?   true}})))
 
 (reg-event-db
@@ -1205,5 +1215,5 @@
                                     (>= next-application-idx application-count) 0
                                     :else next-application-idx)
           next-application-key    (-> filtered-applications (nth guarded-idx) :key)]
-      (cljs-util/update-url-with-query-params {:application-key next-application-key})
-      {:dispatch [:application/select-application next-application-key selected-hakukohde false]})))
+      {:update-url-query-params {:application-key next-application-key}
+       :dispatch                [:application/select-application next-application-key selected-hakukohde false]})))

@@ -112,3 +112,7 @@
   (fn []
     (.removeEventListener js/window "beforeunload" confirm-window-close!)
     (.addEventListener js/window "beforeunload" confirm-window-close!)))
+
+(re-frame/reg-fx
+  :update-url-query-params
+  util/update-url-with-query-params)
