@@ -884,7 +884,9 @@
                values))
 
 (defn- not-indexed [key values]
-  [[key (first values)]])
+  [[key (if (nil? (first values))
+          ""
+          (first values))]])
 
 (defn- flatten-application-answers [answers]
   (reduce
