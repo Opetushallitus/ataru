@@ -790,7 +790,6 @@
         remove-on-click (fn remove-adjacent-text-field [event]
                           (let [row-idx (int (.getAttribute (.-currentTarget event) "data-row-idx"))]
                             (.preventDefault event)
-                            (cljs.pprint/pprint field-descriptor)
                             (dispatch [:application/remove-adjacent-field field-descriptor row-idx])))
         cannot-edits?   (map #(subscribe [:application/cannot-edit? (keyword (:id %))])
                              (util/flatten-form-fields (:children field-descriptor)))]
