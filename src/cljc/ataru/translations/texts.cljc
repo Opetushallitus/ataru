@@ -1250,7 +1250,13 @@
                                                  :en "EN: Aktiiviset"}
    :active-status-passive                       {:fi "Passivoidut"
                                                  :sv "Passiverade"
-                                                 :en "EN: Passivoidut"}})
+                                                 :en "EN: Passivoidut"}
+   :navigate-applications-forward               {:fi "Seuraava hakemus"
+                                                 :sv "SV: Seuraava hakemus"
+                                                 :en "Next application"}
+   :navigate-applications-back                  {:fi "Edellinen hakemus"
+                                                 :sv "SV: Edellinen hakemus"
+                                                 :en "Previous application"}})
 
 (def state-translations
   {:active               {:fi "Aktiivinen"

@@ -184,3 +184,9 @@
 
 (defn non-blank-val [m ks]
   (some #(not-blank (get m %)) ks))
+
+(defn indices-of [f coll]
+  (keep-indexed #(if (f %2) %1 nil) coll))
+
+(defn first-index-of [f coll]
+  (first (indices-of f coll)))

@@ -1651,7 +1651,7 @@
                            "/duplikaatit?permissionCheckService=ATARU")
               :target "_blank"}
              [:i.zmdi.zmdi-account-o]
-             [:span (get-virkailija-translation :person-not-individualized)
+             [:span (str (get-virkailija-translation :person-not-individualized) " ")
               [:span.important "Tee yksilöinti henkilöpalvelussa."]]])])]
       (when (not (contains? (:answers application) :hakukohteet))
         [:ul.application-handling__hakukohteet-list
@@ -1659,7 +1659,17 @@
            ^{:key (str "hakukohteet-list-row-" hakukohde-oid)}
            [:li.application-handling__hakukohteet-list-row
             [:div.application-handling__review-area-hakukohde-heading
-             [hakukohde-and-tarjoaja-name hakukohde-oid]]])])]]))
+             [hakukohde-and-tarjoaja-name hakukohde-oid]]])])]
+     [:div.application-handling__navigation
+      [:a.application-handling__navigation-link
+       {:on-click #(dispatch [:application/navigate-application-list -1])}
+       [:i.zmdi.zmdi-chevron-left]
+       (str " " (get-virkailija-translation :navigate-applications-back))]
+      [:span.application-handling__navigation-link-divider "|"]
+      [:a.application-handling__navigation-link
+       {:on-click #(dispatch [:application/navigate-application-list 1])}
+       (str (get-virkailija-translation :navigate-applications-forward) " ")
+       [:i.zmdi.zmdi-chevron-right]]]]))
 
 (defn close-application []
   [:a {:href     "#"
