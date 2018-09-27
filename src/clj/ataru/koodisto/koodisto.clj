@@ -1,6 +1,9 @@
 (ns ataru.koodisto.koodisto
   (:require [ataru.koodisto.koodisto-db-cache :as koodisto-cache]
-            [ataru.component-data.value-transformers :refer [update-options-while-keeping-existing-followups]]))
+            [ataru.component-data.value-transformers :refer [update-options-while-keeping-existing-followups]]
+            [clojure.core.cache :as cache]))
+
+(def populate-form-koodisto-fields-cache (atom (cache/lru-cache-factory {})))
 
 (defn get-koodisto-options
   [uri version]
@@ -32,6 +35,11 @@
                                         koodis-with-followups)))
                   %)
                 (:content form))))
+
+(defn populate-form-koodisto-fields-cached
+  [form]
+  (let [cached-data (swap! populate-form-koodisto-fields-cache cache/through-cache form populate-form-koodisto-fields)]
+    (get cached-data form)))
 
 (defn get-postal-office-by-postal-code
   [postal-code]

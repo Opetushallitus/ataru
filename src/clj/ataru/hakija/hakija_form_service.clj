@@ -12,7 +12,9 @@
             [clj-time.coerce :as t]
             [schema.core :as s]
             [ataru.hakija.form-role :as form-role]
-            [ataru.component-data.component :as component]))
+            [ataru.component-data.component :as component]
+            [medley.core :refer [find-first]]
+            [ataru.util :as util]))
 
 (defn- set-can-submit-multiple-applications-and-yhteishaku
   [multiple? yhteishaku? haku-oid field]
@@ -28,18 +30,29 @@
     (f field)
     field))
 
+(defn set-submit-multiple-and-yhteishaku-if-ssn-or-email-field
+  [multiple? yhteishaku? haku-oid]
+  (partial map-if-ssn-or-email
+           (partial set-can-submit-multiple-applications-and-yhteishaku
+                    multiple? yhteishaku? haku-oid)))
+
+(defn- update-ssn-and-email-fields-in-person-module
+  [multiple? yhteishaku? haku-oid form]
+  (when-let [person-module-idx (util/first-index-of #(= (:module %) "person-info") (:content form))]
+    (let [person-module     (nth (:content form) person-module-idx)
+          new-person-module (update person-module :children (set-submit-multiple-and-yhteishaku-if-ssn-or-email-field multiple? yhteishaku? haku-oid))]
+      (assoc-in form [:content person-module-idx] new-person-module))))
+
 (defn populate-can-submit-multiple-applications
   [form tarjonta-info]
-  (let [multiple? (get-in tarjonta-info [:tarjonta :can-submit-multiple-applications] true)
+  (let [multiple?   (get-in tarjonta-info [:tarjonta :can-submit-multiple-applications] true)
         yhteishaku? (get-in tarjonta-info [:tarjonta :yhteishaku] false)
-        haku-oid  (get-in tarjonta-info [:tarjonta :haku-oid])]
-    (update form :content
-      (fn [content]
-        (clojure.walk/prewalk
-          (partial map-if-ssn-or-email
-            (partial set-can-submit-multiple-applications-and-yhteishaku
-              multiple? yhteishaku? haku-oid))
-          content)))))
+        haku-oid    (get-in tarjonta-info [:tarjonta :haku-oid])]
+    (or
+      (update-ssn-and-email-fields-in-person-module multiple? yhteishaku? haku-oid form)
+      (update form :content
+              (fn [content]
+                (clojure.walk/prewalk (set-submit-multiple-and-yhteishaku-if-ssn-or-email-field multiple? yhteishaku? haku-oid) content))))))
 
 (defn- attachment-modify-grace-period
   [hakuaika]

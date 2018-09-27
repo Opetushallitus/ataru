@@ -1,6 +1,7 @@
 (ns ataru.tarjonta-service.hakukohde
   (:require [ataru.util :refer [koulutus->str non-blank-val]]
-            [clojure.string :refer [join blank?]]))
+            [clojure.string :refer [join blank?]]
+            [ataru.util :as util]))
 
 (defn- koulutus->str-map
   [koulutus]
@@ -42,12 +43,22 @@
                   (get-in tarjonta-info [:tarjonta :hakukohteet])))
       (assoc-in [:params :max-hakukohteet] (get-in tarjonta-info [:tarjonta :max-hakukohteet]))))
 
+(defn- update-hakukohde-question-on-top-level
+  [form tarjonta-info]
+  (when-let [hakukohteet-field-idx (util/first-index-of #(= (:fieldType %) "hakukohteet") (:content form))]
+    (let [hakukohteet-field (nth (:content form) hakukohteet-field-idx)
+          updated-field     (populate-hakukohteet-field hakukohteet-field tarjonta-info)]
+      (assoc-in form [:content hakukohteet-field-idx] updated-field))))
+
 (defn populate-hakukohde-answer-options [form tarjonta-info]
-  (update form :content
-          (fn [content]
-            (clojure.walk/prewalk
-              (fn [field]
-                (if (= (:fieldType field) "hakukohteet")
-                  (populate-hakukohteet-field field tarjonta-info)
-                  field))
-              content))))
+  ; walking through entire content is very slow for large forms, so try a naive optimization first
+  (or
+    (update-hakukohde-question-on-top-level form tarjonta-info)
+    (update form :content
+            (fn [content]
+              (clojure.walk/prewalk
+                (fn [field]
+                  (if (= (:fieldType field) "hakukohteet")
+                    (populate-hakukohteet-field field tarjonta-info)
+                    field))
+                content)))))

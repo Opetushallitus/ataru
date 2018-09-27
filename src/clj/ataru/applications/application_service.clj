@@ -101,6 +101,13 @@
                                  (person-service/get-person person-client))]
     (parse-person application person-from-onr)))
 
+(defn- populate-form-fields
+  [form tarjonta-info]
+  (-> form
+      koodisto/populate-form-koodisto-fields-cached
+      (populate-hakukohde-answer-options tarjonta-info)
+      (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)))
+
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
@@ -111,25 +118,21 @@
                            session
                            application-key)]
     (let [tarjonta-info    (tarjonta-parser/parse-tarjonta-info-by-haku
-                            tarjonta-service
-                            organization-service
-                            ohjausparametrit-service
-                            (:haku application)
-                            (:hakukohde application))
+                             tarjonta-service
+                             organization-service
+                             ohjausparametrit-service
+                             (:haku application)
+                             (:hakukohde application))
           form-key         (->> (-> tarjonta-info :tarjonta :hakukohteet)
                                 (map :form-key)
                                 (distinct)
                                 (remove nil?)
                                 first)
-          applied-form     #(-> (:form application)
-                                form-store/fetch-by-id)
           newest-form      (some-> form-key form-store/fetch-by-key)
-          form             (-> (if (and newest-form with-newest-form?)
-                                 newest-form
-                                 (applied-form))
-                               koodisto/populate-form-koodisto-fields
-                               (populate-hakukohde-answer-options tarjonta-info)
-                               (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))
+          form-to-use      (if (and newest-form with-newest-form?)
+                             newest-form
+                             (form-store/fetch-by-id (:form application)))
+          form             (populate-form-fields form-to-use tarjonta-info)
           alternative-form (some-> (when (and (not with-newest-form?)
                                               (not= (:id form) (:id newest-form)))
                                      newest-form)
