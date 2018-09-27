@@ -540,19 +540,6 @@
                      []
                      [[:application/run-rules (:blur-rules field)]])})))
 
-(reg-event-fx
-  :application/set-application-field-valid
-  (fn [{db :db} [_ field-descriptor valid? errors]]
-    (let [id (keyword (:id field-descriptor))
-          rules (:rules field-descriptor)]
-      (cond-> {:db (-> db
-                       (assoc-in [:application :answers id :valid] valid?)
-                       (assoc-in [:application :answers id :errors] errors))
-               :dispatch-n [[:application/update-answers-validity]
-                            [:application/set-validator-processed id]]}
-        (not (empty? rules))
-        (update :dispatch-n conj [:application/run-rules rules])))))
-
 (defn- set-validator-processing
   [db id]
   (update-in db [:application :validators-processing] conj id))
