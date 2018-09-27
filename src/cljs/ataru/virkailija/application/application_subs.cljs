@@ -56,15 +56,28 @@
          haun-hakukohteet
          haun-hakukohderyhmat]))))
 
+(defn- application-list-selected-by
+  [db]
+  (let [db-application (:application db)]
+    (cond
+      (:selected-form-key db-application) :selected-form-key
+      (:selected-haku db-application) :selected-haku
+      (:selected-hakukohde db-application) :selected-hakukohde
+      (:selected-hakukohderyhma db-application) :selected-hakukohderyhma)))
+
 (re-frame/reg-sub
   :application/application-list-selected-by
+  application-list-selected-by)
+
+(re-frame/reg-sub
+  :application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
   (fn [db]
-    (let [db-application (:application db)]
-      (cond
-        (:selected-form-key db-application) :selected-form-key
-        (:selected-haku db-application) :selected-haku
-        (:selected-hakukohde db-application) :selected-hakukohde
-        (:selected-hakukohderyhma db-application) :selected-hakukohderyhma))))
+    (let [selected-by (application-list-selected-by db)
+          oid-or-oids (when selected-by (-> db :application selected-by))]
+      (case selected-by
+        :selected-hakukohde #{oid-or-oids}
+        :selected-hakukohderyma (set oid-or-oids)
+        nil))))
 
 (re-frame/reg-sub
   :application/show-ensisijaisesti?
