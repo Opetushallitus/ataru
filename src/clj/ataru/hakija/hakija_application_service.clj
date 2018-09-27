@@ -271,13 +271,18 @@
          :as   result}
         (validate-and-store tarjonta-service organization-service ohjausparametrit-service application true)
         virkailija-secret (:virkailija-secret application)]
-    (when passed?
+    (if passed?
       (if virkailija-secret
         (start-virkailija-edit-jobs job-runner
                                     virkailija-secret
                                     id
                                     application)
-        (start-hakija-edit-jobs tarjonta-service job-runner id)))
+        (start-hakija-edit-jobs tarjonta-service job-runner id))
+      (do
+        (audit-log/log {:new       application
+                        :operation audit-log/operation-failed
+                        :id        (util/extract-email application)})
+        (log/warn "Application edit failed verification" result)))
     result))
 
 (defn save-application-feedback
