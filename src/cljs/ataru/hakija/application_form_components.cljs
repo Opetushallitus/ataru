@@ -256,50 +256,58 @@
 (defn text-field [field-descriptor & {:keys [div-kwd idx]
                                       :or   {div-kwd :div.application__form-field}}]
   (let [id                     (keyword (:id field-descriptor))
-        languages              @(subscribe [:application/default-languages])
         size                   (get-in field-descriptor [:params :size])
         size-class             (text-field-size->class size)
-        show-validation-error? @(subscribe [:application/show-validation-error? id])
-        editing?               @(subscribe [:application/editing?])
-        disabled?              @(subscribe [:application/disabled? id])
-        value                  @(subscribe [:application/answer-value id idx])
-        valid?                 @(subscribe [:application/answer-valid? id idx])
-        errors                 @(subscribe [:application/answer-errors id idx])
-        cannot-view?           @(subscribe [:application/cannot-view? id])
-        cannot-edit?           @(subscribe [:application/cannot-edit? id])
-        show-error?            @(subscribe [:application/show-validation-error-class? id idx])
-        on-change              (if idx
-                                 (->multi-value-field-change field-descriptor 0 idx)
-                                 (->textual-field-change field-descriptor))
-        on-blur                (->textual-field-blur field-descriptor)]
-    [div-kwd
-     [label field-descriptor]
-     (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
-       [question-hakukohde-names field-descriptor])
-     [:div.application__form-text-input-info-text
-      [info-text field-descriptor]]
-     [:div.application__form-text-input-and-validation-errors
-      [:input.application__form-text-input
-       (merge {:id           id
-               :type         "text"
-               :placeholder  (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                               (util/non-blank-val input-hint languages))
-               :class        (str size-class
-                                  (if show-error?
-                                    " application__form-field-error"
-                                    " application__form-text-input--normal"))
-               :on-blur      on-blur
-               :on-change    on-change
-               :required     (is-required-field? field-descriptor)
-               :aria-invalid (not valid?)
-               :value        (if cannot-view?
-                               "***********"
-                               value)}
-              (when (or disabled? cannot-edit?)
-                {:disabled true}))]
-      (when (and (not-empty errors)
-                 show-validation-error?)
-        [validation-error id errors])]]))
+        languages              (subscribe [:application/default-languages])
+        show-validation-error? (subscribe [:application/show-validation-error? id])
+        editing?               (subscribe [:application/editing?])
+        disabled?              (subscribe [:application/disabled? id])
+        cannot-view?           (subscribe [:application/cannot-view? id])
+        cannot-edit?           (subscribe [:application/cannot-edit? id])]
+    (fn [field-descriptor & {:keys [div-kwd idx]
+                             :or   {div-kwd :div.application__form-field}}]
+      (let [languages              @languages
+            show-validation-error? @show-validation-error?
+            editing?               @editing?
+            disabled?              @disabled?
+            value                  @(subscribe [:application/answer-value id idx])
+            valid?                 @(subscribe [:application/answer-valid? id idx])
+            errors                 @(subscribe [:application/answer-errors id idx])
+            cannot-view?           @cannot-view?
+            cannot-edit?           @cannot-edit?
+            show-error?            @(subscribe [:application/show-validation-error-class? id idx])
+            on-change              (if idx
+                                     (->multi-value-field-change field-descriptor 0 idx)
+                                     (->textual-field-change field-descriptor))
+            on-blur                (->textual-field-blur field-descriptor)]
+        [div-kwd
+         [label field-descriptor]
+         (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
+           [question-hakukohde-names field-descriptor])
+         [:div.application__form-text-input-info-text
+          [info-text field-descriptor]]
+         [:div.application__form-text-input-and-validation-errors
+          [:input.application__form-text-input
+           (merge {:id           id
+                   :type         "text"
+                   :placeholder  (when-let [input-hint (-> field-descriptor :params :placeholder)]
+                                   (util/non-blank-val input-hint languages))
+                   :class        (str size-class
+                                      (if show-error?
+                                        " application__form-field-error"
+                                        " application__form-text-input--normal"))
+                   :on-blur      on-blur
+                   :on-change    on-change
+                   :required     (is-required-field? field-descriptor)
+                   :aria-invalid (not valid?)
+                   :value        (if cannot-view?
+                                   "***********"
+                                   value)}
+                  (when (or disabled? cannot-edit?)
+                    {:disabled true}))]
+          (when (and (not-empty errors)
+                     show-validation-error?)
+            [validation-error id errors])]]))))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [id                    (keyword (:id field-descriptor))
