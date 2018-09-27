@@ -79,7 +79,7 @@
    This in necessary to allow older forms that might not have all newest questions
    to be used with latest rules. (e.g. birthplace component)"
   (or (empty? question-ids)
-      (some #{answer-key} question-ids)))
+      (contains? question-ids answer-key)))
 
 (defn contains-id? [content id]
   (contains? (set (map :id content)) id))
@@ -96,7 +96,7 @@
 
 (defn answers->valid-status [all-answers ui flat-form-content content]
   (let [answer-validity (for [[_ answers] all-answers] (:valid answers))
-        question-ids    (map #(-> % :id keyword) flat-form-content)
+        question-ids    (set (map #(-> % :id keyword) flat-form-content))
         invalid-fields  (for [[key answers]
                               (sort-by (fn [[_ answers]] (:order-idx answers)) all-answers)
                               :when (and key
