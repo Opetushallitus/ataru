@@ -1,6 +1,7 @@
 (ns ataru.hakija.hakija-routes
   (:require [ataru.log.access-log :as access-log]
             [ataru.log.audit-log :as audit-log]
+            [ataru.util :as util]
             [ataru.middleware.cache-control :as cache-control]
             [ataru.applications.application-store :as application-store]
             [ataru.hakija.hakija-form-service :as form-service]
