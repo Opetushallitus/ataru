@@ -111,12 +111,10 @@
     {:tarjonta-haut    tarjonta-haut
      :direct-form-haut (get-direct-form-haut organization-service session)
      :haut             (->> (keys tarjonta-haut)
-                            distinct
                             (keep #(tarjonta/get-haku tarjonta-service %))
                             (map tarjonta-service/parse-haku)
                             (util/group-by-first :oid))
      :hakukohteet      (->> (keys tarjonta-haut)
-                            distinct
                             (mapcat #(tarjonta/hakukohde-search tarjonta-service % nil))
                             (util/group-by-first :oid))
      :hakukohderyhmat  (util/group-by-first
