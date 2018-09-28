@@ -675,14 +675,15 @@
 (reg-event-fx
   :application/refresh-haut-and-hakukohteet
   (fn [{:keys [db]}]
-    {:db   (-> db
-               (update :fetching-haut inc)
-               (update :fetching-hakukohteet inc))
-     :http {:method              :get
-            :path                "/lomake-editori/api/haut"
-            :handler-or-dispatch :editor/handle-refresh-haut-and-hakukohteet
-            :skip-parse-times?   true
-            :cache-ttl          (* 1000 60 5)}}))
+    (when (= 0 (:fetching-haut db))
+      {:db   (-> db
+                 (update :fetching-haut inc)
+                 (update :fetching-hakukohteet inc))
+       :http {:method              :get
+              :path                "/lomake-editori/api/haut"
+              :handler-or-dispatch :editor/handle-refresh-haut-and-hakukohteet
+              :skip-parse-times?   true
+              :cache-ttl           (* 1000 60 5)}})))
 
 (reg-event-fx
   :application/navigate
