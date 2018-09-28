@@ -2,7 +2,6 @@
   (:require [cljs-time.format :as f]
             [cljs-time.core :as c]
             [cljs-time.coerce :as coerce]
-            [goog.date :as gd]
             [clojure.walk :refer [postwalk]]
             [taoensso.timbre :refer-macros [spy warn]]))
 

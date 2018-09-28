@@ -307,18 +307,12 @@
        (update-sort column-id true)
        (filter-applications))))
 
-(defn- parse-application-time
-  [application]
-  (-> application
-      (update :created-time temporal/str->googdate)
-      (update :original-created-time temporal/str->googdate)))
-
 (reg-event-fx
   :application/handle-fetch-applications-response
   (fn [{:keys [db]} [_ {:keys [applications]}]]
-    (let [parsed-applications (->> applications
-                                   (map parse-application-time)
-                                   (map #(assoc % :application-hakukohde-reviews (application-states/get-all-reviews-for-all-requirements %))))
+    (let [parsed-applications (map
+                                #(assoc % :application-hakukohde-reviews (application-states/get-all-reviews-for-all-requirements %))
+                                applications)
           db                  (-> db
                                   (assoc-in [:application :applications] parsed-applications)
                                   (assoc-in [:application :fetching-applications] false)

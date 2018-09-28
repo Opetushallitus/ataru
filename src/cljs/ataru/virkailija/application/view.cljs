@@ -553,7 +553,10 @@
 
 (defn application-list-row [application selected?]
   (let [selected-time-column   (subscribe [:state-query [:application :selected-time-column]])
-        day-date-time          (clojure.string/split (t/time->str (@selected-time-column application)) #"\s")
+        day-date-time          (-> (get application @selected-time-column)
+                                   (t/str->googdate)
+                                   (t/time->str)
+                                   (clojure.string/split #"\s"))
         day                    (first day-date-time)
         date-time              (->> day-date-time (rest) (clojure.string/join " "))
         applicant              (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
