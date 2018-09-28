@@ -109,17 +109,6 @@
       (populate-hakukohde-answer-options tarjonta-info)
       (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)))
 
-(defn- perform-async
-  [fn]
-  (let [c (chan)]
-    (go
-      (>! c (fn)))
-    c))
-
-(defn- read-async
-  [c]
-  (<!! (go (<! c))))
-
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
@@ -149,24 +138,24 @@
                                                   (not= (:id form) (:id newest-form)))
                                          newest-form)
                                        (assoc :content []) (dissoc :organization-oid))
-          hakukohde-reviews    (perform-async #(parse-application-hakukohde-reviews application-key))
-          attachment-reviews   (perform-async #(parse-application-attachment-reviews application-key))
-          events               (perform-async #(application-store/get-application-events application-key))
-          review               (perform-async #(application-store/get-application-review application-key))
-          review-notes         (perform-async #(application-store/get-application-review-notes application-key))
-          information-requests (perform-async #(information-request-store/get-information-requests application-key))]
+          hakukohde-reviews    (future (parse-application-hakukohde-reviews application-key))
+          attachment-reviews   (future (parse-application-attachment-reviews application-key))
+          events               (future (application-store/get-application-events application-key))
+          review               (future (application-store/get-application-review application-key))
+          review-notes         (future (application-store/get-application-review-notes application-key))
+          information-requests (future (information-request-store/get-information-requests application-key))]
       (util/remove-nil-values {:application          (-> application
                                                          (dissoc :person-oid)
                                                          (assoc :person (get-person application person-client))
                                                          (merge tarjonta-info))
                                :form                 form
                                :alternative-form     alternative-form
-                               :hakukohde-reviews    (read-async hakukohde-reviews)
-                               :attachment-reviews   (read-async attachment-reviews)
-                               :events               (read-async events)
-                               :review               (read-async review)
-                               :review-notes         (read-async review-notes)
-                               :information-requests (read-async information-requests)}))))
+                               :hakukohde-reviews    @hakukohde-reviews
+                               :attachment-reviews   @attachment-reviews
+                               :events               @events
+                               :review               @review
+                               :review-notes         @review-notes
+                               :information-requests @information-requests}))))
 
 (defn- belongs-to-hakukohderyhma?
   [hakukohderyhma-oid hakukohde]
