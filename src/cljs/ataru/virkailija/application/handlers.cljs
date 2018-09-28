@@ -1210,10 +1210,7 @@
           next-application-idx    (if (nil? current-application-idx)
                                     0
                                     (+ current-application-idx step))
-          guarded-idx             (cond
-                                    (< next-application-idx 0) (dec application-count)
-                                    (>= next-application-idx application-count) 0
-                                    :else next-application-idx)
+          guarded-idx             (mod next-application-idx application-count)
           next-application-key    (-> filtered-applications (nth guarded-idx) :key)]
       {:update-url-query-params {:application-key next-application-key}
        :dispatch                [:application/select-application next-application-key selected-hakukohde false]})))
