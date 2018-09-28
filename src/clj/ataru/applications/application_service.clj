@@ -18,8 +18,7 @@
    [ataru.util :as util]
    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
    [medley.core :refer [filter-vals]]
-   [taoensso.timbre :refer [spy debug]]
-   [clojure.core.async :refer [chan <! <!! >! go]])
+   [taoensso.timbre :refer [spy debug]])
   (:import [java.io ByteArrayInputStream]))
 
 (defn- extract-koodisto-fields [field-descriptor-list]
