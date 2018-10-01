@@ -454,6 +454,10 @@ and (max-width: 1000px) {
   display: flex;
 }
 
+.application-handling__list-row-hakukohde--not-in-selection {
+  filter: opacity(50%)
+}
+
 .application-handling__list-loading-indicator {
   text-align: center;
   width: 100%;
@@ -2030,6 +2034,14 @@ th.application__readonly-adjacent--header {
   flex: 0 1 auto;
   margin-top: 3px;
   padding-left: 12px;
+}
+
+.application-handling__application-hakukohde-cell--selected {
+  color: @selected-blue;
+}
+
+.application-handling__application-hakukohde-cell--not-in-selection {
+  color: @disabled-font-gray;
 }
 
 .application-handling__application-hakukohde-cell--form {

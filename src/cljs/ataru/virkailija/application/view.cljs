@@ -473,7 +473,8 @@
                                         ["form"]
                                         (:hakukohde application))
         application-hakukohde-reviews (:application-hakukohde-reviews application)
-        lang                          (subscribe [:editor/virkailija-lang])]
+        lang                          (subscribe [:editor/virkailija-lang])
+        selected-hakukohde-oids       (subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])]
     (into
       [:div.application-handling__list-row-hakukohteet-wrapper
        {:class (when direct-form-application? "application-handling__application-hakukohde-cell--form")}]
@@ -490,6 +491,10 @@
                                               (seq)))
                 hakukohde-attachment-states ((keyword hakukohde-oid) attachment-states)]
             [:div.application-handling__list-row-hakukohde
+             {:class (when (and (not direct-form-application?)
+                                (some? @selected-hakukohde-oids)
+                                (not (contains? @selected-hakukohde-oids hakukohde-oid)))
+                       "application-handling__list-row-hakukohde--not-in-selection")}
              (when (not direct-form-application?)
                [:span.application-handling__application-hakukohde-cell
                 {:class    (when (= selected-hakukohde hakukohde-oid)
