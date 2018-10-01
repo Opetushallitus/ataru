@@ -399,23 +399,22 @@
     (when-not (or (empty? max-length) (= "0" max-length))
       max-length)))
 
-(defn text-area [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
-  (let [size         (-> field-descriptor :params :size)
+(defn text-area [field-descriptor & {:keys [div-kwd idx]
+                                     :or   {div-kwd :div.application__form-field}}]
+  (let [id           (keyword (:id field-descriptor))
+        size         (-> field-descriptor :params :size)
+        size-class   (text-area-size->class size)
         max-length   (parse-max-length field-descriptor)
-        cannot-edit? (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])
-        valid      (subscribe [:application/answer-valid? (-> field-descriptor :id keyword) idx])
-        value-path   (cond-> [:application :answers (-> field-descriptor :id keyword)]
-                             idx (conj :values idx 0)
-                             true (conj :value))
-        value        (subscribe [:state-query value-path])]
-    (fn [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
-      (let [on-change (if idx
-                        (partial multi-value-field-change field-descriptor 0 idx)
-                        (partial textual-field-change field-descriptor))
-            on-blur   (fn [evt]
-                        (if idx
-                          (multi-value-field-change field-descriptor 0 idx evt)
-                          (textual-field-change field-descriptor evt)))]
+        cannot-edit? (subscribe [:application/cannot-edit? id])
+        local-state  (r/atom {:focused? false :value nil})]
+    (fn [field-descriptor & {:keys [div-kwd idx]
+                             :or   {div-kwd :div.application__form-field}}]
+      (let [value        @(subscribe [:application/answer-value id idx])
+            valid?       @(subscribe [:application/answer-valid? id idx])
+            cannot-edit? @cannot-edit?
+            on-change    (if idx
+                           (->multi-value-field-change field-descriptor 0 idx)
+                           (->textual-field-change field-descriptor))]
         [div-kwd
          [label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
@@ -423,18 +422,26 @@
          [:div.application__form-text-area-info-text
           [info-text field-descriptor]]
          [:textarea.application__form-text-input.application__form-text-area
-          (merge {:id            (:id field-descriptor)
-                  :class         (text-area-size->class size)
-                  :maxLength     max-length
-                  :default-value @value
-                  :on-change     on-change
-                  :on-blur       on-blur
-                  :required      (is-required-field? field-descriptor)
-                  :aria-invalid  (not @valid)}
-                 (when @cannot-edit?
+          (merge {:id           id
+                  :class        size-class
+                  :maxLength    max-length
+                  :value        (if (:focused? @local-state)
+                                  (:value @local-state)
+                                  value)
+                  :on-blur      (fn [_]
+                                  (swap! local-state assoc
+                                         :focused? false))
+                  :on-change    (fn [evt]
+                                  (swap! local-state assoc
+                                         :focused? true
+                                         :value (-> evt .-target .-value))
+                                  (on-change evt))
+                  :required     (is-required-field? field-descriptor)
+                  :aria-invalid (not valid?)}
+                 (when cannot-edit?
                    {:disabled true}))]
          (when max-length
-           [:span.application__form-textarea-max-length (str (count @value) " / " max-length)])]))))
+           [:span.application__form-textarea-max-length (str (count value) " / " max-length)])]))))
 
 (declare render-field)
 
