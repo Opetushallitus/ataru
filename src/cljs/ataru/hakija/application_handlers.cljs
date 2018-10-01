@@ -699,9 +699,9 @@
             true
             (set-repeatable-application-field-top-level-valid id question-group-idx (required? field-descriptor) true))))
 
-(reg-event-fx
+(reg-event-db
   :application/remove-repeatable-application-field-value
-  (fn [{:keys [db]} [_ field-descriptor data-idx question-group-idx]]
+  (fn [db [_ field-descriptor data-idx question-group-idx]]
     (remove-repeatable-field-value db field-descriptor data-idx question-group-idx)))
 
 (defn default-error-handler [db [_ response]]
