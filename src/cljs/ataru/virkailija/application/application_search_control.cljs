@@ -86,7 +86,7 @@
     [:a.application__search-control-haku-link
      {:href href}
      [:span.application__search-control-haku-title
-      {:class (when hakukohde?  (name :application__search-control-haku-title--hakukohde))}
+      {:class (when hakukohde? "application__search-control-haku-title--hakukohde")}
        (or title [:i.zmdi.zmdi-spinner.spin])]
      [:span.application__search-control-haku-hl]
      (when haku-application-count
