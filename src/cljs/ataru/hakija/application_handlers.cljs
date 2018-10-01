@@ -540,7 +540,7 @@
                      []
                      [[:application/run-rules (:blur-rules field)]])})))
 
-(defn- set-validator-processing
+(defn set-validator-processing
   [db id]
   (update-in db [:application :validators-processing] conj id))
 

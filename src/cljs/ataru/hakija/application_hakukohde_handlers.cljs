@@ -4,7 +4,8 @@
     [re-frame.core :refer [subscribe reg-event-db reg-fx reg-event-fx dispatch]]
     [ataru.util :as util]
     [ataru.hakija.application-validators :as validator]
-    [ataru.hakija.application-handlers :refer [set-field-visibilities]]))
+    [ataru.hakija.application-handlers :refer [set-field-visibilities
+                                               set-validator-processing]]))
 
 (defn- hakukohteet-field [db]
   (->> (:flat-form-content db)
@@ -86,10 +87,6 @@
     {:db         (assoc-in db [:application :answers :hakukohteet :valid] valid?)
      :dispatch-n [[:application/update-answers-validity]
                   [:application/set-validator-processed :hakukohteet]]}))
-
-(defn- set-validator-processing
-  [db id]
-  (update-in db [:application :validators-processing] conj id))
 
 (reg-event-fx
   :application/hakukohde-add-selection
