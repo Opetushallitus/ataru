@@ -69,6 +69,16 @@
   :application/application-list-selected-by
   application-list-selected-by)
 
+(defn- selected-hakukohderyhma-hakukohteet
+  [db]
+  (if-let [[_ hakukohderyhma-oid] (get-in db [:application :selected-hakukohderyhma])]
+    (map first
+         (filter
+           (fn [[_ hakukohde]]
+             (if-let [ryhmaliitokset (:ryhmaliitokset hakukohde)]
+               (some #(= hakukohderyhma-oid %) ryhmaliitokset)))
+           (get-in db [:hakukohteet])))))
+
 (re-frame/reg-sub
   :application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
   (fn [db]
@@ -76,7 +86,7 @@
           oid-or-oids (when selected-by (-> db :application selected-by))]
       (case selected-by
         :selected-hakukohde #{oid-or-oids}
-        :selected-hakukohderyma (set oid-or-oids)
+        :selected-hakukohderyhma (set (selected-hakukohderyhma-hakukohteet db))
         nil))))
 
 (re-frame/reg-sub
@@ -117,12 +127,7 @@
 
 (re-frame/reg-sub
   :application/selected-hakukohderyhma-hakukohteet
-  (fn [db _]
-    (if-let [[haku-oid hakukohderyhma-oid] (get-in db [:application :selected-hakukohderyhma])]
-      (map (fn [[oid _]] oid)
-        (filter (fn [[_ h]]
-                  (if-let [ryhmaliitokset (:ryhmaliitokset h)]
-                    (some #(= hakukohderyhma-oid %) ryhmaliitokset))) (get-in db [:hakukohteet]))))))
+  selected-hakukohderyhma-hakukohteet)
 
 (re-frame/reg-sub
  :application/show-mass-update-link?
