@@ -58,17 +58,19 @@
 
 (re-frame/reg-sub
   :application/answer-value
-  (fn [[_ id _] _]
+  (fn [[_ id _ _] _]
     [(re-frame/subscribe [:application/answer id])
      (re-frame/subscribe [:application/person])
      (re-frame/subscribe [:application/editing?])])
-  (fn [[answer person editing?] [_ id idx]]
+  (fn [[answer person editing?] [_ id question-group-idx repeatable-idx]]
     (let [id (keyword id)]
       (cond (and editing?
                  (contains? person-info-fields/editing-forbidden-person-info-field-ids id))
             (get person id)
-            (some? idx)
-            (get-in answer [:values idx 0 :value])
+            (some? question-group-idx)
+            (get-in answer [:values question-group-idx (or repeatable-idx 0) :value])
+            (some? repeatable-idx)
+            (get-in answer [:values repeatable-idx :value])
             :else
             (:value answer)))))
 
@@ -411,10 +413,10 @@
 
 (re-frame/reg-sub
   :application/show-validation-error-class?
-  (fn [[_ id idx] _]
+  (fn [[_ id question-group-idx repeatable-idx] _]
     [(re-frame/subscribe [:application/form-field id])
-     (re-frame/subscribe [:application/answer-value id idx])
-     (re-frame/subscribe [:application/answer-valid? id idx])
+     (re-frame/subscribe [:application/answer-value id question-group-idx repeatable-idx])
+     (re-frame/subscribe [:application/answer-valid? id question-group-idx])
      (re-frame/subscribe [:application/validator-processing? id])])
   (fn [[field value valid? validator-processing?] _]
     (and (not valid?)

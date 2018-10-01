@@ -271,12 +271,12 @@
             show-validation-error? @show-validation-error?
             editing?               @editing?
             disabled?              @disabled?
-            value                  @(subscribe [:application/answer-value id idx])
+            value                  @(subscribe [:application/answer-value id idx nil])
             valid?                 @(subscribe [:application/answer-valid? id idx])
             errors                 @(subscribe [:application/answer-errors id idx])
             cannot-view?           @cannot-view?
             cannot-edit?           @cannot-edit?
-            show-error?            @(subscribe [:application/show-validation-error-class? id idx])
+            show-error?            @(subscribe [:application/show-validation-error-class? id idx nil])
             on-change              (if idx
                                      (->multi-value-field-change field-descriptor 0 idx)
                                      (->textual-field-change field-descriptor))
@@ -409,7 +409,7 @@
         local-state  (r/atom {:focused? false :value nil})]
     (fn [field-descriptor & {:keys [div-kwd idx]
                              :or   {div-kwd :div.application__form-field}}]
-      (let [value        @(subscribe [:application/answer-value id idx])
+      (let [value        @(subscribe [:application/answer-value id idx nil])
             valid?       @(subscribe [:application/answer-valid? id idx])
             cannot-edit? @cannot-edit?
             on-change    (if idx
