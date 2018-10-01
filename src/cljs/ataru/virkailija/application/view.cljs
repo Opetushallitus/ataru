@@ -59,10 +59,6 @@
                    (.submit (.getElementById js/document "excel-download-link")))}
       (get-virkailija-translation :load-excel)]]))
 
-(defn- count-for-application-state
-  [from-states state]
-  (get from-states state 0))
-
 (defn- selected-or-default-mass-review-state
   [selected all]
   (if @selected
@@ -86,10 +82,10 @@
          (str " (" count ")"))))
 
 (defn- selected-or-default-mass-review-state-label
-  [selected all]
+  [selected all review-state-counts]
   (let [name  (selected-or-default-mass-review-state selected all)
         label (review-state-label name)
-        count (count-for-application-state all name)]
+        count (get review-state-counts name)]
     (review-label-with-count label count)))
 
 (defn- mass-review-state-selected-row
@@ -99,8 +95,8 @@
    [icon-check] label])
 
 (defn- mass-review-state-row
-  [current-review-state states disable-empty-rows? state]
-  (let [review-state-count (count-for-application-state states state)
+  [current-review-state states review-state-counts disable-empty-rows? state]
+  (let [review-state-count (get review-state-counts state 0)
         review-state-label (review-state-label state)
         label-with-count   (review-label-with-count review-state-label review-state-count)
         on-click           #(reset! current-review-state state)
@@ -113,8 +109,8 @@
        label-with-count])))
 
 (defn- opened-mass-review-state-list
-  [current-state states disable-empty-rows?]
-  (mapv (partial mass-review-state-row current-state states disable-empty-rows?) (map first states)))
+  [current-state states review-state-counts disable-empty-rows?]
+  (mapv (partial mass-review-state-row current-state states review-state-counts disable-empty-rows?) (map first states)))
 
 (defn- toggle-mass-update-popup-visibility
   [element-visible submit-button-state fn-or-bool]
@@ -135,6 +131,7 @@
         massamuokkaus?             (subscribe [:application/massamuutos-enabled?])
         filtered-applications      (subscribe [:application/filtered-applications])
         haku-header                (subscribe [:application/list-heading-data-for-haku])
+        review-state-counts        (subscribe [:state-query [:application :review-state-counts]])
         all-states                 (reduce (fn [acc [state _]]
                                              (assoc acc state 0))
                                      {}
@@ -178,12 +175,12 @@
                 [:div.application-handling__review-state-list-opened-anchor
                  (into [:div.application-handling__review-state-list-opened
                         {:on-click #(swap! from-list-open? not)}]
-                       (opened-mass-review-state-list selected-from-review-state from-states true))]
+                       (opened-mass-review-state-list selected-from-review-state from-states @review-state-counts true))]
                 (mass-review-state-selected-row
                   (fn []
                     (swap! from-list-open? not)
                     (reset! submit-button-state :submit))
-                  (selected-or-default-mass-review-state-label selected-from-review-state from-states)))
+                  (selected-or-default-mass-review-state-label selected-from-review-state from-states @review-state-counts)))
 
               [:h4.application-handling__mass-edit-review-states-heading (get-virkailija-translation :to-state)]
 
@@ -191,12 +188,12 @@
                 [:div.application-handling__review-state-list-opened-anchor
                  (into [:div.application-handling__review-state-list-opened
                         {:on-click #(when (-> from-states (keys) (count) (pos?)) (swap! to-list-open? not))}]
-                       (opened-mass-review-state-list selected-to-review-state all-states false))]
+                       (opened-mass-review-state-list selected-to-review-state all-states @review-state-counts false))]
                 (mass-review-state-selected-row
                   (fn []
                     (swap! to-list-open? not)
                     (reset! submit-button-state :submit))
-                  (selected-or-default-mass-review-state-label selected-to-review-state all-states)))
+                  (selected-or-default-mass-review-state-label selected-to-review-state all-states @review-state-counts)))
 
               (case @submit-button-state
                 :submit
