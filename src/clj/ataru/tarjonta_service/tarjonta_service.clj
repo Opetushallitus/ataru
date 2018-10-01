@@ -122,15 +122,15 @@
                                            (map :oid)
                                            (.get-hakukohteet this)
                                            (mapv parse-hakukohde))
-          user-organization-oids  (memoize (fn [] (some->> (fetch-or-cached-hakukohde-search cache-service
-                                                                                             haku-oid
-                                                                                             organization-oid)
-                                                           (map :oid)
-                                                           (set))))
+          user-organization-oids  (delay (some->> (fetch-or-cached-hakukohde-search cache-service
+                                                                                    haku-oid
+                                                                                    organization-oid)
+                                                  (map :oid)
+                                                  (set)))
           oph-organization?       (= oph-organization organization-oid)
           is-user-organization-fn (if oph-organization?
                                     (constantly true)
-                                    #(contains? (user-organization-oids) %))]
+                                    #(contains? @user-organization-oids %))]
       (some->> result
                (map #(stamp-user-organization is-user-organization-fn %)))))
 
