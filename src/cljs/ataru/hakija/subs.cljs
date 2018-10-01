@@ -79,12 +79,14 @@
   (fn [[_ id _] _]
     [(re-frame/subscribe [:application/answer id])
      (re-frame/subscribe [:application/editing?])])
-  (fn [[answer editing?] [_ id idx]]
+  (fn [[answer editing?] [_ id question-group-idx repeatable-idx]]
     (cond (and editing?
                (contains? person-info-fields/editing-forbidden-person-info-field-ids (keyword id)))
           true
-          (some? idx)
-          (get-in answer [:values idx 0 :valid])
+          (some? question-group-idx)
+          (get-in answer [:values question-group-idx (or repeatable-idx 0) :valid])
+          (some? repeatable-idx)
+          (get-in answer [:values repeatable-idx :valid])
           :else
           (:valid answer))))
 
@@ -416,7 +418,7 @@
   (fn [[_ id question-group-idx repeatable-idx] _]
     [(re-frame/subscribe [:application/form-field id])
      (re-frame/subscribe [:application/answer-value id question-group-idx repeatable-idx])
-     (re-frame/subscribe [:application/answer-valid? id question-group-idx])
+     (re-frame/subscribe [:application/answer-valid? id question-group-idx repeatable-idx])
      (re-frame/subscribe [:application/validator-processing? id])])
   (fn [[field value valid? validator-processing?] _]
     (and (not valid?)
