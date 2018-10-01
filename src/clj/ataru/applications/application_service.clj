@@ -101,6 +101,13 @@
                                  (person-service/get-person person-client))]
     (parse-person application person-from-onr)))
 
+(defn- populate-form-fields
+  [form tarjonta-info]
+  (-> form
+      koodisto/populate-form-koodisto-fields-cached
+      (populate-hakukohde-answer-options tarjonta-info)
+      (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)))
+
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
@@ -110,42 +117,44 @@
                            tarjonta-service
                            session
                            application-key)]
-    (let [tarjonta-info    (tarjonta-parser/parse-tarjonta-info-by-haku
-                            tarjonta-service
-                            organization-service
-                            ohjausparametrit-service
-                            (:haku application)
-                            (:hakukohde application))
-          form-key         (->> (-> tarjonta-info :tarjonta :hakukohteet)
-                                (map :form-key)
-                                (distinct)
-                                (remove nil?)
-                                first)
-          applied-form     #(-> (:form application)
-                                form-store/fetch-by-id)
-          newest-form      (some-> form-key form-store/fetch-by-key)
-          form             (-> (if (and newest-form with-newest-form?)
+    (let [tarjonta-info        (tarjonta-parser/parse-tarjonta-info-by-haku
+                                 tarjonta-service
+                                 organization-service
+                                 ohjausparametrit-service
+                                 (:haku application)
+                                 (:hakukohde application))
+          form-key             (->> (-> tarjonta-info :tarjonta :hakukohteet)
+                                    (map :form-key)
+                                    (distinct)
+                                    (remove nil?)
+                                    first)
+          newest-form          (some-> form-key form-store/fetch-by-key)
+          form-to-use          (if (and newest-form with-newest-form?)
                                  newest-form
-                                 (applied-form))
-                               koodisto/populate-form-koodisto-fields
-                               (populate-hakukohde-answer-options tarjonta-info)
-                               (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))
-          alternative-form (some-> (when (and (not with-newest-form?)
-                                              (not= (:id form) (:id newest-form)))
-                                     newest-form)
-                                   (assoc :content []) (dissoc :organization-oid))]
+                                 (form-store/fetch-by-id (:form application)))
+          form                 (populate-form-fields form-to-use tarjonta-info)
+          alternative-form     (some-> (when (and (not with-newest-form?)
+                                                  (not= (:id form) (:id newest-form)))
+                                         newest-form)
+                                       (assoc :content []) (dissoc :organization-oid))
+          hakukohde-reviews    (future (parse-application-hakukohde-reviews application-key))
+          attachment-reviews   (future (parse-application-attachment-reviews application-key))
+          events               (future (application-store/get-application-events application-key))
+          review               (future (application-store/get-application-review application-key))
+          review-notes         (future (application-store/get-application-review-notes application-key))
+          information-requests (future (information-request-store/get-information-requests application-key))]
       (util/remove-nil-values {:application          (-> application
                                                          (dissoc :person-oid)
                                                          (assoc :person (get-person application person-client))
                                                          (merge tarjonta-info))
                                :form                 form
                                :alternative-form     alternative-form
-                               :hakukohde-reviews    (parse-application-hakukohde-reviews application-key)
-                               :attachment-reviews   (parse-application-attachment-reviews application-key)
-                               :events               (application-store/get-application-events application-key)
-                               :review               (application-store/get-application-review application-key)
-                               :review-notes         (application-store/get-application-review-notes application-key)
-                               :information-requests (information-request-store/get-information-requests application-key)}))))
+                               :hakukohde-reviews    @hakukohde-reviews
+                               :attachment-reviews   @attachment-reviews
+                               :events               @events
+                               :review               @review
+                               :review-notes         @review-notes
+                               :information-requests @information-requests}))))
 
 (defn- belongs-to-hakukohderyhma?
   [hakukohderyhma-oid hakukohde]

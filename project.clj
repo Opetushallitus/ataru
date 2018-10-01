@@ -65,7 +65,7 @@
                  [ring/ring-session-timeout "0.2.0"]
                  [org.clojure/tools.logging "0.4.0"]
                  [org.apache.poi/poi-ooxml "3.17"]
-                 [org.clojure/core.cache "0.6.5"]
+                 [org.clojure/core.cache "0.7.1"]
                  [org.clojure/tools.nrepl "0.2.13"]
                  [com.taoensso/carmine "2.16.0"]
                  [pandect "0.6.1"]
