@@ -99,7 +99,7 @@
    organization-service
    [:view-applications :edit-applications]
    (constantly nil)
-   #(some->> (application-store/get-latest-application-by-key application-key)
+   #(some->> (application-store/get-latest-application-by-key application-key session)
              vector
              (populate-applications-hakukohteet tarjonta-service)
              (filter (some-fn (partial authorized-by-form? %)
@@ -111,7 +111,7 @@
    #(remove-organization-oid
       (can-edit-application? organization-service
                              session
-                             (application-store/get-latest-application-by-key application-key)))))
+                             (application-store/get-latest-application-by-key application-key session)))))
 
 (defn- populate-hakukohde
   [external-application]

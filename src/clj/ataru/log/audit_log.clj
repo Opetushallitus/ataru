@@ -84,6 +84,7 @@
          (not-blank? id)
          (some #{operation} [operation-failed
                              operation-new
+                             operation-read
                              operation-modify
                              operation-delete
                              operation-login])]}
