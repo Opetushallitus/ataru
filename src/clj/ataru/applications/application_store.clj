@@ -39,7 +39,7 @@
 
 (defn- auditlog-read
   [application session]
-  (audit-log/log {:new              application
+  (audit-log/log {:new              (dissoc application :content)
                   :id               (get-in session [:identity :oid])
                   :operation        audit-log/operation-read}))
 
