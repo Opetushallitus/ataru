@@ -902,8 +902,7 @@
                 (when @cannot-edit? {:disabled true}))]))))
 
 (defn adjacent-text-fields [field-descriptor]
-  (let [languages  (subscribe [:application/default-languages])
-        remove-on-click (fn remove-adjacent-text-field [event]
+  (let [remove-on-click (fn remove-adjacent-text-field [event]
                           (let [row-idx (int (.getAttribute (.-currentTarget event) "data-row-idx"))]
                             (.preventDefault event)
                             (dispatch [:application/remove-adjacent-field field-descriptor row-idx])))
@@ -918,8 +917,7 @@
          [label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [question-hakukohde-names field-descriptor])
-         (when-let [info (util/non-blank-val (some-> field-descriptor :params :info-text :label) @languages)]
-           [:div.application__form-info-text [markdown-paragraph info (-> field-descriptor :params :info-text-collapse)]])
+         [info-text field-descriptor]
          [:div
           (->> (range @row-amount)
                (map (fn adjacent-text-fields-row [row-idx]
