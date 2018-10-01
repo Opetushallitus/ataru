@@ -884,22 +884,34 @@
        [:label.application__form-field-label [:span header]])
      [markdown-paragraph text (-> field-descriptor :params :info-text-collapse)]]))
 
-(defn- adjacent-field-input [{:keys [id] :as child} row-idx question-group-idx]
-  (let [on-change (fn [evt]
-                    (let [value (-> evt .-target .-value)]
-                      (dispatch [:application/set-adjacent-field-answer child row-idx value question-group-idx])))
-        answer    (subscribe [:state-query [:application :answers (keyword id)]])
-        cannot-edit? (subscribe [:application/cannot-edit? (keyword (:id child))])]
-    (fn [{:keys [id]} row-idx]
-      (let [value        (get-in @answer (if question-group-idx
-                                           [:values question-group-idx row-idx :value]
-                                           [:values row-idx :value]))]
+(defn- adjacent-field-input [field-descriptor row-idx question-group-idx]
+  (let [id          (keyword (:id field-descriptor))
+        local-state (r/atom {:focused? false :value nil})]
+    (fn [field-descriptor row-idx question-group-idx]
+      (let [value        @(subscribe [:application/answer-value id question-group-idx row-idx])
+            cannot-edit? @(subscribe [:application/cannot-edit? id])
+            on-blur      (fn [_]
+                           (swap! local-state assoc
+                                  :focused? false))
+            on-change    (fn [evt]
+                           (let [value (-> evt .-target .-value)]
+                             (swap! local-state assoc
+                                    :focused? true
+                                    :value value)
+                             (dispatch [:application/set-adjacent-field-answer
+                                        field-descriptor
+                                        row-idx
+                                        value
+                                        question-group-idx])))]
         [:input.application__form-text-input.application__form-text-input--normal
-         (merge {:id            (str id "-" row-idx)
-                 :type          "text"
-                 :default-value value
-                 :on-change     on-change}
-                (when @cannot-edit? {:disabled true}))]))))
+         {:id        (str id "-" row-idx)
+          :type      "text"
+          :value     (if (:focused? @local-state)
+                       (:value @local-state)
+                       value)
+          :on-blur   on-blur
+          :on-change on-change
+          :disabled  cannot-edit?}]))))
 
 (defn adjacent-text-fields [field-descriptor]
   (let [remove-on-click (fn remove-adjacent-text-field [event]
