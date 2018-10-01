@@ -100,6 +100,16 @@
       (:errors answer))))
 
 (re-frame/reg-sub
+  :application/repeatable-answer-count
+  (fn [[_ id _] _]
+    (re-frame/subscribe [:application/answer id]))
+  (fn [answer [_ _ question-group-idx]]
+    (max 1 (count
+            (if (some? question-group-idx)
+              (get-in answer [:values question-group-idx])
+              (:values answer))))))
+
+(re-frame/reg-sub
   :application/submitted?
   (fn [_ _]
     (re-frame/subscribe [:application/application]))

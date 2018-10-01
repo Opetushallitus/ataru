@@ -320,72 +320,94 @@
                      show-validation-error?)
             [validation-error id errors])]]))))
 
-(defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [id                    (keyword (:id field-descriptor))
-        size-class            (text-field-size->class (get-in field-descriptor [:params :size]))
-        cannot-edit?          (subscribe [:application/cannot-edit? id])
-        validators-processing (subscribe [:state-query [:application :validators-processing]])]
-    (fn [field-descriptor & {div-kwd :div-kwd question-group-idx :idx :or {div-kwd :div.application__form-field}}]
-      (let [values       (subscribe [:state-query [:application :answers id :values question-group-idx]])
-            remove-field (fn [evt]
-                           (let [data-idx (int (.getAttribute (.-target evt) "data-idx"))]
-                             (dispatch [:application/remove-repeatable-application-field-value field-descriptor data-idx question-group-idx])))
-            on-change    (fn [evt]
-                           (let [value    (some-> evt .-target .-value)
-                                 data-idx (int (.getAttribute (.-target evt) "data-idx"))]
-                             (dispatch [:application/set-repeatable-application-field field-descriptor value data-idx question-group-idx])))]
-        (into [div-kwd
-               [label field-descriptor]
-               (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
-                 [question-hakukohde-names field-descriptor])
-               [:div.application__form-text-input-info-text
-                [info-text field-descriptor]]]
-              (cons
-                (let [{:keys [value valid]} (first @values)]
-                  [:div.application__form-repeatable-text-wrap.application__form-repeatable-text-wrap--padded
-                   [:input.application__form-text-input
-                    (merge
-                      {:type          "text"
-                       :class         (str size-class (if (show-text-field-error-class? field-descriptor @validators-processing value valid)
-                                                        " application__form-field-error"
-                                                        " application__form-text-input--normal"))
-                       :default-value value
-                       :data-idx      0
-                       :on-change     on-change
-                       :required      (is-required-field? field-descriptor)
-                       :aria-invalid  (not @(subscribe [:application/answer-valid? id question-group-idx 0]))}
-                      (when (empty? value)
-                        {:on-blur remove-field})
-                      (when @cannot-edit?
-                        {:disabled true}))]])
-                (map-indexed
-                  (let [first-is-empty? (empty? (first (map :value @values)))]
-                    (fn [idx {:keys [value last?]}]
-                      [:div.application__form-repeatable-text-wrap
-                       {:class (when last? "application__form-repeatable-text-wrap--padded")}
-                       [:input.application__form-text-input
-                        (merge
-                          {:type          "text"
-                           :class         (str
-                                            size-class " application__form-text-input--normal"
-                                            (when-not value " application__form-text-input--disabled"))
-                           :default-value value
-                           :data-idx      (inc idx)
-                           :on-change     on-change}
-                          (when (and (not last?) (empty? value))
-                            {:on-blur remove-field})
-                          (when last?
-                            {:placeholder (get-translation :add-more)})
-                          (when (or @cannot-edit?
-                                    (and last? first-is-empty?))
-                            {:disabled true}))]
-                       (when (and value (not @cannot-edit?))
-                         [:a.application__form-repeatable-text--addremove
-                          [:i.zmdi.zmdi-close.zmdi-hc-lg
-                           {:data-idx (inc idx)
-                            :on-click remove-field}]])]))
-                  (concat (rest @values)
-                          [{:value nil :valid true :last? true}]))))))))
+(defn- repeatable-text-field-row
+  [field-descriptor question-group-idx repeatable-idx last?]
+  (let [id           (keyword (:id field-descriptor))
+        size-class   (text-field-size->class (get-in field-descriptor [:params :size]))
+        cannot-edit? (subscribe [:application/cannot-edit? id])
+        local-state  (r/atom {:focused? false :value nil})]
+    (fn [field-descriptor question-group-idx repeatable-idx last?]
+      (let [padded?                      (or (zero? repeatable-idx) last?)
+            first-is-empty?              (empty? @(subscribe [:application/answer-value id question-group-idx 0]))
+            value                        @(subscribe [:application/answer-value id question-group-idx repeatable-idx])
+            valid?                       @(subscribe [:application/answer-valid? id question-group-idx repeatable-idx])
+            show-validation-error-class? @(subscribe [:application/show-validation-error-class? id question-group-idx repeatable-idx])
+            cannot-edit?                 @cannot-edit?
+            remove-field                 (fn [_]
+                                           (swap! local-state assoc
+                                                  :focused? false)
+                                           (dispatch [:application/remove-repeatable-application-field-value
+                                                      field-descriptor
+                                                      repeatable-idx
+                                                      question-group-idx]))
+            on-blur                      (fn [evt]
+                                           (let [value (-> evt .-target .-value)]
+                                             (swap! local-state assoc
+                                                    :focused? false)
+                                             (when (and (empty? value) (not last?))
+                                               (dispatch [:application/remove-repeatable-application-field-value
+                                                          field-descriptor
+                                                          repeatable-idx
+                                                          question-group-idx]))))
+            on-change                    (fn [evt]
+                                           (let [value (-> evt .-target .-value)]
+                                             (swap! local-state assoc
+                                                    :focused? true
+                                                    :value value)
+                                             (dispatch [:application/set-repeatable-application-field
+                                                        field-descriptor
+                                                        value
+                                                        repeatable-idx
+                                                        question-group-idx])))]
+        [:div.application__form-repeatable-text-wrap
+         {:class (when padded? "application__form-repeatable-text-wrap--padded")}
+         [:input.application__form-text-input
+          {:type         "text"
+           :class        (str size-class
+                              (if show-validation-error-class?
+                                " application__form-field-error"
+                                " application__form-text-input--normal")
+                              (when last?
+                                " application__form-text-input--disabled"))
+           :value        (cond last?
+                               nil
+                               (:focused? @local-state)
+                               (:value @local-state)
+                               :else
+                               value)
+           :placeholder  (when last? (get-translation :add-more))
+           :disabled     (or cannot-edit? (and last? first-is-empty?))
+           :aria-invalid (not valid?)
+           :on-blur      on-blur
+           :on-change    on-change}]
+         (when (and (not cannot-edit?) (not last?))
+           [:a.application__form-repeatable-text--addremove
+            [:i.zmdi.zmdi-close.zmdi-hc-lg
+             {:on-click remove-field}]])]))))
+
+(defn repeatable-text-field
+  [field-descriptor & {:keys [div-kwd idx]
+                       :or   {div-kwd :div.application__form-field}}]
+  (let [id           (keyword (:id field-descriptor))
+        cannot-edit? @(subscribe [:application/cannot-edit? id])
+        answer-count @(subscribe [:application/repeatable-answer-count id idx])]
+    [div-kwd
+     [label field-descriptor]
+     (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
+       [question-hakukohde-names field-descriptor])
+     [:div.application__form-text-input-info-text
+      [info-text field-descriptor]]
+     (doall
+      (map (fn [repeatable-idx]
+             ^{:key (str id "-" repeatable-idx)}
+             [repeatable-text-field-row
+              field-descriptor
+              idx
+              repeatable-idx
+              (= repeatable-idx answer-count)])
+           (range (if cannot-edit?
+                    answer-count
+                    (inc answer-count)))))]))
 
 (defn- text-area-size->class [size]
   (match size
