@@ -914,17 +914,22 @@
           :disabled  cannot-edit?}]))))
 
 (defn adjacent-text-fields [field-descriptor]
-  (let [remove-on-click (fn remove-adjacent-text-field [event]
-                          (let [row-idx (int (.getAttribute (.-currentTarget event) "data-row-idx"))]
-                            (.preventDefault event)
-                            (dispatch [:application/remove-adjacent-field field-descriptor row-idx])))
-        cannot-edits?   (map #(subscribe [:application/cannot-edit? (keyword (:id %))])
-                             (util/flatten-form-fields (:children field-descriptor)))]
+  (let [cannot-edits? (map #(subscribe [:application/cannot-edit? (keyword (:id %))])
+                           (util/flatten-form-fields (:children field-descriptor)))]
     (fn [field-descriptor & {question-group-idx :idx}]
-      (let [row-amount   (subscribe [:application/adjacent-field-row-amount field-descriptor question-group-idx])
-            add-on-click (fn add-adjacent-text-field [event]
-                           (.preventDefault event)
-                           (dispatch [:application/add-adjacent-fields field-descriptor question-group-idx]))]
+      (let [row-amount      (subscribe [:application/adjacent-field-row-amount field-descriptor question-group-idx])
+            remove-on-click (fn remove-adjacent-text-field [event]
+                              (let [row-idx (int (.getAttribute (.-currentTarget event) "data-row-idx"))]
+                                (.preventDefault event)
+                                (dispatch [:application/remove-adjacent-field
+                                           field-descriptor
+                                           row-idx
+                                           question-group-idx])))
+            add-on-click    (fn add-adjacent-text-field [event]
+                              (.preventDefault event)
+                              (dispatch [:application/add-adjacent-fields
+                                         field-descriptor
+                                         question-group-idx]))]
         [:div.application__form-field
          [label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)

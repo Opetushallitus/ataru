@@ -875,8 +875,8 @@
 
 (reg-event-fx
   :application/remove-adjacent-field
-  (fn [{:keys [db]} [_ field-descriptor index]]
-    {:db       (reduce #(remove-repeatable-field-value %1 %2 index nil)
+  (fn [{:keys [db]} [_ field-descriptor row-idx question-group-idx]]
+    {:db       (reduce #(remove-repeatable-field-value %1 %2 row-idx question-group-idx)
                        db
                        (:children field-descriptor))
      :dispatch [:application/update-answers-validity]}))
