@@ -766,7 +766,8 @@
               ^{:key (:id followup)}
               [render-field followup])])]))))
 
-(defonce max-attachment-size-bytes (* 10 1024 1024))
+(defonce max-attachment-size-bytes
+  (get (js->clj js/config) "attachment-file-max-size-bytes" (* 10 1024 1024)))
 
 (defn- upload-attachment [field-descriptor component-id attachment-count question-group-idx event]
   (.preventDefault event)
