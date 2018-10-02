@@ -167,13 +167,13 @@
                                                  :sv "Begäran om bilagor berör ansökningsmål"}
    :lupatiedot-info                             {:fi "Tarkista hakulomakkeelle täyttämäsi tiedot huolellisesti ennen hakulomakkeen lähettämistä. Opiskelijavalinta voidaan purkaa, jos olet antanut vääriä tietoja. Hakemuksesi kaikki tiedot tallennetaan opiskelijavalintarekisteriin (L 884/2017). [Opintopolun tietosuojaseloste](https://opintopolku.fi/wp/tietosuojaseloste/).
 
-                        Saat vahvistusviestin vastaanotetusta hakulomakkeesta sähköpostiisi."
+Saat vahvistusviestin vastaanotetusta hakulomakkeesta sähköpostiisi."
                                                  :sv "Kontrollera noggrant de uppgifter som du har angett i ansökningsblanketten innan du skickar ansökningsblanketten. Antagningen av studerande kan hävas om du har gett felaktiga uppgifter. Alla uppgifter i din ansökan sparas i antagningsregistret (L 884/2017). [Studieinfors dataskyddsbeskrivning] (https://studieinfo.fi/wp/dataskyddsbeskrivning).
 
-                        Du får i din e-post ett bekräftelsemeddelande över att ansökningsblanketten har kommit fram."
+Du får i din e-post ett bekräftelsemeddelande över att ansökningsblanketten har kommit fram."
                                                  :en "Please check all the information you have given in the application before you submit the application. If you have given false information, your admission can be withdrawn. The information you have given in this application will be stored in the student admissions register (Act 884/2017). [Studyinfo's register description](https://studyinfo.fi/wp2/en/register/).
 
-                        You will receive a confirmation of your application to your email."}
+You will receive a confirmation of your application to your email."}
    :minute                                      {:fi "minuutti"
                                                  :en "minute"
                                                  :sv "minut"}
