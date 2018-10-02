@@ -380,7 +380,7 @@
         it('has expected data in applications and popup', function() {
           expect(applicationHakukohdeStates()).to.eql(['Käsittelemättä', 'Käsittelyssä', 'Käsittelemättä'])
           expect(massUpdateFromStateSelectionClosed().text()).to.equal('Käsittelemättä (2)')
-          expect(massUpdateToStateSelectionClosed().text()).to.equal('Käsittelemättä')
+          expect(massUpdateToStateSelectionClosed().text()).to.equal('Käsittelemättä (2)')
         })
       })
 
@@ -397,7 +397,7 @@
 
           expect(massUpdateToStateSelectionOpened().find('.application-handling__review-state-row').length === 7)
           expect(massUpdateToStateSelectionOpened().find('.application-handling__review-state-row--disabled').length === 0)
-          expect(massUpdateToStateSelectionOpened().find('.application-handling__review-state-selected-row').text()).to.equal('Käsittelemättä')
+          expect(massUpdateToStateSelectionOpened().find('.application-handling__review-state-selected-row').text()).to.equal('Käsittelemättä (2)')
 
           expect(massUpdateSubmitButton().attr('disabled')).to.equal('disabled')
         })
