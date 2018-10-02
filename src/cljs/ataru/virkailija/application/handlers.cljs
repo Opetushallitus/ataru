@@ -675,7 +675,7 @@
 (reg-event-fx
   :application/refresh-haut-and-hakukohteet
   (fn [{:keys [db]}]
-    (when (= 0 (:fetching-haut db))
+    (when (zero? (:fetching-haut db))
       {:db   (-> db
                  (update :fetching-haut inc)
                  (update :fetching-hakukohteet inc))
