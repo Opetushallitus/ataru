@@ -796,7 +796,8 @@
       {:for id}
       [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
       [:span.application__form-upload-button-add-text (get-translation :add-attachment)]]
-     (let [file-size-info-text (get-translation :file-size-info)
+     (let [file-size-info-text (goog.string/format (get-translation :file-size-info)
+                                                   (util/size-bytes->str max-attachment-size-bytes))
            size-error-path     (if question-group-idx
                                  [:application :answers (keyword component-id) :errors question-group-idx :too-big]
                                  [:application :answers (keyword component-id) :errors :too-big])

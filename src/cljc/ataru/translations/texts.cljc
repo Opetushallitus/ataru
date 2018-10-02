@@ -138,9 +138,9 @@
    :feedback-thanks                             {:fi "Kiitos palautteestasi!"
                                                  :en "Thank you for your feedback!"
                                                  :sv "Tack för din respons!"}
-   :file-size-info                              {:fi "Tiedoston maksimikoko on 10 MB"
-                                                 :en "Maximum file size is 10 MB"
-                                                 :sv "Den maximala filstorleken är 10 MB"}
+   :file-size-info                              {:fi "Tiedoston maksimikoko on %s"
+                                                 :en "Maximum file size is %s"
+                                                 :sv "Den maximala filstorleken är %s"}
    :file-type-forbidden                         {:fi "Tiedostoa ei ladattu, yritä uudelleen"
                                                  :en "File failed to upload, try again"
                                                  :sv "Filen kunde inte laddas, försök igen"}
