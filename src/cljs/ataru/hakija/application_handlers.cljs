@@ -728,6 +728,10 @@
  (fn [db _] db))
 
 (reg-event-db
+  :application/default-http-progress-handler
+  (fn [db _] db))
+
+(reg-event-db
   :state-update
   (fn [db [_ f]]
     (or (f db)
@@ -891,6 +895,7 @@
        :http {:method    :post
               :url       "/hakemus/api/files"
               :handler   [:application/handle-attachment-upload field-descriptor component-id attachment-idx question-group-idx]
+              :progress-handler [:application/handle-attachment-progress field-descriptor component-id attachment-idx question-group-idx]
               :error-handler [:application/handle-attachment-upload-error field-descriptor component-id attachment-idx name file (inc retries) question-group-idx]
               :body      form-data}})))
 
@@ -929,6 +934,7 @@
                                                             :size         (.-size file)}
                                                   :valid   false
                                                   :too-big false
+                                                  :uploaded 0
                                                   :status  :uploading}))
                                              db'))
                                 (assoc-in db' [:application :answers (keyword component-id) :valid] false))
@@ -977,6 +983,18 @@
                                                             (keyword component-id)
                                                             (required? field-descriptor)
                                                             valid?]))}})))
+
+(reg-event-db
+  :application/handle-attachment-progress
+  (fn [db [_ field-descriptor component-id attachment-idx question-group-idx evt]]
+    (if (.-lengthComputable evt)
+      (let [precents (int (* 100 (/ (.-loaded evt) (.-total evt))))]
+        (if (some? question-group-idx)
+          (assoc-in db [:application :answers (keyword component-id) :values question-group-idx attachment-idx :uploaded]
+                    precents)
+          (assoc-in db [:application :answers (keyword component-id) :values attachment-idx :uploaded]
+                    precents)))
+      db)))
 
 (defn- rate-limit-error? [response]
   (= (:status response) 429))
