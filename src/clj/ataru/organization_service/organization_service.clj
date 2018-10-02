@@ -22,16 +22,12 @@
   (get-organizations-for-oids [this organization-oids]))
 
 (defn get-from-cache-or-real-source [cache-instance cache-key get-from-source-fn]
-  ;; According to this:
-  ;; https://github.com/clojure/core.cache/wiki/Using
-  ;; has?/hit/miss pattern _must_ be used (although seems a bit redundant here)
-  (if (cache/has? @cache-instance cache-key)
-    (let [item (cache/lookup @cache-instance cache-key)]
-      (swap! cache-instance cache/hit cache-key)
-      item)
-    (let [item (get-from-source-fn)]
-      (swap! cache-instance cache/miss cache-key item)
-      item)))
+  (let [item (delay (get-from-source-fn))]
+    (cache/lookup (swap! cache-instance
+                         #(if (cache/has? % cache-key)
+                            (cache/hit % cache-key)
+                            (cache/miss % cache-key @item)))
+                  cache-key)))
 
 (defn get-orgs-from-cache-or-client [all-orgs-cache direct-oids]
   (let [cache-key (join "-" direct-oids)]
