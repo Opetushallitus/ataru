@@ -711,6 +711,9 @@ You will receive a confirmation of your application to your email."}
    :attachment-name                             {:fi "Liitteen nimi"
                                                  :sv "Bilagans namn"
                                                  :en "EN: Liitteen nimi"}
+   :attachment-deadline                         {:fi "Toimituspäivämäärä (hh:mm pp.kk.vvvv)"
+                                                 :sv "Toimituspäivämäärä (hh:mm pp.kk.vvvv)"
+                                                 :en "EN: Toimituspäivämäärä (hh:mm pp.kk.vvvv)"}
    :attachments                                 {:fi "Liitepyynnöt"
                                                  :sv "Begäran om bilagor"
                                                  :en "EN: Liitepyynnöt"}
