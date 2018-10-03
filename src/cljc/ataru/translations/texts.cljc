@@ -561,7 +561,7 @@ You will receive a confirmation of your application to your email."}
                           :en "Do you have a Finnish personal identity code?"}
    :ssn                  {:fi "Henkilötunnus"
                           :sv "Personbeteckning"
-                          :en "Personal identity code"}
+                          :en "Finnish personal identity code"}
    :gender               {:fi "Sukupuoli"
                           :sv "Kön"
                           :en "Gender"}
