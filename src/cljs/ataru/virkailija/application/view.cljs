@@ -1326,11 +1326,11 @@
            [:i.zmdi.zmdi-close])]]
        [:div.application-handling__review-note-content
         (when (:hakukohde @note)
-          {:data-tooltip-narrow (str (get-virkailija-translation :eligibility-explanation)
-                                     (when (not= "form" (:hakukohde @note))
-                                       (gstring/format " %s %s"
-                                                       (get-virkailija-translation :for-hakukohde)
-                                                       @hakukohde-name)))})
+          {:data-tooltip (str (get-virkailija-translation :eligibility-explanation)
+                              (when (not= "form" (:hakukohde @note))
+                                (gstring/format " %s %s"
+                                                (get-virkailija-translation :for-hakukohde)
+                                                @hakukohde-name)))})
         @notes]])))
 
 (defn application-review-inputs []

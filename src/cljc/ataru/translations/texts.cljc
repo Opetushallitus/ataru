@@ -1251,6 +1251,15 @@ You will receive a confirmation of your application to your email."}
    :active-status-passive                       {:fi "Passivoidut"
                                                  :sv "Passiverade"
                                                  :en "EN: Passivoidut"}
+   :application-count-unprocessed               {:fi "Käsittelemättä"
+                                                 :sv "SV: Käsittelemättä"
+                                                 :en "Unprocessed"}
+   :application-count-processing                {:fi "Käsittely on kesken"
+                                                 :sv "SV: Käsittely on kesken"
+                                                 :en "In process"}
+   :application-count-processed                 {:fi "Käsitelty"
+                                                 :sv "SV: Käsitelty"
+                                                 :en "Processed"}
    :navigate-applications-forward               {:fi "Seuraava hakemus"
                                                  :sv "SV: Seuraava hakemus"
                                                  :en "Next application"}
