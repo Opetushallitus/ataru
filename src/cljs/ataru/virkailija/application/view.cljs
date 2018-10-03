@@ -251,7 +251,7 @@
            [:div.application-handling__information-request-text-input-container
             [:input.application-handling__information-request-text-input
              {:value     @subject
-              :maxLength 78
+              :maxLength 200
               :on-change #(dispatch [:application/set-mass-information-request-subject (-> % .-target .-value)])}]]]
           [:div.application-handling__information-request-row
            [:textarea.application-handling__information-request-message-area.application-handling__information-request-message-area--large
@@ -1385,7 +1385,7 @@
      [:div.application-handling__information-request-text-input-container
       [:input.application-handling__information-request-text-input
        {:value     @subject
-        :maxLength 78
+        :maxLength 200
         :on-change (fn [event]
                      (let [subject (-> event .-target .-value)]
                        (dispatch [:application/set-information-request-subject subject])))}]]]))
