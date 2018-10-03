@@ -59,7 +59,7 @@
 
 (def max-value-length 5000)
 
-(def tz (t/default-time-zone))
+(def tz (t/time-zone-for-id "Europe/Helsinki"))
 
 (def ^:private modified-time-format
   (f/formatter "yyyy-MM-dd HH:mm:ss" tz))

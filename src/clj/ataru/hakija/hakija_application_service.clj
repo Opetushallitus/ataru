@@ -114,7 +114,7 @@
       (:has-applied (application-store/has-ssn-applied haku-oid (:ssn identifier)))
       (:has-applied (application-store/has-email-applied haku-oid (:email identifier))))))
 
-(def tz (time/default-time-zone))
+(def tz (time/time-zone-for-id "Europe/Helsinki"))
 
 (def ^:private modified-time-format
   (f/formatter "dd.MM.yyyy HH:mm:ss" tz))
