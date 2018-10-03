@@ -132,13 +132,14 @@
       (when (not-empty hakukohteet)
         [:div.application__search-control-hakukohteet-vline])
       [:div.application__search-control-hakukohde-listing
-       (map
-         (fn [hakukohde]
-           ^{:key (:oid hakukohde)}
-           [:div.application__search-control-hakukohde
-            [:div.application__search-control-haku-hover-highlight]
-            [hakukohde-info-link hakukohde]])
-         hakukohteet)]]
+       (->> hakukohteet
+            (sort-by (fn [{:keys [oid]}]
+                       @(subscribe [:application/hakukohde-name oid])))
+            (map (fn [hakukohde]
+                   ^{:key (:oid hakukohde)}
+                   [:div.application__search-control-hakukohde
+                    [:div.application__search-control-haku-hover-highlight]
+                    [hakukohde-info-link hakukohde]])))]]
      [:div.application__search-control-hakukohteet
       [:div.application__search-control-hakukohde-count
        (str (count hakukohteet) " " (get-virkailija-translation :application-options))]])])
