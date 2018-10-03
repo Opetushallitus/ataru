@@ -397,6 +397,7 @@ and (max-width: 1000px) {
   flex: 1 3 450px;
   display: inline-block;
   color: @pale-blue;
+  padding-left: 12px;
 }
 
 .application-handling__list-row--application-time {
@@ -453,6 +454,10 @@ and (max-width: 1000px) {
   display: flex;
 }
 
+.application-handling__list-row-hakukohde--not-in-selection {
+  filter: opacity(50%)
+}
+
 .application-handling__list-loading-indicator {
   text-align: center;
   width: 100%;
@@ -473,6 +478,17 @@ and (max-width: 1000px) {
 
 .application-handling__review-area-container {
   border-top: 1px solid @review-separator-color;
+}
+
+.application-handling__application-loading-indicator {
+  min-height: 2000px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+}
+
+.application-handling__application-loading-indicator-spin {
+  font-size: 36px;
 }
 
 .application-handling__review-area {
@@ -660,6 +676,25 @@ and (max-width: 1000px) {
   display: flex;
   flex-flow: row nowrap;
   justify-content: space-between;
+}
+
+.application-handling__navigation {
+  margin-right: 100px;
+  margin-top: 15px;
+}
+
+.application-handling__navigation-link {
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.application-handling__navigation-link:hover {
+  color: @selected-blue;
+}
+
+.application-handling__navigation-link-divider {
+  margin: 0 10px;
+  color: @disabled-font-gray;
 }
 
 .application-handling__review-area-main-heading-container {
@@ -1857,6 +1892,9 @@ th.application__readonly-adjacent--header {
   z-index: 1;
   border-radius: 3px;
 }
+.application-handling__list-row-hakukohde:hover {
+  background-color: @application-form-list-background-color;
+}
 
 .application__search-control-hakukohde:hover > .application__search-control-haku-hover-highlight {
   background-color: @application-form-list-background-color;
@@ -1869,6 +1907,10 @@ th.application__readonly-adjacent--header {
 .application__search-control-haku-title {
   flex: 0 1 auto;
   max-width: 650px;
+}
+.application__search-control-haku-title--hakukohde {
+  color: @gray-of-the-beast;
+  .light;
 }
 
 .application__search-control-haku-hl {
@@ -1989,10 +2031,15 @@ th.application__readonly-adjacent--header {
   width: auto;
   flex: 0 1 auto;
   margin-top: 3px;
+  padding-left: 12px;
 }
 
-.application-handling__application-hakukohde-cell:hover {
-  color: black;
+.application-handling__application-hakukohde-cell--selected {
+  color: @selected-blue;
+}
+
+.application-handling__application-hakukohde-cell--not-in-selection {
+  color: @disabled-font-gray;
 }
 
 .application-handling__application-hakukohde-cell--form {

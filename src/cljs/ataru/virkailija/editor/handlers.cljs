@@ -231,15 +231,26 @@
     {:db (assoc-in db [:editor :ui :remove-component-button-state path] :confirm)
      :dispatch-later [{:ms 2000 :dispatch [:editor/unstart-remove-component path]}]}))
 
+(defn stamp-user-organization [is-user-organization-fn hakukohderyhma]
+  (merge hakukohderyhma
+    {:user-organization? (boolean (is-user-organization-fn (:oid hakukohderyhma)))}))
+
 (defn- on-haku-data-fetched [hakukohteet-promise hakukohderyhmat-promise]
   (async/go
     (try
-      (let [hakukohderyhmat (asyncm/<? hakukohderyhmat-promise)
-            haut            (asyncm/<? hakukohteet-promise)
-            haun-ryhmaliitokset (set (mapcat #(:ryhmaliitokset %) (mapcat #(:hakukohteet %) (vals haut))))]
+      (let [haut                    (asyncm/<? hakukohteet-promise)
+            hakukohteet             (->> (vals haut)
+                                         (mapcat #(:hakukohteet %)))
+            ryhmaliitokset          (set (mapcat #(:ryhmaliitokset %) hakukohteet))
+            hakukohderyhmat         (->> (asyncm/<? hakukohderyhmat-promise)
+                                         (filter #(contains? ryhmaliitokset (:oid %))))
+            omat-hakukohteet        (->> hakukohteet
+                                         (filter :user-organization?))
+            omat-ryhmaliitokset     (set (mapcat #(:ryhmaliitokset %) omat-hakukohteet))
+            is-user-organization-fn #(contains? omat-ryhmaliitokset %)]
         (dispatch [:editor/set-used-by-haut
                    haut
-                   (filter #(contains? haun-ryhmaliitokset (:oid %)) hakukohderyhmat)]))
+                   (map #(stamp-user-organization is-user-organization-fn %) hakukohderyhmat)]))
       (catch js/Error e
         (dispatch [:editor/unset-used-by-haut])
         (throw e)))))

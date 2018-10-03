@@ -271,13 +271,18 @@
          :as   result}
         (validate-and-store tarjonta-service organization-service ohjausparametrit-service application true)
         virkailija-secret (:virkailija-secret application)]
-    (when passed?
+    (if passed?
       (if virkailija-secret
         (start-virkailija-edit-jobs job-runner
                                     virkailija-secret
                                     id
                                     application)
-        (start-hakija-edit-jobs tarjonta-service job-runner id)))
+        (start-hakija-edit-jobs tarjonta-service job-runner id))
+      (do
+        (audit-log/log {:new       application
+                        :operation audit-log/operation-failed
+                        :id        (util/extract-email application)})
+        (log/warn "Application edit failed verification" result)))
     result))
 
 (defn save-application-feedback
@@ -298,17 +303,26 @@
 (defn attachments-metadata->answers [application]
   (update application :answers (partial map attachment-metadata->answer)))
 
+(defn is-inactivated? [application]
+  (cond (nil? application)
+        false
+        (-> (application-store/get-application-review (:key application))
+            :state (= "inactivated"))
+        true
+        :else
+        false))
+
 (defn get-latest-application-by-secret
   [secret tarjonta-service organization-service ohjausparametrit-service person-client]
   (let [[actor-role secret] (match [secret]
-                                   [{:virkailija s}]
-                                   [:virkailija s]
+                              [{:virkailija s}]
+                              [:virkailija s]
 
-                                   [{:hakija s}]
-                                   [:hakija s]
+                              [{:hakija s}]
+                              [:hakija s]
 
-                                   :else
-                                   [:hakija nil])
+                              :else
+                              [:hakija nil])
         application                (cond
                                      (and (= actor-role :virkailija) (virkailija-edit/virkailija-update-secret-valid? secret))
                                      (application-store/get-latest-application-for-virkailija-edit secret)
@@ -316,12 +330,13 @@
                                      (and (= actor-role :hakija) (some? secret))
                                      (application-store/get-latest-application-by-secret secret))
         form-roles                 (cond-> [actor-role]
-                                           (some? (:person-oid application))
-                                           (conj :with-henkilo))
+                                     (some? (:person-oid application))
+                                     (conj :with-henkilo))
         secret-expired?            (when (nil? application)
                                      (application-store/application-exists-with-secret? secret))
         lang-override              (when secret-expired? (application-store/get-application-language-by-secret secret))
         application-in-processing? (util/application-in-processing? (:application-hakukohde-reviews application))
+        inactivated?               (is-inactivated? application)
         form                       (cond (some? (:haku application)) (hakija-form-service/fetch-form-by-haku-oid
                                                                        tarjonta-service
                                                                        organization-service
@@ -347,14 +362,15 @@
                                            attachments-metadata->answers
                                            (dissoc :person-oid :application-hakukohde-reviews)
                                            (assoc :cannot-edit-because-in-processing (and
-                                                                                       (not= actor-role :virkailija)
-                                                                                       (in-processing-state? application form))))]
+                                                                                      (not= actor-role :virkailija)
+                                                                                      (in-processing-state? application form))))]
     [(when full-application
        {:application full-application
         :person      person
         :form        form})
      secret-expired?
-     lang-override]))
+     lang-override
+     inactivated?]))
 
 (defn create-new-secret-and-send-link
   [tarjonta-service job-runner old-secret]

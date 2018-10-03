@@ -302,7 +302,8 @@
   (hakukohde-search [_ haku-oid _]
     (let [to-hakukohteet (fn [hakukohde-oids] (->> (map #(get hakukohde %) hakukohde-oids)
                                                    (map #(assoc % :nimi (:hakukohteenNimet %)))
-                                                   (map parse-hakukohde)))]
+                                                   (map parse-hakukohde)
+                                                   (map #(assoc % :user-organization? true))))]
          (case haku-oid
                "1.2.246.562.29.65950024187" (to-hakukohteet [:1.2.246.562.20.49028100001
                                                              :1.2.246.562.20.49028100002

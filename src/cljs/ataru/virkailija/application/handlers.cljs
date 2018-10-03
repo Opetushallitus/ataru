@@ -119,36 +119,40 @@
    (close-application db)))
 
 (defn- processing-state-counts-for-application
-  [{:keys [application-hakukohde-reviews]}]
-  (frequencies
-    (map
-      :state
-      (or
-        (->> application-hakukohde-reviews
-             (filter #(= "processing-state" (:requirement %)))
-             (not-empty))
-        [{:requirement "processing-state" :state review-states/initial-application-hakukohde-processing-state}]))))
+  [{:keys [application-hakukohde-reviews]} included-hakukohde-oid-set]
+  (->> (or
+         (->> application-hakukohde-reviews
+              (filter (fn [review]
+                        (and
+                          (= "processing-state" (:requirement review))
+                          (or (nil? included-hakukohde-oid-set)
+                              (contains? included-hakukohde-oid-set (:hakukohde review))))))
+              (not-empty))
+         [{:requirement "processing-state" :state review-states/initial-application-hakukohde-processing-state}])
+       (map :state)
+       (frequencies)))
 
 (defn review-state-counts
   [applications]
-  (reduce
-    (fn [acc application]
-      (merge-with + acc (processing-state-counts-for-application application)))
-    {}
-    applications))
+  (let [included-hakukohde-oid-set @(subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])]
+    (reduce
+      (fn [acc application]
+        (merge-with + acc (processing-state-counts-for-application application included-hakukohde-oid-set)))
+      {}
+      applications)))
 
 (defn- map-vals-to-zero [m]
   (into {} (for [[k v] m] [k 0])))
 
 (defn attachment-state-counts
-  [applications selected-hakukohde]
+  [applications included-hakukohde-oid-set]
   (reduce
     (fn [acc application]
       (merge-with (fn [prev new] (+ prev (if (not-empty new) 1 0)))
         acc
         (group-by :state (cond->> (application-states/attachment-reviews-with-no-requirements application)
-                                  (some? selected-hakukohde)
-                                  (filter #(= (:hakukohde %) selected-hakukohde))))))
+                                  (some? included-hakukohde-oid-set)
+                                  (filter #(contains? included-hakukohde-oid-set (:hakukohde %)))))))
     (map-vals-to-zero review-states/attachment-hakukohde-review-types-with-no-requirements)
     applications))
 
@@ -238,8 +242,9 @@
       (-> db
           (assoc-in [:application :review :attachment-reviews (keyword hakukohde-oid) attachment-key] state)
           (assoc-in [:application :applications] updated-applications)
-          (assoc-in [:application :attachment-state-counts] (attachment-state-counts updated-applications
-                                                                                     (-> db :application :selected-hakukohde)))))))
+          (assoc-in [:application :attachment-state-counts] (attachment-state-counts
+                                                              updated-applications
+                                                              @(subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])))))))
 
 (defn- update-sort
   [db column-id swap-order?]
@@ -289,9 +294,11 @@
 (reg-event-db
   :application/remove-filters
   (fn [db _]
-    (-> db
-        (assoc-in [:application :filters] (get-in initial-db/default-db [:application :filters]))
-        (filter-applications))))
+    (let [initial-filters     (get-in initial-db/default-db [:application :filters])
+          all-enabled-filters (clojure.walk/postwalk #(if (boolean? %) true %) initial-filters)]
+      (-> db
+          (assoc-in [:application :filters] all-enabled-filters)
+          (filter-applications)))))
 
 (reg-event-db
  :application/update-sort
@@ -300,24 +307,19 @@
        (update-sort column-id true)
        (filter-applications))))
 
-(defn- parse-application-time
-  [application]
-  (-> application
-      (update :created-time temporal/str->googdate)
-      (update :original-created-time temporal/str->googdate)))
-
 (reg-event-fx
   :application/handle-fetch-applications-response
   (fn [{:keys [db]} [_ {:keys [applications]}]]
-    (let [parsed-applications (->> applications
-                                   (map parse-application-time)
-                                   (map #(assoc % :application-hakukohde-reviews (application-states/get-all-reviews-for-all-requirements %))))
+    (let [parsed-applications (map
+                                #(assoc % :application-hakukohde-reviews (application-states/get-all-reviews-for-all-requirements %))
+                                applications)
           db                  (-> db
                                   (assoc-in [:application :applications] parsed-applications)
                                   (assoc-in [:application :fetching-applications] false)
                                   (assoc-in [:application :review-state-counts] (review-state-counts parsed-applications))
-                                  (assoc-in [:application :attachment-state-counts] (attachment-state-counts parsed-applications
-                                                                                                             (-> db :application :selected-hakukohde)))
+                                  (assoc-in [:application :attachment-state-counts] (attachment-state-counts
+                                                                                      parsed-applications
+                                                                                      @(subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])))
                                   (assoc-in [:application :sort] application-sorting/initial-sort)
                                   (assoc-in [:application :selected-time-column] :created-time)
                                   (assoc-in [:application :information-request] nil)
@@ -546,24 +548,34 @@
   :application/handle-fetch-application
   (fn [{:keys [db]} [_ response]]
     (let [response-with-parsed-times (parse-application-times response)
-          db                         (update-application-details db response-with-parsed-times)]
+          db                         (-> db
+                                         (update-application-details response-with-parsed-times)
+                                         (assoc-in [:application :loading?] false))]
       {:db         db
        :dispatch-n [(if (application-has-attachments? db)
                       [:application/fetch-application-attachment-metadata]
                       [:application/start-autosave])
                     [:application/get-application-change-history (-> response :application :key)]]})))
 
+(reg-event-db
+  :application/handle-fetch-application-error
+  (fn [db _]
+    (assoc-in db [:application :loading?] false)))
+
 (reg-event-fx
   :application/fetch-application
   (fn [{:keys [db]} [_ application-id newest-form?]]
     (when-let [autosave (get-in db [:application :review-autosave])]
       (autosave/stop-autosave! autosave))
-    (let [db (assoc-in db [:application :review-autosave] nil)]
+    (let [db (-> db
+                 (assoc-in [:application :review-autosave] nil)
+                 (assoc-in [:application :loading?] true))]
       {:db   db
        :http {:method              :get
               :path                (str "/lomake-editori/api/applications/" application-id
-                                     (when  newest-form? "?newest-form=true"))
+                                        (when newest-form? "?newest-form=true"))
               :handler-or-dispatch :application/handle-fetch-application
+              :override-args       {:error-handler #(dispatch [:application/handle-fetch-application-error])}
               :skip-parse-times?   true}})))
 
 (reg-event-db
@@ -663,14 +675,15 @@
 (reg-event-fx
   :application/refresh-haut-and-hakukohteet
   (fn [{:keys [db]}]
-    {:db   (-> db
-               (update :fetching-haut inc)
-               (update :fetching-hakukohteet inc))
-     :http {:method              :get
-            :path                "/lomake-editori/api/haut"
-            :handler-or-dispatch :editor/handle-refresh-haut-and-hakukohteet
-            :skip-parse-times?   true
-            :cache-ttl          (* 1000 60 5)}}))
+    (when (zero? (:fetching-haut db))
+      {:db   (-> db
+                 (update :fetching-haut inc)
+                 (update :fetching-hakukohteet inc))
+       :http {:method              :get
+              :path                "/lomake-editori/api/haut"
+              :handler-or-dispatch :editor/handle-refresh-haut-and-hakukohteet
+              :skip-parse-times?   true
+              :cache-ttl           (* 1000 60 5)}})))
 
 (reg-event-fx
   :application/navigate
@@ -1046,10 +1059,10 @@
         (filter-applications))))
 
 (defn- filter-by-attachment-review
-  [application selected-hakukohde states-to-include]
+  [application selected-hakukohteet states-to-include]
   (or (empty? (:hakukohde application))
       (let [states (->> (application-states/attachment-reviews-with-no-requirements application)
-                        (filter #(or (not selected-hakukohde) (= selected-hakukohde (:hakukohde %))))
+                        (filter #(or (not selected-hakukohteet) (contains? selected-hakukohteet (:hakukohde %))))
                         (map :state))]
         (not (empty? (clojure.set/intersection
                        states-to-include
@@ -1088,7 +1101,7 @@
          [false true] (= (:state application) "inactivated")))
 
 (defn- filter-by-hakukohde-review
-  [application selected-hakukohde requirement-name states-to-include]
+  [application selected-hakukohteet requirement-name states-to-include]
   (let [all-states-count (-> review-states/hakukohde-review-types-map
                              (get (keyword requirement-name))
                              (last)
@@ -1098,7 +1111,7 @@
       true
       (let [relevant-states  (->> (:application-hakukohde-reviews application)
                                   (filter #(and (= requirement-name (:requirement %))
-                                                (or (not selected-hakukohde) (= selected-hakukohde (:hakukohde %)))))
+                                                (or (not selected-hakukohteet) (contains? selected-hakukohteet (:hakukohde %)))))
                                   (map :state)
                                   (set))]
         (not (empty? (clojure.set/intersection states-to-include relevant-states)))))))
@@ -1131,29 +1144,30 @@
 
 (defn- filter-applications
   [db]
-  (let [applications                 (-> db :application :applications)
-        selected-hakukohde           (cond
-                                       (some? (-> db :application :selected-hakukohde))
-                                       (-> db :application :selected-hakukohde)
-                                       (some? (-> db :application :selected-ryhman-ensisijainen-hakukohde))
-                                       (-> db :application :selected-ryhman-ensisijainen-hakukohde)
-                                       (some? (-> db :application :selected-form-key))
-                                       "form"
-                                       :else
-                                       nil)
-        attachment-states-to-include (-> db :application :attachment-state-filter set)
-        processing-states-to-include (-> db :application :processing-state-filter set)
-        selection-states-to-include  (-> db :application :selection-state-filter set)
-        filters                      (-> db :application :filters)
-        with-ssn?                    (-> filters :only-ssn :with-ssn)
-        without-ssn?                 (-> filters :only-ssn :without-ssn)
-        identified?                  (-> filters :only-identified :identified)
-        unidentified?                (-> filters :only-identified :unidentified)
-        active?                      (-> filters :active-status :active)
-        passive?                     (-> filters :active-status :passive)
-        all-base-educations-enabled? (->> (-> filters :base-education)
-                                          (vals)
-                                          (every? true?))]
+  (let [applications                           (-> db :application :applications)
+        hakukohde-oids-from-hakukohde-or-ryhma @(subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])
+        selected-hakukohteet-set               (cond
+                                                 (some? hakukohde-oids-from-hakukohde-or-ryhma)
+                                                 hakukohde-oids-from-hakukohde-or-ryhma
+                                                 (some? (-> db :application :selected-ryhman-ensisijainen-hakukohde))
+                                                 #{(-> db :application :selected-ryhman-ensisijainen-hakukohde)}
+                                                 (some? (-> db :application :selected-form-key))
+                                                 #{"form"}
+                                                 :else
+                                                 nil)
+        attachment-states-to-include           (-> db :application :attachment-state-filter set)
+        processing-states-to-include           (-> db :application :processing-state-filter set)
+        selection-states-to-include            (-> db :application :selection-state-filter set)
+        filters                                (-> db :application :filters)
+        with-ssn?                              (-> filters :only-ssn :with-ssn)
+        without-ssn?                           (-> filters :only-ssn :without-ssn)
+        identified?                            (-> filters :only-identified :identified)
+        unidentified?                          (-> filters :only-identified :unidentified)
+        active?                                (-> filters :active-status :active)
+        passive?                               (-> filters :active-status :passive)
+        all-base-educations-enabled?           (->> (-> filters :base-education)
+                                                    (vals)
+                                                    (every? true?))]
     (assoc-in
       db
       [:application :filtered-applications]
@@ -1166,16 +1180,32 @@
             (or
               all-base-educations-enabled?
               (filter-by-base-education application (:base-education filters)))
-            (filter-by-hakukohde-review application selected-hakukohde "processing-state" processing-states-to-include)
-            (filter-by-hakukohde-review application selected-hakukohde "selection-state" selection-states-to-include)
-            (filter-by-hakukohde-review application selected-hakukohde "language-requirement" (parse-enabled-filters filters :language-requirement))
-            (filter-by-hakukohde-review application selected-hakukohde "degree-requirement" (parse-enabled-filters filters :degree-requirement))
-            (filter-by-hakukohde-review application selected-hakukohde "eligibility-state" (parse-enabled-filters filters :eligibility-state))
-            (filter-by-hakukohde-review application selected-hakukohde "payment-obligation" (parse-enabled-filters filters :payment-obligation))
-            (filter-by-attachment-review application selected-hakukohde attachment-states-to-include)))
+            (filter-by-hakukohde-review application selected-hakukohteet-set "processing-state" processing-states-to-include)
+            (filter-by-hakukohde-review application selected-hakukohteet-set "selection-state" selection-states-to-include)
+            (filter-by-hakukohde-review application selected-hakukohteet-set "language-requirement" (parse-enabled-filters filters :language-requirement))
+            (filter-by-hakukohde-review application selected-hakukohteet-set "degree-requirement" (parse-enabled-filters filters :degree-requirement))
+            (filter-by-hakukohde-review application selected-hakukohteet-set "eligibility-state" (parse-enabled-filters filters :eligibility-state))
+            (filter-by-hakukohde-review application selected-hakukohteet-set "payment-obligation" (parse-enabled-filters filters :payment-obligation))
+            (filter-by-attachment-review application selected-hakukohteet-set attachment-states-to-include)))
         applications))))
 
 (reg-event-db
   :application/filter-applications
   (fn [db _]
     (filter-applications db)))
+
+(reg-event-fx
+  :application/navigate-application-list
+  (fn [{:keys [db]} [_ step]]
+    (let [filtered-applications   (-> db :application :filtered-applications)
+          application-count       (count filtered-applications)
+          current-application-key (-> db :application :selected-key)
+          selected-hakukohde      (-> db :application :selected-hakukohde)
+          current-application-idx (util/first-index-of #(= (:key %) current-application-key) filtered-applications)
+          next-application-idx    (if (nil? current-application-idx)
+                                    0
+                                    (+ current-application-idx step))
+          guarded-idx             (mod next-application-idx application-count)
+          next-application-key    (-> filtered-applications (nth guarded-idx) :key)]
+      {:update-url-query-params {:application-key next-application-key}
+       :dispatch                [:application/select-application next-application-key selected-hakukohde false]})))

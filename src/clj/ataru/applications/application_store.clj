@@ -603,13 +603,11 @@
 
 (defn get-haut
   []
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-haut-and-hakukohteet-from-applications
-                                 {:incomplete_states incomplete-states})))
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-haut-and-hakukohteet-from-applications {})))
 
 (defn get-direct-form-haut
   []
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-direct-form-haut
-                                 {:incomplete_states incomplete-states})))
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-direct-form-haut {})))
 
 (defn add-application-feedback
   [feedback]
@@ -897,7 +895,9 @@
                values))
 
 (defn- not-indexed [key values]
-  [[key (first values)]])
+  [[key (if (nil? (first values))
+          ""
+          (first values))]])
 
 (defn- flatten-application-answers [answers]
   (reduce
@@ -908,15 +908,15 @@
                           indexed-by-value-order
                           :else
                           not-indexed)]
-       (into acc (cond (and (sequential? value)
+       (into acc (cond (= "attachment" fieldType)
+                       nil
+                       (and (sequential? value)
                             (every? sequential? value))
                        (indexed-by-question-group index-fn key value)
                        (and (sequential? value)
                             (contains? #{"multipleChoice" "textField"}
                                        fieldType))
                        (index-fn key value)
-                       (= "attachment" fieldType)
-                       nil
                        (not (sequential? value))
                        [[key value]]
                        :else

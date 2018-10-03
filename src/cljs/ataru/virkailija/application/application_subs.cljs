@@ -56,15 +56,38 @@
          haun-hakukohteet
          haun-hakukohderyhmat]))))
 
+(defn- application-list-selected-by
+  [db]
+  (let [db-application (:application db)]
+    (cond
+      (:selected-form-key db-application) :selected-form-key
+      (:selected-haku db-application) :selected-haku
+      (:selected-hakukohde db-application) :selected-hakukohde
+      (:selected-hakukohderyhma db-application) :selected-hakukohderyhma)))
+
 (re-frame/reg-sub
   :application/application-list-selected-by
+  application-list-selected-by)
+
+(defn- selected-hakukohderyhma-hakukohteet
+  [db]
+  (if-let [[_ hakukohderyhma-oid] (get-in db [:application :selected-hakukohderyhma])]
+    (map first
+         (filter
+           (fn [[_ hakukohde]]
+             (if-let [ryhmaliitokset (:ryhmaliitokset hakukohde)]
+               (some #(= hakukohderyhma-oid %) ryhmaliitokset)))
+           (get-in db [:hakukohteet])))))
+
+(re-frame/reg-sub
+  :application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
   (fn [db]
-    (let [db-application (:application db)]
-      (cond
-        (:selected-form-key db-application) :selected-form-key
-        (:selected-haku db-application) :selected-haku
-        (:selected-hakukohde db-application) :selected-hakukohde
-        (:selected-hakukohderyhma db-application) :selected-hakukohderyhma))))
+    (let [selected-by (application-list-selected-by db)
+          oid-or-oids (when selected-by (-> db :application selected-by))]
+      (case selected-by
+        :selected-hakukohde #{oid-or-oids}
+        :selected-hakukohderyhma (set (selected-hakukohderyhma-hakukohteet db))
+        nil))))
 
 (re-frame/reg-sub
   :application/show-ensisijaisesti?
@@ -104,12 +127,7 @@
 
 (re-frame/reg-sub
   :application/selected-hakukohderyhma-hakukohteet
-  (fn [db _]
-    (if-let [[haku-oid hakukohderyhma-oid] (get-in db [:application :selected-hakukohderyhma])]
-      (map (fn [[oid _]] oid)
-        (filter (fn [[_ h]]
-                  (if-let [ryhmaliitokset (:ryhmaliitokset h)]
-                    (some #(= hakukohderyhma-oid %) ryhmaliitokset))) (get-in db [:hakukohteet]))))))
+  selected-hakukohderyhma-hakukohteet)
 
 (re-frame/reg-sub
  :application/show-mass-update-link?

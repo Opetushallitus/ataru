@@ -59,10 +59,6 @@
                    (.submit (.getElementById js/document "excel-download-link")))}
       (get-virkailija-translation :load-excel)]]))
 
-(defn- count-for-application-state
-  [from-states state]
-  (get from-states state 0))
-
 (defn- selected-or-default-mass-review-state
   [selected all]
   (if @selected
@@ -86,10 +82,10 @@
          (str " (" count ")"))))
 
 (defn- selected-or-default-mass-review-state-label
-  [selected all]
+  [selected all review-state-counts]
   (let [name  (selected-or-default-mass-review-state selected all)
         label (review-state-label name)
-        count (count-for-application-state all name)]
+        count (get review-state-counts name)]
     (review-label-with-count label count)))
 
 (defn- mass-review-state-selected-row
@@ -99,8 +95,8 @@
    [icon-check] label])
 
 (defn- mass-review-state-row
-  [current-review-state states disable-empty-rows? state]
-  (let [review-state-count (count-for-application-state states state)
+  [current-review-state states review-state-counts disable-empty-rows? state]
+  (let [review-state-count (get review-state-counts state 0)
         review-state-label (review-state-label state)
         label-with-count   (review-label-with-count review-state-label review-state-count)
         on-click           #(reset! current-review-state state)
@@ -113,8 +109,8 @@
        label-with-count])))
 
 (defn- opened-mass-review-state-list
-  [current-state states disable-empty-rows?]
-  (mapv (partial mass-review-state-row current-state states disable-empty-rows?) (map first states)))
+  [current-state states review-state-counts disable-empty-rows?]
+  (mapv (partial mass-review-state-row current-state states review-state-counts disable-empty-rows?) (map first states)))
 
 (defn- toggle-mass-update-popup-visibility
   [element-visible submit-button-state fn-or-bool]
@@ -135,6 +131,7 @@
         massamuokkaus?             (subscribe [:application/massamuutos-enabled?])
         filtered-applications      (subscribe [:application/filtered-applications])
         haku-header                (subscribe [:application/list-heading-data-for-haku])
+        review-state-counts        (subscribe [:state-query [:application :review-state-counts]])
         all-states                 (reduce (fn [acc [state _]]
                                              (assoc acc state 0))
                                      {}
@@ -178,12 +175,12 @@
                 [:div.application-handling__review-state-list-opened-anchor
                  (into [:div.application-handling__review-state-list-opened
                         {:on-click #(swap! from-list-open? not)}]
-                       (opened-mass-review-state-list selected-from-review-state from-states true))]
+                       (opened-mass-review-state-list selected-from-review-state from-states @review-state-counts true))]
                 (mass-review-state-selected-row
                   (fn []
                     (swap! from-list-open? not)
                     (reset! submit-button-state :submit))
-                  (selected-or-default-mass-review-state-label selected-from-review-state from-states)))
+                  (selected-or-default-mass-review-state-label selected-from-review-state from-states @review-state-counts)))
 
               [:h4.application-handling__mass-edit-review-states-heading (get-virkailija-translation :to-state)]
 
@@ -191,12 +188,12 @@
                 [:div.application-handling__review-state-list-opened-anchor
                  (into [:div.application-handling__review-state-list-opened
                         {:on-click #(when (-> from-states (keys) (count) (pos?)) (swap! to-list-open? not))}]
-                       (opened-mass-review-state-list selected-to-review-state all-states false))]
+                       (opened-mass-review-state-list selected-to-review-state all-states @review-state-counts false))]
                 (mass-review-state-selected-row
                   (fn []
                     (swap! to-list-open? not)
                     (reset! submit-button-state :submit))
-                  (selected-or-default-mass-review-state-label selected-to-review-state all-states)))
+                  (selected-or-default-mass-review-state-label selected-to-review-state all-states @review-state-counts)))
 
               (case @submit-button-state
                 :submit
@@ -254,7 +251,7 @@
            [:div.application-handling__information-request-text-input-container
             [:input.application-handling__information-request-text-input
              {:value     @subject
-              :maxLength 78
+              :maxLength 200
               :on-change #(dispatch [:application/set-mass-information-request-subject (-> % .-target .-value)])}]]]
           [:div.application-handling__information-request-row
            [:textarea.application-handling__information-request-message-area.application-handling__information-request-message-area--large
@@ -473,7 +470,8 @@
                                         ["form"]
                                         (:hakukohde application))
         application-hakukohde-reviews (:application-hakukohde-reviews application)
-        lang                          (subscribe [:editor/virkailija-lang])]
+        lang                          (subscribe [:editor/virkailija-lang])
+        selected-hakukohde-oids       (subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])]
     (into
       [:div.application-handling__list-row-hakukohteet-wrapper
        {:class (when direct-form-application? "application-handling__application-hakukohde-cell--form")}]
@@ -490,6 +488,10 @@
                                               (seq)))
                 hakukohde-attachment-states ((keyword hakukohde-oid) attachment-states)]
             [:div.application-handling__list-row-hakukohde
+             {:class (when (and (not direct-form-application?)
+                                (some? @selected-hakukohde-oids)
+                                (not (contains? @selected-hakukohde-oids hakukohde-oid)))
+                       "application-handling__list-row-hakukohde--not-in-selection")}
              (when (not direct-form-application?)
                [:span.application-handling__application-hakukohde-cell
                 {:class    (when (= selected-hakukohde hakukohde-oid)
@@ -551,7 +553,10 @@
 
 (defn application-list-row [application selected?]
   (let [selected-time-column   (subscribe [:state-query [:application :selected-time-column]])
-        day-date-time          (clojure.string/split (t/time->str (@selected-time-column application)) #"\s")
+        day-date-time          (-> (get application @selected-time-column)
+                                   (t/str->googdate)
+                                   (t/time->str)
+                                   (clojure.string/split #"\s"))
         day                    (first day-date-time)
         date-time              (->> day-date-time (rest) (clojure.string/join " "))
         applicant              (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
@@ -1120,12 +1125,14 @@
   (match event
          {:event-type "review-state-change"}
          (let [label (application-states/get-review-state-label-by-name
-                       review-states/application-review-states
-                       (:new-review-state event)
-                       lang)]
-           (if (= (:new-review-state event) "information-request")
-             [:span.application-handling__event-caption--inner label (virkailija-initials-span event)]
-             label))
+                      review-states/application-review-states
+                      (:new-review-state event)
+                      lang)]
+           [:span.application-handling__event-caption--inner
+            label
+            " "
+            (or (virkailija-initials-span event)
+                (get-virkailija-translation :unknown))])
 
          {:event-type "updated-by-applicant"}
          (update-event-caption
@@ -1383,7 +1390,7 @@
      [:div.application-handling__information-request-text-input-container
       [:input.application-handling__information-request-text-input
        {:value     @subject
-        :maxLength 78
+        :maxLength 200
         :on-change (fn [event]
                      (let [subject (-> event .-target .-value)]
                        (dispatch [:application/set-information-request-subject subject])))}]]]))
@@ -1603,7 +1610,7 @@
            [application-deactivate-toggle]
            [application-review-events]]]]))))
 
-(defn application-heading [application hakukohteet-by-oid]
+(defn application-heading [application loading?]
   (let [answers            (:answers application)
         pref-name          (-> application :person :preferred-name)
         last-name          (-> application :person :last-name)
@@ -1615,51 +1622,62 @@
         applications-count (:applications-count application)]
     [:div.application__handling-heading
      [:div.application-handling__review-area-main-heading-container
-      [:div.application-handling__review-area-main-heading-person-info
-       [:div.application-handling__review-area-main-heading-name-row
-        (when pref-name
-          [:h2.application-handling__review-area-main-heading
-           (str last-name ", " pref-name " — " (or ssn birth-date))])
-        (when (> applications-count 1)
-          [:a.application-handling__review-area-main-heading-applications-link
-           {:on-click (fn [_]
-                        (dispatch [:application/navigate
-                                   (str "/lomake-editori/applications/search"
-                                        "?term=" (or ssn email))]))}
-           (str applications-count " " (get-virkailija-translation :applications))])]
-       (when person-oid
-         [:div.application-handling__review-area-main-heading-person-oid-row
-          [:div.application-handling__applicant-links
-           [:a
-            {:href   (str "/henkilo-ui/oppija/"
-                          person-oid
-                          "?permissionCheckService=ATARU")
-             :target "_blank"}
-            [:i.zmdi.zmdi-account-circle.application-handling__review-area-main-heading-person-icon]
-            [:span.application-handling__review-area-main-heading-person-oid
-             (str (get-virkailija-translation :student) " " person-oid)]]
-           [:a
-            {:href   (str "/suoritusrekisteri/#/opiskelijat?henkilo=" person-oid)
-             :target "_blank"}
-            [:i.zmdi.zmdi-collection-text.application-handling__review-area-main-heading-person-icon]
-            [:span.application-handling__review-area-main-heading-person-oid
-             (get-virkailija-translation :person-completed-education)]]]
-          (when-not yksiloity
-            [:a.individualization
-             {:href   (str "/henkilo-ui/oppija/"
-                           person-oid
-                           "/duplikaatit?permissionCheckService=ATARU")
-              :target "_blank"}
-             [:i.zmdi.zmdi-account-o]
-             [:span (get-virkailija-translation :person-not-individualized)
-              [:span.important "Tee yksilöinti henkilöpalvelussa."]]])])]
+      (when-not loading?
+        [:div.application-handling__review-area-main-heading-person-info
+         [:div.application-handling__review-area-main-heading-name-row
+          (when pref-name
+            [:h2.application-handling__review-area-main-heading
+             (str last-name ", " pref-name " — " (or ssn birth-date))])
+          (when (> applications-count 1)
+            [:a.application-handling__review-area-main-heading-applications-link
+             {:on-click (fn [_]
+                          (dispatch [:application/navigate
+                                     (str "/lomake-editori/applications/search"
+                                          "?term=" (or ssn email))]))}
+             (str applications-count " " (get-virkailija-translation :applications))])]
+         (when person-oid
+           [:div.application-handling__review-area-main-heading-person-oid-row
+            [:div.application-handling__applicant-links
+             [:a
+              {:href   (str "/henkilo-ui/oppija/"
+                            person-oid
+                            "?permissionCheckService=ATARU")
+               :target "_blank"}
+              [:i.zmdi.zmdi-account-circle.application-handling__review-area-main-heading-person-icon]
+              [:span.application-handling__review-area-main-heading-person-oid
+               (str (get-virkailija-translation :student) " " person-oid)]]
+             [:a
+              {:href   (str "/suoritusrekisteri/#/opiskelijat?henkilo=" person-oid)
+               :target "_blank"}
+              [:i.zmdi.zmdi-collection-text.application-handling__review-area-main-heading-person-icon]
+              [:span.application-handling__review-area-main-heading-person-oid
+               (get-virkailija-translation :person-completed-education)]]]
+            (when-not yksiloity
+              [:a.individualization
+               {:href   (str "/henkilo-ui/oppija/"
+                             person-oid
+                             "/duplikaatit?permissionCheckService=ATARU")
+                :target "_blank"}
+               [:i.zmdi.zmdi-account-o]
+               [:span (str (get-virkailija-translation :person-not-individualized) " ")
+                [:span.important "Tee yksilöinti henkilöpalvelussa."]]])])])
       (when (not (contains? (:answers application) :hakukohteet))
         [:ul.application-handling__hakukohteet-list
          (for [hakukohde-oid (:hakukohde application)]
            ^{:key (str "hakukohteet-list-row-" hakukohde-oid)}
            [:li.application-handling__hakukohteet-list-row
             [:div.application-handling__review-area-hakukohde-heading
-             [hakukohde-and-tarjoaja-name hakukohde-oid]]])])]]))
+             [hakukohde-and-tarjoaja-name hakukohde-oid]]])])]
+     [:div.application-handling__navigation
+      [:a.application-handling__navigation-link
+       {:on-click #(dispatch [:application/navigate-application-list -1])}
+       [:i.zmdi.zmdi-chevron-left]
+       (str " " (get-virkailija-translation :navigate-applications-back))]
+      [:span.application-handling__navigation-link-divider "|"]
+      [:a.application-handling__navigation-link
+       {:on-click #(dispatch [:application/navigate-application-list 1])}
+       (str (get-virkailija-translation :navigate-applications-forward) " ")
+       [:i.zmdi.zmdi-chevron-right]]]]))
 
 (defn close-application []
   [:a {:href     "#"
@@ -1679,27 +1697,32 @@
         expanded?                     (subscribe [:state-query [:application :application-list-expanded?]])
         review-positioning            (subscribe [:state-query [:application :review-positioning]])
         alternative-form              (subscribe [:state-query [:application :alternative-form]])
-        selected-review-hakukohde     (subscribe [:state-query [:application :selected-review-hakukohde]])]
+        selected-review-hakukohde     (subscribe [:state-query [:application :selected-review-hakukohde]])
+        application-loading           (subscribe [:state-query [:application :loading?]])]
     (fn []
       (let [application        (:application @selected-application-and-form)]
         (when-not @expanded?
           [:div.application-handling__detail-container
            [close-application]
-           [application-heading application]
-           [:div.application-handling__review-area
-            [:div.application-handling__application-contents
-             (when @alternative-form
-              [:div.application-handling__form-outdated
-               [:div.application-handling__form-outdated--disclaimer (get-virkailija-translation :form-outdated)]
-               [:a.application-handling__form-outdated--button.application-handling__button
-                {:on-click (fn [evt]
-                             (.preventDefault evt)
-                             (select-application (:key application) @selected-review-hakukohde true))}
-                [:span (get-virkailija-translation :show-newest-version)]]])
-             [application-contents @selected-application-and-form]]
-            [:span#application-handling__review-position-canary]
-            (when (= :fixed @review-positioning) [floating-application-review-placeholder])
-            [application-review]]])))))
+           [application-heading application @application-loading]
+           (if @application-loading
+             [:div.application-handling__application-loading-indicator
+              [:div.application-handling__application-loading-indicator-spin
+               [:i.zmdi.zmdi-spinner.spin]]]
+             [:div.application-handling__review-area
+              [:div.application-handling__application-contents
+               (when @alternative-form
+                 [:div.application-handling__form-outdated
+                  [:div.application-handling__form-outdated--disclaimer (get-virkailija-translation :form-outdated)]
+                  [:a.application-handling__form-outdated--button.application-handling__button
+                   {:on-click (fn [evt]
+                                (.preventDefault evt)
+                                (select-application (:key application) @selected-review-hakukohde true))}
+                   [:span (get-virkailija-translation :show-newest-version)]]])
+               [application-contents @selected-application-and-form]]
+              [:span#application-handling__review-position-canary]
+              (when (= :fixed @review-positioning) [floating-application-review-placeholder])
+              [application-review]])])))))
 
 (defn create-application-paging-scroll-handler
   []

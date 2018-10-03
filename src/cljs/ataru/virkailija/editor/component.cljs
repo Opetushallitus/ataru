@@ -91,7 +91,8 @@
           on-click-remove (fn [hakukohderyhma _] (dispatch [:editor/remove-from-belongs-to-hakukohderyhma
                                                             path (:oid hakukohderyhma)]))
           get-name (fn [hakukohderyhma] @(subscribe [:editor/get-some-name hakukohderyhma]))]
-     (for [hakukohderyhma @hakukohderyhmat]
+     (for [hakukohderyhma (->> @hakukohderyhmat
+                               (filter :user-organization?))]
        ^{:key (:oid hakukohderyhma)}
        [selectable-list-item path id hakukohderyhma selected-hakukohderyhmat get-name on-click-add on-click-remove]))]])
 
@@ -110,7 +111,8 @@
          [:span.belongs-to-hakukohteet-modal__haku-label
           @name]
          [:ul.belongs-to-hakukohteet-modal__hakukohde-list
-          (for [hakukohde (first (split-at @show-at-most (:hakukohteet haku)))]
+          (for [hakukohde (first (split-at @show-at-most (->> (:hakukohteet haku)
+                                                              (filter :user-organization?))))]
             ^{:key (:oid hakukohde)}
             [selectable-list-item path id hakukohde selected-hakukohteet get-name on-click-add on-click-remove])
           (when (< @show-at-most (count (:hakukohteet haku)))
