@@ -230,7 +230,7 @@ You will receive a confirmation of your application to your email."}
                                                  :sv "visa ansökningsmål"}
    :hide-application-options                    {:fi "piilota hakukohteet"
                                                  :en "hide application options"
-                                                 :sv "dölja ansökningsmål"}
+                                                 :sv "dölj ansökningsmål"}
    :read-less                                   {:fi "Sulje ohje"
                                                  :sv "Dölj anvisning"
                                                  :en "Hide instructions"}
