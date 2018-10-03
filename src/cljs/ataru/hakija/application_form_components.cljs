@@ -126,9 +126,12 @@
        (let [lang                           @(subscribe [:application/form-language])
              selected-hakukohteet-for-field @(subscribe [:application/selected-hakukohteet-for-field field-descriptor])]
          [:div.application__question_hakukohde_names_container
-          [:a.application__question_hakukohde_names_info
-           {:on-click #(swap! show-hakukohde-list? not)}
-           (str (get-translation translation-key) " (" (count selected-hakukohteet-for-field) ")")]
+          [:span
+           (str (get-translation translation-key) " ")
+           [:a.application__question_hakukohde_names_info
+            {:on-click #(swap! show-hakukohde-list? not)}
+            (str "[" (get-translation (if @show-hakukohde-list? :hide-application-options :show-application-options))
+                 " (" (count selected-hakukohteet-for-field) ")]")]]
           (when @show-hakukohde-list?
             [:ul.application__question_hakukohde_names
              (for [hakukohde selected-hakukohteet-for-field

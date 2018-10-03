@@ -162,9 +162,9 @@
    :insufficient-base-education                 {:fi "Ilmoitus riittämättömästä pohjakoulutuksesta"
                                                  :sv "Meddelande om otillräcklig grundutbildning"
                                                  :en "Insufficient educational background"}
-   :liitepyynto-for-hakukohde                   {:fi "Liitepyyntö kuuluu hakukohteisiin"
-                                                 :en "Request for attachment is for application options"
-                                                 :sv "Begäran om bilagor berör ansökningsmål"}
+   :liitepyynto-for-hakukohde                   {:fi "Liitepyyntö kuuluu hakukohteisiin:"
+                                                 :en "Request for attachment is for application options:"
+                                                 :sv "Begäran om bilagor berör ansökningsmål:"}
    :lupatiedot-info                             {:fi "Tarkista hakulomakkeelle täyttämäsi tiedot huolellisesti ennen hakulomakkeen lähettämistä. Opiskelijavalinta voidaan purkaa, jos olet antanut vääriä tietoja. Hakemuksesi kaikki tiedot tallennetaan opiskelijavalintarekisteriin (L 884/2017). [Opintopolun tietosuojaseloste](https://opintopolku.fi/wp/tietosuojaseloste/).
 
 Saat vahvistusviestin vastaanotetusta hakulomakkeesta sähköpostiisi."
@@ -222,9 +222,15 @@ You will receive a confirmation of your application to your email."}
    :preview                                     {:fi "Esikatselu"
                                                  :en "Preview"
                                                  :sv "Förhandsvisa"}
-   :question-for-hakukohde                      {:fi "Kysymys kuuluu hakukohteisiin"
-                                                 :en "This question is for application options"
-                                                 :sv "Frågan berör ansökningsmål"}
+   :question-for-hakukohde                      {:fi "Kysymys kuuluu hakukohteisiin:"
+                                                 :en "This question is for application options:"
+                                                 :sv "Frågan berör ansökningsmål:"}
+   :show-application-options                    {:fi "Näytä hakukohteet"
+                                                 :en "Show application options"
+                                                 :sv "Visa ansökningsmål"}
+   :hide-application-options                    {:fi "Piilota hakukohteet"
+                                                 :en "Hide application options"
+                                                 :sv "Dölja ansökningsmål"}
    :read-less                                   {:fi "Sulje ohje"
                                                  :sv "Dölj anvisning"
                                                  :en "Hide instructions"}
