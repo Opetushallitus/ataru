@@ -225,12 +225,12 @@ You will receive a confirmation of your application to your email."}
    :question-for-hakukohde                      {:fi "Kysymys kuuluu hakukohteisiin:"
                                                  :en "This question is for application options:"
                                                  :sv "Frågan berör ansökningsmål:"}
-   :show-application-options                    {:fi "Näytä hakukohteet"
-                                                 :en "Show application options"
-                                                 :sv "Visa ansökningsmål"}
-   :hide-application-options                    {:fi "Piilota hakukohteet"
-                                                 :en "Hide application options"
-                                                 :sv "Dölja ansökningsmål"}
+   :show-application-options                    {:fi "näytä hakukohteet"
+                                                 :en "show application options"
+                                                 :sv "visa ansökningsmål"}
+   :hide-application-options                    {:fi "piilota hakukohteet"
+                                                 :en "hide application options"
+                                                 :sv "dölja ansökningsmål"}
    :read-less                                   {:fi "Sulje ohje"
                                                  :sv "Dölj anvisning"
                                                  :en "Hide instructions"}
