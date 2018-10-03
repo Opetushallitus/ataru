@@ -4,25 +4,14 @@
 
 (def initial-sort {:column :created-time :order :descending})
 
-(defn- compare-by-state
-  [x y]
-  (if (not= (:state x) (:state y))
-    (if (= "inactivated" (:state x)) 1 -1)
-    false))
-
 (defn- date-sort [compare-fn sort-key x y]
-  (or
-    (compare-by-state x y)
-    (compare-fn (t/time->long (sort-key x))
-                (t/time->long (sort-key y)))))
+  (compare-fn (sort-key x) (sort-key y)))
 
 (defn- applicant-sort [order-fn x y]
-  (or
-    (compare-by-state x y)
-    (order-fn
-      (compare
-        (clojure.string/lower-case (-> x :person :last-name))
-        (clojure.string/lower-case (-> y :person :last-name))))))
+  (order-fn
+    (compare
+      (clojure.string/lower-case (str (-> x :person :last-name) (-> x :person :first-name)))
+      (clojure.string/lower-case (str (-> y :person :last-name) (-> y :person :first-name))))))
 
 (def application-sort-column-fns
   {:applicant-name

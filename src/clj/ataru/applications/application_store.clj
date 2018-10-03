@@ -603,13 +603,11 @@
 
 (defn get-haut
   []
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-haut-and-hakukohteet-from-applications
-                                 {:incomplete_states incomplete-states})))
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-haut-and-hakukohteet-from-applications {})))
 
 (defn get-direct-form-haut
   []
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-direct-form-haut
-                                 {:incomplete_states incomplete-states})))
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-direct-form-haut {})))
 
 (defn add-application-feedback
   [feedback]
