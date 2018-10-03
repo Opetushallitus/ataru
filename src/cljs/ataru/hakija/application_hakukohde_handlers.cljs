@@ -4,7 +4,8 @@
     [re-frame.core :refer [subscribe reg-event-db reg-fx reg-event-fx dispatch]]
     [ataru.util :as util]
     [ataru.hakija.application-validators :as validator]
-    [ataru.hakija.application-handlers :refer [set-field-visibilities]]))
+    [ataru.hakija.application-handlers :refer [set-field-visibilities
+                                               set-validator-processing]]))
 
 (defn- hakukohteet-field [db]
   (->> (:flat-form-content db)
@@ -101,6 +102,7 @@
           db                   (-> db
                                    (assoc-in [:application :answers :hakukohteet :values]
                                              new-hakukohde-values)
+                                   (set-validator-processing :hakukohteet)
                                    set-values-changed
                                    set-field-visibilities)]
       {:db                 (cond-> db
@@ -112,7 +114,6 @@
                             :field-descriptor  field-descriptor
                             :editing?          (get-in db [:application :editing?])
                             :virkailija?       (contains? (:application db) :virkailija-secret)
-                            :before-validation #(dispatch [:application/set-validator-processing (keyword (:id field-descriptor))])
                             :on-validated      (fn [[valid? errors]]
                                                  (dispatch [:application/set-hakukohde-valid
                                                             valid?]))}})))
@@ -131,6 +132,7 @@
                                    (assoc-in [:application :answers :hakukohteet :values]
                                              new-hakukohde-values)
                                    (update-in [:application :ui :hakukohteet :deleting] remove-hakukohde-from-deleting hakukohde-oid)
+                                   (set-validator-processing :hakukohteet)
                                    set-values-changed
                                    set-field-visibilities)]
       {:db                 db
@@ -138,7 +140,6 @@
                             :answers-by-key    (get-in db [:application :answers])
                             :field-descriptor  field-descriptor
                             :editing?          (get-in db [:application :editing?])
-                            :before-validation #(dispatch [:application/set-validator-processing (keyword (:id field-descriptor))])
                             :on-validated      (fn [[valid? errors]]
                                                  (dispatch [:application/set-hakukohde-valid
                                                             valid?]))}})))

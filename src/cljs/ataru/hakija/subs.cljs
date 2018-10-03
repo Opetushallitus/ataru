@@ -2,8 +2,147 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :as re-frame]
             [ataru.util :as util]
+            [ataru.application-common.application-field-common :as afc]
             [ataru.hakija.application :refer [answers->valid-status]]
             [ataru.hakija.person-info-fields :as person-info-fields]))
+
+(re-frame/reg-sub
+  :application/form
+  (fn [db _]
+    (:form db)))
+
+(re-frame/reg-sub
+  :application/flat-form-content
+  (fn [db _]
+    (:flat-form-content db)))
+
+(re-frame/reg-sub
+  :application/form-field
+  (fn [_ _]
+    (re-frame/subscribe [:application/flat-form-content]))
+  (fn [flat-form-content [_ id]]
+    (first (filter #(= (keyword id) (keyword (:id %))) flat-form-content))))
+
+(re-frame/reg-sub
+  :application/application
+  (fn [db _]
+    (:application db)))
+
+(re-frame/reg-sub
+  :application/editing?
+  (fn [_ _]
+    (re-frame/subscribe [:application/application]))
+  (fn [application _]
+    (:editing? application)))
+
+(re-frame/reg-sub
+  :application/answers
+  (fn [_ _]
+    (re-frame/subscribe [:application/application]))
+  (fn [application _]
+    (:answers application)))
+
+(re-frame/reg-sub
+  :application/answer
+  (fn [_ _]
+    (re-frame/subscribe [:application/answers]))
+  (fn [answers [_ id]]
+    (get answers (keyword id))))
+
+(re-frame/reg-sub
+  :application/person
+  (fn [_ _]
+    (re-frame/subscribe [:application/application]))
+  (fn [application _]
+    (:person application)))
+
+(re-frame/reg-sub
+  :application/answer-value
+  (fn [[_ id _ _] _]
+    [(re-frame/subscribe [:application/answer id])
+     (re-frame/subscribe [:application/person])
+     (re-frame/subscribe [:application/editing?])])
+  (fn [[answer person editing?] [_ id question-group-idx repeatable-idx]]
+    (let [id (keyword id)]
+      (cond (and editing?
+                 (contains? person-info-fields/editing-forbidden-person-info-field-ids id))
+            (get person id)
+            (some? question-group-idx)
+            (get-in answer [:values question-group-idx (or repeatable-idx 0) :value])
+            (some? repeatable-idx)
+            (get-in answer [:values repeatable-idx :value])
+            :else
+            (:value answer)))))
+
+(re-frame/reg-sub
+  :application/answer-valid?
+  (fn [[_ id _] _]
+    [(re-frame/subscribe [:application/answer id])
+     (re-frame/subscribe [:application/editing?])])
+  (fn [[answer editing?] [_ id question-group-idx repeatable-idx]]
+    (cond (and editing?
+               (contains? person-info-fields/editing-forbidden-person-info-field-ids (keyword id)))
+          true
+          (some? question-group-idx)
+          (get-in answer [:values question-group-idx (or repeatable-idx 0) :valid])
+          (some? repeatable-idx)
+          (get-in answer [:values repeatable-idx :valid])
+          :else
+          (:valid answer))))
+
+(re-frame/reg-sub
+  :application/answer-errors
+  (fn [[_ id _] _]
+    (re-frame/subscribe [:application/answer id]))
+  (fn [answer [_ _ idx]]
+    (if (some? idx)
+      (get-in answer [:values idx 0 :errors])
+      (:errors answer))))
+
+(re-frame/reg-sub
+  :application/repeatable-answer-count
+  (fn [[_ id _] _]
+    (re-frame/subscribe [:application/answer id]))
+  (fn [answer [_ _ question-group-idx]]
+    (max 1 (count
+            (if (some? question-group-idx)
+              (get-in answer [:values question-group-idx])
+              (:values answer))))))
+
+(re-frame/reg-sub
+  :application/submitted?
+  (fn [_ _]
+    (re-frame/subscribe [:application/application]))
+  (fn [application _]
+    (= :submitted (:submit-status application))))
+
+(re-frame/reg-sub
+  :application/cannot-edit-because-in-processing?
+  (fn [_ _]
+    (re-frame/subscribe [:application/application]))
+  (fn [application _]
+    (:cannot-edit-because-in-processing application)))
+
+(re-frame/reg-sub
+  :application/virkailija?
+  (fn [_ _]
+    (re-frame/subscribe [:application/application]))
+  (fn [application _]
+    (some? (:virkailija-secret application))))
+
+(re-frame/reg-sub
+  :application/ui
+  (fn [_ _]
+    (re-frame/subscribe [:application/application]))
+  (fn [application _]
+    (:ui application)))
+
+(re-frame/reg-sub
+  :application/ui-of
+  (fn [_ _]
+    (re-frame/subscribe [:application/ui]))
+  (fn [ui [_ id]]
+    (get ui (keyword id))))
 
 (re-frame/reg-sub
   :state-query
@@ -29,11 +168,27 @@
     (count (-> db :tarjonta :hakukohteet))))
 
 (re-frame/reg-sub
+  :application/selected-language
+  (fn [_ _]
+    (re-frame/subscribe [:application/form]))
+  (fn [form _]
+    (:selected-language form)))
+
+(re-frame/reg-sub
+  :application/languages
+  (fn [_ _]
+    (re-frame/subscribe [:application/form]))
+  (fn [form _]
+    (:languages form)))
+
+(re-frame/reg-sub
   :application/form-language
-  (fn [db]
-    (or
-      (get-in db [:form :selected-language])
-      :fi))) ; When user lands on the page, there isn't any language set until the form is loaded)
+  (fn [_ _]
+    (re-frame/subscribe [:application/selected-language]))
+  (fn [selected-language _]
+    ;; When user lands on the page, there isn't any language set until the
+    ;; form is loaded
+    (or selected-language :fi)))
 
 (defn- selected-hakukohteet [db]
   (map :value (get-in db [:application :answers :hakukohteet :values] [])))
@@ -55,21 +210,26 @@
 
 (re-frame/reg-sub
   :application/cannot-view?
-  (fn [db [_ key]]
-    (let [field    (->> (:flat-form-content db)
-                        (filter #(= (keyword key) (keyword (:id %))))
-                        first)
-          editing? (get-in db [:application :editing?])]
-      (and editing? (:cannot-view field)))))
+  (fn [[_ id] _]
+    [(re-frame/subscribe [:application/form-field id])
+     (re-frame/subscribe [:application/editing?])])
+  (fn [[field editing?] _]
+    (and editing? (:cannot-view field))))
 
 (re-frame/reg-sub
   :application/cannot-edit?
-  (fn [db [_ key]]
-    (let [field    (->> (:flat-form-content db)
-                        (filter #(= (keyword key) (keyword (:id %))))
-                        first)
-          editing? (get-in db [:application :editing?])]
-      (and editing? (:cannot-edit field)))))
+  (fn [[_ id] _]
+    [(re-frame/subscribe [:application/form-field id])
+     (re-frame/subscribe [:application/editing?])])
+  (fn [[field editing?] _]
+    (and editing? (:cannot-edit field))))
+
+(re-frame/reg-sub
+  :application/disabled?
+  (fn [[_ id] _]
+    (re-frame/subscribe [:application/ui-of id]))
+  (fn [ui _]
+    (get ui :disabled? false)))
 
 (re-frame/reg-sub
   :application/get-i18n-text
@@ -182,6 +342,16 @@
       false)))
 
 (re-frame/reg-sub
+  :application/default-languages
+  (fn [_ _]
+    [(re-frame/subscribe [:application/selected-language])
+     (re-frame/subscribe [:application/languages])])
+  (fn [[selected-language languages] _]
+    (concat [selected-language]
+            languages
+            [:fi :sv :en])))
+
+(re-frame/reg-sub
   :application/hakukohde-label
   (fn [db [_ hakukohde-oid]]
     (util/non-blank-val
@@ -220,13 +390,6 @@
     (-> db :form :tarjonta :prioritize-hakukohteet)))
 
 (re-frame/reg-sub
-  :application/default-languages
-  (fn [db _]
-    (concat [(get-in db [:form :selected-language])]
-            (get-in db [:form :languages])
-            [:fi :sv :en])))
-
-(re-frame/reg-sub
   :application/hakukohde-priority-number
   (fn [db [_ hakukohde-oid]]
     (->> (-> db :application :answers :hakukohteet :values)
@@ -235,19 +398,53 @@
          first)))
 
 (re-frame/reg-sub
-  :application/answer-invalid?
-  (fn [db [_ key]]
-    (-> db :application :answers (get key) :valid not)))
-
-(re-frame/reg-sub
   :application/tarjonta-hakukohteet
   (fn [db _]
     (-> db :form :tarjonta :hakukohteet)))
 
 (re-frame/reg-sub
+  :application/visible-validation-error
+  (fn [_ _]
+    (re-frame/subscribe [:application/application]))
+  (fn [application _]
+    (:visible-validation-error application)))
+
+(re-frame/reg-sub
+  :application/validators-processing
+  (fn [_ _]
+    (re-frame/subscribe [:application/application]))
+  (fn [application _]
+    (:validators-processing application)))
+
+(re-frame/reg-sub
+  :application/validator-processing?
+  (fn [_ _]
+    (re-frame/subscribe [:application/validators-processing]))
+  (fn [validators-processing [_ id]]
+    (contains? validators-processing (keyword id))))
+
+(re-frame/reg-sub
+  :application/show-validation-error-class?
+  (fn [[_ id question-group-idx repeatable-idx] _]
+    [(re-frame/subscribe [:application/form-field id])
+     (re-frame/subscribe [:application/answer-value id question-group-idx repeatable-idx])
+     (re-frame/subscribe [:application/answer-valid? id question-group-idx repeatable-idx])
+     (re-frame/subscribe [:application/validator-processing? id])])
+  (fn [[field value valid? validator-processing?] _]
+    (and (not valid?)
+         (or (afc/is-required-field? field)
+             (-> field :params :numeric))
+         (if (string? value)
+           (not (clojure.string/blank? value))
+           (not (empty? value)))
+         (not validator-processing?))))
+
+(re-frame/reg-sub
   :application/show-validation-error?
-  (fn [db [_ id]]
-    (= id (get-in db [:application :visible-validation-error] id))))
+  (fn [_ _]
+    (re-frame/subscribe [:application/visible-validation-error]))
+  (fn [visible-validation-error [_ id]]
+    (or (nil? visible-validation-error) (= id visible-validation-error))))
 
 (re-frame/reg-sub
   :application/verify-email?
