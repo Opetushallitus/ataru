@@ -190,9 +190,10 @@
              :update         false                          ;; if true only process files with src newer than dest
              :extra-values   {:version   "0.1.0-SNAPSHOT"
                               :buildTime ~(.format
-                                            (java.text.SimpleDateFormat. "yyyyMMdd-HHmm")
+                                            (java.text.SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssZZZ")
                                             (java.util.Date.))
-                              :githash   ~(System/getenv "githash")}
+                              :branch    ~(System/getenv "TRAVIS_BRANCH")
+                              :commit    ~(System/getenv "TRAVIS_COMMIT")}
              :silent         false}
 
   :profiles {:dev            {:dependencies   [[com.cemerick/piggieback "0.2.2"]
