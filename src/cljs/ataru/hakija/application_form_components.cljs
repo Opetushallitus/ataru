@@ -130,8 +130,8 @@
            (str (get-translation translation-key) " ")
            [:a.application__question_hakukohde_names_info
             {:on-click #(swap! show-hakukohde-list? not)}
-            (str "[" (get-translation (if @show-hakukohde-list? :hide-application-options :show-application-options))
-                 " (" (count selected-hakukohteet-for-field) ")]")]]
+            (str (get-translation (if @show-hakukohde-list? :hide-application-options :show-application-options))
+                 " (" (count selected-hakukohteet-for-field) ")")]]
           (when @show-hakukohde-list?
             [:ul.application__question_hakukohde_names
              (for [hakukohde selected-hakukohteet-for-field
