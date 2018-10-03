@@ -1122,12 +1122,14 @@
   (match event
          {:event-type "review-state-change"}
          (let [label (application-states/get-review-state-label-by-name
-                       review-states/application-review-states
-                       (:new-review-state event)
-                       lang)]
-           (if (= (:new-review-state event) "information-request")
-             [:span.application-handling__event-caption--inner label (virkailija-initials-span event)]
-             label))
+                      review-states/application-review-states
+                      (:new-review-state event)
+                      lang)]
+           [:span.application-handling__event-caption--inner
+            label
+            " "
+            (or (virkailija-initials-span event)
+                (get-virkailija-translation :unknown))])
 
          {:event-type "updated-by-applicant"}
          (update-event-caption
