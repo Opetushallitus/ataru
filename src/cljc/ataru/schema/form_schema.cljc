@@ -99,6 +99,7 @@
                         :metadata                                        ElementMetadata
                         (s/optional-key :cannot-view)                    s/Bool
                         (s/optional-key :cannot-edit)                    s/Bool
+                        (s/optional-key :human-readable-deadline)        s/Str
                         (s/optional-key :validators)                     [Validator]
                         (s/optional-key :rules)                          {s/Keyword s/Any}
                         (s/optional-key :blur-rules)                     {s/Keyword s/Any}

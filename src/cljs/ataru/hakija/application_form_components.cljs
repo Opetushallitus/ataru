@@ -780,7 +780,7 @@
     (dispatch [:application/add-attachments field-descriptor question-group-idx files])))
 
 (defn attachment-upload [field-descriptor component-id attachment-count question-group-idx]
-  (let [id (str component-id (when question-group-idx "-" question-group-idx) "-upload-button")]
+  (let [id       (str component-id (when question-group-idx "-" question-group-idx) "-upload-button")]
     [:div.application__form-upload-attachment-container
      [:input.application__form-upload-input
       {:id           id
@@ -795,7 +795,10 @@
       [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
       [:span.application__form-upload-button-add-text (get-translation :add-attachment)]]
      [:span.application__form-upload-button-info
-      (get-translation :file-size-info (util/size-bytes->str max-attachment-size-bytes))]]))
+      (get-translation :file-size-info (util/size-bytes->str max-attachment-size-bytes))]
+     (when (:human-readable-deadline field-descriptor)
+       [:div.application__form-upload-attachment--deadline
+        (str (get-translation :deadline-in) " " (:human-readable-deadline field-descriptor))])]))
 
 (defn- attachment-filename
   [id question-group-idx attachment-idx show-size?]

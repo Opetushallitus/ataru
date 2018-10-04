@@ -10,6 +10,8 @@
     [cljs.core.match :refer-macros [match]]
     [goog.dom :as gdom]
     [goog.string :as s]
+    [goog.date :as d]
+    [cljs-time.core :as t]
     [re-frame.core :refer [subscribe dispatch dispatch-sync]]
     [reagent.core :as r]
     [reagent.ratom :refer-macros [reaction]]
@@ -1082,9 +1084,38 @@
                                     (markdown-help)]])))
                doall)])])))
 
+
+(def ^:private deadline-pattern #"^(\d{1,2})\.(\d{1,2})\.(\d{4}) (\d{1,2}):(\d{1,2})$")
+
+(defn deadline-date [deadline]
+  (when-let [[_ day month year hours minutes] (map js/parseInt (re-matches deadline-pattern deadline))]
+    (if-let [dt (t/date-time year month day hours minutes)]
+      (if (= [year month day hours minutes]
+             [(.getYear dt) (inc (.getMonth dt)) (.getDate dt)
+              (.getHours dt)
+              (.getMinutes dt)])
+        (s/format "%d.%d.%d %02d:%02d" day month year hours minutes)))))
+
 (defn attachment [content path]
-  (let [languages        (subscribe [:editor/languages])
-        animation-effect (fade-out-effect path)]
+  (let [component        (subscribe [:editor/get-component-value path])
+        languages        (subscribe [:editor/languages])
+        animation-effect (fade-out-effect path)
+        deadline-value   (r/atom (get-in @component [:params :deadline]))
+        valid            (r/atom true)
+        format-deadline  (fn [event]
+                           (some->> (deadline-date (-> event .-target .-value))
+                                    (reset! deadline-value)))
+        update-value     (fn [unformatted-value value valid?]
+                           (reset! deadline-value unformatted-value)
+                           (reset! valid valid?)
+                           (dispatch-sync [:editor/set-component-value value path :params :deadline]))
+        update-deadline  (fn [event]
+                           (let [value    (-> event .-target .-value)
+                                 deadline (deadline-date value)]
+                             (cond
+                              (clojure.string/blank? value) (update-value value nil true)
+                              (and value deadline) (update-value value deadline true)
+                              :else (update-value value nil false))))]
     (fn [content path]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
@@ -1102,10 +1133,12 @@
          [:div.editor-form__text-field-wrapper
           [:header.editor-form__component-item-header (get-virkailija-translation :attachment-deadline)]
           [:input.editor-form__text-field
-           {:type      "text"
+           {:type        "text"
+            :class       (when-not @valid "editor-form__text-field--invalid")
+            :value       @deadline-value
+            :on-blur     format-deadline
             :placeholder "hh:mm pp.kk.vvvv"
-            ;:id        (str (:id content) "-deadline")
-            :on-change (fn [event])}]]
+            :on-change   update-deadline}]]
          [:div.editor-form__checkbox-wrapper
           [required-checkbox path content]]]
          [belongs-to-hakukohteet path content]]

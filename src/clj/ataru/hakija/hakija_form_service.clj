@@ -10,6 +10,7 @@
             [taoensso.timbre :refer [warn]]
             [clj-time.core :as time]
             [clj-time.coerce :as t]
+            [clj-time.format :as f]
             [schema.core :as s]
             [ataru.hakija.form-role :as form-role]
             [ataru.component-data.component :as component]
@@ -76,6 +77,14 @@
     (select-first-ongoing-hakuaika-or-hakuaika-with-last-ending
      (map :hakuaika relevant-hakukohteet))))
 
+(defn- custom-deadline [field]
+  (get-in field [:params :deadline]))
+
+(defn- editing-allowed-by-custom-deadline? [field]
+  (some->> (custom-deadline field)
+           (f/parse (f/formatter "dd.MM.yyyy HH:mm" (time/time-zone-for-id "Europe/Helsinki")))
+           (time/before? (time/now))))
+
 (defn- editing-allowed-by-hakuaika?
   [field hakukohteet application-in-processing-state?]
   (let [hakuaika            (select-hakuaika-for-field field hakukohteet)
@@ -97,13 +106,20 @@
                       (contains? editing-allowed-person-info-field-ids
                         (keyword (:id field)))))))))
 
+(defn- human-readable-deadline [field hakukohteet roles application-in-processing-state?]
+  (if-let [dl (custom-deadline field)]
+    dl
+    nil))
+
 (defn- uneditable?
   [field hakukohteet roles application-in-processing-state?]
   (not (and (or (and (form-role/virkailija? roles)
                      (not (form-role/with-henkilo? roles)))
                 (not (contains? editing-forbidden-person-info-field-ids (keyword (:id field)))))
             (or (form-role/virkailija? roles)
-                (editing-allowed-by-hakuaika? field hakukohteet application-in-processing-state?))
+                (if (custom-deadline field)
+                  (editing-allowed-by-custom-deadline? field)
+                  (editing-allowed-by-hakuaika? field hakukohteet application-in-processing-state?)))
             (or (form-role/virkailija? roles)
                 (not (and (nil? hakukohteet)
                           application-in-processing-state?))))))
@@ -122,10 +138,16 @@
                                                     (keyword (:id field)))
                                          (not (form-role/virkailija? roles)))
                        cannot-edit? (or cannot-view?
-                                        (uneditable? field hakukohteet roles application-in-processing-state?))]
-                   (assoc field
-                          :cannot-view cannot-view?
-                          :cannot-edit cannot-edit?))
+                                        (uneditable? field hakukohteet roles application-in-processing-state?))
+                       field        (assoc field
+                                           :cannot-view cannot-view?
+                                           :cannot-edit cannot-edit?)
+                       deadline     (and (not cannot-edit?)
+                                         (human-readable-deadline field hakukohteet roles application-in-processing-state?))]
+                   (if deadline
+                     (assoc field
+                            :human-readable-deadline deadline)
+                     field))
                  field))
              content))))
 
