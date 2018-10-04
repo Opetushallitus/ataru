@@ -60,10 +60,11 @@
                     return testFrame().find(id).parent().siblings(".application__question_hakukohde_names_container").text()
                 };
 
-                expect(kysymysKoskeeHakukohteitaFinder("#hakuajat-ohi")).to.equal("Kysymys kuuluu hakukohteisiin (1)")
-                expect(kysymysKoskeeHakukohteitaFinder("#osa-hakuajoista-ohi")).to.equal("Kysymys kuuluu hakukohteisiin (2)")
-                expect(kysymysKoskeeHakukohteitaFinder("#kaikki-hakuajat-voimassa")).to.equal("Kysymys kuuluu hakukohteisiin (1)")
-                expect(kysymysKoskeeHakukohteitaFinder("#assosiaatio-hakukohderyhman-kautta")).to.equal("Kysymys kuuluu hakukohteisiin (1)")
+
+                expect(kysymysKoskeeHakukohteitaFinder("#hakuajat-ohi")).to.equal("Kysymys kuuluu hakukohteisiin: näytä hakukohteet (1)")
+                expect(kysymysKoskeeHakukohteitaFinder("#osa-hakuajoista-ohi")).to.equal("Kysymys kuuluu hakukohteisiin: näytä hakukohteet (2)")
+                expect(kysymysKoskeeHakukohteitaFinder("#kaikki-hakuajat-voimassa")).to.equal("Kysymys kuuluu hakukohteisiin: näytä hakukohteet (1)")
+                expect(kysymysKoskeeHakukohteitaFinder("#assosiaatio-hakukohderyhman-kautta")).to.equal("Kysymys kuuluu hakukohteisiin: näytä hakukohteet (1)")
             })
         })
 
