@@ -44,6 +44,9 @@
    :application-period                          {:fi "Hakuaika"
                                                  :sv "Ansökningstid"
                                                  :en "Application period"}
+   :application-period-left                     {:fi "Hakuaikaa jäljellä"
+                                                 :sv "Återstående ansökningstid"
+                                                 :en "Time left to apply"}
    :application-processed-cant-modify           {:fi "Tämä hakemus on käsitelty eikä ole enää muokattavissa"
                                                  :sv "Denna ansökan har behandlats och kan inte längre bearbetas"
                                                  :en "This application has been processed and can no longer be modified"}

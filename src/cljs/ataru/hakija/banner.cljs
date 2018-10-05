@@ -152,7 +152,7 @@
                                (pos? minutes) (minutes-seconds-text minutes seconds)
                                :else (seconds-text seconds))]
           [:div.application__hakuaika-left
-           (str "Hakuaikaa jäljellä " time-left-text)])))))
+           (str (get-translation :application-period-left) " " time-left-text)])))))
 
 (defn status-controls [submit-status]
   (let [valid-status (subscribe [:application/valid-status])
