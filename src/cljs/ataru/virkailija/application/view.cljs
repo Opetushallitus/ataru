@@ -10,6 +10,7 @@
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :as t]
             [ataru.virkailija.temporal :as temporal]
+            [ataru.virkailija.views.modal :as modal]
             [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
             [ataru.virkailija.virkailija-ajax :as ajax]
             [cljs-time.format :as f]
@@ -1829,11 +1830,9 @@
 (defn application-version-changes []
   (let [history-items (subscribe [:application/current-history-items])]
     (when @history-items
-      [:div.virkailija-modal__container
-       [:div.virkailija-modal__content
-        [:a.virkailija-modal__close-link
-         {:on-click #(dispatch [:application/close-application-version-history])}
-         (clojure.string/capitalize (get-virkailija-translation :close))]
+      [modal/modal
+       #(dispatch [:application/close-application-version-history])
+       [:div.application-handling__version-history
         [application-version-history-header (count @history-items)]
         (for [[key item] @history-items]
           ^{:key (str "application-history-row-for-" key)}

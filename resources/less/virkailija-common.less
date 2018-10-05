@@ -126,7 +126,10 @@ body {
   opacity: 0;
 }
 
-.virkailija-modal__container {
+.virkailija-modal__backdrop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: fixed;
   background-color: @opaque-grey;
   top: 0;
@@ -136,24 +139,49 @@ body {
   z-index: 1000;
 }
 
-.virkailija-modal__content {
-  position: relative;
-  left: 5%;
-  top: 5%;
-  width: 90%;
-  height: 90%;
+.virkailija-modal__container {
+  display: flex;
+  flex-direction: column;
+  max-height: 90%;
+  max-width: 90%;
   background-color: white;
   border-radius: 2px;
   box-shadow: 5px 5px 5px rgb(39, 39, 39);
-  padding: 70px;
-  z-index: 1000;
+}
+
+.virkailija-modal__close-link-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 20px 40px 0px 40px;
+}
+
+.virkailija-modal__content-container {
+  display: flex;
   overflow-y: scroll;
 }
 
-.virkailija-modal__close-link {
-  position: absolute;
-  right: 15px;
-  top: 10px;
+.virkailija-modal__close-text {
+  font-size: 16px;
+  margin-right: 10px;
+}
+
+.virkailija-modal__close-button {
+  background: none;
+  border: none;
+  padding: 0px;
+  font-size: 24px;
+  cursor: pointer;
+  &:focus {
+    outline: none;
+  }
+  &::-moz-focus-inner {
+    border: 0;
+  }
+  &:hover {
+    border: 0;
+    background: none;
+  }
 }
 
 .virkailija-modal-enabled {
