@@ -433,16 +433,16 @@
                          session
                          hakukohde-oid
                          application-keys)]
-    (if-let [yksiloimattomat (->> applications
-                                  (map :personOid)
-                                  distinct
-                                  (person-service/get-persons person-service)
-                                  vals
-                                  (remove #(or (:yksiloity %)
-                                               (:yksiloityVTJ %)))
-                                  (map :oidHenkilo)
-                                  distinct
-                                  seq)]
-      {:yksiloimattomat yksiloimattomat}
-      {:applications applications})
+    (let [yksiloimattomat (->> applications
+                               (map :personOid)
+                               distinct
+                               (person-service/get-persons person-service)
+                               vals
+                               (remove #(or (:yksiloity %)
+                                            (:yksiloityVTJ %)))
+                               (map :oidHenkilo)
+                               distinct
+                               seq)]
+      {:yksiloimattomat yksiloimattomat
+       :applications    applications})
     {:unauthorized nil}))
