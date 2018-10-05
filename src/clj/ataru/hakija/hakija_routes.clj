@@ -51,7 +51,7 @@
 
           (some? application-form-and-person)
           (let [application (:application application-form-and-person)]
-            (audit-log/log {:old       application
+            (audit-log/log {:new       application
                             :operation audit-log/operation-read
                             :id        (util/extract-email application)})
             (response/ok application-form-and-person))
