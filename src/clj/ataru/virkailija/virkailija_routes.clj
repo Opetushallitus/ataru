@@ -750,12 +750,17 @@
                   session
                   hakukohdeOid
                   (not-empty applicationOids))
-            {:applications applications}
+            {:yksiloimattomat (_ :guard empty?)
+             :applications    applications}
             (response/ok applications)
-            {:yksiloimattomat yksiloimattomat}
-            (response/conflict
-             {:error      "Yksilöimättömiä hakijoita"
-              :personOids yksiloimattomat})
+            {:yksiloimattomat yksiloimattomat
+             :applications    applications}
+            (if (get-in config [:yksiloimattomat :allow] false)
+              (do (warn "Yksilöimättömiä hakijoita")
+                  (response/ok applications))
+              (response/conflict
+               {:error      "Yksilöimättömiä hakijoita"
+                :personOids yksiloimattomat}))
             {:unauthorized _}
             (response/unauthorized {:error "Unauthorized"}))))
 
