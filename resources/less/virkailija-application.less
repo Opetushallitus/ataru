@@ -1314,50 +1314,61 @@ and (max-width: 1000px) {
 }
 
 .application-handling__version-history-header {
+  margin-bottom: 40px;
 }
 
 .application-handling__version-history-header-text {
-  font-size: 24px;
+  font-size: 25px;
   margin-bottom: 10px;
 }
 
 .application-handling__version-history-header-sub-text {
-  font-size: 16px;
+  font-size: 14px;
+}
+
+.application-handling__version-history-header-virkailija {
+  font-style: italic;
 }
 
 .application-handling__version-history-row {
-  margin-top: 25px;
+  margin-bottom: 24px;
+}
+
+.application-handling__version-history-sub-row {
+  display: flex;
+}
+
+.application-handling__version-history-sub-row__left {
+  flex: 0 0 86px;
+}
+
+.application-handling__version-history-sub-row__right {
+  flex: 2;
 }
 
 .application-handling__version-history-row-label {
-  margin-bottom: 15px;
+  display: inline-block;
+  font-size: 14px;
+  font-weight: .semibold;
+  margin-bottom: 10px;
 }
 
-.application-handling__version-history-row-value {
-  padding: 10px;
-  display: flex;
-  align-items: center;
-
-  &-old {
-    background-color: @very-light-red;
-    margin-bottom: 1px;
-    opacity: 0.6;
-  }
-
-  &-new {
-    background-color: @very-light-green;
-  }
+.application-handling__version-history-value-label {
+  font-size: 14px;
+  font-style: italic;
 }
 
-.application-handling__version-history-row-value-sign {
-  font-size: 50px;
-  color: white;
-  font-weight: bold;
-  width: 50px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-right: 10px;
+.application-handling__version-history-value {
+  font-size: 14px;
+  min-height: 28px;
+  padding: 4px 26px;
+
+  &__old {
+    background-color: @invalid-input-border-color;
+  }
+  &__new {
+    background-color: @button-green;
+  }
 }
 
 .application-handling__version-history-question-group-value {
@@ -1365,9 +1376,18 @@ and (max-width: 1000px) {
   padding-left: 20px;
 }
 
+.application-handling__version-history-question-group-value-item {
+  min-height: 20px;
+}
+
 .application-handling__version-history-list-value {
   list-style: none;
-  padding-left: 0;
+  padding-left: 0px;
+  margin: 0px;
+}
+
+.application-handling__version-history-list-value-item {
+  min-height: 20px;
 }
 
 .application-handling__event-row {
