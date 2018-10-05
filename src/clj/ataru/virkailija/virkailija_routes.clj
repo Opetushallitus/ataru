@@ -741,20 +741,23 @@
         :query-params [{hakukohdeOid :- s/Str nil}]
         :body         [applicationOids [s/Str]]
         :return [ataru-schema/ValintaApplication]
-        (match (application-service/get-applications-for-valintalaskenta
-                organization-service
-                person-service
-                session
-                hakukohdeOid
-                (not-empty applicationOids))
-          {:applications applications}
-          (response/ok applications)
-          {:yksiloimattomat yksiloimattomat}
-          (response/conflict
-           {:error      "Yksilöimättömiä hakijoita"
-            :personOids yksiloimattomat})
-          {:unauthorized _}
-          (response/unauthorized {:error "Unauthorized"})))
+        (if (and (nil? hakukohdeOid)
+                 (empty? applicationOids))
+          (response/bad-request {:error "Either hakukohdeOid or nonempty list of application oids is required"})
+          (match (application-service/get-applications-for-valintalaskenta
+                  organization-service
+                  person-service
+                  session
+                  hakukohdeOid
+                  (not-empty applicationOids))
+            {:applications applications}
+            (response/ok applications)
+            {:yksiloimattomat yksiloimattomat}
+            (response/conflict
+             {:error      "Yksilöimättömiä hakijoita"
+              :personOids yksiloimattomat})
+            {:unauthorized _}
+            (response/unauthorized {:error "Unauthorized"}))))
 
       (api/GET "/list" {session :session}
         :summary "List application oids and corresponding person oids"
