@@ -114,6 +114,12 @@ run-tests() {
     test-browser
 }
 
+run-tests-and-create-uberjar() {
+    run-tests
+    process-resources
+    ./bin/lein uberjar
+}
+
 run-browser-tests() {
     echo "Starting browser test run"
     clean
@@ -171,6 +177,9 @@ case "$command" in
     "run-tests" )
         run-tests
         ;;
+    "run-tests-and-create-uberjar" )
+        run-tests-and-create-uberjar
+        ;;
     "nuke-test-db" )
         nuke-test-db
         ;;
@@ -201,5 +210,6 @@ case "$command" in
 * ui-compile
 * prepare-ui-tests
 * create-uberjar
-* run-tests"
+* run-tests
+* run-tests-and-create-uberjar"
 esac

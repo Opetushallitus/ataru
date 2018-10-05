@@ -1,4 +1,5 @@
 artifactId=ataru-editori
 version={{version}}
 buildTime={{buildTime}}
-githash={{githash}}
+branch={{branch}}
+commit={{commit}}

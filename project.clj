@@ -66,7 +66,7 @@
                  [org.clojure/tools.logging "0.4.0"]
                  [org.apache.poi/poi-ooxml "3.17"]
                  [org.clojure/core.cache "0.7.1"]
-                 [org.clojure/tools.nrepl "0.2.13"]
+                 [nrepl "0.4.5"]
                  [com.taoensso/carmine "2.16.0"]
                  [pandect "0.6.1"]
                  [hikari-cp "2.0.0" :exclusions [prismatic/schema]]
@@ -77,15 +77,15 @@
 
   :min-lein-version "2.5.3"
 
-  :repositories [["releases" {:url           "https://artifactory.oph.ware.fi/artifactory/oph-sade-release-local"
+  :repositories [["releases" {:url           "https://artifactory.opintopolku.fi/artifactory/oph-sade-release-local"
                               :sign-releases false
                               :snapshots     false
                               ;                             :creds :gpg
                               }]
-                 ["snapshots" {:url "https://artifactory.oph.ware.fi/artifactory/oph-sade-snapshot-local"
+                 ["snapshots" {:url "https://artifactory.opintopolku.fi/artifactory/oph-sade-snapshot-local"
                                ;                                   :creds :gpg
                                }]
-                 ["ext-snapshots" {:url "https://artifactory.oph.ware.fi/artifactory/ext-snapshot-local"}]
+                 ["ext-snapshots" {:url "https://artifactory.opintopolku.fi/artifactory/ext-snapshot-local"}]
                  ["Laughing Panda" {:url       "http://maven.laughingpanda.org/maven2"
                                     :snapshots false}]]
 
@@ -190,9 +190,10 @@
              :update         false                          ;; if true only process files with src newer than dest
              :extra-values   {:version   "0.1.0-SNAPSHOT"
                               :buildTime ~(.format
-                                            (java.text.SimpleDateFormat. "yyyyMMdd-HHmm")
+                                            (java.text.SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssZZZ")
                                             (java.util.Date.))
-                              :githash   ~(System/getenv "githash")}
+                              :branch    ~(System/getenv "TRAVIS_BRANCH")
+                              :commit    ~(System/getenv "TRAVIS_COMMIT")}
              :silent         false}
 
   :profiles {:dev            {:dependencies   [[com.cemerick/piggieback "0.2.2"]

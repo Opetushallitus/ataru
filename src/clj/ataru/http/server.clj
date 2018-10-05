@@ -3,7 +3,7 @@
             [clojure.core.async :as a]
             [environ.core :refer [env]]
             [ring.middleware.reload :refer [wrap-reload]]
-            [clojure.tools.nrepl.server :as nrepl]
+            [nrepl.server :as nrepl]
             [aleph.http :as http]
             [com.stuartsierra.component :as component]))
 
