@@ -1,5 +1,7 @@
 (ns ataru.hakija.hakija-routes
   (:require [ataru.log.access-log :as access-log]
+            [ataru.log.audit-log :as audit-log]
+            [ataru.util :as util]
             [ataru.middleware.cache-control :as cache-control]
             [ataru.applications.application-store :as application-store]
             [ataru.hakija.hakija-form-service :as form-service]
@@ -48,7 +50,11 @@
           (response/bad-request {:error "Inactivated"})
 
           (some? application-form-and-person)
-          (response/ok application-form-and-person)
+          (let [application (:application application-form-and-person)]
+            (audit-log/log {:new       application
+                            :operation audit-log/operation-read
+                            :id        (util/extract-email application)})
+            (response/ok application-form-and-person))
 
           secret-expired?
           (response/unauthorized {:secret-expired true

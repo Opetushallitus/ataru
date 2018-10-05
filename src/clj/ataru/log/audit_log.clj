@@ -11,6 +11,7 @@
            [com.github.fge.jsonpatch.diff JsonDiff]))
 
 (def operation-failed "epäonnistunut")
+(def operation-read "luku")
 (def operation-new "lisäys")
 (def operation-modify "muutos")
 (def operation-delete "poisto")
@@ -83,6 +84,7 @@
          (not-blank? id)
          (some #{operation} [operation-failed
                              operation-new
+                             operation-read
                              operation-modify
                              operation-delete
                              operation-login])]}
