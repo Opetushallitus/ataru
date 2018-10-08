@@ -29,7 +29,8 @@
             [cheshire.core :as json]
             [ataru.config.core :refer [config]]
             [ataru.flowdock.flowdock-client :as flowdock-client]
-            [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret alter-application-to-hakuaikaloppu-for-secret]])
+            [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret alter-application-to-hakuaikaloppu-for-secret]]
+            [ataru.hakija.resumable-file-transfer :as resumable-file])
   (:import [ring.swagger.upload Upload]
            [java.io InputStream]))
 
@@ -230,6 +231,28 @@
          (:old-secret request))
         (response/ok {})))
     (api/context "/files" []
+      (api/GET "/resumable" []
+        :summary "Check if this part has already been uploaded"
+        :query-params [file-part-number :- s/Int
+                       file-size :- s/Int
+                       file-id :- s/Str
+                       file-name :- s/Str]
+        (if (resumable-file/file-part-exists? file-id file-name file-size file-part-number)
+          (response/ok {})
+          (response/not-found)))
+      (api/POST "/resumable" []
+        :summary "Upload file part"
+        :multipart-params [file-part :- upload/TempFileUpload
+                           file-part-number :- s/Int
+                           file-size :- s/Int
+                           file-id :- s/Str]
+        :middleware [upload/wrap-multipart-params]
+        :return {:status                       s/Str
+                 (s/optional-key :stored-file) ataru-schema/File}
+        (try
+          (response/ok (resumable-file/store-file-part! file-id file-size file-part-number file-part))
+          (finally
+            (io/delete-file (:tempfile file-part) true))))
       (api/POST "/" []
         :summary "Upload a file"
         :multipart-params [file :- upload/TempFileUpload]

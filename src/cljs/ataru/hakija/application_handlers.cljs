@@ -4,6 +4,7 @@
             [ataru.cljs-util :as util]
             [ataru.util :as autil]
             [ataru.hakija.rules :as rules]
+            [ataru.hakija.resumable-upload :as resumable-upload]
             [cljs.core.match :refer-macros [match]]
             [ataru.hakija.application :refer [create-initial-answers
                                               create-application-to-submit
@@ -891,6 +892,16 @@
 
 (defonce max-attachment-size-bytes
   (get (js->clj js/config) "attachment-file-max-size-bytes" (* 10 1024 1024)))
+
+(reg-event-fx
+  :application/add-single-attachment-resumable
+  (fn [_ [_ field-descriptor component-id attachment-idx file retries question-group-idx]]
+    ; TODO fx?
+    (resumable-upload/upload-file
+      "/hakemus/api/files/resumable"
+      file
+      [:application/handle-attachment-upload field-descriptor component-id attachment-idx question-group-idx]
+      [:application/handle-attachment-upload-error field-descriptor component-id attachment-idx name file (inc retries) question-group-idx])))
 
 (reg-event-fx
   :application/add-attachments
