@@ -901,46 +901,39 @@
 
 (reg-event-fx
   :application/add-attachments
-  (fn [{:keys [db]} [_ field-descriptor component-id attachment-count files question-group-idx]]
-    (let [row-count     (when (some? question-group-idx)
-                          (get-in db [:application :ui (get-in field-descriptor [:params :question-group-id]) :count] 1))
-          files         (filter (fn [file]
-                                  (let [prev-files (get-in db [:application :answers (keyword component-id) :values])
-                                        new-file   {:filename (.-name file)
-                                                    :size     (.-size file)}]
-                                    (not (some (partial = new-file)
-                                               (eduction (map :value)
-                                                         (map #(select-keys % [:filename :size]))
-                                                         prev-files)))))
-                                files)
-          dispatch-list (map-indexed (fn file->dispatch-vec [idx file]
-                                       [:application/add-single-attachment field-descriptor component-id (+ attachment-count idx) file 0 question-group-idx])
-                                     files)
-          db            (if (not-empty files)
-                          (as-> db db'
-                                (update-in db' [:application :answers (keyword component-id) :values] (util/vector-of-length (or row-count 0)))
-                                (cond-> db'
-                                  question-group-idx
-                                  (update-in [:application :answers (keyword component-id) :values question-group-idx] (fnil identity [])))
-                                (->> files
-                                     (map-indexed (fn attachment-idx->file [idx file]
-                                                    {:idx (+ attachment-count idx) :file file}))
-                                     (reduce (fn attachment-spec->db [db {:keys [idx file]}]
-                                               (assoc-in db (if question-group-idx
-                                                              [:application :answers (keyword component-id) :values question-group-idx idx]
-                                                              [:application :answers (keyword component-id) :values idx])
-                                                 {:value   {:filename     (.-name file)
-                                                            :content-type (.-type file)
-                                                            :size         (.-size file)}
-                                                  :valid   false
-                                                  :too-big false
-                                                  :uploaded-size 0
-                                                  :status  :uploading}))
-                                             db'))
-                                (assoc-in db' [:application :answers (keyword component-id) :valid] false))
-                          db)]
-      {:db         db
-       :dispatch-n dispatch-list})))
+  (fn [{:keys [db]} [_ field-descriptor question-group-idx files]]
+    (let [id                   (keyword (:id field-descriptor))
+          path                 (cond-> [:application :answers id :values]
+                                       (some? question-group-idx)
+                                       (conj question-group-idx))
+          existing-attachments (get-in db path)
+          new-files            (remove (fn [file]
+                                         (some #(and (= (.-name file) (get-in % [:value :filename]))
+                                                     (= (.-size file) (get-in % [:value :size])))
+                                               existing-attachments))
+                                       files)
+          new-attachments      (map (fn [file]
+                                      {:value         {:filename     (.-name file)
+                                                       :content-type (.-type file)
+                                                       :size         (.-size file)}
+                                       :valid         false
+                                       :uploaded-size 0
+                                       :status        :uploading})
+                                    new-files)]
+      {:db         (-> db
+                       (assoc-in [:application :answers id :valid] false)
+                       (update-in [:application :answers id :values] (fnil identity []))
+                       (assoc-in path (vec (concat existing-attachments
+                                                   new-attachments))))
+       :dispatch-n (map-indexed (fn [idx file]
+                                  [:application/add-single-attachment
+                                   field-descriptor
+                                   id
+                                   (+ (count existing-attachments) idx)
+                                   file
+                                   0
+                                   question-group-idx])
+                                new-files)})))
 
 (reg-event-fx
   :application/set-attachment-valid

@@ -779,7 +779,7 @@
         file-sizes (map #(.-size %) files)]
     (if (some #(> % max-attachment-size-bytes) file-sizes)
       (dispatch [:application/show-attachment-too-big-error component-id question-group-idx])
-      (dispatch [:application/add-attachments field-descriptor component-id attachment-count files question-group-idx]))))
+      (dispatch [:application/add-attachments field-descriptor question-group-idx files]))))
 
 (defn attachment-upload [field-descriptor component-id attachment-count question-group-idx]
   (let [id       (str component-id (when question-group-idx "-" question-group-idx) "-upload-button")]
