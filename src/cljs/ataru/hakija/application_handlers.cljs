@@ -142,17 +142,6 @@
     {:db (-> (update (:db cofx) :application dissoc :submit-status)
              (assoc :error {:message "Tapahtui virhe " :detail response}))}))
 
-(reg-event-db
-  :application/show-attachment-too-big-error
-  (fn [db [_ component-id question-group-idx]]
-    (let [error-path (if question-group-idx
-                       [:application :answers (keyword component-id) :errors question-group-idx :too-big]
-                       [:application :answers (keyword component-id) :errors :too-big])
-          db         (cond-> db
-                       question-group-idx
-                       (update-in [:application :answers (keyword component-id) :errors] (util/vector-of-length question-group-idx)))]
-      (assoc-in db error-path true))))
-
 (reg-event-fx
   :application/submit
   (fn [{:keys [db]} _]
@@ -899,6 +888,9 @@
               :error-handler    [:application/handle-attachment-upload-error field-descriptor attachment-idx name file (inc retries) question-group-idx]
               :body             form-data}})))
 
+(defonce max-attachment-size-bytes
+  (get (js->clj js/config) "attachment-file-max-size-bytes" (* 10 1024 1024)))
+
 (reg-event-fx
   :application/add-attachments
   (fn [{:keys [db]} [_ field-descriptor question-group-idx files]]
@@ -913,26 +905,33 @@
                                                existing-attachments))
                                        files)
           new-attachments      (map (fn [file]
-                                      {:value         {:filename     (.-name file)
-                                                       :content-type (.-type file)
-                                                       :size         (.-size file)}
-                                       :valid         false
-                                       :uploaded-size 0
-                                       :status        :uploading})
+                                      (if (< max-attachment-size-bytes (.-size file))
+                                        {:value  {:filename (.-name file)
+                                                  :size     (.-size file)}
+                                         :valid  false
+                                         :status :error
+                                         :errors [[:file-size-info (autil/size-bytes->str max-attachment-size-bytes)]]}
+                                        {:value         {:filename     (.-name file)
+                                                         :content-type (.-type file)
+                                                         :size         (.-size file)}
+                                         :valid         false
+                                         :uploaded-size 0
+                                         :status        :uploading}))
                                     new-files)]
       {:db         (-> db
                        (assoc-in [:application :answers id :valid] false)
                        (update-in [:application :answers id :values] (fnil identity []))
                        (assoc-in path (vec (concat existing-attachments
                                                    new-attachments))))
-       :dispatch-n (map-indexed (fn [idx file]
-                                  [:application/add-single-attachment
-                                   field-descriptor
-                                   (+ (count existing-attachments) idx)
-                                   file
-                                   0
-                                   question-group-idx])
-                                new-files)})))
+       :dispatch-n (keep-indexed (fn [idx file]
+                                   (when (<= (.-size file) max-attachment-size-bytes)
+                                     [:application/add-single-attachment
+                                      field-descriptor
+                                      (+ (count existing-attachments) idx)
+                                      file
+                                      0
+                                      question-group-idx]))
+                                 new-files)})))
 
 (reg-event-fx
   :application/set-attachment-valid
@@ -1039,19 +1038,19 @@
 (reg-event-fx
   :application/remove-attachment
   (fn [{:keys [db]} [_ field-descriptor component-id attachment-idx question-group-idx]]
-    (let [key       (get-in db (if question-group-idx
-                                 [:application :answers (keyword component-id) :values question-group-idx attachment-idx :value :key]
-                                 [:application :answers (keyword component-id) :values attachment-idx :value :key]))
-          db        (-> db
-                        (assoc-in [:application :answers (keyword component-id) :valid] false)
-                        (update-in (if question-group-idx
-                                     [:application :answers (keyword component-id) :values question-group-idx attachment-idx]
-                                     [:application :answers (keyword component-id) :values attachment-idx])
-                                   merge
-                                   {:status :deleting
-                                    :valid  false}))
-          db-and-fx {:db db}]
-      (if (get-in db [:application :editing?])
+    (let [id        (keyword (:id field-descriptor))
+          path      (cond-> [:application :answers id :values]
+                            (some? question-group-idx)
+                            (conj question-group-idx)
+                            true
+                            (conj attachment-idx))
+          key       (get-in db (conj path :value :key))
+          db-and-fx {:db (-> db
+                             (assoc-in [:application :answers id :valid] false)
+                             (update-in path merge {:status :deleting
+                                                    :valid  false}))}]
+      (if (or (get-in db [:application :editing?])
+              (not= :ready (get-in db (conj path :status))))
         (assoc db-and-fx :dispatch [:application/handle-attachment-delete field-descriptor component-id question-group-idx key])
         (assoc db-and-fx :http {:method  :delete
                                 :url     (str "/hakemus/api/files/" key)

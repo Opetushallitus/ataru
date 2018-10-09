@@ -769,42 +769,32 @@
 (defonce max-attachment-size-bytes
   (get (js->clj js/config) "attachment-file-max-size-bytes" (* 10 1024 1024)))
 
-(defn- upload-attachment [field-descriptor component-id attachment-count question-group-idx event]
+(defn- upload-attachment [field-descriptor question-group-idx event]
   (.preventDefault event)
-  (let [file-list  (or (some-> event .-dataTransfer .-files)
-                       (.. event -target -files))
-        files      (->> (.-length file-list)
-                        (range)
-                        (map #(.item file-list %)))
-        file-sizes (map #(.-size %) files)]
-    (if (some #(> % max-attachment-size-bytes) file-sizes)
-      (dispatch [:application/show-attachment-too-big-error component-id question-group-idx])
-      (dispatch [:application/add-attachments field-descriptor question-group-idx files]))))
+  (let [file-list (or (some-> event .-dataTransfer .-files)
+                      (.. event -target -files))
+        files     (->> (.-length file-list)
+                       (range)
+                       (map #(.item file-list %)))]
+    (dispatch [:application/add-attachments field-descriptor question-group-idx files])))
 
 (defn attachment-upload [field-descriptor component-id attachment-count question-group-idx]
-  (let [id       (str component-id (when question-group-idx "-" question-group-idx) "-upload-button")]
+  (let [id (str component-id (when question-group-idx "-" question-group-idx) "-upload-button")]
     [:div.application__form-upload-attachment-container
      [:input.application__form-upload-input
       {:id           id
        :type         "file"
        :multiple     "multiple"
        :key          (str "upload-button-" component-id "-" attachment-count)
-       :on-change    (partial upload-attachment field-descriptor component-id attachment-count question-group-idx)
+       :on-change    (partial upload-attachment field-descriptor question-group-idx)
        :required     (is-required-field? field-descriptor)
        :aria-invalid (not @(subscribe [:application/answer-valid? id question-group-idx nil]))}]
      [:label.application__form-upload-label
       {:for id}
       [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
       [:span.application__form-upload-button-add-text (get-translation :add-attachment)]]
-     (let [file-size-info-text (goog.string/format (get-translation :file-size-info)
-                                                   (util/size-bytes->str max-attachment-size-bytes))
-           size-error-path     (if question-group-idx
-                                 [:application :answers (keyword component-id) :errors question-group-idx :too-big]
-                                 [:application :answers (keyword component-id) :errors :too-big])
-           size-error          (subscribe [:state-query size-error-path])]
-       (if @size-error
-         [:span.application__form-upload-button-error.animated.shake file-size-info-text]
-         [:span.application__form-upload-button-info file-size-info-text]))]))
+     [:span.application__form-upload-button-info
+      (get-translation :file-size-info (util/size-bytes->str max-attachment-size-bytes))]]))
 
 (defn- attachment-filename
   [id question-group-idx attachment-idx]
