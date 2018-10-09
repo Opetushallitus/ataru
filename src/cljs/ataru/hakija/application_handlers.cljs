@@ -1004,18 +1004,21 @@
   (fn [{:keys [db]} [_ field-descriptor component-id attachment-idx filename file retries question-group-idx response]]
     (let [rate-limited? (rate-limit-error? response)
           current-error (if rate-limited?
-                          (util/get-translation :file-upload-failed)
-                          (util/get-translation :file-type-forbidden))]
+                          :file-upload-failed
+                          :file-type-forbidden)]
       (if (and rate-limited? (< retries 3))
-        {:db db
+        {:db               db
          :delayed-dispatch {:dispatch-vec [:application/add-single-attachment field-descriptor component-id attachment-idx file retries question-group-idx]
-                            :timeout (+ 2000 (rand-int 2000))}}
+                            :timeout      (+ 2000 (rand-int 2000))}}
         {:db (-> db
                  (update-in (if question-group-idx
                               [:application :answers (keyword component-id) :values question-group-idx attachment-idx]
                               [:application :answers (keyword component-id) :values attachment-idx])
                             merge
-                            {:value {:filename filename} :valid false :status :error :error current-error})
+                            {:value  {:filename filename}
+                             :valid  false
+                             :status :error
+                             :errors [[current-error]]})
                  (assoc-in [:application :answers (keyword component-id) :valid] false))}))))
 
 (reg-event-fx

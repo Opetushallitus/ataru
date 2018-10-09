@@ -825,7 +825,6 @@
 
 (defn attachment-view-file-error [field-descriptor component-id attachment-idx question-group-idx]
   (let [attachment @(subscribe [:state-query [:application :answers (keyword component-id) :values question-group-idx attachment-idx]])
-        languages  @(subscribe [:application/default-languages])
         on-click   (fn remove-attachment [event]
                      (.preventDefault event)
                      (dispatch [:application/remove-attachment-error field-descriptor component-id attachment-idx question-group-idx]))]
@@ -838,7 +837,12 @@
           {:href     "#"
            :on-click on-click}
           [:i.zmdi.zmdi-close.zmdi-hc-inverse]]]]
-       [:span.application__form-attachment-error (util/non-blank-val (:error attachment) languages)]])))
+       (doall
+        (map-indexed (fn [i error]
+                       ^{:key (str "attachment-error-" i)}
+                       [:span.application__form-attachment-error
+                        (apply get-translation error)])
+                     (:errors attachment)))])))
 
 (defn attachment-deleting-file [component-id attachment-idx question-group-idx]
   [:div.application__form-filename-container
