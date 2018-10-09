@@ -141,6 +141,9 @@
    :file-size-info                              {:fi "Tiedoston maksimikoko on %s"
                                                  :en "Maximum file size is %s"
                                                  :sv "Den maximala filstorleken är %s"}
+   :uploading                                   {:fi "Ladataan"
+                                                 :sv "SV: Ladataan"
+                                                 :ev "Uploading"}
    :file-type-forbidden                         {:fi "Tiedostoa ei ladattu, yritä uudelleen"
                                                  :en "File failed to upload, try again"
                                                  :sv "Filen kunde inte laddas, försök igen"}

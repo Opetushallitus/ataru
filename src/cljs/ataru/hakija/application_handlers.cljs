@@ -934,7 +934,7 @@
                                                             :size         (.-size file)}
                                                   :valid   false
                                                   :too-big false
-                                                  :uploaded 0
+                                                  :uploaded-size 0
                                                   :status  :uploading}))
                                              db'))
                                 (assoc-in db' [:application :answers (keyword component-id) :valid] false))
@@ -988,12 +988,11 @@
   :application/handle-attachment-progress
   (fn [db [_ field-descriptor component-id attachment-idx question-group-idx evt]]
     (if (.-lengthComputable evt)
-      (let [precents (int (* 100 (/ (.-loaded evt) (.-total evt))))]
-        (if (some? question-group-idx)
-          (assoc-in db [:application :answers (keyword component-id) :values question-group-idx attachment-idx :uploaded]
-                    precents)
-          (assoc-in db [:application :answers (keyword component-id) :values attachment-idx :uploaded]
-                    precents)))
+      (if (some? question-group-idx)
+        (assoc-in db [:application :answers (keyword component-id) :values question-group-idx attachment-idx :uploaded-size]
+                  (.-loaded evt))
+        (assoc-in db [:application :answers (keyword component-id) :values attachment-idx :uploaded-size]
+                  (.-loaded evt)))
       db)))
 
 (defn- rate-limit-error? [response]

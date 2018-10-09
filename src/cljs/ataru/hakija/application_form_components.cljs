@@ -871,11 +871,19 @@
     [attachment-filename component-id question-group-idx attachment-idx]]])
 
 (defn attachment-uploading-file [_ component-id question-group-idx attachment-idx]
-  [:div.application__form-attachment-list-item-container
-   [:div.application__form-attachment-list-item-sub-container.application__form-attachment-filename-container
-    [attachment-filename component-id question-group-idx attachment-idx]]
-   [:div.application__form-attachment-list-item-sub-container.application__form-attachment-uploading-container
-    [:i.zmdi.zmdi-spinner.spin]]])
+  (let [{:keys [uploaded-size value]} @(subscribe [:application/answer component-id question-group-idx attachment-idx])
+        size                          (:size value)
+        percent                       (int (* 100 (/ uploaded-size size)))]
+    [:div.application__form-attachment-list-item-container
+     [:div.application__form-attachment-list-item-sub-container.application__form-attachment-filename-container
+      [attachment-filename component-id question-group-idx attachment-idx]]
+     [:div.application__form-attachment-list-item-sub-container.application__form-attachment-uploading-container
+      [:i.zmdi.zmdi-spinner.application__form-upload-uploading-spinner]
+      [:span (str (get-translation :uploading) "... ")]
+      [:span (str percent " % "
+                  "(" (util/size-bytes->str uploaded-size)
+                  "/"
+                  (util/size-bytes->str size) ")")]]]))
 
 (defn attachment-row [field-descriptor component-id attachment-idx question-group-idx]
   (let [{:keys [status]} @(subscribe [:application/answer
