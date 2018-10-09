@@ -1008,8 +1008,7 @@
                               [:application :answers id :values question-group-idx attachment-idx]
                               [:application :answers id :values attachment-idx])
                             merge
-                            {:value  {:filename filename}
-                             :valid  false
+                            {:valid  false
                              :status :error
                              :errors [[current-error]]})
                  (assoc-in [:application :answers id :valid] false))}))))
