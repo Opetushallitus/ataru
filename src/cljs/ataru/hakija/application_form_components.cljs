@@ -808,35 +808,33 @@
      (when (some? size)
        [:span (str " (" (util/size-bytes->str size) ")")])]))
 
+(defn- attachment-remove-button
+  [field-descriptor question-group-idx attachment-idx]
+  (let [id       (keyword (:id field-descriptor))
+        on-click (fn remove-attachment [event]
+                   (.preventDefault event)
+                   (dispatch [:application/remove-attachment
+                              field-descriptor
+                              id
+                              attachment-idx
+                              question-group-idx]))]
+    [:div.application__form-attachment-remove-button-container
+     (when-not @(subscribe [:application/cannot-edit? id])
+       [:button.application__form-attachment-remove-button
+        {:on-click on-click}
+        (get-translation :remove)])]))
+
 (defn attachment-view-file [field-descriptor component-id question-group-idx attachment-idx]
-  (let [on-click                (fn remove-attachment [event]
-                                  (.preventDefault event)
-                                  (dispatch [:application/remove-attachment
-                                             field-descriptor
-                                             component-id
-                                             attachment-idx
-                                             question-group-idx]))
-        {:keys [filename size]} @(subscribe [:application/answer-value
-                                             component-id
-                                             question-group-idx
-                                             attachment-idx])]
-    [:div.application__form-attachment-list-item-container
-     [:div.application__form-attachment-list-item-sub-container.application__form-attachment-filename-container.application__form-attachment-filename-container__success
-      [attachment-filename component-id question-group-idx attachment-idx]]
-     [:div.application__form-attachment-list-item-sub-container.application__form-attachment-check-mark-container
-      [:i.zmdi.zmdi-check.application__form-attachment-check-mark]]
-     [:div.application__form-attachment-list-item-sub-container.application__form-attachment-remove-button-container
-      (when-not @(subscribe [:application/cannot-edit?
-                             (keyword (:id field-descriptor))])
-        [:button.application__form-attachment-remove-button
-         {:on-click on-click}
-         (get-translation :remove)])]]))
+  [:div.application__form-attachment-list-item-container
+   [:div.application__form-attachment-list-item-sub-container.application__form-attachment-filename-container.application__form-attachment-filename-container__success
+    [attachment-filename component-id question-group-idx attachment-idx]]
+   [:div.application__form-attachment-list-item-sub-container.application__form-attachment-check-mark-container
+    [:i.zmdi.zmdi-check.application__form-attachment-check-mark]]
+   [:div.application__form-attachment-list-item-sub-container
+    [attachment-remove-button field-descriptor question-group-idx attachment-idx]]])
 
 (defn attachment-view-file-error [field-descriptor component-id question-group-idx attachment-idx]
-  (let [on-click   (fn remove-attachment [event]
-                     (.preventDefault event)
-                     (dispatch [:application/remove-attachment-error field-descriptor component-id attachment-idx question-group-idx]))
-        attachment @(subscribe [:application/answer
+  (let [attachment @(subscribe [:application/answer
                                 component-id
                                 question-group-idx
                                 attachment-idx])]
@@ -850,10 +848,8 @@
                       [:span.application__form-attachment-error
                        (apply get-translation error)])
                     (:errors attachment)))]
-     [:div.application__form-attachment-list-item-sub-container.application__form-attachment-remove-button-container
-      [:button.application__form-attachment-remove-button
-       {:on-click on-click}
-       (get-translation :remove)]]]))
+     [:div.application__form-attachment-list-item-sub-container
+      [attachment-remove-button field-descriptor question-group-idx attachment-idx]]]))
 
 (defn attachment-deleting-file [_ component-id question-group-idx attachment-idx]
   [:div.application__form-attachment-list-item-container
