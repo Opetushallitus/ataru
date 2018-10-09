@@ -689,30 +689,7 @@ textarea.application__form-text-area__size-large {
   color: @disabled-font-gray;
 }
 
-.application__form-filename-container {
-  align-items: center;
-  background-color: #def2ff;
-  border-radius: 3px;
-  display: inline-flex;
-  flex-flow: row nowrap;
-  justify-content: flex-start;
-  padding: 4px 4px 4px 8px;
-  line-height: 19px;
-  margin-left: 2px;
-
-  &.application__form-file-error {
-    background-color: @sg-color-red;
-    color: white;
-  }
-}
-
-.application__form-attachment-error {
-  margin-left: 10px;
-  color: @sg-color-gray-2;
-}
-
 .application__attachment-filename-list {
-  font-size: 14px;
   padding-left: 17px;
   margin-top: 6px;
 }
@@ -721,15 +698,89 @@ textarea.application__form-text-area__size-large {
   margin-bottom: 8px;
 }
 
-.application__form-attachment-text {
-  height: 19px;
+.application__form-attachment-list-item-container {
+  display: flex;
+  align-items: center;
+  @media only screen and (max-width: @desktop-content-width) {
+    flex-direction: column;
+    align-items: unset;
+    max-width: 288px;
+  }
 }
 
-.application__form-upload-remove-attachment-link {
-  color: @gray-of-the-beast;
+.application__form-attachment-list-item-sub-container {
+  margin-right: 10px;
+  @media only screen and (max-width: @desktop-content-width) {
+    margin-right: 0px;
+  }
+}
+
+.application__form-attachment-filename-container {
+  flex: initial;
+  padding: 2px 8px 2px 8px;
+  border-radius: 3px;
+  background-color: #DEF2FF;
+  &__success {
+    background-color: @sg-color-green-lighten-1;
+  }
+  &__error {
+    background-color: @sg-color-red;
+    color: @white;
+  }
+}
+
+.application__form-attachment-check-mark-container {
+  flex: auto;
+}
+
+.application__form-attachment-check-mark {
+  color: @opintopolku-green;
+}
+
+.application__form-attachment-uploading-container {
+  flex: auto;
+}
+
+.application__form-attachment-error-container {
+  flex: auto;
+}
+
+.application__form-attachment-remove-button-container {
+  flex: none;
+}
+
+.application__form-attachment-remove-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 25px;
+  margin: 0px;
+  border: 0;
+  border-radius: 3px;
+  color: @white;
+  background-color: @pale-blue;
   cursor: pointer;
-  margin-left: 10px;
-  margin-right: 6px;
+  font-size: 14px;
+  font-family: 'Open Sans', sans-serif;
+  &:focus {
+    outline: none;
+  }
+  &::-moz-focus-inner {
+    border: 0;
+  }
+  &:hover {
+    border: 0;
+    background-color: @control-button-hover-blue;
+  }
+}
+
+.application__form-attachment-filename {
+  font-size: 14px;
+}
+
+.application__form-attachment-error {
+  font-size: 14px;
+  color: @sg-color-red;
 }
 
 .application__form-upload-icon {
@@ -753,12 +804,6 @@ textarea.application__form-text-area__size-large {
   width: 211px;
   margin-right: 18px;
   font-size: 14px;
-}
-
-.application__form-upload-uploading-spinner {
-  .spin;
-  margin-left: 10px;
-  margin-right: 6px;
 }
 
 .application__form-upload-button-add-text {
