@@ -887,17 +887,17 @@
 
 (reg-event-fx
   :application/add-single-attachment
-  (fn [{:keys [db]} [_ field-descriptor component-id attachment-idx file retries question-group-idx]]
+  (fn [{:keys [db]} [_ field-descriptor attachment-idx file retries question-group-idx]]
     (let [name      (.-name file)
           form-data (doto (js/FormData.)
                       (.append "file" file name))]
       {:db   db
-       :http {:method    :post
-              :url       "/hakemus/api/files"
-              :handler   [:application/handle-attachment-upload field-descriptor component-id attachment-idx question-group-idx]
-              :progress-handler [:application/handle-attachment-progress field-descriptor component-id attachment-idx question-group-idx]
-              :error-handler [:application/handle-attachment-upload-error field-descriptor component-id attachment-idx name file (inc retries) question-group-idx]
-              :body      form-data}})))
+       :http {:method           :post
+              :url              "/hakemus/api/files"
+              :handler          [:application/handle-attachment-upload field-descriptor attachment-idx question-group-idx]
+              :progress-handler [:application/handle-attachment-progress field-descriptor attachment-idx question-group-idx]
+              :error-handler    [:application/handle-attachment-upload-error field-descriptor attachment-idx name file (inc retries) question-group-idx]
+              :body             form-data}})))
 
 (reg-event-fx
   :application/add-attachments
@@ -928,7 +928,6 @@
        :dispatch-n (map-indexed (fn [idx file]
                                   [:application/add-single-attachment
                                    field-descriptor
-                                   id
                                    (+ (count existing-attachments) idx)
                                    file
                                    0
@@ -956,62 +955,65 @@
 
 (reg-event-fx
   :application/handle-attachment-upload
-  (fn [{db :db} [_ field-descriptor component-id attachment-idx question-group-idx response]]
-    (let [path (if question-group-idx
-                 [:application :answers (keyword component-id) :values question-group-idx attachment-idx]
-                 [:application :answers (keyword component-id) :values attachment-idx])]
+  (fn [{db :db} [_ field-descriptor attachment-idx question-group-idx response]]
+    (let [id   (keyword (:id field-descriptor))
+          path (if question-group-idx
+                 [:application :answers id :values question-group-idx attachment-idx]
+                 [:application :answers id :values attachment-idx])]
       {:db                 (-> db
                                (update-in path
                                           merge
                                           {:value response :valid true :status :ready})
-                               (set-validator-processing (keyword (:id field-descriptor)))
-                               (set-multi-value-changed (keyword component-id) :values))
-       :validate-debounced {:value             (get-in db path)
-                            :answers-by-key    (get-in db [:application :answers])
-                            :field-descriptor  field-descriptor
-                            :editing?          (get-in db [:application :editing?])
-                            :virkailija?       (contains? (:application db) :virkailija-secret)
-                            :on-validated      (fn [[valid? errors]]
-                                                 (dispatch [:application/set-attachment-valid
-                                                            (keyword component-id)
-                                                            (required? field-descriptor)
-                                                            valid?]))}})))
+                               (set-validator-processing id)
+                               (set-multi-value-changed id :values))
+       :validate-debounced {:value            (get-in db path)
+                            :answers-by-key   (get-in db [:application :answers])
+                            :field-descriptor field-descriptor
+                            :editing?         (get-in db [:application :editing?])
+                            :virkailija?      (contains? (:application db) :virkailija-secret)
+                            :on-validated     (fn [[valid? errors]]
+                                                (dispatch [:application/set-attachment-valid
+                                                           id
+                                                           (required? field-descriptor)
+                                                           valid?]))}})))
 
 (reg-event-db
   :application/handle-attachment-progress
-  (fn [db [_ field-descriptor component-id attachment-idx question-group-idx evt]]
-    (if (.-lengthComputable evt)
-      (if (some? question-group-idx)
-        (assoc-in db [:application :answers (keyword component-id) :values question-group-idx attachment-idx :uploaded-size]
-                  (.-loaded evt))
-        (assoc-in db [:application :answers (keyword component-id) :values attachment-idx :uploaded-size]
-                  (.-loaded evt)))
-      db)))
+  (fn [db [_ field-descriptor attachment-idx question-group-idx evt]]
+    (let [id (keyword (:id field-descriptor))]
+      (if (.-lengthComputable evt)
+        (if (some? question-group-idx)
+          (assoc-in db [:application :answers id :values question-group-idx attachment-idx :uploaded-size]
+                    (.-loaded evt))
+          (assoc-in db [:application :answers id :values attachment-idx :uploaded-size]
+                    (.-loaded evt)))
+        db))))
 
 (defn- rate-limit-error? [response]
   (= (:status response) 429))
 
 (reg-event-fx
   :application/handle-attachment-upload-error
-  (fn [{:keys [db]} [_ field-descriptor component-id attachment-idx filename file retries question-group-idx response]]
-    (let [rate-limited? (rate-limit-error? response)
+  (fn [{:keys [db]} [_ field-descriptor attachment-idx filename file retries question-group-idx response]]
+    (let [id            (keyword (:id field-descriptor))
+          rate-limited? (rate-limit-error? response)
           current-error (if rate-limited?
                           :file-upload-failed
                           :file-type-forbidden)]
       (if (and rate-limited? (< retries 3))
         {:db               db
-         :delayed-dispatch {:dispatch-vec [:application/add-single-attachment field-descriptor component-id attachment-idx file retries question-group-idx]
+         :delayed-dispatch {:dispatch-vec [:application/add-single-attachment field-descriptor attachment-idx file retries question-group-idx]
                             :timeout      (+ 2000 (rand-int 2000))}}
         {:db (-> db
                  (update-in (if question-group-idx
-                              [:application :answers (keyword component-id) :values question-group-idx attachment-idx]
-                              [:application :answers (keyword component-id) :values attachment-idx])
+                              [:application :answers id :values question-group-idx attachment-idx]
+                              [:application :answers id :values attachment-idx])
                             merge
                             {:value  {:filename filename}
                              :valid  false
                              :status :error
                              :errors [[current-error]]})
-                 (assoc-in [:application :answers (keyword component-id) :valid] false))}))))
+                 (assoc-in [:application :answers id :valid] false))}))))
 
 (reg-event-fx
   :application/handle-attachment-delete
