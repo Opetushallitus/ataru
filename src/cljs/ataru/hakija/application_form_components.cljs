@@ -809,13 +809,16 @@
 (defn- filename->label [{:keys [filename size]}]
   (str filename " (" (util/size-bytes->str size) ")"))
 
-(defn attachment-view-file [field-descriptor component-id attachment-idx question-group-idx]
+(defn attachment-view-file [field-descriptor component-id question-group-idx attachment-idx]
   (let [on-click (fn remove-attachment [event]
                    (.preventDefault event)
                    (dispatch [:application/remove-attachment field-descriptor component-id attachment-idx question-group-idx]))]
     [:div.application__form-filename-container
      [:span.application__form-attachment-text
-      (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values question-group-idx attachment-idx :value]]))
+      (filename->label @(subscribe [:application/answer-value
+                                    component-id
+                                    question-group-idx
+                                    attachment-idx]))
       (when-not @(subscribe [:application/cannot-edit?
                              (keyword (:id field-descriptor))])
         [:a.application__form-upload-remove-attachment-link
@@ -823,12 +826,15 @@
           :on-click on-click}
          [:i.zmdi.zmdi-close]])]]))
 
-(defn attachment-view-file-error [field-descriptor component-id attachment-idx question-group-idx]
-  (let [attachment @(subscribe [:state-query [:application :answers (keyword component-id) :values question-group-idx attachment-idx]])
+(defn attachment-view-file-error [field-descriptor component-id question-group-idx attachment-idx]
+  (let [attachment @(subscribe [:application/answer
+                                component-id
+                                question-group-idx
+                                attachment-idx])
         on-click   (fn remove-attachment [event]
                      (.preventDefault event)
                      (dispatch [:application/remove-attachment-error field-descriptor component-id attachment-idx question-group-idx]))]
-    (fn [field-descriptor component-id attachment-idx]
+    (fn [_ _ _ _]
       [:div
        [:div.application__form-filename-container.application__form-file-error.animated.shake
         [:span.application__form-attachment-text
@@ -844,25 +850,35 @@
                         (apply get-translation error)])
                      (:errors attachment)))])))
 
-(defn attachment-deleting-file [component-id attachment-idx question-group-idx]
+(defn attachment-deleting-file [_ component-id question-group-idx attachment-idx]
   [:div.application__form-filename-container
    [:span.application__form-attachment-text
-    (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values question-group-idx attachment-idx :value]]))]])
+    (filename->label @(subscribe [:application/answer-value
+                                  component-id
+                                  question-group-idx
+                                  attachment-idx]))]])
 
-(defn attachment-uploading-file [component-id attachment-idx question-group-idx]
+(defn attachment-uploading-file [_ component-id question-group-idx attachment-idx]
   [:div.application__form-filename-container
    [:span.application__form-attachment-text
-    (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values question-group-idx attachment-idx :value]]))]
+    (filename->label @(subscribe [:application/answer-value
+                                  component-id
+                                  question-group-idx
+                                  attachment-idx]))]
    [:i.zmdi.zmdi-spinner.application__form-upload-uploading-spinner]])
 
 (defn attachment-row [field-descriptor component-id attachment-idx question-group-idx]
-  (let [status @(subscribe [:state-query [:application :answers (keyword component-id) :values question-group-idx attachment-idx :status]])]
+  (let [{:keys [status]} @(subscribe [:application/answer
+                                      component-id
+                                      question-group-idx
+                                      attachment-idx])]
     [:li.application__attachment-filename-list-item
-     (case status
-       :ready [attachment-view-file field-descriptor component-id attachment-idx question-group-idx]
-       :error [attachment-view-file-error field-descriptor component-id attachment-idx question-group-idx]
-       :uploading [attachment-uploading-file component-id attachment-idx question-group-idx]
-       :deleting [attachment-deleting-file component-id attachment-idx question-group-idx])]))
+     [(case status
+        :ready     attachment-view-file
+        :error     attachment-view-file-error
+        :uploading attachment-uploading-file
+        :deleting  attachment-deleting-file)
+      field-descriptor component-id question-group-idx attachment-idx]]))
 
 (defn attachment [{:keys [id] :as field-descriptor} & {question-group-idx :idx}]
   (let [languages  (subscribe [:application/default-languages])
