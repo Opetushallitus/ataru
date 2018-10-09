@@ -150,6 +150,12 @@
    :file-upload-failed                          {:fi "Tiedostoa ei ladattu, yritä uudelleen"
                                                  :en "File failed to upload, try again"
                                                  :sv "Filen kunde inte laddas, försök igen"}
+   :cancel-remove                               {:fi "Älä poista"
+                                                 :sv "SV: Älä poista"
+                                                 :en "Don't remove"}
+   :confirm-remove                              {:fi "Vahvista poisto"
+                                                 :sv "SV: Vahvista poisto"
+                                                 :en "Confirm removal"}
    :finnish                                     {:fi "Suomi"
                                                  :sv "Finska"
                                                  :en "Finnish"}

@@ -746,7 +746,9 @@ textarea.application__form-text-area__size-large {
 }
 
 .application__form-attachment-remove-button-container {
+  display: flex;
   flex: none;
+  min-width: 250px;
 }
 
 .application__form-attachment-remove-button {
@@ -755,6 +757,7 @@ textarea.application__form-text-area__size-large {
   justify-content: center;
   height: 25px;
   margin: 0px;
+  margin-right: 10px;
   border: 0;
   border-radius: 3px;
   color: @white;
@@ -762,6 +765,9 @@ textarea.application__form-text-area__size-large {
   cursor: pointer;
   font-size: 14px;
   font-family: 'Open Sans', sans-serif;
+  &:last-child {
+    margin-right: 0px;
+  }
   &:focus {
     outline: none;
   }
@@ -771,6 +777,9 @@ textarea.application__form-text-area__size-large {
   &:hover {
     border: 0;
     background-color: @control-button-hover-blue;
+  }
+  &__confirm {
+    background-color: @sg-color-red;
   }
 }
 

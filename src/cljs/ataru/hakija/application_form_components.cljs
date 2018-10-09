@@ -811,18 +811,25 @@
 (defn- attachment-remove-button
   [field-descriptor question-group-idx attachment-idx]
   (let [id       (keyword (:id field-descriptor))
-        on-click (fn remove-attachment [event]
-                   (.preventDefault event)
-                   (dispatch [:application/remove-attachment
-                              field-descriptor
-                              id
-                              attachment-idx
-                              question-group-idx]))]
-    [:div.application__form-attachment-remove-button-container
-     (when-not @(subscribe [:application/cannot-edit? id])
-       [:button.application__form-attachment-remove-button
-        {:on-click on-click}
-        (get-translation :remove)])]))
+        confirm? (r/atom false)]
+    (fn [field-descriptor question-group-idx attachment-idx]
+      [:div.application__form-attachment-remove-button-container
+       (when-not @(subscribe [:application/cannot-edit? id])
+         [:button.application__form-attachment-remove-button
+          {:on-click #(swap! confirm? not)}
+          (if @confirm?
+            (get-translation :cancel-remove)
+            (get-translation :remove))])
+       (when @confirm?
+         [:button.application__form-attachment-remove-button.application__form-attachment-remove-button__confirm
+          {:on-click (fn [event]
+                       (reset! confirm? false)
+                       (dispatch [:application/remove-attachment
+                                  field-descriptor
+                                  id
+                                  attachment-idx
+                                  question-group-idx]))}
+          (get-translation :confirm-remove)])])))
 
 (defn attachment-view-file [field-descriptor component-id question-group-idx attachment-idx]
   [:div.application__form-attachment-list-item-container
