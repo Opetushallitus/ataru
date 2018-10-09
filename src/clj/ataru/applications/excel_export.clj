@@ -486,33 +486,38 @@
                            answer)))))
 
 (defn- add-all-hakukohde-reviews
-  [get-hakukohde selected-hakukohde-oids application]
-  (let [active-hakukohteet (set (or
-                                  (not-empty (:hakukohde application))
-                                  ["form"]))
+  [get-haku get-hakukohde selected-hakukohde-oids application]
+  (let [yhteishaku?            (fn [application] (-> (get-haku (:haku application)) :tarjonta :yhteishaku))
+        active-hakukohteet     (set (or
+                                     (not-empty
+                                       (if (yhteishaku? application)
+                                         (clojure.set/intersection
+                                          (set (:hakukohde application))
+                                          (set selected-hakukohde-oids))
+                                         (:hakukohde application)))
+                                     ["form"]))
         all-reviews            (->> (application-states/get-all-reviews-for-all-requirements
                                       application
                                       selected-hakukohde-oids)
                                     (filter
                                       #(contains? active-hakukohteet (:hakukohde %))))
         all-reviews-with-names (map
-                                 (fn [{:keys [hakukohde] :as review}]
-                                   (assoc review
-                                     :hakukohde-name
-                                     (get-hakukohde-name
-                                       get-hakukohde
-                                       (:lang application)
-                                       (:haku application)
-                                       hakukohde)))
-                                 all-reviews)]
+                                (fn [{:keys [hakukohde] :as review}]
+                                    (assoc review
+                                           :hakukohde-name
+                                           (get-hakukohde-name
+                                             get-hakukohde
+                                             (:lang application)
+                                             (:haku application)
+                                             hakukohde)))
+                                all-reviews)]
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
 (defn hakukohderyhma-to-hakukohde-oids [applications get-hakukohde selected-hakukohderyhma]
   (if selected-hakukohderyhma
-    (let [haku           (:haku (first applications))
-          hakukohde-oids (set (mapcat :hakukohde applications))]
-      (->> hakukohde-oids
-           (map (partial get-hakukohde haku))
+    (let [all-hakukohteet (flatten (for [[haku applications] (group-by :haku applications)]
+                                     (map #(get-hakukohde haku %) (set (mapcat :hakukohde applications)))))]
+      (->> all-hakukohteet
            (filter #(contains? (set (:hakukohderyhmat %)) selected-hakukohderyhma))
            (map :oid)))))
 
@@ -541,16 +546,17 @@
                                               ohjausparametrit-service
                                               haku-oid)))
         get-hakukohde           (memoize (fn [haku-oid hakukohde-oid]
-                                             (->> (get-tarjonta-info haku-oid)
+                                             (let [hk (get-tarjonta-info haku-oid)]
+                                               (->> hk
                                                   :tarjonta
                                                   :hakukohteet
-                                                  (some #(when (= hakukohde-oid (:oid %)) %)))))
-        selected-hakukohde-oids (concat (hakukohderyhma-to-hakukohde-oids applications get-hakukohde selected-hakukohderyhma)
-                                        (seq selected-hakukohde))]
+                                                  (some #(when (= hakukohde-oid (:oid %)) %))))))
+        selected-hakukohde-oids (or (hakukohderyhma-to-hakukohde-oids applications get-hakukohde selected-hakukohderyhma)
+                                    (some-> selected-hakukohde vector))]
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
          (map (partial add-hakukohde-names get-tarjonta-info get-hakukohde))
-         (map (partial add-all-hakukohde-reviews get-hakukohde selected-hakukohde-oids))
+         (map (partial add-all-hakukohde-reviews get-tarjonta-info get-hakukohde selected-hakukohde-oids))
          (reduce (fn [result {:keys [form] :as application}]
                    (let [form-key (:key (get-form-by-id form))
                          form     (get-latest-form-by-key form-key)]
