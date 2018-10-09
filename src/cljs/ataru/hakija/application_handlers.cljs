@@ -1015,45 +1015,45 @@
 
 (reg-event-fx
   :application/handle-attachment-delete
-  (fn [{db :db} [_ field-descriptor component-id question-group-idx attachment-key _]]
-    {:db       (if (some? question-group-idx)
-                 (-> db
-                     (update-in [:application :answers (keyword component-id) :values] (util/vector-of-length question-group-idx))
-                     (update-in [:application :answers (keyword component-id) :values] (partial mapv (fnil identity [])))
-                     (update-in [:application :answers (keyword component-id) :values question-group-idx]
-                                (comp vec
-                                      (partial remove (comp (partial = attachment-key) :key :value))))
-                     (set-multi-value-changed (keyword component-id) :values))
-                 (-> db
-                     (update-in [:application :answers (keyword component-id) :values]
-                                (comp vec
-                                      (partial remove (comp (partial = attachment-key) :key :value))))
-                     (set-multi-value-changed (keyword component-id) :values)))
-     :dispatch [:application/set-attachment-valid
-                (keyword component-id)
-                (required? field-descriptor)
-                true]}))
+  (fn [{db :db} [_ field-descriptor question-group-idx attachment-key _]]
+    (let [id (keyword (:id field-descriptor))]
+      {:db       (-> db
+                     (update-in (cond-> [:application :answers id :values]
+                                        (some? question-group-idx)
+                                        (conj question-group-idx))
+                                (comp vec (partial remove (comp (partial = attachment-key) :key :value))))
+                     (set-multi-value-changed id :values))
+       :dispatch [:application/set-attachment-valid
+                  id
+                  (required? field-descriptor)
+                  true]})))
 
 (reg-event-fx
   :application/remove-attachment
-  (fn [{:keys [db]} [_ field-descriptor component-id attachment-idx question-group-idx]]
-    (let [id        (keyword (:id field-descriptor))
-          path      (cond-> [:application :answers id :values]
-                            (some? question-group-idx)
-                            (conj question-group-idx)
-                            true
-                            (conj attachment-idx))
-          key       (get-in db (conj path :value :key))
-          db-and-fx {:db (-> db
-                             (assoc-in [:application :answers id :valid] false)
-                             (update-in path merge {:status :deleting
-                                                    :valid  false}))}]
-      (if (or (get-in db [:application :editing?])
-              (not= :ready (get-in db (conj path :status))))
-        (assoc db-and-fx :dispatch [:application/handle-attachment-delete field-descriptor component-id question-group-idx key])
-        (assoc db-and-fx :http {:method  :delete
-                                :url     (str "/hakemus/api/files/" key)
-                                :handler [:application/handle-attachment-delete field-descriptor component-id question-group-idx key]})))))
+  (fn [{:keys [db]} [_ field-descriptor question-group-idx attachment-idx]]
+    (let [id   (keyword (:id field-descriptor))
+          path (cond-> [:application :answers id :values]
+                       (some? question-group-idx)
+                       (conj question-group-idx)
+                       true
+                       (conj attachment-idx))
+          key  (get-in db (conj path :value :key))]
+      (if (and (not (get-in db [:application :editing?]))
+               (= :ready (get-in db (conj path :status))))
+        {:db   (-> db
+                   (assoc-in [:application :answers id :valid] false)
+                   (update-in path merge {:status :deleting
+                                          :valid  false}))
+         :http {:method  :delete
+                :url     (str "/hakemus/api/files/" key)
+                :handler [:application/handle-attachment-delete field-descriptor question-group-idx key]}}
+        {:db       (-> db
+                       (assoc-in [:application :answers id :valid] false)
+                       (update-in (butlast path) autil/remove-nth attachment-idx))
+         :dispatch [:application/set-attachment-valid
+                    id
+                    (required? field-descriptor)
+                    true]}))))
 
 (reg-event-fx
   :application/remove-attachment-error
@@ -1147,9 +1147,9 @@
               [:application/set-adjacent-field-answer child 0 "" group-idx])
             (:children field-descriptor))
       {:fieldType "attachment"}
-           ; Use handle attachment delete here since when calling with nil it 'initializes' an emptry answer.
+           ; Use handle attachment delete here since when calling with nil it 'initializes' an empty answer.
            ; Hacky solution but others would require much rework on the codebase.
-      [[:application/handle-attachment-delete field-descriptor id group-idx nil]]
+      [[:application/handle-attachment-delete field-descriptor group-idx nil nil]]
       {:fieldClass "infoElement"}
       [])))
 

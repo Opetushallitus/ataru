@@ -826,9 +826,8 @@
                        (reset! confirm? false)
                        (dispatch [:application/remove-attachment
                                   field-descriptor
-                                  id
-                                  attachment-idx
-                                  question-group-idx]))}
+                                  question-group-idx
+                                  attachment-idx]))}
           (get-translation :confirm-remove)])])))
 
 (defn attachment-view-file [field-descriptor component-id question-group-idx attachment-idx]
