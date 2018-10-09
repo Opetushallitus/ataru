@@ -841,7 +841,7 @@
                                 question-group-idx
                                 attachment-idx])]
     [:div.application__form-attachment-list-item-container
-     [:div.application__form-attachment-list-item-sub-container.application__form-attachment-filename-container.application__form-attachment-filename-container__error.animated.shake
+     [:div.application__form-attachment-list-item-sub-container.application__form-attachment-filename-container.application__form-attachment-filename-container__error
       [attachment-filename component-id question-group-idx attachment-idx]]
      [:div.application__form-attachment-list-item-sub-container.application__form-attachment-error-container
       (doall
