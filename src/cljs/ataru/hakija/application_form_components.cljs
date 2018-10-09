@@ -276,7 +276,7 @@
             disabled?              @disabled?
             value                  @(subscribe [:application/answer-value id idx nil])
             valid?                 @(subscribe [:application/answer-valid? id idx nil])
-            errors                 @(subscribe [:application/answer-errors id idx])
+            errors                 @(subscribe [:application/answer-errors id idx nil])
             cannot-view?           @cannot-view?
             cannot-edit?           @cannot-edit?
             show-error?            @(subscribe [:application/show-validation-error-class? id idx nil])
