@@ -461,6 +461,13 @@
       (update application :answers conj
         {:key "hakukohteet" :fieldType "hakukohteet" :value (:hakukohde application) :label "Hakukohteet"}))))
 
+(defn- exclude-unselected-hakutoiveet-in-yhteishaku [get-haku get-hakukohde selected-hakukohde-oids application]
+  (if (-> (get-haku (:haku application)) :tarjonta :yhteishaku)
+    (let [hakukohteet (set selected-hakukohde-oids)
+          whitelist   (fn [hakukohde] (contains? hakukohteet hakukohde))]
+      (update application :hakukohde #(filter whitelist %)))
+    application))
+
 (defn- get-hakukohde-name [get-hakukohde lang-s haku-oid hakukohde-oid]
   (let [lang (keyword lang-s)]
     (when-let [hakukohde (get-hakukohde haku-oid hakukohde-oid)]
@@ -486,15 +493,10 @@
                            answer)))))
 
 (defn- add-all-hakukohde-reviews
-  [get-haku get-hakukohde selected-hakukohde-oids application]
-  (let [yhteishaku?            (fn [application] (-> (get-haku (:haku application)) :tarjonta :yhteishaku))
-        active-hakukohteet     (set (or
+  [get-hakukohde selected-hakukohde-oids application]
+  (let [active-hakukohteet     (set (or
                                      (not-empty
-                                       (if (yhteishaku? application)
-                                         (clojure.set/intersection
-                                          (set (:hakukohde application))
-                                          (set selected-hakukohde-oids))
-                                         (:hakukohde application)))
+                                       (:hakukohde application))
                                      ["form"]))
         all-reviews            (->> (application-states/get-all-reviews-for-all-requirements
                                       application
@@ -555,8 +557,9 @@
                                     (some-> selected-hakukohde vector))]
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
+         (map (partial exclude-unselected-hakutoiveet-in-yhteishaku get-tarjonta-info get-hakukohde selected-hakukohde-oids))
          (map (partial add-hakukohde-names get-tarjonta-info get-hakukohde))
-         (map (partial add-all-hakukohde-reviews get-tarjonta-info get-hakukohde selected-hakukohde-oids))
+         (map (partial add-all-hakukohde-reviews get-hakukohde selected-hakukohde-oids))
          (reduce (fn [result {:keys [form] :as application}]
                    (let [form-key (:key (get-form-by-id form))
                          form     (get-latest-form-by-key form-key)]
