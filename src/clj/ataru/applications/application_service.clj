@@ -148,7 +148,7 @@
                                                          (assoc :person (get-person application person-client))
                                                          (merge tarjonta-info))
                                :form                 form
-                               :alternative-form     alternative-form
+                               :alternative-form     nil
                                :hakukohde-reviews    @hakukohde-reviews
                                :attachment-reviews   @attachment-reviews
                                :events               @events
