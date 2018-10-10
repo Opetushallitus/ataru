@@ -899,8 +899,7 @@
       [:span (str percent " % "
                   "(" (util/size-bytes->str uploaded-size false)
                   "/"
-                  (util/size-bytes->str size) ") ")]
-      [:span (str (util/size-bytes->str (:speed attachment)) "/s")]]
+                  (util/size-bytes->str size) ")")]]
      [:div.application__form-attachment-list-item-sub-container
       [cancel-attachment-upload-button field-descriptor question-group-idx attachment-idx]]]))
 
