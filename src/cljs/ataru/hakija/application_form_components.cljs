@@ -897,7 +897,7 @@
       [:i.zmdi.zmdi-spinner.application__form-upload-uploading-spinner]
       [:span (str (get-translation :uploading) "... ")]
       [:span (str percent " % "
-                  "(" (util/size-bytes->str uploaded-size)
+                  "(" (util/size-bytes->str uploaded-size false)
                   "/"
                   (util/size-bytes->str size) ") ")]
       [:span (str (util/size-bytes->str (:speed attachment)) "/s")]]
