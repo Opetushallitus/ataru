@@ -156,6 +156,15 @@
    :confirm-remove                              {:fi "Vahvista poisto"
                                                  :sv "SV: Vahvista poisto"
                                                  :en "Confirm removal"}
+   :cancel-upload                               {:fi "Keskeytä"
+                                                 :sv "SV: Keskeytä"
+                                                 :en "Cancel"}
+   :cancel-cancel-upload                        {:fi "Älä keskeytä"
+                                                 :sv "SV: Älä keskeytä"
+                                                 :en "Don't cancel"}
+   :confirm-cancel-upload                       {:fi "Vahvista keskeytys"
+                                                 :sv "SV: Vahvista keskeytys"
+                                                 :en "Confirm cancel"}
    :finnish                                     {:fi "Suomi"
                                                  :sv "Finska"
                                                  :en "Finnish"}

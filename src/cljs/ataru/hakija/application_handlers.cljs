@@ -886,6 +886,7 @@
               :handler          [:application/handle-attachment-upload field-descriptor attachment-idx question-group-idx]
               :progress-handler [:application/handle-attachment-progress field-descriptor attachment-idx question-group-idx]
               :error-handler    [:application/handle-attachment-upload-error field-descriptor attachment-idx name file (inc retries) question-group-idx]
+              :started-handler  [:application/handle-attachment-upload-started field-descriptor attachment-idx question-group-idx]
               :body             form-data}})))
 
 (defonce max-attachment-size-bytes
@@ -988,6 +989,16 @@
                     (.-loaded evt)))
         db))))
 
+(reg-event-db
+  :application/handle-attachment-upload-started
+  (fn [db [_ field-descriptor attachment-idx question-group-idx request]]
+    (assoc-in db (cond-> [:application :answers (keyword (:id field-descriptor)) :values]
+                         (some? question-group-idx)
+                         (conj question-group-idx)
+                         true
+                         (conj attachment-idx :request))
+              request)))
+
 (defn- rate-limit-error? [response]
   (= (:status response) 429))
 
@@ -1054,6 +1065,15 @@
                     id
                     (required? field-descriptor)
                     true]}))))
+
+(reg-event-fx
+  :application/cancel-attachment-upload
+  (fn [{db :db} [_ field-descriptor question-group-idx attachment-idx]]
+    {:http-abort (get-in db (cond-> [:application :answers (keyword (:id field-descriptor)) :values]
+                                    (some? question-group-idx)
+                                    (conj question-group-idx)
+                                    true
+                                    (conj attachment-idx :request)))}))
 
 (reg-event-fx
   :application/remove-attachment-error

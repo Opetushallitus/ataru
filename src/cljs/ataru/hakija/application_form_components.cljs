@@ -830,6 +830,27 @@
                                   attachment-idx]))}
           (get-translation :confirm-remove)])])))
 
+(defn- cancel-attachment-upload-button
+  [field-descriptor question-group-idx attachment-idx]
+  (let [id       (keyword (:id field-descriptor))
+        confirm? (r/atom false)]
+    (fn [field-descriptor question-group-idx attachment-idx]
+      [:div.application__form-attachment-remove-button-container
+       [:button.application__form-attachment-remove-button
+        {:on-click #(swap! confirm? not)}
+        (if @confirm?
+          (get-translation :cancel-cancel-upload)
+          (get-translation :cancel-upload))]
+       (when @confirm?
+         [:button.application__form-attachment-remove-button.application__form-attachment-remove-button__confirm
+          {:on-click (fn [event]
+                       (reset! confirm? false)
+                       (dispatch [:application/cancel-attachment-upload
+                                  field-descriptor
+                                  question-group-idx
+                                  attachment-idx]))}
+          (get-translation :confirm-cancel-upload)])])))
+
 (defn attachment-view-file [field-descriptor component-id question-group-idx attachment-idx]
   [:div.application__form-attachment-list-item-container
    [:div.application__form-attachment-list-item-sub-container.application__form-attachment-filename-container.application__form-attachment-filename-container__success
@@ -862,7 +883,8 @@
    [:div.application__form-attachment-list-item-sub-container.application__form-attachment-filename-container
     [attachment-filename component-id question-group-idx attachment-idx]]])
 
-(defn attachment-uploading-file [_ component-id question-group-idx attachment-idx]
+(defn attachment-uploading-file
+  [field-descriptor component-id question-group-idx attachment-idx]
   (let [{:keys [uploaded-size value]} @(subscribe [:application/answer component-id question-group-idx attachment-idx])
         size                          (:size value)
         percent                       (int (* 100 (/ uploaded-size size)))]
@@ -875,7 +897,9 @@
       [:span (str percent " % "
                   "(" (util/size-bytes->str uploaded-size)
                   "/"
-                  (util/size-bytes->str size) ")")]]]))
+                  (util/size-bytes->str size) ")")]]
+     [:div.application__form-attachment-list-item-sub-container
+      [cancel-attachment-upload-button field-descriptor question-group-idx attachment-idx]]]))
 
 (defn attachment-row [field-descriptor component-id attachment-idx question-group-idx]
   (let [{:keys [status]} @(subscribe [:application/answer

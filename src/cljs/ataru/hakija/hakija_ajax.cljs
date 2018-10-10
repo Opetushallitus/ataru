@@ -2,7 +2,7 @@
   (:require [re-frame.core :refer [dispatch reg-fx]]
             [ataru.cljs-util :as util]
             [cljs.core.match :refer-macros [match]]
-            [ajax.core :refer [GET POST PUT DELETE raw-response-format]])
+            [ajax.core :refer [GET POST PUT DELETE raw-response-format abort]])
   (:refer-clojure :exclude [get]))
 
 (def ^:private json-params {:format :json :response-format :json :keywords? true})
@@ -46,13 +46,24 @@
   (DELETE path (merge (params handler-kw progress-handler-kw error-handler-kw) json-params)))
 
 (reg-fx
-  :http
-  (fn [{:keys [method post-data url handler progress-handler error-handler body]}]
-    (let [f (case method
-              :post (partial post url post-data)
-              :put  (partial put url post-data)
-              :get  (partial get url)
-              :delete (partial delete url))]
-      (f handler progress-handler error-handler body))))
+ :http
+ (fn [{:keys [method
+              post-data
+              url
+              handler
+              progress-handler
+              error-handler
+              started-handler
+              body]}]
+   (let [f (case method
+             :post   (partial post url post-data)
+             :put    (partial put url post-data)
+             :get    (partial get url)
+             :delete (partial delete url))
+         r (f handler progress-handler error-handler body)]
+     (when (some? started-handler)
+       ((handler-fn started-handler) r)))))
+
+(reg-fx :http-abort abort)
 
 
