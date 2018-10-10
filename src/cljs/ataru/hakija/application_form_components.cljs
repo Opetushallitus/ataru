@@ -4,6 +4,7 @@
             [reagent.ratom :refer-macros [reaction]]
             [markdown.core :refer [md->html]]
             [cljs.core.match :refer-macros [match]]
+            [cljs-time.core :as time]
             [ataru.cljs-util :as cljs-util :refer [get-translation]]
             [ataru.application-common.application-field-common
              :refer
@@ -885,9 +886,10 @@
 
 (defn attachment-uploading-file
   [field-descriptor component-id question-group-idx attachment-idx]
-  (let [{:keys [uploaded-size value]} @(subscribe [:application/answer component-id question-group-idx attachment-idx])
-        size                          (:size value)
-        percent                       (int (* 100 (/ uploaded-size size)))]
+  (let [attachment    @(subscribe [:application/answer component-id question-group-idx attachment-idx])
+        size          (:size (:value attachment))
+        uploaded-size (:uploaded-size attachment)
+        percent       (int (* 100 (/ uploaded-size size)))]
     [:div.application__form-attachment-list-item-container
      [:div.application__form-attachment-list-item-sub-container.application__form-attachment-filename-container
       [attachment-filename component-id question-group-idx attachment-idx]]
@@ -897,7 +899,8 @@
       [:span (str percent " % "
                   "(" (util/size-bytes->str uploaded-size)
                   "/"
-                  (util/size-bytes->str size) ")")]]
+                  (util/size-bytes->str size) ") ")]
+      [:span (str (util/size-bytes->str (:speed attachment)) "/s")]]
      [:div.application__form-attachment-list-item-sub-container
       [cancel-attachment-upload-button field-descriptor question-group-idx attachment-idx]]]))
 

@@ -917,6 +917,8 @@
                                                          :size         (.-size file)}
                                          :valid         false
                                          :uploaded-size 0
+                                         :last-progress (c/now)
+                                         :speed         0
                                          :status        :uploading}))
                                     new-files)]
       {:db         (-> db
@@ -980,14 +982,24 @@
 (reg-event-db
   :application/handle-attachment-progress
   (fn [db [_ field-descriptor attachment-idx question-group-idx evt]]
-    (let [id (keyword (:id field-descriptor))]
-      (if (.-lengthComputable evt)
-        (if (some? question-group-idx)
-          (assoc-in db [:application :answers id :values question-group-idx attachment-idx :uploaded-size]
-                    (.-loaded evt))
-          (assoc-in db [:application :answers id :values attachment-idx :uploaded-size]
-                    (.-loaded evt)))
-        db))))
+    (if (.-lengthComputable evt)
+      (let [now           (c/now)
+            path          (cond-> [:application :answers (keyword (:id field-descriptor)) :values]
+                                  (some? question-group-idx)
+                                  (conj question-group-idx)
+                                  true
+                                  (conj attachment-idx))
+            prev-uploaded (get-in db (conj path :uploaded-size) 0)
+            uploaded-size (.-loaded evt)
+            last-progress (get-in db (conj path :last-progress))
+            speed         (* 1000
+                             (/ (- uploaded-size prev-uploaded)
+                                (c/in-millis (c/interval last-progress now))))]
+        (-> db
+            (assoc-in (conj path :uploaded-size) uploaded-size)
+            (assoc-in (conj path :last-progress) now)
+            (assoc-in (conj path :speed) speed)))
+      db)))
 
 (reg-event-db
   :application/handle-attachment-upload-started
