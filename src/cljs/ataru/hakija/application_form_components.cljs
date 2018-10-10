@@ -798,7 +798,7 @@
       (get-translation :file-size-info (util/size-bytes->str max-attachment-size-bytes))]]))
 
 (defn- attachment-filename
-  [id question-group-idx attachment-idx]
+  [id question-group-idx attachment-idx show-size?]
   (let [{:keys [filename size]} @(subscribe [:application/answer-value
                                              id
                                              question-group-idx
@@ -806,7 +806,7 @@
     [:div
      [:span.application__form-attachment-filename
       filename]
-     (when (some? size)
+     (when (and (some? size) show-size?)
        [:span (str " (" (util/size-bytes->str size) ")")])]))
 
 (defn- attachment-remove-button
@@ -855,7 +855,7 @@
 (defn attachment-view-file [field-descriptor component-id question-group-idx attachment-idx]
   [:div.application__form-attachment-list-item-container
    [:div.application__form-attachment-list-item-sub-container.application__form-attachment-filename-container.application__form-attachment-filename-container__success
-    [attachment-filename component-id question-group-idx attachment-idx]]
+    [attachment-filename component-id question-group-idx attachment-idx true]]
    [:div.application__form-attachment-list-item-sub-container.application__form-attachment-check-mark-container
     [:i.zmdi.zmdi-check.application__form-attachment-check-mark]]
    [:div.application__form-attachment-list-item-sub-container
@@ -868,7 +868,7 @@
                                 attachment-idx])]
     [:div.application__form-attachment-list-item-container
      [:div.application__form-attachment-list-item-sub-container.application__form-attachment-filename-container.application__form-attachment-filename-container__error
-      [attachment-filename component-id question-group-idx attachment-idx]]
+      [attachment-filename component-id question-group-idx attachment-idx true]]
      [:div.application__form-attachment-list-item-sub-container.application__form-attachment-error-container
       (doall
        (map-indexed (fn [i error]
@@ -882,7 +882,7 @@
 (defn attachment-deleting-file [_ component-id question-group-idx attachment-idx]
   [:div.application__form-attachment-list-item-container
    [:div.application__form-attachment-list-item-sub-container.application__form-attachment-filename-container
-    [attachment-filename component-id question-group-idx attachment-idx]]])
+    [attachment-filename component-id question-group-idx attachment-idx true]]])
 
 (defn attachment-uploading-file
   [field-descriptor component-id question-group-idx attachment-idx]
@@ -892,7 +892,7 @@
         percent       (int (* 100 (/ uploaded-size size)))]
     [:div.application__form-attachment-list-item-container
      [:div.application__form-attachment-list-item-sub-container.application__form-attachment-filename-container
-      [attachment-filename component-id question-group-idx attachment-idx]]
+      [attachment-filename component-id question-group-idx attachment-idx false]]
      [:div.application__form-attachment-list-item-sub-container.application__form-attachment-uploading-container
       [:i.zmdi.zmdi-spinner.application__form-upload-uploading-spinner]
       [:span (str (get-translation :uploading) "... ")]
