@@ -164,7 +164,7 @@
   (put-many-to [_ key-values]
     (when (not-empty key-values)
       (let [key-value-flattened (->> key-values
-                                     (map (fn [[k v]] [(str name "_" (clojure.core/name k)) v]))
+                                     (map (fn [[k v]] [(str name "_" k) v]))
                                      (filter (fn [[_ v]] (some? v))))
             [ttl timeunit] ttl
             ttl-ms              (.toMillis timeunit ttl)]

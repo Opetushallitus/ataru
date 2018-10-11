@@ -278,7 +278,7 @@
                       person-service
                       (distinct (keep :person-oid applications)))]
     (map (fn [application]
-           (let [onr-person (get persons (keyword (:person-oid application)))
+           (let [onr-person (get persons (:person-oid application))
                  person     (if (or (:yksiloity onr-person)
                                     (:yksiloityVTJ onr-person))
                               {:oid            (:oidHenkilo onr-person)
@@ -315,7 +315,6 @@
           applications-with-persons        (map (fn [application]
                                                   (assoc application
                                                     :person (->> (:person-oid application)
-                                                                 keyword
                                                                  (get onr-persons)
                                                                  (parse-person application))))
                                                 applications)
