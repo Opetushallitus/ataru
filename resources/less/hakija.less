@@ -696,6 +696,9 @@ textarea.application__form-text-area__size-large {
 
 .application__attachment-filename-list-item:not(:last-child) {
   margin-bottom: 8px;
+  @media only screen and (max-width: @desktop-content-width) {
+    margin-bottom: 24px;
+  }
 }
 
 .application__form-attachment-list-item-container {
@@ -709,9 +712,10 @@ textarea.application__form-text-area__size-large {
 }
 
 .application__form-attachment-list-item-sub-container {
-  margin-right: 10px;
+  margin-right: 8px;
   @media only screen and (max-width: @desktop-content-width) {
     margin-right: 0px;
+    margin-bottom: 8px;
   }
 }
 
@@ -743,7 +747,7 @@ textarea.application__form-text-area__size-large {
 
 .application__form-attachment-error-container {
   flex: auto;
-  padding: 2px 8px 2px 8px;
+  padding: 2px 0px 2px 0px;
 }
 
 .application__form-attachment-remove-button-container {
