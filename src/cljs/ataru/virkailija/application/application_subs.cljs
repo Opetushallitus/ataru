@@ -60,10 +60,11 @@
   [db]
   (let [db-application (:application db)]
     (cond
-      (:selected-form-key db-application) :selected-form-key
-      (:selected-haku db-application) :selected-haku
-      (:selected-hakukohde db-application) :selected-hakukohde
-      (:selected-hakukohderyhma db-application) :selected-hakukohderyhma)))
+      (:selected-form-key db-application)                      :selected-form-key
+      (:selected-haku db-application)                          :selected-haku
+      (:selected-hakukohde db-application)                     :selected-hakukohde
+      (:selected-ryhman-ensisijainen-hakukohde db-application) :selected-ryhman-ensisijainen-hakukohde
+      (:selected-hakukohderyhma db-application)                :selected-hakukohderyhma)))
 
 (re-frame/reg-sub
   :application/application-list-selected-by
@@ -86,6 +87,7 @@
           oid-or-oids (when selected-by (-> db :application selected-by))]
       (case selected-by
         :selected-hakukohde #{oid-or-oids}
+        :selected-ryhman-ensisijainen-hakukohde #{oid-or-oids}
         :selected-hakukohderyhma (set (selected-hakukohderyhma-hakukohteet db))
         nil))))
 
@@ -99,7 +101,8 @@
                      :haku-oid
                      (get (get-in db [:haut]))
                      :prioritize-hakukohteet)
-            (= :selected-hakukohderyhma selected-by)
+            (or (= :selected-hakukohderyhma selected-by)
+                (= :selected-ryhman-ensisijainen-hakukohde selected-by))
             (some->> (get-in db [:application :selected-hakukohderyhma])
                      first
                      (get (get-in db [:haut]))
@@ -117,7 +120,8 @@
   (fn [db]
     (if @(re-frame/subscribe [:application/ensisijaisesti?])
       (let [selected-by @(re-frame/subscribe [:application/application-list-selected-by])]
-        (cond (= :selected-hakukohderyhma selected-by)
+        (cond (or (= :selected-hakukohderyhma selected-by)
+                  (= :selected-ryhman-ensisijainen-hakukohde selected-by))
               (some->> (get-in db [:application :selected-hakukohderyhma])
                 first
                 (get (get-in db [:haut]))

@@ -824,18 +824,15 @@
 (reg-event-fx
   :application/handle-mass-update-application-reviews
   (fn [{:keys [db]} [_ _]]
-    (let [db-application (:application db)
-          selected-type  @(subscribe [:application/application-list-selected-by])
-          selected-id    (if (= :selected-form-key selected-type)
-                           (:selected-form-key db-application)
-                           (-> db-application selected-type))
+    (let [selected-type  @(subscribe [:application/application-list-selected-by])
           dispatch-kw    (case selected-type
                            :selected-form-key :application/fetch-applications
                            :selected-haku :application/fetch-applications-by-haku
-                           :selected-hakukohde :application/fetch-applications-by-hakukohde)]
-      (if selected-type
+                           :selected-hakukohde :application/fetch-applications-by-hakukohde
+                           nil)]
+      (if dispatch-kw
         {:db db
-         :dispatch [dispatch-kw selected-id]}
+         :dispatch [dispatch-kw (-> db :application selected-type)]}
         {:db db}))))
 
 (reg-event-fx
@@ -1149,8 +1146,6 @@
         selected-hakukohteet-set               (cond
                                                  (some? hakukohde-oids-from-hakukohde-or-ryhma)
                                                  hakukohde-oids-from-hakukohde-or-ryhma
-                                                 (some? (-> db :application :selected-ryhman-ensisijainen-hakukohde))
-                                                 #{(-> db :application :selected-ryhman-ensisijainen-hakukohde)}
                                                  (some? (-> db :application :selected-form-key))
                                                  #{"form"}
                                                  :else
