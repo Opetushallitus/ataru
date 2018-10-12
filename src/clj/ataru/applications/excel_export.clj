@@ -548,11 +548,10 @@
                                               ohjausparametrit-service
                                               haku-oid)))
         get-hakukohde           (memoize (fn [haku-oid hakukohde-oid]
-                                             (let [hk (get-tarjonta-info haku-oid)]
-                                               (->> hk
+                                             (->> (get-tarjonta-info haku-oid)
                                                   :tarjonta
                                                   :hakukohteet
-                                                  (some #(when (= hakukohde-oid (:oid %)) %))))))
+                                                  (some #(when (= hakukohde-oid (:oid %)) %)))))
         selected-hakukohde-oids (or (hakukohderyhma-to-hakukohde-oids applications get-hakukohde selected-hakukohderyhma)
                                     (some-> selected-hakukohde vector))]
     (->> applications
