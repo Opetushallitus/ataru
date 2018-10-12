@@ -71,7 +71,8 @@
      :ssn            (-> answers :ssn :value)
      :birth-date     (-> answers :birth-date :value)
      :gender         (-> answers :gender :value)
-     :nationality    (-> answers :nationality :value)}))
+     :nationality    (-> answers :nationality :value)
+     :language       (-> answers :language :value)}))
 
 (defn- person-info-from-onr-person [person]
   {:first-name     (:etunimet person)
@@ -81,7 +82,8 @@
    :birth-date     (some-> person :syntymaaika bd-converter/convert-to-finnish-format)
    :gender         (-> person :sukupuoli)
    :nationality    (->> (-> person :kansalaisuus)
-                        (mapv #(vector (get % :kansalaisuusKoodi "999"))))})
+                        (mapv #(vector (get % :kansalaisuusKoodi "999"))))
+   :language       (-> person :aidinkieli :kieliKoodi clojure.string/upper-case)})
 
 (defn parse-person [application person-from-onr]
   (let [yksiloity       (or (-> person-from-onr :yksiloity)

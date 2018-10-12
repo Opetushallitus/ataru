@@ -367,6 +367,7 @@
    :last-name                           s/Str
    :gender                              s/Str
    :nationality                         [(s/constrained [s/Str] #(= 1 (count %)))]
+   :language                            s/Str
    (s/optional-key :gender-string)      s/Str
    (s/optional-key :nationality-string) s/Str
    (s/optional-key :ssn)                (s/maybe s/Str)
