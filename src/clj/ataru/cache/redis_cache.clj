@@ -85,10 +85,12 @@
   (get-many-from [this keys]
     (if (empty? keys)
       []
-      (map (fn [key value] (if (some? value) value (cache/get-from this key)))
-           keys
-           (wcar (:connection-opts redis)
-                 (apply car/mget (map #(str name "_" %) keys))))))
+      (mapcat (fn [keys]
+                (map (fn [key value] (if (some? value) value (cache/get-from this key)))
+                     keys
+                     (wcar (:connection-opts redis)
+                           (apply car/mget (map #(str name "_" %) keys)))))
+              (partition 5000 5000 nil keys))))
   (put-to [_ key value]
     (let [[ttl timeunit] ttl]
       (wcar (:connection-opts redis)
@@ -181,10 +183,12 @@
     (if (empty? keys)
       []
       (into {}
-            (map (fn [key value] (when (some? value) [key value]))
-                 keys
-                 (wcar (:connection-opts redis)
-                       (apply car/mget (map #(str name "_" %) keys)))))))
+            (mapcat (fn [keys]
+                      (map (fn [key value] (when (some? value) [key value]))
+                           keys
+                           (wcar (:connection-opts redis)
+                                 (apply car/mget (map #(str name "_" %) keys)))))
+                    (partition 5000 5000 nil keys)))))
   (put-to [_ key value]
     (let [[ttl timeunit] ttl]
       (wcar (:connection-opts redis)
