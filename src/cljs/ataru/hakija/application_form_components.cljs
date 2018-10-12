@@ -4,6 +4,7 @@
             [reagent.ratom :refer-macros [reaction]]
             [markdown.core :refer [md->html]]
             [cljs.core.match :refer-macros [match]]
+            [cljs-time.core :as time]
             [ataru.cljs-util :as cljs-util :refer [get-translation]]
             [ataru.application-common.application-field-common
              :refer
@@ -276,7 +277,7 @@
             disabled?              @disabled?
             value                  @(subscribe [:application/answer-value id idx nil])
             valid?                 @(subscribe [:application/answer-valid? id idx nil])
-            errors                 @(subscribe [:application/answer-errors id idx])
+            errors                 @(subscribe [:application/answer-errors id idx nil])
             cannot-view?           @cannot-view?
             cannot-edit?           @cannot-edit?
             show-error?            @(subscribe [:application/show-validation-error-class? id idx nil])
@@ -766,97 +767,154 @@
               ^{:key (:id followup)}
               [render-field followup])])]))))
 
-(defonce max-attachment-size-bytes (* 10 1024 1024))
+(defonce max-attachment-size-bytes
+  (get (js->clj js/config) "attachment-file-max-size-bytes" (* 10 1024 1024)))
 
-(defn- upload-attachment [field-descriptor component-id attachment-count question-group-idx event]
+(defn- upload-attachment [field-descriptor question-group-idx event]
   (.preventDefault event)
-  (let [file-list  (or (some-> event .-dataTransfer .-files)
-                       (.. event -target -files))
-        files      (->> (.-length file-list)
-                        (range)
-                        (map #(.item file-list %)))
-        file-sizes (map #(.-size %) files)]
-    (if (some #(> % max-attachment-size-bytes) file-sizes)
-      (dispatch [:application/show-attachment-too-big-error component-id question-group-idx])
-      (dispatch [:application/add-attachments field-descriptor component-id attachment-count files question-group-idx]))))
+  (let [file-list (or (some-> event .-dataTransfer .-files)
+                      (.. event -target -files))
+        files     (->> (.-length file-list)
+                       (range)
+                       (map #(.item file-list %)))]
+    (dispatch [:application/add-attachments field-descriptor question-group-idx files])))
 
 (defn attachment-upload [field-descriptor component-id attachment-count question-group-idx]
-  (let [id       (str component-id (when question-group-idx "-" question-group-idx) "-upload-button")]
+  (let [id (str component-id (when question-group-idx "-" question-group-idx) "-upload-button")]
     [:div.application__form-upload-attachment-container
      [:input.application__form-upload-input
       {:id           id
        :type         "file"
        :multiple     "multiple"
        :key          (str "upload-button-" component-id "-" attachment-count)
-       :on-change    (partial upload-attachment field-descriptor component-id attachment-count question-group-idx)
+       :on-change    (partial upload-attachment field-descriptor question-group-idx)
        :required     (is-required-field? field-descriptor)
        :aria-invalid (not @(subscribe [:application/answer-valid? id question-group-idx nil]))}]
      [:label.application__form-upload-label
       {:for id}
       [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
       [:span.application__form-upload-button-add-text (get-translation :add-attachment)]]
-     (let [file-size-info-text (get-translation :file-size-info)
-           size-error-path     (if question-group-idx
-                                 [:application :answers (keyword component-id) :errors question-group-idx :too-big]
-                                 [:application :answers (keyword component-id) :errors :too-big])
-           size-error          (subscribe [:state-query size-error-path])]
-       (if @size-error
-         [:span.application__form-upload-button-error.animated.shake file-size-info-text]
-         [:span.application__form-upload-button-info file-size-info-text]))]))
+     [:span.application__form-upload-button-info
+      (get-translation :file-size-info (util/size-bytes->str max-attachment-size-bytes))]]))
 
-(defn- filename->label [{:keys [filename size]}]
-  (str filename " (" (util/size-bytes->str size) ")"))
+(defn- attachment-filename
+  [id question-group-idx attachment-idx show-size?]
+  (let [{:keys [filename size]} @(subscribe [:application/answer-value
+                                             id
+                                             question-group-idx
+                                             attachment-idx])]
+    [:div
+     [:span.application__form-attachment-filename
+      filename]
+     (when (and (some? size) show-size?)
+       [:span (str " (" (util/size-bytes->str size) ")")])]))
 
-(defn attachment-view-file [field-descriptor component-id attachment-idx question-group-idx]
-  (let [on-click (fn remove-attachment [event]
-                   (.preventDefault event)
-                   (dispatch [:application/remove-attachment field-descriptor component-id attachment-idx question-group-idx]))]
-    [:div.application__form-filename-container
-     [:span.application__form-attachment-text
-      (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values question-group-idx attachment-idx :value]]))
-      (when-not @(subscribe [:application/cannot-edit?
-                             (keyword (:id field-descriptor))])
-        [:a.application__form-upload-remove-attachment-link
-         {:href     "#"
-          :on-click on-click}
-         [:i.zmdi.zmdi-close]])]]))
+(defn- attachment-remove-button
+  [field-descriptor question-group-idx attachment-idx]
+  (let [id       (keyword (:id field-descriptor))
+        confirm? (r/atom false)]
+    (fn [field-descriptor question-group-idx attachment-idx]
+      [:div.application__form-attachment-remove-button-container
+       (when-not @(subscribe [:application/cannot-edit? id])
+         [:button.application__form-attachment-remove-button
+          {:on-click #(swap! confirm? not)}
+          (if @confirm?
+            (get-translation :cancel-remove)
+            (get-translation :remove))])
+       (when @confirm?
+         [:button.application__form-attachment-remove-button.application__form-attachment-remove-button__confirm
+          {:on-click (fn [event]
+                       (reset! confirm? false)
+                       (dispatch [:application/remove-attachment
+                                  field-descriptor
+                                  question-group-idx
+                                  attachment-idx]))}
+          (get-translation :confirm-remove)])])))
 
-(defn attachment-view-file-error [field-descriptor component-id attachment-idx question-group-idx]
-  (let [attachment @(subscribe [:state-query [:application :answers (keyword component-id) :values question-group-idx attachment-idx]])
-        languages  @(subscribe [:application/default-languages])
-        on-click   (fn remove-attachment [event]
-                     (.preventDefault event)
-                     (dispatch [:application/remove-attachment-error field-descriptor component-id attachment-idx question-group-idx]))]
-    (fn [field-descriptor component-id attachment-idx]
-      [:div
-       [:div.application__form-filename-container.application__form-file-error.animated.shake
-        [:span.application__form-attachment-text
-         (-> attachment :value :filename)
-         [:a.application__form-upload-remove-attachment-link
-          {:href     "#"
-           :on-click on-click}
-          [:i.zmdi.zmdi-close.zmdi-hc-inverse]]]]
-       [:span.application__form-attachment-error (util/non-blank-val (:error attachment) languages)]])))
+(defn- cancel-attachment-upload-button
+  [field-descriptor question-group-idx attachment-idx]
+  (let [id       (keyword (:id field-descriptor))
+        confirm? (r/atom false)]
+    (fn [field-descriptor question-group-idx attachment-idx]
+      [:div.application__form-attachment-remove-button-container
+       [:button.application__form-attachment-remove-button
+        {:on-click #(swap! confirm? not)}
+        (if @confirm?
+          (get-translation :cancel-cancel-upload)
+          (get-translation :cancel-upload))]
+       (when @confirm?
+         [:button.application__form-attachment-remove-button.application__form-attachment-remove-button__confirm
+          {:on-click (fn [event]
+                       (reset! confirm? false)
+                       (dispatch [:application/cancel-attachment-upload
+                                  field-descriptor
+                                  question-group-idx
+                                  attachment-idx]))}
+          (get-translation :confirm-cancel-upload)])])))
 
-(defn attachment-deleting-file [component-id attachment-idx question-group-idx]
-  [:div.application__form-filename-container
-   [:span.application__form-attachment-text
-    (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values question-group-idx attachment-idx :value]]))]])
+(defn attachment-view-file [field-descriptor component-id question-group-idx attachment-idx]
+  [:div.application__form-attachment-list-item-container
+   [:div.application__form-attachment-list-item-sub-container.application__form-attachment-filename-container.application__form-attachment-filename-container__success
+    [attachment-filename component-id question-group-idx attachment-idx true]]
+   [:div.application__form-attachment-list-item-sub-container.application__form-attachment-check-mark-container
+    [:i.zmdi.zmdi-check.application__form-attachment-check-mark]]
+   [:div.application__form-attachment-list-item-sub-container
+    [attachment-remove-button field-descriptor question-group-idx attachment-idx]]])
 
-(defn attachment-uploading-file [component-id attachment-idx question-group-idx]
-  [:div.application__form-filename-container
-   [:span.application__form-attachment-text
-    (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values question-group-idx attachment-idx :value]]))]
-   [:i.zmdi.zmdi-spinner.application__form-upload-uploading-spinner]])
+(defn attachment-view-file-error [field-descriptor component-id question-group-idx attachment-idx]
+  (let [attachment @(subscribe [:application/answer
+                                component-id
+                                question-group-idx
+                                attachment-idx])]
+    [:div.application__form-attachment-list-item-container
+     [:div.application__form-attachment-list-item-sub-container.application__form-attachment-filename-container.application__form-attachment-filename-container__error
+      [attachment-filename component-id question-group-idx attachment-idx true]]
+     [:div.application__form-attachment-list-item-sub-container.application__form-attachment-error-container
+      (doall
+       (map-indexed (fn [i error]
+                      ^{:key (str "attachment-error-" i)}
+                      [:span.application__form-attachment-error
+                       (apply get-translation error)])
+                    (:errors attachment)))]
+     [:div.application__form-attachment-list-item-sub-container
+      [attachment-remove-button field-descriptor question-group-idx attachment-idx]]]))
+
+(defn attachment-deleting-file [_ component-id question-group-idx attachment-idx]
+  [:div.application__form-attachment-list-item-container
+   [:div.application__form-attachment-list-item-sub-container.application__form-attachment-filename-container
+    [attachment-filename component-id question-group-idx attachment-idx true]]])
+
+(defn attachment-uploading-file
+  [field-descriptor component-id question-group-idx attachment-idx]
+  (let [attachment    @(subscribe [:application/answer component-id question-group-idx attachment-idx])
+        size          (:size (:value attachment))
+        uploaded-size (:uploaded-size attachment)
+        percent       (int (* 100 (/ uploaded-size size)))]
+    [:div.application__form-attachment-list-item-container
+     [:div.application__form-attachment-list-item-sub-container.application__form-attachment-filename-container
+      [attachment-filename component-id question-group-idx attachment-idx false]]
+     [:div.application__form-attachment-list-item-sub-container.application__form-attachment-uploading-container
+      [:i.zmdi.zmdi-spinner.application__form-upload-uploading-spinner]
+      [:span (str (get-translation :uploading) "... ")]
+      [:span (str percent " % "
+                  "(" (util/size-bytes->str uploaded-size false)
+                  "/"
+                  (util/size-bytes->str size) ")")]]
+     [:div.application__form-attachment-list-item-sub-container
+      [cancel-attachment-upload-button field-descriptor question-group-idx attachment-idx]]]))
 
 (defn attachment-row [field-descriptor component-id attachment-idx question-group-idx]
-  (let [status @(subscribe [:state-query [:application :answers (keyword component-id) :values question-group-idx attachment-idx :status]])]
+  (let [{:keys [status]} @(subscribe [:application/answer
+                                      component-id
+                                      question-group-idx
+                                      attachment-idx])]
     [:li.application__attachment-filename-list-item
-     (case status
-       :ready [attachment-view-file field-descriptor component-id attachment-idx question-group-idx]
-       :error [attachment-view-file-error field-descriptor component-id attachment-idx question-group-idx]
-       :uploading [attachment-uploading-file component-id attachment-idx question-group-idx]
-       :deleting [attachment-deleting-file component-id attachment-idx question-group-idx])]))
+     [(case status
+        :ready     attachment-view-file
+        :error     attachment-view-file-error
+        :uploading attachment-uploading-file
+        :deleting  attachment-deleting-file)
+      field-descriptor component-id question-group-idx attachment-idx]]))
 
 (defn attachment [{:keys [id] :as field-descriptor} & {question-group-idx :idx}]
   (let [languages  (subscribe [:application/default-languages])

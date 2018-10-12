@@ -138,15 +138,33 @@
    :feedback-thanks                             {:fi "Kiitos palautteestasi!"
                                                  :en "Thank you for your feedback!"
                                                  :sv "Tack för din respons!"}
-   :file-size-info                              {:fi "Tiedoston maksimikoko on 10 MB"
-                                                 :en "Maximum file size is 10 MB"
-                                                 :sv "Den maximala filstorleken är 10 MB"}
+   :file-size-info                              {:fi "Tiedoston maksimikoko on %s"
+                                                 :en "Maximum file size is %s"
+                                                 :sv "Den maximala filstorleken är %s"}
+   :uploading                                   {:fi "Ladataan"
+                                                 :sv "SV: Ladataan"
+                                                 :ev "Uploading"}
    :file-type-forbidden                         {:fi "Tiedostoa ei ladattu, yritä uudelleen"
                                                  :en "File failed to upload, try again"
                                                  :sv "Filen kunde inte laddas, försök igen"}
    :file-upload-failed                          {:fi "Tiedostoa ei ladattu, yritä uudelleen"
                                                  :en "File failed to upload, try again"
                                                  :sv "Filen kunde inte laddas, försök igen"}
+   :cancel-remove                               {:fi "Älä poista"
+                                                 :sv "SV: Älä poista"
+                                                 :en "Don't remove"}
+   :confirm-remove                              {:fi "Vahvista poisto"
+                                                 :sv "SV: Vahvista poisto"
+                                                 :en "Confirm removal"}
+   :cancel-upload                               {:fi "Keskeytä"
+                                                 :sv "SV: Keskeytä"
+                                                 :en "Cancel"}
+   :cancel-cancel-upload                        {:fi "Älä keskeytä"
+                                                 :sv "SV: Älä keskeytä"
+                                                 :en "Don't cancel"}
+   :confirm-cancel-upload                       {:fi "Vahvista keskeytys"
+                                                 :sv "SV: Vahvista keskeytys"
+                                                 :en "Confirm cancel"}
    :finnish                                     {:fi "Suomi"
                                                  :sv "Finska"
                                                  :en "Finnish"}

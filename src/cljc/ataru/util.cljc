@@ -128,16 +128,21 @@
 
 (def ^:private b-limit 1024)
 (def ^:private kb-limit 102400)
+(def ^:private mb-limit (* 1024 1024 1024))
 
-(defn size-bytes->str [bytes]
-  #?(:cljs (condp > bytes
-             b-limit (str bytes "B")
-             kb-limit (gstring/format "%.01fkB" (/ bytes 1024))
-             (gstring/format "%.01fMB" (/ bytes 1024000)))
-     :clj (condp > bytes
-            b-limit (str bytes " B")
-            kb-limit (format "%.2f kB" (float (/ bytes 1024)))
-            (format "%.2f MB" (float (/ bytes 1024000))))))
+(defn size-bytes->str
+  ([bytes] (size-bytes->str bytes true))
+  ([bytes unit?]
+   #?(:cljs (condp > bytes
+              b-limit  (str bytes (when unit? " B"))
+              kb-limit (gstring/format (str "%.01f" (when unit? " kB")) (/ bytes 1024))
+              mb-limit (gstring/format (str "%.01f" (when unit? " MB")) (/ bytes 1024 1024))
+              (gstring/format (str "%.01f" (when unit? " GB")) (/ bytes 1024 1024 1024)))
+      :clj (condp > bytes
+             b-limit  (str bytes (when unit? " B"))
+             kb-limit (format (str "%.2f" (when unit? " kB")) (float (/ bytes 1024)))
+             mb-limit (format (str "%.2f" (when unit? " MB")) (float (/ bytes 1024 1024)))
+             (format (str "%.2f" (when unit? " GB")) (float (/ bytes 1024 1024 1024)))))))
 
 (defn remove-nth
   "remove nth elem in vector"
