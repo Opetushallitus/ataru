@@ -786,6 +786,12 @@ You will receive a confirmation of your application to your email."}
    :diff-from-changes                           {:fi "Vertailu muutoksesta"
                                                  :sv "Jämför ändringen"
                                                  :en "EN: Vertailu muutoksesta"}
+   :diff-added                                  {:fi "Lisätty"
+                                                 :sv "SV: Lisätty"
+                                                 :en "Added"}
+   :diff-removed                                {:fi "Poistettu"
+                                                 :sv "SV: Poistettu"
+                                                 :en "Removed"}
    :dropdown                                    {:fi "Pudotusvalikko"
                                                  :sv "Rullgardinsmeny"
                                                  :en "EN: Pudotusvalikko"}

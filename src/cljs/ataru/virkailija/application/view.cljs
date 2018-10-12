@@ -10,6 +10,7 @@
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :as t]
             [ataru.virkailija.temporal :as temporal]
+            [ataru.virkailija.views.modal :as modal]
             [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
             [ataru.virkailija.virkailija-ajax :as ajax]
             [cljs-time.format :as f]
@@ -1785,18 +1786,21 @@
                " "
                (t/time->short-str (or (:time @event) (:created-time @event))))]
          [:div.application-handling__version-history-header-sub-text
-          (gstring/format "%s %s %s %s"
-                          changed-by
-                          (get-virkailija-translation :changed)
-                          changes-amount
-                          (get-virkailija-translation :answers))]]))))
+          [:span.application-handling__version-history-header-virkailija
+           changed-by]
+          [:span
+           (gstring/format " %s %s %s"
+                           (get-virkailija-translation :changed)
+                           changes-amount
+                           (get-virkailija-translation :answers))]]]))))
 
 (defn- application-version-history-list-value [values]
   [:ol.application-handling__version-history-list-value
    (map-indexed
     (fn [index value]
       ^{:key index}
-      [:li value])
+      [:li.application-handling__version-history-list-value-item
+       value])
     values)])
 
 (defn application-version-history-value [value-or-values]
@@ -1806,34 +1810,47 @@
      (map-indexed
       (fn [index values]
         ^{:key index}
-        [:li (application-version-history-list-value values)])
+        [:li.application-handling__version-history-question-group-value-item
+         (application-version-history-list-value values)])
       value-or-values)]
 
     (sequential? value-or-values)
     (application-version-history-list-value value-or-values)
 
-    :else (str value-or-values)))
+    :else [:span (str value-or-values)]))
+
+(defn- application-version-history-sub-row
+  [left right]
+  [:div.application-handling__version-history-sub-row
+   [:div.application-handling__version-history-sub-row__left
+    left]
+   [:div.application-handling__version-history-sub-row__right
+    right]])
 
 (defn application-version-history-row [key history-item]
   ^{:key (str "application-change-history-" key)}
   [:div.application-handling__version-history-row
-   [:div.application-handling__version-history-row-label
-    (:label history-item)]
-   [:div.application-handling__version-history-row-value.application-handling__version-history-row-value-old
-    [:div.application-handling__version-history-row-value-sign (gstring/unescapeEntities "&minus;")]
-    (application-version-history-value (:old history-item))]
-   [:div.application-handling__version-history-row-value.application-handling__version-history-row-value-new
-    [:div.application-handling__version-history-row-value-sign (gstring/unescapeEntities "&plus;")]
-    (application-version-history-value (:new history-item))]])
+   [application-version-history-sub-row
+    nil
+    [:span.application-handling__version-history-row-label
+     (:label history-item) ":"]]
+   [application-version-history-sub-row
+    [:span.application-handling__version-history-value-label
+     (get-virkailija-translation :diff-removed)]
+    [:div.application-handling__version-history-value.application-handling__version-history-value__old
+     (application-version-history-value (:old history-item))]]
+   [application-version-history-sub-row
+    [:span.application-handling__version-history-value-label
+     (get-virkailija-translation :diff-added)]
+    [:div.application-handling__version-history-value.application-handling__version-history-value__new
+     (application-version-history-value (:new history-item))]]])
 
 (defn application-version-changes []
   (let [history-items (subscribe [:application/current-history-items])]
     (when @history-items
-      [:div.virkailija-modal__container
-       [:div.virkailija-modal__content
-        [:a.virkailija-modal__close-link
-         {:on-click #(dispatch [:application/close-application-version-history])}
-         (clojure.string/capitalize (get-virkailija-translation :close))]
+      [modal/modal
+       #(dispatch [:application/close-application-version-history])
+       [:div.application-handling__version-history
         [application-version-history-header (count @history-items)]
         (for [[key item] @history-items]
           ^{:key (str "application-history-row-for-" key)}
