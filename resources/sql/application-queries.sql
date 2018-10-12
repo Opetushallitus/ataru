@@ -62,32 +62,32 @@ INSERT INTO application_secrets (application_key, secret) VALUES (:application_k
 -- name: yesql-get-application-list-for-virkailija
 SELECT
   a.id,
-  a.person_oid,
+  a.person_oid AS "person-oid",
   a.key,
   a.lang,
-  a.preferred_name,
-  a.last_name,
-  a.created_time,
+  a.preferred_name AS "preferred-name",
+  a.last_name AS "last-name",
+  a.created_time AS "created-time",
   a.haku,
   a.hakukohde,
   a.ssn,
   (SELECT cast(value as JSON)
    FROM jsonb_to_recordset(a.content->'answers') x(key text, value text)
-   WHERE key = 'higher-completed-base-education') AS base_education,
+   WHERE key = 'higher-completed-base-education') AS "base-education",
   ar.state                            AS state,
   ar.score                            AS score,
   a.form_id                           AS form,
-  lf.organization_oid,
+  lf.organization_oid AS "organization-oid",
   (SELECT json_agg(json_build_object('requirement', requirement,
                                      'state', state,
                                      'hakukohde', hakukohde))
    FROM application_hakukohde_reviews ahr
-   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
-  (SELECT json_agg(json_build_object('attachment_key', attachment_key,
+   WHERE ahr.application_key = a.key) AS "application-hakukohde-reviews",
+  (SELECT json_agg(json_build_object('attachment-key', attachment_key,
                                      'state', state,
                                      'hakukohde', hakukohde))
    FROM application_hakukohde_attachment_reviews aar
-   WHERE aar.application_key = a.key) AS application_attachment_reviews,
+   WHERE aar.application_key = a.key) AS "application-attachment-reviews",
   (SELECT count(*)
    FROM application_events AS ae
    WHERE ae.application_key = a.key AND
@@ -95,8 +95,8 @@ SELECT
          ae.time > (SELECT max(time)
                     FROM application_events
                     WHERE application_key = ae.application_key AND
-                          new_review_state = 'information-request') IS NOT DISTINCT FROM true) AS new_application_modifications,
-  (SELECT min(created_time) FROM applications WHERE a.key = key) AS original_created_time
+                          new_review_state = 'information-request') IS NOT DISTINCT FROM true) AS "new-application-modifications",
+  (SELECT min(created_time) FROM applications WHERE a.key = key) AS "original-created-time"
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id
