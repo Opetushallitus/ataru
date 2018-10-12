@@ -343,10 +343,6 @@
   (and (not= "infoElement" (:fieldClass form-element))
        (not (:exclude-from-answers form-element))))
 
-(defn- pick-answer? [skip-answers? element-id]
-  (or (not skip-answers?)
-      (contains? answers-to-always-include element-id)))
-
 (defn- hidden-answer? [form-element]
   (:exclude-from-answers form-element))
 
@@ -394,7 +390,7 @@
       (str "Liitepyyntö: " (label/get-language-label-in-preferred-order (:label element)))
       :else header)))
 
-(defn- extract-headers-from-applications [applications flat-fields skip-answers]
+(defn- extract-headers-from-applications [applications flat-fields pick-answers]
   (let [hidden-answers (->> (pick-form-labels flat-fields hidden-answer?)
                             (map first)
                             set)]
@@ -404,21 +400,32 @@
                         (:answers application))))
          (into {})
          (filter (fn [[key _]]
-                   (and (pick-answer? skip-answers key)
+                   (and (pick-answers key)
                         (not (contains? hidden-answers key))))))))
 
 (defn- extract-headers
-  [applications form skip-answers?]
+  [applications form selected-hakukohderyhma selected-hakukohde skip-answers? yhteishaku?]
   (let [flat-fields            (util/flatten-form-fields (:content form))
+        selected-field         (fn [id]
+                                   (let [element (delay (first (filter #(= (:id %) id) flat-fields)))]
+                                     (cond
+                                       (not yhteishaku?) true
+                                       selected-hakukohde (contains? (set (:belongs-to-hakukohteet @element)) selected-hakukohde)
+                                       selected-hakukohderyhma (contains? (set (:belongs-to-hakukohderyhma @element)) selected-hakukohderyhma)
+                                       :else true)))
+        pick-answers           (fn [id]
+                                   (or (and (not skip-answers?)
+                                            (selected-field id))
+                                       (contains? answers-to-always-include id)))
         labels-in-form         (pick-form-labels flat-fields
                                                  #(and (form-label? %)
-                                                       (pick-answer? skip-answers? (:id %))))
+                                                       (pick-answers (:id %))))
         labels-in-applications (let [form-ids (set (map first labels-in-form))]
                                  (remove #(contains? form-ids (first %))
                                          (extract-headers-from-applications
                                           applications
                                           flat-fields
-                                          skip-answers?)))
+                                          pick-answers)))
         all-labels             (concat labels-in-form labels-in-applications)]
     (for [[idx [id header]] (map vector (range) all-labels)
           :let [header (or header "")]]
@@ -460,13 +467,6 @@
       application
       (update application :answers conj
         {:key "hakukohteet" :fieldType "hakukohteet" :value (:hakukohde application) :label "Hakukohteet"}))))
-
-(defn- exclude-unselected-hakutoiveet-in-yhteishaku [get-haku get-hakukohde selected-hakukohde-oids application]
-  (if (-> (get-haku (:haku application)) :tarjonta :yhteishaku)
-    (let [hakukohteet (set selected-hakukohde-oids)
-          whitelist   (fn [hakukohde] (contains? hakukohteet hakukohde))]
-      (update application :hakukohde #(filter whitelist %)))
-    application))
 
 (defn- get-hakukohde-name [get-hakukohde lang-s haku-oid hakukohde-oid]
   (let [lang (keyword lang-s)]
@@ -557,7 +557,6 @@
                                     (some-> selected-hakukohde vector))]
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
-         (map (partial exclude-unselected-hakutoiveet-in-yhteishaku get-tarjonta-info get-hakukohde selected-hakukohde-oids))
          (map (partial add-hakukohde-names get-tarjonta-info get-hakukohde))
          (map (partial add-all-hakukohde-reviews get-hakukohde selected-hakukohde-oids))
          (reduce (fn [result {:keys [form] :as application}]
@@ -573,7 +572,8 @@
          (map second)
          (map-indexed (fn [sheet-idx {:keys [^String sheet-name form applications]}]
                         (let [applications-sheet (.createSheet workbook sheet-name)
-                              headers            (extract-headers applications form skip-answers?)
+                              yhteishaku? (->  (get-tarjonta-info (:haku (first applications))) :tarjonta :yhteishaku)
+                              headers            (extract-headers applications form selected-hakukohderyhma selected-hakukohde skip-answers? yhteishaku?)
                               meta-writer        (make-writer styles form-meta-sheet (inc sheet-idx))
                               header-writer      (make-writer styles applications-sheet 0)
                               form-fields-by-key (reduce #(assoc %1 (:id %2) %2)
