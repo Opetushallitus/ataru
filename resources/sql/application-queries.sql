@@ -618,9 +618,10 @@ FROM application_hakukohde_reviews
 WHERE application_key = :application_key AND requirement = :requirement AND hakukohde = :hakukohde;
 
 -- name: yesql-update-attachment-hakukohde-review!
-UPDATE application_hakukohde_attachment_reviews
-SET state = :state, modified_time = now()
-WHERE application_key = :application_key AND attachment_key = :attachment_key AND hakukohde = :hakukohde;
+INSERT INTO application_hakukohde_attachment_reviews (application_key, attachment_key, hakukohde, state)
+VALUES (:application_key, :attachment_key, :hakukohde, :state)
+ON CONFLICT (application_key, attachment_key, hakukohde)
+DO UPDATE SET state = :state, modified_time = now();
 
 -- name: yesql-get-existing-attachment-review
 SELECT *
