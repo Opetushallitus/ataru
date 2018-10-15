@@ -360,6 +360,9 @@ and (max-width: 1000px) {
 
 .application-handling__created-time-column-header {
   color: @link-color;
+  &:hover {
+    color: @selected-blue;
+  }
 }
 
 .application-handling__identification {
@@ -398,6 +401,9 @@ and (max-width: 1000px) {
   display: inline-block;
   color: @pale-blue;
   padding-left: 12px;
+  &:hover {
+    color: @selected-blue;
+  }
 }
 
 .application-handling__list-row--application-time {
@@ -642,6 +648,9 @@ and (max-width: 1000px) {
   margin-bottom: 15px;
   padding-top: 8px;
   cursor: pointer;
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .application-handling__attachment-review-toggle {
@@ -866,7 +875,7 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review-note-remove-link:hover {
-  color: @link-color;
+  color: @selected-blue;
 }
 
 .application-handling__review-note-remove-link--disabled {
@@ -925,6 +934,10 @@ and (max-width: 1000px) {
   align-items: center;
   justify-content: center;
   height: 41px;
+
+  &:hover {
+    background-color: @editor-control-button-hover-blue;
+  }
 }
 
 .application-handling__link-button[disabled] {
@@ -1076,6 +1089,10 @@ and (max-width: 1000px) {
 
 .application-handling__send-information-request-button--enabled {
   background-color: @link-color;
+
+  &:hover {
+    background-color: @editor-control-button-hover-blue;
+  }
 }
 
 .application-handling__send-information-request-button--disabled {
@@ -1764,6 +1781,9 @@ th.application__readonly-adjacent--header {
   margin-right: 20px;
   position: relative;
   flex: 0 1 300px;
+  div:hover {
+    color: @selected-blue;
+  }
 }
 
 .application__search-control-tab-selector-wrapper--search {
@@ -2225,6 +2245,9 @@ th.application__readonly-adjacent--header {
   cursor: pointer;
   margin-top: 2px;
   margin-left: 3px;
+  &:hover {
+    color: @selected-blue;
+  }
 }
 
 .application-handling__dropdown-box-closed-label {
@@ -2257,7 +2280,11 @@ th.application__readonly-adjacent--header {
 
 .application-handling__review-deactivate-toggle-slider-right {
   transform: translateX(0px);
-  background-color: @button-green;
+  background-color: @sg-color-green;
+
+  &:hover {
+    background-color: @button-green;
+  }
 }
 
 .application-handling__review-deactivate-toggle-slider--disabled {
@@ -2312,6 +2339,9 @@ th.application__readonly-adjacent--header {
 .application-handling__filters {
   position: relative;
   margin-left: 10px;
+  a:hover {
+    color: @selected-blue;
+  }
 }
 
 .application-handling__filters-popup {
