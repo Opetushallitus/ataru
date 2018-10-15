@@ -59,7 +59,7 @@
                                    (:cannot-view (fields-by-key (:key answer)))
                                    (assoc :value nil :cannot-view true)))))))
 
-(defn- merge-uneditable-answers-from-previous
+(defn- merge-unviewable-answers-from-previous
   [new-application
    old-application
    form]
@@ -69,7 +69,7 @@
         old-answers-by-key (util/group-by-first :key (:answers old-application))]
     (update new-application :answers
             (partial keep (fn [answer]
-                            (if (:cannot-edit (fields-by-key (:key answer)))
+                            (if (:cannot-view (fields-by-key (:key answer)))
                               (when-let [old-answer (old-answers-by-key (:key answer))]
                                 (assoc old-answer :label (:label answer)))
                               answer))))))
@@ -163,7 +163,7 @@
                                            (util/application-in-processing? application-hakukohde-reviews)))
         final-application             (if is-modify?
                                         (-> application
-                                            (merge-uneditable-answers-from-previous
+                                            (merge-unviewable-answers-from-previous
                                              latest-application
                                              form)
                                             (assoc :person-oid (:person-oid latest-application)))
