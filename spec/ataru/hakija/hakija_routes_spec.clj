@@ -34,9 +34,11 @@
 (def application-edited-email (assoc-in application-fixtures/person-info-form-application [:answers 2 :value] "edited@foo.com"))
 (def application-edited-ssn (assoc-in application-fixtures/person-info-form-application [:answers 8 :value] "020202A0202"))
 (def application-for-hakukohde-edited (-> application-fixtures/person-info-form-application-for-hakukohde
-                                          (assoc-in [:answers 11 :value] "SV")
                                           (assoc-in [:answers 2 :value] "edited@foo.com")
                                           (assoc-in [:answers 16 :value] ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"])))
+(def application-for-hakukohde-email-edited (-> application-fixtures/person-info-form-application-for-hakukohde
+                                                (assoc-in [:answers 2 :value] "aku@ankkalinna.com")
+                                                (assoc-in [:answers 16 :value] ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"])))
 (def application-for-hakukohde-hakukohde-order-edited (-> application-fixtures/person-info-form-application-for-hakukohde
                                                           (assoc :hakukohde [ "1.2.246.562.20.49028196524" "1.2.246.562.20.49028196523"])
                                                           (assoc-in [:answers 17 :value] [ "1.2.246.562.20.49028196524" "1.2.246.562.20.49028196523"])))
@@ -469,14 +471,20 @@
     (it "should allow application edit after grace period and only changes to limited person info"
       (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing
                     store/generate-new-application-secret (constantly "0000000022")]
-        (with-response :put resp (merge application-fixtures/person-info-form-application-for-hakukohde {:secret "0000000021"})
+        (with-response :put resp (merge application-for-hakukohde-email-edited {:secret "0000000021"})
           (should= 200 (:status resp))
           (let [id          (-> resp :body :id)
                 application (get-application-by-id id)]
             (should= "FI" (get-answer application "language"))
             (should= "aku@ankkalinna.com" (get-answer application "email"))
             (should= ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"]
-                     (get-answer application "164954b5-7b23-4774-bd44-dee14071316b")))))))
+                     (get-answer application "164954b5-7b23-4774-bd44-dee14071316b"))))))
+
+    (it "should disallow application edit after grace period to attachments"
+      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing
+                    store/generate-new-application-secret (constantly "0000000022")]
+        (with-response :put resp (merge application-fixtures/person-info-form-application-for-hakukohde {:secret "0000000021"})
+          (should= 400 (:status resp))))))
 
   (describe "Tests for a more complicated form"
     (around [spec]

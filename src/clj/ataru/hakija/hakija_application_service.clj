@@ -74,6 +74,18 @@
                                 (assoc old-answer :label (:label answer)))
                               answer))))))
 
+(defn- edited-cannot-edit-questions
+  [new-application old-application form]
+  (let [new-answers (util/group-by-first :key (:answers new-application))
+        old-answers (util/group-by-first :key (:answers old-application))]
+    (->> (:content form)
+         util/flatten-form-fields
+         (keep (fn [{:keys [id cannot-edit]}]
+                 (when (and cannot-edit
+                            (not= (:value (new-answers id))
+                                  (:value (old-answers id))))
+                   id))))))
+
 (defn- flatten-attachment-keys [application]
   (->> (:answers application)
        (filter (comp (partial = "attachment") :fieldType))
@@ -173,7 +185,12 @@
                                        (set-original-values latest-application final-application)
                                        form
                                        applied-hakukohderyhmat
-                                       (some? virkailija-secret))]
+                                       (some? virkailija-secret))
+        edited-cannot-edit-questions  (when is-modify?
+                                        (edited-cannot-edit-questions
+                                         final-application
+                                         latest-application
+                                         form))]
     (cond
       (and (some? (:virkailija-secret application))
            (nil? virkailija-secret))
@@ -193,6 +210,11 @@
       (do
         (log-late-submitted-application application now)
         {:passed? false :failures ["Application period is not open."]})
+
+      (not-empty edited-cannot-edit-questions)
+      {:passed?  false
+       :failures (into {} (map #(vector % "Cannot edit answer to question")
+                               edited-cannot-edit-questions))}
 
       (not (:passed? validation-result))
       validation-result

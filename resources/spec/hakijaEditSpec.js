@@ -90,7 +90,7 @@
 
     describe('changing values to be invalid', function () {
       before(
-        setNthFieldInputValue(1, '420noscope'), //cannot be edited, no error!
+        setNthFieldInputValue(1, '420noscope'),
         setNthFieldValue(23, 'textarea', ''),
         clickNthFieldRadio(26, 'Ensimmäinen vaihtoehto'),
         clickElement(invalidFieldsStatus),
@@ -107,7 +107,7 @@
 
     describe('change values and save', function () {
       before(
-        setNthFieldInputValue(1, 'Tokanimi'), // cannot be edited, should not be edited in virkailija edit spec.
+        setNthFieldInputValue(1, 'Etunimi'),
         setNthFieldValue(23, 'textarea', 'Muokattu vastaus'),
         clickNthFieldRadio(26, 'Toinen vaihtoehto'),
         wait.until(function () {
@@ -125,7 +125,7 @@
         console.log(displayedValues);
         var expectedValues = [
           "Etunimi Tokanimi",
-          "Tokanimi",
+          "Etunimi",
           "Sukunimi",
           "Suomi",
           "***********",
