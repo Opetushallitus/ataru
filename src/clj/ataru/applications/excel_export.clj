@@ -390,31 +390,38 @@
       (str "Liitepyyntö: " (label/get-language-label-in-preferred-order (:label element)))
       :else header)))
 
-(defn- extract-headers-from-applications [applications flat-fields pick-answers]
-  (let [hidden-answers (->> (pick-form-labels flat-fields hidden-answer?)
-                            (map first)
-                            set)]
-    (->> applications
-         (mapcat (fn [application]
+(defn- extract-headers-from-applications [applications pick-answers]
+  (->> applications
+       (mapcat (fn [application]
                    (map (fn [{:keys [key label]}] [key label])
                         (:answers application))))
-         (into {})
-         (filter (fn [[key _]]
-                   (and (pick-answers key)
-                        (not (contains? hidden-answers key))))))))
+       (into {})
+       (filter (fn [[key _]]
+                   (pick-answers key)))))
 
 (defn- extract-headers
-  [applications form selected-hakukohderyhma selected-hakukohde skip-answers? yhteishaku?]
+  [applications form selected-oids skip-answers? yhteishaku?]
   (let [flat-fields            (util/flatten-form-fields (:content form))
+        hidden-answers         (->> (pick-form-labels flat-fields hidden-answer?)
+                                    (map first)
+                                    set)
+        belongs-to             (delay (->> flat-fields
+                                           (map (fn [field] [(:id field)
+                                                             (clojure.set/union
+                                                               (set (:belongs-to-hakukohderyhma field))
+                                                               (set (:belongs-to-hakukohteet field)))]))
+                                           (into {})))
         selected-field         (fn [id]
-                                   (let [element (delay (first (filter #(= (:id %) id) flat-fields)))]
-                                     (cond
-                                       (not yhteishaku?) true
-                                       selected-hakukohde (contains? (set (:belongs-to-hakukohteet @element)) selected-hakukohde)
-                                       selected-hakukohderyhma (contains? (set (:belongs-to-hakukohderyhma @element)) selected-hakukohderyhma)
-                                       :else true)))
+                                   (cond
+                                     (not yhteishaku?) true
+                                     (not-empty selected-oids) (-> (get @belongs-to id)
+                                                                   (clojure.set/intersection selected-oids)
+                                                                   (not-empty))
+                                     yhteishaku? false
+                                     :else true))
         pick-answers           (fn [id]
                                    (or (and (not skip-answers?)
+                                            (not (contains? hidden-answers key))
                                             (selected-field id))
                                        (contains? answers-to-always-include id)))
         labels-in-form         (pick-form-labels flat-fields
@@ -424,7 +431,6 @@
                                  (remove #(contains? form-ids (first %))
                                          (extract-headers-from-applications
                                           applications
-                                          flat-fields
                                           pick-answers)))
         all-labels             (concat labels-in-form labels-in-applications)]
     (for [[idx [id header]] (map vector (range) all-labels)
@@ -515,13 +521,14 @@
                                 all-reviews)]
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
-(defn hakukohderyhma-to-hakukohde-oids [applications get-hakukohde selected-hakukohderyhma]
-  (if selected-hakukohderyhma
-    (let [all-hakukohteet (flatten (for [[haku applications] (group-by :haku applications)]
-                                     (map #(get-hakukohde haku %) (set (mapcat :hakukohde applications)))))]
-      (->> all-hakukohteet
-           (filter #(contains? (set (:hakukohderyhmat %)) selected-hakukohderyhma))
-           (map :oid)))))
+(defn hakukohde-to-hakukohderyhma-oids [all-hakukohteet selected-hakukohde]
+  (some->> (first (filter #(= selected-hakukohde (:oid %)) @all-hakukohteet))
+           :hakukohderyhmat))
+
+(defn hakukohderyhma-to-hakukohde-oids [all-hakukohteet selected-hakukohderyhma]
+  (->> @all-hakukohteet
+       (filter #(contains? (set (:hakukohderyhmat %)) selected-hakukohderyhma))
+       (map :oid)))
 
 (defn export-applications
   [applications
@@ -535,25 +542,33 @@
    organization-service
    ohjausparametrit-service]
   (let [[^XSSFWorkbook workbook styles] (create-workbook-and-styles)
-        form-meta-fields        (indexed-meta-fields form-meta-fields)
-        form-meta-sheet         (create-form-meta-sheet workbook styles form-meta-fields lang)
-        application-meta-fields (indexed-meta-fields application-meta-fields)
-        get-form-by-id          (memoize form-store/fetch-by-id)
-        get-latest-form-by-key  (memoize form-store/fetch-by-key)
-        get-koodisto-options    (memoize koodisto/get-koodisto-options)
-        get-tarjonta-info       (memoize (fn [haku-oid]
-                                             (tarjonta-parser/parse-tarjonta-info-by-haku
-                                              tarjonta-service
-                                              organization-service
-                                              ohjausparametrit-service
-                                              haku-oid)))
-        get-hakukohde           (memoize (fn [haku-oid hakukohde-oid]
-                                             (->> (get-tarjonta-info haku-oid)
-                                                  :tarjonta
-                                                  :hakukohteet
-                                                  (some #(when (= hakukohde-oid (:oid %)) %)))))
-        selected-hakukohde-oids (or (hakukohderyhma-to-hakukohde-oids applications get-hakukohde selected-hakukohderyhma)
-                                    (some-> selected-hakukohde vector))]
+        form-meta-fields             (indexed-meta-fields form-meta-fields)
+        form-meta-sheet              (create-form-meta-sheet workbook styles form-meta-fields lang)
+        application-meta-fields      (indexed-meta-fields application-meta-fields)
+        get-form-by-id               (memoize form-store/fetch-by-id)
+        get-latest-form-by-key       (memoize form-store/fetch-by-key)
+        get-koodisto-options         (memoize koodisto/get-koodisto-options)
+        get-tarjonta-info            (memoize (fn [haku-oid]
+                                                  (tarjonta-parser/parse-tarjonta-info-by-haku
+                                                   tarjonta-service
+                                                   organization-service
+                                                   ohjausparametrit-service
+                                                   haku-oid)))
+        get-hakukohde                (memoize (fn [haku-oid hakukohde-oid]
+                                                  (->> (get-tarjonta-info haku-oid)
+                                                       :tarjonta
+                                                       :hakukohteet
+                                                       (some #(when (= hakukohde-oid (:oid %)) %)))))
+        all-hakukohteet              (delay (->> (group-by :haku applications)
+                                                 (mapcat (fn [[haku applications]]
+                                                             (map #(get-hakukohde haku %) (set (mapcat :hakukohde applications)))))))
+        selected-hakukohde-oids      (or (some-> selected-hakukohde vector)
+                                         (and selected-hakukohderyhma
+                                              (hakukohderyhma-to-hakukohde-oids all-hakukohteet selected-hakukohderyhma)))
+        selected-hakukohderyhma-oids (or (some-> selected-hakukohderyhma vector)
+                                         (and selected-hakukohde
+                                              (hakukohde-to-hakukohderyhma-oids all-hakukohteet selected-hakukohde)))
+        selected-oids                (clojure.set/union (set selected-hakukohde-oids) (set selected-hakukohderyhma-oids))]
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
          (map (partial add-hakukohde-names get-tarjonta-info get-hakukohde))
@@ -572,7 +587,7 @@
          (map-indexed (fn [sheet-idx {:keys [^String sheet-name form applications]}]
                         (let [applications-sheet (.createSheet workbook sheet-name)
                               yhteishaku? (->  (get-tarjonta-info (:haku (first applications))) :tarjonta :yhteishaku)
-                              headers            (extract-headers applications form selected-hakukohderyhma selected-hakukohde skip-answers? yhteishaku?)
+                              headers            (extract-headers applications form selected-oids skip-answers? yhteishaku?)
                               meta-writer        (make-writer styles form-meta-sheet (inc sheet-idx))
                               header-writer      (make-writer styles applications-sheet 0)
                               form-fields-by-key (reduce #(assoc %1 (:id %2) %2)
