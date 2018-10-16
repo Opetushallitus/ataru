@@ -895,13 +895,15 @@
 
 (reg-event-fx
   :application/add-single-attachment-resumable
-  (fn [_ [_ field-descriptor component-id attachment-idx file retries question-group-idx]]
+  (fn [_ [_ field-descriptor attachment-idx file retries question-group-idx]]
     ; TODO fx?
     (resumable-upload/upload-file
       "/hakemus/api/files/resumable"
       file
-      [:application/handle-attachment-upload field-descriptor component-id attachment-idx question-group-idx]
-      [:application/handle-attachment-upload-error field-descriptor component-id attachment-idx name file (inc retries) question-group-idx])))
+      {:handler          [:application/handle-attachment-upload field-descriptor attachment-idx question-group-idx]
+       :error-handler    [:application/handle-attachment-upload-error field-descriptor attachment-idx name file (inc retries) question-group-idx]
+       :progress-handler [:application/handle-attachment-progress-resumable field-descriptor attachment-idx question-group-idx]
+       :started-handler  [:application/handle-attachment-upload-started field-descriptor attachment-idx question-group-idx]})))
 
 (reg-event-fx
   :application/add-attachments
@@ -942,7 +944,7 @@
                                                    new-attachments))))
        :dispatch-n (keep-indexed (fn [idx file]
                                    (when (<= (.-size file) max-attachment-size-bytes)
-                                     [:application/add-single-attachment
+                                     [:application/add-single-attachment-resumable
                                       field-descriptor
                                       (+ (count existing-attachments) idx)
                                       file
@@ -1038,7 +1040,7 @@
                           :file-type-forbidden)]
       (if (and rate-limited? (< retries 3))
         {:db               db
-         :delayed-dispatch {:dispatch-vec [:application/add-single-attachment field-descriptor attachment-idx file retries question-group-idx]
+         :delayed-dispatch {:dispatch-vec [:application/add-single-attachment-resumable field-descriptor attachment-idx file retries question-group-idx]
                             :timeout      (+ 2000 (rand-int 2000))}}
         {:db (-> db
                  (update-in (if question-group-idx

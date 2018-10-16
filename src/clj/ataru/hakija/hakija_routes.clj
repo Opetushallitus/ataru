@@ -237,9 +237,8 @@
                        file-size :- s/Int
                        file-id :- s/Str
                        file-name :- s/Str]
-        (if (resumable-file/file-part-exists? file-id file-name file-size file-part-number)
-          (response/ok {})
-          (response/not-found)))
+        :return {:file-exists s/Bool}
+        (response/ok {:file-exists (resumable-file/file-part-exists? file-id file-name file-size file-part-number)}))
       (api/POST "/resumable" []
         :summary "Upload file part"
         :multipart-params [file-part :- upload/TempFileUpload
