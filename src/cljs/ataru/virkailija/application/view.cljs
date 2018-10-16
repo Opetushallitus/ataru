@@ -1598,7 +1598,7 @@
                (if @show-attachment-review?
                  [:span [:i.zmdi.zmdi-chevron-right] [:i.zmdi.zmdi-chevron-right]]
                  [:span [:i.zmdi.zmdi-chevron-left] [:i.zmdi.zmdi-chevron-left]])]
-              (gstring/format " %s (%d)"
+              (gstring/format "%s (%d)"
                               (get-virkailija-translation :attachments)
                               (count @attachment-reviews-for-hakukohde))])
            [application-hakukohde-review-inputs review-states/hakukohde-review-types]
