@@ -420,10 +420,10 @@
                                      yhteishaku? false
                                      :else true))
         pick-answers           (fn [id]
-                                   (or (and (not skip-answers?)
-                                            (not (contains? hidden-answers key))
-                                            (selected-field id))
-                                       (contains? answers-to-always-include id)))
+                                   (and (or (and (not skip-answers?)
+                                                 (selected-field id))
+                                            (contains? answers-to-always-include id))
+                                        (not (contains? hidden-answers id))))
         labels-in-form         (pick-form-labels flat-fields
                                                  #(and (form-label? %)
                                                        (pick-answers (:id %))))
