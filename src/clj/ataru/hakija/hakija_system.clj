@@ -25,23 +25,23 @@
   ([http-port repl-port]
    (apply
     component/system-map
-    :cache-service (component/using {} (mapv (comp keyword :name) caches))
+
+    :organization-service (organization-service/new-organization-service)
 
     :tarjonta-service (component/using
                        (tarjonta-service/new-tarjonta-service)
-                       [:cache-service])
-
-    :organization-service (component/using
-                           (organization-service/new-organization-service)
-                           [:cache-service])
+                       [:koulutus-cache
+                        :hakukohde-cache
+                        :haku-cache
+                        :hakukohde-search-cache])
 
     :ohjausparametrit-service (component/using
                                (ohjausparametrit-service/new-ohjausparametrit-service)
-                               [:cache-service])
+                               [:ohjausparametrit-cache])
 
     :person-service (component/using
                      (person-service/new-person-service)
-                     [:cache-service])
+                     [:henkilo-cache])
 
     :suoritus-service (suoritus-service/new-suoritus-service)
 
@@ -79,5 +79,6 @@
     :redis (redis/map->Redis {})
 
     (mapcat (fn [cache]
-              [(keyword (:name cache)) (component/using cache [:redis])])
+              [(keyword (str (:name cache) "-cache"))
+               (component/using cache [:redis])])
             caches))))

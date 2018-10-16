@@ -44,6 +44,11 @@
       applications)))
 
 (defn get-application-stats
-  [cache-service time-period]
-  (let [cache-key (keyword (str "statistics-" (name time-period)))]
-    (cache/cache-get cache-service cache-key time-period)))
+  [statistics-month-cache
+   statistics-week-cache
+   statistics-day-cache
+   time-period]
+  (case time-period
+    :month (cache/get-from statistics-month-cache :month)
+    :week  (cache/get-from statistics-week-cache :week)
+    :day   (cache/get-from statistics-day-cache :day)))

@@ -5,11 +5,11 @@
             [ataru.ohjausparametrit.mock-ohjausparametrit-service :refer [->MockOhjausparametritService]]
             [ataru.ohjausparametrit.ohjausparametrit-client :as client]))
 
-(defrecord CachedOhjausparametritService [cache-service]
+(defrecord CachedOhjausparametritService [ohjausparametrit-cache]
   OhjausparametritService
 
   (get-parametri [_ haku-oid]
-    (cache/cache-get cache-service :ohjausparametrit haku-oid)))
+    (cache/get-from ohjausparametrit-cache haku-oid)))
 
 (defn new-ohjausparametrit-service []
   (if (-> config :dev :fake-dependencies)

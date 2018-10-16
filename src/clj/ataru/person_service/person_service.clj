@@ -20,7 +20,7 @@
 
   (linked-oids [this oid]))
 
-(defrecord IntegratedPersonService [cache-service]
+(defrecord IntegratedPersonService [henkilo-cache]
   component/Lifecycle
 
   (start [this]
@@ -42,7 +42,7 @@
 
   (get-persons [{:keys [oppijanumerorekisteri-cas-client]} oids]
     (if (seq oids)
-      (let [persons-from-cache  (cache/cache-get-many cache-service :henkilo oids)
+      (let [persons-from-cache  (cache/get-many-from henkilo-cache oids)
             uncached-oids       (clojure.set/difference
                                  (set oids)
                                  (set (keys persons-from-cache)))
@@ -50,15 +50,15 @@
         (log/info "Using" (count persons-from-cache) "persons from cache")
         (when (not-empty persons-from-client)
           (log/info "Caching" (count persons-from-client) "persons")
-          (cache/cache-put-many cache-service :henkilo persons-from-client))
+          (cache/put-many-to henkilo-cache persons-from-client))
         (merge persons-from-cache persons-from-client))
       {}))
 
   (get-person [{:keys [oppijanumerorekisteri-cas-client]} oid]
-    (cache/cache-get-from-or-fetch
-      cache-service
-      :henkilo
-      (partial person-client/get-person oppijanumerorekisteri-cas-client) oid))
+    (cache/get-from-or-fetch
+     henkilo-cache
+     (partial person-client/get-person oppijanumerorekisteri-cas-client)
+     oid))
 
   (linked-oids [{:keys [oppijanumerorekisteri-cas-client]} oid]
     (person-client/linked-oids oppijanumerorekisteri-cas-client oid)))

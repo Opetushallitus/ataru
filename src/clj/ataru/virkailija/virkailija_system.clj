@@ -23,23 +23,22 @@
    (apply
     component/system-map
 
-    :organization-service (component/using
-                           (organization-service/new-organization-service)
-                           [:cache-service])
-
-    :cache-service (component/using {} (mapv (comp keyword :name) caches))
+    :organization-service (organization-service/new-organization-service)
 
     :virkailija-tarjonta-service (component/using
                                   (tarjonta-service/new-virkailija-tarjonta-service)
-                                  [:organization-service :cache-service])
+                                  [:forms-in-use-cache :organization-service])
 
     :tarjonta-service (component/using
                        (tarjonta-service/new-tarjonta-service)
-                       [:cache-service])
+                       [:koulutus-cache
+                        :hakukohde-cache
+                        :haku-cache
+                        :hakukohde-search-cache])
 
     :ohjausparametrit-service (component/using
                                (ohjausparametrit-service/new-ohjausparametrit-service)
-                               [:cache-service])
+                               [:ohjausparametrit-cache])
 
     :kayttooikeus-service (if (-> config :dev :fake-dependencies)
                             (kayttooikeus-service/->FakeKayttooikeusService)
@@ -47,18 +46,18 @@
 
     :person-service (component/using
                      (person-service/new-person-service)
-                     [:cache-service])
+                     [:henkilo-cache])
 
     :handler (component/using
               (virkailija-routes/new-handler)
-              [:organization-service
-               :virkailija-tarjonta-service
-               :tarjonta-service
-               :job-runner
-               :ohjausparametrit-service
-               :cache-service
-               :person-service
-               :kayttooikeus-service])
+              (vec (concat [:organization-service
+                            :virkailija-tarjonta-service
+                            :tarjonta-service
+                            :job-runner
+                            :ohjausparametrit-service
+                            :person-service
+                            :kayttooikeus-service]
+                           (map #(keyword (str (:name %) "-cache")) caches))))
 
     :server-setup {:port      http-port
                    :repl-port repl-port}
@@ -72,5 +71,6 @@
     :redis (redis/map->Redis {})
 
     (mapcat (fn [cache]
-              [(keyword (:name cache)) (component/using cache [:redis])])
+              [(keyword (str (:name cache) "-cache"))
+               (component/using cache [:redis])])
             caches))))
