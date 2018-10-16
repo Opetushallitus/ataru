@@ -20,66 +20,64 @@
 (defn new-system
   ([]
    (new-system
-     (Integer/parseInt (get env :ataru-http-port "8351"))
-     (Integer/parseInt (get env :ataru-repl-port "3335"))))
+    (Integer/parseInt (get env :ataru-http-port "8351"))
+    (Integer/parseInt (get env :ataru-repl-port "3335"))))
   ([http-port repl-port]
    (apply
-     component/system-map
-     :cache-service (component/using {} (mapv (comp keyword :name) caches))
+    component/system-map
+    :cache-service (component/using {} (mapv (comp keyword :name) caches))
 
-     :tarjonta-service (component/using
-                         (tarjonta-service/new-tarjonta-service)
-                         [:cache-service])
-
-     :organization-service (component/using
-                             (organization-service/new-organization-service)
-                             [:cache-service])
-
-     :ohjausparametrit-service (component/using
-                                 (ohjausparametrit-service/new-ohjausparametrit-service)
-                                 [:cache-service])
-
-     :person-service (component/using
-                       (person-service/new-person-service)
+    :tarjonta-service (component/using
+                       (tarjonta-service/new-tarjonta-service)
                        [:cache-service])
 
-     :suoritus-service (suoritus-service/new-suoritus-service)
+    :organization-service (component/using
+                           (organization-service/new-organization-service)
+                           [:cache-service])
 
-     :s3-client (s3-client/new-client)
+    :ohjausparametrit-service (component/using
+                               (ohjausparametrit-service/new-ohjausparametrit-service)
+                               [:cache-service])
 
-     :temp-file-store (if (get-in config [:aws :temp-files])
-                        (component/using
-                          (s3-temp-file-store/new-store)
-                          [:s3-client])
-                        (filesystem-temp-file-store/new-store))
+    :person-service (component/using
+                     (person-service/new-person-service)
+                     [:cache-service])
 
-     :handler (component/using
-                (handler/new-handler)
-                [:tarjonta-service
-                 :job-runner
-                 :organization-service
-                 :ohjausparametrit-service
-                 :person-service
-                 :temp-file-store])
+    :suoritus-service (suoritus-service/new-suoritus-service)
 
-     :server-setup {:port      http-port
-                    :repl-port repl-port}
+    :s3-client (s3-client/new-client)
 
-     :server (component/using
-               (server/new-server)
-               [:server-setup :handler])
+    :temp-file-store (if (get-in config [:aws :temp-files])
+                       (component/using
+                        (s3-temp-file-store/new-store)
+                        [:s3-client])
+                       (filesystem-temp-file-store/new-store))
 
-     :job-runner (component/using
-                   (job/new-job-runner hakija-jobs/job-definitions)
-                   [:ohjausparametrit-service
-                    :person-service
-                    :tarjonta-service
-                    :suoritus-service])
+    :handler (component/using
+              (handler/new-handler)
+              [:tarjonta-service
+               :job-runner
+               :organization-service
+               :ohjausparametrit-service
+               :person-service
+               :temp-file-store])
 
-     :redis (redis/map->Redis {})
+    :server-setup {:port      http-port
+                   :repl-port repl-port}
 
-     (mapcat (fn [cache]
-               [(keyword (:name cache)) (component/using cache [:redis])])
-             caches)
+    :server (component/using
+             (server/new-server)
+             [:server-setup :handler])
 
-)))
+    :job-runner (component/using
+                 (job/new-job-runner hakija-jobs/job-definitions)
+                 [:ohjausparametrit-service
+                  :person-service
+                  :tarjonta-service
+                  :suoritus-service])
+
+    :redis (redis/map->Redis {})
+
+    (mapcat (fn [cache]
+              [(keyword (:name cache)) (component/using cache [:redis])])
+            caches))))

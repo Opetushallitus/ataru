@@ -17,60 +17,60 @@
 (defn new-system
   ([]
    (new-system
-     (Integer/parseInt (get env :ataru-http-port "8350"))
-     (Integer/parseInt (get env :ataru-repl-port "3333"))))
+    (Integer/parseInt (get env :ataru-http-port "8350"))
+    (Integer/parseInt (get env :ataru-repl-port "3333"))))
   ([http-port repl-port]
    (apply
-     component/system-map
+    component/system-map
 
-     :organization-service (component/using
-                             (organization-service/new-organization-service)
-                             [:cache-service])
+    :organization-service (component/using
+                           (organization-service/new-organization-service)
+                           [:cache-service])
 
-     :cache-service (component/using {} (mapv (comp keyword :name) caches))
+    :cache-service (component/using {} (mapv (comp keyword :name) caches))
 
-     :virkailija-tarjonta-service (component/using
-                                    (tarjonta-service/new-virkailija-tarjonta-service)
-                                    [:organization-service :cache-service])
+    :virkailija-tarjonta-service (component/using
+                                  (tarjonta-service/new-virkailija-tarjonta-service)
+                                  [:organization-service :cache-service])
 
-     :tarjonta-service (component/using
-                         (tarjonta-service/new-tarjonta-service)
-                         [:cache-service])
-
-     :ohjausparametrit-service (component/using
-                                 (ohjausparametrit-service/new-ohjausparametrit-service)
-                                 [:cache-service])
-
-     :kayttooikeus-service (if (-> config :dev :fake-dependencies)
-                             (kayttooikeus-service/->FakeKayttooikeusService)
-                             (kayttooikeus-service/->HttpKayttooikeusService nil))
-
-     :person-service (component/using
-                       (person-service/new-person-service)
+    :tarjonta-service (component/using
+                       (tarjonta-service/new-tarjonta-service)
                        [:cache-service])
 
-     :handler (component/using
-                (virkailija-routes/new-handler)
-                [:organization-service
-                 :virkailija-tarjonta-service
-                 :tarjonta-service
-                 :job-runner
-                 :ohjausparametrit-service
-                 :cache-service
-                 :person-service
-                 :kayttooikeus-service])
+    :ohjausparametrit-service (component/using
+                               (ohjausparametrit-service/new-ohjausparametrit-service)
+                               [:cache-service])
 
-     :server-setup {:port      http-port
-                    :repl-port repl-port}
+    :kayttooikeus-service (if (-> config :dev :fake-dependencies)
+                            (kayttooikeus-service/->FakeKayttooikeusService)
+                            (kayttooikeus-service/->HttpKayttooikeusService nil))
 
-     :server (component/using
-               (server/new-server)
-               [:server-setup :handler])
+    :person-service (component/using
+                     (person-service/new-person-service)
+                     [:cache-service])
 
-     :job-runner (job/new-job-runner virkailija-jobs/job-definitions)
+    :handler (component/using
+              (virkailija-routes/new-handler)
+              [:organization-service
+               :virkailija-tarjonta-service
+               :tarjonta-service
+               :job-runner
+               :ohjausparametrit-service
+               :cache-service
+               :person-service
+               :kayttooikeus-service])
 
-     :redis (redis/map->Redis {})
+    :server-setup {:port      http-port
+                   :repl-port repl-port}
 
-     (mapcat (fn [cache]
-               [(keyword (:name cache)) (component/using cache [:redis])])
-             caches))))
+    :server (component/using
+             (server/new-server)
+             [:server-setup :handler])
+
+    :job-runner (job/new-job-runner virkailija-jobs/job-definitions)
+
+    :redis (redis/map->Redis {})
+
+    (mapcat (fn [cache]
+              [(keyword (:name cache)) (component/using cache [:redis])])
+            caches))))
