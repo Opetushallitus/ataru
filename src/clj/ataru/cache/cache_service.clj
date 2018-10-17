@@ -1,4 +1,9 @@
-(ns ataru.cache.cache-service)
+(ns ataru.cache.cache-service
+  (:refer-clojure :exclude [load]))
+
+(defprotocol CacheLoader
+  (load [this key])
+  (load-many [this keys]))
 
 (defprotocol Cache
   (get-from [this key])
