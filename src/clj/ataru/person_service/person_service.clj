@@ -33,25 +33,9 @@
      oppijanumerorekisteri-cas-client
      (orpe/extract-person-from-application application)))
 
-  (get-persons [_ oids]
-    (if (seq oids)
-      (let [persons-from-cache  (cache/get-many-from henkilo-cache oids)
-            uncached-oids       (clojure.set/difference
-                                 (set oids)
-                                 (set (keys persons-from-cache)))
-            persons-from-client (person-client/get-persons oppijanumerorekisteri-cas-client uncached-oids)]
-        (log/info "Using" (count persons-from-cache) "persons from cache")
-        (when (not-empty persons-from-client)
-          (log/info "Caching" (count persons-from-client) "persons")
-          (cache/put-many-to henkilo-cache persons-from-client))
-        (merge persons-from-cache persons-from-client))
-      {}))
+  (get-persons [_ oids] (cache/get-many-from henkilo-cache oids))
 
-  (get-person [_ oid]
-    (cache/get-from-or-fetch
-     henkilo-cache
-     (partial person-client/get-person oppijanumerorekisteri-cas-client)
-     oid))
+  (get-person [_ oid] (cache/get-from henkilo-cache oid))
 
   (linked-oids [_ oid]
     (person-client/linked-oids oppijanumerorekisteri-cas-client oid)))

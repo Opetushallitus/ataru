@@ -2,6 +2,7 @@
   (:require [ataru.cache.redis-cache :as redis]
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
             [ataru.ohjausparametrit.ohjausparametrit-client :as ohjausparametrit-client]
+            [ataru.person-service.person-client :as person-client]
             [ataru.statistics.statistics-service :as s]
             [com.stuartsierra.component :as component])
   (:import java.util.concurrent.TimeUnit))
@@ -44,12 +45,17 @@
        :ttl    [3 TimeUnit/DAYS]
        :period [15 TimeUnit/MINUTES]})
      [:redis])]
+   [:henkilo-cache-loader
+    (component/using
+     (person-client/map->PersonCacheLoader {})
+     [:oppijanumerorekisteri-cas-client])]
    [:henkilo-cache
     (component/using
-     (redis/map->MappedCache
-      {:name "henkilo"
-       :ttl  [1 TimeUnit/HOURS]})
-     [:redis])]
+     (redis/map->Cache
+      {:name            "henkilo"
+       :ttl-after-write [1 TimeUnit/HOURS]})
+     {:redis  :redis
+      :loader :henkilo-cache-loader})]
    [:hakukohde-search-cache
     (component/using
      (redis/map->BasicCache
