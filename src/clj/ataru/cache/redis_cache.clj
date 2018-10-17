@@ -201,3 +201,132 @@
       (when (not= "0" cursor)
         (recur (wcar (:connection-opts redis)
                      (car/scan cursor :match (str name "_*"))))))))
+
+(defn- ->cache-key
+  [name key]
+  (str "ataru:cache:item:" name ":" key))
+
+(defn- ->lock-key
+  [name lock-name]
+  (str "ataru:cache:lock:" name ":" lock-name))
+
+(defn- ->set-command
+  [name key value ttl]
+  (let [[ttl timeunit] ttl]
+    (car/set (->cache-key name key) value :px (.toMillis timeunit ttl))))
+
+(defn- redis-set
+  [redis name key value ttl]
+  (when (some? value)
+    (wcar (:connection-opts redis)
+          (->set-command name key value ttl)))
+  value)
+
+(defn- redis-get
+  [redis name key ttl-after-read]
+  (let [value (wcar (:connection-opts redis)
+                    (car/get (->cache-key name key)))]
+    (if (and (some? ttl-after-read) (some? value))
+      (redis-set redis name key value ttl-after-read)
+      value)))
+
+(defn- redis-scan
+  [redis name cursor]
+  (wcar (:connection-opts redis)
+        (car/scan cursor :match (->cache-key name "*"))))
+
+(defn- redis-mset
+  [redis name m ttl]
+  (doseq [chunk (partition 5000 5000 nil m)]
+    (wcar (:connection-opts redis)
+          (mapv #(->set-command name (first %) (second %) ttl)
+                chunk)))
+  m)
+
+(defn- redis-mget
+  [redis name keys ttl-after-read]
+  (let [from-cache (mapcat (fn [keys]
+                             (map vector
+                                  keys
+                                  (wcar (:connection-opts redis)
+                                        (apply car/mget (map #(->cache-key name %) keys)))))
+                           (partition 5000 5000 nil keys))
+        hits       (filter #(some? (second %)) from-cache)]
+    (when (some? ttl-after-read)
+      (redis-mset redis name hits ttl-after-read))
+    {:hits   (into {} hits)
+     :misses (keep #(when (nil? (second %)) (first %)) from-cache)}))
+
+(defn- redis-with-lock
+  [redis name lock-name timeout-ms wait-ms thunk]
+  (let [l-name (->lock-key name lock-name)
+        result (carlocks/with-lock
+                 (:connection-opts redis)
+                 l-name
+                 timeout-ms wait-ms
+                 (thunk))]
+    (if (some? result)
+      (:result result)
+      (do (warn (str "Failed to acquire lock " l-name " in " wait-ms " ms"))
+          (thunk)))))
+
+(defrecord Cache [redis
+                  loader
+                  name
+                  ttl-after-read
+                  ttl-after-write]
+  component/Lifecycle
+
+  (start [this] this)
+  (stop [this] this)
+
+  cache/Cache
+
+  (get-from [this key]
+    (try
+      (let [from-cache (redis-get redis name key ttl-after-read)]
+        (if (some? from-cache)
+          from-cache
+          (redis-with-lock
+           redis name (str "single:" key)
+           (.toMillis TimeUnit/MINUTES 2) (.toMillis TimeUnit/MINUTES 2)
+           (fn []
+             (let [from-cache (redis-get redis name key ttl-after-read)]
+               (if (some? from-cache)
+                 from-cache
+                 (redis-set redis name key (cache/load loader key) ttl-after-write)))))))
+      (catch Exception e
+        (error e "Error while get from Redis")
+        (cache/load loader key))))
+
+  (get-many-from [this keys]
+    (try
+      (let [{:keys [hits misses]} (redis-mget redis name keys ttl-after-read)]
+        (if (empty? misses)
+          hits
+          (merge hits
+                 (redis-with-lock
+                  redis name "many"
+                  (.toMillis TimeUnit/MINUTES 2) (.toMillis TimeUnit/MINUTES 2)
+                  (fn []
+                    (let [{:keys [hits misses]} (redis-mget redis name keys ttl-after-read)]
+                      (if (empty? misses)
+                        hits
+                        (merge hits (redis-mset redis name (cache/load-many loader misses) ttl-after-write)))))))))
+      (catch Exception e
+        (error e "Error while get-many from Redis")
+        (cache/load-many loader keys))))
+
+  (put-to [_ key value]
+    (redis-set redis name key value ttl-after-write))
+
+  (remove-from [_ key]
+    (wcar (:connection-opts redis)
+          (car/del (->cache-key name key))))
+
+  (clear-all [_]
+    (loop [[cursor keys] (redis-scan redis name 0)]
+      (wcar (:connection-opts redis)
+            (mapv car/del keys))
+      (when (not= "0" cursor)
+        (recur (redis-scan redis name cursor))))))
