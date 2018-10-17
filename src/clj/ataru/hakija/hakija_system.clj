@@ -85,7 +85,4 @@
 
     :redis (redis/map->Redis {})
 
-    (mapcat (fn [cache]
-              [(keyword (str (:name cache) "-cache"))
-               (component/using cache [:redis])])
-            caches))))
+    (mapcat identity caches))))

@@ -64,7 +64,7 @@
                             :ohjausparametrit-service
                             :person-service
                             :kayttooikeus-service]
-                           (map #(keyword (str (:name %) "-cache")) caches))))
+                           (map first caches))))
 
     :server-setup {:port      http-port
                    :repl-port repl-port}
@@ -77,7 +77,4 @@
 
     :redis (redis/map->Redis {})
 
-    (mapcat (fn [cache]
-              [(keyword (str (:name cache) "-cache"))
-               (component/using cache [:redis])])
-            caches))))
+    (mapcat identity caches))))
