@@ -1137,7 +1137,7 @@
             :class       (when-not @valid "editor-form__text-field--invalid")
             :value       @deadline-value
             :on-blur     format-deadline
-            :placeholder "hh:mm pp.kk.vvvv"
+            :placeholder "pp.kk.vvvv hh:mm"
             :on-change   update-deadline}]]
          [:div.editor-form__checkbox-wrapper
           [required-checkbox path content]]]
