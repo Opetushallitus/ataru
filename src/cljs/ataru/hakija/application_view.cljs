@@ -10,6 +10,7 @@
             [cljs-time.core :refer [to-default-time-zone now after?]]
             [cljs-time.format :refer [unparse unparse-local formatter]]
             [cljs-time.coerce :refer [from-long]]
+            [ataru.virkailija.temporal :refer [millis->str]]
             [goog.string :as gstring]
             [reagent.ratom :refer [reaction]]
             [reagent.core :as r]))
@@ -18,15 +19,6 @@
   {:fi "Suomeksi"
    :sv "På svenska"
    :en "In English"})
-
-(def date-format (formatter "d.M.yyyy HH:mm" "Europe/Helsinki"))
-
-(defn- millis->str
-  [millis]
-  (->> millis
-    (from-long)
-    (to-default-time-zone)
-    (unparse-local date-format)))
 
 (defn application-header []
   (let [form                               @(subscribe [:application/form])
@@ -38,24 +30,7 @@
         cannot-edit-because-in-processing? @(subscribe [:application/cannot-edit-because-in-processing?])
         secret                             (:modify (util/extract-query-params))
         virkailija?                        @(subscribe [:application/virkailija?])
-        longest-open                       (->> (get-in form [:tarjonta :hakukohteet])
-                                                (map :hakuaika)
-                                                (filter :on)
-                                                (sort-by :end >)
-                                                first)
-        next-open                          (->> (get-in form [:tarjonta :hakukohteet])
-                                                (map :hakuaika)
-                                                (remove :on)
-                                                (filter #(after? (from-long (:start %)) (now)))
-                                                (sort-by :start <)
-                                                first)
-        last-open                          (->> (get-in form [:tarjonta :hakukohteet])
-                                                (map :hakuaika)
-                                                (sort-by :end >)
-                                                first)
-        apply-dates                        (when-let [hakuaika (or longest-open
-                                                                   next-open
-                                                                   last-open)]
+        apply-dates                        (when-let [hakuaika @(subscribe [:application/haku-aika])]
                                              (if (:jatkuva-haku? hakuaika)
                                                (get-translation :continuous-period)
                                                (str (get-translation :application-period)

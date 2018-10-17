@@ -12,6 +12,7 @@
             [clj-time.coerce :as t]
             [clj-time.format :as f]
             [schema.core :as s]
+            [ataru.hakuaika :refer [select-hakuaika-for-field attachment-edit-end]]
             [ataru.hakija.form-role :as form-role]
             [ataru.component-data.component :as component]
             [medley.core :refer [find-first]]
@@ -55,28 +56,6 @@
               (fn [content]
                 (clojure.walk/prewalk (set-submit-multiple-and-yhteishaku-if-ssn-or-email-field multiple? yhteishaku? haku-oid) content))))))
 
-(defn- attachment-modify-grace-period
-  [hakuaika]
-  (or (:attachment-modify-grace-period-days hakuaika)
-      (-> config
-        :public-config
-        (get :attachment-modify-grace-period-days 14))))
-
-(defn- select-first-ongoing-hakuaika-or-hakuaika-with-last-ending [hakuajat]
-  (if-let [ongoing-hakuaika (first (filter :on hakuajat))]
-    ongoing-hakuaika
-    (first (sort-by :end > (filter :end hakuajat)))))
-
-(defn- select-hakuaika-for-field [field hakukohteet]
-  (let [field-hakukohde-and-group-oids (set (concat (:belongs-to-hakukohteet field)
-                                                    (:belongs-to-hakukohderyhma field)))
-        relevant-hakukohteet (cond->> hakukohteet
-                               (not-empty field-hakukohde-and-group-oids)
-                               (filter #(not-empty (clojure.set/intersection field-hakukohde-and-group-oids
-                                                                  (set (cons (:oid %) (:hakukohderyhmat %)))))))]
-    (select-first-ongoing-hakuaika-or-hakuaika-with-last-ending
-     (map :hakuaika relevant-hakukohteet))))
-
 (defn- custom-deadline [field]
   (get-in field [:params :deadline]))
 
@@ -90,7 +69,9 @@
   (let [hakuaika            (select-hakuaika-for-field field hakukohteet)
         hakuaika-start      (some-> hakuaika :start t/from-long)
         hakuaika-end        (some-> hakuaika :end t/from-long)
-        attachment-edit-end (some-> hakuaika-end (time/plus (time/days (attachment-modify-grace-period hakuaika))))
+        attachment-edit-end (attachment-edit-end hakuaika (-> config
+                                                              :public-config
+                                                              (get :attachment-modify-grace-period-days 14)))
         hakukierros-end     (some-> hakuaika :hakukierros-end t/from-long)
         after?              (fn [t] (or (nil? t)
                                         (time/after? (time/now) t)))
@@ -105,11 +86,6 @@
                  (and (before? hakukierros-end)
                       (contains? editing-allowed-person-info-field-ids
                         (keyword (:id field)))))))))
-
-(defn- human-readable-deadline [field hakukohteet roles application-in-processing-state?]
-  (if-let [dl (custom-deadline field)]
-    dl
-    nil))
 
 (defn- uneditable?
   [field hakukohteet roles application-in-processing-state?]
@@ -141,13 +117,8 @@
                                         (uneditable? field hakukohteet roles application-in-processing-state?))
                        field        (assoc field
                                            :cannot-view cannot-view?
-                                           :cannot-edit cannot-edit?)
-                       deadline     (and (not cannot-edit?)
-                                         (human-readable-deadline field hakukohteet roles application-in-processing-state?))]
-                   (if deadline
-                     (assoc field
-                            :human-readable-deadline deadline)
-                     field))
+                                           :cannot-edit cannot-edit?)]
+                   field)
                  field))
              content))))
 

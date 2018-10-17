@@ -3,9 +3,14 @@
             [cljs-time.core :as c]
             [cljs-time.coerce :as coerce]
             [clojure.walk :refer [postwalk]]
+            [cljs-time.core :refer [to-default-time-zone now after?]]
+            [cljs-time.format :refer [unparse unparse-local formatter]]
+            [cljs-time.coerce :refer [from-long]]
             [taoensso.timbre :refer-macros [spy warn]]))
 
-(def ^:private time-formatter (f/formatter "dd.MM.yyyy HH:mm"))
+(def ^:private time-formatter-leading-zeros (f/formatter "dd.MM.yyyy HH:mm" "Europe/Helsinki"))
+
+(def ^:private time-formatter (f/formatter "d.M.yyyy HH:mm" "Europe/Helsinki"))
 
 (def ^:private date-formatter (f/formatter "dd.MM.yyyy"))
 
@@ -28,7 +33,7 @@
 (defn time->short-str [google-date]
   (->> google-date
        c/to-default-time-zone
-       (f/unparse time-formatter)))
+       (f/unparse time-formatter-leading-zeros)))
 
 (defn time->date [google-date]
   (->> google-date
@@ -45,6 +50,13 @@
 
 (defn datetime-now []
   (f/unparse (f/formatters :date-time-no-ms) (c/now)))
+
+(defn- millis->str
+  [millis]
+  (->> millis
+       (from-long)
+       (to-default-time-zone)
+       (unparse-local time-formatter)))
 
 (defn parse-times [expr]
   (let [f (fn [[k v]]
