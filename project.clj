@@ -73,7 +73,8 @@
                  [ring/ring-mock "0.3.2"]
                  [speclj "3.3.2"]
                  [org.clojure/test.check "0.9.0"]
-                 [com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer "20180219.1" :exclusions [com.google.guava/guava]]]
+                 [com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer "20180219.1" :exclusions [com.google.guava/guava]]
+                 [com.amazonaws/aws-java-sdk-s3 "1.11.429"]]
 
   :min-lein-version "2.5.3"
 

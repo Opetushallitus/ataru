@@ -12,7 +12,10 @@
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
-            [ataru.suoritus.suoritus-service :as suoritus-service]))
+            [ataru.suoritus.suoritus-service :as suoritus-service]
+            [ataru.temp-file-storage.s3-client :as s3-client]
+            [ataru.temp-file-storage.filesystem-temp-file-store :as filesystem-temp-file-store]
+            [ataru.temp-file-storage.s3-temp-file-store :as s3-temp-file-store]))
 
 (defn new-system
   ([]
@@ -42,13 +45,16 @@
 
      :suoritus-service (suoritus-service/new-suoritus-service)
 
+     :temp-file-store (filesystem-temp-file-store/new-store)
+
      :handler (component/using
                 (handler/new-handler)
                 [:tarjonta-service
                  :job-runner
                  :organization-service
                  :ohjausparametrit-service
-                 :person-service])
+                 :person-service
+                 :temp-file-store])
 
      :server-setup {:port      http-port
                     :repl-port repl-port}
@@ -66,6 +72,17 @@
 
      :redis (redis/map->Redis {})
 
+     ;(if (get-in config [:temp-files :s3])
+     ;  [:s3-client (s3-client/new-client)
+     ;   :temp-file-store (component/using
+     ;                      (s3-temp-file-store/new-store)
+     ;                      [:s3-client])]
+     ;  [:temp-file-store (filesystem-temp-file-store/new-store)])
+
+
+
      (mapcat (fn [cache]
                [(keyword (:name cache)) (component/using cache [:redis])])
-             caches))))
+             caches)
+
+)))

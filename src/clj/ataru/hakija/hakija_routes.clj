@@ -126,7 +126,8 @@
                   job-runner
                   organization-service
                   ohjausparametrit-service
-                  person-service]
+                  person-service
+                  temp-file-store]
   (api/context "/api" []
     :tags ["application-api"]
     (api/GET ["/haku/:haku-oid" :haku-oid #"[0-9\.]+"] []
@@ -238,7 +239,7 @@
                        file-id :- s/Str
                        file-name :- s/Str]
         :return {:file-exists s/Bool}
-        (response/ok {:file-exists (resumable-file/file-part-exists? file-id file-name file-size file-part-number)}))
+        (response/ok {:file-exists (resumable-file/file-part-exists? temp-file-store file-id file-name file-size file-part-number)}))
       (api/POST "/resumable" []
         :summary "Upload file part"
         :multipart-params [file-part :- upload/TempFileUpload
@@ -249,7 +250,7 @@
         :return {:status                       s/Str
                  (s/optional-key :stored-file) ataru-schema/File}
         (try
-          (response/ok (resumable-file/store-file-part! file-id file-size file-part-number file-part))
+          (response/ok (resumable-file/store-file-part! temp-file-store file-id file-size file-part-number file-part))
           (finally
             (io/delete-file (:tempfile file-part) true))))
       (api/POST "/" []
@@ -325,7 +326,8 @@
                                               (:job-runner this)
                                               (:organization-service this)
                                               (:ohjausparametrit-service this)
-                                              (:person-service this))
+                                              (:person-service this)
+                                              (:temp-file-store this))
                                   (route/resources "/")
                                   (api/undocumented
                                     (api/GET "/haku/:oid" []

@@ -14,7 +14,9 @@
                    :environment-name                    "dev"
                    :features                            {}
                    :attachment-modify-grace-period-days 14
-                   :attachment-file-max-size-bytes      10485760}
+                   :attachment-file-max-size-bytes      10485760
+                   :attachment-file-part-max-size-bytes 1048576}
+ :temp-files      {:filesystem {:base-path "/tmp"}}
  :background-job  {:exec-interval-seconds 15}
  :log             {:virkailija-base-path "/tmp"
                    :hakija-base-path     "/tmp"}

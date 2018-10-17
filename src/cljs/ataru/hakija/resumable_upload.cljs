@@ -21,48 +21,49 @@
     (.readAsArrayBuffer fr file)))
 
 (reg-event-fx
+  :application-file-upload/start-upload
+  (fn [_ [file handlers]]
+    (let [fr (js/FileReader.)]
+      (.addEventListener fr "loadend" #(dispatch [:application-file-upload/check-file-part-status-and-upload "/hakemus/api/files/resumable" handlers (hex-md5-hash (.-result fr)) file 0]))
+      (.readAsArrayBuffer fr file))))
+
+(reg-event-fx
   :application-file-upload/check-file-part-status-and-upload
   (fn [_ [_ url {:keys [error-handler started-handler] :as handlers} file-id file file-part-number]]
-    {:http }
-    (let [req (GET url (merge json-params
-                              {:params        {:file-id          file-id
-                                               :file-size        (.-size file)
-                                               :file-name        (.-name file)
-                                               :file-part-number file-part-number}
-                               :handler       (fn [{:keys [file-exists]}]
-                                                (if file-exists
-                                                  (dispatch [:application-file-upload/check-file-part-status-and-upload url handlers file-id file (inc file-part-number)])
-                                                  (dispatch [:application-file-upload/upload-file-part url handlers file-id file file-part-number])))
-                               :error-handler #(dispatch (conj error-handler %))}))]
+    (let [have-file-dispatch     [:application-file-upload/check-file-part-status-and-upload url handlers file-id file (inc file-part-number)]
+          not-have-file-dispatch [:application-file-upload/upload-file-part url handlers file-id file file-part-number]
+          params                 (merge json-params
+                                        {:params        {:file-id          file-id
+                                                         :file-size        (.-size file)
+                                                         :file-name        (.-name file)
+                                                         :file-part-number file-part-number}
+                                         :handler       (fn [{:keys [file-exists]}]
+                                                          (dispatch (if file-exists have-file-dispatch not-have-file-dispatch)))
+                                         :error-handler #(dispatch (conj error-handler %))})
+          req                    (GET url params)]
       (dispatch (conj started-handler req)))))
 
 (reg-event-fx
   :application-file-upload/upload-file-part
   (fn [_ [_ url {:keys [handler started-handler progress-handler error-handler] :as handlers} file-id file file-part-number]]
-    (println "do upload" file file-part-number)
-    (let [file-part-start (* max-part-size file-part-number)
-          file-part-end   (min (* max-part-size (inc file-part-number)) (.-size file))
-          file-part       (.slice file file-part-start file-part-end)
-          file-name       (.-name file)
-          params          (merge json-params
-                                 {:handler          (fn [{:keys [status stored-file]}]
-                                                      (case status
-                                                        "send-next" (dispatch [:application-file-upload/check-file-part-status-and-upload
-                                                                               url
-                                                                               handlers
-                                                                               file-id
-                                                                               file
-                                                                               (inc file-part-number)])
-                                                        "retransmit" (dispatch error-handler)
-                                                        "complete" (dispatch (conj handler stored-file))))
-                                  :error-handler    #(dispatch (conj error-handler %))
-                                  :progress-handler #(dispatch (conj progress-handler % file-part-number))
-                                  :body             (doto (js/FormData.)
-                                                      (.append "file-part" file-part file-name)
-                                                      (.append "file-id" file-id)
-                                                      (.append "file-size" (.-size file))
-                                                      (.append "file-part-number" file-part-number))})
-          req             (POST url params)]
+    (let [file-part-start         (* max-part-size file-part-number)
+          file-part-end           (min (* max-part-size (inc file-part-number)) (.-size file))
+          file-part               (.slice file file-part-start file-part-end)
+          send-next-part-dispatch [:application-file-upload/check-file-part-status-and-upload url handlers file-id file (inc file-part-number)]
+          params                  (merge json-params
+                                         {:handler          (fn [{:keys [status stored-file] :as resp}]
+                                                              (case status
+                                                                "send-next" (dispatch send-next-part-dispatch)
+                                                                "retransmit" (dispatch (conj error-handler resp))
+                                                                "complete" (dispatch (conj handler stored-file))))
+                                          :error-handler    #(dispatch (conj error-handler %))
+                                          :progress-handler #(dispatch (conj progress-handler % file-part-number))
+                                          :body             (doto (js/FormData.)
+                                                              (.append "file-part" file-part (.-name file))
+                                                              (.append "file-id" file-id)
+                                                              (.append "file-size" (.-size file))
+                                                              (.append "file-part-number" file-part-number))})
+          req                     (POST url params)]
       (dispatch (conj started-handler req)))))
 
 (reg-event-db
@@ -81,7 +82,6 @@
             speed         (* 1000
                              (/ (- uploaded-size prev-uploaded)
                                 (c/in-millis (c/interval last-progress now))))]
-        (println "progress" uploaded-size)
         (-> db
             (assoc-in (conj path :uploaded-size) uploaded-size)
             (assoc-in (conj path :last-progress) now)

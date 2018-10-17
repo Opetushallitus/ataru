@@ -10,12 +10,14 @@
  :cache           {:type :redis}
  :redis           {:uri "redis://localhost:6380"}
  :cas             {}
- :public-config   {:applicant                      {:service_url "http://localhost:8351"}
-                   :virkailija                     {:service_url "http://localhost:8350/lomake-editori/"}
-                   :environment-name               "test"
-                   :enable-re-frisk                true
-                   :local-dev-logout               true
-                   :attachment-file-max-size-bytes 10485760}
+ :public-config   {:applicant                           {:service_url "http://localhost:8351"}
+                   :virkailija                          {:service_url "http://localhost:8350/lomake-editori/"}
+                   :environment-name                    "test"
+                   :enable-re-frisk                     true
+                   :local-dev-logout                    true
+                   :attachment-file-max-size-bytes      10485760
+                   :attachment-file-part-max-size-bytes 1048576}
+ :temp-files      {:filesystem {:base-path "/tmp"}}
  :dev             {:fake-dependencies true}
  :urls            {:virkailija-host "virkailija.untuvaopintopolku.fi"
                    :hakija-host     "oppija.untuvaopintopolku.fi"
