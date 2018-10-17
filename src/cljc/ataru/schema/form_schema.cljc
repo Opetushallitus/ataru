@@ -61,6 +61,7 @@
 (s/defschema Params {(s/optional-key :adjacent)                         s/Bool
                      (s/optional-key :can-submit-multiple-applications) s/Bool
                      (s/optional-key :deadline)                         (s/maybe s/Str)
+                     (s/optional-key :yhteishaku)                       (s/maybe s/Bool)
                      (s/optional-key :repeatable)                       s/Bool
                      (s/optional-key :numeric)                          s/Bool
                      (s/optional-key :decimals)                         (s/maybe s/Int)
