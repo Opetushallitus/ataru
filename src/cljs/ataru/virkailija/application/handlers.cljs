@@ -946,7 +946,7 @@
                                   :application-key application-key}
                                  (when state-name
                                    {:hakukohde  hakukohde
-                                    :state-name state-name}))
+                                    :state-name (name state-name)}))
           db              (-> db
                               (update-in [:application :review-notes]
                                          (fn [notes]

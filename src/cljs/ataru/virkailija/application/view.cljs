@@ -1024,7 +1024,7 @@
   (let [note                (subscribe [:state-query [:application :review-notes note-idx]])
         name                (reaction (if (and (:first-name @note) (:last-name @note))
                                         (str (:first-name @note) " " (:last-name @note))
-                                        "Virkailija ei tiedossa"))
+                                        (get-virkailija-translation :unknown-virkailija)))
         created-time        (reaction (when-let [created-time (:created-time @note)]
                                         (temporal/time->short-str created-time)))
         notes               (reaction (:notes @note))
@@ -1066,16 +1066,16 @@
 (defn- review-state-comment
   [state-name selected-hakukohde]
   (fn [state-name selected-hakukohde]
-    (let [review-note     (subscribe [:state-query [:application :notes selected-hakukohde state-name]])
-          review-notes    (subscribe [:state-query [:application :review-notes]])
-          notes-count     (subscribe [:application/review-notes-count])
-          previous-note   (->> @review-notes
-                               (filter #(and (= (name state-name) (:state-name %))
-                                             (= (name selected-hakukohde) (:hakukohde %))))
-                               first
-                               :notes)
-          button-enabled? (and (-> @review-note clojure.string/blank? not)
-                               (not= @review-note previous-note))]
+    (let [review-note        (subscribe [:state-query [:application :notes selected-hakukohde state-name]])
+          review-notes       (subscribe [:state-query [:application :review-notes]])
+          selected-notes-idx (subscribe [:application/review-note-indexes-on-eligibility selected-hakukohde])
+          previous-note      (->> @review-notes             ; [:application :review-notes]
+                                  (filter #(and (= (name state-name) (:state-name %))
+                                                (= (name selected-hakukohde) (:hakukohde %))))
+                                  first
+                                  :notes)
+          button-enabled?    (and (-> @review-note clojure.string/blank? not)
+                                  (not= @review-note previous-note))]
       [:div.application-handling__review-state-selected-container
        [:textarea.application-handling__review-note-input.application-handling__eligibility-state-comment
         {:value       @review-note
@@ -1090,12 +1090,8 @@
          :class    (if button-enabled?
                      "application-handling__review-note-submit-button--enabled"
                      "application-handling__review-note-submit-button--disabled")}
-        (get-virkailija-translation :rejection-reason)]
-       (->> (doall (filter (fn [idx]
-                      (let [note @(subscribe [:state-query [:application :review-notes idx]])]
-                        (and (= (name selected-hakukohde) (:hakukohde note))
-                             (= "eligibility-state" (:state-name note)))))
-                    (range @notes-count)))
+        (get-virkailija-translation :add)]
+       (->> @selected-notes-idx
             (map (fn [idx]
                    ^{:key (str "application-review-note-" idx)}
                    [application-review-note idx])))
@@ -1350,7 +1346,7 @@
         review-field->str (fn [review field] (if-let [notes (field @review)] notes ""))
         settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
         input-visible?    (subscribe [:application/review-state-setting-enabled? :score])
-        notes-count       (subscribe [:application/review-notes-count])
+        notes             (subscribe [:application/review-note-indexes-excluding-eligibility])
         can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
     (fn []
       [:div.application-handling__review-inputs
@@ -1371,9 +1367,7 @@
        [:div.application-handling__review-row--nocolumn
         [:div.application-handling__review-header (get-virkailija-translation :notes)]
         [application-review-note-input]
-        (->> (doall (filter (fn [idx]
-                              (not= "eligibility-state" @(subscribe [:state-query [:application :review-notes idx :state-name]])))
-                            (range @notes-count)))
+        (->> @notes
              (map (fn [idx]
                     ^{:key (str "application-review-note-" idx)}
                     [application-review-note idx])))]])))
