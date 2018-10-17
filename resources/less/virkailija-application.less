@@ -846,7 +846,9 @@ and (max-width: 1000px) {
 .application-handling__review-row--nocolumn {
   display: block;
 }
-
+.application-handling__review-state-selected-container .application-handling__review-note {
+  width: 219px;
+}
 .application-handling__review-note {
   background-color: @review-note-background-color;
   border-radius: 5px;
@@ -860,12 +862,16 @@ and (max-width: 1000px) {
   margin-top: 5px;
 }
 
+.application-handling__review-note-details-timestamp {
+  white-space: nowrap;
+}
+
 .application-handling__review-note-details-row {
   color: @gray-of-the-beast;
   display: flex;
   font-size: 14px;
-  flex-flow: row nowrap;
   justify-content: space-between;
+  flex-flow: row nowrap;
 }
 
 .application-handling__review-note-remove-link {
@@ -909,6 +915,7 @@ and (max-width: 1000px) {
   flex-flow: column nowrap;
   align-items: center;
   justify-content: center;
+  margin-bottom: 10px;
 }
 
 .application-handling__general-review-note-submit-button {

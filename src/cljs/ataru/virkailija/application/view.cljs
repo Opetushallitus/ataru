@@ -1020,18 +1020,58 @@
       :disabled  @disabled?
       :on-change #(dispatch [:application/toggle-review-state-setting setting-kwd])}]))
 
+(defn- application-review-note [note-idx]
+  (let [note                (subscribe [:state-query [:application :review-notes note-idx]])
+        name                (reaction (if (and (:first-name @note) (:last-name @note))
+                                        (str (:first-name @note) " " (:last-name @note))
+                                        (get-virkailija-translation :unknown-virkailija)))
+        created-time        (reaction (when-let [created-time (:created-time @note)]
+                                        (temporal/time->short-str created-time)))
+        notes               (reaction (:notes @note))
+        animated?           (reaction (:animated? @note))
+        remove-disabled?    (reaction (or (-> @note :state some?)
+                                          (-> @note :id not)))
+        hakukohde-name      (subscribe [:application/hakukohde-name (:hakukohde @note)])
+        removing?           (r/atom false)
+        remove-note         (fn []
+                              (dispatch [:application/remove-review-note note-idx])
+                              (reset! removing? false))
+        start-removing-note (fn []
+                              (reset! removing? true)
+                              (js/setTimeout #(reset! removing? false) 1200))]
+    (fn [note-idx]
+      [:div.application-handling__review-note
+       (when @animated?
+         {:class "animated fadeIn"})
+       [:div.application-handling__review-note-details-row
+        [:div [:span (str @name " ")] [:span.application-handling__review-note-details-timestamp (str @created-time)]]
+        [:div.application-handling__review-note-remove-link
+         {:class    (when @remove-disabled? "application-handling__review-note-remove-link--disabled")
+          :on-click #(when-not @remove-disabled?
+                       (if @removing?
+                         (remove-note)
+                         (start-removing-note)))}
+         (if @removing?
+           (get-virkailija-translation :confirm-delete)
+           [:i.zmdi.zmdi-close])]]
+       [:div.application-handling__review-note-content
+        (when (:hakukohde @note)
+          {:data-tooltip (str (get-virkailija-translation :eligibility-explanation)
+                              (when (not= "form" (:hakukohde @note))
+                                (gstring/format " %s %s"
+                                  (get-virkailija-translation :for-hakukohde)
+                                  @hakukohde-name)))})
+        @notes]])))
+
 (defn- review-state-comment
   [state-name selected-hakukohde]
   (fn [state-name selected-hakukohde]
-    (let [review-note     (subscribe [:state-query [:application :notes selected-hakukohde state-name]])
-          review-notes    (subscribe [:state-query [:application :review-notes]])
-          previous-note   (->> @review-notes
-                               (filter #(and (= (name state-name) (:state-name %))
-                                             (= (name selected-hakukohde) (:hakukohde %))))
-                               first
-                               :notes)
-          button-enabled? (and (-> @review-note clojure.string/blank? not)
-                               (not= @review-note previous-note))]
+    (let [review-note        (subscribe [:state-query [:application :notes selected-hakukohde state-name]])
+          selected-notes-idx (subscribe [:application/review-note-indexes-on-eligibility selected-hakukohde])
+          previous-note      (when (first @selected-notes-idx)
+                               (subscribe [:state-query [:application :review-notes (first @selected-notes-idx)]]))
+          button-enabled?    (and (-> @review-note clojure.string/blank? not)
+                                  (not= @review-note (:notes @previous-note)))]
       [:div.application-handling__review-state-selected-container
        [:textarea.application-handling__review-note-input.application-handling__eligibility-state-comment
         {:value       @review-note
@@ -1046,7 +1086,12 @@
          :class    (if button-enabled?
                      "application-handling__review-note-submit-button--enabled"
                      "application-handling__review-note-submit-button--disabled")}
-        (get-virkailija-translation :rejection-reason)]])))
+        (get-virkailija-translation :add)]
+       (->> @selected-notes-idx
+            (map (fn [idx]
+                   ^{:key (str "application-review-note-" idx)}
+                   [application-review-note idx])))
+       ])))
 
 (defn- application-hakukohde-review-input
   [label kw states]
@@ -1291,56 +1336,13 @@
                      (dispatch [:application/add-review-note @input-value nil]))}
         (get-virkailija-translation :add)]])))
 
-(defn- application-review-note [note-idx]
-  (let [note                (subscribe [:state-query [:application :review-notes note-idx]])
-        name                (reaction (if (and (:first-name @note) (:last-name @note))
-                                        (str (:first-name @note) " " (:last-name @note))
-                                        "Virkailija ei tiedossa"))
-        created-time        (reaction (when-let [created-time (:created-time @note)]
-                                        (temporal/time->short-str created-time)))
-        notes               (reaction (:notes @note))
-        animated?           (reaction (:animated? @note))
-        remove-disabled?    (reaction (or (-> @note :state some?)
-                                          (-> @note :id not)))
-        hakukohde-name      (subscribe [:application/hakukohde-name (:hakukohde @note)])
-        removing?           (r/atom false)
-        remove-note         (fn []
-                              (dispatch [:application/remove-review-note note-idx])
-                              (reset! removing? false))
-        start-removing-note (fn []
-                              (reset! removing? true)
-                              (js/setTimeout #(reset! removing? false) 1200))]
-    (fn [note-idx]
-      [:div.application-handling__review-note
-       (when @animated?
-         {:class "animated fadeIn"})
-       [:div.application-handling__review-note-details-row
-        [:div (str @name " " @created-time)]
-        [:div.application-handling__review-note-remove-link
-         {:class    (when @remove-disabled? "application-handling__review-note-remove-link--disabled")
-          :on-click #(when-not @remove-disabled?
-                       (if @removing?
-                         (remove-note)
-                         (start-removing-note)))}
-         (if @removing?
-           (get-virkailija-translation :confirm-delete)
-           [:i.zmdi.zmdi-close])]]
-       [:div.application-handling__review-note-content
-        (when (:hakukohde @note)
-          {:data-tooltip (str (get-virkailija-translation :eligibility-explanation)
-                              (when (not= "form" (:hakukohde @note))
-                                (gstring/format " %s %s"
-                                                (get-virkailija-translation :for-hakukohde)
-                                                @hakukohde-name)))})
-        @notes]])))
-
 (defn application-review-inputs []
   (let [review            (subscribe [:state-query [:application :review]])
         ; React doesn't like null, it leaves the previous value there, hence:
         review-field->str (fn [review field] (if-let [notes (field @review)] notes ""))
         settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
         input-visible?    (subscribe [:application/review-state-setting-enabled? :score])
-        notes-count       (subscribe [:application/review-notes-count])
+        notes             (subscribe [:application/review-note-indexes-excluding-eligibility])
         can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
     (fn []
       [:div.application-handling__review-inputs
@@ -1361,7 +1363,7 @@
        [:div.application-handling__review-row--nocolumn
         [:div.application-handling__review-header (get-virkailija-translation :notes)]
         [application-review-note-input]
-        (->> (range @notes-count)
+        (->> @notes
              (map (fn [idx]
                     ^{:key (str "application-review-note-" idx)}
                     [application-review-note idx])))]])))

@@ -415,10 +415,21 @@
     (-> db :application :ui/review list-kwd)))
 
 (re-frame/reg-sub
-  :application/review-notes-count
+  :application/review-note-indexes-on-eligibility
+  (fn [db [_ hakukohde-oid]]
+    (->> (-> db :application :review-notes)
+         (keep-indexed (fn [index {:keys [state-name hakukohde]}]
+                         (when (and (= "eligibility-state" state-name)
+                                    (= (name hakukohde-oid) hakukohde))
+                           index))))))
+
+(re-frame/reg-sub
+  :application/review-note-indexes-excluding-eligibility
   (fn [db]
-    (or (-> db :application :review-notes count)
-        0)))
+    (->> (-> db :application :review-notes)
+         (keep-indexed (fn [index {:keys [state-name hakukohde]}]
+                         (when (not= "eligibility-state" state-name)
+                           index))))))
 
 (re-frame/reg-sub
   :application/prioritize-hakukohteet?

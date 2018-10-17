@@ -1113,9 +1113,9 @@ You will receive a confirmation of your application to your email."}
    :receiver                                    {:fi "Vastaanottaja:"
                                                  :sv "Mottagare:"
                                                  :en "EN: Vastaanottaja:"}
-   :rejection-reason                            {:fi "Hylkäyksen syy.."
-                                                 :sv "Orsak till avslag.."
-                                                 :en "EN: Hylkäyksen syy.."}
+   :rejection-reason                            {:fi "Hylkäyksen syy"
+                                                 :sv "Orsak till avslag"
+                                                 :en "EN: Hylkäyksen syy"}
    :remove                                      {:fi "Poista"
                                                  :sv "Radera"
                                                  :en "EN: Poista"}
@@ -1236,6 +1236,9 @@ You will receive a confirmation of your application to your email."}
    :unknown                                     {:fi "Tuntematon"
                                                  :sv "Okänd"
                                                  :en "EN: Tuntematon"}
+   :unknown-virkailija                          {:fi "Tuntematon virkailija"
+                                                 :sv "SV: Tuntematon virkailija"
+                                                 :en "EN: Tuntematon virkailija"}
    :unknown-option                              {:fi "Tuntematon vastausvaihtoehto"
                                                  :sv "Okänt svarsalternativ"
                                                  :en "EN: Tuntematon vastausvaihtoehto"}
