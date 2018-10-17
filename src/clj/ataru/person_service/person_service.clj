@@ -20,27 +20,20 @@
 
   (linked-oids [this oid]))
 
-(defrecord IntegratedPersonService [henkilo-cache]
+(defrecord IntegratedPersonService [henkilo-cache
+                                    oppijanumerorekisteri-cas-client]
   component/Lifecycle
-
-  (start [this]
-    (assoc
-     this
-     :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service")))
-
-  (stop [this]
-    (assoc
-     this
-     :oppijanumerorekisteri-cas-client nil))
+  (start [this] this)
+  (stop [this] this)
 
   PersonService
 
-  (create-or-find-person [{:keys [oppijanumerorekisteri-cas-client]} application]
+  (create-or-find-person [_ application]
     (person-client/create-or-find-person
      oppijanumerorekisteri-cas-client
      (orpe/extract-person-from-application application)))
 
-  (get-persons [{:keys [oppijanumerorekisteri-cas-client]} oids]
+  (get-persons [_ oids]
     (if (seq oids)
       (let [persons-from-cache  (cache/get-many-from henkilo-cache oids)
             uncached-oids       (clojure.set/difference
@@ -54,13 +47,13 @@
         (merge persons-from-cache persons-from-client))
       {}))
 
-  (get-person [{:keys [oppijanumerorekisteri-cas-client]} oid]
+  (get-person [_ oid]
     (cache/get-from-or-fetch
      henkilo-cache
      (partial person-client/get-person oppijanumerorekisteri-cas-client)
      oid))
 
-  (linked-oids [{:keys [oppijanumerorekisteri-cas-client]} oid]
+  (linked-oids [_ oid]
     (person-client/linked-oids oppijanumerorekisteri-cas-client oid)))
 
 (def fake-person-from-creation {:personOid    "1.2.3.4.5.6"
@@ -117,4 +110,4 @@
 (defn new-person-service []
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode
     (->FakePersonService)
-    (->IntegratedPersonService nil)))
+    (map->IntegratedPersonService {})))

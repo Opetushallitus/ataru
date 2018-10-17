@@ -7,21 +7,16 @@
 (defprotocol KayttooikeusService
   (virkailija-by-username [this username]))
 
-(defrecord HttpKayttooikeusService [cas-client]
+(defrecord HttpKayttooikeusService [kayttooikeus-cas-client]
   component/Lifecycle
-  (start [this]
-    (if (nil? cas-client)
-      (assoc this :cas-client (cas/new-client "/kayttooikeus-service"))
-      this))
-
-  (stop [this]
-    (assoc this :cas-client nil))
+  (start [this] this)
+  (stop [this] this)
 
   KayttooikeusService
   (virkailija-by-username [_ username]
     (let [url                   (url/resolve-url :kayttooikeus-service.kayttooikeus.kayttaja
                                                  {"username" username})
-          {:keys [status body]} (cas/cas-authenticated-get cas-client url)]
+          {:keys [status body]} (cas/cas-authenticated-get kayttooikeus-cas-client url)]
       (if (= 200 status)
         (if-let [virkailija (first (json/parse-string body true))]
           virkailija

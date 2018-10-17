@@ -2,6 +2,7 @@
   (:require [ataru.application.review-states :as review-states]
             [ataru.applications.application-store :as application-store]
             [ataru.background-job.job-store :as job-store]
+            [ataru.cas.client :as cas]
             [ataru.component-data.person-info-module :as person-info-module]
             [ataru.component-data.value-transformers :as t]
             [ataru.config.core :refer [config]]
@@ -412,7 +413,8 @@
 (def get-virkailija
   (let [kayttooikeus-service (if (-> config :dev :fake-dependencies)
                                (kayttooikeus-service/->FakeKayttooikeusService)
-                               (kayttooikeus-service/->HttpKayttooikeusService nil))
+                               (kayttooikeus-service/->HttpKayttooikeusService
+                                (cas/new-client "/kayttooikeus-service")))
         person-service       (person-service/new-person-service)]
     (memoize (fn [username]
                (->> username

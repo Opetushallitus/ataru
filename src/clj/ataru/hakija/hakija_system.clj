@@ -1,5 +1,6 @@
 (ns ataru.hakija.hakija-system
   (:require [com.stuartsierra.component :as component]
+            [ataru.cas.client :as cas]
             [ataru.hakija.hakija-routes :as handler]
             [ataru.background-job.job :as job]
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
@@ -39,11 +40,17 @@
                                (ohjausparametrit-service/new-ohjausparametrit-service)
                                [:ohjausparametrit-cache])
 
+    :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service")
+
     :person-service (component/using
                      (person-service/new-person-service)
-                     [:henkilo-cache])
+                     [:henkilo-cache :oppijanumerorekisteri-cas-client])
 
-    :suoritus-service (suoritus-service/new-suoritus-service)
+    :suoritusrekisteri-cas-client (cas/new-client "/suoritusrekisteri")
+
+    :suoritus-service (component/using
+                       (suoritus-service/new-suoritus-service)
+                       [:suoritusrekisteri-cas-client])
 
     :s3-client (s3-client/new-client)
 

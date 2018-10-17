@@ -1,5 +1,6 @@
 (ns ataru.virkailija.virkailija-system
   (:require [com.stuartsierra.component :as component]
+            [ataru.cas.client :as cas]
             [ataru.http.server :as server]
             [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.organization-service.organization-service :as organization-service]
@@ -40,13 +41,19 @@
                                (ohjausparametrit-service/new-ohjausparametrit-service)
                                [:ohjausparametrit-cache])
 
+    :kayttooikeus-cas-client (cas/new-client "/kayttooikeus-service")
+
     :kayttooikeus-service (if (-> config :dev :fake-dependencies)
                             (kayttooikeus-service/->FakeKayttooikeusService)
-                            (kayttooikeus-service/->HttpKayttooikeusService nil))
+                            (component/using
+                             (kayttooikeus-service/->HttpKayttooikeusService nil)
+                             [:kayttooikeus-cas-client]))
+
+    :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service")
 
     :person-service (component/using
                      (person-service/new-person-service)
-                     [:henkilo-cache])
+                     [:henkilo-cache :oppijanumerorekisteri-cas-client])
 
     :handler (component/using
               (virkailija-routes/new-handler)
