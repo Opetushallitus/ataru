@@ -216,16 +216,17 @@
   [name]
   (str "ataru:cache:to-update:" name))
 
-(defn- ->set-command
+(defn- car-set
   [name key value ttl]
   (let [[ttl timeunit] ttl]
     (car/set (->cache-key name key) value :px (.toMillis timeunit ttl))))
 
-(defn- ->mset-commands
+(defn- car-mset
   [name m ttl]
-  (mapv #(->set-command name (first %) (second %) ttl) m))
+  (doseq [[key value] m]
+    (car-set name key value ttl)))
 
-(defn- ->mark-to-update-command
+(defn- car-mark-to-update
   [name keys]
   (apply car/sadd (->to-update-key name) keys))
 
@@ -233,7 +234,7 @@
   [redis name key value ttl]
   (when (some? value)
     (wcar (:connection-opts redis)
-          (->set-command name key value ttl)))
+          (car-set name key value ttl)))
   value)
 
 (defn- redis-get
@@ -243,9 +244,9 @@
     (when (some? value)
       (wcar (:connection-opts redis)
             (when (some? ttl-after-read)
-              (->set-command name key value ttl-after-read))
+              (car-set name key value ttl-after-read))
             (when update-after-read?
-              (->mark-to-update-command name [key]))))
+              (car-mark-to-update name [key]))))
     value))
 
 (defn- redis-scan
@@ -257,7 +258,7 @@
   [redis name m ttl]
   (doseq [chunk (partition 5000 5000 nil m)]
     (wcar (:connection-opts redis)
-          (->mset-commands name chunk ttl)))
+          (car-mset name chunk ttl)))
   m)
 
 (defn- redis-mget
@@ -271,9 +272,9 @@
               (when (not-empty hits)
                 (wcar (:connection-opts redis)
                       (when (some? ttl-after-read)
-                        (->mset-commands name hits ttl-after-read))
+                        (car-mset name hits ttl-after-read))
                       (when update-after-read?
-                        (->mark-to-update-command name (map first hits)))))
+                        (car-mark-to-update name (map first hits)))))
               (-> acc
                   (update :hits into hits)
                   (update :misses concat (keep #(when (nil? (second %)) (first %)) from-cache)))))
@@ -300,15 +301,14 @@
     (if-let [keys (seq (wcar (:connection-opts redis)
                              (car/spop (->to-update-key name) 100)))]
       (let [ttls      (wcar (:connection-opts redis) :as-pipeline
-                            (mapv #(car/pttl (->cache-key name %)) keys))
+                            (doseq [key keys]
+                              (car/pttl (->cache-key name key))))
             to-update (filter #(< 0 (second %)) (map vector keys ttls))
             values    (cache/load-many loader (map first to-update))]
         (wcar (:connection-opts redis)
-              (keep #(let [[key ttl] %
-                           value     (get values key)]
-                       (when (some? value)
-                         (car/set (->cache-key name key) value :px ttl)))
-                    to-update))
+              (doseq [[key ttl] to-update
+                      :when     (contains? values key)]
+                (car/set (->cache-key name key) (get values key) :px ttl)))
         (recur (+ updated-count (count values))))
       (info "Updated" updated-count name "keys"))))
 
@@ -386,6 +386,6 @@
   (clear-all [_]
     (loop [[cursor keys] (redis-scan redis name 0)]
       (wcar (:connection-opts redis)
-            (mapv car/del keys))
+            (doseq [key keys] (car/del key)))
       (when (not= "0" cursor)
         (recur (redis-scan redis name cursor))))))
