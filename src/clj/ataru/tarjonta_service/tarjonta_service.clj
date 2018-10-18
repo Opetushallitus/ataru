@@ -111,7 +111,7 @@
   (get-hakukohteet [this hakukohde-oids]
     (remove #(or (nil? %)
                  (not (contains? allowed-hakukohde-tilas (:tila %))))
-            (cache/get-many-from hakukohde-cache hakukohde-oids)))
+            (vals (cache/get-many-from hakukohde-cache hakukohde-oids))))
 
   (get-hakukohde-name [this hakukohde-oid]
     (when-let [hakukohde (.get-hakukohde this hakukohde-oid)]

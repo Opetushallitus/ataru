@@ -6,6 +6,7 @@
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.http.server :as server]
             [ataru.person-service.person-service :as person-service]
+            [ataru.person-service.person-client :as person-client]
             [environ.core :refer [env]]
             [ataru.cache.caches :refer [caches]]
             [ataru.redis :as redis]
@@ -41,6 +42,10 @@
                                [:ohjausparametrit-cache])
 
     :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service")
+
+    :henkilo-cache-loader (component/using
+                           (person-client/map->PersonCacheLoader {})
+                           [:oppijanumerorekisteri-cas-client])
 
     :person-service (component/using
                      (person-service/new-person-service)

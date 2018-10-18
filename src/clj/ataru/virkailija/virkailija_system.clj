@@ -12,6 +12,7 @@
             [ataru.config.core :refer [config]]
             [ataru.background-job.job :as job]
             [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]
+            [ataru.person-service.person-client :as person-client]
             [ataru.person-service.person-service :as person-service]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]))
 
@@ -50,6 +51,10 @@
                              [:kayttooikeus-cas-client]))
 
     :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service")
+
+    :henkilo-cache-loader (component/using
+                           (person-client/map->PersonCacheLoader {})
+                           [:oppijanumerorekisteri-cas-client])
 
     :person-service (component/using
                      (person-service/new-person-service)
