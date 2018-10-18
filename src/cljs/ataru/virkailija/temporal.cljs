@@ -51,7 +51,7 @@
 (defn datetime-now []
   (f/unparse (f/formatters :date-time-no-ms) (c/now)))
 
-(defn- millis->str
+(defn millis->str
   [millis]
   (->> millis
        (from-long)
