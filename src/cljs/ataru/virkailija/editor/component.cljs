@@ -1086,6 +1086,7 @@
 
 
 (def ^:private deadline-pattern #"^(\d{1,2})\.(\d{1,2})\.(\d{4}) (\d{1,2}):(\d{1,2})$")
+(def ^:private deadline-format "%d.%d.%d %02d:%02d")
 
 (defn deadline-date [deadline]
   (when-let [[_ day month year hours minutes] (map js/parseInt (re-matches deadline-pattern deadline))]
@@ -1094,7 +1095,7 @@
              [(.getYear dt) (inc (.getMonth dt)) (.getDate dt)
               (.getHours dt)
               (.getMinutes dt)])
-        (s/format "%d.%d.%d %02d:%02d" day month year hours minutes)))))
+        (s/format deadline-format day month year hours minutes)))))
 
 (defn attachment [content path]
   (let [component        (subscribe [:editor/get-component-value path])
