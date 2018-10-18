@@ -2,6 +2,7 @@
   (:require [taoensso.timbre :refer [info warn error]]
             [com.stuartsierra.component :as component]
             [taoensso.carmine :as car :refer [wcar]]
+            [taoensso.carmine.message-queue :as car-mq]
             [taoensso.carmine.locks :as carlocks]
             [ataru.cache.cache-service :as cache])
   (:import [java.util.concurrent
@@ -208,6 +209,13 @@
   [name key]
   (str "ataru:cache:item:" name ":" key))
 
+(defn- cache-key->key
+  [name cache-key]
+  (clojure.string/replace-first
+   cache-key
+   (str "ataru:cache:item:" name ":")
+   ""))
+
 (defn- ->lock-key
   [name lock-name]
   (str "ataru:cache:lock:" name ":" lock-name))
@@ -215,6 +223,10 @@
 (defn- ->to-update-key
   [name]
   (str "ataru:cache:to-update:" name))
+
+(defn- ->mark-all-keys-to-update-queue-name
+  [name]
+  (str "mark-all-keys-to-update-queue:" name))
 
 (defn- car-set
   [name key value ttl]
@@ -312,32 +324,76 @@
         (recur (+ updated-count (count values))))
       (info "Updated" updated-count name "keys"))))
 
+(defn- mark-all-keys-to-update [redis name]
+  (loop [[cursor keys] (redis-scan redis name 0)]
+    (when (not-empty keys)
+      (wcar (:connection-opts redis)
+            (car-mark-to-update name (map #(cache-key->key name %) keys))))
+    (when (not= "0" cursor)
+      (recur (redis-scan redis name cursor)))))
+
+(defn- update-to-update-keys-runnable [redis loader name update-period]
+  (fn []
+    (try
+      (when (some? update-period)
+        (wcar (:connection-opts redis)
+              (car-mq/enqueue (->mark-all-keys-to-update-queue-name name) name name)))
+      (update-to-update-keys redis loader name)
+      (catch Exception e
+        (error e "Error while updating" name "keys")))))
+
+(defn- mark-all-keys-to-update-handler [redis name [update-period time-unit]]
+  (fn [{:keys [attempt]}]
+    (try
+      (info "Marking all" name "keys to update")
+      (mark-all-keys-to-update redis name)
+      {:status     :success
+       :backoff-ms (.toMillis time-unit update-period)}
+      (catch Exception e
+        (if (< attempt 2)
+          (do (warn "Error while marking all" name "keys to update, retrying")
+              {:status :retry})
+          (do (error e "Error while marking all" name "keys to update")
+              {:status :success}))))))
+
 (defrecord Cache [redis
                   loader
                   name
                   ttl-after-read
                   ttl-after-write
                   update-after-read?
-                  scheduler]
+                  update-period
+                  scheduler
+                  mq-worker]
   component/Lifecycle
 
   (start [this]
     (if (nil? scheduler)
-      (let [scheduler (ScheduledThreadPoolExecutor. 1)]
+      (let [scheduler (ScheduledThreadPoolExecutor. 1)
+            mq-worker (when (some? update-period)
+                          (car-mq/worker
+                           (:connection-opts redis)
+                           (->mark-all-keys-to-update-queue-name name)
+                           {:handler        (mark-all-keys-to-update-handler redis name update-period)
+                            :lock-ms        (.toMillis TimeUnit/MINUTES 2)
+                            :eoq-backoff-ms (.toMillis TimeUnit/SECONDS 10)
+                            :throttle-ms    (.toMillis TimeUnit/SECONDS 10)}))]
         (.scheduleAtFixedRate
          scheduler
-         (fn []
-           (try
-             (update-to-update-keys redis loader name)
-             (catch Exception e
-               (error e "Error while updating" name "keys"))))
+         (update-to-update-keys-runnable redis loader name update-period)
          10 10 TimeUnit/SECONDS)
-        (assoc this :scheduler scheduler))
+        (assoc this
+               :scheduler scheduler
+               :mq-worker mq-worker))
       this))
   (stop [this]
     (when (some? scheduler)
       (.shutdown scheduler))
-    (assoc this :scheduler nil))
+    (when (some? mq-worker)
+      (car-mq/stop mq-worker))
+    (assoc this
+           :scheduler nil
+           :mq-worker nil))
 
   cache/Cache
 
