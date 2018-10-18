@@ -112,7 +112,6 @@
           (thunk)))))
 
 (defn- update-to-update-keys [redis loader name]
-  (info "Updating" name "keys")
   (loop [updated-count 0]
     (if-let [keys (seq (wcar (:connection-opts redis)
                              (car/spop (->to-update-key name) 100)))]
@@ -126,15 +125,20 @@
                       :when     (contains? values key)]
                 (car/set (->cache-key name key) (get values key) :px ttl)))
         (recur (+ updated-count (count values))))
-      (info "Updated" updated-count name "keys"))))
+      (when (< 0 updated-count)
+        (info "Updated" updated-count name "keys")))))
 
 (defn- mark-all-keys-to-update [redis name]
-  (loop [[cursor keys] (redis-scan redis name 0)]
+  (loop [[cursor keys] (redis-scan redis name 0)
+         key-count     0]
     (when (not-empty keys)
       (wcar (:connection-opts redis)
             (car-mark-to-update name (map #(cache-key->key name %) keys))))
-    (when (not= "0" cursor)
-      (recur (redis-scan redis name cursor)))))
+    (if (= "0" cursor)
+      (when (< 0 (+ key-count (count keys)))
+        (info "Marked" (+ key-count (count keys)) name "keys to update"))
+      (recur (redis-scan redis name cursor)
+             (+ key-count (count keys))))))
 
 (defn- update-to-update-keys-runnable [redis loader name update-period]
   (fn []
@@ -149,7 +153,6 @@
 (defn- mark-all-keys-to-update-handler [redis name [update-period time-unit]]
   (fn [{:keys [attempt]}]
     (try
-      (info "Marking all" name "keys to update")
       (mark-all-keys-to-update redis name)
       {:status     :success
        :backoff-ms (.toMillis time-unit update-period)}
