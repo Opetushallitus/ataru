@@ -6,7 +6,8 @@
             [cljs-time.core :as c]))
 
 (def ^:private json-params {:format :json :response-format :json :keywords? true})
-(def max-part-size (* 1024 100))
+(def max-part-size
+  (get (js->clj js/config) "attachment-file-part-max-size-bytes" (* 1024 1024)))
 
 (defn- hex-md5-hash
   [array-buffer]
@@ -19,13 +20,6 @@
   (let [fr (js/FileReader.)]
     (.addEventListener fr "loadend" #(dispatch [:application-file-upload/check-file-part-status-and-upload url handlers (hex-md5-hash (.-result fr)) file 0]))
     (.readAsArrayBuffer fr file)))
-
-(reg-event-fx
-  :application-file-upload/start-upload
-  (fn [_ [file handlers]]
-    (let [fr (js/FileReader.)]
-      (.addEventListener fr "loadend" #(dispatch [:application-file-upload/check-file-part-status-and-upload "/hakemus/api/files/resumable" handlers (hex-md5-hash (.-result fr)) file 0]))
-      (.readAsArrayBuffer fr file))))
 
 (reg-event-fx
   :application-file-upload/check-file-part-status-and-upload
@@ -41,7 +35,7 @@
                                                           (dispatch (if file-exists have-file-dispatch not-have-file-dispatch)))
                                          :error-handler #(dispatch (conj error-handler %))})
           req                    (GET url params)]
-      (dispatch (conj started-handler req)))))
+      {:dispatch (conj started-handler req)})))
 
 (reg-event-fx
   :application-file-upload/upload-file-part
@@ -64,10 +58,10 @@
                                                               (.append "file-size" (.-size file))
                                                               (.append "file-part-number" file-part-number))})
           req                     (POST url params)]
-      (dispatch (conj started-handler req)))))
+      {:dispatch (conj started-handler req)})))
 
 (reg-event-db
-  :application/handle-attachment-progress-resumable
+  :application-file-upload/handle-attachment-progress-resumable
   (fn [db [_ field-descriptor attachment-idx question-group-idx evt file-part-number]]
     (if (.-lengthComputable evt)
       (let [now           (c/now)

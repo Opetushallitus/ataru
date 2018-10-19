@@ -896,13 +896,12 @@
 (reg-event-fx
   :application/add-single-attachment-resumable
   (fn [_ [_ field-descriptor attachment-idx file retries question-group-idx]]
-    ; TODO fx?
     (resumable-upload/upload-file
       "/hakemus/api/files/resumable"
       file
       {:handler          [:application/handle-attachment-upload field-descriptor attachment-idx question-group-idx]
        :error-handler    [:application/handle-attachment-upload-error field-descriptor attachment-idx name file (inc retries) question-group-idx]
-       :progress-handler [:application/handle-attachment-progress-resumable field-descriptor attachment-idx question-group-idx]
+       :progress-handler [:application-file-upload/handle-attachment-progress-resumable field-descriptor attachment-idx question-group-idx]
        :started-handler  [:application/handle-attachment-upload-started field-descriptor attachment-idx question-group-idx]})))
 
 (reg-event-fx

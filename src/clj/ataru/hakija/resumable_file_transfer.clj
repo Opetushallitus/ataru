@@ -1,6 +1,7 @@
 (ns ataru.hakija.resumable-file-transfer
   (:require [ataru.util.http-util :as http-util]
             [cheshire.core :as json]
+            [ataru.config.core :refer [config]]
             [ataru.config.url-helper :refer [resolve-url]]
             [clojure.java.io :as io]
             [pandect.algo.md5 :refer [md5]]
@@ -8,7 +9,7 @@
   (:import (java.text Normalizer Normalizer$Form)
            (java.io File)))
 
-(def max-part-size (* 1024 100))
+(def max-part-size (get-in config [:public-config :attachment-file-part-max-size-bytes] (* 1024 1024)))
 
 (defn- build-file-name
   [file-id file-name parts-count part-number]
@@ -81,7 +82,6 @@
         file           (:tempfile file-part)
         file-part-name (build-file-name file-id file-name num-parts part-number)]
     (store-part file-store file file-part-name)
-    (println "stored file" file-part-name)
     (if last-part?
       (if (all-parts-exist? file-store file-id file-name file-size)
         (merge {:status "complete"} {:stored-file (upload-file-to-liiteri file-store file-id file-name file-size)})
