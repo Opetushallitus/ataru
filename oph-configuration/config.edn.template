@@ -11,8 +11,8 @@
  :yksiloimattomat {:allow {{ataru_allow_yksiloimattomat}}}
  :cache {:type {{ataru_cache_type}}}
  :redis {:uri "{{ataru_redis_uri}}"}
- :temp-files {:s3 {:bucket "{{ataru_temp_file_bucket_name}}"
-                   :region "{{ataru_temp_file_bucket_region}}"}}
+ :aws {:region "{{aws_region}}"
+       :temp-files {:bucket "{{ataru_temp_file_bucket_name}}"}}
  :public-config {:applicant {:service_url "{{ataru_applicant_service_url}}"}
                  :virkailija {:service_url "https://{{host_virkailija}}/lomake-editori/"}
                  :environment-name "{{ataru_environment_name}}"

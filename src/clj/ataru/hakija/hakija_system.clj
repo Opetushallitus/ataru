@@ -45,7 +45,14 @@
 
      :suoritus-service (suoritus-service/new-suoritus-service)
 
-     :temp-file-store (filesystem-temp-file-store/new-store)
+     :s3-client (when (get-in config [:aws :temp-files])
+                  (s3-client/new-client))
+
+     :temp-file-store (if (get-in config [:aws :temp-files])
+                        (component/using
+                          (s3-temp-file-store/new-store)
+                          [:s3-client])
+                        (filesystem-temp-file-store/new-store))
 
      :handler (component/using
                 (handler/new-handler)
@@ -71,15 +78,6 @@
                     :suoritus-service])
 
      :redis (redis/map->Redis {})
-
-     ;(if (get-in config [:temp-files :s3])
-     ;  [:s3-client (s3-client/new-client)
-     ;   :temp-file-store (component/using
-     ;                      (s3-temp-file-store/new-store)
-     ;                      [:s3-client])]
-     ;  [:temp-file-store (filesystem-temp-file-store/new-store)])
-
-
 
      (mapcat (fn [cache]
                [(keyword (:name cache)) (component/using cache [:redis])])

@@ -1,4 +1,9 @@
 (defproject ataru "0.1.0-SNAPSHOT"
+  :managed-dependencies [[com.fasterxml.jackson.core/jackson-core "2.9.0"]
+                         [com.fasterxml.jackson.core/jackson-databind "2.9.0"]
+                         [com.fasterxml.jackson.core/jackson-annotations "2.9.0"]
+                         [com.fasterxml.jackson.dataformat/jackson-dataformat-cbor "2.9.0"]
+                         [com.fasterxml.jackson.dataformat/jackson-dataformat-smile "2.9.0"]]
   :dependencies [[org.clojure/clojure "1.9.0"]
 
                  ; clojurescript
