@@ -12,7 +12,7 @@
   (start [this]
     (let [credentials-provider (DefaultAWSCredentialsProviderChain/getInstance)
           client               (-> (AmazonS3Client/builder)
-                                   (.withRegion (Regions/fromName (get-in config [:aws :region])))
+                                   (.withRegion (Regions/fromName (get-in config [:aws :region] "eu-west-1")))
                                    (.withCredentials credentials-provider)
                                    (.build))]
       (-> this

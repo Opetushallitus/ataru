@@ -45,8 +45,7 @@
 
      :suoritus-service (suoritus-service/new-suoritus-service)
 
-     :s3-client (when (get-in config [:aws :temp-files])
-                  (s3-client/new-client))
+     :s3-client (s3-client/new-client)
 
      :temp-file-store (if (get-in config [:aws :temp-files])
                         (component/using
