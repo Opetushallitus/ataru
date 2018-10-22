@@ -16,6 +16,7 @@
    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
    [ataru.util :as util]
+   [clojure.data :refer [diff]]
    [ataru.virkailija.editor.form-utils :refer [visible?]]
    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
    [medley.core :refer [filter-vals]]
@@ -120,12 +121,13 @@
        (let [answers        (group-by :key (:answers application))
              hakutoiveet    (set (:hakukohde application))
              visible-fields (fn [form]
-                                (->> (util/flatten-form-fields (:content form))
-                                     (filter #(visible? % answers hakutoiveet
-                                                        (-> tarjonta-info :tarjonta :hakukohteet)))))
+                                (let [flat-form-fields (util/flatten-form-fields (:content form))]
+                                  (->> flat-form-fields
+                                       (filter #(visible? % (group-by :id flat-form-fields) answers hakutoiveet
+                                                          (-> tarjonta-info :tarjonta :hakukohteet))))))
              fields-left    (visible-fields form-left)
              fields-right   (visible-fields form-right)]
-         (not (fields-equal? (clojure.data/diff fields-left fields-right))))))
+         (not (fields-equal? (diff fields-left fields-right))))))
 
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
