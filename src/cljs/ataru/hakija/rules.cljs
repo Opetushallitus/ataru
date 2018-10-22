@@ -172,6 +172,7 @@
     (when auto-input?
       (ajax/get (str "/hakemus/api/postal-codes/" (:value postal-code))
                 :application/handle-postal-code-input
+                nil
                 :application/handle-postal-code-error))
     (-> db
         (update-in [:application :answers :postal-office]
