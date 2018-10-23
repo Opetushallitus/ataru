@@ -59,9 +59,11 @@
 (defn- custom-deadline [field]
   (get-in field [:params :deadline]))
 
+(def deadline-format (f/formatter "dd.MM.yyyy HH:mm" (time/time-zone-for-id "Europe/Helsinki")))
+
 (defn- editing-allowed-by-custom-deadline? [field]
   (some->> (custom-deadline field)
-           (f/parse (f/formatter "dd.MM.yyyy HH:mm" (time/time-zone-for-id "Europe/Helsinki")))
+           (f/parse deadline-format)
            (time/before? (time/now))))
 
 (defn- editing-allowed-by-hakuaika?
