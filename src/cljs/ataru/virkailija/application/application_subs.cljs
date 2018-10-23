@@ -3,6 +3,7 @@
             [cljs-time.core :as t]
             [re-frame.core :as re-frame]
             [medley.core :refer [find-first]]
+            [ataru.application-common.application-field-common :as common]
             [ataru.util :as u]
             [ataru.cljs-util :as util]))
 
@@ -464,7 +465,18 @@
 (re-frame.core/reg-sub
   :application/current-history-items
   (fn [db _]
-    (modify-event-changes db (-> db :application :selected-application-and-form :selected-event :id))))
+    (let [form-fields (-> db :application :selected-application-and-form :form u/form-fields-by-id)]
+      (when-let [changes (modify-event-changes db (-> db :application :selected-application-and-form :selected-event :id))]
+        (->> changes
+             (map (fn [[id change]]
+                    (match (get form-fields id)
+                      {:options options}
+                      [id (-> change
+                              (update :old common/replace-with-option-label options :fi)
+                              (update :new common/replace-with-option-label options :fi))]
+                      :else
+                      [id change])))
+             (into {}))))))
 
 (re-frame.core/reg-sub
   :application/selected-event
