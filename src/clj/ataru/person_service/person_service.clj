@@ -77,6 +77,9 @@
                       :syntymaaika  "1941-06-16"
                       :sukupuoli    "2"
                       :kansalaisuus [{:kansalaisuusKoodi "246"}]
+                      :aidinkieli   {:id          "742310"
+                                     :kieliKoodi  "fi"
+                                     :kieliTyyppi "suomi"}
                       :turvakielto  false
                       :yksiloity    false
                       :yksiloityVTJ false})
