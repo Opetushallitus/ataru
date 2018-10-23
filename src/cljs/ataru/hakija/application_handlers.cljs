@@ -923,7 +923,10 @@
                                     new-files)]
       {:db         (-> db
                        (assoc-in [:application :answers id :valid] false)
-                       (update-in [:application :answers id :values] (fnil identity []))
+                       (update-in [:application :answers id :values]
+                                  (fnil identity (if (some? question-group-idx)
+                                                   (vec (repeat (inc question-group-idx) []))
+                                                   [])))
                        (assoc-in path (vec (concat existing-attachments
                                                    new-attachments))))
        :dispatch-n (keep-indexed (fn [idx file]
@@ -1041,6 +1044,10 @@
   (fn [{db :db} [_ field-descriptor question-group-idx attachment-key _]]
     (let [id (keyword (:id field-descriptor))]
       {:db       (-> db
+                     (update-in [:application :answers id :values]
+                                (fnil identity (if (some? question-group-idx)
+                                                 (vec (repeat (inc question-group-idx) []))
+                                                 [])))
                      (update-in (cond-> [:application :answers id :values]
                                         (some? question-group-idx)
                                         (conj question-group-idx))
