@@ -85,10 +85,12 @@
   (get-many-from [this keys]
     (if (empty? keys)
       []
-      (map (fn [key value] (if (some? value) value (cache/get-from this key)))
-           keys
-           (wcar (:connection-opts redis)
-                 (apply car/mget (map #(str name "_" %) keys))))))
+      (mapcat (fn [keys]
+                (map (fn [key value] (if (some? value) value (cache/get-from this key)))
+                     keys
+                     (wcar (:connection-opts redis)
+                           (apply car/mget (map #(str name "_" %) keys)))))
+              (partition 5000 5000 nil keys))))
   (put-to [_ key value]
     (let [[ttl timeunit] ttl]
       (wcar (:connection-opts redis)
@@ -164,7 +166,7 @@
   (put-many-to [_ key-values]
     (when (not-empty key-values)
       (let [key-value-flattened (->> key-values
-                                     (map (fn [[k v]] [(str name "_" (clojure.core/name k)) v]))
+                                     (map (fn [[k v]] [(str name "_" k) v]))
                                      (filter (fn [[_ v]] (some? v))))
             [ttl timeunit] ttl
             ttl-ms              (.toMillis timeunit ttl)]
@@ -181,10 +183,12 @@
     (if (empty? keys)
       []
       (into {}
-            (map (fn [key value] (when (some? value) [key value]))
-                 keys
-                 (wcar (:connection-opts redis)
-                       (apply car/mget (map #(str name "_" %) keys)))))))
+            (mapcat (fn [keys]
+                      (map (fn [key value] (when (some? value) [key value]))
+                           keys
+                           (wcar (:connection-opts redis)
+                                 (apply car/mget (map #(str name "_" %) keys)))))
+                    (partition 5000 5000 nil keys)))))
   (put-to [_ key value]
     (let [[ttl timeunit] ttl]
       (wcar (:connection-opts redis)
