@@ -144,6 +144,9 @@
    :uploading                                   {:fi "Ladataan"
                                                  :sv "SV: Ladataan"
                                                  :ev "Uploading"}
+   :deadline-in                                 {:fi "Palautettava viimeistään"
+                                                 :sv "Deadline in"
+                                                 :en "Deadline in"}
    :file-type-forbidden                         {:fi "Tiedostoa ei ladattu, yritä uudelleen"
                                                  :en "File failed to upload, try again"
                                                  :sv "Filen kunde inte laddas, försök igen"}
@@ -711,6 +714,9 @@ You will receive a confirmation of your application to your email."}
    :attachment-name                             {:fi "Liitteen nimi"
                                                  :sv "Bilagans namn"
                                                  :en "EN: Liitteen nimi"}
+   :attachment-deadline                         {:fi "Valinnainen toimituspäivämäärä (pp.kk.vvvv hh:mm)"
+                                                 :sv "SV: Valinnainen toimituspäivämäärä (pp.kk.vvvv hh:mm)"
+                                                 :en "EN: Valinnainen toimituspäivämäärä (pp.kk.vvvv hh:mm)"}
    :attachments                                 {:fi "Liitepyynnöt"
                                                  :sv "Begäran om bilagor"
                                                  :en "EN: Liitepyynnöt"}

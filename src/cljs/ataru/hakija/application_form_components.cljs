@@ -779,8 +779,12 @@
                        (map #(.item file-list %)))]
     (dispatch [:application/add-attachments field-descriptor question-group-idx files])))
 
+(defn deadline-info [deadline]
+  [:div.application__form-upload-attachment--deadline
+   (str (get-translation :deadline-in) " " deadline)])
+
 (defn attachment-upload [field-descriptor component-id attachment-count question-group-idx]
-  (let [id (str component-id (when question-group-idx "-" question-group-idx) "-upload-button")]
+  (let [id       (str component-id (when question-group-idx "-" question-group-idx) "-upload-button")]
     [:div.application__form-upload-attachment-container
      [:input.application__form-upload-input
       {:id           id
@@ -795,7 +799,12 @@
       [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
       [:span.application__form-upload-button-add-text (get-translation :add-attachment)]]
      [:span.application__form-upload-button-info
-      (get-translation :file-size-info (util/size-bytes->str max-attachment-size-bytes))]]))
+      [:div
+       (get-translation :file-size-info (util/size-bytes->str max-attachment-size-bytes))]
+      (cond
+       (-> field-descriptor :params :deadline) (deadline-info (-> field-descriptor :params :deadline))
+       :else (when-let [deadline @(subscribe [:application/attachment-deadline field-descriptor])]
+               (deadline-info deadline)))]]))
 
 (defn- attachment-filename
   [id question-group-idx attachment-idx show-size?]

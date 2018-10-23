@@ -2,9 +2,14 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :as re-frame]
             [ataru.util :as util]
+            [ataru.hakuaika :refer [select-hakuaika-for-haku select-hakuaika-for-field attachment-edit-end]]
+            [ataru.virkailija.temporal :refer [millis->str]]
             [ataru.application-common.application-field-common :as afc]
             [ataru.hakija.application :refer [answers->valid-status]]
             [ataru.hakija.person-info-fields :as person-info-fields]))
+
+(defonce attachment-modify-grace-period-days
+  (get (js->clj js/config) "attachment-modify-grace-period-days" 14))
 
 (re-frame/reg-sub
   :application/form
@@ -61,6 +66,20 @@
     (re-frame/subscribe [:application/application]))
   (fn [application _]
     (:person application)))
+
+(re-frame/reg-sub
+  :application/attachment-deadline
+  (fn [db [_ field]]
+    (when-let [hakukohteet (-> db :form :tarjonta :hakukohteet)]
+      (when-let [hakuaika (or (select-hakuaika-for-field field hakukohteet)
+                              (select-hakuaika-for-haku (map :hakuaika hakukohteet)))]
+        (millis->str (attachment-edit-end hakuaika attachment-modify-grace-period-days))))))
+
+(re-frame/reg-sub
+  :application/haku-aika
+  (fn [db _]
+    (select-hakuaika-for-haku (->> (-> db :form :tarjonta :hakukohteet)
+                                            (map :hakuaika)))))
 
 (re-frame/reg-sub
   :application/answer-value

@@ -10,7 +10,9 @@
             [taoensso.timbre :refer [warn]]
             [clj-time.core :as time]
             [clj-time.coerce :as t]
+            [clj-time.format :as f]
             [schema.core :as s]
+            [ataru.hakuaika :refer [select-hakuaika-for-field attachment-edit-end]]
             [ataru.hakija.form-role :as form-role]
             [ataru.component-data.component :as component]
             [medley.core :refer [find-first]]
@@ -54,34 +56,24 @@
               (fn [content]
                 (clojure.walk/prewalk (set-submit-multiple-and-yhteishaku-if-ssn-or-email-field multiple? yhteishaku? haku-oid) content))))))
 
-(defn- attachment-modify-grace-period
-  [hakuaika]
-  (or (:attachment-modify-grace-period-days hakuaika)
-      (-> config
-        :public-config
-        (get :attachment-modify-grace-period-days 14))))
+(defn- custom-deadline [field]
+  (get-in field [:params :deadline]))
 
-(defn- select-first-ongoing-hakuaika-or-hakuaika-with-last-ending [hakuajat]
-  (if-let [ongoing-hakuaika (first (filter :on hakuajat))]
-    ongoing-hakuaika
-    (first (sort-by :end > (filter :end hakuajat)))))
+(def deadline-format (f/formatter "dd.MM.yyyy HH:mm" (time/time-zone-for-id "Europe/Helsinki")))
 
-(defn- select-hakuaika-for-field [field hakukohteet]
-  (let [field-hakukohde-and-group-oids (set (concat (:belongs-to-hakukohteet field)
-                                                    (:belongs-to-hakukohderyhma field)))
-        relevant-hakukohteet (cond->> hakukohteet
-                               (not-empty field-hakukohde-and-group-oids)
-                               (filter #(not-empty (clojure.set/intersection field-hakukohde-and-group-oids
-                                                                  (set (cons (:oid %) (:hakukohderyhmat %)))))))]
-    (select-first-ongoing-hakuaika-or-hakuaika-with-last-ending
-     (map :hakuaika relevant-hakukohteet))))
+(defn- editing-allowed-by-custom-deadline? [field]
+  (some->> (custom-deadline field)
+           (f/parse deadline-format)
+           (time/before? (time/now))))
 
 (defn- editing-allowed-by-hakuaika?
   [field hakukohteet application-in-processing-state?]
   (let [hakuaika            (select-hakuaika-for-field field hakukohteet)
         hakuaika-start      (some-> hakuaika :start t/from-long)
         hakuaika-end        (some-> hakuaika :end t/from-long)
-        attachment-edit-end (some-> hakuaika-end (time/plus (time/days (attachment-modify-grace-period hakuaika))))
+        attachment-edit-end (attachment-edit-end hakuaika (-> config
+                                                              :public-config
+                                                              (get :attachment-modify-grace-period-days 14)))
         hakukierros-end     (some-> hakuaika :hakukierros-end t/from-long)
         after?              (fn [t] (or (nil? t)
                                         (time/after? (time/now) t)))
@@ -103,7 +95,9 @@
                      (not (form-role/with-henkilo? roles)))
                 (not (contains? editing-forbidden-person-info-field-ids (keyword (:id field)))))
             (or (form-role/virkailija? roles)
-                (editing-allowed-by-hakuaika? field hakukohteet application-in-processing-state?))
+                (if (custom-deadline field)
+                  (editing-allowed-by-custom-deadline? field)
+                  (editing-allowed-by-hakuaika? field hakukohteet application-in-processing-state?)))
             (or (form-role/virkailija? roles)
                 (not (and (nil? hakukohteet)
                           application-in-processing-state?))))))
@@ -122,10 +116,11 @@
                                                     (keyword (:id field)))
                                          (not (form-role/virkailija? roles)))
                        cannot-edit? (or cannot-view?
-                                        (uneditable? field hakukohteet roles application-in-processing-state?))]
-                   (assoc field
-                          :cannot-view cannot-view?
-                          :cannot-edit cannot-edit?))
+                                        (uneditable? field hakukohteet roles application-in-processing-state?))
+                       field        (assoc field
+                                           :cannot-view cannot-view?
+                                           :cannot-edit cannot-edit?)]
+                   field)
                  field))
              content))))
 
