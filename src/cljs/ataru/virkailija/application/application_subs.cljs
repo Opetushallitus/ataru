@@ -462,20 +462,41 @@
               changes))
           (map vector modify-events change-history))))
 
+(defn- replace-change-value-with-label
+  [change field lang]
+  (match field
+    {:options options}
+    (-> change
+        (update :old common/replace-with-option-label options lang)
+        (update :new common/replace-with-option-label options lang))
+    :else
+    change))
+
+(defn- breadcrumb-label
+  [field form-fields answers lang]
+  (conj (if-let [parent-field (some-> (:followup-of field) keyword form-fields)]
+          (let [parent-breadcrumb (breadcrumb-label parent-field form-fields answers lang)
+                value             (common/replace-with-option-label (:option-value field)
+                                                                    (:options parent-field)
+                                                                    lang)]
+            (conj (vec (butlast parent-breadcrumb))
+                  (conj (last parent-breadcrumb) value)))
+          [])
+        [(from-multi-lang (:label field) lang)]))
+
 (re-frame.core/reg-sub
   :application/current-history-items
   (fn [db _]
-    (let [form-fields (-> db :application :selected-application-and-form :form u/form-fields-by-id)]
+    (let [lang        @(re-frame.core/subscribe [:editor/virkailija-lang])
+          form-fields (-> db :application :selected-application-and-form :form u/form-fields-by-id)
+          answers     (-> db :application :selected-application-and-form :application :answers)]
       (when-let [changes (modify-event-changes db (-> db :application :selected-application-and-form :selected-event :id))]
         (->> changes
              (map (fn [[id change]]
-                    (match (get form-fields id)
-                      {:options options}
+                    (let [field (get form-fields id)]
                       [id (-> change
-                              (update :old common/replace-with-option-label options :fi)
-                              (update :new common/replace-with-option-label options :fi))]
-                      :else
-                      [id change])))
+                              (replace-change-value-with-label field lang)
+                              (assoc :label (breadcrumb-label field form-fields answers lang)))])))
              (into {}))))))
 
 (re-frame.core/reg-sub

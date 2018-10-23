@@ -1829,13 +1829,27 @@
    [:div.application-handling__version-history-sub-row__right
     right]])
 
+(defn- breadcrumb-label
+  [history-item]
+  [:span.application-handling__version-history-row-breadcrumb
+   (->> (:label history-item)
+        (map-indexed (fn [i [label value]]
+                       ^{:key (str "breadcrumb-" i "-" label)}
+                       [^{:key (str "breadcrumb-" i "-" label "-label")}
+                        [:span.application-handling__version-history-row-breadcrumb-label
+                         label ": "]
+                        (when (some? value)
+                          ^{:key (str "breadcrumb-" i "-" label "-value")}
+                          [:span.application-handling__version-history-row-breadcrumb-value
+                           "\"" value "\" > "])]))
+        (mapcat identity))])
+
 (defn application-version-history-row [key history-item]
   ^{:key (str "application-change-history-" key)}
   [:div.application-handling__version-history-row
    [application-version-history-sub-row
     nil
-    [:span.application-handling__version-history-row-label
-     (:label history-item) ":"]]
+    (breadcrumb-label history-item)]
    [application-version-history-sub-row
     [:span.application-handling__version-history-value-label
      (get-virkailija-translation :diff-removed)]
