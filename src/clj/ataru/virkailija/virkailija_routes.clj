@@ -382,6 +382,7 @@
                                 application-key
                                 session
                                 organization-service
+                                ohjausparametrit-service
                                 tarjonta-service
                                 job-runner)]
           (response/ok resend-event)

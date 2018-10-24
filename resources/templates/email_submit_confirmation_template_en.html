@@ -48,7 +48,8 @@
           <ul>
             {% for attachment in attachments-without-answer %}
             <li>
-              {{attachment}}
+              {{attachment.label}} <br>
+              {{attachment.deadline}}
             </li>
             {% endfor %}
           </ul>

@@ -5,7 +5,12 @@
             [ataru.background-job.job :as job]
             [ataru.config.core :refer [config]]
             [ataru.email.email-store :as email-store]
+            [ataru.tarjonta-service.hakuaika :refer [millis->localized-date-time]]
             [ataru.forms.form-store :as forms]
+            [ataru.tarjonta-service.hakukohde :as hakukohde]
+            [ataru.hakuaika :as hakuaika]
+            [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
+            [ataru.tarjonta-service.hakuaika :as tarjonta-hakuaika]
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
             [ataru.translations.texts :refer [email-default-texts]]
@@ -105,6 +110,12 @@
    :body           (-> (submit-email-template-filename lang)
                        (selmer/render-file {:lang            lang
                                             :hakukohteet     ["Hakukohde 1" "Hakukohde 2" "Hakukohde 3"]
+                                            :attachments-without-answer [{:label "Liite 1"
+                                                                          :deadline (get (millis->localized-date-time 1540295947420) (keyword lang))}
+                                                                         {:label "Liite 2"
+                                                                          :deadline ""}
+                                                                         {:label "Liite 3"
+                                                                          :deadline ""}]
                                             :application-url "https://opintopolku.fi/hakemus/01234567890abcdefghijklmn"
                                             :application-oid "1.2.246.562.11.00000000000000000000"
                                             :content         (->safe-html content)
@@ -116,10 +127,25 @@
         (add-blank-templates x)
         (map #(preview-submit-email (:lang %) (:subject %) (:content %) (:content-ending %)) x)))
 
-(defn- create-email [tarjonta-service subject template-name application-id]
+(defn- attachment-with-deadline [tarjonta-info application lang field]
+  (let [attachment {:label (-> field :label lang)}]
+    (if-let [deadline (or (-> field :params :deadline-label lang)
+                          (when-some [hakukohteet (get-in tarjonta-info [:tarjonta :hakukohteet])]
+                            (some-> (hakuaika/select-hakuaika-for-field field hakukohteet) :label :attachment-period-end lang)))]
+      (assoc attachment :deadline deadline)
+      attachment)))
+
+(defn- create-email [tarjonta-service organization-service ohjausparametrit-service subject template-name application-id]
   (let [application                     (application-store/get-application application-id)
+        tarjonta-info                   (tarjonta-parser/parse-tarjonta-info-by-haku
+                                          tarjonta-service
+                                          organization-service
+                                          ohjausparametrit-service
+                                          (:haku application)
+                                          (:hakukohde application))
         answers-by-key                  (-> application :answers util/answers-by-key)
-        form                            (forms/fetch-by-id (:form application))
+        form                            (-> (forms/fetch-by-id (:form application))
+                                            hakukohde/populate-attachment-deadlines)
         lang                            (keyword (:lang application))
         attachment-keys-without-answers (->> (application-store/get-application-attachment-reviews (:key application))
                                              (map :attachment-key)
@@ -129,7 +155,7 @@
                                              :content
                                              util/flatten-form-fields
                                              (filter #(contains? attachment-keys-without-answers (:id %)))
-                                             (map #(-> % :label lang)))
+                                             (map #(attachment-with-deadline tarjonta-info application lang %)))
         email-template                  (find-first #(= (:lang application) (:lang %)) (get-email-templates (:key form)))
         content                         (-> email-template
                                             :content
@@ -158,8 +184,10 @@
      :subject    subject
      :body       body}))
 
-(defn- create-submit-email [tarjonta-service application-id]
+(defn- create-submit-email [tarjonta-service organization-service ohjausparametrit-service application-id]
   (create-email tarjonta-service
+                organization-service
+                ohjausparametrit-service
                 nil
                 submit-email-template-filename
                 application-id))
@@ -173,8 +201,8 @@
       (preview-submit-email lang subject content content-ending)) previews))
 
 
-(defn- create-edit-email [tarjonta-service application-id]
-  (create-email tarjonta-service
+(defn- create-edit-email [tarjonta-service organization-service ohjausparametrit-service application-id]
+  (create-email tarjonta-service organization-service ohjausparametrit-service
                 edit-email-subjects
                 #(str "templates/email_edit_confirmation_template_"
                       (name %)
@@ -182,8 +210,8 @@
                 application-id))
 
 (defn- create-refresh-secret-email
-  [tarjonta-service application-id]
-  (create-email tarjonta-service
+  [tarjonta-service organization-service ohjausparametrit-service application-id]
+  (create-email tarjonta-service organization-service ohjausparametrit-service
                 refresh-secret-email-subjects
                 #(str "templates/email_refresh_secret_template_" (name %) ".html")
                 application-id))
@@ -196,18 +224,20 @@
     (log/info email)))
 
 (defn start-email-submit-confirmation-job
-  [tarjonta-service job-runner application-id]
+  [tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
   (start-email-job job-runner (create-submit-email tarjonta-service
+                                                   organization-service
+                                                   ohjausparametrit-service
                                                    application-id)))
 
 (defn start-email-edit-confirmation-job
-  [tarjonta-service job-runner application-id]
-  (start-email-job job-runner (create-edit-email tarjonta-service
+  [tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
+  (start-email-job job-runner (create-edit-email tarjonta-service organization-service ohjausparametrit-service
                                                  application-id)))
 
 (defn start-email-refresh-secret-confirmation-job
-  [tarjonta-service job-runner application-id]
-  (start-email-job job-runner (create-refresh-secret-email tarjonta-service
+  [tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
+  (start-email-job job-runner (create-refresh-secret-email tarjonta-service organization-service ohjausparametrit-service
                                                            application-id)))
 
 (defn store-email-templates

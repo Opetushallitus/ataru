@@ -2,8 +2,7 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :as re-frame]
             [ataru.util :as util]
-            [ataru.hakuaika :refer [select-hakuaika-for-haku select-hakuaika-for-field attachment-edit-end]]
-            [ataru.virkailija.temporal :refer [millis->str]]
+            [ataru.hakuaika :as hakuaika]
             [ataru.application-common.application-field-common :as afc]
             [ataru.hakija.application :refer [answers->valid-status]]
             [ataru.hakija.person-info-fields :as person-info-fields]))
@@ -69,17 +68,19 @@
 
 (re-frame/reg-sub
   :application/attachment-deadline
-  (fn [db [_ field]]
-    (when-let [hakukohteet (-> db :form :tarjonta :hakukohteet)]
-      (when-let [hakuaika (or (select-hakuaika-for-field field hakukohteet)
-                              (select-hakuaika-for-haku (map :hakuaika hakukohteet)))]
-        (millis->str (attachment-edit-end hakuaika attachment-modify-grace-period-days))))))
+  (fn [db _]
+    [(re-frame/subscribe [:state-query [:form :tarjonta :hakukohteet]])
+     (re-frame/subscribe [:application/selected-language])])
+  (fn [[hakukohteet selected-language] [_ field]]
+    (if-let [deadline (or (-> field :params :deadline-label selected-language)
+                          (when hakukohteet
+                            (some-> (hakuaika/select-hakuaika-for-field field hakukohteet) :label :attachment-period-end selected-language)))]
+      deadline)))
 
 (re-frame/reg-sub
   :application/haku-aika
   (fn [db _]
-    (select-hakuaika-for-haku (->> (-> db :form :tarjonta :hakukohteet)
-                                            (map :hakuaika)))))
+    (-> db :form :tarjonta :hakuaika)))
 
 (re-frame/reg-sub
   :application/answer-value

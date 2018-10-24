@@ -38,6 +38,10 @@
                                       (s/optional-key :sv) s/Str
                                       (s/optional-key :en) s/Str})
 
+(s/defschema LocalizedDateTime {:fi s/Str
+                                :sv s/Str
+                                :en s/Str})
+
 (s/defschema Form {(s/optional-key :id)                s/Int
                    :name                               LocalizedStringOptional
                    :content                            (s/pred empty?)
@@ -60,7 +64,8 @@
 
 (s/defschema Params {(s/optional-key :adjacent)                         s/Bool
                      (s/optional-key :can-submit-multiple-applications) s/Bool
-                     (s/optional-key :deadline)                         (s/maybe s/Str)
+                     (s/optional-key :deadline)                         s/Str
+                     (s/optional-key :deadline-label)                   LocalizedDateTime
                      (s/optional-key :yhteishaku)                       (s/maybe s/Bool)
                      (s/optional-key :repeatable)                       s/Bool
                      (s/optional-key :numeric)                          s/Bool
@@ -216,18 +221,24 @@
                   #(= "update" (:type %)) UpdateElementOperation
                   #(= "delete" (:type %)) DeleteElementOperation))
 
+(s/defschema Hakuaika
+  {:label                               {:start                 LocalizedDateTime
+                                         :end                   LocalizedDateTime
+                                         :attachment-period-end LocalizedDateTime}
+   :start                               s/Int
+   :end                                 (s/maybe s/Int)
+   :on                                  s/Bool
+   :jatkuva-haku?                       s/Bool
+   :attachment-modify-grace-period-days (s/maybe s/Int)
+   :hakukierros-end                     (s/maybe s/Int)})
+
 (s/defschema FormTarjontaHakukohde
   {:oid                          s/Str
    :name                         LocalizedStringOptional
    :tarjoaja-name                LocalizedStringOptional
    (s/optional-key :form-key)    (s/maybe s/Str)
    :hakukohderyhmat              [s/Str]
-   :hakuaika                     {:start                               s/Int
-                                  :end                                 (s/maybe s/Int)
-                                  :on                                  s/Bool
-                                  :jatkuva-haku?                       s/Bool
-                                  :attachment-modify-grace-period-days (s/maybe s/Int)
-                                  :hakukierros-end                     (s/maybe s/Int)}
+   :hakuaika                     Hakuaika
    (s/optional-key :koulutukset) [{:oid                  s/Str
                                    :koulutuskoodi-name   LocalizedStringOptional
                                    :tutkintonimike-names [LocalizedStringOptional]
@@ -237,12 +248,12 @@
 (s/defschema FormTarjontaMetadata
   {:hakukohteet                        [FormTarjontaHakukohde]
    :haku-oid                           s/Str
+   :hakuaika                           Hakuaika
    :haku-name                          LocalizedStringOptional
    :prioritize-hakukohteet             s/Bool
    :max-hakukohteet                    (s/maybe s/Int)
    :can-submit-multiple-applications   s/Bool
-   :yhteishaku                         (s/maybe s/Bool)
-   (s/optional-key :default-hakukohde) FormTarjontaHakukohde})
+   :yhteishaku                         (s/maybe s/Bool)})
 
 (s/defschema Haku
   {:oid                    s/Str

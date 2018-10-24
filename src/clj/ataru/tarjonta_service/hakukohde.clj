@@ -1,6 +1,7 @@
 (ns ataru.tarjonta-service.hakukohde
   (:require [ataru.util :refer [koulutus->str non-blank-val]]
             [clojure.string :refer [join blank?]]
+            [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.util :as util]))
 
 (defn- koulutus->str-map
@@ -49,6 +50,19 @@
     (let [hakukohteet-field (nth (:content form) hakukohteet-field-idx)
           updated-field     (populate-hakukohteet-field hakukohteet-field tarjonta-info)]
       (assoc-in form [:content hakukohteet-field-idx] updated-field))))
+
+(defn populate-attachment-deadlines [form]
+  (update form :content
+    (fn [content]
+        (clojure.walk/prewalk
+          (fn [field]
+              (if (and (= (:fieldType field) "attachment")
+                       (seq (-> field :params :deadline)))
+                (assoc-in field [:params :deadline-label] (hakuaika/date-time->localized-date-time
+                                                            (hakuaika/str->date-time
+                                                              (-> field :params :deadline))))
+                field))
+          content))))
 
 (defn populate-hakukohde-answer-options [form tarjonta-info]
   ; walking through entire content is very slow for large forms, so try a naive optimization first

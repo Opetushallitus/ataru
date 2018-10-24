@@ -28,7 +28,7 @@
       {% if attachments-without-answer|not-empty %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
-          Vänlig kom ihåg att lägga till bilagor till dessa frågor:
+          Vänlig kom ihåg att lägga till bilagor:
         </td>
       </tr>
       <tr>
@@ -36,7 +36,8 @@
           <ul>
             {% for attachment in attachments-without-answer %}
             <li>
-              {{attachment}}
+              {{attachment.label}} <br>
+              {{attachment.deadline}}
             </li>
             {% endfor %}
           </ul>

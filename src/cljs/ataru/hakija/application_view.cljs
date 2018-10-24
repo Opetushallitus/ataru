@@ -10,7 +10,6 @@
             [cljs-time.core :refer [to-default-time-zone now after?]]
             [cljs-time.format :refer [unparse unparse-local formatter]]
             [cljs-time.coerce :refer [from-long]]
-            [ataru.virkailija.temporal :refer [millis->str]]
             [goog.string :as gstring]
             [reagent.ratom :refer [reaction]]
             [reagent.core :as r]))
@@ -33,14 +32,16 @@
         apply-dates                        (when-let [hakuaika @(subscribe [:application/haku-aika])]
                                              (if (:jatkuva-haku? hakuaika)
                                                (get-translation :continuous-period)
-                                               (str (get-translation :application-period)
-                                                    " "
-                                                    (millis->str (:start hakuaika))
-                                                    " - "
-                                                    (millis->str (:end hakuaika))
-                                                    (when (and (not (:on hakuaika))
-                                                               (not virkailija?))
-                                                      (str " (" (get-translation :not-within-application-period) ")")))))]
+                                               [:span (str (get-translation :application-period)
+                                                           " "
+                                                           (-> hakuaika :label :start selected-lang)
+                                                           " - "
+                                                           (-> hakuaika :label :end selected-lang)
+                                                           )
+                                                [:br]
+                                                (when (and (not (:on hakuaika))
+                                                           (not virkailija?))
+                                                  (str " (" (get-translation :not-within-application-period) ")"))]))]
     [:div
      [:div.application__header-container
       [:span.application__header (or (-> form :tarjonta :haku-name selected-lang)

@@ -236,8 +236,10 @@
                            (:type attachment-finalizer-job/job-definition)
                            {:application-id application-id})))
 
-(defn- start-submit-jobs [tarjonta-service job-runner application-id]
+(defn- start-submit-jobs [tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
   (application-email/start-email-submit-confirmation-job tarjonta-service
+                                                         organization-service
+                                                         ohjausparametrit-service
                                                          job-runner
                                                          application-id)
   (start-person-creation-job job-runner application-id)
@@ -253,8 +255,8 @@
     (start-person-creation-job job-runner application-id))
   (start-attachment-finalizer-job job-runner application-id))
 
-(defn- start-hakija-edit-jobs [tarjonta-service job-runner application-id]
-  (application-email/start-email-edit-confirmation-job tarjonta-service
+(defn- start-hakija-edit-jobs [tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
+  (application-email/start-email-edit-confirmation-job tarjonta-service organization-service ohjausparametrit-service
                                                        job-runner
                                                        application-id)
   (start-attachment-finalizer-job job-runner application-id))
@@ -274,7 +276,7 @@
       (do
         (when virkailija-secret
           (virkailija-edit/invalidate-virkailija-create-secret virkailija-secret))
-        (start-submit-jobs tarjonta-service job-runner id))
+        (start-submit-jobs tarjonta-service organization-service ohjausparametrit-service job-runner id))
       (do
         (audit-log/log {:new       application
                         :operation audit-log/operation-failed
@@ -296,10 +298,10 @@
     (if passed?
       (if virkailija-secret
         (start-virkailija-edit-jobs job-runner
-                                    virkailija-secret
-                                    id
-                                    application)
-        (start-hakija-edit-jobs tarjonta-service job-runner id))
+          virkailija-secret
+          id
+          application)
+        (start-hakija-edit-jobs tarjonta-service organization-service ohjausparametrit-service job-runner id))
       (do
         (audit-log/log {:new       application
                         :operation audit-log/operation-failed
@@ -395,9 +397,9 @@
      inactivated?]))
 
 (defn create-new-secret-and-send-link
-  [tarjonta-service job-runner old-secret]
+  [tarjonta-service organization-service ohjausparametrit-service job-runner old-secret]
   (let [application-id (application-store/add-new-secret-to-application-by-old-secret old-secret)]
-    (application-email/start-email-refresh-secret-confirmation-job
-     tarjonta-service
-     job-runner
-     application-id)))
+    (application-email/start-email-refresh-secret-confirmation-job tarjonta-service
+                                                                   organization-service ohjausparametrit-service
+                                                                   job-runner
+                                                                   application-id)))
