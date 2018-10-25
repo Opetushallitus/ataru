@@ -156,59 +156,60 @@
        first
        :value))
 
+
 (defn- hakuaika-ongoing
   [_ _ _]
-  {:on                                  true
-   :start                               (- (System/currentTimeMillis) (* 2 24 3600 1000))
-   :end                                 (+ (System/currentTimeMillis) (* 2 24 3600 1000))
-   :hakukierros-end                     nil
-   :jatkuva-haku?                       false
-   :attachment-modify-grace-period-days (-> config :public-config :attachment-modify-grace-period-days)})
+  (hakuaika/hakuaika-with-label {:on                                  true
+                                 :start                               (- (System/currentTimeMillis) (* 2 24 3600 1000))
+                                 :end                                 (+ (System/currentTimeMillis) (* 2 24 3600 1000))
+                                 :hakukierros-end                     nil
+                                 :jatkuva-haku?                       false
+                                 :attachment-modify-grace-period-days (-> config :public-config :attachment-modify-grace-period-days)}))
 
 (defn- hakuaika-ended
   [_ _ _]
-  {:on                                  false
-   :start                               (- (System/currentTimeMillis) (* 2 24 3600 1000))
-   :end                                 (- (System/currentTimeMillis) (* 2 24 3600 1000))
-   :hakukierros-end                     nil
-   :jatkuva-haku?                       false
-   :attachment-modify-grace-period-days nil})
+  (hakuaika/hakuaika-with-label {:on                                  false
+                                 :start                               (- (System/currentTimeMillis) (* 2 24 3600 1000))
+                                 :end                                 (- (System/currentTimeMillis) (* 2 24 3600 1000))
+                                 :hakukierros-end                     nil
+                                 :jatkuva-haku?                       false
+                                 :attachment-modify-grace-period-days nil}))
 
 (defn- hakuaika-ended-within-grace-period
   [_ _ _]
   (let [edit-grace-period (-> config :public-config :attachment-modify-grace-period-days)
         start             (* 2 edit-grace-period)
         end               (quot edit-grace-period 2)]
-    {:on                                  false
-     :start                               (- (System/currentTimeMillis) (* start 24 3600 1000))
-     :end                                 (- (System/currentTimeMillis) (* end 24 3600 1000))
-     :hakukierros-end                     nil
-     :jatkuva-haku?                       false
-     :attachment-modify-grace-period-days edit-grace-period}))
+    (hakuaika/hakuaika-with-label {:on                                  false
+                                   :start                               (- (System/currentTimeMillis) (* start 24 3600 1000))
+                                   :end                                 (- (System/currentTimeMillis) (* end 24 3600 1000))
+                                   :hakukierros-end                     nil
+                                   :jatkuva-haku?                       false
+                                   :attachment-modify-grace-period-days edit-grace-period})))
 
 (defn- hakuaika-ended-within-grace-period-hakukierros-ongoing
   [_ _ _]
   (let [edit-grace-period (-> config :public-config :attachment-modify-grace-period-days)
         start             (* 2 edit-grace-period)
         end               (quot edit-grace-period 2)]
-    {:on                                  false
-     :start                               (- (System/currentTimeMillis) (* start 24 3600 1000))
-     :end                                 (- (System/currentTimeMillis) (* end 24 3600 1000))
-     :hakukierros-end                     (+ (System/currentTimeMillis) (* 2 24 3600 1000))
-     :jatkuva-haku?                       false
-     :attachment-modify-grace-period-days edit-grace-period}))
+    (hakuaika/hakuaika-with-label {:on                                  false
+                                   :start                               (- (System/currentTimeMillis) (* start 24 3600 1000))
+                                   :end                                 (- (System/currentTimeMillis) (* end 24 3600 1000))
+                                   :hakukierros-end                     (+ (System/currentTimeMillis) (* 2 24 3600 1000))
+                                   :jatkuva-haku?                       false
+                                   :attachment-modify-grace-period-days edit-grace-period})))
 
 (defn- hakuaika-ended-grace-period-passed-hakukierros-ongoing
   [_ _ _]
   (let [edit-grace-period (-> config :public-config :attachment-modify-grace-period-days)
         start             (* 2 edit-grace-period)
         end               (+ edit-grace-period 1)]
-    {:on                                  false
-     :start                               (- (System/currentTimeMillis) (* start 24 3600 1000))
-     :end                                 (- (System/currentTimeMillis) (* end 24 3600 1000))
-     :hakukierros-end                     (+ (System/currentTimeMillis) (* 2 24 3600 1000))
-     :jatkuva-haku?                       false
-     :attachment-modify-grace-period-days edit-grace-period}))
+    (hakuaika/hakuaika-with-label {:on                                  false
+                                   :start                               (- (System/currentTimeMillis) (* start 24 3600 1000))
+                                   :end                                 (- (System/currentTimeMillis) (* end 24 3600 1000))
+                                   :hakukierros-end                     (+ (System/currentTimeMillis) (* 2 24 3600 1000))
+                                   :jatkuva-haku?                       false
+                                   :attachment-modify-grace-period-days edit-grace-period})))
 
 (describe "/haku"
   (tags :unit :hakija-routes)

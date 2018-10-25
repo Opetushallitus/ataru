@@ -53,6 +53,16 @@
     (some-> hakuaika-end (t/plus (t/days (or hakuaika-period
                                              default-modify-grace-period))))))
 
+(defn hakuaika-with-label
+  ([hakuaika]
+   (hakuaika-with-label hakuaika 0))
+  ([{:keys [start end attachment-modify-grace-period-days] :as hakuaika} default-grace-period]
+  (assoc hakuaika :label {:start                 (millis->localized-date-time start)
+                          :end                   (millis->localized-date-time end)
+                          :attachment-period-end (millis->localized-date-time (attachment-edit-end end
+                                                                                                   attachment-modify-grace-period-days
+                                                                                                   default-grace-period))})))
+
 (defn get-hakuaika-info [haku ohjausparametrit hakukohde]
   (let [[start end] (if (:kaytetaanHakukohdekohtaistaHakuaikaa hakukohde)
                       [(:hakuaikaAlkuPvm hakukohde)
@@ -63,14 +73,9 @@
         default-grace-period (-> config
                                  :public-config
                                  (get :attachment-modify-grace-period-days 14))]
-    {:start                               start
-     :end                                 end
-     :on                                  (hakuaika-on start end)
-     :attachment-modify-grace-period-days (-> ohjausparametrit :PH_LMT :value)
-     :jatkuva-haku?                       (jatkuva-haku? haku)
-     :hakukierros-end                     (-> ohjausparametrit :PH_HKP :date)
-     :label                               {:start                 (millis->localized-date-time start)
-                                           :end                   (millis->localized-date-time end)
-                                           :attachment-period-end (millis->localized-date-time (attachment-edit-end end
-                                                                                                                    (-> ohjausparametrit :PH_LMT :value)
-                                                                                                                    default-grace-period))}}))
+    (hakuaika-with-label {:start                               start
+                          :end                                 end
+                          :on                                  (hakuaika-on start end)
+                          :attachment-modify-grace-period-days (-> ohjausparametrit :PH_LMT :value)
+                          :jatkuva-haku?                       (jatkuva-haku? haku)
+                          :hakukierros-end                     (-> ohjausparametrit :PH_HKP :date)} default-grace-period)))
