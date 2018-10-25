@@ -64,7 +64,7 @@
 
 (s/defschema Params {(s/optional-key :adjacent)                         s/Bool
                      (s/optional-key :can-submit-multiple-applications) s/Bool
-                     (s/optional-key :deadline)                         s/Str
+                     (s/optional-key :deadline)                         (s/maybe s/Str)
                      (s/optional-key :deadline-label)                   LocalizedDateTime
                      (s/optional-key :yhteishaku)                       (s/maybe s/Bool)
                      (s/optional-key :repeatable)                       s/Bool
