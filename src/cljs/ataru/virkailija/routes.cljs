@@ -79,9 +79,7 @@
     [query-params]
     (dispatch [:set-active-panel :application])
     (dispatch [:application/show-search-term])
-    (if-let [term (:term query-params)]
-      (dispatch [:application/search-by-term term])
-      (dispatch [:application/clear-applications-haku-and-form-selections])))
+    (dispatch [:application/search-by-term (or (:term query-params) "")]))
 
   (defroute "/lomake-editori/applications/hakukohde/:hakukohde-oid"
     [hakukohde-oid query-params]
