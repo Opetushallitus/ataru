@@ -1,10 +1,6 @@
 @import "vars";
 @import "mixins";
 
-.editor-form--padded {
-  padding-left: 14px;
-}
-
 .editor-form__container {
   padding: 14px 85px 0 85px;
   background-color: @very-light-gray;
@@ -460,35 +456,23 @@
   font-size: 20px;
 }
 
-.editor-form__section_wrapper {
-  border: 1px solid @section-gray-border;
-  border-radius: 2px;
-}
-
 .editor-form__module-fields {
   font-size: 14px;
   color: @blue-text-color;
-  margin: 15px;
 }
 
 .editor-form__module-fields-label {
   font-weight: bold;
 }
 
-.editor-form__section_wrapper > .editor-form__component-wrapper:first-of-type {
-  border: none;
-  margin: 0;
-}
-
-section.editor-form > div > .editor-form__component-wrapper {
-  margin: 0;
-}
-
 .editor-form__component-wrapper {
   border: 1px solid @section-gray-border;
   background-color: white;
   border-radius: 2px;
-  margin: 0px 11px;
+}
+
+.editor-form__component-content-wrapper {
+  padding: 12px;
 }
 
 .fade-out {
@@ -508,7 +492,7 @@ section.editor-form > div > .editor-form__component-wrapper {
 }
 
 .editor-form__info-addon-wrapper {
-  padding: 0px 14px 20px;
+  margin-bottom: 20px;
   .editor-form__info-addon-checkbox {
     display: flex;
     font-size: 14px;
@@ -523,7 +507,7 @@ section.editor-form > div > .editor-form__component-wrapper {
 }
 
 .editor-form__text-field-wrapper {
-  padding: 10px 14px 0px;
+  padding-right: 14px;
   display: flex;
   flex-flow: column nowrap;
   flex: initial;
@@ -613,7 +597,7 @@ section.editor-form > div > .editor-form__component-wrapper {
   align-items: stretch;
   display: flex;
   flex-flow: row nowrap;
-  margin: 18px 14px;
+  margin: 18px 0px;
 }
 
 .editor-form__multi-options-arrows-container {
@@ -720,24 +704,12 @@ section.editor-form > div > .editor-form__component-wrapper {
 }
 
 .editor-form__add-dropdown-item {
-  padding-bottom: 14px;
-  margin: 14px 14px 0 14px;
+  margin-left: 12px;
 }
 
 .editor-form__add-dropdown-item--disabled {
   color: @gray;
   cursor: default;
-}
-
-form > div > .editor-form__component-wrapper {
-  margin-left: 0;
-  margin-right: 0;
-}
-
-
-.editor-form__text-field--section {
-  padding-bottom: 1px;
-  padding-left: 12px;
 }
 
 .editor-form__button-wrapper {
@@ -810,7 +782,7 @@ form > div > .editor-form__component-wrapper {
   display: flex;
   flex: auto;
   flex-flow: column nowrap;
-  padding: 10px 14px 20px;
+  padding: 0px 14px 20px;
   justify-content: flex-start;
 }
 
@@ -1025,29 +997,7 @@ form > div > .editor-form__component-wrapper {
     margin-bottom: 6px;
 }
 
-.editor-form__section_wrapper {
-  .editor-form__add-component-toolbar {
-    margin-left: 11px;
-    margin-right: 11px;
-    margin-bottom: 14px;
-  }
-
-  .editor-form__drag_n_drop_spacer--dashbox-visible {
-    margin-left: 11px;
-    margin-right: 11px;
-  }
-
-  .editor-form__section_wrapper {
-    margin-left: 11px;
-    margin-right: 11px;
-  }
-}
-
 .editor-form__drag_n_drop_spacer_container_for_component {
-  padding-top: 17px;
-}
-
-.editor-form__drag_n_drop_spacer_container_for_component_group {
   padding-top: 17px;
 }
 
@@ -1133,10 +1083,6 @@ form > div > .editor-form__component-wrapper {
 
 .editor-form__followup-question-overlay-parent {
   position: relative;
-
-  .editor-form__section_wrapper {
-    margin: 0px;
-  }
 }
 
 .editor-form__followup-question-overlay-outer {
@@ -1144,44 +1090,9 @@ form > div > .editor-form__component-wrapper {
 }
 
 .editor-form__followup-question-overlay {
-  border-top: 1px solid @section-gray-border;
-  border-bottom: 1px solid @section-gray-border;
+  border: 1px solid @section-gray-border;
   background-color: #fcfcfc;
-  padding: 14px;
-}
-
-.editor-form__followup-question-overlay .editor-form__component-wrapper {
-  margin: 0;
-  margin-bottom: 14px;
-}
-
-.editor-form__followup-question-overlay .editor-form__section_wrapper {
-  margin-bottom: 14px;
-}
-
-.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-wrapper:not(:first-of-type) {
-  margin-left: 14px;
-  margin-right: 14px;
-}
-
-.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__add-component-toolbar {
-  margin-left: 14px;
-  margin-right: 14px;
-}
-
-.editor-form__followup-question-overlay .editor-form__add-component-toolbar {
-  margin: 0;
-}
-
-.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container > div > .editor-form__component-wrapper {
-  margin: 0 14px 14px 14px;
-}
-
-.editor-form__adjacent-fieldset-container {
-  margin: 14px 0;
-  .editor-form__add-component-toolbar {
-    margin: 14px 12px;
-  }
+  padding: 12px;
 }
 
 .editor-form__text-field:focus + .editor-form__text-field-label + .editor-form__markdown-help,
@@ -1273,7 +1184,7 @@ input.editor-form__text-field ~ .editor-form__markdown-anchor {
 .belongs-to-hakukohteet {
   flex: initial;
   width: 700px;
-  padding: 10px 14px 20px;
+  padding: 0px 14px 20px;
 
   &__modal-toggle-label {
     color: @blue-text-color;
