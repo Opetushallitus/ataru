@@ -1068,10 +1068,10 @@
   (fn [state-name selected-hakukohde]
     (let [review-note        (subscribe [:state-query [:application :notes selected-hakukohde state-name]])
           selected-notes-idx (subscribe [:application/review-note-indexes-on-eligibility selected-hakukohde])
-          previous-note      (when (first @selected-notes-idx)
-                               (subscribe [:state-query [:application :review-notes (first @selected-notes-idx)]]))
           button-enabled?    (and (-> @review-note clojure.string/blank? not)
-                                  (not= @review-note (:notes @previous-note)))]
+                                  (or (nil? (first @selected-notes-idx))
+                                      (not= @review-note (:notes @(subscribe [:state-query [:application :review-notes
+                                                                                            (first @selected-notes-idx)]])))))]
       [:div.application-handling__review-state-selected-container
        [:textarea.application-handling__review-note-input.application-handling__eligibility-state-comment
         {:value       @review-note
