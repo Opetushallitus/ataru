@@ -1106,17 +1106,16 @@
              [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
            @languages
            :header? true)]
-         [:div
-          [:div.editor-form__text-field-wrapper
-           [:header.editor-form__component-item-header (get-virkailija-translation :attachment-deadline)]
-           [:input.editor-form__text-field
-            {:type        "text"
-             :class       (when-not @valid "editor-form__text-field--invalid")
-             :value       @deadline-value
-             :on-blur     format-deadline
-             :placeholder "pp.kk.vvvv hh:mm"
-             :on-change   update-deadline}]]
-          [:div.editor-form__checkbox-wrapper
-           [required-checkbox path content]]]
+         [:div.editor-form__text-field-wrapper
+          [:label.editor-form__component-item-header (get-virkailija-translation :attachment-deadline)]
+          [:input.editor-form__attachment-deadline-field
+           {:type        "text"
+            :class       (when-not @valid "editor-form__text-field--invalid")
+            :value       @deadline-value
+            :on-blur     format-deadline
+            :placeholder "pp.kk.vvvv hh:mm"
+            :on-change   update-deadline}]]
+         [:div.editor-form__checkbox-wrapper
+          [required-checkbox path content]]
          [belongs-to-hakukohteet path content]]
         [attachment-textarea path]]])))
