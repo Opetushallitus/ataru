@@ -40,8 +40,12 @@
 
     function formComponents() {
         return testFrame().find('.editor-form__component-wrapper')
-        // exclude followup question components
-            .not('.editor-form__followup-question-overlay .editor-form__component-wrapper')
+      // exclude followup question components
+        .not('.editor-form__followup-question-overlay .editor-form__component-wrapper')
+      // exclude hakukohteet
+        .not(function (i, node) { return $(node).find("header:contains('Hakukohteet')").length > 0; })
+      // exclude henkilötiedot
+        .not(function (i, node) { return $(node).find("header:contains('Henkilötiedot')").length > 0; })
     }
 
     describe('Virkailija creates koodisto with lisäkysymys', function () {

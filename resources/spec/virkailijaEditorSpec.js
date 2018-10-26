@@ -25,17 +25,22 @@
 
     function personInfoModule() {
         return testFrame()
-            .find(".editor-form__module-wrapper header:contains('Henkilötiedot')");
+            .find(".editor-form__component-wrapper header:contains('Henkilötiedot')");
     }
 
     function formComponents() {
         return testFrame().find('.editor-form__component-wrapper')
         // exclude followup question components
-            .not('.editor-form__followup-question-overlay .editor-form__component-wrapper')
+        .not('.editor-form__followup-question-overlay .editor-form__component-wrapper')
+        // exclude hakukohteet
+        .not(function (i, node) { return $(node).find("header:contains('Hakukohteet')").length > 0; })
+        // exclude henkilötiedot
+        .not(function (i, node) { return $(node).find("header:contains('Henkilötiedot')").length > 0; })
     }
 
     function formSections() {
-        return testFrame().find('.editor-form__section_wrapper')
+        return testFrame().find(".editor-form__component-wrapper")
+        .filter(function (i, node) { return $(node).find("header:contains('Lomakeosio')").length > 0; })
     }
 
     function clickComponentMenuItem(title) {
