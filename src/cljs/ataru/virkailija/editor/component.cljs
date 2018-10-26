@@ -285,11 +285,14 @@
 (defn- text-header
   [label path metadata & {:keys [component-wrapped?
                                  draggable
+                                 removable?
                                  sub-header
                                  on-fold-click]
-                          :or   {draggable true}}]
+                          :or   {draggable  true
+                                 removable? true}}]
   [:div.editor-form__header-wrapper
-   {:draggable     draggable
+   {:class         (when draggable "editor-form__header-wrapper--draggable")
+    :draggable     draggable
     :on-drag-start (on-drag-start path)
     :on-drag-over  prevent-default}
    [:header.editor-form__component-header
@@ -311,7 +314,8 @@
             (map (partial get sub-header))
             (remove clojure.string/blank?)
             (clojure.string/join " - ")))]]
-   [remove-component-button component-wrapped? path]])
+   (when removable?
+     [remove-component-button component-wrapped? path])])
 
 (defn markdown-help []
   [:div.editor-form__markdown-help
@@ -891,29 +895,30 @@
     (flatten (recursively-get-labels component))))
 
 (defn hakukohteet-module [path]
-  (let [languages       (subscribe [:editor/languages])
-        virkailija-lang (subscribe [:editor/virkailija-lang])
+  (let [virkailija-lang (subscribe [:editor/virkailija-lang])
         value           (subscribe [:editor/get-component-value path])]
     (fn [path]
-      [:div.editor-form__module-wrapper
-       [:header.editor-form__module-header
-        [:span.editor-form__module-header-label (get-in @value [:label @virkailija-lang])]
-        " "
-        [:span (get-in @value [:label-amendment :fi @virkailija-lang])]]
-       [:div.editor-form__module-fields (get-virkailija-translation :hakukohde-info)]])))
+      [:div.editor-form__component-wrapper
+       [text-header (get-in @value [:label @virkailija-lang]) path nil
+        :removable? false]
+       [:div.editor-form__component-content-wrapper
+        [:div.editor-form__module-fields
+         (get-virkailija-translation :hakukohde-info)]]])))
 
 (defn module [path]
-  (let [languages (subscribe [:editor/languages])
-        value     (subscribe [:editor/get-component-value path])
+  (let [languages       (subscribe [:editor/languages])
+        value           (subscribe [:editor/get-component-value path])
         virkailija-lang (subscribe [:editor/virkailija-lang])]
     (fn [path]
-      [:div.editor-form__module-wrapper
-       [:header.editor-form__module-header
-        [:span.editor-form__module-header-label (get-in @value [:label @virkailija-lang])]]
-       [:div.editor-form__module-fields
-        [:span.editor-form__module-fields-label (get-virkailija-translation :contains-fields)]
-        " "
-        (clojure.string/join ", " (get-leaf-component-labels @value :fi))]])))
+      [:div.editor-form__component-wrapper
+       [text-header (get-in @value [:label @virkailija-lang]) path nil
+        :removable? false]
+       [:div.editor-form__component-content-wrapper
+        [:div.editor-form__module-fields
+         [:span.editor-form__module-fields-label
+          (get-virkailija-translation :contains-fields)]
+         " "
+         (clojure.string/join ", " (get-leaf-component-labels @value :fi))]]])))
 
 (defn info-element
   "Info text which is a standalone component"
