@@ -243,7 +243,7 @@
               :fade-in "animated fadeInUp"
               nil)))
 
-(defn- remove-component-button [component-wrapped? path]
+(defn- remove-component-button [path]
   (case @(subscribe [:editor/remove-component-button-state path])
     :active
     [:button.editor-form__remove-component-button
@@ -277,8 +277,7 @@
              (-> metadata :modified-by :date temporal/str->googdate temporal/time->date))])
 
 (defn- text-header
-  [label path metadata & {:keys [component-wrapped?
-                                 draggable
+  [label path metadata & {:keys [draggable
                                  removable?
                                  sub-header
                                  on-fold-click]
@@ -309,7 +308,7 @@
             (remove clojure.string/blank?)
             (clojure.string/join " - ")))]]
    (when removable?
-     [remove-component-button component-wrapped? path])])
+     [remove-component-button path])])
 
 (defn markdown-help []
   [:div.editor-form__markdown-help
@@ -825,13 +824,11 @@
       [:div.editor-form__component-wrapper
        {:class animation-effect}
        [text-header group-header-text path (:metadata content)
-        :component-wrapped? true
         :sub-header (:label value)
         :on-fold-click #(dispatch [:editor/unfold id])]]
       [:div.editor-form__component-wrapper
        {:class animation-effect}
        [text-header group-header-text path (:metadata content)
-         :component-wrapped? true
         :on-fold-click #(dispatch [:editor/fold id])]
        [:div.editor-form__component-content-wrapper
         [:div.editor-form__text-field-wrapper
