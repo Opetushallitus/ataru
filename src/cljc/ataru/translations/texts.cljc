@@ -153,6 +153,12 @@
    :file-upload-failed                          {:fi "Tiedostoa ei ladattu, yritä uudelleen"
                                                  :en "File failed to upload, try again"
                                                  :sv "Filen kunde inte laddas, försök igen"}
+   :file-upload-retransmit                      {:fi "Tiedostoa ei ladattu, yritä uudelleen"
+                                                 :en "File failed to upload, try again"
+                                                 :sv "Filen kunde inte laddas, försök igen"}
+   :file-upload-error                           {:fi "Tiedostoa ei ladattu, yritä uudelleen"
+                                                 :en "File failed to upload, try again"
+                                                 :sv "Filen kunde inte laddas, försök igen"}
    :cancel-remove                               {:fi "Älä poista"
                                                  :sv "SV: Älä poista"
                                                  :en "Don't remove"}

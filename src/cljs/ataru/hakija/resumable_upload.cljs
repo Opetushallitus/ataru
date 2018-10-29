@@ -31,11 +31,17 @@
                                                          :file-size        (.-size file)
                                                          :file-name        (.-name file)
                                                          :file-part-number file-part-number}
-                                         :handler       (fn [{:keys [file-exists]}]
-                                                          (dispatch (if file-exists have-file-dispatch not-have-file-dispatch)))
-                                         :error-handler #(dispatch (conj error-handler %))})
+                                         :handler       #(dispatch have-file-dispatch)
+                                         :error-handler (fn [{:keys [status]}]
+                                                          (if (= status 404)
+                                                            (dispatch not-have-file-dispatch)
+                                                            (dispatch (conj error-handler status))))})
           req                    (GET url params)]
       {:dispatch (conj started-handler req)})))
+
+(defn- get-xhrio-json
+  [xhrio]
+  (js->clj (.parse js/JSON (.getResponse xhrio)) :keywordize-keys true))
 
 (reg-event-fx
   :application-file-upload/upload-file-part
@@ -44,13 +50,19 @@
           file-part-end           (min (* max-part-size (inc file-part-number)) (.-size file))
           file-part               (.slice file file-part-start file-part-end)
           send-next-part-dispatch [:application-file-upload/check-file-part-status-and-upload url handlers file-id file (inc file-part-number)]
+          response-handler        (fn [xhrio]
+                                    (let [status (or (:status xhrio) (.getStatus xhrio))]
+                                      (case status
+                                        -1 (dispatch (conj error-handler status))
+                                        200 (dispatch send-next-part-dispatch)
+                                        201 (dispatch (conj handler (:stored-file (get-xhrio-json xhrio))))
+                                        409 (dispatch (conj error-handler status))
+                                        500 (dispatch (conj error-handler status)))))
           params                  (merge json-params
-                                         {:handler          (fn [{:keys [status stored-file] :as resp}]
-                                                              (case status
-                                                                "send-next" (dispatch send-next-part-dispatch)
-                                                                "retransmit" (dispatch (conj error-handler resp))
-                                                                "complete" (dispatch (conj handler stored-file))))
-                                          :error-handler    #(dispatch (conj error-handler %))
+                                         {:response-format  {:read        identity
+                                                             :description "raw"}
+                                          :handler          response-handler
+                                          :error-handler    response-handler
                                           :progress-handler #(dispatch (conj progress-handler % file-part-number))
                                           :body             (doto (js/FormData.)
                                                               (.append "file-part" file-part (.-name file))

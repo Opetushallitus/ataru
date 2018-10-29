@@ -238,8 +238,9 @@
                        file-size :- s/Int
                        file-id :- s/Str
                        file-name :- s/Str]
-        :return {:file-exists s/Bool}
-        (response/ok {:file-exists (resumable-file/file-part-exists? temp-file-store file-id file-name file-size file-part-number)}))
+        (if (resumable-file/file-part-exists? temp-file-store file-id file-name file-size file-part-number)
+          (response/ok {})
+          (response/not-found {})))
       (api/POST "/resumable" []
         :summary "Upload file part"
         :multipart-params [file-part :- upload/TempFileUpload
@@ -247,23 +248,16 @@
                            file-size :- s/Int
                            file-id :- s/Str]
         :middleware [upload/wrap-multipart-params]
-        :return {:status                       s/Str
-                 (s/optional-key :stored-file) ataru-schema/File}
+        :return {(s/optional-key :stored-file) ataru-schema/File}
         (try
-          (response/ok (resumable-file/store-file-part! temp-file-store file-id file-size file-part-number file-part))
+          (let [[status stored-file] (resumable-file/store-file-part! temp-file-store file-id file-size file-part-number file-part)]
+            (case status
+              :send-next (response/ok {})
+              :retransmit (response/conflict {})
+              :complete (response/created "" {:stored-file stored-file})
+              :liiteri-error (response/internal-server-error {})))
           (finally
             (io/delete-file (:tempfile file-part) true))))
-      (api/POST "/" []
-        :summary "Upload a file"
-        :multipart-params [file :- upload/TempFileUpload]
-        :middleware [upload/wrap-multipart-params]
-        :return ataru-schema/File
-        (try
-          (if-let [resp (file-store/upload-file file)]
-            (response/ok resp)
-            (response/bad-request {:failures "Failed to upload file"}))
-          (finally
-            (io/delete-file (:tempfile file) true))))
       (api/DELETE "/:key" []
         :summary "Delete a file"
         :path-params [key :- s/Str]

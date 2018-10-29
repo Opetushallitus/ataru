@@ -5,7 +5,8 @@
             [ataru.config.url-helper :refer [resolve-url]]
             [clojure.java.io :as io]
             [pandect.algo.md5 :refer [md5]]
-            [ataru.temp-file-storage.temp-file-store :as temp-file-store])
+            [ataru.temp-file-storage.temp-file-store :as temp-file-store]
+            [clojure.core.match :refer [match]])
   (:import (java.text Normalizer Normalizer$Form)
            (java.io File)))
 
@@ -22,13 +23,24 @@
       (Math/ceil)
       (int)))
 
+(defn- assert-valid-file
+  [file file-id file-size]
+  (assert (= file-size (.length file)) "invalid combined file size")
+  (assert (= file-id (md5 file))) "invalid combined file hash")
+
+(defn- assert-valid-part-number
+  [num-parts part-number]
+  (assert (< part-number num-parts) "Invalid file part number"))
+
 (defn- store-part
   [file-store file file-part-name]
   (temp-file-store/put-file file-store file file-part-name))
 
 (defn file-part-exists?
   [file-store file-id file-name file-size part-number]
-  (let [stored-file-part-name (build-file-name file-id file-name (count-parts file-size) part-number)]
+  (let [num-parts             (count-parts file-size)
+        stored-file-part-name (build-file-name file-id file-name num-parts part-number)]
+    (assert-valid-part-number num-parts part-number)
     (temp-file-store/file-exists? file-store stored-file-part-name)))
 
 (defn- combine-files!
@@ -39,11 +51,6 @@
     (doseq [input-file-name input-file-names]
       (temp-file-store/delete-file file-store input-file-name))
     output-file))
-
-(defn- assert-valid-file
-  [file file-id file-size]
-  (assert (= file-size (.length file)) "invalid combined file size")
-  (assert (= file-id (md5 file))) "invalid combined file hash")
 
 (defn- combine-file-parts
   [file-store file-id file-name file-size]
@@ -57,9 +64,8 @@
 
 (defn- all-parts-exist?
   [file-store file-id file-name file-size]
-  (let [parts-count (count-parts file-size)
-        parts-exist (map (partial file-part-exists? file-store file-id file-name file-size) (range parts-count))]
-    (every? true? parts-exist)))
+  (let [num-parts (count-parts file-size)]
+    (every? (partial file-part-exists? file-store file-id file-name file-size) (range num-parts))))
 
 (defn upload-file-to-liiteri
   [file-store file-id file-name file-size]
@@ -81,9 +87,12 @@
         file-name      (:filename file-part)
         file           (:tempfile file-part)
         file-part-name (build-file-name file-id file-name num-parts part-number)]
+    (assert-valid-part-number num-parts part-number)
     (store-part file-store file file-part-name)
     (if last-part?
       (if (all-parts-exist? file-store file-id file-name file-size)
-        (merge {:status "complete"} {:stored-file (upload-file-to-liiteri file-store file-id file-name file-size)})
-        {:status "retransmit"})
-      {:status "send-next"})))
+        (if-let [liiteri-file (upload-file-to-liiteri file-store file-id file-name file-size)]
+          [:complete liiteri-file]
+          [:liiteri-error])
+        [:retransmit])
+      [:send-next])))
