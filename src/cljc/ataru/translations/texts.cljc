@@ -714,6 +714,9 @@ You will receive a confirmation of your application to your email."}
    :attachment-info-text                        {:fi "Liitepyyntö sisältää ohjetekstin"
                                                  :sv "Begäran om bilagor innehåller anvisningar"
                                                  :en "EN: Liitepyyntö sisältää ohjetekstin"}
+   :mail-attachment-text                        {:fi "Postitettava liitepyyntö"
+                                                 :sv "SV: Postitettava liitepyyntö"
+                                                 :en "EN: Postitettava liitepyyntö"}
    :attachment-name                             {:fi "Liitteen nimi"
                                                  :sv "Bilagans namn"
                                                  :en "EN: Liitteen nimi"}

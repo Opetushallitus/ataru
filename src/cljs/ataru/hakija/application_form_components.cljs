@@ -941,7 +941,8 @@
                  (map (fn [attachment-idx]
                         ^{:key (str "attachment-" (when question-group-idx (str question-group-idx "-")) id "-" attachment-idx)}
                         [attachment-row field-descriptor id attachment-idx question-group-idx])))])
-         (when-not @(subscribe [:application/cannot-edit? (keyword id)])
+         (when-not (or (not (get-in field-descriptor [:params :mail-attachment]))
+                       @(subscribe [:application/cannot-edit? (keyword id)]))
            [attachment-upload field-descriptor id @attachment-count question-group-idx])]))))
 
 (defn info-element [field-descriptor]
