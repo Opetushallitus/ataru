@@ -172,6 +172,13 @@
         (assoc-in (current-form-content-path db [path]) value)
         (update-modified-by path))))
 
+(reg-event-db
+  :editor/update-component-value
+  (fn [db [_ update-fn & path]]
+    (-> db
+        (update-in (current-form-content-path db [path]) update-fn)
+        (update-modified-by path))))
+
 (defn generate-component
   [db [_ generate-fn sub-path]]
   (let [parent-component-path (cond-> (current-form-content-path db)
