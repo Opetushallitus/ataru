@@ -473,6 +473,17 @@
 
 .editor-form__component-content-wrapper {
   padding: 12px;
+  overflow: hidden;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -ms-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+
+  &--folded {
+    padding: 0px 12px;
+    height: 0;
+  }
 }
 
 .fade-out {
@@ -1013,7 +1024,7 @@
 }
 
 .editor-form__drag_n_drop_spacer_container_for_component {
-  padding-top: 17px;
+  height: 17px;
 }
 
 .editor-form__drag_n_drop_spacer--dashbox-hidden {

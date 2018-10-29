@@ -310,6 +310,74 @@
    (when removable?
      [remove-component-button path])])
 
+(defn- fold-transition
+  [component folded? state height]
+  (case [@folded? @state]
+    [true :unfolded]
+    (do (reset! height (.-scrollHeight (r/dom-node component)))
+        (reset! state :set-height))
+    [true :set-height]
+    (reset! state :folded)
+    [false :folded]
+    (reset! state :set-height)
+    nil))
+
+(defn- component-fold-transition
+  [component folded? set-height height]
+  (cond (and (= [false false] [@folded? @set-height])
+             (some? @height))
+        ;; unfolding, set height
+        (reset! set-height true)
+        (and (= [true false] [@folded? @set-height])
+             (nil? @height))
+        ;; folding, calculate and set height
+        (do (reset! height (.-scrollHeight (r/dom-node component)))
+            (reset! set-height true))
+        (= [true true] [@folded? @set-height])
+        ;; folding, height set
+        (reset! set-height false)))
+
+(defn- unfold-ended-listener
+  [folded? set-height]
+  (fn [_]
+    (when (= [false true] [@folded? @set-height])
+      ;; unfolding, height set and transition ended
+      (reset! set-height false))))
+
+(defn- component-content
+  [id _]
+  (let [folded?    (subscribe [:editor/folded? id])
+        set-height (r/atom false)
+        height     (r/atom nil)
+        listener   (unfold-ended-listener folded? set-height)]
+    (r/create-class
+     {:component-did-mount
+      (fn [component]
+        (.addEventListener (r/dom-node component)
+                           "transitionend"
+                           listener)
+        (component-fold-transition component folded? set-height height))
+      :component-will-unmount
+      (fn [component]
+        (.removeEventListener (r/dom-node component)
+                              "transitionend"
+                              listener))
+      :component-did-update
+      (fn [component]
+        (component-fold-transition component folded? set-height height))
+      :reagent-render
+      (fn [id content-component]
+        (cond @set-height
+              [:div.editor-form__component-content-wrapper
+               {:style {:height @height}}
+               content-component]
+              (and @folded? (some? @height))
+              [:div.editor-form__component-content-wrapper.editor-form__component-content-wrapper--folded
+               content-component]
+              :else
+              [:div.editor-form__component-content-wrapper
+               content-component]))})))
+
 (defn markdown-help []
   [:div.editor-form__markdown-help
    [:div
@@ -820,34 +888,33 @@
         header-label-text (case (:fieldClass content)
                             "wrapperElement" (get-virkailija-translation :wrapper-header)
                             "questionGroup"  (get-virkailija-translation :group-header))]
-    (if folded?
-      [:div.editor-form__component-wrapper
-       {:class animation-effect}
-       [text-header group-header-text path (:metadata content)
-        :sub-header (:label value)
-        :on-fold-click #(dispatch [:editor/unfold id])]]
-      [:div.editor-form__component-wrapper
-       {:class animation-effect}
-       [text-header group-header-text path (:metadata content)
-        :on-fold-click #(dispatch [:editor/fold id])]
-       [:div.editor-form__component-content-wrapper
-        [:div.editor-form__text-field-wrapper
-         [:header.editor-form__component-item-header header-label-text]
-         (input-fields-with-lang
-          (fn [lang]
-            [input-field path lang #(dispatch-sync [:editor/set-component-value
-                                                    (-> % .-target .-value)
-                                                    path
-                                                    :label lang])])
-          languages
-          :header? true)]
-        children
-        [dnd/drag-n-drop-spacer (conj path :children (count children))]
-        (case (:fieldClass content)
-          "wrapperElement" [toolbar/add-component (conj path :children (count children))]
-          "questionGroup"  [toolbar/question-group-toolbar path
-                            (fn [generate-fn]
-                              (dispatch [:generate-component generate-fn (conj path :children (count children))]))])]])))
+    [:div.editor-form__component-wrapper
+     {:class animation-effect}
+     [text-header group-header-text path (:metadata content)
+      :sub-header (when folded? (:label value))
+      :on-fold-click #(if folded?
+                        (dispatch [:editor/unfold id])
+                        (dispatch [:editor/fold id]))]
+     [component-content
+      id
+      [:div
+       [:div.editor-form__text-field-wrapper
+        [:header.editor-form__component-item-header header-label-text]
+        (input-fields-with-lang
+         (fn [lang]
+           [input-field path lang #(dispatch-sync [:editor/set-component-value
+                                                   (-> % .-target .-value)
+                                                   path
+                                                   :label lang])])
+         languages
+         :header? true)]
+       children
+       [dnd/drag-n-drop-spacer (conj path :children (count children))]
+       (case (:fieldClass content)
+         "wrapperElement" [toolbar/add-component (conj path :children (count children))]
+         "questionGroup"  [toolbar/question-group-toolbar path
+                           (fn [generate-fn]
+                             (dispatch [:generate-component generate-fn (conj path :children (count children))]))])]]]))
 
 (defn get-leaf-component-labels [component lang]
   (letfn [(recursively-get-labels [component]
