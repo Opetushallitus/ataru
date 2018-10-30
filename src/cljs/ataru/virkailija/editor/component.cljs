@@ -327,40 +327,38 @@
     nil))
 
 (defn- component-fold-transition
-  [component folded? set-height height]
-  (cond (and (= [false false] [@folded? @set-height])
-             (some? @height))
-        ;; unfolding, set height
-        (reset! set-height true)
-        (and (= [true false] [@folded? @set-height])
-             (nil? @height))
+  [component folded? state height]
+  (cond (= [true :unfolded] [@folded? @state])
         ;; folding, calculate and set height
         (do (reset! height (.-scrollHeight (r/dom-node component)))
-            (reset! set-height true))
-        (= [true true] [@folded? @set-height])
-        ;; folding, height set
-        (reset! set-height false)))
+            (reset! state :set-height))
+        (= [true :set-height] [@folded? @state])
+        ;; folding, render folded
+        (reset! state :folded)
+        (= [false :folded] [@folded? @state])
+        ;; unfolding, set height
+        (reset! state :set-height)))
 
 (defn- unfold-ended-listener
-  [folded? set-height]
+  [folded? state]
   (fn [_]
-    (when (= [false true] [@folded? @set-height])
-      ;; unfolding, height set and transition ended
-      (reset! set-height false))))
+    (when (= [false :set-height] [@folded? @state])
+      ;; unfolding, render unfolded
+      (reset! state :unfolded))))
 
 (defn- component-content
   [id _]
-  (let [folded?    (subscribe [:editor/folded? id])
-        set-height (r/atom false)
-        height     (r/atom nil)
-        listener   (unfold-ended-listener folded? set-height)]
+  (let [folded?  (subscribe [:editor/folded? id])
+        state    (r/atom :unfolded)
+        height   (r/atom nil)
+        listener (unfold-ended-listener folded? state)]
     (r/create-class
      {:component-did-mount
       (fn [component]
         (.addEventListener (r/dom-node component)
                            "transitionend"
                            listener)
-        (component-fold-transition component folded? set-height height))
+        (component-fold-transition component folded? state height))
       :component-will-unmount
       (fn [component]
         (.removeEventListener (r/dom-node component)
@@ -368,19 +366,21 @@
                               listener))
       :component-did-update
       (fn [component]
-        (component-fold-transition component folded? set-height height))
+        (component-fold-transition component folded? state height))
       :reagent-render
       (fn [id content-component]
-        (cond @set-height
-              [:div.editor-form__component-content-wrapper
-               {:style {:height @height}}
-               content-component]
-              (and @folded? (some? @height))
-              [:div.editor-form__component-content-wrapper.editor-form__component-content-wrapper--folded
-               content-component]
-              :else
-              [:div.editor-form__component-content-wrapper
-               content-component]))})))
+        (let [folded? @folded?]
+          (case @state
+            :unfolded
+            [:div.editor-form__component-content-wrapper
+             content-component]
+            :set-height
+            [:div.editor-form__component-content-wrapper
+             {:style {:height @height}}
+             content-component]
+            :folded
+            [:div.editor-form__component-content-wrapper.editor-form__component-content-wrapper--folded
+             content-component])))})))
 
 (defn markdown-help []
   [:div.editor-form__markdown-help
