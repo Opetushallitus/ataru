@@ -53,7 +53,9 @@
       (fn [acc result]
         (match result
                {:status 200 :body body}
-               (merge acc (json/parse-string body))
+               (->> (json/parse-string body true)
+                    (reduce-kv #(assoc %1 (name %2) %3) {})
+                    (merge acc))
 
                :else (throw-error (str "Could not get persons by oids, status: "
                                        (:status result)
