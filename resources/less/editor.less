@@ -848,7 +848,7 @@
   width: 100%;
   display: flex;
   flex-flow: row nowrap;
-  justify-content: space-between;
+  align-items: center;
   background: @element-header-background;
 }
 
@@ -860,15 +860,14 @@
 .editor-form__component-header {
   margin: 0;
   padding: 10px 11px 8px 11px;
-  display: flex;
-  align-items: center;
+  flex: 2;
 }
 
 .editor-form__component-fold-button {
   margin: 0px;
   padding: 0px 8px 0px 0px;
   border: 0;
-  font-size: 18px;
+  font-size: 16px;
   color: @blue-text-color;
   background: none;
   cursor: pointer;
@@ -895,7 +894,7 @@
   color: @disabled-font-gray;
   font-size: 13px;
   text-transform: none;
-  margin-left: 10px;
+  margin-right: 10px;
 }
 
 .editor-form__component-sub-header {

@@ -281,7 +281,7 @@
                                     foldable?
                                     removable?
                                     sub-header]
-                             :or   {draggable?  true
+                             :or   {draggable? true
                                     foldable?  true
                                     removable? true}}]
   (let [folded? @(subscribe [:editor/folded? id])]
@@ -301,7 +301,6 @@
            [:i.zmdi.zmdi-chevron-up]]))
       [:span.editor-form__component-main-header
        label]
-      (when metadata (header-metadata metadata))
       [:span.editor-form__component-sub-header
        {:class (if (and folded? (some? sub-header))
                  "editor-form__component-sub-header-visible"
@@ -311,6 +310,8 @@
               (map (partial get sub-header))
               (remove clojure.string/blank?)
               (clojure.string/join " - ")))]]
+     (when metadata
+       (header-metadata metadata))
      (when removable?
        [remove-component-button path])]))
 
