@@ -30,7 +30,8 @@
             [ataru.config.core :refer [config]]
             [ataru.flowdock.flowdock-client :as flowdock-client]
             [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret alter-application-to-hakuaikaloppu-for-secret]]
-            [ataru.hakija.resumable-file-transfer :as resumable-file])
+            [ataru.hakija.resumable-file-transfer :as resumable-file]
+            [clojure.tools.logging :as log])
   (:import [ring.swagger.upload Upload]
            [java.io InputStream]))
 
@@ -238,9 +239,10 @@
                        file-size :- s/Int
                        file-id :- s/Str
                        file-name :- s/Str]
-        (if (resumable-file/file-part-exists? temp-file-store file-id file-name file-size file-part-number)
-          (response/ok {})
-          (response/not-found {})))
+        (let [[exists? next-is-last?] (resumable-file/file-part-exists? temp-file-store file-id file-name file-size file-part-number)]
+          (if exists?
+            (response/ok {:next-is-last next-is-last?})
+            (response/not-found {}))))
       (api/POST "/resumable" []
         :summary "Upload file part"
         :multipart-params [file-part :- upload/TempFileUpload
@@ -251,6 +253,7 @@
         :return {(s/optional-key :stored-file) ataru-schema/File}
         (try
           (let [[status stored-file] (resumable-file/store-file-part! temp-file-store file-id file-size file-part-number file-part)]
+            (log/info "File upload" file-part-number "of" file-size "bytes:" status)
             (case status
               :send-next (response/ok {})
               :retransmit (response/conflict {})

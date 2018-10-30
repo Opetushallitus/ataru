@@ -7,7 +7,7 @@
 
 (def ^:private json-params {:format :json :response-format :json :keywords? true})
 (def max-part-size
-  (get (js->clj js/config) "attachment-file-part-max-size-bytes" (* 1024 1024)))
+  (get (js->clj js/config) "attachment-file-part-max-size-bytes" (* 1024 1024 5)))
 
 (defn- hex-md5-hash
   [array-buffer]
@@ -18,7 +18,16 @@
 (defn upload-file
   [url file handlers]
   (let [fr (js/FileReader.)]
-    (.addEventListener fr "loadend" #(dispatch [:application-file-upload/check-file-part-status-and-upload url handlers (hex-md5-hash (.-result fr)) file 0]))
+    (.addEventListener
+      fr
+      "loadend"
+      (fn []
+        (let [file-buffer (.-result fr)
+              id          (hex-md5-hash file-buffer)
+              dispatch-kw (if (<= (.-size file) max-part-size)
+                            :application-file-upload/upload-file-part
+                            :application-file-upload/check-file-part-status-and-upload)]
+          (dispatch [dispatch-kw url handlers id file 0]))))
     (.readAsArrayBuffer fr file)))
 
 (reg-event-fx
@@ -26,12 +35,16 @@
   (fn [_ [_ url {:keys [error-handler started-handler] :as handlers} file-id file file-part-number]]
     (let [have-file-dispatch     [:application-file-upload/check-file-part-status-and-upload url handlers file-id file (inc file-part-number)]
           not-have-file-dispatch [:application-file-upload/upload-file-part url handlers file-id file file-part-number]
+          last-file-dispatch     [:application-file-upload/upload-file-part url handlers file-id file (inc file-part-number)]
           params                 (merge json-params
                                         {:params        {:file-id          file-id
                                                          :file-size        (.-size file)
                                                          :file-name        (.-name file)
                                                          :file-part-number file-part-number}
-                                         :handler       #(dispatch have-file-dispatch)
+                                         :handler       (fn [{:keys [next-is-last]}]
+                                                          (if next-is-last
+                                                            (dispatch last-file-dispatch)
+                                                            (dispatch have-file-dispatch)))
                                          :error-handler (fn [{:keys [status]}]
                                                           (if (= status 404)
                                                             (dispatch not-have-file-dispatch)
@@ -49,7 +62,7 @@
     (let [file-part-start         (* max-part-size file-part-number)
           file-part-end           (min (* max-part-size (inc file-part-number)) (.-size file))
           file-part               (.slice file file-part-start file-part-end)
-          send-next-part-dispatch [:application-file-upload/check-file-part-status-and-upload url handlers file-id file (inc file-part-number)]
+          send-next-part-dispatch [:application-file-upload/upload-file-part url handlers file-id file (inc file-part-number)]
           response-handler        (fn [xhrio]
                                     (let [status (or (:status xhrio) (.getStatus xhrio))]
                                       (case status

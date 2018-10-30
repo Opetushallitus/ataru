@@ -26,7 +26,14 @@
 
   (file-exists? [_ file-name]
     (let [path (str (base-path) "/" file-name)]
-      (.exists (File. path)))))
+      (.exists (File. path))))
+
+  (filenames-with-prefix [_ prefix]
+    (let [directory (File. (base-path))]
+      (->>
+        (file-seq directory)
+        (map #(.getName %))
+        (filter #(.startsWith % prefix))))))
 
 (defn new-store []
   (map->FilesystemTempFileStore {}))
