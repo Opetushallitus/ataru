@@ -950,6 +950,8 @@
     [:div.application__form-info-element.application__form-field
      (when (not-empty header)
        [:label.application__form-field-label [:span header]])
+     (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
+       [question-hakukohde-names field-descriptor :info-for-hakukohde])
      [markdown-paragraph text (-> field-descriptor :params :info-text-collapse)]]))
 
 (defn- adjacent-field-input [field-descriptor row-idx question-group-idx]

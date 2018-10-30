@@ -249,6 +249,9 @@ You will receive a confirmation of your application to your email."}
    :question-for-hakukohde                      {:fi "Kysymys kuuluu hakukohteisiin:"
                                                  :en "This question is for application options:"
                                                  :sv "Frågan berör ansökningsmål:"}
+   :info-for-hakukohde                          {:fi "Osio kuuluu hakukohteisiin:"
+                                                 :en "This information is shown for application options:"
+                                                 :sv "Frågan berör ansökningsmål:"}
    :show-application-options                    {:fi "näytä hakukohteet"
                                                  :en "show application options"
                                                  :sv "visa ansökningsmål"}
