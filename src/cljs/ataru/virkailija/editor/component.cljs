@@ -277,38 +277,42 @@
              (-> metadata :modified-by :date temporal/str->googdate temporal/time->date))])
 
 (defn- text-header
-  [label path metadata & {:keys [draggable
-                                 removable?
-                                 sub-header
-                                 on-fold-click]
-                          :or   {draggable  true
-                                 removable? true}}]
-  [:div.editor-form__header-wrapper
-   {:class         (when draggable "editor-form__header-wrapper--draggable")
-    :draggable     draggable
-    :on-drag-start (on-drag-start path)
-    :on-drag-over  prevent-default}
-   [:header.editor-form__component-header
-    (when (some? on-fold-click)
-      [:button.editor-form__component-fold-button
-       {:on-click on-fold-click}
-       (if (some? sub-header)
-         [:i.zmdi.zmdi-chevron-down]
-         [:i.zmdi.zmdi-chevron-up])])
-    [:span.editor-form__component-main-header
-     label]
-    (when metadata (header-metadata metadata))
-    [:span.editor-form__component-sub-header
-     {:class (if (some? sub-header)
-               "editor-form__component-sub-header-visible"
-               "editor-form__component-sub-header-hidden")}
-     (when (some? sub-header)
-       (->> [:fi :sv :en]
-            (map (partial get sub-header))
-            (remove clojure.string/blank?)
-            (clojure.string/join " - ")))]]
-   (when removable?
-     [remove-component-button path])])
+  [id label path metadata & {:keys [draggable?
+                                    foldable?
+                                    removable?
+                                    sub-header]
+                             :or   {draggable?  true
+                                    foldable?  true
+                                    removable? true}}]
+  (let [folded? @(subscribe [:editor/folded? id])]
+    [:div.editor-form__header-wrapper
+     {:class         (when draggable? "editor-form__header-wrapper--draggable")
+      :draggable     draggable?
+      :on-drag-start (on-drag-start path)
+      :on-drag-over  prevent-default}
+     [:header.editor-form__component-header
+      (when foldable?
+        (if folded?
+          [:button.editor-form__component-fold-button
+           {:on-click #(dispatch [:editor/unfold id])}
+           [:i.zmdi.zmdi-chevron-down]]
+          [:button.editor-form__component-fold-button
+           {:on-click #(dispatch [:editor/fold id])}
+           [:i.zmdi.zmdi-chevron-up]]))
+      [:span.editor-form__component-main-header
+       label]
+      (when metadata (header-metadata metadata))
+      [:span.editor-form__component-sub-header
+       {:class (if (and folded? (some? sub-header))
+                 "editor-form__component-sub-header-visible"
+                 "editor-form__component-sub-header-hidden")}
+       (when (some? sub-header)
+         (->> [:fi :sv :en]
+              (map (partial get sub-header))
+              (remove clojure.string/blank?)
+              (clojure.string/join " - ")))]]
+     (when removable?
+       [remove-component-button path])]))
 
 (defn- fold-transition
   [component folded? state height]
@@ -588,7 +592,8 @@
     (fn [initial-content path & {:keys [header-label size-label]}]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header header-label path (:metadata initial-content)]
+       [text-header (:id initial-content) header-label path (:metadata initial-content)
+        :foldable? false]
        [:div.editor-form__component-content-wrapper
         [:div.editor-form__component-row-wrapper
          [:div.editor-form__text-field-wrapper
@@ -831,7 +836,8 @@
                         "dropdown" (get-virkailija-translation :dropdown)
                         "singleChoice" (get-virkailija-translation :single-choice-button)
                         "multipleChoice" (get-virkailija-translation :multiple-choice))]
-           [text-header header path (:metadata initial-content)])
+           [text-header (:id initial-content) header path (:metadata initial-content)
+            :foldable? false])
          [:div.editor-form__component-content-wrapper
           [:div.editor-form__component-row-wrapper
            [:div.editor-form__multi-question-wrapper
@@ -890,11 +896,8 @@
                             "questionGroup"  (get-virkailija-translation :group-header))]
     [:div.editor-form__component-wrapper
      {:class animation-effect}
-     [text-header group-header-text path (:metadata content)
-      :sub-header (when folded? (:label value))
-      :on-fold-click #(if folded?
-                        (dispatch [:editor/unfold id])
-                        (dispatch [:editor/fold id]))]
+     [text-header id group-header-text path (:metadata content)
+      :sub-header (:label value)]
      [component-content
       id
       [:div
@@ -924,24 +927,26 @@
               :else (-> component :label lang)))]
     (flatten (recursively-get-labels component))))
 
-(defn hakukohteet-module [path]
+(defn hakukohteet-module [content path]
   (let [virkailija-lang (subscribe [:editor/virkailija-lang])
         value           (subscribe [:editor/get-component-value path])]
     (fn [path]
       [:div.editor-form__component-wrapper
-       [text-header (get-in @value [:label @virkailija-lang]) path nil
+       [text-header (:id content) (get-in @value [:label @virkailija-lang]) path nil
+        :foldable? false
         :removable? false]
        [:div.editor-form__component-content-wrapper
         [:div.editor-form__module-fields
          (get-virkailija-translation :hakukohde-info)]]])))
 
-(defn module [path]
+(defn module [content path]
   (let [languages       (subscribe [:editor/languages])
         value           (subscribe [:editor/get-component-value path])
         virkailija-lang (subscribe [:editor/virkailija-lang])]
     (fn [path]
       [:div.editor-form__component-wrapper
-       [text-header (get-in @value [:label @virkailija-lang]) path nil
+       [text-header (:id content) (get-in @value [:label @virkailija-lang]) path nil
+        :foldable? false
         :removable? false]
        [:div.editor-form__component-content-wrapper
         [:div.editor-form__module-fields
@@ -960,7 +965,8 @@
     (fn [initial-content path]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header (get-virkailija-translation :info-element) path (:metadata initial-content)]
+       [text-header (:id initial-content) (get-virkailija-translation :info-element) path (:metadata initial-content)
+        :foldable? false]
        [:div.editor-form__component-content-wrapper
         [:div.editor-form__component-row-wrapper
          [:div.editor-form__text-field-wrapper
@@ -1007,7 +1013,8 @@
     (fn [initial-content path]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header (get-in initial-content [:label :fi]) path (:metadata initial-content)]
+       [text-header (:id initial-content) (get-in initial-content [:label :fi]) path (:metadata initial-content)
+        :foldable? false]
        [:div.editor-form__component-content-wrapper
         [:div.editor-form__component-row-wrapper
          [:div.editor-form__text-field-wrapper
@@ -1030,7 +1037,8 @@
     (fn [content path children]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header (get-virkailija-translation :adjacent-fieldset) path (:metadata content)]
+       [text-header (:id content) (get-virkailija-translation :adjacent-fieldset) path (:metadata content)
+        :foldable? false]
        [:div.editor-form__component-content-wrapper
         [:div.editor-form__component-row-wrapper
          [:div.editor-form__text-field-wrapper
@@ -1058,7 +1066,9 @@
     (fn [content path]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header (get-virkailija-translation :text-field) path (:metadata content) :draggable false]
+       [text-header (:id content) (get-virkailija-translation :text-field) path (:metadata content)
+        :foldable? false
+        :draggable? false]
        [:div.editor-form__component-content-wrapper
         [:div.editor-form__component-row-wrapper
          [:div.editor-form__text-field-wrapper
@@ -1159,7 +1169,8 @@
     (fn [content path]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header (get-virkailija-translation :attachment) path (:metadata content)]
+       [text-header (:id content) (get-virkailija-translation :attachment) path (:metadata content)
+        :foldable? false]
        [:div.editor-form__component-content-wrapper
         [:div.editor-form__component-row-wrapper
          [:div.editor-form__text-field-wrapper

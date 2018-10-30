@@ -46,7 +46,7 @@
       (when-let [component
                  (match content
                    {:module module}
-                   [ec/module path]
+                   [ec/module content path]
 
                    {:fieldClass "wrapperElement"
                     :fieldType  "adjacentfieldset"}
@@ -92,7 +92,7 @@
 
                    {:fieldClass "formField"
                     :fieldType  "hakukohteet"}
-                   [ec/hakukohteet-module path]
+                   [ec/hakukohteet-module content path]
 
                    :else (do
                            (error content)
