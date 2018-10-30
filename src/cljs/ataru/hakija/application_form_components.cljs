@@ -127,19 +127,18 @@
        (let [lang                           @(subscribe [:application/form-language])
              selected-hakukohteet-for-field @(subscribe [:application/selected-hakukohteet-for-field field-descriptor])]
          [:div.application__question_hakukohde_names_container
-          [:span
-           (str (get-translation translation-key) " ")
-           [:a.application__question_hakukohde_names_info
-            {:on-click #(swap! show-hakukohde-list? not)}
-            (str (get-translation (if @show-hakukohde-list? :hide-application-options :show-application-options))
-                 " (" (count selected-hakukohteet-for-field) ")")]]
+          [:div.application__question_hakukohde_names_belongs-to (str (get-translation translation-key) " ")]
           (when @show-hakukohde-list?
             [:ul.application__question_hakukohde_names
              (for [hakukohde selected-hakukohteet-for-field
                    :let [name          (util/non-blank-val (:name hakukohde) [lang :fi :sv :en])
                          tarjoaja-name (util/non-blank-val (:tarjoaja-name hakukohde) [lang :fi :sv :en])]]
                [:li {:key (str (:id field-descriptor) "-" (:oid hakukohde))}
-                name " - " tarjoaja-name])])])))))
+                name " - " tarjoaja-name])])
+          [:a.application__question_hakukohde_names_info
+           {:on-click #(swap! show-hakukohde-list? not)}
+           (str (get-translation (if @show-hakukohde-list? :hide-application-options :show-application-options))
+                " (" (count selected-hakukohteet-for-field) ")")]])))))
 
 (defn- belongs-to-hakukohde-or-ryhma? [field]
   (seq (concat (:belongs-to-hakukohteet field)
