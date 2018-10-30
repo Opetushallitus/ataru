@@ -73,4 +73,5 @@
                               :dispatch [:application/fetch-applications-by-term term type]}}
         {:db (-> db
                  (set-search-term search-term)
-                 (assoc-in [:application :applications] nil))}))))
+                 (assoc-in [:application :applications] nil)
+                 (assoc-in [:application :filtered-applications] nil))}))))

@@ -602,12 +602,8 @@
 (reg-event-fx
   :application/clear-applications-haku-and-form-selections
   (fn [{db :db} _]
-    (cljs-util/unset-query-param "term")
-    {:db (-> db
-             (assoc-in [:editor :selected-form-key] nil)
-             (assoc-in [:application :applications] nil)
-             (assoc-in [:application :search-control :search-term :value] "")
-             clear-selection)}))
+    {:db       (clear-selection db)
+     :dispatch [:application/search-by-term ""]}))
 
 (reg-event-db
   :application/select-form
