@@ -160,7 +160,7 @@
    [:span.editor-form__fold-clickable-text
     {:on-click #(dispatch [:editor/unfold-all])}
     (get-virkailija-translation :open)]
-   [:span.editor-form__fold-description-text (str " " (get-virkailija-translation :sections))]])
+   [:span.editor-form__fold-description-text (str " " (get-virkailija-translation :questions))]])
 
 (defn- preview-link [form-key lang-kwd]
   [:a.editor-form__preview-button-link
