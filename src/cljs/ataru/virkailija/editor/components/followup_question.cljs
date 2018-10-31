@@ -2,6 +2,7 @@
   (:require
    [ataru.cljs-util :as util]
    [ataru.component-data.component :as component]
+   [ataru.virkailija.editor.components.drag-n-drop-spacer :as dnd]
    [ataru.virkailija.editor.components.toolbar :as toolbar]
    [cljs.core.match :refer-macros [match]]
    [goog.string :as s]
@@ -30,6 +31,7 @@
       [:div.editor-form__followup-indicator-inlay]
       [:div.editor-form__followup-question-overlay
        followups
+       [dnd/drag-n-drop-spacer (conj option-path :followups (count followups))]
        [toolbar/followup-toolbar option-path
         (fn [generate-fn]
           (dispatch [:editor/generate-followup-component generate-fn option-path]))]]]]))

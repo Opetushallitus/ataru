@@ -2,6 +2,7 @@
   (:require [ataru.feature-config :as fc]
             [ataru.virkailija.dev.lomake :as l]
             [ataru.virkailija.editor.component :as ec]
+            [ataru.virkailija.editor.components.drag-n-drop-spacer :as dnd]
             [ataru.virkailija.editor.components.toolbar :as toolbar]
             [ataru.virkailija.editor.components.followup-question :as followup]
             [ataru.util :as util]
@@ -45,7 +46,7 @@
       (when-let [component
                  (match content
                    {:module module}
-                   [ec/module path]
+                   [ec/module content path]
 
                    {:fieldClass "wrapperElement"
                     :fieldType  "adjacentfieldset"}
@@ -91,13 +92,13 @@
 
                    {:fieldClass "formField"
                     :fieldType  "hakukohteet"}
-                   [ec/hakukohteet-module path]
+                   [ec/hakukohteet-module content path]
 
                    :else (do
                            (error content)
                            (throw "error" content)))]
         [:div
-         [ec/drag-n-drop-spacer path content]
+         [dnd/drag-n-drop-spacer path]
          component]))))
 
 (defn editor []
@@ -109,6 +110,6 @@
                         ^{:key index}
                         [soresu->reagent element [index]]))
                     content))
-     [ec/drag-n-drop-spacer [(count content)]]
+     [dnd/drag-n-drop-spacer [(count content)]]
      [toolbar/add-component (count content)]]))
 

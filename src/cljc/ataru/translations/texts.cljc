@@ -1152,9 +1152,9 @@ You will receive a confirmation of your application to your email."}
    :search-terms-list                           {:fi "Nimi, henkilötunnus, syntymäaika tai sähköpostiosoite"
                                                  :sv "Namn, personbeteckning, födelsetid eller e-postadress"
                                                  :en "EN: Nimi, henkilötunnus, syntymäaika tai sähköpostiosoite"}
-   :sections                                    {:fi "osiot"
-                                                 :sv "delar"
-                                                 :en "EN: osiot"}
+   :questions                                   {:fi "kysymykset"
+                                                 :sv "SV: kysymykset"
+                                                 :en "EN: kysymykset"}
    :selection                                   {:fi "Valinta"
                                                  :sv "Antagning"
                                                  :en "EN: Valinta"}

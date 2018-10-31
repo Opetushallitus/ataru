@@ -750,7 +750,6 @@
   :editor/fold-all
   (fn [db _]
     (->> (get-in db (vec (current-form-content-path db)))
-         (filter #(= "fieldset" (:fieldType %)))
          (map :id)
          (reduce fold db))))
 
