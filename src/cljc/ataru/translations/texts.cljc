@@ -233,7 +233,7 @@ You will receive a confirmation of your application to your email."}
                                                  :sv "Studieinfo – ansökningsblankett"}
    :permission-for-electronic-transactions      {:fi "Opiskelijavalinnan tulokset saa lähettää minulle sähköisesti."
                                                  :sv "Mitt antagningsresultat får skickas elektroniskt till mig."
-                                                 :en "Opiskelijavalinnan tulokset saa lähettää minulle sähköisesti."}
+                                                 :en "Consent for electronic communication."}
    :permission-for-electronic-transactions-info {:fi "Täyttämällä sähköisen hakulomakkeen annat samalla luvan siihen, että opiskelijavalintaan liittyvä viestintä hoidetaan pelkästään sähköisesti. Jos et suostu näihin ehtoihin, ota yhteyttä korkeakoulun hakijapalveluihin."
                                                  :sv "Genom att fylla i denna elektroniska ansökningsblankett ger du samtidigt ditt medgivande till att kommunikationen gällande studerandeantagningen kan skötas enbart elektroniskt. Om du inte går med på dessa villkor, kontakta ansökningsservicen vid högskolan."
                                                  :en "By filling in this electronic application form you also give your consent that communication regarding student admissions can be carried out only by email. If you do not agree to these terms, please contact the admissions services of the higher education institution that you are applying to."}
