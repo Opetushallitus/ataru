@@ -635,13 +635,27 @@
                 {:hakemus_oids hakemus-oids})
        (group-by :application_key)))
 
-(defn- kk-base-educations [answers]
+(defn- kk-base-educations-old-module [answers]
   (->> [["kk" :higher-education-qualification-in-finland-year-and-date]
         ["avoin" :studies-required-by-higher-education-field]
         ["ulk" :higher-education-qualification-outside-finland-year-and-date]
         ["muu" :other-eligibility-year-of-completion]]
-       (remove (fn [[_ id]] (clojure.string/blank? (-> answers id :value first first))))
+       (remove (fn [[_ id]]
+                 (or (not (sequential? (-> answers id :value)))
+                     (not (sequential? (-> answers id :value first)))
+                     (clojure.string/blank? (-> answers id :value first first)))))
        (map first)))
+
+(defn- kk-base-educations-new-module [answers]
+  (let [m {"pohjakoulutus_kk"    "kk"
+           "pohjakoulutus_avoin" "avoin"
+           "pohjakoulutus_ulk"   "ulk"
+           "pohjakoulutus_muu"   "muu"}]
+    (keep m (-> answers :higher-completed-base-education :value))))
+
+(defn- kk-base-educations [answers]
+  (distinct (concat (kk-base-educations-old-module answers)
+                    (kk-base-educations-new-module answers))))
 
 (defn- korkeakoulututkinto-vuosi [answers]
   (when (= "Yes" (get-in answers [:finnish-vocational-before-1995 :value] "No"))
