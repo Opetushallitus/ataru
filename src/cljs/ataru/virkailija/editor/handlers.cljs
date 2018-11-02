@@ -45,6 +45,17 @@
       (concat further-path)
       (flatten)))
 
+(defn- fold [db id]
+  (assoc-in db [:editor :ui id :folded?] true))
+
+(defn unfold [db id]
+  (assoc-in db [:editor :ui id :folded?] false))
+
+(defn fold-all [db]
+  (->> (get-in db (vec (current-form-content-path db)))
+       (map :id)
+       (reduce fold db)))
+
 (defn- set-non-koodisto-option-values
   [field-descriptor]
   (if (nil? (:koodisto-source field-descriptor))
@@ -362,6 +373,8 @@
       (-> db
           (update :editor dissoc :ui)
           (assoc-in [:editor :forms key] new-form)
+          (assoc-in [:editor :selected-form-key] key)
+          (fold-all)
           (assoc-in [:editor :save-snapshot] new-form)
           (assoc-in [:editor :autosave]
                     (autosave/interval-loop {:subscribe-path    [:editor :forms key]
@@ -730,12 +743,6 @@
           (update-in content-path (fnil (comp vec #(disj % oid) set) []))
           (update-modified-by [path])))))
 
-(defn- fold [db id]
-  (assoc-in db [:editor :ui id :folded?] true))
-
-(defn- unfold [db id]
-  (assoc-in db [:editor :ui id :folded?] false))
-
 (reg-event-db
   :editor/fold
   (fn [db [_ id]]
@@ -749,9 +756,7 @@
 (reg-event-db
   :editor/fold-all
   (fn [db _]
-    (->> (get-in db (vec (current-form-content-path db)))
-         (map :id)
-         (reduce fold db))))
+    (fold-all db)))
 
 (reg-event-db
   :editor/unfold-all
