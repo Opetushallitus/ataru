@@ -350,7 +350,8 @@
 (defn- component-content
   [id _]
   (let [folded?  (subscribe [:editor/folded? id])
-        state    (r/atom :unfolded)
+        state    (r/atom (if @folded?
+                           :folded :unfolded))
         height   (r/atom nil)
         listener (unfold-ended-listener folded? state)]
     (r/create-class
