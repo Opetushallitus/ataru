@@ -42,7 +42,7 @@
   [multiple? yhteishaku? haku-oid form]
   (when-let [person-module-idx (util/first-index-of #(= (:module %) "person-info") (:content form))]
     (let [person-module     (nth (:content form) person-module-idx)
-          new-person-module (update person-module :children (partial map (set-submit-multiple-and-yhteishaku-if-ssn-or-email-field multiple? yhteishaku? haku-oid)))]
+          new-person-module (update person-module :children (partial clojure.walk/prewalk (set-submit-multiple-and-yhteishaku-if-ssn-or-email-field multiple? yhteishaku? haku-oid)))]
       (assoc-in form [:content person-module-idx] new-person-module))))
 
 (defn populate-can-submit-multiple-applications
