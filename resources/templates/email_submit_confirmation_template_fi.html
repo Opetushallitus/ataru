@@ -40,7 +40,7 @@
       {% if attachments-without-answer|not-empty %}
         <tr>
           <td style="padding-left: 20px; padding-top: 20px;">
-            Muistathan palauttaa vielä nämä liitteet:
+            Muistathan palauttaa vielä liitteet:
           </td>
         </tr>
         <tr>
@@ -48,7 +48,10 @@
             <ul>
               {% for attachment in attachments-without-answer %}
                 <li>
-                  {{attachment}}
+                  {{attachment.label}}
+                  {% if attachment.deadline|not-empty %}
+                  <br> Palautettava viimeistään {{attachment.deadline}}
+                  {% endif %}
                 </li>
               {% endfor %}
             </ul>

@@ -145,7 +145,7 @@
                                                  :sv "SV: Ladataan"
                                                  :ev "Uploading"}
    :deadline-in                                 {:fi "Palautettava viimeistään"
-                                                 :sv "Deadline in"
+                                                 :sv "Sista leveransdatum"
                                                  :en "Deadline in"}
    :file-type-forbidden                         {:fi "Tiedostoa ei ladattu, yritä uudelleen"
                                                  :en "File failed to upload, try again"

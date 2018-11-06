@@ -13,8 +13,8 @@
   (:import (java.util.concurrent TimeUnit)))
 
 (defn- run-specs-with-virkailija-and-hakija-systems [specs]
-  (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _ _])
-                application-email/start-email-edit-confirmation-job   (fn [_ _ _])]
+  (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _ _ _ _])
+                application-email/start-email-edit-confirmation-job   (fn [_ _ _ _ _])]
     (let [virkailija-system (atom (virkailija-system/new-system))
           hakija-system     (atom (hakija-system/new-system))]
       (try

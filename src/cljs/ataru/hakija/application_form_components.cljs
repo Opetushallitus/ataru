@@ -801,10 +801,8 @@
      [:span.application__form-upload-button-info
       [:div
        (get-translation :file-size-info (util/size-bytes->str max-attachment-size-bytes))]
-      (cond
-       (-> field-descriptor :params :deadline) (deadline-info (-> field-descriptor :params :deadline))
-       :else (when-let [deadline @(subscribe [:application/attachment-deadline field-descriptor])]
-               (deadline-info deadline)))]]))
+      (when-let [deadline @(subscribe [:application/attachment-deadline field-descriptor])]
+               (deadline-info deadline))]]))
 
 (defn- attachment-filename
   [id question-group-idx attachment-idx show-size?]

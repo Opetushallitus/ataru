@@ -9,21 +9,6 @@
     ongoing-hakuaika
     (first (sort-by :end > (filter :end hakuajat)))))
 
-(defn select-hakuaika-for-field [field hakukohteet]
-  (let [field-hakukohde-and-group-oids (set (concat (:belongs-to-hakukohteet field)
-                                                    (:belongs-to-hakukohderyhma field)))
-        relevant-hakukohteet (cond->> hakukohteet
-                                      (not-empty field-hakukohde-and-group-oids)
-                                      (filter #(not-empty (clojure.set/intersection field-hakukohde-and-group-oids
-                                                                                    (set (cons (:oid %) (:hakukohderyhmat %)))))))]
-    (select-first-ongoing-hakuaika-or-hakuaika-with-last-ending
-      (map :hakuaika relevant-hakukohteet))))
-
-(defn attachment-edit-end [hakuaika default-modify-grace-period]
-  (let [hakuaika-end (some-> hakuaika :end c/from-long)]
-    (some-> hakuaika-end (t/plus (t/days (or (:attachment-modify-grace-period-days hakuaika)
-                                             default-modify-grace-period))))))
-
 (defn select-hakuaika-for-haku [hakuajat]
   (let [longest-open (->> hakuajat
                           (filter :on)
@@ -40,3 +25,18 @@
     (or longest-open
         next-open
         last-open)))
+
+(defn select-hakuaika-for-field [field hakukohteet]
+  (let [field-hakukohde-and-group-oids (set (concat (:belongs-to-hakukohteet field)
+                                                    (:belongs-to-hakukohderyhma field)))
+        relevant-hakukohteet           (cond->> hakukohteet
+                                                (not-empty field-hakukohde-and-group-oids)
+                                                (filter #(not-empty (clojure.set/intersection field-hakukohde-and-group-oids
+                                                                                              (set (cons (:oid %) (:hakukohderyhmat %)))))))]
+    (select-first-ongoing-hakuaika-or-hakuaika-with-last-ending
+      (map :hakuaika relevant-hakukohteet))))
+
+(defn attachment-edit-end [hakuaika default-modify-grace-period]
+  (let [hakuaika-end (some-> hakuaika :end c/from-long)]
+    (some-> hakuaika-end (t/plus (t/days (or (:attachment-modify-grace-period-days hakuaika)
+                                             default-modify-grace-period))))))

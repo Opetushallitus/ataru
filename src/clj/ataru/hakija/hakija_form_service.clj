@@ -6,7 +6,7 @@
                                                      editing-forbidden-person-info-field-ids
                                                      editing-allowed-person-info-field-ids]]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
-            [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
+            [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options populate-attachment-deadlines]]
             [taoensso.timbre :refer [warn]]
             [clj-time.core :as time]
             [clj-time.coerce :as t]
@@ -176,6 +176,7 @@
       (-> form
           (merge tarjonta-info)
           (assoc :load-time (System/currentTimeMillis))
+          (populate-attachment-deadlines tarjonta-info)
           (populate-hakukohde-answer-options tarjonta-info)
           (populate-can-submit-multiple-applications tarjonta-info))
       (warn "could not find local form for haku" haku-oid "with keys" (pr-str form-keys)))))
@@ -194,9 +195,5 @@
                                           (:hakuOid hakukohde)
                                           false
                                           roles)]
-    (when form
-      (-> form
-          (assoc :load-time (System/currentTimeMillis))
-          (assoc-in [:tarjonta :default-hakukohde]
-                    (some #(when (= hakukohde-oid (:oid %)) %)
-                      (:hakukohteet (:tarjonta form))))))))
+    (some-> form
+            (assoc :load-time (System/currentTimeMillis)))))
