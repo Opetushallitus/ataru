@@ -16,7 +16,7 @@ before_script:
   - docker run -d --name ataru-test-redis -p 6380:6379 redis
 script: >-
   ./bin/cibuild.sh run-tests-and-create-uberjar &&
-  export BASE_IMAGE="base-legacy:0.1" &&
+  export BASE_IMAGE="baseimage-fatjar:master" &&
   ./ci-tools/common/pull-image.sh &&
   cp -v ./target/ataru.jar $DOCKER_BUILD_DIR/artifact/ataru-editori.jar &&
   cp -vr ./oph-configuration $DOCKER_BUILD_DIR/config/ &&
