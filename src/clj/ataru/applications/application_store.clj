@@ -963,6 +963,21 @@
                                                         :application_keys (cons "" application-keys)})
        (map unwrap-valintalaskenta-application)))
 
+(defn- unwrap-siirto-application [application]
+  (let [keyword-values (->> application
+                            :content
+                            :answers
+                            (filter #(not= "hakukohteet" (:key %)))
+                            flatten-application-answers)]
+    (-> application
+        (dissoc :content)
+        (assoc :keyValues keyword-values)
+        (clojure.set/rename-keys {:key :hakemusOid :person-oid :personOid :haku :hakuOid}))))
+
+(defn siirto-applications [hakukohde-oid application-keys]
+  (->> (exec-db :db yesql-siirto-applications {:hakukohde_oid    hakukohde-oid
+                                               :application_keys (cons "" application-keys)})
+       (map unwrap-siirto-application)))
 
 (defn remove-review-note [note-id]
   (when-not (= (exec-db :db yesql-remove-review-note! {:id note-id}) 0)

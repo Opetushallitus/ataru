@@ -212,6 +212,23 @@
     (constantly nil)
     #(application-store/get-applications-for-valintalaskenta hakukohde-oid application-keys)))
 
+(defn siirto-applications
+  [tarjonta-service organization-service session hakukohde-oid application-keys]
+  (session-orgs/run-org-authorized
+   session
+   organization-service
+   [:view-applications :edit-applications]
+   (constantly nil)
+   #(->> (application-store/siirto-applications hakukohde-oid application-keys)
+         (map (fn [a] (assoc a :hakukohde (:hakutoiveet a))))
+         (filter-authorized tarjonta-service
+                            (some-fn (partial authorized-by-form? %)
+                                     (partial authorized-by-tarjoajat? %)))
+         (map (fn [a] (dissoc a :hakukohde)))
+         (map remove-organization-oid))
+   #(->> (application-store/siirto-applications hakukohde-oid application-keys)
+         (map remove-organization-oid))))
+
 (defn valinta-ui-applications
   [organization-service tarjonta-service session query]
   (session-orgs/run-org-authorized

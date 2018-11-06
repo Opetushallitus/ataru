@@ -794,6 +794,23 @@ WHERE person_oid IS NOT NULL
   AND (array_length(ARRAY[:application_keys], 1) < 2 OR key IN (:application_keys))
   AND state <> 'inactivated';
 
+--name: yesql-siirto-applications
+SELECT
+  a.key,
+  a.person_oid AS "person-oid",
+  a.haku,
+  a.hakukohde AS hakutoiveet,
+  a.content,
+  lf.organization_oid AS "organization-oid"
+FROM latest_applications AS a
+JOIN application_reviews AS ar ON ar.application_key = a.key
+JOIN forms AS f ON form_id = f.id
+JOIN latest_forms AS lf ON lf.key = f.key
+WHERE a.person_oid IS NOT NULL
+  AND (:hakukohde_oid::TEXT IS NULL OR :hakukohde_oid = ANY (a.hakukohde))
+  AND (array_length(ARRAY[:application_keys], 1) < 2 OR a.key IN (:application_keys))
+  AND ar.state <> 'inactivated';
+
 --name: yesql-get-latest-application-ids-distinct-by-person-oid
 SELECT DISTINCT ON (person_oid) id FROM latest_applications ORDER BY person_oid, id DESC;
 
