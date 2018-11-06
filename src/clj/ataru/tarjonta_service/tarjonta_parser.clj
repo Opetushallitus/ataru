@@ -36,12 +36,21 @@
               (localized-names :nimi)))
         (-> koulutus :tutkintonimikes :meta)))
 
+(defn- parse-koulutusohjelma
+  [koulutus]
+  (-> koulutus
+      :koulutusohjelma
+      :tekstis
+      (clojure.set/rename-keys lang-key-renames)
+      localized-names))
+
 (defn- parse-koulutus
   [response]
   {:oid                  (:oid response)
    :koulutuskoodi-name   (parse-koulutuskoodi response)
    :tutkintonimike-names (parse-tutkintonimikes response)
-   :tarkenne             (:tarkenne response)})
+   :tarkenne             (:tarkenne response)
+   :koulutusohjelma-name (parse-koulutusohjelma response)})
 
 (defn- applicable-base-educations
   [hakukohde pohjakoulutusvaatimuskorkeakoulut]
