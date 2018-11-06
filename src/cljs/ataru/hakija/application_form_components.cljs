@@ -136,7 +136,8 @@
                [:li {:key (str (:id field-descriptor) "-" (:oid hakukohde))}
                 name " - " tarjoaja-name])])
           [:a.application__question_hakukohde_names_info
-           {:on-click #(swap! show-hakukohde-list? not)}
+           {:role "button"
+            :on-click #(swap! show-hakukohde-list? not)}
            (str (get-translation (if @show-hakukohde-list? :hide-application-options :show-application-options))
                 " (" (count selected-hakukohteet-for-field) ")")]])))))
 
