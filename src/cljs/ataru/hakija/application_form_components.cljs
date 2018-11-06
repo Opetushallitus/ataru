@@ -137,6 +137,7 @@
                 name " - " tarjoaja-name])])
           [:a.application__question_hakukohde_names_info
            {:role "button"
+            :aria-pressed (str (boolean @show-hakukohde-list?))
             :on-click #(swap! show-hakukohde-list? not)}
            (str (get-translation (if @show-hakukohde-list? :hide-application-options :show-application-options))
                 " (" (count selected-hakukohteet-for-field) ")")]])))))
