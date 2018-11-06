@@ -127,13 +127,9 @@
         (add-blank-templates x)
         (map #(preview-submit-email (:lang %) (:subject %) (:content %) (:content-ending %)) x)))
 
-(defn- attachment-with-deadline [tarjonta-info application lang field]
+(defn- attachment-with-deadline [application lang field]
   (let [attachment {:label (-> field :label lang)}]
-    (if-let [deadline (or (-> field :params :deadline-label lang)
-                          (when-some [hakukohteet (get-in tarjonta-info [:tarjonta :hakukohteet])]
-                            (some-> (hakuaika/select-hakuaika-for-field field hakukohteet) :label :attachment-period-end lang)))]
-      (assoc attachment :deadline deadline)
-      attachment)))
+    (assoc attachment :deadline (-> field :params :deadline-label lang))))
 
 (defn- create-email [tarjonta-service organization-service ohjausparametrit-service subject template-name application-id]
   (let [application                     (application-store/get-application application-id)
@@ -145,7 +141,7 @@
                                           (:hakukohde application))
         answers-by-key                  (-> application :answers util/answers-by-key)
         form                            (-> (forms/fetch-by-id (:form application))
-                                            hakukohde/populate-attachment-deadlines)
+                                            (hakukohde/populate-attachment-deadlines tarjonta-info))
         lang                            (keyword (:lang application))
         attachment-keys-without-answers (->> (application-store/get-application-attachment-reviews (:key application))
                                              (map :attachment-key)
@@ -155,7 +151,7 @@
                                              :content
                                              util/flatten-form-fields
                                              (filter #(contains? attachment-keys-without-answers (:id %)))
-                                             (map #(attachment-with-deadline tarjonta-info application lang %)))
+                                             (map #(attachment-with-deadline application lang %)))
         email-template                  (find-first #(= (:lang application) (:lang %)) (get-email-templates (:key form)))
         content                         (-> email-template
                                             :content

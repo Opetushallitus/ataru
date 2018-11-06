@@ -145,8 +145,7 @@
     (when (not (:deleted form))
       (-> form
           (remove-required-hakija-validator-if-virkailija roles)
-          koodisto/populate-form-koodisto-fields
-          populate-attachment-deadlines))))
+          koodisto/populate-form-koodisto-fields))))
 
 (s/defn ^:always-validate fetch-form-by-key-with-flagged-fields :- s/Any
   [key :- s/Any
@@ -177,7 +176,7 @@
       (-> form
           (merge tarjonta-info)
           (assoc :load-time (System/currentTimeMillis))
-          (populate-attachment-deadlines)
+          (populate-attachment-deadlines tarjonta-info)
           (populate-hakukohde-answer-options tarjonta-info)
           (populate-can-submit-multiple-applications tarjonta-info))
       (warn "could not find local form for haku" haku-oid "with keys" (pr-str form-keys)))))

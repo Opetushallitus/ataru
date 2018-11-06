@@ -223,8 +223,7 @@
 
 (s/defschema Hakuaika
   {:label                               {:start                 LocalizedDateTime
-                                         :end                   LocalizedDateTime
-                                         :attachment-period-end LocalizedDateTime}
+                                         :end                   LocalizedDateTime}
    :start                               s/Int
    :end                                 (s/maybe s/Int)
    :on                                  s/Bool

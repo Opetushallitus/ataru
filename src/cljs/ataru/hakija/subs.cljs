@@ -72,10 +72,7 @@
     [(re-frame/subscribe [:state-query [:form :tarjonta :hakukohteet]])
      (re-frame/subscribe [:application/selected-language])])
   (fn [[hakukohteet selected-language] [_ field]]
-    (if-let [deadline (or (-> field :params :deadline-label selected-language)
-                          (when hakukohteet
-                            (some-> (hakuaika/select-hakuaika-for-field field hakukohteet) :label :attachment-period-end selected-language)))]
-      deadline)))
+    (-> field :params :deadline-label selected-language)))
 
 (re-frame/reg-sub
   :application/haku-aika

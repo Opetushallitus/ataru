@@ -2,6 +2,8 @@
   (:require [ataru.util :refer [koulutus->str non-blank-val]]
             [clojure.string :refer [join blank?]]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
+            [ataru.config.core :refer [config]]
+            [ataru.hakuaika :as h]
             [ataru.util :as util]))
 
 (defn- koulutus->str-map
@@ -51,18 +53,25 @@
           updated-field     (populate-hakukohteet-field hakukohteet-field tarjonta-info)]
       (assoc-in form [:content hakukohteet-field-idx] updated-field))))
 
-(defn populate-attachment-deadlines [form]
-  (update form :content
-    (fn [content]
-        (clojure.walk/prewalk
-          (fn [field]
-              (if (and (= (:fieldType field) "attachment")
-                       (seq (-> field :params :deadline)))
-                (assoc-in field [:params :deadline-label] (hakuaika/date-time->localized-date-time
-                                                            (hakuaika/str->date-time
-                                                              (-> field :params :deadline))))
-                field))
-          content))))
+(defn populate-attachment-deadlines [form tarjonta-info]
+  (let [hakukohteet (get-in tarjonta-info [:tarjonta :hakukohteet])
+        default-grace-period (-> config
+                                 :public-config
+                                 (get :attachment-modify-grace-period-days 14))]
+    (update form :content
+      (fn [content]
+          (clojure.walk/prewalk
+            (fn [field]
+                (if (= (:fieldType field) "attachment")
+                  (let [label (or (some-> (-> field :params :deadline)
+                                          (hakuaika/str->date-time)
+                                          (hakuaika/date-time->localized-date-time))
+                                  (some-> (h/select-hakuaika-for-field field hakukohteet)
+                                          (h/attachment-edit-end default-grace-period)
+                                          (hakuaika/date-time->localized-date-time)))]
+                    (assoc-in field [:params :deadline-label] label))
+                  field))
+            content)))))
 
 (defn populate-hakukohde-answer-options [form tarjonta-info]
   ; walking through entire content is very slow for large forms, so try a naive optimization first
