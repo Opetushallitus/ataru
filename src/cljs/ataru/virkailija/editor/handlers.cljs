@@ -17,7 +17,7 @@
             [ataru.virkailija.routes :refer [set-history!]]
             [ataru.virkailija.virkailija-ajax :refer [http post put dispatch-flasher-error-msg]]
             [ataru.util :as util]
-            [ataru.cljs-util :as cu]
+            [ataru.cljs-util :as cu :refer [assoc?]]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.virkailija.temporal :as temporal]
             [ataru.virkailija.editor.form-diff :as form-diff]
@@ -168,11 +168,20 @@
         (update-modified-by path))))
 
 (reg-event-db
-  :editor/update-component-value
-  (fn [db [_ update-fn & path]]
-    (-> db
-        (update-in (current-form-content-path db [path]) update-fn)
-        (update-modified-by path))))
+  :editor/update-mail-attachment
+  (fn [db [_ mail-attachment? & path]]
+    (let [flip-mail-attachment (fn [{:keys [params validators] :as field}]
+                                 (let [params (assoc? params
+                                                      :mail-attachment? mail-attachment?
+                                                      :info-text (when mail-attachment?
+                                                                   (assoc (:info-text params) :enabled? true)))]
+                                   (assoc? field
+                                           :params params
+                                           :validators (when mail-attachment?
+                                                         (filter #(not= "required" %) validators)))))]
+      (-> db
+          (update-in (current-form-content-path db [path]) flip-mail-attachment)
+          (update-modified-by path)))))
 
 (defn generate-component
   [db [_ generate-fn sub-path]]

@@ -1,7 +1,7 @@
 (ns ataru.virkailija.editor.component
   (:require
     [ataru.application-common.application-field-common :refer [copy-link]]
-    [ataru.cljs-util :as util :refer [assoc? cljs->str str->cljs new-uuid get-virkailija-translation]]
+    [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid get-virkailija-translation]]
     [ataru.component-data.component :as component]
     [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
     [ataru.virkailija.editor.components.followup-question :refer [followup-question followup-question-overlay]]
@@ -1114,16 +1114,7 @@
                    :on-change (fn toggle-attachment-textarea [event]
                                 (.preventDefault event)
                                 (let [mail-attachment? (.. event -target -checked)]
-                                  (dispatch [:editor/update-component-value (fn [{:keys [params validators] :as field}]
-                                                                              (let [params (assoc? params
-                                                                                                   :mail-attachment? mail-attachment?
-                                                                                                   :info-text (when mail-attachment?
-                                                                                                                (assoc (:info-text params) :enabled? true)))]
-                                                                                (assoc? field
-                                                                                        :params params
-                                                                                        :validators (when mail-attachment?
-                                                                                                        (filter #(not= "required" %) validators)))))
-                                             path])))}]
+                                  (dispatch [:editor/update-mail-attachment mail-attachment? path])))}]
           [:label
            {:for   id
             :class (when @form-locked "editor-form__checkbox-label--disabled")}
