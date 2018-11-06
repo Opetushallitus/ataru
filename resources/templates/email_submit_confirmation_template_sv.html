@@ -48,8 +48,10 @@
           <ul>
             {% for attachment in attachments-without-answer %}
             <li>
-              {{attachment.label}} <br>
-              Sista leveransdatum {{attachment.deadline}}
+              {{attachment.label}}
+              {% if attachment.deadline|not-empty %}
+              <br> Sista leveransdatum {{attachment.deadline}}
+              {% endif %}
             </li>
             {% endfor %}
           </ul>

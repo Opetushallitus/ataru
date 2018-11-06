@@ -36,8 +36,10 @@
           <ul>
             {% for attachment in attachments-without-answer %}
             <li>
-              {{attachment.label}} <br>
-              Deadline in {{attachment.deadline}}
+              {{attachment.label}}
+              {% if attachment.deadline|not-empty %}
+              <br> Deadline in {{attachment.deadline}}
+              {% endif %}
             </li>
             {% endfor %}
           </ul>
