@@ -145,6 +145,7 @@
     (when (not (:deleted form))
       (-> form
           (remove-required-hakija-validator-if-virkailija roles)
+          (populate-attachment-deadlines nil)
           koodisto/populate-form-koodisto-fields))))
 
 (s/defn ^:always-validate fetch-form-by-key-with-flagged-fields :- s/Any

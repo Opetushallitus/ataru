@@ -925,8 +925,8 @@
       field-descriptor component-id question-group-idx attachment-idx]]))
 
 (defn attachment [{:keys [id] :as field-descriptor} & {question-group-idx :idx}]
-  (let [languages  (subscribe [:application/default-languages])
-        text     (reaction (util/non-blank-val (get-in field-descriptor [:params :info-text :value]) @languages))]
+  (let [languages (subscribe [:application/default-languages])
+        text      (reaction (util/non-blank-val (get-in field-descriptor [:params :info-text :value]) @languages))]
     (fn [{:keys [id] :as field-descriptor} & {question-group-idx :idx}]
       (let [attachment-count (reaction (count @(subscribe [:state-query [:application :answers (keyword id) :values question-group-idx]])))]
         [:div.application__form-field
@@ -941,9 +941,12 @@
                  (map (fn [attachment-idx]
                         ^{:key (str "attachment-" (when question-group-idx (str question-group-idx "-")) id "-" attachment-idx)}
                         [attachment-row field-descriptor id attachment-idx question-group-idx])))])
-         (when-not (or (not (get-in field-descriptor [:params :mail-attachment]))
-                       @(subscribe [:application/cannot-edit? (keyword id)]))
-           [attachment-upload field-descriptor id @attachment-count question-group-idx])]))))
+         (if (get-in field-descriptor [:params :mail-attachment?])
+           (when-let [deadline @(subscribe [:application/attachment-deadline field-descriptor])]
+             [:div.application__mail-attachment--deadline
+              [deadline-info deadline]])
+           (when-not @(subscribe [:application/cannot-edit? (keyword id)])
+             [attachment-upload field-descriptor id @attachment-count question-group-idx]))]))))
 
 (defn info-element [field-descriptor]
   (let [languages  (subscribe [:application/default-languages])
