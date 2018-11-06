@@ -8,7 +8,7 @@
             [ataru.cljs-util :as util]))
 
 (defn- from-multi-lang [text lang]
-  (some #(get text %) [lang :fi :sv :en]))
+  (u/non-blank-val text [lang :fi :sv :en]))
 
 (re-frame/reg-sub
  :application/list-heading
