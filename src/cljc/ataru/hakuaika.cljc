@@ -29,13 +29,12 @@
 (defn select-hakuaika-for-field [field hakukohteet]
   (let [field-hakukohde-and-group-oids (set (concat (:belongs-to-hakukohteet field)
                                                     (:belongs-to-hakukohderyhma field)))
-        relevant-hakukohteet (cond->> hakukohteet
-                                      (not-empty field-hakukohde-and-group-oids)
-                                      (filter #(not-empty (clojure.set/intersection field-hakukohde-and-group-oids
-                                                                                    (set (cons (:oid %) (:hakukohderyhmat %)))))))]
-    (or (select-first-ongoing-hakuaika-or-hakuaika-with-last-ending
-          (map :hakuaika relevant-hakukohteet))
-        (select-hakuaika-for-haku (map :hakuaika hakukohteet)))))
+        relevant-hakukohteet           (cond->> hakukohteet
+                                                (not-empty field-hakukohde-and-group-oids)
+                                                (filter #(not-empty (clojure.set/intersection field-hakukohde-and-group-oids
+                                                                                              (set (cons (:oid %) (:hakukohderyhmat %)))))))]
+    (select-first-ongoing-hakuaika-or-hakuaika-with-last-ending
+      (map :hakuaika relevant-hakukohteet))))
 
 (defn attachment-edit-end [hakuaika default-modify-grace-period]
   (let [hakuaika-end (some-> hakuaika :end c/from-long)]
