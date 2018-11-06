@@ -1098,26 +1098,42 @@
          [belongs-to-hakukohteet path content]]]])))
 
 (defn attachment-textarea [path]
-  (let [checked?    (subscribe [:editor/get-component-value path :params :info-text :enabled?])
-        collapse?   (subscribe [:editor/get-component-value path :params :info-text-collapse])
-        languages   (subscribe [:editor/languages])
-        form-locked (subscribe [:editor/current-form-locked])]
+  (let [checked?         (subscribe [:editor/get-component-value path :params :info-text :enabled?])
+        mail-attachment? (subscribe [:editor/get-component-value path :params :mail-attachment?])
+        collapse?        (subscribe [:editor/get-component-value path :params :info-text-collapse])
+        languages        (subscribe [:editor/languages])
+        form-locked      (subscribe [:editor/current-form-locked])]
     (fn [path]
       [:div.editor-form__info-addon-wrapper
        (let [id (util/new-uuid)]
          [:div.editor-form__info-addon-checkbox
           [:input {:id        id
                    :type      "checkbox"
-                   :checked   @checked?
+                   :checked   @mail-attachment?
                    :disabled  (some? @form-locked)
                    :on-change (fn toggle-attachment-textarea [event]
                                 (.preventDefault event)
-                                (let [checked? (.. event -target -checked)]
-                                  (dispatch [:editor/set-component-value checked? path :params :info-text :enabled?])))}]
+                                (let [mail-attachment? (.. event -target -checked)]
+                                  (dispatch [:editor/update-mail-attachment mail-attachment? path])))}]
           [:label
            {:for   id
             :class (when @form-locked "editor-form__checkbox-label--disabled")}
-           (get-virkailija-translation :attachment-info-text)]])
+           (get-virkailija-translation :mail-attachment-text)]])
+       (when-not @mail-attachment?
+         (let [id (util/new-uuid)]
+           [:div.editor-form__info-addon-checkbox
+            [:input {:id        id
+                     :type      "checkbox"
+                     :checked   @checked?
+                     :disabled  (some? @form-locked)
+                     :on-change (fn toggle-attachment-textarea [event]
+                                  (.preventDefault event)
+                                  (let [checked? (.. event -target -checked)]
+                                    (dispatch [:editor/set-component-value checked? path :params :info-text :enabled?])))}]
+            [:label
+             {:for   id
+              :class (when @form-locked "editor-form__checkbox-label--disabled")}
+             (get-virkailija-translation :attachment-info-text)]]))
        (when @checked?
          (let [id (util/new-uuid)]
            [:div.editor-form__info-addon-checkbox
@@ -1166,6 +1182,7 @@
         animation-effect (fade-out-effect path)
         deadline-value   (r/atom (get-in @component [:params :deadline]))
         valid            (r/atom true)
+        mail-attachment? (subscribe [:editor/get-component-value path :params :mail-attachment?])
         format-deadline  (fn [event]
                            (some->> (deadline-date (-> event .-target .-value))
                                     (reset! deadline-value)))
@@ -1206,7 +1223,7 @@
              :on-blur     format-deadline
              :placeholder "pp.kk.vvvv hh:mm"
              :on-change   update-deadline}]]
-          [:div.editor-form__checkbox-wrapper
-           [required-checkbox path content]]
+          (when-not @mail-attachment? [:div.editor-form__checkbox-wrapper
+           [required-checkbox path content]])
           [belongs-to-hakukohteet path content]]
          [attachment-textarea path]]]])))

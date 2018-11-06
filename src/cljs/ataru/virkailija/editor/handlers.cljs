@@ -17,7 +17,7 @@
             [ataru.virkailija.routes :refer [set-history!]]
             [ataru.virkailija.virkailija-ajax :refer [http post put dispatch-flasher-error-msg]]
             [ataru.util :as util]
-            [ataru.cljs-util :as cu]
+            [ataru.cljs-util :as cu :refer [assoc?]]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.virkailija.temporal :as temporal]
             [ataru.virkailija.editor.form-diff :as form-diff]
@@ -33,11 +33,6 @@
   db)
 
 (reg-event-db :editor/get-user-info get-user-info)
-
-(reg-event-db
-  :editor/set-save-snapshot
-  (fn [db [_ form]]
-    (assoc-in db [:editor :save-snapshot] form)))
 
 (defn- current-form-content-path
   [db & further-path]
@@ -171,6 +166,22 @@
     (-> db
         (assoc-in (current-form-content-path db [path]) value)
         (update-modified-by path))))
+
+(reg-event-db
+  :editor/update-mail-attachment
+  (fn [db [_ mail-attachment? & path]]
+    (let [flip-mail-attachment (fn [{:keys [params validators] :as field}]
+                                 (let [params (assoc? params
+                                                      :mail-attachment? mail-attachment?
+                                                      :info-text (when mail-attachment?
+                                                                   (assoc (:info-text params) :enabled? true)))]
+                                   (assoc? field
+                                           :params params
+                                           :validators (when mail-attachment?
+                                                         (filter #(not= "required" %) validators)))))]
+      (-> db
+          (update-in (current-form-content-path db [path]) flip-mail-attachment)
+          (update-modified-by path)))))
 
 (defn generate-component
   [db [_ generate-fn sub-path]]
@@ -380,7 +391,7 @@
                     (autosave/interval-loop {:subscribe-path    [:editor :forms key]
                                              :changed-predicate editor-autosave-predicate
                                              :handler           (fn [form previous-autosave-form-at-time-of-dispatch]
-                                                                  (dispatch [:editor/save-form]))})))))))
+                                                                  (dispatch [:editor/save-form form new-form]))})))))))
 
 (defn- fetch-form-content-fx
   [form-id]
@@ -406,10 +417,6 @@
 
 (def save-chan (async/chan (async/sliding-buffer 1)))
 
-(defn fragment-updates-from-difference [form]
-  (let [prev-form @(subscribe [:editor/last-save-snapshot])]
-    (seq (form-diff/as-operations prev-form form))))
-
 (defn update-form-with-fragment [form fragments]
   (let [response-promise (async/promise-chan)]
     (put (str "/lomake-editori/api/forms/" (:id form)) fragments
@@ -421,33 +428,37 @@
     response-promise))
 
 (defn save-loop [save-chan]
-  (go-loop [_ (async/<! save-chan)]
-    (let [form (-> @(subscribe [:editor/selected-form])
-                   (dissoc :created-time))]
-      (when (not-empty (:content form))
-        (try
-          (if-let [fragments (fragment-updates-from-difference form)]
-            (do
-              (asyncm/<? (update-form-with-fragment form fragments))
-              (dispatch [:editor/set-save-snapshot form])))
-          (catch js/Error error
-            (do
-              (prn error)
-              (dispatch [:snackbar-message
-                         [(str "Toinen käyttäjä teki muutoksen lomakkeeseen \"" (some #(get-in form [:name %])
-                                                                                  [:fi :sv :en]) "\"")
-                          "Lataa sivu uudelleen ja tarkista omat muutokset"]])
-              (dispatch-flasher-error-msg :post error))))))
-    (recur (async/<! save-chan))))
+  (let [last-saved-snapshot (atom nil)]
+    (go-loop []
+      (let [[form original-form] (async/<! save-chan)
+            snapshot (let [snapshot @last-saved-snapshot]
+                       (if (= (:key snapshot) (:key form))
+                         snapshot
+                         original-form))
+            form     (-> form
+                         (dissoc :created-time))]
+        (when (not-empty (:content form))
+          (try
+            (if-let [fragments (seq (form-diff/as-operations snapshot form))]
+              (do
+                (asyncm/<? (update-form-with-fragment form fragments))
+                (reset! last-saved-snapshot form)))
+            (catch js/Error error
+              (do
+                (prn error)
+                (dispatch [:snackbar-message
+                           [(str "Toinen käyttäjä teki muutoksen lomakkeeseen \"" (some #(get-in form [:name %])
+                                                                                    [:fi :sv :en]) "\"")
+                            "Lataa sivu uudelleen ja tarkista omat muutokset"]])
+                (dispatch-flasher-error-msg :post error))))))
+      (recur))))
 
 (save-loop save-chan)
 
-(defn save-form
-  [db _]
-  (async/put! save-chan true)
-  db)
-
-(reg-event-db :editor/save-form save-form)
+(reg-event-db :editor/save-form
+  (fn [db [_ form old-form]]
+    (async/put! save-chan [form old-form])
+    db))
 
 (defn- post-new-form
   [form]
