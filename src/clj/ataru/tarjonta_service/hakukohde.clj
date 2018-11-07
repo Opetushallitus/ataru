@@ -54,7 +54,7 @@
       (assoc-in form [:content hakukohteet-field-idx] updated-field))))
 
 (defn populate-attachment-deadlines [form tarjonta-info]
-  (let [hakukohteet (get-in tarjonta-info [:tarjonta :hakukohteet])
+  (let [hakukohteet          (get-in tarjonta-info [:tarjonta :hakukohteet])
         default-grace-period (-> config
                                  :public-config
                                  (get :attachment-modify-grace-period-days 14))]
@@ -62,14 +62,14 @@
       (fn [content]
           (clojure.walk/prewalk
             (fn [field]
-                (if (= (:fieldType field) "attachment")
-                  (let [label (or (some-> (-> field :params :deadline)
-                                          (hakuaika/str->date-time)
-                                          (hakuaika/date-time->localized-date-time))
-                                  (some-> (h/select-hakuaika-for-field field hakukohteet)
-                                          (h/attachment-edit-end default-grace-period)
-                                          (hakuaika/date-time->localized-date-time)))]
-                    (assoc-in field [:params :deadline-label] label))
+                (if-let [label (and (= (:fieldType field) "attachment")
+                                    (or (some-> (-> field :params :deadline)
+                                                (hakuaika/str->date-time)
+                                                (hakuaika/date-time->localized-date-time))
+                                        (some-> (h/select-hakuaika-for-field field hakukohteet)
+                                                (h/attachment-edit-end default-grace-period)
+                                                (hakuaika/date-time->localized-date-time))))]
+                  (assoc-in field [:params :deadline-label] label)
                   field))
             content)))))
 
