@@ -1,8 +1,8 @@
 (ns ataru.temp-file-storage.filesystem-temp-file-store
   (:require [clojure.java.io :as io]
-            [ataru.config.core :refer [config]])
-  (:import (ataru.temp_file_storage.temp_file_store TempFileStorage)
-           (java.io File FileInputStream)))
+            [ataru.config.core :refer [config]]
+            [ataru.temp-file-storage.temp-file-store :refer [TempFileStorage]])
+  (:import (java.io File FileInputStream)))
 
 (defn- base-path []
   (get-in config [:temp-files :filesystem :base-path]))

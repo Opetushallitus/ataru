@@ -1,8 +1,8 @@
 (ns ataru.temp-file-storage.s3-temp-file-store
   (:require [ataru.config.core :refer [config]]
-            [clojure.tools.logging :as log])
-  (:import (ataru.temp_file_storage.temp_file_store TempFileStorage)
-           (java.io File FileOutputStream)
+            [clojure.tools.logging :as log]
+            [ataru.temp-file-storage.temp-file-store :refer [TempFileStorage]])
+  (:import (java.io File FileOutputStream)
            (org.apache.commons.io IOUtils)))
 
 (defn- bucket-name []
