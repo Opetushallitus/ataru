@@ -142,8 +142,11 @@
                                                  :en "Maximum file size is %s"
                                                  :sv "Den maximala filstorleken är %s"}
    :uploading                                   {:fi "Ladataan"
-                                                 :sv "SV: Ladataan"
-                                                 :ev "Uploading"}
+                                                 :sv "Laddar upp"
+                                                 :en "Uploading"}
+   :processing-file                             {:fi "Käsitellään"
+                                                 :sv "Bearbetar"
+                                                 :en "Processing"}
    :deadline-in                                 {:fi "Palautettava viimeistään"
                                                  :sv "Sista leveransdatum"
                                                  :en "Deadline in"}
