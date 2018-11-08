@@ -54,8 +54,8 @@
   (with-open [output-stream (io/output-stream output-file)]
     (doseq [input-file-name input-file-names]
       (io/copy (temp-file-store/get-file file-store input-file-name) output-stream))
-    (future #((doseq [input-file-name input-file-names]
-                (temp-file-store/delete-file file-store input-file-name))))
+    (future (doseq [input-file-name input-file-names]
+              (temp-file-store/delete-file file-store input-file-name)))
     output-file))
 
 (defn- combine-file-parts
