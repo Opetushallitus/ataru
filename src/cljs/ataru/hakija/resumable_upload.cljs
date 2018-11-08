@@ -66,11 +66,9 @@
           response-handler        (fn [xhrio]
                                     (let [status (or (:status xhrio) (.getStatus xhrio))]
                                       (case status
-                                        -1 (dispatch (conj error-handler status))
                                         200 (dispatch send-next-part-dispatch)
                                         201 (dispatch (conj handler (:stored-file (get-xhrio-json xhrio))))
-                                        409 (dispatch (conj error-handler status))
-                                        500 (dispatch (conj error-handler status)))))
+                                        (dispatch (conj error-handler status)))))
           params                  (merge json-params
                                          {:response-format  {:read        identity
                                                              :description "raw"}
