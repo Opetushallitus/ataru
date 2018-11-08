@@ -47,6 +47,9 @@
    :application-period-left                     {:fi "Hakuaikaa jäljellä"
                                                  :sv "Återstående ansökningstid"
                                                  :en "Time left to apply"}
+   :application-priorization-invalid            {:fi "Hakukohteet ovat väärässä ensisijaisuusjärjestyksessä"
+                                                 :sv "SV: Hakukohteet ovat väärässä ensisijaisuusjärjestyksessä"
+                                                 :en "EN: Hakukohteet ovat väärässä ensisijaisuusjärjestyksessä"}
    :application-processed-cant-modify           {:fi "Tämä hakemus on käsitelty eikä ole enää muokattavissa"
                                                  :sv "Denna ansökan har behandlats och kan inte längre bearbetas"
                                                  :en "This application has been processed and can no longer be modified"}
@@ -77,6 +80,9 @@
    :best-regards                                {:fi "Ystävällisin terveisin"
                                                  :sv "Med vänliga hälsningar"
                                                  :en "Best Regards"}
+   :should-be-higher-priorization-than          {:fi ["Hakukohde " " tulee olla korkeammalla prioriteetillä kuin "],
+                                                 :sv ["SV: Hakukohde " " SV: tulee olla korkeammalla prioriteetillä kuin "],
+                                                 :en ["EN: Hakukohde " " EN: tulee olla korkeammalla prioriteetillä kuin "]}
    :check-answers                               {:fi ["Tarkista " " tietoa"], :sv ["Kontrollera " " uppgifter"], :en ["Check " " answers"]}
    :contact-language                            {:fi "Asiointikieli"
                                                  :sv "Ärendespråk"

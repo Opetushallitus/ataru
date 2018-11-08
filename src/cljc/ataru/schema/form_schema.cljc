@@ -184,10 +184,21 @@
 
 (def Content (s/if (comp some? :children) WrapperElement BasicElement))
 
+(s/defschema RajaavaHakukohderyhma
+  {:haku-oid           s/Str
+   :hakukohderyhma-oid s/Str
+   :raja               s/Int})
+
+(s/defschema PriorisoivaHakukohderyhma
+  {:haku-oid           s/Str
+   :hakukohderyhma-oid s/Str
+   :prioriteetit       [[s/Str]]})
+
 (s/defschema FormWithContent
   (merge Form
-         {:content                           [Content]
-          (s/optional-key :organization-oid) (s/maybe s/Str)}))
+         {:content                                       [Content]
+          (s/optional-key :priorisoivat-hakukohderyhmat) [PriorisoivaHakukohderyhma]
+          (s/optional-key :organization-oid)             (s/maybe s/Str)}))
 
 (s/defschema UpdateElementOperation
   {:type (s/eq "update")
@@ -603,13 +614,3 @@
                             :content        s/Str
                             :content-ending s/Str
                             :subject        (s/constrained s/Str (comp not clojure.string/blank?))})
-
-(s/defschema RajaavaHakukohderyhma
-  {:haku-oid           s/Str
-   :hakukohderyhma-oid s/Str
-   :raja               s/Int})
-
-(s/defschema PriorisoivaHakukohderyhma
-  {:haku-oid           s/Str
-   :hakukohderyhma-oid s/Str
-   :prioriteetit       [[s/Str]]})

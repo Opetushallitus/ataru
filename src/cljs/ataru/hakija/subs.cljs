@@ -312,6 +312,34 @@
          (not @(re-frame/subscribe [:application/cannot-edit? :hakukohteet])))))
 
 (re-frame/reg-sub
+  :application/hakukohde-offending-priorization?
+  (fn [db [_ hakukohde-oid]]
+    (let [selected         (set (selected-hakukohteet db))
+          hakukohderyhmat  (->> (get-in db [:form :tarjonta :hakukohteet])
+                                (some #(when (= hakukohde-oid (:oid %)) %))
+                                :hakukohderyhmat
+                                (set))
+          priorisoivat     (->> (-> db :form :priorisoivat-hakukohderyhmat)
+                                (filter #(contains? hakukohderyhmat (:hakukohderyhma-oid %)))
+                                (mapcat (fn [o] (filter #(contains? (set %) hakukohde-oid) (:prioriteetit o))))
+                                (map (fn [o] (partition-by #(= hakukohde-oid %) o))))
+          priorities       (group-by second (map-indexed (fn [a b] [a b]) selected))
+          this-priority    (ffirst (get priorities hakukohde-oid))
+          as-priorities    (fn [hakukohde-oids]
+                             (->> hakukohde-oids
+                                  (filter #(contains? selected %))
+                                  (map #(first (get priorities %)))))
+          should-be-lower  (->> (mapcat last priorisoivat)
+                                (as-priorities)
+                                (filter #(> (first %) this-priority))
+                                (map second))
+          should-be-higher (->> (mapcat first priorisoivat)
+                                (as-priorities)
+                                (filter #(< (first %) this-priority))
+                                (map second))]
+      [should-be-lower should-be-higher])))
+
+(re-frame/reg-sub
   :application/hakukohde-editable?
   (fn [db [_ hakukohde-oid]]
     (or (some? (get-in db [:application :virkailija-secret]))

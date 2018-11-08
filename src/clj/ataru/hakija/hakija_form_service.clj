@@ -2,6 +2,7 @@
   (:require [ataru.config.core :refer [config]]
             [ataru.forms.form-store :as form-store]
             [ataru.koodisto.koodisto :as koodisto]
+            [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
             [ataru.hakija.person-info-fields :refer [viewing-forbidden-person-info-field-ids
                                                      editing-forbidden-person-info-field-ids
                                                      editing-allowed-person-info-field-ids]]
@@ -16,7 +17,7 @@
             [ataru.hakija.form-role :as form-role]
             [ataru.component-data.component :as component]
             [medley.core :refer [find-first]]
-            [ataru.util :as util]))
+            [ataru.util :as util :refer [assoc?]]))
 
 (defn- set-can-submit-multiple-applications-and-yhteishaku
   [multiple? yhteishaku? haku-oid field]
@@ -165,17 +166,19 @@
    roles :- [form-role/FormRole]]
   (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service organization-service ohjausparametrit-service haku-oid)
         form-keys     (->> (-> tarjonta-info :tarjonta :hakukohteet)
-                        (map :form-key)
-                        (distinct)
-                        (remove nil?))
+                           (map :form-key)
+                           (distinct)
+                           (remove nil?))
         hakukohteet   (get-in tarjonta-info [:tarjonta :hakukohteet])
+        priorisoivat  (:ryhmat (hakukohderyhmat/priorisoivat-hakukohderyhmat tarjonta-service haku-oid))
         form          (when (= 1 (count form-keys))
-                        (fetch-form-by-key-with-flagged-fields (first form-keys) roles hakukohteet application-in-processing-state?))]
+                            (fetch-form-by-key-with-flagged-fields (first form-keys) roles hakukohteet application-in-processing-state?))]
     (when (not tarjonta-info)
       (throw (Exception. (str "No haku found for haku " haku-oid " and keys " (pr-str form-keys)))))
     (if form
       (-> form
           (merge tarjonta-info)
+          (assoc? :priorisoivat-hakukohderyhmat priorisoivat)
           (assoc :load-time (System/currentTimeMillis))
           (populate-attachment-deadlines tarjonta-info)
           (populate-hakukohde-answer-options tarjonta-info)
