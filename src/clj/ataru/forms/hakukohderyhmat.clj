@@ -9,6 +9,10 @@
 
 (defqueries "sql/hakukohderyhmat-queries.sql")
 
+(defn- db-exec [query params]
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+    (query params {:connection connection})))
+
 (defn- hakukohteiden-hakukohderyhmat
   [tarjonta-service ryhmat]
   (reduce #(->> %2
@@ -37,7 +41,7 @@
 
 (defn rajaavat-hakukohderyhmat
   [haku-oid]
-  (if-let [ryhmat (seq (db/exec :db yesql-rajaavat-hakukohderyhmat
+  (if-let [ryhmat (seq (db-exec yesql-rajaavat-hakukohderyhmat
                                 {:haku_oid haku-oid}))]
     {:ryhmat        (map #(dissoc % :last-modified) ryhmat)
      :last-modified (:last-modified (first ryhmat))}
@@ -47,7 +51,7 @@
   [ryhma]
   (when-let [ryhma (try
                      (first
-                      (db/exec :db yesql-insert-rajaava-hakukohderyhma
+                      (db-exec yesql-insert-rajaava-hakukohderyhma
                                {:haku_oid           (:haku-oid ryhma)
                                 :hakukohderyhma_oid (:hakukohderyhma-oid ryhma)
                                 :raja               (:raja ryhma)}))
@@ -58,7 +62,7 @@
 (defn update-rajaava-hakukohderyhma
   [ryhma if-unmodified-since]
   (when-let [ryhma (first
-                    (db/exec :db yesql-update-rajaava-hakukohderyhma
+                    (db-exec yesql-update-rajaava-hakukohderyhma
                              {:haku_oid            (:haku-oid ryhma)
                               :hakukohderyhma_oid  (:hakukohderyhma-oid ryhma)
                               :raja                (:raja ryhma)
@@ -68,13 +72,13 @@
 
 (defn delete-rajaava-hakukohderyhma
   [haku-oid hakukohderyhma-oid]
-  (db/exec :db yesql-delete-rajaava-hakukohderyhma!
+  (db-exec yesql-delete-rajaava-hakukohderyhma!
            {:haku_oid           haku-oid
             :hakukohderyhma_oid hakukohderyhma-oid}))
 
 (defn priorisoivat-hakukohderyhmat
   [tarjonta-service haku-oid]
-  (if-let [ryhmat (seq (db/exec :db yesql-priorisoivat-hakukohderyhmat
+  (if-let [ryhmat (seq (db-exec yesql-priorisoivat-hakukohderyhmat
                                 {:haku_oid haku-oid}))]
     {:ryhmat        (->> ryhmat
                          (map (partial remove-hakukohteet-not-in-hakukohderyhma
@@ -89,7 +93,7 @@
   [ryhma]
   (when-let [ryhma (try
                      (first
-                      (db/exec :db yesql-insert-priorisoiva-hakukohderyhma
+                      (db-exec yesql-insert-priorisoiva-hakukohderyhma
                                {:haku_oid           (:haku-oid ryhma)
                                 :hakukohderyhma_oid (:hakukohderyhma-oid ryhma)
                                 :prioriteetit       (json/generate-string (:prioriteetit ryhma))}))
@@ -100,7 +104,7 @@
 (defn update-priorisoiva-hakukohderyhma
   [ryhma if-unmodified-since]
   (when-let [ryhma (first
-                    (db/exec :db yesql-update-priorisoiva-hakukohderyhma
+                    (db-exec yesql-update-priorisoiva-hakukohderyhma
                              {:haku_oid            (:haku-oid ryhma)
                               :hakukohderyhma_oid  (:hakukohderyhma-oid ryhma)
                               :prioriteetit        (json/generate-string (:prioriteetit ryhma))
@@ -110,6 +114,6 @@
 
 (defn delete-priorisoiva-hakukohderyhma
   [haku-oid hakukohderyhma-oid]
-  (db/exec :db yesql-delete-priorisoiva-hakukohderyhma!
+  (db-exec yesql-delete-priorisoiva-hakukohderyhma!
            {:haku_oid           haku-oid
             :hakukohderyhma_oid hakukohderyhma-oid}))
