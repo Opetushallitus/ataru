@@ -242,7 +242,8 @@
    (s/optional-key :koulutukset) [{:oid                  s/Str
                                    :koulutuskoodi-name   LocalizedStringOptional
                                    :tutkintonimike-names [LocalizedStringOptional]
-                                   :tarkenne             (s/maybe s/Str)}]
+                                   :tarkenne             (s/maybe s/Str)
+                                   :koulutusohjelma-name LocalizedStringOptional}]
    :applicable-base-educations   [s/Str]})
 
 (s/defschema FormTarjontaMetadata

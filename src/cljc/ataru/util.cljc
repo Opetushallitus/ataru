@@ -167,12 +167,14 @@
 
 (defn koulutus->str
   [koulutus lang]
-  (->> [(-> koulutus :koulutuskoodi-name lang)
-        (->> koulutus :tutkintonimike-names (mapv lang) (clojure.string/join ", "))
-        (:tarkenne koulutus)]
-       (remove clojure.string/blank?)
-       (distinct)
-       (clojure.string/join " | ")))
+  (if-let [classic-name (->> [(-> koulutus :koulutuskoodi-name lang)
+                              (->> koulutus :tutkintonimike-names (mapv lang) (clojure.string/join ", "))
+                              (:tarkenne koulutus)]
+                             (remove clojure.string/blank?)
+                             distinct
+                             seq)]
+    (clojure.string/join " | " classic-name)
+    (-> koulutus :koulutusohjelma-name lang)))
 
 (defn remove-nil-values [m]
   (->> m
