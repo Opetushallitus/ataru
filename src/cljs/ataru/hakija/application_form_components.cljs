@@ -897,7 +897,7 @@
   (let [attachment       @(subscribe [:application/answer component-id question-group-idx attachment-idx])
         size             (:size (:value attachment))
         uploaded-size    (:uploaded-size attachment)
-        upload-complete? (= size uploaded-size)
+        upload-complete? (<= size uploaded-size)
         percent          (int (* 100 (/ uploaded-size size)))]
     [:div.application__form-attachment-list-item-container
      [:div.application__form-attachment-list-item-sub-container.application__form-attachment-filename-container
