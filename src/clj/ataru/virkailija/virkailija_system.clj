@@ -1,5 +1,6 @@
 (ns ataru.virkailija.virkailija-system
   (:require [com.stuartsierra.component :as component]
+            [ataru.cas.client :as cas]
             [ataru.http.server :as server]
             [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.organization-service.organization-service :as organization-service]
@@ -11,66 +12,74 @@
             [ataru.config.core :refer [config]]
             [ataru.background-job.job :as job]
             [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]
+            [ataru.person-service.person-client :as person-client]
             [ataru.person-service.person-service :as person-service]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]))
 
 (defn new-system
   ([]
    (new-system
-     (Integer/parseInt (get env :ataru-http-port "8350"))
-     (Integer/parseInt (get env :ataru-repl-port "3333"))))
+    (Integer/parseInt (get env :ataru-http-port "8350"))
+    (Integer/parseInt (get env :ataru-repl-port "3333"))))
   ([http-port repl-port]
    (apply
-     component/system-map
+    component/system-map
 
-     :organization-service (component/using
-                             (organization-service/new-organization-service)
-                             [:cache-service])
+    :organization-service (organization-service/new-organization-service)
 
-     :cache-service (component/using {} (mapv (comp keyword :name) caches))
+    :virkailija-tarjonta-service (component/using
+                                  (tarjonta-service/new-virkailija-tarjonta-service)
+                                  [:forms-in-use-cache :organization-service])
 
-     :virkailija-tarjonta-service (component/using
-                                    (tarjonta-service/new-virkailija-tarjonta-service)
-                                    [:organization-service :cache-service])
+    :tarjonta-service (component/using
+                       (tarjonta-service/new-tarjonta-service)
+                       [:koulutus-cache
+                        :hakukohde-cache
+                        :haku-cache
+                        :hakukohde-search-cache])
 
-     :tarjonta-service (component/using
-                         (tarjonta-service/new-tarjonta-service)
-                         [:cache-service])
+    :ohjausparametrit-service (component/using
+                               (ohjausparametrit-service/new-ohjausparametrit-service)
+                               [:ohjausparametrit-cache])
 
-     :ohjausparametrit-service (component/using
-                                 (ohjausparametrit-service/new-ohjausparametrit-service)
-                                 [:cache-service])
+    :kayttooikeus-cas-client (cas/new-client "/kayttooikeus-service")
 
-     :kayttooikeus-service (if (-> config :dev :fake-dependencies)
-                             (kayttooikeus-service/->FakeKayttooikeusService)
-                             (kayttooikeus-service/->HttpKayttooikeusService nil))
+    :kayttooikeus-service (if (-> config :dev :fake-dependencies)
+                            (kayttooikeus-service/->FakeKayttooikeusService)
+                            (component/using
+                             (kayttooikeus-service/->HttpKayttooikeusService nil)
+                             [:kayttooikeus-cas-client]))
 
-     :person-service (component/using
-                       (person-service/new-person-service)
-                       [:cache-service])
+    :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service")
 
-     :handler (component/using
-                (virkailija-routes/new-handler)
-                [:organization-service
-                 :virkailija-tarjonta-service
-                 :tarjonta-service
-                 :job-runner
-                 :ohjausparametrit-service
-                 :cache-service
-                 :person-service
-                 :kayttooikeus-service])
+    :henkilo-cache-loader (component/using
+                           (person-client/map->PersonCacheLoader {})
+                           [:oppijanumerorekisteri-cas-client])
 
-     :server-setup {:port      http-port
-                    :repl-port repl-port}
+    :person-service (component/using
+                     (person-service/new-person-service)
+                     [:henkilo-cache :oppijanumerorekisteri-cas-client])
 
-     :server (component/using
-               (server/new-server)
-               [:server-setup :handler])
+    :handler (component/using
+              (virkailija-routes/new-handler)
+              (vec (concat [:organization-service
+                            :virkailija-tarjonta-service
+                            :tarjonta-service
+                            :job-runner
+                            :ohjausparametrit-service
+                            :person-service
+                            :kayttooikeus-service]
+                           (map first caches))))
 
-     :job-runner (job/new-job-runner virkailija-jobs/job-definitions)
+    :server-setup {:port      http-port
+                   :repl-port repl-port}
 
-     :redis (redis/map->Redis {})
+    :server (component/using
+             (server/new-server)
+             [:server-setup :handler])
 
-     (mapcat (fn [cache]
-               [(keyword (:name cache)) (component/using cache [:redis])])
-             caches))))
+    :job-runner (job/new-job-runner virkailija-jobs/job-definitions)
+
+    :redis (redis/map->Redis {})
+
+    (mapcat identity caches))))

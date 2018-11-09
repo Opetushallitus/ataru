@@ -5,6 +5,8 @@
             [cheshire.core :as json]
             [clj-util.cas :as cas]))
 
+(defrecord CasClient [client params session-id])
+
 (defn new-client [cas-uri]
   {:pre [(some? (:cas config))]}
   (let [username   (get-in config [:cas :username])
@@ -12,9 +14,9 @@
         cas-url    (resolve-url :cas-client)
         cas-params (cas/cas-params cas-uri username password)
         cas-client (cas/cas-client cas-url)]
-    {:client     cas-client
-     :params     cas-params
-     :session-id (atom nil)}))
+    (map->CasClient {:client     cas-client
+                     :params     cas-params
+                     :session-id (atom nil)})))
 
 (defn- request-with-json-body [request body]
   (-> request

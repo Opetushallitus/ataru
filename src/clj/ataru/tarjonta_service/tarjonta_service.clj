@@ -31,7 +31,7 @@
   (update hakus avain merge (reduce haku-name-and-oid {} haut)))
 
 (defn- forms-in-use
-  [cache-service organization-service session]
+  [forms-in-use-cache organization-service session]
   (->> (select-organizations-for-rights organization-service
                                         session
                                         [:form-edit])
@@ -40,7 +40,7 @@
                             (get-in session [:identity :superuser]))
                      [oph-organization]
                      oids)))
-       (mapcat (partial cache/cache-get cache-service :forms-in-use))
+       (mapcat (partial cache/get-from forms-in-use-cache))
        (reduce hakus-by-form-key {})))
 
 (defn- epoch-millis->zoned-date-time
@@ -83,22 +83,25 @@
 
 (def allowed-hakukohde-tilas #{"VALMIS" "JULKAISTU"})
 
-(defn fetch-or-cached-hakukohde-search [cache-service haku-oid organization-oid]
-  (some->> (cache/cache-get
-             cache-service
-             :hakukohde-search
-             {:haku-oid         haku-oid
-              :organization-oid organization-oid})
+(defn fetch-or-cached-hakukohde-search
+  [hakukohde-search-cache haku-oid organization-oid]
+  (some->> (cache/get-from
+            hakukohde-search-cache
+            {:haku-oid         haku-oid
+             :organization-oid organization-oid})
            parse-search-result))
 
 (defn stamp-user-organization [is-user-organization-fn hakukohde]
   (merge hakukohde
          {:user-organization? (boolean (is-user-organization-fn (:oid hakukohde)))}))
 
-(defrecord CachedTarjontaService [cache-service]
+(defrecord CachedTarjontaService [koulutus-cache
+                                  hakukohde-cache
+                                  haku-cache
+                                  hakukohde-search-cache]
   TarjontaService
   (get-hakukohde [this hakukohde-oid]
-    (when-let [hakukohde (cache/cache-get cache-service :hakukohde hakukohde-oid)]
+    (when-let [hakukohde (cache/get-from hakukohde-cache hakukohde-oid)]
       (when (contains? allowed-hakukohde-tilas (:tila hakukohde))
         ;; Serialization breaks boxed booleans, as it doesn't return the
         ;; canonical instance
@@ -108,21 +111,18 @@
   (get-hakukohteet [this hakukohde-oids]
     (remove #(or (nil? %)
                  (not (contains? allowed-hakukohde-tilas (:tila %))))
-            (cache/cache-get-many
-             cache-service
-             :hakukohde
-             hakukohde-oids)))
+            (vals (cache/get-many-from hakukohde-cache hakukohde-oids))))
 
   (get-hakukohde-name [this hakukohde-oid]
     (when-let [hakukohde (.get-hakukohde this hakukohde-oid)]
       (parse-multi-lang-text (:hakukohteenNimet hakukohde))))
 
   (hakukohde-search [this haku-oid organization-oid]
-    (let [result                  (some->> (fetch-or-cached-hakukohde-search cache-service haku-oid oph-organization)
+    (let [result                  (some->> (fetch-or-cached-hakukohde-search hakukohde-search-cache haku-oid oph-organization)
                                            (map :oid)
                                            (.get-hakukohteet this)
                                            (mapv parse-hakukohde))
-          user-organization-oids  (delay (some->> (fetch-or-cached-hakukohde-search cache-service
+          user-organization-oids  (delay (some->> (fetch-or-cached-hakukohde-search hakukohde-search-cache
                                                                                     haku-oid
                                                                                     organization-oid)
                                                   (map :oid)
@@ -137,7 +137,7 @@
   (get-haku [this haku-oid]
     ;; Serialization breaks boxed booleans, as it doesn't return the
     ;; canonical instance
-    (some-> (cache/cache-get cache-service :haku haku-oid)
+    (some-> (cache/get-from haku-cache haku-oid)
             (update :canSubmitMultipleApplications #(.booleanValue %))
             (update :usePriority #(.booleanValue %))))
 
@@ -146,9 +146,10 @@
       (parse-multi-lang-text (:nimi haku))))
 
   (get-koulutus [this koulutus-oid]
-    (cache/cache-get cache-service :koulutus koulutus-oid)))
+    (cache/get-from koulutus-cache koulutus-oid)))
 
-(defrecord VirkailijaTarjontaFormsService [cache-service]
+(defrecord VirkailijaTarjontaFormsService [forms-in-use-cache
+                                           organization-service]
   component/Lifecycle
   VirkailijaTarjontaService
 
@@ -156,16 +157,16 @@
   (stop [this] this)
 
   (get-forms-in-use [this session]
-    (forms-in-use cache-service (:organization-service this) session)))
+    (forms-in-use forms-in-use-cache organization-service session)))
 
 (defn new-tarjonta-service
   []
   (if (-> config :dev :fake-dependencies)
     (->MockTarjontaService)
-    (->CachedTarjontaService nil)))
+    (->CachedTarjontaService nil nil nil nil)))
 
 (defn new-virkailija-tarjonta-service
   []
   (if (-> config :dev :fake-dependencies)
     (->MockVirkailijaTarjontaService)
-    (->VirkailijaTarjontaFormsService nil)))
+    (->VirkailijaTarjontaFormsService nil nil)))

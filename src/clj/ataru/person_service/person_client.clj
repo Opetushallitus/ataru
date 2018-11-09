@@ -1,13 +1,14 @@
 (ns ataru.person-service.person-client
   (:require
-   [taoensso.timbre :as log]
-   [cheshire.core :as json]
-   [ataru.config.core :refer [config]]
-   [schema.core :as s]
-   [clojure.core.match :refer [match]]
+   [ataru.cache.cache-service :as cache]
    [ataru.cas.client :as cas]
+   [ataru.config.core :refer [config]]
    [ataru.config.url-helper :refer [resolve-url]]
-   [ataru.person-service.person-schema :as person-schema])
+   [ataru.person-service.person-schema :as person-schema]
+   [cheshire.core :as json]
+   [clojure.core.match :refer [match]]
+   [schema.core :as s]
+   [taoensso.timbre :as log])
   (:import
    [java.net URLEncoder]))
 
@@ -106,3 +107,10 @@
       :else (throw-error (str "Could not get linked oids for oid " oid ", "
                               "status: " (:status result) ", "
                               "response body: " (:body result))))))
+
+(defrecord PersonCacheLoader [oppijanumerorekisteri-cas-client]
+  cache/CacheLoader
+  (load [_ key]
+    (get-person oppijanumerorekisteri-cas-client key))
+  (load-many [_ keys]
+    (get-persons oppijanumerorekisteri-cas-client keys)))

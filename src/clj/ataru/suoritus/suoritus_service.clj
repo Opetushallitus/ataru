@@ -57,18 +57,16 @@
   (ylioppilas-suoritukset-modified-since [this modified-since])
   (ylioppilas? [this person-oid]))
 
-(defrecord HttpSuoritusService [cas-client]
+(defrecord HttpSuoritusService [suoritusrekisteri-cas-client]
   component/Lifecycle
-  (start [this]
-    (assoc this :cas-client (cas-client/new-client "/suoritusrekisteri")))
-  (stop [this]
-    (assoc this :cas-client nil))
+  (start [this] this)
+  (stop [this] this)
 
   SuoritusService
   (ylioppilas-suoritukset-modified-since [this modified-since]
-    (ylioppilas-suoritukset cas-client nil modified-since))
+    (ylioppilas-suoritukset suoritusrekisteri-cas-client nil modified-since))
   (ylioppilas? [this person-oid]
     (some #(= :valmis (:tila %))
-          (ylioppilas-suoritukset cas-client person-oid nil))))
+          (ylioppilas-suoritukset suoritusrekisteri-cas-client person-oid nil))))
 
 (defn new-suoritus-service [] (->HttpSuoritusService nil))

@@ -176,8 +176,11 @@
                           job-runner
                           ohjausparametrit-service
                           virkailija-tarjonta-service
-                          cache-service
-                          person-service]}]
+                          statistics-month-cache
+                          statistics-week-cache
+                          statistics-day-cache
+                          person-service]
+                   :as dependencies}]
   (api/context "/api" []
     :tags ["form-api"]
 
@@ -509,22 +512,23 @@
         :summary "Clear all caches"
         {:status 200
          :body   (do
-                   (doseq [cache caches/caches]
-                     (cache/cache-clear cache-service (keyword (:name cache))))
+                   (doseq [[key dep] (keys dependencies)
+                           :when     (clojure.string/ends-with? (name key) "-cache")]
+                     (cache/clear-all dep))
                    {})})
       (api/POST "/clear/:cache" {session :session}
         :path-params [cache :- s/Str]
         :summary "Clear an entire cache map of its entries"
         {:status 200
-         :body   (do (cache/cache-clear cache-service (keyword cache))
-                   {})})
+         :body   (do (cache/clear-all (get dependencies (keyword (str cache "-cache"))))
+                     {})})
       (api/POST "/remove/:cache/:key" {session :session}
         :path-params [cache :- s/Str
                       key :- s/Str]
         :summary "Remove an entry from cache map"
         {:status 200
-         :body   (do (cache/cache-remove cache-service (keyword cache) key)
-                   {})}))
+         :body   (do (cache/remove-from (get dependencies (keyword (str cache "-cache"))) key)
+                     {})}))
 
     (api/GET "/haut" {session :session}
       :summary "List haku and hakukohde information found for applications stored in system"
@@ -623,7 +627,11 @@
       (api/GET "/applications/:time-period" []
         :path-params [time-period :- (api/describe (s/enum "month" "week" "day") "One of: month, week, day")]
         :summary "Get info about number of submitted applications for past time period"
-        (ok (statistics-service/get-application-stats cache-service (keyword time-period)))))
+        (ok (statistics-service/get-application-stats
+             statistics-month-cache
+             statistics-week-cache
+             statistics-day-cache
+             (keyword time-period)))))
 
     (api/POST "/checkpermission" []
       :body [dto ataru-schema/PermissionCheckDto]
