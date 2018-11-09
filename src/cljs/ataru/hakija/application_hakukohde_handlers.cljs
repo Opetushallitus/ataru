@@ -151,17 +151,25 @@
      :dispatch-later [{:ms       500
                        :dispatch [:application/hakukohde-remove hakukohde-oid]}]}))
 
-(reg-event-db
+(reg-event-fx
   :application/change-hakukohde-priority
-  (fn [db [_ hakukohde-oid index-change]]
+  (fn [{db :db} [_ hakukohde-oid index-change]]
     (let [hakukohteet     (-> db :application :answers :hakukohteet :values vec)
           current-index   (first (keep-indexed #(when (= hakukohde-oid (:value %2))
                                                   %1)
-                                               hakukohteet))
+                                   hakukohteet))
           new-index       (+ current-index index-change)
           new-hakukohteet (assoc hakukohteet
-                                 current-index (nth hakukohteet new-index)
-                                 new-index (nth hakukohteet current-index))]
-      (-> db
-          (assoc-in [:application :answers :hakukohteet :values] new-hakukohteet)
-          set-values-changed))))
+                            current-index (nth hakukohteet new-index)
+                            new-index (nth hakukohteet current-index))
+          db              (-> db
+                              (assoc-in [:application :answers :hakukohteet :values] new-hakukohteet)
+                              set-values-changed)]
+      {:db                 db
+       :validate-debounced {:value            new-hakukohteet
+                            :answers-by-key   (get-in db [:application :answers])
+                            :field-descriptor (hakukohteet-field db)
+                            :editing?         (get-in db [:application :editing?])
+                            :on-validated     (fn [[valid? errors]]
+                                                (dispatch [:application/set-hakukohde-valid
+                                                           valid?]))}})))
