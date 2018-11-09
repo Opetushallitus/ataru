@@ -36,7 +36,7 @@
        field
        {:fieldClass (:or "wrapperElement" "questionGroup")
         :children   children}
-       (flatten-form-fields children)
+        (flatten-form-fields (map #(assoc % :children-of (:id field)) children))
 
        {:fieldType (:or "dropdown" "multipleChoice" "singleChoice")
         :options   options}

@@ -16,6 +16,8 @@
    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
    [ataru.util :as util]
+   [clojure.data :refer [diff]]
+   [ataru.virkailija.editor.form-utils :refer [visible?]]
    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
    [medley.core :refer [filter-vals]]
    [taoensso.timbre :refer [spy debug]])
@@ -110,6 +112,24 @@
       (populate-hakukohde-answer-options tarjonta-info)
       (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)))
 
+(defn fields-equal? [[new-in-left new-in-right shared]]
+  (and (nil? new-in-left)
+       (nil? new-in-right)))
+
+(defn forms-differ? [application tarjonta-info form-left form-right]
+  (and (not= (:id form-left) (:id form-right))
+       (let [answers        (group-by :key (:answers application))
+             hakutoiveet    (set (:hakukohde application))
+             visible-fields (fn [form]
+                                (let [flat-form-fields (util/flatten-form-fields (:content form))
+                                      field-by-id (util/group-by-first :id flat-form-fields)]
+                                  (->> flat-form-fields
+                                       (filter #(visible? % field-by-id answers hakutoiveet
+                                                          (-> tarjonta-info :tarjonta :hakukohteet))))))
+             fields-left    (visible-fields form-left)
+             fields-right   (visible-fields form-right)]
+         (not (fields-equal? (diff fields-left fields-right))))))
+
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
@@ -125,20 +145,18 @@
                                  ohjausparametrit-service
                                  (:haku application)
                                  (:hakukohde application))
-          form-key             (->> (-> tarjonta-info :tarjonta :hakukohteet)
-                                    (map :form-key)
-                                    (distinct)
-                                    (remove nil?)
-                                    first)
-          newest-form          (some-> form-key form-store/fetch-by-key)
-          form-to-use          (if (and newest-form with-newest-form?)
-                                 newest-form
-                                 (form-store/fetch-by-id (:form application)))
-          form                 (populate-form-fields form-to-use tarjonta-info)
-          alternative-form     (some-> (when (and (not with-newest-form?)
-                                                  (not= (:id form) (:id newest-form)))
-                                         newest-form)
-                                       (assoc :content []) (dissoc :organization-oid))
+          form-in-application  (form-store/fetch-by-id (:form application))
+          newest-form          (form-store/fetch-by-key (:key form-in-application))
+          form                 (populate-form-fields (if with-newest-form?
+                                                       newest-form
+                                                       form-in-application) tarjonta-info)
+          forms-differ?        (and (not with-newest-form?)
+                                    (forms-differ? application tarjonta-info form
+                                                   (populate-form-fields newest-form tarjonta-info)))
+          alternative-form     (some-> (when forms-differ?
+                                             newest-form)
+                                       (assoc :content [])
+                                       (dissoc :organization-oid))
           hakukohde-reviews    (future (parse-application-hakukohde-reviews application-key))
           attachment-reviews   (future (parse-application-attachment-reviews application-key))
           events               (future (application-store/get-application-events application-key))
@@ -150,7 +168,7 @@
                                                          (assoc :person (get-person application person-client))
                                                          (merge tarjonta-info))
                                :form                 form
-                               :alternative-form     nil
+                               :alternative-form     alternative-form
                                :hakukohde-reviews    @hakukohde-reviews
                                :attachment-reviews   @attachment-reviews
                                :events               @events
