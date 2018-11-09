@@ -172,16 +172,40 @@
     (every? string? value) value
     (every? map? value) (map :value value)))
 
+(defn offending-priorization [hakukohde-oid selected priorisoivat-hakukohderyhmat]
+  (let [priorisoivat     (->> priorisoivat-hakukohderyhmat
+                              (mapcat (fn [o] (filter #(contains? (set %) hakukohde-oid) (:prioriteetit o))))
+                              (map (fn [o] (partition-by #(= hakukohde-oid %) o))))
+        priorities       (group-by second (map-indexed (fn [a b] [a b]) selected))
+        this-priority    (ffirst (get priorities hakukohde-oid))
+        as-priorities    (fn [hakukohde-oids]
+                           (->> hakukohde-oids
+                                (filter #(contains? selected %))
+                                (map #(first (get priorities %)))))
+        should-be-lower  (->> (mapcat last priorisoivat)
+                              (as-priorities)
+                              (filter #(> (first %) this-priority))
+                              (map second))
+        should-be-higher (->> (mapcat first priorisoivat)
+                              (as-priorities)
+                              (filter #(< (first %) this-priority))
+                              (map second))]
+    [should-be-lower should-be-higher]))
+
 (defn- hakukohteet?
-  [{:keys [value field-descriptor]}]
+  [{:keys [value field-descriptor priorisoivat-hakukohderyhmat]}]
   (let [hakukohde-options          (:options field-descriptor)
         num-answers                (count value)
-        answers-subset-of-options? (clojure.set/subset? (set (parse-value value)) (set (map :value hakukohde-options)))]
-    (if (pos? (count hakukohde-options))
-      (if-let [max-hakukohteet (-> field-descriptor :params :max-hakukohteet)]
-        (and (< 0 num-answers (inc max-hakukohteet)) answers-subset-of-options?)
-        (and (pos? num-answers) answers-subset-of-options?))
-      true)))
+        selected                   (set (parse-value value))
+        answers-subset-of-options? (clojure.set/subset? selected (set (map :value hakukohde-options)))
+        offending?                 (first (filter (fn [hakukohde-oid]
+                                                    (seq (flatten (offending-priorization hakukohde-oid selected priorisoivat-hakukohderyhmat)))) selected))]
+    (cond
+     offending? false
+     (pos? (count hakukohde-options)) (if-let [max-hakukohteet (-> field-descriptor :params :max-hakukohteet)]
+                                        (and (< 0 num-answers (inc max-hakukohteet)) answers-subset-of-options?)
+                                        (and (pos? num-answers) answers-subset-of-options?))
+     :else true)))
 
 (def numeric-matcher #"[+-]?(0|[1-9][0-9]*)([,.][0-9]+)?")
 

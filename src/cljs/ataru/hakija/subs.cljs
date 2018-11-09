@@ -5,6 +5,7 @@
             [ataru.hakuaika :as hakuaika]
             [ataru.application-common.application-field-common :as afc]
             [ataru.hakija.application :refer [answers->valid-status]]
+            [ataru.hakija.application-validators :as validators]
             [ataru.hakija.person-info-fields :as person-info-fields]))
 
 (defonce attachment-modify-grace-period-days
@@ -312,32 +313,16 @@
          (not @(re-frame/subscribe [:application/cannot-edit? :hakukohteet])))))
 
 (re-frame/reg-sub
+  :application/priorisoivat-hakukohderyhmat
+  (fn [db _]
+    (-> db :form :priorisoivat-hakukohderyhmat)))
+
+(re-frame/reg-sub
   :application/hakukohde-offending-priorization?
   (fn [db [_ hakukohde-oid]]
-    (let [selected         (set (selected-hakukohteet db))
-          hakukohderyhmat  (->> (get-in db [:form :tarjonta :hakukohteet])
-                                (some #(when (= hakukohde-oid (:oid %)) %))
-                                :hakukohderyhmat
-                                (set))
-          priorisoivat     (->> (-> db :form :priorisoivat-hakukohderyhmat)
-                                (filter #(contains? hakukohderyhmat (:hakukohderyhma-oid %)))
-                                (mapcat (fn [o] (filter #(contains? (set %) hakukohde-oid) (:prioriteetit o))))
-                                (map (fn [o] (partition-by #(= hakukohde-oid %) o))))
-          priorities       (group-by second (map-indexed (fn [a b] [a b]) selected))
-          this-priority    (ffirst (get priorities hakukohde-oid))
-          as-priorities    (fn [hakukohde-oids]
-                             (->> hakukohde-oids
-                                  (filter #(contains? selected %))
-                                  (map #(first (get priorities %)))))
-          should-be-lower  (->> (mapcat last priorisoivat)
-                                (as-priorities)
-                                (filter #(> (first %) this-priority))
-                                (map second))
-          should-be-higher (->> (mapcat first priorisoivat)
-                                (as-priorities)
-                                (filter #(< (first %) this-priority))
-                                (map second))]
-      [should-be-lower should-be-higher])))
+    (let [selected                     (set (selected-hakukohteet db))
+          priorisoivat-hakukohderyhmat @(re-frame/subscribe [:application/priorisoivat-hakukohderyhmat])]
+      (validators/offending-priorization hakukohde-oid selected priorisoivat-hakukohderyhmat))))
 
 (re-frame/reg-sub
   :application/hakukohde-editable?

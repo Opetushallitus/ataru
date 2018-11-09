@@ -39,9 +39,9 @@
   (fn [title]
     (aset js/document "title" title)))
 
-(defn- validatep [{:keys [field-descriptor] :as params}]
+(defn- validatep [{:keys [field-descriptor] :as params} priorisoivat-hakukohderyhmat]
   (async/merge
-   (map (fn [v] (validator/validate (assoc params :validator v :has-applied has-applied)))
+   (map (fn [v] (validator/validate (assoc params :validator v :has-applied has-applied :priorisoivat-hakukohderyhmat priorisoivat-hakukohderyhmat)))
         (:validators field-descriptor))))
 
 (defn- all-valid? [valid-ch]
@@ -55,20 +55,20 @@
 (def validation-debounce-ms 500)
 
 (defn- async-validate-value
-  [{:keys [field-descriptor editing? on-validated] :as params}]
+  [{:keys [field-descriptor editing? on-validated] :as params} priorisoivat-hakukohderyhmat]
   (if (and editing? (:cannot-edit field-descriptor))
     (on-validated [true []])
-    (async/take! (all-valid? (validatep params))
+    (async/take! (all-valid? (validatep params priorisoivat-hakukohderyhmat))
                  (fn [result]
                    (on-validated result)))))
 
 (defn- async-validate-values
-  [{:keys [field-descriptor editing? on-validated values] :as params}]
+  [{:keys [field-descriptor editing? on-validated values] :as params} priorisoivat-hakukohderyhmat]
   (if (and editing? (:cannot-edit field-descriptor))
     (on-validated [true []])
     (async/take! (all-valid?
                    (async/merge
-                     (map (fn [value] (validatep (merge params {:value value})))
+                     (map (fn [value] (validatep (merge params {:value value}) priorisoivat-hakukohderyhmat))
                           values)))
                  (fn [result]
                    (on-validated result)))))
@@ -76,24 +76,26 @@
 (re-frame/reg-fx
   :validate-debounced
   (fn [{:keys [field-descriptor field-idx group-idx] :as params}]
-    (let [id          (keyword (:id field-descriptor))
-          debounce-id (keyword (str (name id) "-" field-idx "-" group-idx))]
+    (let [id                           (keyword (:id field-descriptor))
+          debounce-id                  (keyword (str (name id) "-" field-idx "-" group-idx))
+          priorisoivat-hakukohderyhmat @(re-frame/subscribe [:application/priorisoivat-hakukohderyhmat])]
       (js/clearTimeout (@validation-debounces debounce-id))
       (swap! validation-debounces assoc debounce-id
-             (js/setTimeout
-               #(async-validate-value params)
-               validation-debounce-ms)))))
+        (js/setTimeout
+          #(async-validate-value params priorisoivat-hakukohderyhmat)
+          validation-debounce-ms)))))
 
 (re-frame/reg-fx
   :validate-every-debounced
   (fn [{:keys [field-descriptor field-idx group-idx] :as params}]
-    (let [id          (keyword (:id field-descriptor))
-          debounce-id (keyword (str (name id) "-" field-idx "-" group-idx))]
+    (let [id                           (keyword (:id field-descriptor))
+          debounce-id                  (keyword (str (name id) "-" field-idx "-" group-idx))
+          priorisoivat-hakukohderyhmat @(re-frame/subscribe [:application/priorisoivat-hakukohderyhmat])]
       (js/clearTimeout (@validation-debounces debounce-id))
       (swap! validation-debounces assoc debounce-id
-             (js/setTimeout
-               #(async-validate-values params)
-               validation-debounce-ms)))))
+        (js/setTimeout
+          #(async-validate-values params priorisoivat-hakukohderyhmat)
+          validation-debounce-ms)))))
 
 (defn- confirm-window-close!
   [event]
