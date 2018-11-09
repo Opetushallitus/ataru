@@ -603,3 +603,13 @@
                             :content        s/Str
                             :content-ending s/Str
                             :subject        (s/constrained s/Str (comp not clojure.string/blank?))})
+
+(s/defschema RajaavaHakukohderyhma
+  {:haku-oid           s/Str
+   :hakukohderyhma-oid s/Str
+   :raja               s/Int})
+
+(s/defschema PriorisoivaHakukohderyhma
+  {:haku-oid           s/Str
+   :hakukohderyhma-oid s/Str
+   :prioriteetit       [[s/Str]]})

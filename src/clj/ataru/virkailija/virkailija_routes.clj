@@ -17,6 +17,7 @@
             [ataru.files.file-store :as file-store]
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.forms.form-store :as form-store]
+            [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
             [ataru.haku.haku-service :as haku-service]
             [ataru.information-request.information-request-service :as information-request]
             [ataru.koodisto.koodisto :as koodisto]
@@ -35,7 +36,7 @@
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
             [ataru.virkailija.authentication.auth-utils :as auth-utils]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
-            [ataru.organization-service.session-organizations :refer [organization-list]]
+            [ataru.organization-service.session-organizations :refer [organization-list] :as session-orgs]
             [ataru.organization-service.organization-selection :as organization-selection]
             [cheshire.core :as json]
             [cheshire.generate :refer [add-encoder]]
@@ -62,7 +63,9 @@
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [spy debug error warn info]]
             [ataru.organization-service.user-rights :as user-rights])
-  (:import java.time.ZonedDateTime
+  (:import java.util.Locale
+           java.time.ZonedDateTime
+           org.joda.time.format.DateTimeFormat
            java.time.format.DateTimeFormatter))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
@@ -88,6 +91,29 @@
                (.writeString
                 json-generator
                 (.format d DateTimeFormatter/ISO_OFFSET_DATE_TIME))))
+
+(defn- parse-if-unmodified-since
+  [s]
+  (try
+    (.parseDateTime (-> "EEE, dd MMM yyyy HH:mm:ss 'GMT'"
+                        DateTimeFormat/forPattern
+                        .withZoneUTC
+                        (.withLocale Locale/US))
+                    s)
+    (catch Exception e
+      (throw (new IllegalArgumentException
+                  (str "Ei voitu jäsentää otsaketta If-Unmodified-Since: " s))))))
+
+(defn- format-last-modified
+  [d]
+  (.print (-> "EEE, dd MMM yyyy HH:mm:ss 'GMT'"
+              DateTimeFormat/forPattern
+              .withZoneUTC
+              (.withLocale Locale/US))
+          (-> d
+              .millisOfSecond
+              .roundFloorCopy
+              (.plusSeconds 1))))
 
 (defmethod json-schema/convert-class ZonedDateTime [_ _] {:type "string"})
 
@@ -603,6 +629,134 @@
       :body [dto ataru-schema/PermissionCheckDto]
       :return ataru-schema/PermissionCheckResponseDto
       (ok (permission-check/check tarjonta-service dto)))
+
+    (api/context "/rajaavat-hakukohderyhmat" []
+      :tags ["rajaavat-hakukohderyhmat"]
+      (api/GET "/:haku-oid" {session :session}
+        :summary "Get configurations for rajaavat hakukohderyhmät in given haku"
+        :path-params [haku-oid :- (api/describe s/Str "Haku OID")]
+        :return [ataru-schema/RajaavaHakukohderyhma]
+        (let [{:keys [ryhmat last-modified]} (hakukohderyhmat/rajaavat-hakukohderyhmat haku-oid)]
+          (cond-> (response/ok ryhmat)
+                  (some? last-modified)
+                  (response/header "Last-Modified"
+                                   (format-last-modified last-modified)))))
+      (api/PUT "/:haku-oid/ryhma/:hakukohderyhma-oid" {session :session}
+        :summary "Set configuration for rajaava hakukohderyhmä in given haku"
+        :path-params [haku-oid :- (api/describe s/Str "Haku OID")
+                      hakukohderyhma-oid :- (api/describe s/Str "Hakukohderyhmä OID")]
+        :header-params [{if-unmodified-since :- s/Str nil}
+                        {if-none-match :- s/Str nil}]
+        :body [ryhma ataru-schema/RajaavaHakukohderyhma]
+        :return ataru-schema/RajaavaHakukohderyhma
+        (try
+          (let [if-unmodified-since (if (= "*" if-none-match)
+                                      nil
+                                      (parse-if-unmodified-since if-unmodified-since))
+                put                 (fn []
+                                      (if-let [{:keys [ryhma last-modified]}
+                                               (if (some? if-unmodified-since)
+                                                 (hakukohderyhmat/update-rajaava-hakukohderyhma
+                                                  ryhma
+                                                  if-unmodified-since)
+                                                 (hakukohderyhmat/insert-rajaava-hakukohderyhma
+                                                  ryhma))]
+                                        (response/header (response/ok ryhma)
+                                                         "Last-Modified" (format-last-modified last-modified))
+                                        (response/conflict {:error (if (some? if-unmodified-since)
+                                                                     (str "Hakukohderyhma modified since " if-unmodified-since)
+                                                                     "Hakukohderyhma exists")})))]
+            (session-orgs/run-org-authorized
+             session
+             organization-service
+             [:form-edit]
+             #(response/unauthorized {:error "Unauthorized"})
+             (fn [_] (put))
+             put))
+          (catch IllegalArgumentException e
+            (response/bad-request {:error (.getMessage e)}))))
+      (api/DELETE "/:haku-oid/ryhma/:hakukohderyhma-oid" {session :session}
+        :summary "Delete configuration of rajaava hakukohderyhmä in given haku"
+        :path-params [haku-oid :- (api/describe s/Str "Haku OID")
+                      hakukohderyhma-oid :- (api/describe s/Str "Hakukohderyhmä OID")]
+        :return ataru-schema/RajaavaHakukohderyhma
+        (let [delete (fn []
+                       (hakukohderyhmat/delete-rajaava-hakukohderyhma
+                        haku-oid
+                        hakukohderyhma-oid)
+                       (response/no-content))]
+          (session-orgs/run-org-authorized
+           session
+           organization-service
+           [:form-edit]
+           #(response/unauthorized {:error "Unauthorized"})
+           (fn [_] (delete))
+           delete))))
+
+    (api/context "/priorisoivat-hakukohderyhmat" []
+      :tags ["priorisoivat-hakukohderyhmat"]
+      (api/GET "/:haku-oid" {session :session}
+        :summary "Get configurations for priorisoivat hakukohderyhmät in given haku"
+        :path-params [haku-oid :- (api/describe s/Str "Haku OID")]
+        :return [ataru-schema/PriorisoivaHakukohderyhma]
+        (let [{:keys [ryhmat last-modified]} (hakukohderyhmat/priorisoivat-hakukohderyhmat
+                                              tarjonta-service
+                                              haku-oid)]
+          (cond-> (response/ok ryhmat)
+                  (some? last-modified)
+                  (response/header "Last-Modified"
+                                   (format-last-modified last-modified)))))
+      (api/PUT "/:haku-oid/ryhma/:hakukohderyhma-oid" {session :session}
+        :summary "Set configuration for priorisoiva hakukohderyhmä in given haku"
+        :path-params [haku-oid :- (api/describe s/Str "Haku OID")
+                      hakukohderyhma-oid :- (api/describe s/Str "Hakukohderyhmä OID")]
+        :header-params [{if-unmodified-since :- s/Str nil}
+                        {if-none-match :- s/Str nil}]
+        :body [ryhma ataru-schema/PriorisoivaHakukohderyhma]
+        :return ataru-schema/PriorisoivaHakukohderyhma
+        (try
+          (let [if-unmodified-since (if (= "*" if-none-match)
+                                      nil
+                                      (parse-if-unmodified-since if-unmodified-since))
+                put                 (fn []
+                                      (if-let [{:keys [ryhma last-modified]}
+                                               (if (some? if-unmodified-since)
+                                                 (hakukohderyhmat/update-priorisoiva-hakukohderyhma
+                                                  ryhma
+                                                  if-unmodified-since)
+                                                 (hakukohderyhmat/insert-priorisoiva-hakukohderyhma
+                                                  ryhma))]
+                                        (response/header (response/ok ryhma)
+                                                         "Last-Modified" (format-last-modified last-modified))
+                                        (response/conflict {:error (if (some? if-unmodified-since)
+                                                                     (str "Hakukohderyhma modified since " if-unmodified-since)
+                                                                     "Hakukohderyhma exists")})))]
+            (session-orgs/run-org-authorized
+             session
+             organization-service
+             [:form-edit]
+             #(response/unauthorized {:error "Unauthorized"})
+             (fn [_] (put))
+             put))
+          (catch IllegalArgumentException e
+            (response/bad-request {:error (.getMessage e)}))))
+      (api/DELETE "/:haku-oid/ryhma/:hakukohderyhma-oid" {session :session}
+        :summary "Delete configuration of priorisoiva hakukohderyhmä in given haku"
+        :path-params [haku-oid :- (api/describe s/Str "Haku OID")
+                      hakukohderyhma-oid :- (api/describe s/Str "Hakukohderyhmä OID")]
+        :return ataru-schema/PriorisoivaHakukohderyhma
+        (let [delete (fn []
+                       (hakukohderyhmat/delete-priorisoiva-hakukohderyhma
+                        haku-oid
+                        hakukohderyhma-oid)
+                       (response/no-content))]
+          (session-orgs/run-org-authorized
+           session
+           organization-service
+           [:form-edit]
+           #(response/unauthorized {:error "Unauthorized"})
+           (fn [_] (delete))
+           delete))))
 
     (api/context "/external" []
       :tags ["external-api"]
