@@ -894,16 +894,17 @@
 
 (defn attachment-uploading-file
   [field-descriptor component-id question-group-idx attachment-idx]
-  (let [attachment    @(subscribe [:application/answer component-id question-group-idx attachment-idx])
-        size          (:size (:value attachment))
-        uploaded-size (:uploaded-size attachment)
-        percent       (int (* 100 (/ uploaded-size size)))]
+  (let [attachment       @(subscribe [:application/answer component-id question-group-idx attachment-idx])
+        size             (:size (:value attachment))
+        uploaded-size    (:uploaded-size attachment)
+        upload-complete? (<= size uploaded-size)
+        percent          (int (* 100 (/ uploaded-size size)))]
     [:div.application__form-attachment-list-item-container
      [:div.application__form-attachment-list-item-sub-container.application__form-attachment-filename-container
       [attachment-filename component-id question-group-idx attachment-idx false]]
      [:div.application__form-attachment-list-item-sub-container.application__form-attachment-uploading-container
       [:i.zmdi.zmdi-spinner.application__form-upload-uploading-spinner]
-      [:span (str (get-translation :uploading) "... ")]
+      [:span (str (get-translation (if upload-complete? :processing-file :uploading)) "... ")]
       [:span (str percent " % "
                   "(" (util/size-bytes->str uploaded-size false)
                   "/"

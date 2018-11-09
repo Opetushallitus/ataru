@@ -4,6 +4,7 @@
             [ataru.cljs-util :as util]
             [ataru.util :as autil]
             [ataru.hakija.rules :as rules]
+            [ataru.hakija.resumable-upload :as resumable-upload]
             [cljs.core.match :refer-macros [match]]
             [ataru.hakija.application :refer [create-initial-answers
                                               create-application-to-submit
@@ -874,23 +875,19 @@
                        (:children field-descriptor))
      :dispatch [:application/update-answers-validity]}))
 
-(reg-event-fx
-  :application/add-single-attachment
-  (fn [{:keys [db]} [_ field-descriptor attachment-idx file retries question-group-idx]]
-    (let [name      (.-name file)
-          form-data (doto (js/FormData.)
-                      (.append "file" file name))]
-      {:db   db
-       :http {:method           :post
-              :url              "/hakemus/api/files"
-              :handler          [:application/handle-attachment-upload field-descriptor attachment-idx question-group-idx]
-              :progress-handler [:application/handle-attachment-progress field-descriptor attachment-idx question-group-idx]
-              :error-handler    [:application/handle-attachment-upload-error field-descriptor attachment-idx name file (inc retries) question-group-idx]
-              :started-handler  [:application/handle-attachment-upload-started field-descriptor attachment-idx question-group-idx]
-              :body             form-data}})))
-
 (defonce max-attachment-size-bytes
   (get (js->clj js/config) "attachment-file-max-size-bytes" (* 10 1024 1024)))
+
+(reg-event-fx
+  :application/add-single-attachment-resumable
+  (fn [_ [_ field-descriptor attachment-idx file retries question-group-idx]]
+    (resumable-upload/upload-file
+      "/hakemus/api/files/resumable"
+      file
+      {:handler          [:application/handle-attachment-upload field-descriptor attachment-idx question-group-idx]
+       :error-handler    [:application/handle-attachment-upload-error field-descriptor attachment-idx name file (inc retries) question-group-idx]
+       :progress-handler [:application-file-upload/handle-attachment-progress-resumable field-descriptor attachment-idx question-group-idx]
+       :started-handler  [:application/handle-attachment-upload-started field-descriptor attachment-idx question-group-idx]})))
 
 (reg-event-fx
   :application/add-attachments
@@ -931,7 +928,7 @@
                                                    new-attachments))))
        :dispatch-n (keep-indexed (fn [idx file]
                                    (when (<= (.-size file) max-attachment-size-bytes)
-                                     [:application/add-single-attachment
+                                     [:application/add-single-attachment-resumable
                                       field-descriptor
                                       (+ (count existing-attachments) idx)
                                       file
@@ -1014,20 +1011,22 @@
                          (conj attachment-idx :request))
               request)))
 
-(defn- rate-limit-error? [response]
-  (= (:status response) 429))
-
 (reg-event-fx
   :application/handle-attachment-upload-error
-  (fn [{:keys [db]} [_ field-descriptor attachment-idx filename file retries question-group-idx response]]
+  (fn [{:keys [db]} [_ field-descriptor attachment-idx filename file retries question-group-idx response-status]]
     (let [id            (keyword (:id field-descriptor))
-          rate-limited? (rate-limit-error? response)
-          current-error (if rate-limited?
-                          :file-upload-failed
-                          :file-type-forbidden)]
-      (if (and rate-limited? (< retries 3))
+          current-error (case response-status
+                          ; misc error in resumable file transfer, retry:
+                          409 :file-upload-retransmit
+                          ; rate limited:
+                          429 :file-upload-failed
+                          ; any liiteri error:
+                          500 :file-type-forbidden
+                          ; generic error, e.g. transfer interrupted:
+                          :file-upload-error)]
+      (if (and (contains? #{:file-upload-failed :retransmit} current-error) (< retries 3))
         {:db               db
-         :delayed-dispatch {:dispatch-vec [:application/add-single-attachment field-descriptor attachment-idx file retries question-group-idx]
+         :delayed-dispatch {:dispatch-vec [:application/add-single-attachment-resumable field-descriptor attachment-idx file retries question-group-idx]
                             :timeout      (+ 2000 (rand-int 2000))}}
         {:db (-> db
                  (update-in (if question-group-idx

@@ -80,6 +80,25 @@ lein figwheel hakija-dev
 ```
 Browse to [http://localhost:8351/hakemus/<uuid>](http://localhost:8351/hakemus/<uuid>).
 
+### AWS service integration
+
+Currently S3 integration is used in non-dev environments for storage of temporary files accrued 
+when uploading attachments in parts (for upload resume support). By default the local file system 
+(/tmp) is used for temporary file storage.
+  
+In order to use S3 in development environments, add the following to your configuration file:
+
+```
+:aws {:region "eu-west-1"
+      :temp-files {:bucket "opintopolku-hahtuva-ataru-temp-files"}}
+```
+
+.. and provide credentials when running the hakija application, e.g. 
+
+```
+AWS_ACCESS_KEY_ID=abc AWS_SECRET_ACCESS_KEY=xyz CONFIG=config_file.edn ./bin/lein hakija-dev
+```
+
 ### Backend & browser tests
 
 Tests require a special database and a special Redis. Here is an example of running those

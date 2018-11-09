@@ -11,12 +11,15 @@
  :yksiloimattomat {:allow {{ataru_allow_yksiloimattomat}}}
  :cache {:type {{ataru_cache_type}}}
  :redis {:uri "{{ataru_redis_uri}}"}
+ :aws {:region "{{aws_region}}"
+       :temp-files {:bucket "{{ataru_temp_file_bucket_name}}"}}
  :public-config {:applicant {:service_url "{{ataru_applicant_service_url}}"}
                  :virkailija {:service_url "https://{{host_virkailija}}/lomake-editori/"}
                  :environment-name "{{ataru_environment_name}}"
                  :features {}
                  :attachment-modify-grace-period-days 14
-                 :attachment-file-max-size-bytes {{ataru_attachment_file_max_size_bytes}}}
+                 :attachment-file-max-size-bytes {{ataru_attachment_file_max_size_bytes}}
+                 :attachment-file-part-max-size-bytes {{ataru_attachment_file_part_max_size_bytes}}}
  :cas {:username "{{ataru_cas_username}}"
        :password "{{ataru_cas_password}}"}
  :log {:virkailija-base-path "{{ataru_virkailija_log_path}}"

@@ -29,7 +29,9 @@
             [cheshire.core :as json]
             [ataru.config.core :refer [config]]
             [ataru.flowdock.flowdock-client :as flowdock-client]
-            [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret alter-application-to-hakuaikaloppu-for-secret]])
+            [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret alter-application-to-hakuaikaloppu-for-secret]]
+            [ataru.hakija.resumable-file-transfer :as resumable-file]
+            [clojure.tools.logging :as log])
   (:import [ring.swagger.upload Upload]
            [java.io InputStream]))
 
@@ -125,7 +127,8 @@
                   job-runner
                   organization-service
                   ohjausparametrit-service
-                  person-service]
+                  person-service
+                  temp-file-store]
   (api/context "/api" []
     :tags ["application-api"]
     (api/GET ["/haku/:haku-oid" :haku-oid #"[0-9\.]+"] []
@@ -230,17 +233,34 @@
          (:old-secret request))
         (response/ok {})))
     (api/context "/files" []
-      (api/POST "/" []
-        :summary "Upload a file"
-        :multipart-params [file :- upload/TempFileUpload]
+      (api/GET "/resumable" []
+        :summary "Check if this part has already been uploaded"
+        :query-params [file-part-number :- s/Int
+                       file-size :- s/Int
+                       file-id :- s/Str
+                       file-name :- s/Str]
+        (let [[exists? next-is-last?] (resumable-file/file-part-exists? temp-file-store file-id file-name file-size file-part-number)]
+          (if exists?
+            (response/ok {:next-is-last next-is-last?})
+            (response/not-found {}))))
+      (api/POST "/resumable" []
+        :summary "Upload file part"
+        :multipart-params [file-part :- upload/TempFileUpload
+                           file-part-number :- s/Int
+                           file-size :- s/Int
+                           file-id :- s/Str]
         :middleware [upload/wrap-multipart-params]
-        :return ataru-schema/File
+        :return {(s/optional-key :stored-file) ataru-schema/File}
         (try
-          (if-let [resp (file-store/upload-file file)]
-            (response/ok resp)
-            (response/bad-request {:failures "Failed to upload file"}))
+          (let [[status stored-file] (resumable-file/store-file-part! temp-file-store file-id file-size file-part-number file-part)]
+            (log/info "File upload" file-part-number "of" file-size "bytes:" status)
+            (case status
+              :send-next (response/ok {})
+              :retransmit (response/conflict {})
+              :complete (response/created "" {:stored-file stored-file})
+              :liiteri-error (response/internal-server-error {})))
           (finally
-            (io/delete-file (:tempfile file) true))))
+            (io/delete-file (:tempfile file-part) true))))
       (api/DELETE "/:key" []
         :summary "Delete a file"
         :path-params [key :- s/Str]
@@ -303,7 +323,8 @@
                                               (:job-runner this)
                                               (:organization-service this)
                                               (:ohjausparametrit-service this)
-                                              (:person-service this))
+                                              (:person-service this)
+                                              (:temp-file-store this))
                                   (route/resources "/")
                                   (api/undocumented
                                     (api/GET "/haku/:oid" []
