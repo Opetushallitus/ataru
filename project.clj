@@ -79,7 +79,8 @@
                  [speclj "3.3.2"]
                  [org.clojure/test.check "0.9.0"]
                  [com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer "20180219.1" :exclusions [com.google.guava/guava]]
-                 [com.amazonaws/aws-java-sdk-s3 "1.11.429"]]
+                 [com.amazonaws/aws-java-sdk-s3 "1.11.429"]
+                 [clj-http "3.9.1"]]
 
   :min-lein-version "2.5.3"
 

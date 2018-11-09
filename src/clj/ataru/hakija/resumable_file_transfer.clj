@@ -1,5 +1,5 @@
 (ns ataru.hakija.resumable-file-transfer
-  (:require [ataru.util.http-util :as http-util]
+  (:require [clj-http.client :as http-client]
             [cheshire.core :as json]
             [ataru.config.core :refer [config]]
             [ataru.config.url-helper :refer [resolve-url]]
@@ -9,7 +9,7 @@
             [clojure.core.match :refer [match]]
             [clojure.tools.logging :as log])
   (:import (java.text Normalizer Normalizer$Form)
-           (java.io File)))
+           (java.io File FileInputStream)))
 
 (def max-part-size (get-in config [:public-config :attachment-file-part-max-size-bytes] (* 1024 1024)))
 
@@ -81,14 +81,18 @@
 (defn upload-file-to-liiteri
   [file file-name]
   (log/info "Uploading to liiteri:" file-name (.length file) "bytes")
-  (let [url (resolve-url :liiteri.files)
-        {:keys [status body error]} (http-util/do-post url {:timeout   (* 1000 300)
-                                                            :multipart [{:name     "file"
-                                                                         :content  file
-                                                                         :filename (Normalizer/normalize file-name Normalizer$Form/NFD)}]})]
+  (let [url        (resolve-url :liiteri.files)
+        start-time (System/currentTimeMillis)
+        {:keys [status body error]} (http-client/post url {:socket-timeout (* 1000 300)
+                                                           :cookie-policy  :standard
+                                                           :multipart      [{:part-name "file"
+                                                                             :content   (FileInputStream. file)
+                                                                             :name      (Normalizer/normalize file-name Normalizer$Form/NFD)}]})]
     (.delete file)
     (if (= status 200)
-      (dissoc (json/parse-string body true) :version :deleted)
+      (do
+        (log/info "Uploaded file" file-name "to liiteri in" (- (System/currentTimeMillis) start-time) "ms:" body)
+        (dissoc (json/parse-string body true) :version :deleted))
       (log/error "Error uploading file to liiteri:" file-name status error body))))
 
 (defn store-file-part!
