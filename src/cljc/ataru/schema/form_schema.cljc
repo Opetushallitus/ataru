@@ -198,6 +198,7 @@
   (merge Form
          {:content                                       [Content]
           (s/optional-key :priorisoivat-hakukohderyhmat) [PriorisoivaHakukohderyhma]
+          (s/optional-key :rajaavat-hakukohderyhmat)     [RajaavaHakukohderyhma]
           (s/optional-key :organization-oid)             (s/maybe s/Str)}))
 
 (s/defschema UpdateElementOperation

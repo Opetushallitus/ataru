@@ -171,6 +171,7 @@
                            (remove nil?))
         hakukohteet   (get-in tarjonta-info [:tarjonta :hakukohteet])
         priorisoivat  (:ryhmat (hakukohderyhmat/priorisoivat-hakukohderyhmat tarjonta-service haku-oid))
+        rajaavat      (:ryhmat (hakukohderyhmat/rajaavat-hakukohderyhmat haku-oid))
         form          (when (= 1 (count form-keys))
                             (fetch-form-by-key-with-flagged-fields (first form-keys) roles hakukohteet application-in-processing-state?))]
     (when (not tarjonta-info)
@@ -179,6 +180,7 @@
       (-> form
           (merge tarjonta-info)
           (assoc? :priorisoivat-hakukohderyhmat priorisoivat)
+          (assoc? :rajaavat-hakukohderyhmat rajaavat)
           (assoc :load-time (System/currentTimeMillis))
           (populate-attachment-deadlines tarjonta-info)
           (populate-hakukohde-answer-options tarjonta-info)

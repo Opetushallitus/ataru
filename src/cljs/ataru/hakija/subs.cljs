@@ -214,10 +214,12 @@
 (defn- selected-hakukohteet [db]
   (map :value (get-in db [:application :answers :hakukohteet :values] [])))
 
+(defn- hakukohteet-from-tarjonta [db hakukohteet]
+  (->> (get-in db [:form :tarjonta :hakukohteet])
+       (filter #(contains? hakukohteet (:oid %)))))
+
 (defn- selected-hakukohteet-from-tarjonta [db]
-  (let [selected-hakukohteet     (set (selected-hakukohteet db))]
-    (->> (get-in db [:form :tarjonta :hakukohteet])
-         (filter #(contains? selected-hakukohteet (:oid %))))))
+  (hakukohteet-from-tarjonta db (set (selected-hakukohteet db))))
 
 (re-frame/reg-sub
   :application/selected-hakukohteet-for-field
@@ -366,12 +368,33 @@
             [:params :max-hakukohteet]
             nil)))
 
+(defn hakukohderyhma->rajaus [hakukohderyhma-oid rajaavat]
+  (->> rajaavat
+       (filter #(= (:hakukohderyhma-oid %) hakukohderyhma-oid))))
+
+(defn- rajaavat-hakukohteet [db hakukohde-oid]
+  (if-let [rajaavat (-> db :form :rajaavat-hakukohderyhmat)]
+    (if-let [hakukohderyhmat (->> (mapcat :hakukohderyhmat (hakukohteet-from-tarjonta db (set [hakukohde-oid])))
+                                  (mapcat #(hakukohderyhma->rajaus % rajaavat)))]
+      (let [selected-hakukohteet     (hakukohteet-from-tarjonta db (set (selected-hakukohteet db)))
+            selected-hakukohderyhmat (frequencies (mapcat :hakukohderyhmat selected-hakukohteet))]
+        (mapcat (fn [ryhma]
+                  (if-let [frequency (get selected-hakukohderyhmat (:hakukohderyhma-oid ryhma))]
+                    (if (<= (:raja ryhma) frequency)
+                      (filter #(contains? (set (:hakukohderyhmat %)) (:hakukohderyhma-oid ryhma)) selected-hakukohteet))))
+          hakukohderyhmat)))))
+
+(re-frame/reg-sub
+  :application/rajaavat-hakukohteet
+  (fn [db [_ hakukohde-oid]]
+    (doall (rajaavat-hakukohteet db hakukohde-oid))))
+
 (re-frame/reg-sub
   :application/hakukohteet-full?
   (fn [_ _]
     (if-let [max-hakukohteet @(re-frame/subscribe [:application/max-hakukohteet])]
       (<= max-hakukohteet
-          (count @(re-frame/subscribe [:application/selected-hakukohteet])))
+        (count @(re-frame/subscribe [:application/selected-hakukohteet])))
       false)))
 
 (re-frame/reg-sub

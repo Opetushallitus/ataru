@@ -50,6 +50,9 @@
    :application-priorization-invalid            {:fi "Hakukohteet ovat väärässä ensisijaisuusjärjestyksessä"
                                                  :sv "SV: Hakukohteet ovat väärässä ensisijaisuusjärjestyksessä"
                                                  :en "EN: Hakukohteet ovat väärässä ensisijaisuusjärjestyksessä"}
+   :application-limit-reached-in-hakukohderyhma {:fi "Et voi hakea tähän hakukohteeseen, koska olet jo hakemassa seuraaviin hakukohteisiin:"
+                                                 :sv "SV: Et voi hakea tähän hakukohteeseen, koska olet jo hakemassa seuraaviin hakukohteisiin:"
+                                                 :en "EN: Et voi hakea tähän hakukohteeseen, koska olet jo hakemassa seuraaviin hakukohteisiin:"}
    :application-processed-cant-modify           {:fi "Tämä hakemus on käsitelty eikä ole enää muokattavissa"
                                                  :sv "Denna ansökan har behandlats och kan inte längre bearbetas"
                                                  :en "This application has been processed and can no longer be modified"}
