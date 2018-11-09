@@ -16,7 +16,7 @@
 
 (defn- parent-is-visible [children-of fields answers hakutoiveet hakukohteet]
   (or (not children-of)
-      (visible? (first (get fields children-of)) fields answers hakutoiveet hakukohteet)))
+      (visible? (get fields children-of) fields answers hakutoiveet hakukohteet)))
 
 (defn- followup-of-answer [{:keys [id followup-of] :as field} fields answers hakutoiveet hakukohteet]
   (or (not followup-of)

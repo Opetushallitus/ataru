@@ -121,9 +121,10 @@
        (let [answers        (group-by :key (:answers application))
              hakutoiveet    (set (:hakukohde application))
              visible-fields (fn [form]
-                                (let [flat-form-fields (util/flatten-form-fields (:content form))]
+                                (let [flat-form-fields (util/flatten-form-fields (:content form))
+                                      field-by-id (util/group-by-first :id flat-form-fields)]
                                   (->> flat-form-fields
-                                       (filter #(visible? % (group-by :id flat-form-fields) answers hakutoiveet
+                                       (filter #(visible? % field-by-id answers hakutoiveet
                                                           (-> tarjonta-info :tarjonta :hakukohteet))))))
              fields-left    (visible-fields form-left)
              fields-right   (visible-fields form-right)]
