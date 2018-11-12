@@ -571,7 +571,8 @@
       :class    (clojure.string/join " " [(when selected?
                                             "application-handling__list-row--selected")
                                           (when (= "inactivated" (:state application))
-                                            "application-handling__list-row--inactivated")])}
+                                            "application-handling__list-row--inactivated")])
+      :id       (str "application-list-row-" (:key application))}
      [:div.application-handling__list-row-person-info
       [:span.application-handling__list-row--application-applicant
        (or applicant [:span.application-handling__list-row--applicant-unknown (get-virkailija-translation :unknown)])]
@@ -588,15 +589,18 @@
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
         expanded?    (subscribe [:state-query [:application :application-list-expanded?]])]
-    (fn [applications]
-      (into [:div.application-handling__list
-             {:class (str (when (= true @expanded?) "application-handling__list--expanded")
-                          (when (> (count applications) 0) " animated fadeIn"))}]
-            (for [application applications
-                  :let [selected? (= @selected-key (:key application))]]
-              (if selected?
-                [cljs-util/wrap-scroll-to [application-list-row application selected?]]
-                [application-list-row application selected?]))))))
+    (r/create-class
+      {:component-did-update #(dispatch [:application/scroll-list-to-previously-closed-application])
+       :reagent-render       (fn [applications]
+                               (into [:div.application-handling__list
+                                      {:class (str (when (= true @expanded?) "application-handling__list--expanded")
+                                                   (when (> (count applications) 0) " animated fadeIn"))
+                                       :id    "application-handling-list"}]
+                                     (for [application applications
+                                           :let [selected? (= @selected-key (:key application))]]
+                                       (if selected?
+                                         [cljs-util/wrap-scroll-to [application-list-row application selected?]]
+                                         [application-list-row application selected?]))))})))
 
 (defn- toggle-state-filter!
   [hakukohde-filters states filter-kw filter-id selected?]

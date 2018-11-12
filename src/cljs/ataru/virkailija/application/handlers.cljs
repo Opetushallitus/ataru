@@ -108,15 +108,16 @@
 (defn close-application [db]
   (cljs-util/update-url-with-query-params {:application-key nil})
   (-> db
+      (assoc-in [:application :previously-closed-application] (-> db :application :selected-application-and-form :application :key))
       (assoc-in [:application :selected-review-hakukohde] nil)
       (assoc-in [:application :selected-key] nil)
       (assoc-in [:application :selected-application-and-form] nil)
       (assoc-in [:application :application-list-expanded?] true)))
 
 (reg-event-db
- :application/close-application
- (fn [db [_ _]]
-   (close-application db)))
+  :application/close-application
+  (fn [db _]
+    (close-application db)))
 
 (defn- processing-state-counts-for-application
   [{:keys [application-hakukohde-reviews]} included-hakukohde-oid-set]
@@ -1200,3 +1201,10 @@
           next-application-key    (-> filtered-applications (nth guarded-idx) :key)]
       {:update-url-query-params {:application-key next-application-key}
        :dispatch                [:application/select-application next-application-key selected-hakukohde false]})))
+
+(reg-event-fx
+  :application/scroll-list-to-previously-closed-application
+  (fn [{:keys [db]} _]
+    (when-let [application-key (-> db :application :previously-closed-application)]
+      {:db                            (update db :application dissoc :previously-closed-application)
+       :scroll-to-application-in-list application-key})))
