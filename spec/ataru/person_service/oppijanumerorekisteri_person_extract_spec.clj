@@ -38,6 +38,17 @@
                                              {:key "gender" :value "1"}]
                                    :lang    "sv"})
 
+(def asiointikieli-application {:answers [{:key "email", :value "roger.moore@ankkalinna.com"}
+                                          {:key "first-name" :value "Roger"}
+                                          {:key "preferred-name" :value "Roger"}
+                                          {:key "last-name" :value "Moore"}
+                                          {:key "birth-date" :value "29.10.1984"}
+                                          {:key "language" :value "SV"}
+                                          {:key "nationality" :value [["247"]]}
+                                          {:key "gender" :value "1"}
+                                          {:key "asiointikieli" :value "3"}]
+                                :lang    "sv"})
+
 (def expected-foreign-person {:etunimet           "Roger"
                               :kutsumanimi        "Roger"
                               :sukunimi           "Moore"
@@ -68,18 +79,36 @@
                                        :identifications    [{:idpEntityId "oppijaToken"
                                                              :identifier  "roger.moore@ankkalinna.com"}]})
 
-(describe
- "person extract"
- (tags :unit  :person-extract)
- (it "extracts finnish person correctly"
-     (should=
-      finnish-person
-      (extract-person-from-application application-fixtures/application-with-person-info-module)))
- (it "extracts foreign person correctly"
-     (should=
-      expected-foreign-person
-      (extract-person-from-application foreign-application)))
+(def expected-asiointikieli-person {:etunimet           "Roger"
+                                    :kutsumanimi        "Roger"
+                                    :sukunimi           "Moore"
+                                    :aidinkieli         {:kieliKoodi "sv"}
+                                    :asiointiKieli      {:kieliKoodi "en"}
+                                    :syntymaaika        "1984-10-29"
+                                    :eiSuomalaistaHetua true
+                                    :kansalaisuus       [{:kansalaisuusKoodi "247"}]
+                                    :sukupuoli          "1"
+                                    :yhteystieto        [{:yhteystietoTyyppi "YHTEYSTIETO_SAHKOPOSTI"
+                                                          :yhteystietoArvo   "roger.moore@ankkalinna.com"}]
+                                    :henkiloTyyppi      "OPPIJA"
+                                    :identifications    [{:idpEntityId "oppijaToken"
+                                                          :identifier  "roger.moore@ankkalinna.com"}]})
+
+(describe "person extract"
+  (tags :unit  :person-extract)
+  (it "extracts finnish person correctly"
+    (should=
+     finnish-person
+     (extract-person-from-application application-fixtures/application-with-person-info-module)))
+  (it "extracts foreign person correctly"
+    (should=
+     expected-foreign-person
+     (extract-person-from-application foreign-application)))
   (it "extracts dual citizenship person correctly"
     (should=
-      expected-dual-citizenship-person
-      (extract-person-from-application dual-citizenship-application))))
+     expected-dual-citizenship-person
+     (extract-person-from-application dual-citizenship-application)))
+  (it "extracts asiointikieli correctly"
+    (should=
+     expected-asiointikieli-person
+     (extract-person-from-application asiointikieli-application))))

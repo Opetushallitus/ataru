@@ -575,15 +575,7 @@
         languages    (subscribe [:application/default-languages])
         id           (answer-key field-descriptor)
         disabled?    @(subscribe [:application/cannot-edit? id])
-        use-onr-info? (contains? (:person application) id)
-        value-path   (if (and @editing
-                              (contains? editing-forbidden-person-info-field-ids id)
-                              use-onr-info?)
-                       [:application :person id]
-                       (cond-> [:application :answers id]
-                         idx (concat [:values idx 0])
-                         :always (concat [:value])))
-        value        (subscribe [:state-query value-path])
+        value        (subscribe [:application/answer-value id idx nil])
         on-change    (fn [e]
                        (dispatch [:application/dropdown-change
                                   field-descriptor
@@ -601,8 +593,9 @@
          [:i.zmdi.zmdi-chevron-down]]
         [:span.application__form-select-arrow
          [:i.zmdi.zmdi-chevron-down]])
-      [(keyword (str "select.application__form-select" (when (not disabled?) ".application__form-select--enabled")))
-       {:id           (:id field-descriptor)
+      [:select.application__form-select
+       {:class        (when (not disabled?) "application__form-select--enabled")
+        :id           (:id field-descriptor)
         :value        (or @value "")
         :on-change    on-change
         :disabled     disabled?

@@ -393,9 +393,11 @@
    :gender                              s/Str
    :nationality                         [(s/constrained [s/Str] #(= 1 (count %)))]
    :language                            s/Str
+   :asiointikieli                       s/Str
    (s/optional-key :gender-string)      s/Str
    (s/optional-key :nationality-string) s/Str
    (s/optional-key :ssn)                (s/maybe s/Str)
+   :have-finnish-ssn                    s/Str
    (s/optional-key :birth-date)         s/Str})
 
 (s/defschema ApplicationWithPerson

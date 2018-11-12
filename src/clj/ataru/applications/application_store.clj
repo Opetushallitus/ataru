@@ -746,7 +746,10 @@
      :hakuOid          haku
      :organization-oid organization_oid
      :henkiloOid       person_oid
-     :asiointikieli    lang
+     :asiointikieli    (or (-> answers :asiointikieli :value {"1" "fi"
+                                                              "2" "sv"
+                                                              "3" "en"})
+                           lang)
      :email            email
      :lahiosoite       (-> answers :address :value)
      :postinumero      (-> answers :postal-code :value)
