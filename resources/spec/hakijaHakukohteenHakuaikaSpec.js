@@ -60,14 +60,34 @@
                     return testFrame().find(id).parent().siblings(".application__question_hakukohde_names_container").text()
                 };
 
-
                 expect(kysymysKoskeeHakukohteitaFinder("#hakuajat-ohi")).to.equal("Kysymys kuuluu hakukohteisiin: näytä hakukohteet (1)")
                 expect(kysymysKoskeeHakukohteitaFinder("#osa-hakuajoista-ohi")).to.equal("Kysymys kuuluu hakukohteisiin: näytä hakukohteet (2)")
                 expect(kysymysKoskeeHakukohteitaFinder("#kaikki-hakuajat-voimassa")).to.equal("Kysymys kuuluu hakukohteisiin: näytä hakukohteet (1)")
                 expect(kysymysKoskeeHakukohteitaFinder("#assosiaatio-hakukohderyhman-kautta")).to.equal("Kysymys kuuluu hakukohteisiin: näytä hakukohteet (1)")
+
+
             })
+
+
         })
 
+        describe('priorisoivat hakukohderyhmat', function () {
+            before(
+                wait.until(function() { return addHakukohdeLink().length == 1 }, 10000),
+                clickElement(addHakukohdeLink, "hakukohdeLink"),
+                clickElement(function() { return nthHakukohdeSearchResultButton(1) }, "searchResult2"),
+                clickElement(invalidFieldsStatus),
+                wait.until(submitButtonDisabled),
+                wait.until(function () {
+                    return invalidFieldsStatus().text() === 'Tarkista 1 tietoa'
+                })
+            )
+
+            it('doesnt allow to add hakutoive in wrong priority order', function() {
+                expect(testFrame().find('.application__hakukohde-selected-row-priorization-invalid').length).to.equal(2)
+                expect(invalidFieldNames().join(";")).to.equal("Hakukohteet")
+            })
+        })
 
     })
 })()
