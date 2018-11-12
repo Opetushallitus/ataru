@@ -55,7 +55,8 @@
     "gender"
     "postal-office"
     "home-town"
-    "other-eligibility-year-of-completion"})
+    "other-eligibility-year-of-completion"
+    "asiointikieli"})
 
 (def max-value-length 5000)
 

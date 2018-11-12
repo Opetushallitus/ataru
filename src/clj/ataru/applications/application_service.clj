@@ -67,25 +67,31 @@
 
 (defn- person-info-from-application [application]
   (let [answers (util/answers-by-key (:answers application))]
-    {:first-name     (-> answers :first-name :value)
-     :preferred-name (-> answers :preferred-name :value)
-     :last-name      (-> answers :last-name :value)
-     :ssn            (-> answers :ssn :value)
-     :birth-date     (-> answers :birth-date :value)
-     :gender         (-> answers :gender :value)
-     :nationality    (-> answers :nationality :value)
-     :language       (-> answers :language :value)}))
+    {:first-name       (-> answers :first-name :value)
+     :preferred-name   (-> answers :preferred-name :value)
+     :last-name        (-> answers :last-name :value)
+     :ssn              (-> answers :ssn :value)
+     :have-finnish-ssn (if (some? (-> answers :ssn :value)) "true" "false")
+     :birth-date       (-> answers :birth-date :value)
+     :gender           (-> answers :gender :value)
+     :nationality      (-> answers :nationality :value)
+     :language         (-> answers :language :value)
+     :asiointikieli    (-> answers :asiointikieli :value)}))
 
 (defn- person-info-from-onr-person [person]
-  {:first-name     (:etunimet person)
-   :preferred-name (:kutsumanimi person)
-   :last-name      (:sukunimi person)
-   :ssn            (:hetu person)
-   :birth-date     (some-> person :syntymaaika bd-converter/convert-to-finnish-format)
-   :gender         (-> person :sukupuoli)
-   :nationality    (->> (-> person :kansalaisuus)
-                        (mapv #(vector (get % :kansalaisuusKoodi "999"))))
-   :language       (-> person :aidinkieli :kieliKoodi clojure.string/upper-case)})
+  {:first-name       (:etunimet person)
+   :preferred-name   (:kutsumanimi person)
+   :last-name        (:sukunimi person)
+   :ssn              (:hetu person)
+   :have-finnish-ssn (if (some? (:hetu person)) "true" "false")
+   :birth-date       (some-> person :syntymaaika bd-converter/convert-to-finnish-format)
+   :gender           (-> person :sukupuoli)
+   :nationality      (->> (-> person :kansalaisuus)
+                          (mapv #(vector (get % :kansalaisuusKoodi "999"))))
+   :language         (-> person :aidinkieli :kieliKoodi clojure.string/upper-case)
+   :asiointikieli    ({"fi" "1"
+                       "sv" "2"
+                       "en" "3"} (-> person :asiointiKieli :kieliKoodi))})
 
 (defn parse-person [application person-from-onr]
   (let [yksiloity       (or (-> person-from-onr :yksiloity)

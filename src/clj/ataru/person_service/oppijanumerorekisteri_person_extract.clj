@@ -16,6 +16,13 @@
   [nationalities]
   (mapv (fn [[nat-code & _]] {:kansalaisuusKoodi nat-code}) nationalities))
 
+(defn- extract-asiointikieli
+  [application]
+  (or ({"1" "fi"
+        "2" "sv"
+        "3" "en"} (extract-field application "asiointikieli"))
+      (:lang application)))
+
 (defn extract-person-from-application [application]
   (let [email        (extract-field application "email")
         basic-fields {:yhteystieto    [{:yhteystietoTyyppi "YHTEYSTIETO_SAHKOPOSTI"
@@ -25,7 +32,7 @@
                       :sukunimi       (extract-field application "last-name")
                       :sukupuoli      (extract-field application "gender")
                       :aidinkieli     {:kieliKoodi (clojure.string/lower-case (extract-field application "language"))}
-                      :asiointiKieli  {:kieliKoodi (:lang application)}
+                      :asiointiKieli  {:kieliKoodi (extract-asiointikieli application)}
                       :kansalaisuus   (extract-nationalities (extract-field application "nationality"))
                       :henkiloTyyppi  "OPPIJA"}
         person-id    (extract-field application "ssn")]

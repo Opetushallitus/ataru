@@ -19,7 +19,8 @@
     :postal-code
     :home-town
     :city
-    :language})
+    :language
+    :asiointikieli})
 
 (def viewing-forbidden-person-info-field-ids
   #{:ssn
@@ -34,7 +35,8 @@
      :nationality
      :have-finnish-ssn
      :gender
-     :language}))
+     :language
+     :asiointikieli}))
 
 (def editing-allowed-person-info-field-ids
   (clojure.set/difference

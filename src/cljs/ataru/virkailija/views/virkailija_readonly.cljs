@@ -17,6 +17,7 @@
                                                                        answers->read-only-format]]
             [ataru.cljs-util :refer [get-virkailija-translation]]
             [ataru.feature-config :as fc]
+            [ataru.hakija.person-info-fields :refer [person-info-field-ids]]
             [ataru.util :as util]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
@@ -121,12 +122,12 @@
     [scroll-to-anchor content]]
    (into [:div.application__wrapper-contents]
          (for [child children]
-           [field child application lang]))])
+           [field child application lang nil]))])
 
-(defn row-container [application lang children group-idx person-info-field?]
+(defn row-container [application lang children group-idx]
   (fn [application lang children]
     (into [:div] (for [child children]
-                   [field child application lang group-idx person-info-field?]))))
+                   [field child application lang group-idx]))))
 
 (defn- extract-values [children answers group-idx]
   (let [child-answers  (->> (map answer-key children)
@@ -213,7 +214,7 @@
              [:div.application-handling__nested-container
               (for [followup (:followups option)]
                 ^{:key (:id followup)}
-                [field followup application lang])])]))
+                [field followup application lang nil])])]))
       (doall
         (for [value values-wo-option]
           ^{:key (str "unknown-option-" value)}
@@ -280,7 +281,7 @@
     (into [:div.application__wrapper-contents]
           (for [child (:children content)
                 :when (not (:exclude-from-answers child))]
-            [field child application lang nil true]))]])
+            [field child application lang nil]))]])
 
 (defn- repeat-count
   [application question-group-children]
@@ -320,19 +321,19 @@
        (clojure.string/join ", " values)]]]))
 
 (defn field
-  [content application lang group-idx person-info-field?]
+  [content application lang group-idx]
   (when (visible? content application)
     (match content
       {:module "person-info"} [person-info-module content application lang]
       {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
       {:fieldClass "questionGroup" :fieldType "fieldset" :children children}
-           (if person-info-field?
-             (nationality-field content application lang children)
-             [question-group content application lang children])
-      {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children group-idx person-info-field?]
+      (if (some #(contains? person-info-field-ids (keyword (:id %))) children)
+        (nationality-field content application lang children)
+        [question-group content application lang children])
+      {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children group-idx]
       {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children group-idx]
-      {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")}
-      (if person-info-field?
+      {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice") :id id}
+      (if (contains? person-info-field-ids (keyword id))
         (text content application lang group-idx)
         [selectable content application lang group-idx])
       {:fieldClass "formField" :fieldType (:or "textField" "textArea")} (text content application lang group-idx)

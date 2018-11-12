@@ -88,11 +88,13 @@
                           repeatable-idx])
      (re-frame/subscribe [:application/person])
      (re-frame/subscribe [:application/editing?])])
-  (fn [[answer person editing?] [_ id _ _]]
+  (fn [[answer person editing?] [_ id question-group-idx _]]
     (let [id (keyword id)]
       (if (and editing?
                (contains? person-info-fields/editing-forbidden-person-info-field-ids id))
-        (get person id)
+        (if (some? question-group-idx)
+          (first (nth (get person id) question-group-idx))
+          (get person id))
         (:value answer)))))
 
 (re-frame/reg-sub
