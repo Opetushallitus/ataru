@@ -80,7 +80,7 @@
                                           :first-name               (:kutsumanimi henkilo)
                                           :last-name                (:sukunimi henkilo)
                                           :oid                      (:oidHenkilo henkilo)
-                                          :lang                     (or (some (-> henkilo :asiointiKieli :kieliKoodi set)
+                                          :lang                     (or (some #{(-> henkilo :asiointiKieli :kieliKoodi)}
                                                                               ["fi" "sv" "en"])
                                                                         "fi")
                                           :ticket                   ticket
