@@ -146,7 +146,7 @@
 (defn- offending-priorization [should-be-higher should-be-lower]
   [:div.application__hakukohde-selected-row-priorization-invalid
    [:i.zmdi.zmdi-alert-circle]
-   [:h3 (get-translation :application-priorization-invalid)]
+   [:h3.application__hakukohde-selected-row-priorization-invalid-heading (get-translation :application-priorization-invalid)]
    [:div (first (get-translation :should-be-higher-priorization-than))
     [:em (str "\"" @(subscribe [:application/hakukohde-label should-be-higher]) "\"")]
     (last (get-translation :should-be-higher-priorization-than))
@@ -223,7 +223,8 @@
      (when (and (not hakukohde-selected?)
                 (not-empty rajaavat-hakukohteet))
        [:div.application__hakukohde-row--limit-reached
-        [:h3 (get-translation :application-limit-reached-in-hakukohderyhma)]
+        [:h3.application__hakukohde-row--limit-reached-heading
+         (get-translation :application-limit-reached-in-hakukohderyhma)]
         (doall (for [hakukohde rajaavat-hakukohteet]
                  ^{:key (str "limitting-hakukohde-" (:oid hakukohde))}
                  [:div.application__hakukohde-row--limitting-hakukohde
