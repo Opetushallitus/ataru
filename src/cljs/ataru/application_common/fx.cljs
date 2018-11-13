@@ -39,9 +39,9 @@
   (fn [title]
     (aset js/document "title" title)))
 
-(defn- validatep [{:keys [field-descriptor] :as params} priorisoivat-hakukohderyhmat]
+(defn- validatep [{:keys [field-descriptor] :as params}]
   (async/merge
-   (map (fn [v] (validator/validate (assoc params :validator v :has-applied has-applied :priorisoivat-hakukohderyhmat priorisoivat-hakukohderyhmat)))
+   (map (fn [v] (validator/validate (assoc params :validator v :has-applied has-applied)))
         (:validators field-descriptor))))
 
 (defn- all-valid? [valid-ch]
@@ -55,20 +55,20 @@
 (def validation-debounce-ms 500)
 
 (defn- async-validate-value
-  [{:keys [field-descriptor editing? on-validated] :as params} priorisoivat-hakukohderyhmat]
+  [{:keys [field-descriptor editing? on-validated] :as params}]
   (if (and editing? (:cannot-edit field-descriptor))
     (on-validated [true []])
-    (async/take! (all-valid? (validatep params priorisoivat-hakukohderyhmat))
+    (async/take! (all-valid? (validatep params))
                  (fn [result]
                    (on-validated result)))))
 
 (defn- async-validate-values
-  [{:keys [field-descriptor editing? on-validated values] :as params} priorisoivat-hakukohderyhmat]
+  [{:keys [field-descriptor editing? on-validated values] :as params}]
   (if (and editing? (:cannot-edit field-descriptor))
     (on-validated [true []])
     (async/take! (all-valid?
                    (async/merge
-                     (map (fn [value] (validatep (merge params {:value value}) priorisoivat-hakukohderyhmat))
+                     (map (fn [value] (validatep (merge params {:value value})))
                           values)))
                  (fn [result]
                    (on-validated result)))))
@@ -82,7 +82,8 @@
       (js/clearTimeout (@validation-debounces debounce-id))
       (swap! validation-debounces assoc debounce-id
         (js/setTimeout
-          #(async-validate-value params priorisoivat-hakukohderyhmat)
+          #(async-validate-value (-> params
+                                     (assoc :priorisoivat-hakukohderyhmat priorisoivat-hakukohderyhmat)))
           validation-debounce-ms)))))
 
 (re-frame/reg-fx
@@ -94,7 +95,8 @@
       (js/clearTimeout (@validation-debounces debounce-id))
       (swap! validation-debounces assoc debounce-id
         (js/setTimeout
-          #(async-validate-values params priorisoivat-hakukohderyhmat)
+          #(async-validate-values (-> params
+                                      (assoc :priorisoivat-hakukohderyhmat priorisoivat-hakukohderyhmat)))
           validation-debounce-ms)))))
 
 (defn- confirm-window-close!

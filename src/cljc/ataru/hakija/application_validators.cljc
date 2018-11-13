@@ -201,15 +201,33 @@
                                                                             (set hk-below)))))]
     [should-be-lower should-be-higher]))
 
+(defn limitting-hakukohderyhmat [tarjonta-hakukohteet rajaavat-hakukohderyhmat]
+  (let [exceeds-limit? (fn [s hakukohderyhma-oid frequency]
+                         (if (not-empty (->> rajaavat-hakukohderyhmat
+                                             (filter #(= (:hakukohderyhma-oid %) hakukohderyhma-oid))
+                                             (filter #(< (:raja %) frequency))))
+                           (cons hakukohderyhma-oid s)
+                           s))]
+    (some->> tarjonta-hakukohteet
+             (mapcat :hakukohderyhmat)
+             (frequencies)
+             (reduce-kv exceeds-limit? []))))
+
 (defn- hakukohteet?
-  [{:keys [value field-descriptor priorisoivat-hakukohderyhmat]}]
+  [{:keys [value field-descriptor tarjonta-hakukohteet priorisoivat-hakukohderyhmat rajaavat-hakukohderyhmat]}]
+(prn (first rajaavat-hakukohderyhmat))
   (let [hakukohde-options          (:options field-descriptor)
         num-answers                (count value)
         selected                   (parse-value value)
-        answers-subset-of-options? (clojure.set/subset? (set selected) (set (map :value hakukohde-options)))
-        offending?                 (first (filter (fn [hakukohde-oid]
-                                                    (seq (flatten (offending-priorization hakukohde-oid selected priorisoivat-hakukohderyhmat)))) selected))]
+        selected-set               (set (parse-value value))
+        answers-subset-of-options? (clojure.set/subset? selected-set (set (map :value hakukohde-options)))
+        limitting?                 (not-empty (limitting-hakukohderyhmat (->> tarjonta-hakukohteet
+                                                                    (filter (fn [{:keys [oid]}] (contains? selected-set oid))))
+                                                               rajaavat-hakukohderyhmat))
+        offending?                 (first (filter #(seq (flatten (offending-priorization % selected priorisoivat-hakukohderyhmat)))
+                                                  selected))]
     (cond
+     limitting? false
      offending? false
      (pos? (count hakukohde-options)) (if-let [max-hakukohteet (-> field-descriptor :params :max-hakukohteet)]
                                         (and (< 0 num-answers (inc max-hakukohteet)) answers-subset-of-options?)

@@ -368,26 +368,15 @@
             [:params :max-hakukohteet]
             nil)))
 
-(defn hakukohderyhma->rajaus [hakukohderyhma-oid rajaavat]
-  (->> rajaavat
-       (filter #(= (:hakukohderyhma-oid %) hakukohderyhma-oid))))
-
-(defn- rajaavat-hakukohteet [db hakukohde-oid]
-  (when-let [rajaavat (-> db :form :rajaavat-hakukohderyhmat)]
-    (when-let [hakukohderyhmat (->> (mapcat :hakukohderyhmat (hakukohteet-from-tarjonta db (set [hakukohde-oid])))
-                                    (mapcat #(hakukohderyhma->rajaus % rajaavat)))]
-      (let [selected-hakukohteet     (hakukohteet-from-tarjonta db (set (selected-hakukohteet db)))
-            selected-hakukohderyhmat (frequencies (mapcat :hakukohderyhmat selected-hakukohteet))]
-        (mapcat (fn [ryhma]
-                  (when-let [frequency (get selected-hakukohderyhmat (:hakukohderyhma-oid ryhma))]
-                    (if (<= (:raja ryhma) frequency)
-                      (filter #(contains? (set (:hakukohderyhmat %)) (:hakukohderyhma-oid ryhma)) selected-hakukohteet))))
-          hakukohderyhmat)))))
-
 (re-frame/reg-sub
   :application/rajaavat-hakukohteet
   (fn [db [_ hakukohde-oid]]
-    (rajaavat-hakukohteet db hakukohde-oid)))
+    (when-let [rajaavat (-> db :form :rajaavat-hakukohderyhmat)]
+      (let [hakukohteet                   (hakukohteet-from-tarjonta db (set (cons hakukohde-oid (selected-hakukohteet db))))
+            limitting-hakukohderyhma-oids (set (validators/limitting-hakukohderyhmat hakukohteet rajaavat))]
+        (->> hakukohteet
+             (filter #(not= hakukohde-oid (:oid %)))
+             (filter #(clojure.set/intersection limitting-hakukohderyhma-oids (set (:hakukohderyhmat %)))))))))
 
 (re-frame/reg-sub
   :application/hakukohteet-full?
