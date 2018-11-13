@@ -224,8 +224,8 @@
                 (not-empty rajaavat-hakukohteet))
        [:div.application__hakukohde-row--limit-reached
         [:h3 (get-translation :application-limit-reached-in-hakukohderyhma)]
-        (doall (for [hakukohde (doall rajaavat-hakukohteet)]
-                 ^{:key (str "dfsgdf-" (:oid hakukohde))}
+        (doall (for [hakukohde rajaavat-hakukohteet]
+                 ^{:key (str "limitting-hakukohde-" (:oid hakukohde))}
                  [:div.application__hakukohde-row--limitting-hakukohde
                   @(subscribe [:application/hakukohde-label (:oid hakukohde)])]))])]))
 

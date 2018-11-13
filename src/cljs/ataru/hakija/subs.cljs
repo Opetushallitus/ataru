@@ -387,7 +387,7 @@
 (re-frame/reg-sub
   :application/rajaavat-hakukohteet
   (fn [db [_ hakukohde-oid]]
-    (doall (rajaavat-hakukohteet db hakukohde-oid))))
+    (rajaavat-hakukohteet db hakukohde-oid)))
 
 (re-frame/reg-sub
   :application/hakukohteet-full?
