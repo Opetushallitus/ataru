@@ -373,13 +373,13 @@
        (filter #(= (:hakukohderyhma-oid %) hakukohderyhma-oid))))
 
 (defn- rajaavat-hakukohteet [db hakukohde-oid]
-  (if-let [rajaavat (-> db :form :rajaavat-hakukohderyhmat)]
-    (if-let [hakukohderyhmat (->> (mapcat :hakukohderyhmat (hakukohteet-from-tarjonta db (set [hakukohde-oid])))
-                                  (mapcat #(hakukohderyhma->rajaus % rajaavat)))]
+  (when-let [rajaavat (-> db :form :rajaavat-hakukohderyhmat)]
+    (when-let [hakukohderyhmat (->> (mapcat :hakukohderyhmat (hakukohteet-from-tarjonta db (set [hakukohde-oid])))
+                                    (mapcat #(hakukohderyhma->rajaus % rajaavat)))]
       (let [selected-hakukohteet     (hakukohteet-from-tarjonta db (set (selected-hakukohteet db)))
             selected-hakukohderyhmat (frequencies (mapcat :hakukohderyhmat selected-hakukohteet))]
         (mapcat (fn [ryhma]
-                  (if-let [frequency (get selected-hakukohderyhmat (:hakukohderyhma-oid ryhma))]
+                  (when-let [frequency (get selected-hakukohderyhmat (:hakukohderyhma-oid ryhma))]
                     (if (<= (:raja ryhma) frequency)
                       (filter #(contains? (set (:hakukohderyhmat %)) (:hakukohderyhma-oid ryhma)) selected-hakukohteet))))
           hakukohderyhmat)))))
