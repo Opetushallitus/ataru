@@ -801,6 +801,7 @@ SELECT
   a.haku,
   a.hakukohde AS hakutoiveet,
   a.content,
+  a.lang,
   lf.organization_oid AS "organization-oid"
 FROM latest_applications AS a
 JOIN application_reviews AS ar ON ar.application_key = a.key

@@ -468,15 +468,28 @@
 
 (defn- add-henkilo
   [henkilot application]
-  (-> application
-      (assoc :person (select-keys (get henkilot (:personOid application))
-                                  [:oidHenkilo
-                                   :etunimet
-                                   :syntymaaika
-                                   :hetu
-                                   :sukunimi
-                                   :asiointiKieli]))
-      (dissoc :personOid)))
+  (let [person        (get henkilot (:personOid application))
+        asiointikieli (or (:asiointiKieli person)
+                          (get {"fi" {:kieliKoodi  "fi"
+                                      :kieliTyyppi "suomi"}
+                                "sv" {:kieliKoodi  "sv"
+                                      :kieliTyyppi "svenska"}
+                                "en" {:kieliKoodi  "en"
+                                      :kieliTyyppi "English"}}
+                               (or (get {"1" "fi"
+                                         "2" "sv"
+                                         "3" "en"}
+                                        ((:keyValues application) "asiointikieli"))
+                                   (:lang application))))]
+    (-> application
+        (assoc :person (select-keys person
+                                    [:oidHenkilo
+                                     :etunimet
+                                     :syntymaaika
+                                     :hetu
+                                     :sukunimi]))
+        (assoc-in [:person :asiointiKieli] asiointikieli)
+        (dissoc :personOid :lang))))
 
 (defn siirto-applications
   [tarjonta-service organization-service person-service session hakukohde-oid application-keys]
