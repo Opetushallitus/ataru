@@ -172,32 +172,41 @@
     (every? string? value) value
     (every? map? value) (map :value value)))
 
+(defn- partition-above-and-below
+  [match? coll]
+  (let [not-match? (fn [coll]
+                     (every? (comp not match?) coll))
+        parts      (partition-by match? coll)
+        above      (take-while not-match? parts)
+        below      (->> (drop-while not-match? parts)
+                        (filter not-match?))]
+    [(flatten above) (flatten below)]))
+
 (defn offending-priorization [hakukohde-oid selected priorisoivat-hakukohderyhmat]
-  (let [priorisoivat     (->> priorisoivat-hakukohderyhmat
-                              (mapcat (fn [o] (filter #(contains? (set %) hakukohde-oid) (:prioriteetit o))))
-                              (map (fn [o] (partition-by #(= hakukohde-oid %) o))))
-        priorities       (group-by second (map-indexed (fn [a b] [a b]) selected))
-        this-priority    (ffirst (get priorities hakukohde-oid))
-        as-priorities    (fn [hakukohde-oids]
-                           (->> hakukohde-oids
-                                (filter #(contains? selected %))
-                                (map #(first (get priorities %)))))
-        should-be-lower  (->> (mapcat last priorisoivat)
-                              (as-priorities)
-                              (filter #(> (first %) this-priority))
-                              (map second))
-        should-be-higher (->> (mapcat first priorisoivat)
-                              (as-priorities)
-                              (filter #(< (first %) this-priority))
-                              (map second))]
+  (let [priorities-above-and-below (->> priorisoivat-hakukohderyhmat
+                                        (filter (fn [ryhma] (contains? (set (flatten (:prioriteetit ryhma))) hakukohde-oid)))
+                                        (map :prioriteetit)
+                                        (map
+                                         #(partition-above-and-below (fn [j]
+                                                                       (contains? (set j) hakukohde-oid)) %)))
+        [hk-above hk-below] (partition-above-and-below (fn [h]
+                                                         (= hakukohde-oid h)) selected)
+        should-be-lower            (->> priorities-above-and-below
+                                        (mapcat (fn [[_ below]]
+                                                  (clojure.set/intersection (set below)
+                                                                            (set hk-above)))))
+        should-be-higher           (->> priorities-above-and-below
+                                        (mapcat (fn [[above _]]
+                                                  (clojure.set/intersection (set above)
+                                                                            (set hk-below)))))]
     [should-be-lower should-be-higher]))
 
 (defn- hakukohteet?
   [{:keys [value field-descriptor priorisoivat-hakukohderyhmat]}]
   (let [hakukohde-options          (:options field-descriptor)
         num-answers                (count value)
-        selected                   (set (parse-value value))
-        answers-subset-of-options? (clojure.set/subset? selected (set (map :value hakukohde-options)))
+        selected                   (parse-value value)
+        answers-subset-of-options? (clojure.set/subset? (set selected) (set (map :value hakukohde-options)))
         offending?                 (first (filter (fn [hakukohde-oid]
                                                     (seq (flatten (offending-priorization hakukohde-oid selected priorisoivat-hakukohderyhmat)))) selected))]
     (cond

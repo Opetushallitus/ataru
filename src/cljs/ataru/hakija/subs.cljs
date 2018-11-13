@@ -322,7 +322,7 @@
 (re-frame/reg-sub
   :application/hakukohde-offending-priorization?
   (fn [db [_ hakukohde-oid]]
-    (let [selected                     (set (selected-hakukohteet db))
+    (let [selected                     (selected-hakukohteet db)
           priorisoivat-hakukohderyhmat @(re-frame/subscribe [:application/priorisoivat-hakukohderyhmat])]
       (validators/offending-priorization hakukohde-oid selected priorisoivat-hakukohderyhmat))))
 
