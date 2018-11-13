@@ -96,42 +96,47 @@
              [:div.profile__organization-link-name org-str]]
             (when @org-select-visible?
               [:div.profile__organization-select
-               [:div.profile__organization-select-username-container
-                [:i.profile__organization-select-username-icon.zmdi.zmdi-account.zmdi-hc-lg]
-                [:span.profile__organization-select-username-name (str (:name @user-info) " (" (:oid @user-info) ")")]]
-               (into
+               [:div.profile__organization-select-header
+                [:div.profile__organization-select-username-container
+                 [:i.profile__organization-select-username-icon.zmdi.zmdi-account.zmdi-hc-lg]
+                 [:span.profile__organization-select-username-name (str (:name @user-info) " (" (:oid @user-info) ")")]]
+                [:button.profile__organization-select-close-button
+                 {:on-click #(swap! org-select-visible? not)}
+                 [:i.zmdi.zmdi-close]]]
+               [:div.profile__organization-select-content
+                (into
                  [:ul.profile__organization-select-user-orgs.zmdi-hc-ul]
                  (map
-                   (fn [org] [:li [:i.zmdi.zmdi-hc-li.zmdi-accounts] org])
-                   (create-org-labels (or selected-organization organizations) @lang)))
-               (when selected-organization
-                 [:div
-                  (when (:superuser? @user-info)
-                    [organization-rights-select])
-                  [:a.profile__reset-to-default-organization
-                   {:on-click #(dispatch [:editor/remove-selected-organization])}
-                   (s/format "%s (%s)"
-                             (get-virkailija-translation :reset-organization)
-                             (org-label organizations nil))]])
-               [:h4.profile__organization-select-title (get-virkailija-translation :change-organization)]
-               [:input.editor-form__text-field.profile__organization-select-input
-                {:type        "text"
-                 :placeholder (get-virkailija-translation :search-sub-organizations)
-                 :value       @(subscribe [:state-query [:editor :organizations :query]])
-                 :on-change   #(dispatch [:editor/update-organization-select-query (.-value (.-target %))])}]
-               (into
+                  (fn [org] [:li [:i.zmdi.zmdi-hc-li.zmdi-accounts] org])
+                  (create-org-labels (or selected-organization organizations) @lang)))
+                (when selected-organization
+                  [:div
+                   (when (:superuser? @user-info)
+                     [organization-rights-select])
+                   [:a.profile__reset-to-default-organization
+                    {:on-click #(dispatch [:editor/remove-selected-organization])}
+                    (s/format "%s (%s)"
+                              (get-virkailija-translation :reset-organization)
+                              (org-label organizations nil))]])
+                [:h4.profile__organization-select-title (get-virkailija-translation :change-organization)]
+                [:input.editor-form__text-field.profile__organization-select-input
+                 {:type        "text"
+                  :placeholder (get-virkailija-translation :search-sub-organizations)
+                  :value       @(subscribe [:state-query [:editor :organizations :query]])
+                  :on-change   #(dispatch [:editor/update-organization-select-query (.-value (.-target %))])}]
+                (into
                  [:ul.profile__organization-select-results.zmdi-hc-ul
                   (map
-                    (fn [{:keys [oid name]}]
-                      [:li.profile__organization-select-result
-                       {:key (str "organization-match-" oid)}
-                       [:a
-                        {:on-click #(dispatch [:editor/select-organization oid])}
-                        [:i.zmdi.zmdi-hc-li.zmdi-accounts]
-                        (get-label name)]])
-                    @search-results)])
-               (when (< 10 (count @search-results))
-                 [:div.profile__organization-more-results (get-virkailija-translation :more-results-refine-search)])])]])))))
+                   (fn [{:keys [oid name]}]
+                     [:li.profile__organization-select-result
+                      {:key (str "organization-match-" oid)}
+                      [:a
+                       {:on-click #(dispatch [:editor/select-organization oid])}
+                       [:i.zmdi.zmdi-hc-li.zmdi-accounts]
+                       (get-label name)]])
+                   @search-results)])
+                (when (< 10 (count @search-results))
+                  [:div.profile__organization-more-results (get-virkailija-translation :more-results-refine-search)])]])]])))))
 
 (defn status []
   (let [flash    (subscribe [:state-query [:flash]])

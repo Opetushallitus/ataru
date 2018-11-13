@@ -128,6 +128,7 @@
 .profile__organization-link {
   display: block;
   position: relative;
+  color: white;
   &:hover {
     color: @pale-blue;
   }
@@ -161,13 +162,45 @@
   text-align: start;
   background-color: white;
   width: 450px;
-  padding: 15px;
   font-size: 13px;
   line-height: 21px;
   color: @text-color;
 }
 
+.profile__organization-select-content {
+  padding: 0 15px 15px 15px;
+}
+
+.profile__organization-select-header {
+  padding: 15px 15px 0px 15px;
+  display: flex;
+  align-items: center;
+}
+
+.profile__organization-select-close-button {
+  flex: initial;
+  margin: 0px;
+  padding: 0px;
+  width: 28px;
+  border: 0;
+  color: @section-gray-border;
+  background-color: white;
+  cursor: pointer;
+  font-size: 20px;
+  &:focus {
+    outline: none;
+  }
+  &::-moz-focus-inner {
+    border: 0;
+  }
+  &:hover {
+    border: 0;
+    background-color: @control-button-hover-blue;
+  }
+}
+
 .profile__organization-select-username-container {
+  flex: 1;
   margin-left: 7px;
 }
 
