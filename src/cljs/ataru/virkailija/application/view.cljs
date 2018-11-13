@@ -1587,22 +1587,23 @@
            [application-hakukohde-selection]
            (when (not-empty @attachment-reviews-for-hakukohde)
              [:div.application-handling__attachment-review-toggle-container
-              {:on-click (fn []
-                           (when-not @settings-visible
-                             (let [show? (not @show-attachment-review?)]
-                               (dispatch [:state-update #(assoc-in % [:application :show-attachment-reviews?] show?)])
-                               (if show?
-                                 (reset! show-attachment-review? show?)
-                                 (js/setTimeout #(reset! show-attachment-review? show?) 500)))))}
               (when @settings-visible
                 [review-settings-checkbox :attachment-handling])
-              [:span.application-handling__attachment-review-toggle
-               (if @show-attachment-review?
-                 [:span [:i.zmdi.zmdi-chevron-right] [:i.zmdi.zmdi-chevron-right]]
-                 [:span [:i.zmdi.zmdi-chevron-left] [:i.zmdi.zmdi-chevron-left]])]
-              (gstring/format "%s (%d)"
-                              (get-virkailija-translation :attachments)
-                              (count @attachment-reviews-for-hakukohde))])
+              [:span.application-handling__attachment-review-toggle-container-link
+               {:on-click (fn []
+                            (when-not @settings-visible
+                              (let [show? (not @show-attachment-review?)]
+                                (dispatch [:state-update #(assoc-in % [:application :show-attachment-reviews?] show?)])
+                                (if show?
+                                  (reset! show-attachment-review? show?)
+                                  (js/setTimeout #(reset! show-attachment-review? show?) 500)))))}
+               [:span.application-handling__attachment-review-toggle
+                (if @show-attachment-review?
+                  [:span [:i.zmdi.zmdi-chevron-right] [:i.zmdi.zmdi-chevron-right]]
+                  [:span [:i.zmdi.zmdi-chevron-left] [:i.zmdi.zmdi-chevron-left]])]
+               (gstring/format "%s (%d)"
+                               (get-virkailija-translation :attachments)
+                               (count @attachment-reviews-for-hakukohde))]])
            [application-hakukohde-review-inputs review-states/hakukohde-review-types]
            (when @(subscribe [:application/show-info-request-ui?])
              [application-information-request])
