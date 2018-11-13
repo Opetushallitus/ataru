@@ -103,7 +103,7 @@
 
       function reviewNotes() { return testFrame().find('.application-handling__review-note-input') }
 
-      function reviewNotesSubmitButton() { return testFrame().find('.application-handling__general-review-note-submit-button') }
+      function reviewNotesSubmitButton() { return testFrame().find('.application-handling__review-note-submit-button') }
 
       function score() { return testFrame().find('.application-handling__score-input') }
 

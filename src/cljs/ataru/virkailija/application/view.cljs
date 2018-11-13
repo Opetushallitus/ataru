@@ -1075,7 +1075,7 @@
                                       (not= @review-note (:notes @(subscribe [:state-query [:application :review-notes
                                                                                             (first @selected-notes-idx)]])))))]
       [:div.application-handling__review-state-selected-container
-       [:textarea.application-handling__review-note-input.application-handling__eligibility-state-comment
+       [:textarea.application-handling__review-note-input
         {:value       @review-note
          :placeholder (get-virkailija-translation :rejection-reason)
          :on-change   (fn [event]
@@ -1322,13 +1322,13 @@
                                        (every? (comp not :animated?) @review-notes)))]
     (fn []
       [:div.application-handling__review-row.application-handling__review-row--notes-row
-       [:input.application-handling__review-note-input
+       [:textarea.application-handling__review-note-input
         {:type      "text"
          :value     @input-value
          :on-change (fn [event]
                       (let [review-comment (.. event -target -value)]
                         (dispatch [:application/set-review-comment-value review-comment])))}]
-       [:button.application-handling__general-review-note-submit-button
+       [:button.application-handling__review-note-submit-button
         {:type     "button"
          :class    (if @button-enabled?
                      "application-handling__review-note-submit-button--enabled"
