@@ -188,22 +188,23 @@
           true)))))
 
 (defn- selectable [content application lang question-group-idx]
-  [:div.application__form-field-label--selectable
-   [:div.application__form-field-label (some (:label content) [lang :fi :sv :en])]
-   (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
-                                      (some? question-group-idx)
-                                      (nth question-group-idx))
-                              vector
-                              flatten
-                              set)
-         selected-options (filter #(contains? values (:value %))
-                                  (:options content))
-         values-wo-option (remove (fn [value]
-                                    (some #(= value (:value %))
-                                          selected-options))
-                                  values)]
-     [:div.application-handling__nested-container
-      (doall
+  [:div.application__form-field
+   [:div.application__form-field-label--selectable
+    [:div.application__form-field-label (some (:label content) [lang :fi :sv :en])]
+    (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
+                                       (some? question-group-idx)
+                                       (nth question-group-idx))
+                               vector
+                               flatten
+                               set)
+          selected-options (filter #(contains? values (:value %))
+                                   (:options content))
+          values-wo-option (remove (fn [value]
+                                     (some #(= value (:value %))
+                                           selected-options))
+                                   values)]
+      [:div.application-handling__nested-container
+       (doall
         (for [option selected-options]
           ^{:key (:value option)}
           [:div
@@ -214,14 +215,14 @@
               (for [followup (:followups option)]
                 ^{:key (:id followup)}
                 [field followup application lang])])]))
-      (doall
+       (doall
         (for [value values-wo-option]
           ^{:key (str "unknown-option-" value)}
           [:div
            [:p.application__text-field-paragraph
             (if value
               (str (get-virkailija-translation :unknown-option) " " value)
-              (str (get-virkailija-translation :empty-option)))]]))])])
+              (str (get-virkailija-translation :empty-option)))]]))])]])
 
 (defn- haku-row [haku-name haku-oid]
   [:div.application__form-field
