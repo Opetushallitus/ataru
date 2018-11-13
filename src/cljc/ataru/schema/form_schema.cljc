@@ -481,6 +481,19 @@
    :hakutoiveet [s/Str]
    :keyValues   {s/Str Value}})
 
+(s/defschema SiirtoApplication
+  {:hakemusOid  s/Str
+   :person      {:oidHenkilo    s/Str
+                 :etunimet      s/Str
+                 :syntymaaika   s/Str
+                 :hetu          (s/maybe s/Str)
+                 :sukunimi      s/Str
+                 :asiointiKieli {:kieliKoodi  s/Str
+                                 :kieliTyyppi s/Str}}
+   :hakuOid     (s/maybe s/Str)
+   :hakutoiveet [s/Str]
+   :keyValues   {s/Str Value}})
+
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"
                          "received-from-applicant"

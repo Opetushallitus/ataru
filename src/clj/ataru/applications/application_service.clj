@@ -465,3 +465,38 @@
       {:yksiloimattomat yksiloimattomat
        :applications    applications})
     {:unauthorized nil}))
+
+(defn- add-henkilo
+  [henkilot application]
+  (-> application
+      (assoc :person (select-keys (get henkilot (:personOid application))
+                                  [:oidHenkilo
+                                   :etunimet
+                                   :syntymaaika
+                                   :hetu
+                                   :sukunimi
+                                   :asiointiKieli]))
+      (dissoc :personOid)))
+
+(defn siirto-applications
+  [tarjonta-service organization-service person-service session hakukohde-oid application-keys]
+  (if-let [applications (aac/siirto-applications
+                         tarjonta-service
+                         organization-service
+                         session
+                         hakukohde-oid
+                         application-keys)]
+    (let [henkilot        (->> applications
+                               (map :personOid)
+                               distinct
+                               (person-service/get-persons person-service))
+          yksiloimattomat (->> henkilot
+                               (keep (fn [[oid h]]
+                                       (when-not (or (:yksiloity h)
+                                                     (:yksiloityVTJ h))
+                                         oid)))
+                               distinct
+                               seq)]
+      {:yksiloimattomat yksiloimattomat
+       :applications    (map (partial add-henkilo henkilot) applications)})
+    {:unauthorized nil}))
