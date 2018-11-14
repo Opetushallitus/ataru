@@ -647,6 +647,9 @@ and (max-width: 1000px) {
   position: relative;
   margin-bottom: 15px;
   padding-top: 8px;
+ }
+
+.application-handling__attachment-review-toggle-container-link {
   cursor: pointer;
   &:hover {
     text-decoration: underline;
@@ -737,6 +740,7 @@ and (max-width: 1000px) {
 .application-handling__applicant-links {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
 }
 
 .application-handling__review-area-main-heading-person-icon {
@@ -1258,6 +1262,7 @@ and (max-width: 1000px) {
 
 .application-handling__review-state-row:hover {
   background-color: @application-form-list-background-color;
+  cursor: pointer;
 }
 
 .application-handling__review-state-row--mass-update {
@@ -1887,26 +1892,13 @@ th.application__readonly-adjacent--header {
   color: @sg-color-red;
 }
 
-.application__search-control-search-term-input::-webkit-input-placeholder { /* Chrome/Opera/Safari */
-  color: @sg-gray-lighten-3;
+.application__search-control-search-term-input::placeholder {
+  color: @gray;
   font-style: italic;
   font-size: 15px;
 }
 
-.application__search-control-search-term-input::-moz-placeholder { /* Chrome/Opera/Safari */
-  color: @sg-gray-lighten-3;
-  font-style: italic;
-  font-size: 15px;
-}
-
-.application__search-control-search-term-input:-ms-input-placeholder { /* IE 10+ */
-  color: @sg-gray-lighten-3;
-  font-style: italic;
-  font-size: 15px;
-}
-
-
-.application__search-control-search-term-input:-moz-placeholder { /* Firefox 18- */
+.application__search-control-search-term-input:focus::placeholder {
   color: @sg-gray-lighten-3;
   font-style: italic;
   font-size: 15px;
