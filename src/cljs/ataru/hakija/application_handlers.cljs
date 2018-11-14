@@ -564,14 +564,15 @@
                       (set-multi-value-changed id key)
                       (set-field-visibility field))]
       {:db                 new-db
-       :validate-debounced {:value             value
-                            :answers-by-key    answers
-                            :field-descriptor  field
-                            :editing?          (get-in new-db [:application :editing?])
-                            :virkailija?       (contains? (:application new-db) :virkailija-secret)
-                            :on-validated      (fn [[valid? errors]]
-                                                 (dispatch [:application/set-application-field-valid
-                                                            field valid? errors]))}})))
+       :validate-debounced {:value                        value
+                            :priorisoivat-hakukohderyhmat (get-in new-db [:form :priorisoivat-hakukohderyhmat])
+                            :answers-by-key               answers
+                            :field-descriptor             field
+                            :editing?                     (get-in new-db [:application :editing?])
+                            :virkailija?                  (contains? (:application new-db) :virkailija-secret)
+                            :on-validated                 (fn [[valid? errors]]
+                                                            (dispatch [:application/set-application-field-valid
+                                                                       field valid? errors]))}})))
 
 
 (defn- set-repeatable-field-values
@@ -649,20 +650,21 @@
                      (set-repeatable-field-values field-descriptor value data-idx question-group-idx)
                      (set-repeatable-field-value field-descriptor question-group-idx))]
       {:db                 new-db
-       :validate-debounced {:value             value
-                            :answers           (get-in new-db [:application :answers])
-                            :field-descriptor  field-descriptor
-                            :editing?          (get-in new-db [:application :editing?])
-                            :group-idx         question-group-idx
-                            :field-idx         data-idx
-                            :virkailija?       (contains? (:application new-db) :virkailija-secret)
-                            :on-validated      (fn [[valid? _]]
-                                                 (dispatch [:application/set-repeatable-application-field-valid
-                                                            field-descriptor
-                                                            question-group-idx
-                                                            data-idx
-                                                            (required? field-descriptor)
-                                                            valid?]))}})))
+       :validate-debounced {:value                        value
+                            :priorisoivat-hakukohderyhmat (get-in new-db [:form :priorisoivat-hakukohderyhmat])
+                            :answers                      (get-in new-db [:application :answers])
+                            :field-descriptor             field-descriptor
+                            :editing?                     (get-in new-db [:application :editing?])
+                            :group-idx                    question-group-idx
+                            :field-idx                    data-idx
+                            :virkailija?                  (contains? (:application new-db) :virkailija-secret)
+                            :on-validated                 (fn [[valid? _]]
+                                                            (dispatch [:application/set-repeatable-application-field-valid
+                                                                       field-descriptor
+                                                                       question-group-idx
+                                                                       data-idx
+                                                                       (required? field-descriptor)
+                                                                       valid?]))}})))
 
 
 (defn- remove-repeatable-field-value
@@ -769,17 +771,19 @@
                  (set-multi-value-changed id :value))]
       (if question-group-idx
         {:db                       db
-         :validate-every-debounced {:values            (get-in db [:application :answers id :value])
-                                    :answers-by-key    (get-in db [:application :answers])
-                                    :field-descriptor  field-descriptor
-                                    :editing?          (get-in db [:application :editing?])
-                                    :virkailija?       (contains? (:application db) :virkailija-secret)
-                                    :on-validated      (fn [[valid? errors]]
-                                                         (dispatch [:application/set-multiple-choice-valid
-                                                                    field-descriptor
-                                                                    valid?]))}}
+         :validate-every-debounced {:values                       (get-in db [:application :answers id :value])
+                                    :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
+                                    :answers-by-key               (get-in db [:application :answers])
+                                    :field-descriptor             field-descriptor
+                                    :editing?                     (get-in db [:application :editing?])
+                                    :virkailija?                  (contains? (:application db) :virkailija-secret)
+                                    :on-validated                 (fn [[valid? errors]]
+                                                                    (dispatch [:application/set-multiple-choice-valid
+                                                                               field-descriptor
+                                                                               valid?]))}}
         {:db                 (set-field-visibility db field-descriptor)
          :validate-debounced {:value             (get-in db [:application :answers id :value])
+                              :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
                               :answers-by-key    (get-in db [:application :answers])
                               :field-descriptor  field-descriptor
                               :editing?          (get-in db [:application :editing?])
@@ -808,27 +812,28 @@
                               (assoc-in value-path new-value)
                               (update-in button-path (fn [answer]
                                                        (assoc answer :value (mapv (partial mapv :value)
-                                                                                  (:values answer)))))
+                                                                              (:values answer)))))
                               (set-multi-value-changed id :value))
                           (-> db
                               (assoc-in value-path new-value)
                               (set-multi-value-changed id :value)
                               (set-field-visibility field-descriptor)))]
       {:db                 (set-validator-processing db id)
-       :validate-debounced {:value             new-value
-                            :answers-by-key    (get-in db [:application :answers])
-                            :field-descriptor  field-descriptor
-                            :editing?          (get-in db [:application :editing?])
-                            :group-idx         question-group-idx
-                            :field-idx         0
-                            :virkailija?       (contains? (:application db) :virkailija-secret)
-                            :on-validated      (fn [[valid? errors]]
-                                                 (dispatch [:application/set-repeatable-application-field-valid
-                                                            field-descriptor
-                                                            question-group-idx
-                                                            0
-                                                            (required? field-descriptor)
-                                                            valid?]))}})))
+       :validate-debounced {:value                        new-value
+                            :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
+                            :answers-by-key               (get-in db [:application :answers])
+                            :field-descriptor             field-descriptor
+                            :editing?                     (get-in db [:application :editing?])
+                            :group-idx                    question-group-idx
+                            :field-idx                    0
+                            :virkailija?                  (contains? (:application db) :virkailija-secret)
+                            :on-validated                 (fn [[valid? errors]]
+                                                            (dispatch [:application/set-repeatable-application-field-valid
+                                                                       field-descriptor
+                                                                       question-group-idx
+                                                                       0
+                                                                       (required? field-descriptor)
+                                                                       valid?]))}})))
 
 (reg-event-fx
   :application/set-adjacent-field-answer
@@ -838,20 +843,21 @@
                      (set-repeatable-field-values field-descriptor value idx question-group-idx)
                      (set-repeatable-field-value field-descriptor question-group-idx))]
       {:db                 new-db
-       :validate-debounced {:value             value
-                            :answers-by-key    (get-in new-db [:application :answers])
-                            :field-descriptor  field-descriptor
-                            :editing?          (get-in new-db [:application :editing?])
-                            :field-idx         (or idx 0)
-                            :group-idx         (or question-group-idx 0)
-                            :virkailija?       (contains? (:application new-db) :virkailija-secret)
-                            :on-validated      (fn [[valid? errors]]
-                                                 (dispatch [:application/set-repeatable-application-field-valid
-                                                            field-descriptor
-                                                            question-group-idx
-                                                            idx
-                                                            (required? field-descriptor)
-                                                            valid?]))}})))
+       :validate-debounced {:value                        value
+                            :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
+                            :answers-by-key               (get-in new-db [:application :answers])
+                            :field-descriptor             field-descriptor
+                            :editing?                     (get-in new-db [:application :editing?])
+                            :field-idx                    (or idx 0)
+                            :group-idx                    (or question-group-idx 0)
+                            :virkailija?                  (contains? (:application new-db) :virkailija-secret)
+                            :on-validated                 (fn [[valid? errors]]
+                                                            (dispatch [:application/set-repeatable-application-field-valid
+                                                                       field-descriptor
+                                                                       question-group-idx
+                                                                       idx
+                                                                       (required? field-descriptor)
+                                                                       valid?]))}})))
 
 (reg-event-fx
   :application/add-adjacent-fields
@@ -964,20 +970,21 @@
                  [:application :answers id :values attachment-idx])]
       {:db                 (-> db
                                (update-in path
-                                          merge
-                                          {:value response :valid true :status :ready})
+                                 merge
+                                 {:value response :valid true :status :ready})
                                (set-validator-processing id)
                                (set-multi-value-changed id :values))
-       :validate-debounced {:value            (get-in db path)
-                            :answers-by-key   (get-in db [:application :answers])
-                            :field-descriptor field-descriptor
-                            :editing?         (get-in db [:application :editing?])
-                            :virkailija?      (contains? (:application db) :virkailija-secret)
-                            :on-validated     (fn [[valid? errors]]
-                                                (dispatch [:application/set-attachment-valid
-                                                           id
-                                                           (required? field-descriptor)
-                                                           valid?]))}})))
+       :validate-debounced {:value                        (get-in db path)
+                            :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
+                            :answers-by-key               (get-in db [:application :answers])
+                            :field-descriptor             field-descriptor
+                            :editing?                     (get-in db [:application :editing?])
+                            :virkailija?                  (contains? (:application db) :virkailija-secret)
+                            :on-validated                 (fn [[valid? errors]]
+                                                            (dispatch [:application/set-attachment-valid
+                                                                       id
+                                                                       (required? field-descriptor)
+                                                                       valid?]))}})))
 
 (reg-event-db
   :application/handle-attachment-progress
