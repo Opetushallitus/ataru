@@ -238,3 +238,8 @@
   :editor/virkailija-lang
   (fn [db _]
     (or (-> db :editor :user-info :lang keyword) :fi)))
+
+(re-frame/reg-sub
+  :editor/autosave-enabled?
+  (fn [db _]
+    (some? (-> db :editor :autosave))))

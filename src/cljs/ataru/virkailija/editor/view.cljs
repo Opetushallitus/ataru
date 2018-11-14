@@ -193,6 +193,18 @@
             (get-virkailija-translation :remove-lock)
             (get-virkailija-translation :lock-form))]]))))
 
+(defn- disable-autosave
+  []
+  (let [autosave-enabled (subscribe [:editor/autosave-enabled?])]
+    (fn []
+      [:div.editor-form__preview-buttons
+       [:a.editor-form__autosave-toggle-link
+        {:on-click #(dispatch [:editor/toggle-autosave])
+         :class    (when-not @autosave-enabled "editor-form__autosave-toggle-link--autosave-off")}
+        (if @autosave-enabled
+          "Automaattitalletus: päällä"
+          "Automaattitalletus: pois päältä")]])))
+
 (defn- form-toolbar [form]
   (let [languages @(subscribe [:editor/languages])
         lang      (subscribe [:editor/virkailija-lang])]
@@ -206,7 +218,8 @@
        [:a.editor-form__email-template-editor-link
         {:on-click #(dispatch [:editor/toggle-email-template-editor])}
         (get-virkailija-translation :edit-email-templates )]]
-      [lock-form-editing]]
+      [lock-form-editing]
+      [disable-autosave]]
      [:div.editor-form__toolbar-right
       [fold-all]]]))
 

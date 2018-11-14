@@ -373,6 +373,16 @@
       (update-in [:editor :used-by-haut] dissoc :haut)
       (update-in [:editor :used-by-haut] dissoc :hakukohderyhmat))))
 
+(defn- create-autosave-loop
+  ([new-form]
+   (create-autosave-loop new-form nil))
+  ([new-form old-form]
+   (autosave/interval-loop {:last-autosaved-form old-form
+                            :subscribe-path      [:editor :forms (:key new-form)]
+                            :changed-predicate   editor-autosave-predicate
+                            :handler             (fn [form previous-autosave-form-at-time-of-dispatch]
+                                                   (dispatch [:editor/save-form form new-form]))})))
+
 (reg-event-db
   :editor/handle-fetch-form
   (fn [db [_ {:keys [key deleted] :as response} _]]
@@ -387,11 +397,7 @@
           (assoc-in [:editor :selected-form-key] key)
           (fold-all)
           (assoc-in [:editor :save-snapshot] new-form)
-          (assoc-in [:editor :autosave]
-                    (autosave/interval-loop {:subscribe-path    [:editor :forms key]
-                                             :changed-predicate editor-autosave-predicate
-                                             :handler           (fn [form previous-autosave-form-at-time-of-dispatch]
-                                                                  (dispatch [:editor/save-form form new-form]))})))))))
+          (assoc-in [:editor :autosave] (create-autosave-loop new-form)))))))
 
 (defn- fetch-form-content-fx
   [form-id]
@@ -943,3 +949,20 @@
                                         (when rights
                                           (str "?rights=" (clojure.string/join "&rights=" rights))))
               :handler-or-dispatch :editor/update-selected-organization}})))
+
+(reg-event-db
+  :editor/toggle-autosave
+  (fn [db _]
+    (let [form-key         (-> db :editor :selected-form-key)
+          form             (-> db :editor :forms form-key)
+          autosave-stop-fn (-> db :editor :autosave)]
+      (if (fn? autosave-stop-fn)
+        (when (autosave-stop-fn)
+          {:db (-> db
+                   (assoc-in [:editor :last-autosaved-form] form)
+                   (update :editor dissoc :autosave))})
+        (let [new-autosave (when form
+                             (create-autosave-loop form (get-in db [:editor :last-autosaved-form])))]
+          {:db (-> db
+                   (update :editor dissoc :last-autosaved-form)
+                   (assoc-in [:editor :autosave] new-autosave))})))))
