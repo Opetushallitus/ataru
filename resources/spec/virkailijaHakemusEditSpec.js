@@ -81,12 +81,12 @@
       before(
         function() {return loadInFrame('/hakemus?virkailija-secret=' + virkailijaSecret)},
         wait.until(function () {
-          return testFrame().find('.application__error-display').length == 1;
+          return testFrame().find('.application__message-display').length == 1;
         })
       )
 
       it('shows error', function() {
-        expect(testFrame().find('.application__error-display').text()).to.include('{:status 400, :status-text "Bad Request", :failure :error, :response {:error "Invalid virkailija secret"}}')
+        expect(testFrame().find('.application__message-display').text()).to.include('{:status 400, :status-text "Bad Request", :failure :error, :response {:error "Invalid virkailija secret"}}')
       })
     })
   });
