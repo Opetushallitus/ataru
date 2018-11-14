@@ -318,7 +318,7 @@ You will receive a confirmation of your application to your email."}
    :network-offline                             {:fi "Ei yhteyttä verkkoon."
                                                  :sv "Network is offline."
                                                  :en "Network is offline."}
-   :internal-server-error                       {:fi "Tapahtui palvelin virhe."
+   :internal-server-error                       {:fi "Tapahtui palvelinvirhe."
                                                  :sv "Internal server error."
                                                  :en "Internal server error."}})
 
