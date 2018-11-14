@@ -86,7 +86,7 @@
       )
 
       it('shows error', function() {
-        expect(testFrame().find('.application__message-display').text()).to.include('{:status 400, :status-text "Bad Request", :failure :error, :response {:error "Invalid virkailija secret"}}')
+        expect(testFrame().find('.application__message-display').text()).to.include('vanhentunut')
       })
     })
   });

@@ -62,7 +62,8 @@
           (response/unauthorized {:secret-expired true
                                   :lang           lang-override})
           (:virkailija secret)
-          (response/bad-request {:error "Invalid virkailija secret"})
+          (response/bad-request {:code :secret-expired
+                                 :error "Invalid virkailija secret"})
 
           :else
           (response/not-found {:error "No application found"}))))
@@ -222,7 +223,8 @@
                              person-service)
 
             :else
-            (response/bad-request {:error "No secret given"})))
+            (response/bad-request {:code :secret-expired
+                                   :error "No secret given"})))
     (api/POST "/send-application-secret" []
       :summary "Sends application link with fresh secret to applicant"
       :body [request {:old-secret s/Str}]

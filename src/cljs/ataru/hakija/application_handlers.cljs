@@ -137,11 +137,17 @@
   :application/handle-submit-response
   handle-submit)
 
+(defn response->error-message [db response]
+  (prn response)
+  (assoc db :error {:code    (keyword (get-in response [:response :code] :internal-server-error))
+                    :message "Tapahtui virhe "
+                    :detail  (str response)}))
+
 (reg-event-fx
   :application/handle-submit-error
   (fn [cofx [_ response]]
     {:db (-> (update (:db cofx) :application dissoc :submit-status)
-             (assoc :error {:code :internal-server-error :message "Tapahtui virhe " :detail response}))}))
+             (response->error-message response))}))
 
 (reg-event-fx
   :application/submit
@@ -711,8 +717,7 @@
     (remove-repeatable-field-value db field-descriptor data-idx question-group-idx)))
 
 (defn default-error-handler [db [_ response]]
-  (prn response)
-  (assoc db :error {:code :internal-server-error :message "Tapahtui virhe " :detail (str response)}))
+  (response->error-message db response))
 
 (defn application-run-rules [db rule]
   (if (not-empty rule)
