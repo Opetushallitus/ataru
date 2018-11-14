@@ -141,7 +141,7 @@
   :application/handle-submit-error
   (fn [cofx [_ response]]
     {:db (-> (update (:db cofx) :application dissoc :submit-status)
-             (assoc :error {:message "Tapahtui virhe " :detail response}))}))
+             (assoc :error {:code :internal-server-error :message "Tapahtui virhe " :detail response}))}))
 
 (reg-event-fx
   :application/submit
@@ -515,6 +515,20 @@
      :dispatch [:application/post-handle-form-dispatches]}))
 
 (reg-event-db
+  :application/network-online
+  (fn [db [_ flash]]
+    (if (= :network-offline (get-in db [:error :code]))
+      (dissoc db :error)
+      db)))
+
+(reg-event-db
+  :application/network-offline
+  (fn [db [_ flash]]
+    (if (get db :error)
+      db
+      (assoc-in db [:error :code] :network-offline))))
+
+(reg-event-db
   :application/initialize-db
   initialize-db)
 
@@ -697,7 +711,8 @@
     (remove-repeatable-field-value db field-descriptor data-idx question-group-idx)))
 
 (defn default-error-handler [db [_ response]]
-  (assoc db :error {:message "Tapahtui virhe " :detail (str response)}))
+  (prn response)
+  (assoc db :error {:code :internal-server-error :message "Tapahtui virhe " :detail (str response)}))
 
 (defn application-run-rules [db rule]
   (if (not-empty rule)

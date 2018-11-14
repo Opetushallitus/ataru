@@ -58,8 +58,14 @@
     (or (get cfg "enable-re-frisk")
         (= (get cfg "environment-name") "luokka"))))
 
+
+(defn network-listener []
+  (.addEventListener js/window "online" (fn [] (re-frame/dispatch [:application/network-online])))
+  (.addEventListener js/window "offline" (fn [] (re-frame/dispatch [:application/network-offline]))))
+
 (defn ^:export init []
   (cljs-util/set-global-error-handler! #(post "/hakemus/api/client-error" %))
+  (network-listener)
   (mount-root)
   (re-frame/dispatch-sync [:application/initialize-db])
   (when (re-frisk-environment?)

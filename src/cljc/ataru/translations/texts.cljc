@@ -314,7 +314,13 @@ You will receive a confirmation of your application to your email."}
                                                  :en "Edit"}
    :preview-answers                             {:fi "Esikatselu"
                                                  :sv "Förhandsvisa"
-                                                 :en "Preview"}})
+                                                 :en "Preview"}
+   :network-offline                             {:fi "Ei yhteyttä verkkoon."
+                                                 :sv "Network is offline."
+                                                 :en "Network is offline."}
+   :internal-server-error                       {:fi "Tapahtui palvelin virhe."
+                                                 :sv "Internal server error."
+                                                 :en "Internal server error."}})
 
 (def general-texts
   {:yes                {:en "Yes"
