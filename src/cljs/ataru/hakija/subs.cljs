@@ -373,10 +373,13 @@
   (fn [db [_ hakukohde-oid]]
     (when-let [rajaavat (-> db :form :rajaavat-hakukohderyhmat)]
       (let [hakukohteet                   (hakukohteet-from-tarjonta db (set (cons hakukohde-oid (selected-hakukohteet db))))
+            hakukohde                     (first (filter #(= (:oid %) hakukohde-oid) hakukohteet))
+            hakukohteet                   (filter #(not-empty (clojure.set/intersection (set (:hakukohderyhmat %))
+                                                                                        (set (:hakukohderyhmat hakukohde)))) hakukohteet)
             limitting-hakukohderyhma-oids (set (validators/limitting-hakukohderyhmat hakukohteet rajaavat))]
         (->> hakukohteet
              (filter #(not= hakukohde-oid (:oid %)))
-             (filter #(clojure.set/intersection limitting-hakukohderyhma-oids (set (:hakukohderyhmat %)))))))))
+             (filter #(not-empty (clojure.set/intersection limitting-hakukohderyhma-oids (set (:hakukohderyhmat %))))))))))
 
 (re-frame/reg-sub
   :application/hakukohteet-full?

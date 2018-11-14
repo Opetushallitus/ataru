@@ -269,7 +269,7 @@
                                                       :prioriteetit [["1.2.246.562.20.49028100003"] ["1.2.246.562.20.49028100001"]]
                                                       :hakukohderyhma-oid "1.2.246.562.28.00000000001"})
   (hakukohderyhmat/insert-rajaava-hakukohderyhma {:haku-oid "1.2.246.562.29.65950024187"
-                                                  :raja 3
+                                                  :raja 2
                                                   :hakukohderyhma-oid "1.2.246.562.28.00000000001"}))
 
 (defn init-db-fixture []
