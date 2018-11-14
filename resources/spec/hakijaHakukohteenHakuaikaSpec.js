@@ -87,6 +87,9 @@
                 expect(testFrame().find('.application__hakukohde-selected-row-priorization-invalid').length).to.equal(2)
                 expect(invalidFieldNames().join(";")).to.equal("Hakukohteet")
             })
+            it('doesnt allow adding hakutoive when limit is reached', function() {
+                expect(testFrame().find('.application__hakukohde-row--limit-reached-heading').length).to.equal(1)
+            })
         })
 
     })
