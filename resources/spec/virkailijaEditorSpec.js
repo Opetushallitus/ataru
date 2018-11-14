@@ -534,7 +534,7 @@
                     return component().find('.belongs-to-hakukohteet__modal-toggle')
                 }),
                 clickElement(function() {
-                    return component().find('.belongs-to-hakukohteet-modal__hakukohde-list-item')
+                    return component().find('.hakukohde-and-hakukohderyhma-category-list-item')
                 })
             );
             it('shows the selected hakukohde', function() {

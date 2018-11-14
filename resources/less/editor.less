@@ -1276,7 +1276,7 @@ input.editor-form__text-field ~ .editor-form__markdown-anchor {
       position: absolute;
       width: 20px;
       height: 20px;
-      background: @element-header-background;
+      background: white;
       transform: rotate(135deg);
       top: 6px;
       left: 5px;
@@ -1285,10 +1285,11 @@ input.editor-form__text-field ~ .editor-form__markdown-anchor {
   }
 
   &__box {
-    background: @element-header-background;
+    background: white;
     margin-bottom: 6px;
     border-radius: 4px;
     box-shadow: @modal-shadow;
+    width: 650px;
   }
 
   &__no-haku-row {
@@ -1307,21 +1308,16 @@ input.editor-form__text-field ~ .editor-form__markdown-anchor {
 
   &__input-row {
     display: flex;
+    padding-left: 24px;
   }
 
   &__search-container {
     flex: 1;
+    padding-top: 24px;
   }
 
-  &__search {
-    width: 434px;
-    margin-top: 24px;
-    margin-bottom: 14px;
-    margin-left: 24px;
-    padding: 6px;
-    border: 1px solid #c1c1c1;
-    border-radius: 2px;
-    font-size: 14px;
+  &__content {
+    padding: 24px;
   }
 
   &__hide {
@@ -1340,63 +1336,6 @@ input.editor-form__text-field ~ .editor-form__markdown-anchor {
     font-size: 14px;
     padding-left: 24px;
     padding-bottom: 14px;
-  }
-
-  &__haku-list {
-    height: 500px;
-    width: 650px;
-    overflow-y: scroll;
-    list-style: none;
-    margin: 0px;
-    padding-left: 24px;
-    padding-right: 24px;
-  }
-
-  &__haku-list-item {
-    padding-bottom: 14px;
-    &:last-child {
-      padding-bottom: 0px;
-    }
-  }
-
-  &__hakukohde-list {
-    list-style: none;
-    padding-left: 24px;
-    padding-top: 14px;
-  }
-
-  &__hakukohde-list-item {
-    padding-bottom: 12px;
-    list-style: none;
-    &:last-child {
-      padding-bottom: 0px;
-    }
-  }
-  &__hakukohde-list-item--show-more {
-    text-align: center;
-    .unselectable
-  }
-  &__hakukohde-list-item--selected {
-    list-style-image: url('/lomake-editori/images/icon_check.png');
-  }
-
-  &__haku-label {
-    color: @grey;
-    font-size: 14px;
-  }
-
-  &__hakukohde-label {
-    color: @pale-blue;
-    font-size: 14px;
-    cursor: pointer;
-  }
-
-  &__hakukohde-label--selected {
-    color: @grey;
-  }
-
-  &__hakukohde-label--highlighted {
-    background: #B7E3F1;
   }
 }
 

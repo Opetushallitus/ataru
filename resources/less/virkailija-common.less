@@ -190,3 +190,57 @@ body {
 .virkailija-modal-enabled {
   overflow: hidden;
 }
+
+.hakukohde-and-hakukohderyhma-search-input {
+  width: 100%;
+  font-size: 16px;
+  padding: 10px;
+  border: 1px solid @section-gray-border;
+  border-radius: 2px;
+}
+
+.hakukohde-and-hakukohderyhma-search-listing {
+  list-style: none;
+  padding: 0px;
+  margin: 0px;
+}
+
+.hakukohde-and-hakukohderyhma-category-name {
+  display: inline-block;
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+
+.hakukohde-and-hakukohderyhma-category-list {
+  list-style: none;
+  margin: 0px 0px 14px 0px;
+  padding: 0px 0px 0px 24px;
+}
+
+.hakukohde-and-hakukohderyhma-category-list-item {
+  margin-bottom: 8px;
+  &--selected {
+    list-style-image: url('/lomake-editori/images/icon_check.png');
+  }
+  &--show-more {
+    text-align: center;
+  }
+}
+
+.hakukohde-and-hakukohderyhma-list-item-label {
+  font-size: 14px;
+  color: @link-color;
+  cursor: pointer;
+  &--selected {
+    color: @text-color;
+  }
+  &--highlighted {
+    background: #B7E3F1;
+  }
+}
+
+.hakukohde-and-hakukohderyhma-show-more {
+  font-size: 14px;
+  color: @link-color;
+  cursor: pointer;
+}

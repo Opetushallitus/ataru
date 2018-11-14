@@ -109,7 +109,7 @@
                     (str (when (selected? id)
                            "hakukohde-and-hakukohderyhma-list-item-label--selected")
                          (when hilight
-                           "hakukohde-and-hakukohderyhma-list-item-label--highlighted"))}
+                           " hakukohde-and-hakukohderyhma-list-item-label--highlighted"))}
                    text])
                 label-parts)])
 
