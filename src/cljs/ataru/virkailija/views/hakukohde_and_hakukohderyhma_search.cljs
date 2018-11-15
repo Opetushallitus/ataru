@@ -186,3 +186,14 @@
          hakukohde-selected?
          on-hakukohde-select
          on-hakukohde-unselect]))]))
+
+(defn popup
+  [header-component content-component on-close]
+  [:div.hakukohde-and-hakukohderyhma-search-popup
+   [:div.hakukohde-and-hakukohderyhma-search-popup-header
+    header-component
+    [:button.virkailija-close-button
+     {:on-click on-close}
+     [:i.zmdi.zmdi-close]]]
+   [:div.hakukohde-and-hakukohderyhma-search-popup-content
+    content-component]])

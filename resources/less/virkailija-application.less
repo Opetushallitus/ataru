@@ -2224,19 +2224,24 @@ th.application__readonly-adjacent--header {
   color: @text-color;
 }
 
-.application-handling__dropdown-box-closed {
+.application-handling__hakukohde-rajaus-toggle-button {
+  display: inline-block;
   color: @pale-blue;
+  background-color: white;
+  border: 0px;
+  padding: 0px;
   cursor: pointer;
-  margin-top: 2px;
-  margin-left: 3px;
+  &:focus {
+    border: 0px;
+    outline: none;
+  }
+  &::-moz-focus-inner {
+    border: 0px;
+  }
   &:hover {
+    border: 0px;
     color: @selected-blue;
   }
-}
-
-.application-handling__dropdown-box-closed-label {
-  margin-left: 7px;
-  display: inline;
 }
 
 .application-handling__review-deactivate-toggle {

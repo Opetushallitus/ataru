@@ -303,11 +303,9 @@
 
 (defn- closed-row
   [on-click label]
-  [:div.application-handling__dropdown-box-closed
+  [:button.application-handling__hakukohde-rajaus-toggle-button
    {:on-click on-click}
-   [:i.zmdi.zmdi-chevron-down]
-   [:p.application-handling__dropdown-box-closed-label
-    (or label [:i.zmdi.zmdi-spinner.spin])]])
+   (or label [:i.zmdi.zmdi-spinner.spin])])
 
 (defn- row-component
   [close-list href label description selected?]
@@ -352,11 +350,21 @@
           (if-let [haku-name @(subscribe [:application/haku-name haku-oid])]
             haku-name
             [:i.zmdi.zmdi-spinner.spin])]
+         (closed-row (if @list-opened close-list open-list)
+                     (cond (some? selected-hakukohde-oid)
+                           @(subscribe [:application/hakukohde-name
+                                        selected-hakukohde-oid])
+                           (some? selected-hakukohderyhma-oid)
+                           @(subscribe [:application/hakukohderyhma-name
+                                        selected-hakukohderyhma-oid])
+                           :else
+                           (get-virkailija-translation :all-hakukohteet)))
          (when @list-opened
-           [:div.application-handling__dropdown-box-opened
+           [h-and-h/popup
             [h-and-h/search-input
              {:id                       haku-oid
               :haut                     [{:oid         haku-oid
+                                          :name        (get virkailija-texts :hakukohteet)
                                           :hakukohteet hakukohteet}]
               :hakukohderyhmat          hakukohderyhmat
               :hakukohde-selected?      #(= selected-hakukohde-oid %)
@@ -364,6 +372,7 @@
             [h-and-h/search-listing
              {:id                         haku-oid
               :haut                       [{:oid         haku-oid
+                                            :name        (get virkailija-texts :hakukohteet)
                                             :hakukohteet hakukohteet}]
               :hakukohderyhmat            hakukohderyhmat
               :hakukohde-selected?        #(= selected-hakukohde-oid %)
@@ -386,16 +395,8 @@
               :on-hakukohderyhma-unselect #(do (close-list)
                                                (dispatch
                                                 [:application/navigate
-                                                 (str "/lomake-editori/applications/haku/" haku-oid)]))}]])
-         (closed-row open-list
-                     (cond (some? selected-hakukohde-oid)
-                           @(subscribe [:application/hakukohde-name
-                                        selected-hakukohde-oid])
-                           (some? selected-hakukohderyhma-oid)
-                           @(subscribe [:application/hakukohderyhma-name
-                                        selected-hakukohderyhma-oid])
-                           :else
-                           (get-virkailija-translation :all-hakukohteet)))]))))
+                                                 (str "/lomake-editori/applications/haku/" haku-oid)]))}]
+            close-list])]))))
 
 (defn selected-applications-heading
   [haku-data list-heading]

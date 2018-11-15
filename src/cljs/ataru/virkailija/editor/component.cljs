@@ -68,42 +68,31 @@
         on-change       (fn [e] (dispatch [:editor/on-belongs-to-hakukohteet-modal-search-term-change
                                            id (.-value (.-target e))]))]
     (fn [path id selected-hakukohteet selected-hakukohderyhmat]
-      [:div.belongs-to-hakukohteet-modal
-       [:div.belongs-to-hakukohteet-modal__arrow-up]
-       (if @used-by-haku?
-         [:div.belongs-to-hakukohteet-modal__box
-          [:div.belongs-to-hakukohteet-modal__input-row
-           [:div.belongs-to-hakukohteet-modal__search-container
-            [h-and-h/search-input
-             {:id                       id
-              :haut                     (map second @haut)
-              :hakukohderyhmat          @hakukohderyhmat
-              :hakukohde-selected?      #(contains? (set selected-hakukohteet) %)
-              :hakukohderyhma-selected? #(contains? (set selected-hakukohderyhmat) %)}]]
-           [:button.belongs-to-hakukohteet-modal__hide
-            {:on-click on-click}
-            [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
-          [:div.belongs-to-hakukohteet-modal__content
-           (if @fetching?
-             [:div.belongs-to-hakukohteet-modal__spinner
-              [:i.zmdi.zmdi-spinner.spin]]
-             [h-and-h/search-listing
-              {:id                         id
-               :haut                       (map second @haut)
-               :hakukohderyhmat            @hakukohderyhmat
-               :hakukohde-selected?        #(contains? (set selected-hakukohteet) %)
-               :hakukohderyhma-selected?   #(contains? (set selected-hakukohderyhmat) %)
-               :on-hakukohde-select        #(dispatch [:editor/add-to-belongs-to-hakukohteet path %])
-               :on-hakukohde-unselect      #(dispatch [:editor/remove-from-belongs-to-hakukohteet path %])
-               :on-hakukohderyhma-select   #(dispatch [:editor/add-to-belongs-to-hakukohderyhma path %])
-               :on-hakukohderyhma-unselect #(dispatch [:editor/remove-from-belongs-to-hakukohderyhma path %])}])]]
-         [:div.belongs-to-hakukohteet-modal__box
-          [:div.belongs-to-hakukohteet-modal__no-haku-row
-           [:p.belongs-to-hakukohteet-modal__no-haku
-            (get-virkailija-translation :set-haku-to-form)]
-           [:button.belongs-to-hakukohteet-modal__hide
-            {:on-click on-click}
-            [:i.zmdi.zmdi-close.zmdi-hc-lg]]]])])))
+      (if @used-by-haku?
+        [h-and-h/popup
+         [h-and-h/search-input
+          {:id                       id
+           :haut                     (map second @haut)
+           :hakukohderyhmat          @hakukohderyhmat
+           :hakukohde-selected?      #(contains? (set selected-hakukohteet) %)
+           :hakukohderyhma-selected? #(contains? (set selected-hakukohderyhmat) %)}]
+         [h-and-h/search-listing
+          {:id                         id
+           :haut                       (map second @haut)
+           :hakukohderyhmat            @hakukohderyhmat
+           :hakukohde-selected?        #(contains? (set selected-hakukohteet) %)
+           :hakukohderyhma-selected?   #(contains? (set selected-hakukohderyhmat) %)
+           :on-hakukohde-select        #(dispatch [:editor/add-to-belongs-to-hakukohteet path %])
+           :on-hakukohde-unselect      #(dispatch [:editor/remove-from-belongs-to-hakukohteet path %])
+           :on-hakukohderyhma-select   #(dispatch [:editor/add-to-belongs-to-hakukohderyhma path %])
+           :on-hakukohderyhma-unselect #(dispatch [:editor/remove-from-belongs-to-hakukohderyhma path %])}]
+         #(dispatch [:editor/hide-belongs-to-hakukohteet-modal id])]
+        [h-and-h/popup
+         [:div.belongs-to-hakukohteet-modal__no-haku-row
+          [:p.belongs-to-hakukohteet-modal__no-haku
+           (get-virkailija-translation :set-haku-to-form)]]
+         nil
+         #(dispatch [:editor/hide-belongs-to-hakukohteet-modal id])]))))
 
 (defn- belongs-to-hakukohderyhma
   [path oid]
@@ -139,27 +128,24 @@
 
 (defn- belongs-to-hakukohteet
   [path initial-content]
-  (let [id              (:id initial-content)
-        on-click-show   (fn [_]
-                          (dispatch [:editor/show-belongs-to-hakukohteet-modal id]))
-        on-click-hide   (fn [_]
-                          (dispatch [:editor/hide-belongs-to-hakukohteet-modal id]))
-        show-modal?     (subscribe [:editor/show-belongs-to-hakukohteet-modal id])
-        modal-toggle-id (util/new-uuid)
-        form-locked?    (subscribe [:editor/form-locked?])]
+  (let [id            (:id initial-content)
+        on-click-show (fn [_]
+                        (dispatch [:editor/show-belongs-to-hakukohteet-modal id]))
+        on-click-hide (fn [_]
+                        (dispatch [:editor/hide-belongs-to-hakukohteet-modal id]))
+        show-modal?   (subscribe [:editor/show-belongs-to-hakukohteet-modal id])
+        form-locked?  (subscribe [:editor/form-locked?])]
     (fn [path initial-content]
       (let [visible-to                 (:belongs-to-hakukohteet initial-content)
             visible-to-hakukohderyhmat (:belongs-to-hakukohderyhma initial-content)]
         [:div.belongs-to-hakukohteet
-         [:label.belongs-to-hakukohteet__modal-toggle-label
-          {:for modal-toggle-id}
-          (str (get-virkailija-translation :visibility-on-form) " ")]
          [:button.belongs-to-hakukohteet__modal-toggle
-          {:id       modal-toggle-id
-           :disabled @form-locked?
+          {:disabled @form-locked?
            :class    (when @form-locked? "belongs-to-hakukohteet__modal-toggle--disabled")
            :on-click (when-not @form-locked?
                        (if @show-modal? on-click-hide on-click-show))}
+          (str (get-virkailija-translation :visibility-on-form) " ")]
+         [:span.belongs-to-hakukohteet__modal-toggle-label
           (if (and (empty? visible-to) (empty? visible-to-hakukohderyhmat))
             (get-virkailija-translation :visible-to-all)
             (get-virkailija-translation :visible-to-hakukohteet))]
