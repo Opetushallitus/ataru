@@ -307,21 +307,6 @@
    {:on-click on-click}
    (or label [:i.zmdi.zmdi-spinner.spin])])
 
-(defn- row-component
-  [close-list href label description selected?]
-  [:a.application-handling__dropdown-box-item
-   {:href     href
-    :on-click close-list}
-   (if selected?
-     [:img.application-handling__dropdown-box-item-selected-icon
-      {:src "/lomake-editori/images/icon_check.png"}]
-     [:span.application-handling__dropdown-box-item-selected-icon])
-   (if label
-     [:div
-      [:span.application-handling__dropdown-box-item--label label]
-      [:span.application-handling__dropdown-box-item--description description]]
-     [:i.zmdi.zmdi-spinner.spin])])
-
 (defn- ensisijaisesti
   []
   (let [ensisijaisesti? @(subscribe [:application/ensisijaisesti?])]
@@ -759,53 +744,52 @@
             (map (fn [[id label]] (application-filter-checkbox filters label nil :base-education id)))
             (doall))])))
 
-(defn- rajaava-hakukohde-row
-  [close-list oid haku-oid hakukohderyhma-oid selected?]
-  (let [name        @(subscribe [:application/hakukohde-name oid])
-        description @(subscribe [:application/tarjoaja-name oid])]
-    (row-component close-list
-                   (str "/lomake-editori/applications/haku/" haku-oid "/hakukohderyhma/" hakukohderyhma-oid "?ensisijaisesti=true&rajaus-hakukohteella=" oid)
-                   name
-                   description
-                   selected?)))
-
 (defn- select-rajaava-hakukohde [opened?]
-  (if @opened?
-    (let [close                         #(reset! opened? false)
-          [haku-oid hakukohderyhma-oid] @(subscribe [:state-query [:application :selected-hakukohderyhma]])
-          ryhman-ensisijainen-hakukohde @(subscribe [:state-query [:application :selected-ryhman-ensisijainen-hakukohde]])
-          ryhman-hakukohteet            @(subscribe [:application/selected-hakukohderyhma-hakukohteet])]
-      [:div.application-handling__dropdown-box-opened.application-handling__dropdown-box-opened__rajaus-hakukohteella
-       (row-component close
-                      (str "/lomake-editori/applications/haku/" haku-oid "/hakukohderyhma/" hakukohderyhma-oid "?ensisijaisesti=true")
-                      (get-virkailija-translation :all-hakukohteet)
-                      nil
-                      (nil? ryhman-ensisijainen-hakukohde))
-       (let [hakukohde-sorted-oids (->> ryhman-hakukohteet
-                                        (map (fn [hakukohde-oid]
-                                               [@(subscribe [:application/hakukohde-name hakukohde-oid])
-                                                hakukohde-oid]))
-                                        (sort-by first)
-                                        (map second))]
-         (doall
-           (for [hakukohde-oid hakukohde-sorted-oids]
-             ^{:key hakukohde-oid}
-             [rajaava-hakukohde-row
-              close
-              hakukohde-oid
-              haku-oid
-              hakukohderyhma-oid
-              (= ryhman-ensisijainen-hakukohde hakukohde-oid)])))])
-    (let [ryhman-ensisijainen-hakukohde @(subscribe [:state-query [:application :selected-ryhman-ensisijainen-hakukohde]])
-          label                         (if (nil? ryhman-ensisijainen-hakukohde)
-                                          (get-virkailija-translation :all-hakukohteet)
-                                          @(subscribe [:application/hakukohde-name ryhman-ensisijainen-hakukohde]))]
-      [:div.application-handling__dropdown-box-closed
-       {:on-click (fn []
-                    (reset! opened? true))}
-       [:i.zmdi.zmdi-chevron-down]
-       [:p.application-handling__dropdown-box-closed-label
-        (or label [:i.zmdi.zmdi-spinner.spin])]])))
+  (let [ryhman-ensisijainen-hakukohde @(subscribe [:state-query [:application :selected-ryhman-ensisijainen-hakukohde]])]
+    [:div.application-handling__ensisijaisesti-hakukohteeseen
+     [:button.application-handling__ensisijaisesti-hakukohteeseen-popup-button
+      {:on-click #(swap! opened? not)}
+      (if (nil? ryhman-ensisijainen-hakukohde)
+        (get-virkailija-translation :all-hakukohteet)
+        (or @(subscribe [:application/hakukohde-name ryhman-ensisijainen-hakukohde])
+            [:i.zmdi.zmdi-spinner.spin]))]
+     (when @opened?
+       (let [close                         #(reset! opened? false)
+             [haku-oid hakukohderyhma-oid] @(subscribe [:state-query [:application :selected-hakukohderyhma]])
+             ryhman-ensisijainen-hakukohde @(subscribe [:state-query [:application :selected-ryhman-ensisijainen-hakukohde]])
+             ryhman-hakukohteet            @(subscribe [:application/selected-hakukohderyhma-hakukohteet])]
+         [h-and-h/popup
+          [h-and-h/search-input
+           {:id                       (str haku-oid "-" hakukohderyhma-oid)
+            :haut                     [{:oid         haku-oid
+                                        :hakukohteet ryhman-hakukohteet}]
+            :hakukohderyhmat          []
+            :hakukohde-selected?      #(= ryhman-ensisijainen-hakukohde %)
+            :hakukohderyhma-selected? (constantly false)}]
+          [h-and-h/search-listing
+           {:id                         (str haku-oid "-" hakukohderyhma-oid)
+            :haut                       [{:oid         haku-oid
+                                          :hakukohteet ryhman-hakukohteet}]
+            :hakukohderyhmat            []
+            :hakukohde-selected?        #(= ryhman-ensisijainen-hakukohde %)
+            :hakukohderyhma-selected?   (constantly false)
+            :on-hakukohde-select        #(do (close)
+                                             (dispatch
+                                              [:application/navigate
+                                               (str "/lomake-editori/applications/haku/"
+                                                    haku-oid
+                                                    "/hakukohderyhma/" hakukohderyhma-oid
+                                                    "?ensisijaisesti=true&rajaus-hakukohteella=" %)]))
+            :on-hakukohde-unselect      #(do (close)
+                                             (dispatch
+                                              [:application/navigate
+                                               (str "/lomake-editori/applications/haku/"
+                                                    haku-oid
+                                                    "/hakukohderyhma/" hakukohderyhma-oid
+                                                    "?ensisijaisesti=true")]))
+            :on-hakukohderyhma-select   (fn [])
+            :on-hakukohderyhma-unselect (fn [])}]
+          close]))]))
 
 (defn- application-filters
   []
