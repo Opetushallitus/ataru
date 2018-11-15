@@ -200,23 +200,24 @@
 (defn should-search? [search-term]
   (> (count search-term) 1))
 
+(defn- term-text-matches
+  [text matches index term]
+  (if-let [match-start (clojure.string/index-of text term index)]
+    (let [match-end (+ match-start (count term))]
+      (recur text (conj matches [match-start match-end]) match-end term))
+    matches))
+
 (defn- text-matches
-  [text search-terms]
+  [text search-terms all-terms-must-match?]
   (let [text         (clojure.string/lower-case text)
         search-terms (->> search-terms
                           (filter should-search?)
-                          (map clojure.string/lower-case))]
-    (apply concat
-           (for [search-term search-terms]
-             (loop [res           []
-                    current-index 0]
-               (let [match-index (clojure.string/index-of text search-term current-index)
-                     match-end   (when match-index (+ match-index (count search-term)))]
-                 (if (nil? match-index)
-                   res
-                   (recur
-                     (conj res [match-index match-end])
-                     match-end))))))))
+                          (map clojure.string/lower-case))
+        matches      (map (partial term-text-matches text [] 0) search-terms)]
+    (if (and all-terms-must-match?
+             (some empty? matches))
+      []
+      (mapcat identity matches))))
 
 (defn- combine-overlapping-matches
   [text-matches]
@@ -229,12 +230,12 @@
     []
     (sort text-matches)))
 
-(defn match-text [text search-terms]
+(defn match-text [text search-terms all-terms-must-match?]
   (if (or (empty? search-terms)
           (every? false? (map should-search? search-terms)))
     [{:text text :hilight false}]
     (let [highlights (-> text
-                         (text-matches search-terms)
+                         (text-matches search-terms all-terms-must-match?)
                          (combine-overlapping-matches))]
       (loop [res           []
              current-index 0

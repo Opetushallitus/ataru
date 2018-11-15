@@ -15,7 +15,7 @@
 
 (defn hilight-text [text hilight-text]
   (if (some? text)
-    (map-indexed hilighted-text->span (util/match-text text (clojure.string/split hilight-text #"\s+")))
+    (map-indexed hilighted-text->span (util/match-text text (clojure.string/split hilight-text #"\s+") false))
     [:span ""]))
 
 (defn- hakukohde-remove-event-handler [e]

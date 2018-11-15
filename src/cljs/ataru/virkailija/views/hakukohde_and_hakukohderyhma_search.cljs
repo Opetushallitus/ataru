@@ -22,7 +22,8 @@
 (defn- hakukohderyhma->hakukohderyhma-hit
   [lang search-terms hakukohderyhma]
   (let [parts (util/match-text (hakukohderyhma->name lang hakukohderyhma)
-                               search-terms)]
+                               search-terms
+                               true)]
     {:id          (:oid hakukohderyhma)
      :label-parts parts
      :match?      (or (not-empty (rest parts))
@@ -31,7 +32,8 @@
 (defn- hakukohde->hakukohde-hit
   [lang search-terms hakukohde]
   (let [parts (util/match-text (hakukohde->hakukohde-name lang hakukohde)
-                               search-terms)]
+                               search-terms
+                               true)]
     {:id          (:oid hakukohde)
      :label-parts parts
      :match?      (or (not-empty (rest parts))
