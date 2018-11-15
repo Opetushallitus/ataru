@@ -1095,6 +1095,9 @@ You will receive a confirmation of your application to your email."}
    :person-not-individualized                   {:fi "Hakijaa ei ole yksilöity."
                                                  :sv "Sökande har inte individualiserats."
                                                  :en "EN: Hakijaa ei ole yksilöity."}
+   :individualize-in-henkilopalvelu             {:fi "Tee yksilöinti henkilöpalvelussa."
+                                                 :sv "Tee yksilöinti henkilöpalvelussa."
+                                                 :en "Tee yksilöinti henkilöpalvelussa."}
    :pohjakoulutus_am                            {:fi "Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"
                                                  :sv "I Finland avlagd yrkesinriktad grundexamen, examen på skolnivå, institutnivå eller inom yrkesutbildning på högre nivå"
                                                  :en "EN: Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"}
