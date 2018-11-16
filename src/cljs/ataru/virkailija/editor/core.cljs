@@ -13,15 +13,6 @@
             [cljs-uuid-utils.core :as uuid]
             [taoensso.timbre :refer-macros [spy debug error]]))
 
-(reg-sub
-  :editor/get-component-value
-  (fn [db [_ & path]]
-    (get-in db
-      (flatten
-        (concat
-          [:editor :forms (-> db :editor :selected-form-key) :content]
-          path)))))
-
 (defn soresu->reagent [content path & args]
   (fn [content path & args]
     (let [children  (map-indexed

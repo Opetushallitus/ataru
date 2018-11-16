@@ -11,6 +11,20 @@
     (get-in db [:editor :forms (get-in db [:editor :selected-form-key])])))
 
 (re-frame/reg-sub
+  :editor/top-level-content
+  (fn [_ _]
+    (re-frame/subscribe [:editor/selected-form]))
+  (fn top-level-content [form [_ i]]
+    (get-in form [:content i])))
+
+(re-frame/reg-sub
+  :editor/get-component-value
+  (fn [[_ & path] _]
+    (re-frame/subscribe [:editor/top-level-content (first (flatten path))]))
+  (fn get-component-value [component [_ & path]]
+    (get-in component (rest (flatten path)))))
+
+(re-frame/reg-sub
   :editor/languages
   (fn [db]
     (let [lang-path [:editor :forms (get-in db [:editor :selected-form-key]) :languages]
