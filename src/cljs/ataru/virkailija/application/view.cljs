@@ -1690,7 +1690,7 @@
               [:span.application-handling__review-area-main-heading-person-oid
                (get-virkailija-translation :person-completed-education)]])
            (when (> applications-count 1)
-             [:a
+             [:a.application-handling__review-area-main-heading-applications-link
               {:on-click (fn [_]
                            (dispatch [:application/navigate
                                       (str "/lomake-editori/applications/search"
