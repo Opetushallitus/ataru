@@ -1203,8 +1203,10 @@
        :dispatch                [:application/select-application next-application-key selected-hakukohde false]})))
 
 (reg-event-fx
-  :application/scroll-list-to-previously-closed-application
+  :application/scroll-list-to-selected-or-previously-closed-application
   (fn [{:keys [db]} _]
-    (when-let [application-key (-> db :application :previously-closed-application)]
+    (when-let [application-key (or
+                                 (-> db :application :previously-closed-application)
+                                 (-> db :application :selected-key))]
       {:db                            (update db :application dissoc :previously-closed-application)
        :scroll-to-application-in-list application-key})))

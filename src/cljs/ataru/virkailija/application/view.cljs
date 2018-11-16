@@ -590,7 +590,7 @@
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
         expanded?    (subscribe [:state-query [:application :application-list-expanded?]])]
     (r/create-class
-      {:component-did-update #(dispatch [:application/scroll-list-to-previously-closed-application])
+      {:component-did-update #(dispatch [:application/scroll-list-to-selected-or-previously-closed-application])
        :reagent-render       (fn [applications]
                                (into [:div.application-handling__list
                                       {:class (str (when (= true @expanded?) "application-handling__list--expanded")
@@ -598,9 +598,7 @@
                                        :id    "application-handling-list"}]
                                      (for [application applications
                                            :let [selected? (= @selected-key (:key application))]]
-                                       (if selected?
-                                         [cljs-util/wrap-scroll-to [application-list-row application selected?]]
-                                         [application-list-row application selected?]))))})))
+                                       [application-list-row application selected?])))})))
 
 (defn- toggle-state-filter!
   [hakukohde-filters states filter-kw filter-id selected?]
