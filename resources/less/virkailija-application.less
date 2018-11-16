@@ -693,6 +693,7 @@ and (max-width: 1000px) {
 .application-handling__navigation {
   margin-right: 100px;
   margin-top: 15px;
+  .unselectable;
 }
 
 .application-handling__navigation-link {
@@ -2411,7 +2412,6 @@ th.application__readonly-adjacent--header {
   margin-bottom: 10px;
 }
 
-
 .application__message-display {
   margin-top: 0;
   margin-left: 0;
@@ -2443,6 +2443,7 @@ th.application__readonly-adjacent--header {
   align-items: center;
 }
 .application__message-display--notification {
+  margin-top: 15px;
   border-color: @application-notification-display-border-color;
   overflow: hidden;
   .application__message-display--details {
@@ -2455,3 +2456,4 @@ th.application__readonly-adjacent--header {
     background-color: @application-notification-display-border-color;
   }
 }
+
