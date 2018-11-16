@@ -81,14 +81,14 @@
 
 
 (defn custom-add-component [toolbar path generator]
-  (let [mouse-over? (r/atom false)
-        form-locked (subscribe [:editor/current-form-locked])]
+  (let [mouse-over?  (r/atom false)
+        form-locked? (subscribe [:editor/form-locked?])]
     (fn [toolbar path generator]
       [:div.editor-form__add-component-toolbar
-       {:class          (when @form-locked "disabled")
+       {:class          (when @form-locked? "disabled")
         :on-mouse-enter #(reset! mouse-over? true)
         :on-mouse-leave #(reset! mouse-over? false)}
-       (cond @form-locked
+       (cond @form-locked?
              [:div.plus-component.plus-component--disabled [:span "+"]]
              @mouse-over?
              [component-toolbar path toolbar generator]

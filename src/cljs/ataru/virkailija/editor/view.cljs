@@ -91,22 +91,22 @@
 (defn- editor-name-input [lang focus?]
   (let [form              (subscribe [:editor/selected-form])
         new-form-created? (subscribe [:state-query [:editor :new-form-created?]])
-        form-locked       (subscribe [:editor/current-form-locked])]
+        form-locked?      (subscribe [:editor/form-locked?])]
     (r/create-class
      {:component-did-update (fn [this]
                               (when (and focus? @new-form-created?)
                                 (do
                                   (.focus (r/dom-node this))
                                   (.select (r/dom-node this)))))
-      :reagent-render (fn [lang focus?]
-                        [:input.editor-form__form-name-input
-                         {:type        "text"
-                          :value       (get-in @form [:name lang])
-                          :disabled    (some? @form-locked)
-                          :placeholder (get-virkailija-translation :form-name)
-                          :on-change   #(do (dispatch [:editor/change-form-name lang (.-value (.-target %))])
-                                            (dispatch [:set-state [:editor :new-form-created?] false]))
-                          :on-blur     #(dispatch [:set-state [:editor :new-form-created?] false])}])})))
+      :reagent-render       (fn [lang focus?]
+                              [:input.editor-form__form-name-input
+                               {:type        "text"
+                                :value       (get-in @form [:name lang])
+                                :disabled    @form-locked?
+                                :placeholder (get-virkailija-translation :form-name)
+                                :on-change   #(do (dispatch [:editor/change-form-name lang (.-value (.-target %))])
+                                                  (dispatch [:set-state [:editor :new-form-created?] false]))
+                                :on-blur     #(dispatch [:set-state [:editor :new-form-created?] false])}])})))
 
 (defn- editor-name-wrapper [lang focus? lang-tag?]
   [:div.editor-form__form-name-input-wrapper
@@ -173,25 +173,23 @@
     (clojure.string/upper-case (name lang-kwd))]])
 
 (defn- lock-form-editing []
-  (let [form-locked (subscribe [:editor/current-form-locked])]
-    (fn []
-      (let [locked? (some? (:locked @form-locked))]
-        [:div.editor-form__preview-buttons
-         (when locked?
-           [:div.editor-form__form-editing-locked
-            (get-virkailija-translation :form-locked)
-            [:i.zmdi.zmdi-lock.editor-form__form-editing-lock-icon]
-            [:div.editor-form__form-editing-locked-by
-             (str "("
-                  (:locked-by @form-locked)
-                  " "
-                  (-> @form-locked :locked temporal/str->googdate temporal/time->short-str)
-                  ")")]])
-         [:div#lock-form.editor-form__fold-clickable-text
-          {:on-click #(dispatch [:editor/toggle-form-editing-lock])}
-          (if locked?
-            (get-virkailija-translation :remove-lock)
-            (get-virkailija-translation :lock-form))]]))))
+  (let [form-locked-info @(subscribe [:editor/form-locked-info])]
+    [:div.editor-form__preview-buttons
+     (when (some? form-locked-info)
+       [:div.editor-form__form-editing-locked
+        (get-virkailija-translation :form-locked)
+        [:i.zmdi.zmdi-lock.editor-form__form-editing-lock-icon]
+        [:div.editor-form__form-editing-locked-by
+         (str "("
+              (:locked-by form-locked-info)
+              " "
+              (-> form-locked-info :locked temporal/str->googdate temporal/time->short-str)
+              ")")]])
+     [:div#lock-form.editor-form__fold-clickable-text
+      {:on-click #(dispatch [:editor/toggle-form-editing-lock])}
+      (if (some? form-locked-info)
+        (get-virkailija-translation :remove-lock)
+        (get-virkailija-translation :lock-form))]]))
 
 (defn- disable-autosave
   []

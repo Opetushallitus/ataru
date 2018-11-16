@@ -184,29 +184,31 @@
   (fn [db [_ id]]
     (get-in db [:editor :ui id :folded?] false)))
 
-(defn- current-form-locked? [db]
-  (let [current-form (get-in db [:editor :forms (get-in db [:editor :selected-form-key])])]
-    (when (some? (:locked current-form))
-      (select-keys current-form [:locked :locked-by]))))
+(re-frame/reg-sub
+  :editor/form-locked-info
+  (fn form-locked-info [db _]
+    (let [current-form (get-in db [:editor :forms (get-in db [:editor :selected-form-key])])]
+      (when (some? (:locked current-form))
+        (select-keys current-form [:locked :locked-by])))))
 
 (re-frame/reg-sub
-  :editor/current-form-locked
-  (fn [db _]
-    (current-form-locked? db)))
+  :editor/form-locked?
+  (fn [_ _]
+    (re-frame/subscribe [:editor/form-locked-info]))
+  (fn form-locked? [info _]
+    (boolean (:locked info))))
 
 (re-frame/reg-sub
   :editor/remove-form-button-state
-  (fn [db _]
-    (get-in db [:editor :ui :remove-form-button-state]
-            (if (and (some? (get-in db [:editor :selected-form-key]))
-                     (nil? (current-form-locked? db)))
-              :active
-              :disabled))))
+  (fn remove-form-button-state [db _]
+    (if @(re-frame/subscribe [:editor/form-locked?])
+      :disabled
+      (get-in db [:editor :ui :remove-form-button-state] :active))))
 
 (re-frame/reg-sub
   :editor/remove-component-button-state
-  (fn [db [_ path]]
-    (if (current-form-locked? db)
+  (fn remove-component-button-state [db [_ path]]
+    (if @(re-frame/subscribe [:editor/form-locked?])
       :disabled
       (get-in db [:editor :ui :remove-component-button-state path] :active))))
 

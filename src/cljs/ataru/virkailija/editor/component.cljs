@@ -21,11 +21,10 @@
 
 (defn- required-checkbox
   [path initial-content]
-  (let [id          (util/new-uuid)
-        validators  (-> initial-content :validators set)
-        form-locked (subscribe [:editor/current-form-locked])
-        disabled?   (or (some? @form-locked)
-                        (contains? validators "required-hakija"))]
+  (let [id         (util/new-uuid)
+        validators (-> initial-content :validators set)
+        disabled?  (or @(subscribe [:editor/form-locked?])
+                       (contains? validators "required-hakija"))]
     [:div.editor-form__checkbox-container
      [:input.editor-form__checkbox {:type      "checkbox"
                                     :id        id
@@ -42,19 +41,19 @@
 
 (defn- repeater-checkbox
   [path initial-content]
-  (let [id          (util/new-uuid)
-        checked?    (-> initial-content :params :repeatable boolean)
-        form-locked (subscribe [:editor/current-form-locked])]
+  (let [id           (util/new-uuid)
+        checked?     (-> initial-content :params :repeatable boolean)
+        form-locked? @(subscribe [:editor/form-locked?])]
     [:div.editor-form__checkbox-container
      [:input.editor-form__checkbox {:type      "checkbox"
                                     :id        id
                                     :checked   checked?
-                                    :disabled  (some? @form-locked)
+                                    :disabled  form-locked?
                                     :on-change (fn [event]
                                                  (dispatch [:editor/set-component-value (-> event .-target .-checked) path :params :repeatable]))}]
      [:label.editor-form__checkbox-label
       {:for   id
-       :class (when @form-locked "editor-form__checkbox-label--disabled")}
+       :class (when form-locked? "editor-form__checkbox-label--disabled")}
       (get-virkailija-translation :multiple-answers)]]))
 
 (defn- selectable-list-item
@@ -201,20 +200,20 @@
         on-click-hide   (fn [_]
                           (dispatch [:editor/hide-belongs-to-hakukohteet-modal id]))
         show-modal?     (subscribe [:editor/show-belongs-to-hakukohteet-modal id])
-        modal-toggle-id (util/new-uuid)]
+        modal-toggle-id (util/new-uuid)
+        form-locked?    (subscribe [:editor/form-locked?])]
     (fn [path initial-content]
       (let [visible-to                 (:belongs-to-hakukohteet initial-content)
-            visible-to-hakukohderyhmat (:belongs-to-hakukohderyhma initial-content)
-            form-locked                (subscribe [:editor/current-form-locked])]
+            visible-to-hakukohderyhmat (:belongs-to-hakukohderyhma initial-content)]
         [:div.belongs-to-hakukohteet
          [:label.belongs-to-hakukohteet__modal-toggle-label
           {:for modal-toggle-id}
           (str (get-virkailija-translation :visibility-on-form) " ")]
          [:button.belongs-to-hakukohteet__modal-toggle
           {:id       modal-toggle-id
-           :disabled (some? @form-locked)
-           :class    (when @form-locked "belongs-to-hakukohteet__modal-toggle--disabled")
-           :on-click (when-not @form-locked
+           :disabled @form-locked?
+           :class    (when @form-locked? "belongs-to-hakukohteet__modal-toggle--disabled")
+           :on-click (when-not @form-locked?
                        (if @show-modal? on-click-hide on-click-show))}
           (if (and (empty? visible-to) (empty? visible-to-hakukohderyhmat))
             (get-virkailija-translation :visible-to-all)
@@ -408,28 +407,28 @@
 
 (defn input-field [path lang dispatch-fn {:keys [class value-fn tag]
                                           :or   {tag :input}}]
-  (let [component   (subscribe [:editor/get-component-value path])
-        focus?      (subscribe [:state-query [:editor :ui (:id @component) :focus?]])
-        value       (or
-                     (when value-fn
-                       (reaction (value-fn @component)))
-                     (reaction (get-in @component [:label lang])))
-        languages   (subscribe [:editor/languages])
-        form-locked (subscribe [:editor/current-form-locked])]
+  (let [component    (subscribe [:editor/get-component-value path])
+        focus?       (subscribe [:state-query [:editor :ui (:id @component) :focus?]])
+        value        (or
+                      (when value-fn
+                        (reaction (value-fn @component)))
+                      (reaction (get-in @component [:label lang])))
+        languages    (subscribe [:editor/languages])
+        form-locked? (subscribe [:editor/form-locked?])]
     (r/create-class
-      {:component-did-mount (fn [component]
-                              (when (cond-> @focus?
-                                            (> (count @languages) 1)
-                                            (and (= (first @languages) lang)))
-                                (let [dom-node (r/dom-node component)]
-                                  (.focus dom-node))))
-       :reagent-render      (fn [_ _ _ _]
-                              [tag
-                               {:class     (str "editor-form__text-field " (when-not (empty? class) class))
-                                :value     @value
-                                :on-change dispatch-fn
-                                :on-drop   prevent-default
-                                :disabled  (some? @form-locked)}])})))
+     {:component-did-mount (fn [component]
+                             (when (cond-> @focus?
+                                           (> (count @languages) 1)
+                                           (and (= (first @languages) lang)))
+                               (let [dom-node (r/dom-node component)]
+                                 (.focus dom-node))))
+      :reagent-render      (fn [_ _ _ _]
+                             [tag
+                              {:class     (str "editor-form__text-field " (when-not (empty? class) class))
+                               :value     @value
+                               :on-change dispatch-fn
+                               :on-drop   prevent-default
+                               :disabled  @form-locked?}])})))
 
 (defn- add-multi-lang-class [field-spec]
   (let [multi-lang-class "editor-form__text-field-wrapper--with-label"]
@@ -475,21 +474,21 @@
         checked?         (reaction (some? @(subscribe [:editor/get-component-value path :params :info-text :label])))
         collapse-checked (subscribe [:editor/get-component-value path :params :info-text-collapse])
         languages        (subscribe [:editor/languages])
-        form-locked      (subscribe [:editor/current-form-locked])]
+        form-locked?     (subscribe [:editor/form-locked?])]
     (fn [path]
       [:div.editor-form__info-addon-wrapper
        [:div.editor-form__info-addon-checkbox
         [:input {:id        id
                  :type      "checkbox"
                  :checked   @checked?
-                 :disabled  (some? @form-locked)
+                 :disabled  @form-locked?
                  :on-change (fn [event]
                               (dispatch [:editor/set-component-value
                                          (if (-> event .-target .-checked) {:fi "" :sv "" :en ""} nil)
                                          path :params :info-text :label]))}]
         [:label
-         {:for id
-          :class (when (some? @form-locked) "disabled")}
+         {:for   id
+          :class (when @form-locked? "disabled")}
          (get-virkailija-translation :info-addon)]]
        (when @checked?
          (let [collapsed-id (util/new-uuid)]
@@ -497,27 +496,27 @@
             [:input {:type      "checkbox"
                      :id        collapsed-id
                      :checked   (boolean @collapse-checked)
-                     :disabled  (some? @form-locked)
+                     :disabled  @form-locked?
                      :on-change (fn [event]
                                   (dispatch [:editor/set-component-value
                                              (-> event .-target .-checked)
                                              path :params :info-text-collapse]))}]
             [:label
              {:for   collapsed-id
-              :class (when @form-locked "editor-form__checkbox-label--disabled")}
+              :class (when @form-locked? "editor-form__checkbox-label--disabled")}
              (get-virkailija-translation :collapse-info-text)]]))
        (when @checked?
          [:div.editor-form__info-addon-inputs
           (->> (input-fields-with-lang
-                 (fn [lang]
-                   [input-field
-                    (concat path [:params :info-text])
-                    lang
-                    #(dispatch-sync [:editor/set-component-value
-                                     (-> % .-target .-value)
-                                     path :params :info-text :label lang])
-                    {:tag :textarea}])
-                 @languages)
+                (fn [lang]
+                  [input-field
+                   (concat path [:params :info-text])
+                   lang
+                   #(dispatch-sync [:editor/set-component-value
+                                    (-> % .-target .-value)
+                                    path :params :info-text :label lang])
+                   {:tag :textarea}])
+                @languages)
                (map (fn [field]
                       (into field [[:div.editor-form__info-addon-markdown-anchor (markdown-help)]])))
                (doall))])])))
@@ -527,13 +526,13 @@
 
 (defn- decimal-places-selector [path]
   (let [decimal-places (subscribe [:editor/get-component-value path :params :decimals])
-        form-locked    (subscribe [:editor/current-form-locked])]
+        form-locked?   (subscribe [:editor/form-locked?])]
     (fn [path]
       [:div.editor-form__additional-params-container
        [:header.editor-form__component-item-header (get-virkailija-translation :shape)]
        [:select.editor-form__decimal-places-selector
         {:value     (or @decimal-places "")
-         :disabled  (some? @form-locked)
+         :disabled  @form-locked?
          :on-change (fn [e]
                       (let [new-val (get-val e)
                             value   (when (not-empty new-val)
@@ -541,13 +540,13 @@
                         (dispatch [:editor/set-component-value value path :params :decimals])))}
         [:option {:value "" :key 0} (get-virkailija-translation :integer)]
         (doall
-          (for [i (range 1 5)]
-            [:option {:value i :key i} (str i " " (get-virkailija-translation :decimals))]))]])))
+         (for [i (range 1 5)]
+           [:option {:value i :key i} (str i " " (get-virkailija-translation :decimals))]))]])))
 
 (defn- text-component-type-selector [path radio-group-id]
-  (let [id          (util/new-uuid)
-        checked?    (subscribe [:editor/get-component-value path :params :numeric])
-        form-locked (subscribe [:editor/current-form-locked])]
+  (let [id           (util/new-uuid)
+        checked?     (subscribe [:editor/get-component-value path :params :numeric])
+        form-locked? (subscribe [:editor/form-locked?])]
     (fn [path radio-group-id]
       [:div
        [:div.editor-form__checkbox-container
@@ -555,7 +554,7 @@
          {:type      "checkbox"
           :id        id
           :checked   (or @checked? false)
-          :disabled  (some? @form-locked)
+          :disabled  @form-locked?
           :on-change (fn [event]
                        (let [checked-now? (-> event .-target .-checked)]
                          (dispatch [:editor/set-component-value checked-now? path :params :numeric])
@@ -565,19 +564,19 @@
                          (when-not checked-now?
                            (dispatch [:editor/set-component-value nil path :params :decimals]))))}]
         [:label.editor-form__checkbox-label
-         {:for id
-          :class (when @form-locked "editor-form__checkbox-label--disabled")}
+         {:for   id
+          :class (when @form-locked? "editor-form__checkbox-label--disabled")}
          (get-virkailija-translation :only-numeric)]]
        (when @checked?
          [decimal-places-selector path])])))
 
 (defn- button-label-class
-  [button-name form-locked]
+  [button-name form-locked?]
   (let [button-class (match button-name
-                            "S" "editor-form__button--left-edge"
-                            "L" "editor-form__button--right-edge"
-                            :else nil)]
-    (str (when (some? @form-locked) "editor-form__button-label--disabled ") button-class)))
+                       "S" "editor-form__button--left-edge"
+                       "L" "editor-form__button--right-edge"
+                       :else nil)]
+    (str (when form-locked? "editor-form__button-label--disabled ") button-class)))
 
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages         (subscribe [:editor/languages])
@@ -593,7 +592,7 @@
                             (dispatch-sync [:editor/set-component-value new-size path :params :size]))
         text-area?        (= "Tekstialue" header-label)
         animation-effect  (fade-out-effect path)
-        form-locked       (subscribe [:editor/current-form-locked])]
+        form-locked?      (subscribe [:editor/form-locked?])]
     (fn [initial-content path & {:keys [header-label size-label]}]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
@@ -627,18 +626,18 @@
                                      (= "M" btn-name)))
                         :name      radio-group-id
                         :id        btn-id
-                        :disabled  (some? @form-locked)
+                        :disabled  @form-locked?
                         :on-change (fn [] (size-change btn-name))}]
                       [:label.editor-form__button-label
                        {:for   btn-id
-                        :class (button-label-class btn-name form-locked)}
+                        :class (button-label-class btn-name @form-locked?)}
                        btn-name]]))]
            (when text-area?
              [:div.editor-form__max-length-container
               [:header.editor-form__component-item-header (get-virkailija-translation :max-characters)]
               [:input.editor-form__text-field.editor-form__text-field-auto-width
                {:value     @max-length
-                :disabled  (some? @form-locked)
+                :disabled  @form-locked?
                 :on-change #(max-length-change (get-val %))}]])]
           [:div.editor-form__checkbox-wrapper
            [required-checkbox path initial-content]
@@ -659,15 +658,15 @@
    :header-label (get-virkailija-translation :text-area)
    :size-label (get-virkailija-translation :text-area-size)])
 
-(defn- remove-dropdown-option-button [path option-index form-locked parent-key option-value question-group-element?]
+(defn- remove-dropdown-option-button [path option-index form-locked? parent-key option-value question-group-element?]
   [:div.editor-form__multi-options-remove--cross
    [copy-link (str parent-key "_" (when question-group-element? "groupN_") option-value) :answer? true]
    [:i.zmdi.zmdi-delete.zmdi-hc-lg
     {:on-click (fn [evt]
-                 (when-not @form-locked
+                 (when-not form-locked?
                    (.preventDefault evt)
                    (dispatch [:editor/remove-dropdown-option path :options option-index])))
-     :class    (when @form-locked "editor-form__multi-options-remove--cross--disabled")}]])
+     :class    (when form-locked? "editor-form__multi-options-remove--cross--disabled")}]])
 
 (defn- dropdown-option
   [option-index option-path followups path languages show-followups parent-key option-value question-group-element? &
@@ -675,9 +674,9 @@
     :or   {header? false editable? true}
     :as   opts}]
   (let [multiple-languages? (< 1 (count languages))
-        form-locked         (subscribe [:editor/current-form-locked])
+        form-locked?        (subscribe [:editor/form-locked?])
         on-click            (fn [up? event]
-                              (when-not @form-locked
+                              (when-not @form-locked?
                                 (.preventDefault event)
                                 (reset! show-followups nil)
                                 (dispatch [(if up?
@@ -693,23 +692,23 @@
          [:div.editor-form__multi-options-arrows-container
           [:div.editor-form__multi-options-arrow.editor-form__multi-options-arrow--up
            {:on-click (partial on-click true)
-            :class (when @form-locked "editor-form__multi-options-arrow--disabled")}]
+            :class    (when @form-locked? "editor-form__multi-options-arrow--disabled")}]
           [:div.editor-form__multi-options-arrows--stretch]
           [:div.editor-form__multi-options-arrow.editor-form__multi-options-arrow--down
            {:on-click (partial on-click false)
-            :class (when @form-locked "editor-form__multi-options-arrow--disabled")}]]]
+            :class    (when @form-locked? "editor-form__multi-options-arrow--disabled")}]]]
         [:div.editor-form__multi-options-wrapper-inner
          {:key (str "options-" option-index)}
          (if editable?
            (input-fields-with-lang
-             (fn [lang]
-               [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
-             languages)
+            (fn [lang]
+              [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
+            languages)
            [koodisto-fields-with-lang languages option-path])]
         (when (not question-group-element?)
           [followup-question option-index followups option-path show-followups parent-key option-value question-group-element?])
         (when editable?
-          [remove-dropdown-option-button path option-index form-locked parent-key option-value question-group-element?])]
+          [remove-dropdown-option-button path option-index @form-locked? parent-key option-value question-group-element?])]
        (when (not question-group-element?)
          [followup-question-overlay option-index followups option-path show-followups])])))
 
@@ -722,7 +721,7 @@
                                                     (str ": " koodisto-name))))
         koodisto-button-id         (str dropdown-id "-koodisto")
         koodisto-popover-expanded? (r/atom false)
-        form-locked                (subscribe [:editor/current-form-locked])]
+        form-locked?               (subscribe [:editor/form-locked?])]
     (fn [path options-koodisto]
       [:div.editor-form__button-group
        [:input.editor-form__button.editor-form__button--large
@@ -731,14 +730,14 @@
          :checked   (nil? @options-koodisto)
          :name      dropdown-id
          :id        custom-button-id
-         :disabled  (some? @form-locked)
+         :disabled  @form-locked?
          :on-change (fn [evt]
                       (.preventDefault evt)
                       (reset! koodisto-popover-expanded? false)
                       (dispatch [:editor/select-custom-multi-options path]))}]
        [:label.editor-form__button-label.editor-form__button-label--left-edge
         {:for   custom-button-id
-         :class (when (some? @form-locked) "editor-form__button-label--disabled")}
+         :class (when @form-locked? "editor-form__button-label--disabled")}
         custom-button-value]
        [:input.editor-form__button.editor-form__button--large
         {:type      "radio"
@@ -746,13 +745,13 @@
          :checked   (not (nil? @options-koodisto))
          :name      dropdown-id
          :id        koodisto-button-id
-         :disabled  (some? @form-locked)
+         :disabled  @form-locked?
          :on-change (fn [evt]
                       (.preventDefault evt)
                       (reset! koodisto-popover-expanded? true))}]
        [:label.editor-form__button-label.editor-form__button-label--right-edge
         {:for   koodisto-button-id
-         :class (when (some? @form-locked) "editor-form__button-label--disabled")}
+         :class (when @form-locked? "editor-form__button-label--disabled")}
         @koodisto-button-value]
        (when @koodisto-popover-expanded?
          [:div.editor-form__koodisto-popover
@@ -832,16 +831,16 @@
         value                    (subscribe [:editor/get-component-value path])
         animation-effect         (fade-out-effect path)
         koodisto-ordered-id      (util/new-uuid)
-        form-locked              (subscribe [:editor/current-form-locked])]
+        form-locked?             (subscribe [:editor/form-locked?])]
     (fn [initial-content followups path {:keys [question-group-element?]}]
-      (let [languages  @languages
-            field-type (:fieldType @value)
+      (let [languages      @languages
+            field-type     (:fieldType @value)
             show-followups (r/atom nil)]
         [:div.editor-form__component-wrapper
          {:class @animation-effect}
          (let [header (case field-type
-                        "dropdown" (get-virkailija-translation :dropdown)
-                        "singleChoice" (get-virkailija-translation :single-choice-button)
+                        "dropdown"       (get-virkailija-translation :dropdown)
+                        "singleChoice"   (get-virkailija-translation :single-choice-button)
                         "multipleChoice" (get-virkailija-translation :multiple-choice))]
            [text-header (:id initial-content) header path (:metadata initial-content)
             :sub-header (:label @value)])
@@ -870,7 +869,7 @@
                 [:input {:id        koodisto-ordered-id
                          :type      "checkbox"
                          :checked   (not @koodisto-ordered-by-user)
-                         :disabled  (some? @form-locked)
+                         :disabled  @form-locked?
                          :on-change (fn [event]
                                       (dispatch [:editor/set-ordered-by-user (-> event .-target .-checked) path]))}]
                 [:label
@@ -884,11 +883,11 @@
                [:div.editor-form__add-dropdown-item
                 [:a
                  {:on-click (fn [evt]
-                              (when-not @form-locked
+                              (when-not @form-locked?
                                 (.preventDefault evt)
                                 (reset! show-followups nil)
                                 (dispatch [:editor/add-dropdown-option path])))
-                  :class    (when @form-locked "editor-form__add-dropdown-item--disabled")}
+                  :class    (when @form-locked? "editor-form__add-dropdown-item--disabled")}
                  [:i.zmdi.zmdi-plus-square] (str " " (get-virkailija-translation :add))]])]]]]]))))
 
 (defn component-group [content path children]
@@ -971,7 +970,7 @@
         animation-effect (fade-out-effect path)
         collapse-checked (subscribe [:editor/get-component-value path :params :info-text-collapse])
         sub-header       (subscribe [:editor/get-component-value path :label])
-        form-locked      (subscribe [:editor/current-form-locked])]
+        form-locked?     (subscribe [:editor/form-locked?])]
     (fn [initial-content path]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
@@ -1007,14 +1006,14 @@
               [:input.editor-form__checkbox {:type      "checkbox"
                                              :id        collapsed-id
                                              :checked   (boolean @collapse-checked)
-                                             :disabled  (some? @form-locked)
+                                             :disabled  @form-locked?
                                              :on-change (fn [event]
                                                           (dispatch [:editor/set-component-value
                                                                      (-> event .-target .-checked)
                                                                      path :params :info-text-collapse]))}]
               [:label.editor-form__checkbox-label
                {:for   collapsed-id
-                :class (when @form-locked "editor-form__checkbox-label--disabled")}
+                :class (when @form-locked? "editor-form__checkbox-label--disabled")}
                (get-virkailija-translation :collapse-info-text)]])]
           [belongs-to-hakukohteet path initial-content]]]]])))
 
@@ -1104,7 +1103,7 @@
         mail-attachment? (subscribe [:editor/get-component-value path :params :mail-attachment?])
         collapse?        (subscribe [:editor/get-component-value path :params :info-text-collapse])
         languages        (subscribe [:editor/languages])
-        form-locked      (subscribe [:editor/current-form-locked])]
+        form-locked?      (subscribe [:editor/form-locked?])]
     (fn [path]
       [:div.editor-form__info-addon-wrapper
        (let [id (util/new-uuid)]
@@ -1112,14 +1111,14 @@
           [:input {:id        id
                    :type      "checkbox"
                    :checked   @mail-attachment?
-                   :disabled  (some? @form-locked)
+                   :disabled  @form-locked?
                    :on-change (fn toggle-attachment-textarea [event]
                                 (.preventDefault event)
                                 (let [mail-attachment? (.. event -target -checked)]
                                   (dispatch [:editor/update-mail-attachment mail-attachment? path])))}]
           [:label
            {:for   id
-            :class (when @form-locked "editor-form__checkbox-label--disabled")}
+            :class (when @form-locked? "editor-form__checkbox-label--disabled")}
            (get-virkailija-translation :mail-attachment-text)]])
        (when-not @mail-attachment?
          (let [id (util/new-uuid)]
@@ -1127,14 +1126,14 @@
             [:input {:id        id
                      :type      "checkbox"
                      :checked   @checked?
-                     :disabled  (some? @form-locked)
+                     :disabled  @form-locked?
                      :on-change (fn toggle-attachment-textarea [event]
                                   (.preventDefault event)
                                   (let [checked? (.. event -target -checked)]
                                     (dispatch [:editor/set-component-value checked? path :params :info-text :enabled?])))}]
             [:label
              {:for   id
-              :class (when @form-locked "editor-form__checkbox-label--disabled")}
+              :class (when @form-locked? "editor-form__checkbox-label--disabled")}
              (get-virkailija-translation :attachment-info-text)]]))
        (when @checked?
          (let [id (util/new-uuid)]
@@ -1142,14 +1141,14 @@
             [:input {:id        id
                      :type      "checkbox"
                      :checked   (boolean @collapse?)
-                     :disabled  (some? @form-locked)
+                     :disabled  @form-locked?
                      :on-change (fn [event]
                                   (dispatch [:editor/set-component-value
                                              (-> event .-target .-checked)
                                              path :params :info-text-collapse]))}]
             [:label
              {:for   id
-              :class (when @form-locked "editor-form__checkbox-label--disabled")}
+              :class (when @form-locked? "editor-form__checkbox-label--disabled")}
              (get-virkailija-translation :collapse-info-text)]]))
        (when @checked?
          [:div.editor-form__info-addon-inputs
