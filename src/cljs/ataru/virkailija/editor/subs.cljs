@@ -6,6 +6,11 @@
             [markdown.core :as md]))
 
 (re-frame/reg-sub
+  :editor/ui
+  (fn ui [db]
+    (get-in db [:editor :ui])))
+
+(re-frame/reg-sub
   :editor/selected-form
   (fn [db]
     (get-in db [:editor :forms (get-in db [:editor :selected-form-key])])))
@@ -182,17 +187,23 @@
 
 (re-frame/reg-sub
   :editor/remove-form-button-state
-  (fn remove-form-button-state [db _]
-    (if @(re-frame/subscribe [:editor/form-locked?])
+  (fn [_ _]
+    [(re-frame/subscribe [:editor/ui])
+     (re-frame/subscribe [:editor/form-locked?])])
+  (fn remove-form-button-state [[ui form-locked?] _]
+    (if form-locked?
       :disabled
-      (get-in db [:editor :ui :remove-form-button-state] :active))))
+      (get ui :remove-form-button-state :active))))
 
 (re-frame/reg-sub
   :editor/remove-component-button-state
-  (fn remove-component-button-state [db [_ path]]
-    (if @(re-frame/subscribe [:editor/form-locked?])
+  (fn [_ _]
+    [(re-frame/subscribe [:editor/ui])
+     (re-frame/subscribe [:editor/form-locked?])])
+  (fn remove-component-button-state [[ui form-locked?] [_ path]]
+    (if form-locked?
       :disabled
-      (get-in db [:editor :ui :remove-component-button-state path] :active))))
+      (get-in ui [:remove-component-button-state path] :active))))
 
 (re-frame/reg-sub
   :editor/email-templates-altered
