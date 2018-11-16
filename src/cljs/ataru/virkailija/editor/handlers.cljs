@@ -374,14 +374,14 @@
       (update-in [:editor :used-by-haut] dissoc :hakukohderyhmat))))
 
 (defn- create-autosave-loop
-  ([new-form]
-   (create-autosave-loop new-form nil))
-  ([new-form old-form]
-   (autosave/interval-loop {:last-autosaved-form old-form
-                            :subscribe-path      [:editor :forms (:key new-form)]
+  ([initial-form]
+   (create-autosave-loop initial-form nil))
+  ([initial-form last-autosaved-form]
+   (autosave/interval-loop {:last-autosaved-form last-autosaved-form
+                            :subscribe-path      [:editor :forms (:key initial-form)]
                             :changed-predicate   editor-autosave-predicate
-                            :handler             (fn [form previous-autosave-form-at-time-of-dispatch]
-                                                   (dispatch [:editor/save-form form new-form]))})))
+                            :handler             (fn [form _]
+                                                   (dispatch [:editor/save-form form (or last-autosaved-form initial-form)]))})))
 
 (reg-event-db
   :editor/handle-fetch-form
@@ -953,16 +953,16 @@
 (reg-event-db
   :editor/toggle-autosave
   (fn [db _]
-    (let [form-key         (-> db :editor :selected-form-key)
-          form             (-> db :editor :forms form-key)
-          autosave-stop-fn (-> db :editor :autosave)]
+    (let [form-key         (get-in db [:editor :selected-form-key])
+          form             (get-in db [:editor :forms form-key])
+          autosave-stop-fn (get-in db [:editor :autosave])]
       (if (fn? autosave-stop-fn)
         (when (autosave-stop-fn)
-          {:db (-> db
-                   (assoc-in [:editor :last-autosaved-form] form)
-                   (update :editor dissoc :autosave))})
+          (-> db
+              (assoc-in [:editor :last-autosaved-form] form)
+              (update :editor dissoc :autosave)))
         (let [new-autosave (when form
                              (create-autosave-loop form (get-in db [:editor :last-autosaved-form])))]
-          {:db (-> db
-                   (update :editor dissoc :last-autosaved-form)
-                   (assoc-in [:editor :autosave] new-autosave))})))))
+          (-> db
+              (update :editor dissoc :last-autosaved-form)
+              (assoc-in [:editor :autosave] new-autosave)))))))
