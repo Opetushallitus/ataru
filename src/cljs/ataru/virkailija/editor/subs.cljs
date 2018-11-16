@@ -55,6 +55,16 @@
                haut)))
 
 (re-frame/reg-sub
+  :editor/used-by-haut-haut
+  (fn [db _]
+    (get-in db [:editor :used-by-haut :haut])))
+
+(re-frame/reg-sub
+  :editor/used-by-haut-hakukohderyhmat
+  (fn [db _]
+    (get-in db [:editor :used-by-haut :hakukohderyhmat])))
+
+(re-frame/reg-sub
   :editor/filtered-haut
   (fn [db [_ id]]
     (if-let [search-term (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term])]
@@ -119,26 +129,27 @@
 
 (re-frame/reg-sub
   :editor/belongs-to-hakukohderyhma-name
-  (fn [db [_ oid]]
-    (let [l (get-in db [:editor :used-by-haut :hakukohderyhmat])
-          s (filter #(= oid (:oid %)) l)]
-      @(re-frame/subscribe [:editor/get-some-name (first s)]))))
+  (fn [_ _]
+    [(re-frame/subscribe [:editor/used-by-haut-hakukohderyhmat])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn [[hakukohderyhmat lang] [_ oid]]
+    (when-let [hakukohderyhma (some #(when (= oid (:oid %)) %)
+                                    hakukohderyhmat)]
+      (str (util/non-blank-val (:name hakukohderyhma) [lang :fi :sv :en])))))
 
 (re-frame/reg-sub
   :editor/belongs-to-hakukohde-name
-  (fn [db [_ oid]]
-    (let [multiple-haku? (< 1 (count (get-in db [:editor :used-by-haut :haut] {})))
-          [haku hakukohde] (find-haku-and-hakukohde
-                             (map second (get-in db [:editor :used-by-haut :haut]))
-                             oid)
-          hakukohde-name (some #(get (:name hakukohde) %) [:fi :sv :en])
-          tarjoaja-name (some #(get (:tarjoaja-name hakukohde) %) [:fi :sv :en])
-          haku-name (some #(get (:name haku) %) [:fi :sv :en])]
-      (str hakukohde-name
+  (fn [_ _]
+    [(re-frame/subscribe [:editor/used-by-haut-haut])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn [[haut lang] [_ oid]]
+    (let [multiple-haku?   (< 1 (count haut))
+          [haku hakukohde] (find-haku-and-hakukohde (map second haut) oid)]
+      (str (util/non-blank-val (:name hakukohde) [lang :fi :sv :en])
            " - "
-           tarjoaja-name
+           (util/non-blank-val (:tarjoaja-name hakukohde) [lang :fi :sv :en])
            (when multiple-haku?
-             (str " - " haku-name))))))
+             (str " - " (util/non-blank-val (:name haku) [lang :fi :sv :en])))))))
 
 (re-frame/reg-sub
   :editor/show-belongs-to-hakukohteet-modal
