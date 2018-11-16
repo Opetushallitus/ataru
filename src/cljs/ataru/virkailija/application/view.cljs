@@ -1633,17 +1633,10 @@
          [:div.application-handling__review-area-main-heading-name-row
           (when pref-name
             [:h2.application-handling__review-area-main-heading
-             (str last-name ", " pref-name " — " (or ssn birth-date))])
-          (when (> applications-count 1)
-            [:a.application-handling__review-area-main-heading-applications-link
-             {:on-click (fn [_]
-                          (dispatch [:application/navigate
-                                     (str "/lomake-editori/applications/search"
-                                          "?term=" (or ssn email))]))}
-             (str applications-count " " (get-virkailija-translation :applications))])]
-         (when person-oid
-           [:div.application-handling__review-area-main-heading-person-oid-row
-            [:div.application-handling__applicant-links
+             (str last-name ", " pref-name " — " (or ssn birth-date))])]
+         [:div.application-handling__review-area-main-heading-person-oid-row
+          [:div.application-handling__applicant-links
+           (when person-oid
              [:a
               {:href   (str "/henkilo-ui/oppija/"
                             person-oid
@@ -1651,13 +1644,23 @@
                :target "_blank"}
               [:i.zmdi.zmdi-account-circle.application-handling__review-area-main-heading-person-icon]
               [:span.application-handling__review-area-main-heading-person-oid
-               (str (get-virkailija-translation :student) " " person-oid)]]
+               (str (get-virkailija-translation :student) " " person-oid)]])
+           (when person-oid
              [:a
               {:href   (str "/suoritusrekisteri/#/opiskelijat?henkilo=" person-oid)
                :target "_blank"}
               [:i.zmdi.zmdi-collection-text.application-handling__review-area-main-heading-person-icon]
               [:span.application-handling__review-area-main-heading-person-oid
-               (get-virkailija-translation :person-completed-education)]]]])])
+               (get-virkailija-translation :person-completed-education)]])
+           (when (> applications-count 1)
+             [:a
+              {:on-click (fn [_]
+                           (dispatch [:application/navigate
+                                      (str "/lomake-editori/applications/search"
+                                           "?term=" (or ssn email))]))}
+              [:i.zmdi.zmdi-collection-text.application-handling__review-area-main-heading-person-icon]
+              [:span.application-handling__review-area-main-heading-person-oid
+               (str (get-virkailija-translation :view-applications) " (" applications-count ")")]])]]])
       (when (not (contains? (:answers application) :hakukohteet))
         [:ul.application-handling__hakukohteet-list
          (for [hakukohde-oid (:hakukohde application)]

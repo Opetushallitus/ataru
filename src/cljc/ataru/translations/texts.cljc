@@ -729,6 +729,9 @@ You will receive a confirmation of your application to your email."}
    :applications                                {:fi "hakemusta"
                                                  :sv "ansökningar"
                                                  :en "EN: hakemusta"}
+   :view-applications                           {:fi "Näytä oppijan hakemukset"
+                                                 :sv "SV: Näytä oppijan hakemukset"
+                                                 :en "EN: Näytä oppijan hakemukset"}
    :applications-panel                          {:fi "Hakemukset"
                                                  :sv "Ansökningar"
                                                  :en "EN: Hakemukset"}
@@ -912,7 +915,7 @@ You will receive a confirmation of your application to your email."}
    :form-section                                {:fi "Lomakeosio"
                                                  :sv "Blankettdel"
                                                  :en "EN: Lomakeosio"}
-   :form-outdated                               {:fi "Hakijan täyttämästä lomakkeesta on uudempi versio!"
+   :form-outdated                               {:fi "Lomakkeesta on uudempi versio!"
                                                  :sv "Det finns en ny version av sökandens blankett!"
                                                  :en "EN: Hakijan täyttämästä lomakkeesta on uudempi versio!"}
    :show-newest-version                         {:fi "Näytä lomake uusimmalla versiolla"

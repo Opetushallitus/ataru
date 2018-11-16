@@ -731,21 +731,22 @@ and (max-width: 1000px) {
   margin-top: 5px;
   display: flex;
   align-items: center;
+  white-space: nowrap;
 }
 
 .application-handling__applicant-links {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  font-size: 14px;
 }
 
 .application-handling__review-area-main-heading-person-icon {
-  font-size: 22px;
+  font-size: 14px;
   vertical-align: bottom;
 }
 
 .application-handling__review-area-main-heading-person-oid {
-  color: black;
   margin-left: 6px;
 }
 
@@ -2410,9 +2411,10 @@ th.application__readonly-adjacent--header {
   margin-bottom: 10px;
 }
 
+
 .application__message-display {
   margin-top: 0;
-  margin-left: 0px;
+  margin-left: 0;
   color: black;
   z-index: 10;
   border: solid 2px black;
@@ -2427,14 +2429,14 @@ th.application__readonly-adjacent--header {
 .application__message-display--details {
   padding: 5px 20px;
   font-weight: normal;
-  line-height: 30px;
   font-size: 14px;
-  min-width: 500px;
+  justify-content: center;
+  align-items: flex-start;
 }
 .application__message-display--exclamation {
-  font-size: 20px;
+  font-size: 14px;
   color: white;
-  padding: 12px 20px;
+  padding: 12px 10px;
   .semibold;
   display: flex;
   justify-content: center;
