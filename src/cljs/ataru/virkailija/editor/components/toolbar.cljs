@@ -5,6 +5,7 @@
             [ataru.component-data.higher-education-base-education-module :as kk-base-education-module]
             [ataru.feature-config :as fc]
             [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]))
 
 (def ^:private toolbar-elements
@@ -79,27 +80,25 @@
                 (get-virkailija-translation component-name)]])))))
 
 
-(defn add-component [path]
-  (let [form-locked (subscribe [:editor/current-form-locked])]
-    [:div.editor-form__add-component-toolbar
-     {:class (when @form-locked "disabled")}
-     (when-not @form-locked
-       [component-toolbar path toolbar-elements
-        (fn [generate-fn]
-          (dispatch [:generate-component generate-fn path]))])
-     [:div.plus-component
-      {:class (when @form-locked "disabled")}
-      [:span "+"]]]))
-
 (defn custom-add-component [toolbar path generator]
-  (let [form-locked (subscribe [:editor/current-form-locked])]
-    [:div.editor-form__add-component-toolbar
-     {:class (when @form-locked "disabled")}
-     (when-not @form-locked
-       [component-toolbar path toolbar generator])
-     [:div.plus-component
-      {:class (when @form-locked "disabled")}
-      [:span "+"]]]))
+  (let [mouse-over? (r/atom false)
+        form-locked (subscribe [:editor/current-form-locked])]
+    (fn [toolbar path generator]
+      [:div.editor-form__add-component-toolbar
+       {:class          (when @form-locked "disabled")
+        :on-mouse-enter #(reset! mouse-over? true)
+        :on-mouse-leave #(reset! mouse-over? false)}
+       (cond @form-locked
+             [:div.plus-component.plus-component--disabled [:span "+"]]
+             @mouse-over?
+             [component-toolbar path toolbar generator]
+             :else
+             [:div.plus-component [:span "+"]])])))
+
+(defn add-component [path]
+  [custom-add-component toolbar-elements path
+   (fn [generate-fn]
+     (dispatch [:generate-component generate-fn path]))])
 
 (defn followup-toolbar [option-path generator]
   [custom-add-component followup-toolbar-elements option-path generator])
