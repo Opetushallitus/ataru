@@ -291,7 +291,7 @@
 
       it('shows link to all applications belonging to a given ssn', function(done) {
         wait.until(function() {
-          return searchApplicationsBySsnLink().text() === 'hakemukset (2)'
+          return searchApplicationsBySsnLink().textContent === 'Näytä oppijan hakemukset (2)'
         })()
         .then(clickElement(searchApplicationsBySsnLink))
         .then(wait.until(ssnSearchFieldHasValue('020202A0202')))
