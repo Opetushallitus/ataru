@@ -96,11 +96,10 @@
   (let [content (:content @(subscribe [:editor/selected-form]))]
     [:section.editor-form
      (doall
-      (keep-indexed (fn [index element]
-                      (when-not @(subscribe [:editor/belongs-to-other-organization? element])
-                        ^{:key index}
-                        [soresu->reagent element [index]]))
-                    content))
+      (map-indexed (fn [index element]
+                     ^{:key index}
+                     [soresu->reagent element [index]])
+                   content))
      [dnd/drag-n-drop-spacer [(count content)]]
      [toolbar/add-component (count content)]]))
 
