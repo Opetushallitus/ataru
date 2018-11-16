@@ -202,8 +202,8 @@
         {:on-click #(dispatch [:editor/toggle-autosave])
          :class    (when-not @autosave-enabled "editor-form__autosave-toggle-link--autosave-off")}
         (if @autosave-enabled
-          "Automaattitalletus: päällä"
-          "Automaattitalletus: pois päältä")]])))
+          (get-virkailija-translation :autosave-enabled)
+          (get-virkailija-translation :autosave-disabled))]])))
 
 (defn- form-toolbar [form]
   (let [languages @(subscribe [:editor/languages])
