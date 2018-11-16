@@ -1645,11 +1645,12 @@
                                             (.preventDefault evt)
                                             (select-application (:key application) @selected-review-hakukohde true))}])
               (when-not yksiloity
-                [notification {:text      :person-not-individualized
-                               :link-text :individualize-in-henkilopalvelu
-                               :href      (str "/henkilo-ui/oppija/"
-                                               person-oid
-                                               "/duplikaatit?permissionCheckService=ATARU")}])]]))))))
+                [:div.individualization
+                 [notification {:text      :person-not-individualized
+                                :link-text :individualize-in-henkilopalvelu
+                                :href      (str "/henkilo-ui/oppija/"
+                                                person-oid
+                                                "/duplikaatit?permissionCheckService=ATARU")}]])]]))))))
 
 (defn application-heading [application loading?]
   (let [answers            (:answers application)
