@@ -174,13 +174,8 @@
 
 (defn- partition-above-and-below
   [match? coll]
-  (let [not-match? (fn [coll]
-                     (every? (comp not match?) coll))
-        parts      (partition-by match? coll)
-        above      (take-while not-match? parts)
-        below      (->> (drop-while not-match? parts)
-                        (filter not-match?))]
-    [(flatten above) (flatten below)]))
+  (let [[above below] (split-with (complement match?) coll)]
+    [(flatten above) (flatten (rest below))]))
 
 (defn offending-priorization [hakukohde-oid selected priorisoivat-hakukohderyhmat]
   (let [priorities-above-and-below (->> priorisoivat-hakukohderyhmat
