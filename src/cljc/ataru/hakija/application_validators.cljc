@@ -210,7 +210,6 @@
 
 (defn- hakukohteet?
   [{:keys [value field-descriptor tarjonta-hakukohteet priorisoivat-hakukohderyhmat rajaavat-hakukohderyhmat]}]
-(prn (first rajaavat-hakukohderyhmat))
   (let [hakukohde-options          (:options field-descriptor)
         num-answers                (count value)
         selected                   (parse-value value)
