@@ -106,11 +106,6 @@
         haut))
 
 (re-frame/reg-sub
-  :editor/get-some-name
-  (fn [db [_ {:keys [name]}]]
-    (some #(get name %) [:fi :sv :en])))
-
-(re-frame/reg-sub
   :editor/get-hakukohde-name
   (fn [db [_ hakukohde]]
     (let [hakukohde-name (some #(get (:name hakukohde) %) [:fi :sv :en])

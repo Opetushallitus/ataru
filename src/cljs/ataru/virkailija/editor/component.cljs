@@ -1,22 +1,23 @@
 (ns ataru.virkailija.editor.component
   (:require
-    [ataru.application-common.application-field-common :refer [copy-link]]
-    [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid get-virkailija-translation]]
-    [ataru.component-data.component :as component]
-    [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
-    [ataru.virkailija.editor.components.followup-question :refer [followup-question followup-question-overlay]]
-    [ataru.virkailija.editor.components.toolbar :as toolbar]
-    [ataru.virkailija.editor.components.drag-n-drop-spacer :as dnd]
-    [ataru.virkailija.temporal :as temporal]
-    [cljs.core.match :refer-macros [match]]
-    [goog.dom :as gdom]
-    [goog.string :as s]
-    [goog.date :as d]
-    [cljs-time.core :as t]
-    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
-    [reagent.core :as r]
-    [reagent.ratom :refer-macros [reaction]]
-    [taoensso.timbre :refer-macros [spy debug]]))
+   [ataru.application-common.application-field-common :refer [copy-link]]
+   [ataru.util :as cutil]
+   [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid get-virkailija-translation]]
+   [ataru.component-data.component :as component]
+   [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
+   [ataru.virkailija.editor.components.followup-question :refer [followup-question followup-question-overlay]]
+   [ataru.virkailija.editor.components.toolbar :as toolbar]
+   [ataru.virkailija.editor.components.drag-n-drop-spacer :as dnd]
+   [ataru.virkailija.temporal :as temporal]
+   [cljs.core.match :refer-macros [match]]
+   [goog.dom :as gdom]
+   [goog.string :as s]
+   [goog.date :as d]
+   [cljs-time.core :as t]
+   [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+   [reagent.core :as r]
+   [reagent.ratom :refer-macros [reaction]]
+   [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn- required-checkbox
   [path initial-content]
@@ -89,15 +90,16 @@
                                                             (:oid hakukohderyhma)]))
           on-click-remove (fn [hakukohderyhma _] (dispatch [:editor/remove-from-belongs-to-hakukohderyhma
                                                             path (:oid hakukohderyhma)]))
-          get-name (fn [hakukohderyhma] @(subscribe [:editor/get-some-name hakukohderyhma]))]
-     (for [hakukohderyhma (->> @hakukohderyhmat
-                               (filter :user-organization?))]
-       ^{:key (:oid hakukohderyhma)}
-       [selectable-list-item path id hakukohderyhma selected-hakukohderyhmat get-name on-click-add on-click-remove]))]])
+          lang            @(subscribe [:editor/virkailija-lang])
+          get-name        (fn [hakukohderyhma] (cutil/non-blank-val (:name hakukohderyhma) [lang :fi :sv :en]))]
+      (for [hakukohderyhma (->> @hakukohderyhmat
+                                (filter :user-organization?))]
+        ^{:key (:oid hakukohderyhma)}
+        [selectable-list-item path id hakukohderyhma selected-hakukohderyhmat get-name on-click-add on-click-remove]))]])
 
 (defn- haku-list-item
   [path id haku selected-hakukohteet]
-  (let [name            (subscribe [:editor/get-some-name haku])
+  (let [lang            (subscribe [:editor/virkailija-lang])
         on-click-add    (fn [hakukohde _] (dispatch [:editor/add-to-belongs-to-hakukohteet
                                                      path
                                                      (:oid hakukohde)]))
@@ -108,7 +110,7 @@
       (let [show-at-most (subscribe [:editor/belongs-to-hakukohteet-modal-show-more-value id (:oid haku)])]
         [:li.belongs-to-hakukohteet-modal__haku-list-item
          [:span.belongs-to-hakukohteet-modal__haku-label
-          @name]
+          (cutil/non-blank-val (:name haku) [lang :fi :sv :en])]
          [:ul.belongs-to-hakukohteet-modal__hakukohde-list
           (for [hakukohde (first (split-at @show-at-most (->> (:hakukohteet haku)
                                                               (filter :user-organization?))))]
