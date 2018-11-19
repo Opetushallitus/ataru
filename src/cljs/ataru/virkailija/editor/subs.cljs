@@ -11,6 +11,43 @@
     (get-in db [:editor :ui])))
 
 (re-frame/reg-sub
+  :editor/form-keys
+  (fn form-keys [db _]
+    (get-in db [:editor :sorted-form-keys])))
+
+(re-frame/reg-sub
+  :editor/selected-form-key
+  (fn selected-form-key [db _]
+    (get-in db [:editor :selected-form-key])))
+
+(re-frame/reg-sub
+  :editor/form
+  (fn form [db [_ key]]
+    (get-in db [:editor :forms key])))
+
+(re-frame/reg-sub
+  :editor/form-name
+  (fn [[_ key] _]
+    [(re-frame/subscribe [:editor/form key])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn form-name [[form lang] _]
+    (util/non-blank-val (:name form) [lang :fi :sv :en])))
+
+(re-frame/reg-sub
+  :editor/form-created-by
+  (fn [[_ key] _]
+    (re-frame/subscribe [:editor/form key]))
+  (fn form-created-by [form _]
+    (:created-by form)))
+
+(re-frame/reg-sub
+  :editor/form-created-time
+  (fn [[_ key] _]
+    (re-frame/subscribe [:editor/form key]))
+  (fn form-created-time [form _]
+    (:created-time form)))
+
+(re-frame/reg-sub
   :editor/selected-form
   (fn [db]
     (get-in db [:editor :forms (get-in db [:editor :selected-form-key])])))
@@ -173,17 +210,25 @@
 
 (re-frame/reg-sub
   :editor/form-locked-info
-  (fn form-locked-info [db _]
-    (let [current-form (get-in db [:editor :forms (get-in db [:editor :selected-form-key])])]
-      (when (some? (:locked current-form))
-        (select-keys current-form [:locked :locked-by])))))
+  (fn [_ _]
+    (re-frame/subscribe [:editor/selected-form]))
+  (fn form-locked-info [form _]
+    (when (some? (:locked form))
+      (select-keys form [:locked :locked-by]))))
 
 (re-frame/reg-sub
   :editor/form-locked?
   (fn [_ _]
-    (re-frame/subscribe [:editor/form-locked-info]))
-  (fn form-locked? [info _]
-    (boolean (:locked info))))
+    (re-frame/subscribe [:editor/selected-form]))
+  (fn form-locked? [form _]
+    (some? (:locked form))))
+
+(re-frame/reg-sub
+  :editor/this-form-locked?
+  (fn [[_ key] _]
+    (re-frame/subscribe [:editor/form key]))
+  (fn this-form-locked? [form _]
+    (some? (:locked form))))
 
 (re-frame/reg-sub
   :editor/remove-form-button-state
