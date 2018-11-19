@@ -1,5 +1,5 @@
 (ns ataru.virkailija.views.template-editor
-  (:require [ataru.cljs-util :refer [wrap-scroll-to get-virkailija-translation]]
+  (:require [ataru.cljs-util :refer [get-virkailija-translation]]
             [ataru.translations.texts :refer [email-default-texts virkailija-texts]]
             [ataru.virkailija.views.modal :as modal]
             [goog.string :as s]

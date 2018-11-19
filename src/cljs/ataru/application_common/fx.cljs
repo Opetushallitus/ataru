@@ -1,5 +1,6 @@
 (ns ataru.application-common.fx
   (:require [re-frame.core :as re-frame]
+            [reagent.core :as reagent]
             [cljs.core.async :as async]
             [ataru.hakija.has-applied :refer [has-applied]]
             [ataru.hakija.application-validators :as validator]
@@ -114,3 +115,10 @@
 (re-frame/reg-fx
   :update-url-query-params
   util/update-url-with-query-params)
+
+(re-frame/reg-fx
+  :scroll-to-application-in-list
+  (fn [element-id]
+    (when-let [element (.getElementById js/document (str "application-list-row-" element-id))]
+      (.scrollIntoView element)
+      (.scrollBy js/window 0 -50))))

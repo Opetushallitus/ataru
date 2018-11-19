@@ -185,7 +185,8 @@
     [:div
      [:div.top-banner {:class (case @banner-type
                                 :fixed   "fixed-top-banner"
-                                :in-flow "in-flow-top-banner")}
+                                :in-flow "in-flow-top-banner"
+                                "fixed-top-banner")}
       [profile]
       [:div.tabs [title]]
       [status]]
