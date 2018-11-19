@@ -190,23 +190,31 @@
 
 (re-frame/reg-sub
   :editor/show-belongs-to-hakukohteet-modal
-  (fn [db [_ id]]
-    (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :show] false)))
+  (fn [_ _]
+    (re-frame/subscribe [:editor/ui]))
+  (fn [ui [_ id]]
+    (get-in ui [id :belongs-to-hakukohteet :modal :show] false)))
 
 (re-frame/reg-sub
   :editor/belongs-to-hakukohteet-modal-search-term-value
-  (fn [db [_ id]]
-    (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term-value] "")))
+  (fn [_ _]
+    (re-frame/subscribe [:editor/ui]))
+  (fn [ui [_ id]]
+    (get-in ui [id :belongs-to-hakukohteet :modal :search-term-value] "")))
 
 (re-frame/reg-sub
   :editor/belongs-to-hakukohteet-modal-show-more-value
-  (fn [db [_ id haku-oid]]
-    (get-in db [:editor :ui id :belongs-to-hakukohteet :modal haku-oid :show-more-value] 15)))
+  (fn [_ _]
+    (re-frame/subscribe [:editor/ui]))
+  (fn [ui [_ id haku-oid]]
+    (get-in ui [id :belongs-to-hakukohteet :modal haku-oid :show-more-value] 15)))
 
 (re-frame/reg-sub
   :editor/folded?
-  (fn [db [_ id]]
-    (get-in db [:editor :ui id :folded?] false)))
+  (fn [_ _]
+    (re-frame/subscribe [:editor/ui]))
+  (fn [ui [_ id]]
+    (get-in ui [id :folded?] false)))
 
 (re-frame/reg-sub
   :editor/form-locked-info
