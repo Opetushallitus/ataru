@@ -11,6 +11,43 @@
   (u/non-blank-val text [lang :fi :sv :en]))
 
 (re-frame/reg-sub
+  :application/selected-form
+  (fn selected-form [db _]
+    (get-in db [:application :selected-application-and-form :form])))
+
+(re-frame/reg-sub
+  :application/selected-application
+  (fn selected-application [db _]
+    (get-in db [:application :selected-application-and-form :application])))
+
+(re-frame/reg-sub
+  :application/hakukohde-attachment-reviews
+  (fn hakukohde-attachment-reviews [db [_ hakukohde]]
+    (get-in db [:application :review :attachment-reviews (keyword hakukohde)])))
+
+(re-frame/reg-sub
+  :application/selected-form-fields-by-id
+  (fn [_ _]
+    (re-frame/subscribe [:application/selected-form]))
+  (fn selected-form-fields-by-id [form _]
+    (u/form-fields-by-id form)))
+
+(re-frame/reg-sub
+  :application/events
+  (fn [db _]
+    (get-in db [:application :events])))
+
+(re-frame/reg-sub
+  :application/selected-event
+  (fn [db _]
+    (get-in db [:application :selected-application-and-form :selected-event])))
+
+(re-frame/reg-sub
+  :application/change-history
+  (fn [db _]
+    (get-in db [:application :selected-application-and-form :application-change-history])))
+
+(re-frame/reg-sub
  :application/list-heading
  (fn [db]
    (let [selected-haku      (get-in db [:haut (get-in db [:application :selected-haku])])
@@ -454,9 +491,8 @@
     (-> db :application :selected-application-and-form :application :key)))
 
 (defn- modify-event-changes
-  [db event-id]
-  (let [modify-events  (filter util/modify-event? (-> db :application :events))
-        change-history (-> db :application :selected-application-and-form :application-change-history)]
+  [events change-history event-id]
+  (let [modify-events (filter util/modify-event? events)]
     (some (fn [[event changes]]
             (when (= event-id (:id event))
               changes))
@@ -486,28 +522,34 @@
 
 (re-frame.core/reg-sub
   :application/current-history-items
-  (fn [db _]
-    (let [lang        @(re-frame.core/subscribe [:editor/virkailija-lang])
-          form-fields (-> db :application :selected-application-and-form :form u/form-fields-by-id)
-          answers     (-> db :application :selected-application-and-form :application :answers)]
-      (when-let [changes (modify-event-changes db (-> db :application :selected-application-and-form :selected-event :id))]
-        (->> changes
-             (map (fn [[id change]]
-                    (let [field (get form-fields id)]
-                      [id (-> change
-                              (replace-change-value-with-label field lang)
-                              (assoc :label (breadcrumb-label field form-fields answers lang)))])))
-             (into {}))))))
-
-(re-frame.core/reg-sub
-  :application/selected-event
-  (fn [db _]
-    (-> db :application :selected-application-and-form :selected-event)))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/selected-form-fields-by-id])
+     (re-frame/subscribe [:application/selected-application])
+     (re-frame/subscribe [:application/events])
+     (re-frame/subscribe [:application/selected-event])
+     (re-frame/subscribe [:application/change-history])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn current-history-items
+    [[form-fields application events selected-event change-history lang] _]
+    (when-let [changes (modify-event-changes events change-history (:id selected-event))]
+      (->> changes
+           (map (fn [[id change]]
+                  (let [field (get form-fields id)]
+                    [id (-> change
+                            (replace-change-value-with-label field lang)
+                            (assoc :label (breadcrumb-label field
+                                                            form-fields
+                                                            (:answers application)
+                                                            lang)))])))
+           (into {})))))
 
 (re-frame.core/reg-sub
   :application/changes-made-for-event
-  (fn [db [_ event-id]]
-    (modify-event-changes db event-id)))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/events])
+     (re-frame/subscribe [:application/change-history])])
+  (fn [[events change-history] [_ event-id]]
+    (modify-event-changes events change-history event-id)))
 
 (re-frame.core/reg-sub
   :application/field-highlighted?
@@ -526,17 +568,19 @@
 
 (re-frame.core/reg-sub
   :application/get-attachment-reviews-for-selected-hakukohde
-  (fn [db [_ selected-hakukohde]]
-    (let [attachment-reviews (get-in db [:application :review :attachment-reviews (keyword selected-hakukohde)])
-          answers            (-> db :application :selected-application-and-form :application :answers)
-          form-fields        (-> db :application :selected-application-and-form :form u/form-fields-by-id)]
-      (for [[key state] attachment-reviews
-            :let [answer ((keyword key) answers)
-                  field  ((keyword key) form-fields)]]
-        {:key    key
-         :state  state
-         :values (:values answer)
-         :label  (:label field)}))))
+  (fn [[_ hakukohde] _]
+    [(re-frame/subscribe [:application/selected-form-fields-by-id])
+     (re-frame/subscribe [:application/selected-application])
+     (re-frame/subscribe [:application/hakukohde-attachment-reviews hakukohde])])
+  (fn get-attachment-reviews-for-selected-hakukohde
+    [[form-fields application attachment-reviews] _]
+    (for [[key state] attachment-reviews
+          :let        [answer (get-in application [:answers (keyword key)])
+                       field  ((keyword key) form-fields)]]
+      {:key    key
+       :state  state
+       :values (:values answer)
+       :label  (:label field)})))
 
 (re-frame.core/reg-sub
   :application/lang
