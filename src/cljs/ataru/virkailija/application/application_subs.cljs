@@ -344,18 +344,20 @@
 
 (re-frame/reg-sub
   :application/hakukohteet-field
-  (fn [db _]
-    (first
-     (filter #(= "hakukohteet" (:id %))
-             (get-in db [:application
-                         :selected-application-and-form
-                         :form
-                         :content])))))
+  (fn [_ _]
+    (re-frame/subscribe [:application/selected-form]))
+  (fn [form _]
+    (->> (:content form)
+         u/flatten-form-fields
+         (filter #(= "hakukohteet" (:id %)))
+         first)))
 
 (re-frame/reg-sub
   :application/hakukohde-options-by-oid
-  (fn [db _]
-    (->> @(re-frame/subscribe [:application/hakukohteet-field])
+  (fn [_ _]
+    (re-frame/subscribe [:application/hakukohteet-field]))
+  (fn hakukohde-options-by-oid [hakukohteet-field _]
+    (->> hakukohteet-field
          :options
          (map (juxt :value identity))
          (into {}))))
@@ -407,22 +409,27 @@
 
 (re-frame/reg-sub
   :application/hakukohteet-header
-  (fn [db _]
-    @(re-frame/subscribe [:application/get-i18n-text
-                          (:label @(re-frame/subscribe [:application/hakukohteet-field]))])))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/hakukohteet-field])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn hakukohteet-header [[hakukohteet-field lang] _]
+    (from-multi-lang (:label hakukohteet-field) lang)))
+
 (re-frame/reg-sub
   :application/hakukohde-label
-  (fn [db [_ hakukohde-oid]]
-    @(re-frame/subscribe [:application/get-i18n-text
-                          (get-in @(re-frame/subscribe [:application/hakukohde-options-by-oid])
-                                  [hakukohde-oid :label])])))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/hakukohde-options-by-oid])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn hakukohde-label [[hakukohde-options lang] [_ hakukohde-oid]]
+    (from-multi-lang (get-in hakukohde-options [hakukohde-oid :label]) lang)))
 
 (re-frame/reg-sub
   :application/hakukohde-description
-  (fn [db [_ hakukohde-oid]]
-    @(re-frame/subscribe [:application/get-i18n-text
-                          (get-in @(re-frame/subscribe [:application/hakukohde-options-by-oid])
-                                  [hakukohde-oid :description])])))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/hakukohde-options-by-oid])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn hakukohde-description [[hakukohde-options lang] [_ hakukohde-oid]]
+    (from-multi-lang (get-in hakukohde-options [hakukohde-oid :description]) lang)))
 
 (re-frame/reg-sub
   :application/hakutoiveet
