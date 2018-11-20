@@ -5,6 +5,7 @@
             [ataru.hakuaika :as hakuaika]
             [ataru.application-common.application-field-common :as afc]
             [ataru.hakija.application :refer [answers->valid-status]]
+            [ataru.hakija.application-validators :as validators]
             [ataru.hakija.person-info-fields :as person-info-fields]))
 
 (defonce attachment-modify-grace-period-days
@@ -213,10 +214,12 @@
 (defn- selected-hakukohteet [db]
   (map :value (get-in db [:application :answers :hakukohteet :values] [])))
 
+(defn- hakukohteet-from-tarjonta [db hakukohteet]
+  (->> (get-in db [:form :tarjonta :hakukohteet])
+       (filter #(contains? hakukohteet (:oid %)))))
+
 (defn- selected-hakukohteet-from-tarjonta [db]
-  (let [selected-hakukohteet     (set (selected-hakukohteet db))]
-    (->> (get-in db [:form :tarjonta :hakukohteet])
-         (filter #(contains? selected-hakukohteet (:oid %))))))
+  (hakukohteet-from-tarjonta db (set (selected-hakukohteet db))))
 
 (re-frame/reg-sub
   :application/selected-hakukohteet-for-field
@@ -312,6 +315,18 @@
          (not @(re-frame/subscribe [:application/cannot-edit? :hakukohteet])))))
 
 (re-frame/reg-sub
+  :application/priorisoivat-hakukohderyhmat
+  (fn [db _]
+    (-> db :form :priorisoivat-hakukohderyhmat)))
+
+(re-frame/reg-sub
+  :application/hakukohde-offending-priorization?
+  (fn [db [_ hakukohde-oid]]
+    (let [selected                     (selected-hakukohteet db)
+          priorisoivat-hakukohderyhmat @(re-frame/subscribe [:application/priorisoivat-hakukohderyhmat])]
+      (validators/offending-priorization hakukohde-oid selected priorisoivat-hakukohderyhmat))))
+
+(re-frame/reg-sub
   :application/hakukohde-editable?
   (fn [db [_ hakukohde-oid]]
     (or (some? (get-in db [:application :virkailija-secret]))
@@ -354,11 +369,24 @@
             nil)))
 
 (re-frame/reg-sub
+  :application/rajaavat-hakukohteet
+  (fn [db [_ hakukohde-oid]]
+    (when-let [rajaavat (-> db :form :rajaavat-hakukohderyhmat)]
+      (let [hakukohteet                   (hakukohteet-from-tarjonta db (set (cons hakukohde-oid (selected-hakukohteet db))))
+            hakukohde                     (first (filter #(= (:oid %) hakukohde-oid) hakukohteet))
+            hakukohteet                   (filter #(not-empty (clojure.set/intersection (set (:hakukohderyhmat %))
+                                                                                        (set (:hakukohderyhmat hakukohde)))) hakukohteet)
+            limitting-hakukohderyhma-oids (set (validators/limitting-hakukohderyhmat hakukohteet rajaavat))]
+        (->> hakukohteet
+             (filter #(not= hakukohde-oid (:oid %)))
+             (filter #(not-empty (clojure.set/intersection limitting-hakukohderyhma-oids (set (:hakukohderyhmat %))))))))))
+
+(re-frame/reg-sub
   :application/hakukohteet-full?
   (fn [_ _]
     (if-let [max-hakukohteet @(re-frame/subscribe [:application/max-hakukohteet])]
       (<= max-hakukohteet
-          (count @(re-frame/subscribe [:application/selected-hakukohteet])))
+        (count @(re-frame/subscribe [:application/selected-hakukohteet])))
       false)))
 
 (re-frame/reg-sub

@@ -161,7 +161,7 @@
        ; dropdown "Pohjakoulutus"
        :b05a6057-2c65-40a8-9312-c837429f44bb {:passed? true}}
       (validator/build-results has-never-applied answers-by-key
-        []
+        [] []
         (:content f) [] false)))
 
   (it "passes validation on multipleChoice answer being empty"
@@ -172,7 +172,7 @@
               :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
               assoc
               :value "")
-            []
+            [] []
             (:content f) [] false)
           :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
           :passed?)))
@@ -185,7 +185,7 @@
                 :gender
                 assoc
                 :value "")
-              []
+              [] []
               (clojure.walk/postwalk
                 (fn [form]
                   (match form
@@ -204,7 +204,7 @@
               :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
               assoc
               :value "")
-            []
+            [] []
             (clojure.walk/postwalk
               (fn [form]
                 (match form
@@ -223,7 +223,7 @@
                 :gender
                 assoc
                 :value "")
-              []
+              [] []
               (clojure.walk/postwalk
                 (fn [form]
                   (match form
@@ -242,7 +242,7 @@
               :047da62c-9afe-4e28-bfe8-5b50b21b4277
               assoc
               :value [])
-            []
+            [] []
             (:content f) [] false)
           :047da62c-9afe-4e28-bfe8-5b50b21b4277
           :passed?)))
@@ -255,7 +255,7 @@
                 :047da62c-9afe-4e28-bfe8-5b50b21b4277
                 assoc
                 :value [])
-              []
+              [] []
               (clojure.walk/postwalk
                 (fn [form]
                   (match form
@@ -270,7 +270,7 @@
       (should-not
         (-> (validator/build-results has-never-applied
               answers-by-key
-              []
+              [] []
               (clojure.walk/postwalk
                 (fn [form]
                   (match form
@@ -289,7 +289,7 @@
                 :answers
                 util/answers-by-key
                 (assoc :b05a6057-2c65-40a8-9312-c837429f44bb {:key "b05a6057-2c65-40a8-9312-c837429f44bb", :fieldType "dropdown", :value "Ammatillinen peruskoulu"}))
-              []
+              [] []
               (clojure.walk/postwalk
                 (fn [form]
                   (match form
@@ -311,7 +311,7 @@
                                     :value     "02.02.2022",
                                     :fieldType "textField",
                                     :label     {:fi "Syntymäaika", :sv "Födelsetid"}}))
-              []
+              [] []
               (clojure.walk/postwalk
                 (fn [form-field]
                   (match form-field

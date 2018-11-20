@@ -4,6 +4,7 @@
             [clojure.java.jdbc :as jdbc]
             [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
+            [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
             [ataru.db.db :as db]
             [ataru.component-data.component :as component]
             [ataru.component-data.person-info-module :as person-info-module]
@@ -263,7 +264,16 @@
                                  :key       "language"
                                  :value     "fi"}]})
 
+(defn create-rajaavat-and-priorisoivat-hakukohderyhmat []
+  (hakukohderyhmat/insert-priorisoiva-hakukohderyhma {:haku-oid "1.2.246.562.29.65950024187"
+                                                      :prioriteetit [["1.2.246.562.20.49028100003"] ["1.2.246.562.20.49028100001"]]
+                                                      :hakukohderyhma-oid "1.2.246.562.28.00000000001"})
+  (hakukohderyhmat/insert-rajaava-hakukohderyhma {:haku-oid "1.2.246.562.29.65950024187"
+                                                  :raja 2
+                                                  :hakukohderyhma-oid "1.2.246.562.28.00000000001"}))
+
 (defn init-db-fixture []
+  (create-rajaavat-and-priorisoivat-hakukohderyhmat)
   (form-store/create-new-form! form1 (:key form1))
   (form-store/create-new-form! form2 (:key form2))
   (form-store/create-new-form! form3 (:key form3))

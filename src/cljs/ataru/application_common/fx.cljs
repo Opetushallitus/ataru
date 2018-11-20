@@ -77,24 +77,24 @@
 (re-frame/reg-fx
   :validate-debounced
   (fn [{:keys [field-descriptor field-idx group-idx] :as params}]
-    (let [id          (keyword (:id field-descriptor))
-          debounce-id (keyword (str (name id) "-" field-idx "-" group-idx))]
+    (let [id                           (keyword (:id field-descriptor))
+          debounce-id                  (keyword (str (name id) "-" field-idx "-" group-idx))]
       (js/clearTimeout (@validation-debounces debounce-id))
       (swap! validation-debounces assoc debounce-id
-             (js/setTimeout
-               #(async-validate-value params)
-               validation-debounce-ms)))))
+        (js/setTimeout
+          #(async-validate-value params)
+          validation-debounce-ms)))))
 
 (re-frame/reg-fx
   :validate-every-debounced
   (fn [{:keys [field-descriptor field-idx group-idx] :as params}]
-    (let [id          (keyword (:id field-descriptor))
-          debounce-id (keyword (str (name id) "-" field-idx "-" group-idx))]
+    (let [id                           (keyword (:id field-descriptor))
+          debounce-id                  (keyword (str (name id) "-" field-idx "-" group-idx))]
       (js/clearTimeout (@validation-debounces debounce-id))
       (swap! validation-debounces assoc debounce-id
-             (js/setTimeout
-               #(async-validate-values params)
-               validation-debounce-ms)))))
+        (js/setTimeout
+          #(async-validate-values params)
+          validation-debounce-ms)))))
 
 (defn- confirm-window-close!
   [event]

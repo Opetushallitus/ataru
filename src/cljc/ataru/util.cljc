@@ -197,3 +197,13 @@
 
 (defn first-index-of [f coll]
   (first (indices-of f coll)))
+
+(defn assoc?
+  ; https://stackoverflow.com/questions/16356888/assoc-if-in-clojure
+  "Same as assoc, but skip the assoc if v is nil"
+  [m & kvs]
+  (->> kvs
+       (partition 2)
+       (filter #(some? (second %)))
+       (map vec)
+       (into m)))

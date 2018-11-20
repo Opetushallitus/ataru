@@ -117,7 +117,8 @@
                                  :ataruLomakeAvain "hakija-hakukohteen-hakuaika-test-form"
                                  :hakukohdeOids    ["1.2.246.562.20.49028100001"
                                                     "1.2.246.562.20.49028100002"
-                                                    "1.2.246.562.20.49028100003"]})
+                                                    "1.2.246.562.20.49028100003"
+                                                    "1.2.246.562.20.490281000035"]})
    :1.2.246.562.29.65950024188 (merge
                                  base-haku
                                  {:oid              "1.2.246.562.29.65950024188"
@@ -215,6 +216,17 @@
                                   :hakukohteenNimet
                                                     {:kieli_fi "Aikaa loputtomasti 3"
                                                      :kieli_sv "sv Aikaa loputtomasti 3"}})
+   :1.2.246.562.20.490281000035 (merge
+                                base-hakukohde
+                                {:ataruLomakeAvain "hakija-hakukohteen-hakuaika-test-form"
+                                 :oid              "1.2.246.562.20.490281000035"
+                                 :hakuOid          "1.2.246.562.29.65950024187"
+                                 :koulutukset      [{:oid "1.2.246.562.17.74335799465"}]
+                                 :ryhmaliitokset [{:ryhmaOid "1.2.246.562.28.00000000001"}
+                                                  {:ryhmaOid "1.2.246.562.28.00000000002"}]
+                                 :hakukohteenNimet
+                                                   {:kieli_fi "Aikaa loputtomasti 3.5"
+                                                    :kieli_sv "sv Aikaa loputtomasti 3.5"}})
    :1.2.246.562.20.49028100004 (merge
                                  base-hakukohde
                                  {:ataruLomakeAvain "hakukohteen-organisaatiosta-form"
@@ -307,7 +319,8 @@
          (case haku-oid
                "1.2.246.562.29.65950024187" (to-hakukohteet [:1.2.246.562.20.49028100001
                                                              :1.2.246.562.20.49028100002
-                                                             :1.2.246.562.20.49028100003])
+                                                             :1.2.246.562.20.49028100003
+                                                             :1.2.246.562.20.490281000035])
                "1.2.246.562.29.65950024188" (to-hakukohteet [:1.2.246.562.20.49028100004])
                (to-hakukohteet [:1.2.246.562.20.49028196523
                                 :1.2.246.562.20.49028196524

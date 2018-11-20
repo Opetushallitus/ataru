@@ -39,14 +39,17 @@
 (defn extra-answers-not-in-original-form [form-keys answer-keys]
   (apply disj (set answer-keys) form-keys))
 
-(defn- passed? [has-applied answer validators answers-by-key field-descriptor virkailija?]
+(defn- passed? [has-applied form answer validators answers-by-key field-descriptor virkailija?]
   (every? (fn [validator]
-            (first (async/<!! (validator/validate {:has-applied      has-applied
-                                                   :validator        validator
-                                                   :value            answer
-                                                   :answers-by-key   answers-by-key
-                                                   :virkailija?      virkailija?
-                                                   :field-descriptor field-descriptor}))))
+              (first (async/<!! (validator/validate {:has-applied                  has-applied
+                                                     :validator                    validator
+                                                     :value                        answer
+                                                     :answers-by-key               answers-by-key
+                                                     :tarjonta-hakukohteet         (:tarjonta-hakukohteet form)
+                                                     :priorisoivat-hakukohderyhmat (:priorisoivat-hakukohderyhmat form)
+                                                     :rajaavat-hakukohderyhmat     (:rajaavat-hakukohderyhmat form)
+                                                     :virkailija?                  virkailija?
+                                                     :field-descriptor             field-descriptor}))))
           validators))
 
 (defn- wrap-coll [xs]
@@ -59,9 +62,9 @@
   #{:hakukohteet})
 
 (defn- passes-all?
-  [has-applied validators answers answers-by-key field-descriptor virkailija?]
+  [has-applied form validators answers answers-by-key field-descriptor virkailija?]
   (every? true? (map
-                  #(passed? has-applied % validators answers-by-key field-descriptor virkailija?)
+                  #(passed? has-applied form % validators answers-by-key field-descriptor virkailija?)
                   (or
                     (when (empty? answers) [nil])
                     (when (contains? answers-to-validate-as-vector (-> field-descriptor :id (keyword))) [answers])
@@ -124,7 +127,7 @@
        (every-followup-nil? answers-by-key followups)))
 
 (defn build-results
-  [has-applied answers-by-key results [{:keys [id] :as field} & rest-form-fields] hakukohderyhmat virkailija?]
+  [has-applied answers-by-key results form [{:keys [id] :as field} & rest-form-fields] hakukohderyhmat virkailija?]
   (let [id          (keyword id)
         answers     (wrap-coll (:value (get answers-by-key id)))
         hakukohteet (-> answers-by-key :hakukohteet :value set)]
@@ -144,16 +147,16 @@
                               (concat results
                                       {id {:passed?
                                            ((validator-keyword->fn validation-keyword) answers-by-key
-                                             (build-results has-applied answers-by-key [] children hakukohderyhmat virkailija?))}})
+                                             (build-results has-applied answers-by-key [] form children hakukohderyhmat virkailija?))}})
 
                               {:fieldClass "wrapperElement"
                                :children   children}
-                              (concat results (build-results has-applied answers-by-key [] children hakukohderyhmat virkailija?))
+                              (concat results (build-results has-applied answers-by-key [] form children hakukohderyhmat virkailija?))
 
                               {:fieldClass "questionGroup"
                                :fieldType  "fieldset"
                                :children   children}
-                              (concat results (build-results has-applied answers-by-key [] children hakukohderyhmat virkailija?))
+                              (concat results (build-results has-applied answers-by-key [] form children hakukohderyhmat virkailija?))
 
                               {:fieldClass "formField"
                                :fieldType  (:or "dropdown" "multipleChoice")
@@ -168,14 +171,15 @@
                                                               (belongs-to-existing-hakukohde-or-hakukohderyma? field hakukohteet hakukohderyhmat))
                                                         (if (is-question-group-answer? non-empty-answers)
                                                           (and (every? true? (map #(all-answers-allowed? (set %) allowed-values) non-empty-answers))
-                                                               (every? true? (map #(passes-all? has-applied validators (set %) answers-by-key field virkailija?) non-empty-answers)))
+                                                               (every? true? (map #(passes-all? has-applied form validators (set %) answers-by-key field virkailija?) non-empty-answers)))
                                                           (and (all-answers-allowed? non-empty-answers allowed-values)
-                                                               (passes-all? has-applied validators non-empty-answers answers-by-key field virkailija?)))
+                                                               (passes-all? has-applied form validators non-empty-answers answers-by-key field virkailija?)))
                                                         (all-answers-nil? non-empty-answers answers-by-key followups))}}
                                         (when followups
                                           (build-results has-applied
                                                          answers-by-key
                                                          results
+                                                         form
                                                          followups
                                                          hakukohderyhmat
                                                          virkailija?))))
@@ -185,10 +189,10 @@
                               (concat results
                                       {id {:passed? (if (or (not (field-belongs-to-hakukohde-or-hakukohderyhma? field))
                                                             (belongs-to-existing-hakukohde-or-hakukohderyma? field hakukohteet hakukohderyhmat))
-                                                      (passes-all? has-applied validators answers answers-by-key field virkailija?)
+                                                      (passes-all? has-applied form validators answers answers-by-key field virkailija?)
                                                       (every? nil? answers))}})
                               :else (when (some? field) (warn "Invalid field clause, not validated:" field)))]
-            (build-results has-applied answers-by-key ret rest-form-fields hakukohderyhmat virkailija?)
+            (build-results has-applied answers-by-key ret form rest-form-fields hakukohderyhmat virkailija?)
             results))))
 
 (defn build-failed-results [answers-by-key failed-results]
@@ -218,7 +222,7 @@
         extra-answers      (extra-answers-not-in-original-form
                              (map (comp keyword :id) (util/flatten-form-fields (:content form)))
                              (keys answers-by-key))
-        results            (build-results has-applied answers-by-key [] (:content form) applied-hakukohderyhmat virkailija?)
+        results            (build-results has-applied answers-by-key [] form (:content form) applied-hakukohderyhmat virkailija?)
         failed-results     (some->>
                              (into {} (filter #(not (:passed? (second %))) results))
                              (build-failed-results answers-by-key))

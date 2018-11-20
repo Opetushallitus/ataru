@@ -5,6 +5,7 @@
     [clojure.core.match :refer [match]]
     [ataru.applications.automatic-eligibility :as automatic-eligibility]
     [ataru.background-job.job :as job]
+    [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
     [ataru.email.application-email-confirmation :as application-email]
     [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
@@ -164,11 +165,18 @@
         application-hakukohde-reviews (some-> latest-application
                                               :key
                                               application-store/get-application-hakukohde-reviews)
+        priorisoivat-and-rajaavat     (fn [form]
+                                          (merge form
+                                                 (when (:haku application)
+                                                       {:priorisoivat-hakukohderyhmat (:ryhmat (hakukohderyhmat/priorisoivat-hakukohderyhmat tarjonta-service (:haku application)))
+                                                        :tarjonta-hakukohteet         hakukohteet
+                                                        :rajaavat-hakukohderyhmat     (:ryhmat (hakukohderyhmat/rajaavat-hakukohderyhmat (:haku application)))})))
         form                          (-> application
                                           (:form)
                                           (form-store/fetch-by-id)
                                           (hakukohde/populate-hakukohde-answer-options tarjonta-info)
                                           (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)
+                                          (priorisoivat-and-rajaavat)
                                           (hakija-form-service/flag-uneditable-and-unviewable-fields
                                            hakukohteet
                                            form-roles
