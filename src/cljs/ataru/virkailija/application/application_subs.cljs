@@ -371,12 +371,17 @@
 
 (re-frame/reg-sub
   :application/hakukohde-and-tarjoaja-name
-  (fn [db [_ hakukohde-oid]]
-    (if-let [hakukohde (get-in db [:hakukohteet hakukohde-oid])]
-      (str (or (from-multi-lang (:name hakukohde) :fi) hakukohde-oid)
-           (when-let [tarjoaja-name (from-multi-lang (:tarjoaja-name hakukohde) :fi)]
+  (fn [_ _]
+    [(re-frame/subscribe [:application/hakukohteet])
+     (re-frame/subscribe [:application/fetching-hakukohteet])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn hakukohde-and-tarjoaja-name
+    [[hakukohteet fetching-hakukohteet lang] [_ hakukohde-oid]]
+    (if-let [hakukohde (get hakukohteet hakukohde-oid)]
+      (str (or (from-multi-lang (:name hakukohde) lang) hakukohde-oid)
+           (when-let [tarjoaja-name (from-multi-lang (:tarjoaja-name hakukohde) lang)]
              (str " - " tarjoaja-name)))
-      (when (zero? (:fetching-hakukohteet db))
+      (when (zero? fetching-hakukohteet)
         hakukohde-oid))))
 
 (re-frame/reg-sub
