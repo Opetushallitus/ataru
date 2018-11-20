@@ -48,6 +48,31 @@
     (get-in db [:application :selected-application-and-form :application-change-history])))
 
 (re-frame/reg-sub
+  :application/application-haut
+  (fn [db _]
+    (get-in db [:application :haut])))
+
+(re-frame/reg-sub
+  :application/haut
+  (fn [db _]
+    (get db :haut)))
+
+(re-frame/reg-sub
+  :application/fetching-haut
+  (fn [db _]
+    (get db :fetching-haut)))
+
+(re-frame/reg-sub
+  :application/hakukohteet
+  (fn [db _]
+    (get db :hakukohteet)))
+
+(re-frame/reg-sub
+  :application/fetching-hakukohteet
+  (fn [db _]
+    (get db :fetching-hakukohteet)))
+
+(re-frame/reg-sub
  :application/list-heading
  (fn [db]
    (let [selected-haku      (get-in db [:haut (get-in db [:application :selected-haku])])
@@ -220,68 +245,87 @@
 (defn sort-hakukohteet [tarjonta-haut sort]
   (map #(update % :hakukohteet sort) tarjonta-haut))
 
-(defn- haku-name [db haku-oid lang]
-  (if-let [haku (get-in db [:haut haku-oid])]
+(defn- haku-name [haut fetching-haut haku-oid lang]
+  (if-let [haku (get haut haku-oid)]
     (or (from-multi-lang (:name haku) lang) haku-oid)
-    (when (zero? (:fetching-haut db))
+    (when (zero? fetching-haut)
       haku-oid)))
 
-(defn- hakukohde-name [db hakukohde-oid lang]
-  (if-let [hakukohde (get-in db [:hakukohteet hakukohde-oid])]
+(defn- hakukohde-name [hakukohteet fetching-hakukohteet hakukohde-oid lang]
+  (if-let [hakukohde (get hakukohteet hakukohde-oid)]
     (or (from-multi-lang (:name hakukohde) lang) hakukohde-oid)
-    (when (zero? (:fetching-hakukohteet db))
+    (when (zero? fetching-hakukohteet)
       hakukohde-oid)))
 
-(defn- sort-by-haku-name [haut db]
+(defn- sort-by-haku-name
+  [application-haut haut fetching-haut lang]
   (sort-by (comp clojure.string/lower-case
-                 #(or (haku-name db (:oid %) :fi) ""))
-           haut))
+                 #(or (haku-name haut fetching-haut (:oid %) lang) ""))
+           application-haut))
 
-(defn- sort-by-hakukohde-name [hakukohteet db]
+(defn- sort-by-hakukohde-name
+  [hakukohteet fetching-hakukohteet lang application-hakukohteet]
   (sort-by (comp clojure.string/lower-case
-                 #(or (hakukohde-name db (:oid %) :fi) ""))
-           hakukohteet))
+                 #(or (hakukohde-name hakukohteet fetching-hakukohteet (:oid %) lang) ""))
+           application-hakukohteet))
 
-(defn- sort-by-form-name [direct-form-haut]
+(defn- sort-by-form-name [direct-form-haut lang]
   (sort-by (comp clojure.string/lower-case
-                 #(or (from-multi-lang (:name %) :fi) ""))
+                 #(or (from-multi-lang (:name %) lang) ""))
            direct-form-haut))
 
-(defn- incomplete-haut [db]
-  (when-let [haut (get-in db [:application :haut])]
-    (-> (filter-haut-all-not-processed haut)
+(defn- incomplete-haut [application-haut]
+  (when (some? application-haut)
+    (-> (filter-haut-all-not-processed application-haut)
         (update :tarjonta-haut sort-by-unprocessed)
         (update :tarjonta-haut sort-hakukohteet sort-by-unprocessed)
         (update :direct-form-haut sort-by-unprocessed))))
 
-(defn- complete-haut [db]
-  (when-let [haut (get-in db [:application :haut])]
-    (-> (filter-haut-all-processed haut)
-        (update :tarjonta-haut sort-by-haku-name db)
-        (update :tarjonta-haut sort-hakukohteet sort-by-hakukohde-name)
-        (update :direct-form-haut sort-by-form-name))))
+(defn- complete-haut
+  [application-haut haut fetching-haut hakukohteet fetching-hakukohteet lang]
+  (when (some? application-haut)
+    (-> (filter-haut-all-processed application-haut)
+        (update :tarjonta-haut sort-by-haku-name haut fetching-haut lang)
+        (update :tarjonta-haut sort-hakukohteet (partial sort-by-hakukohde-name
+                                                         hakukohteet
+                                                         fetching-hakukohteet
+                                                         lang))
+        (update :direct-form-haut sort-by-form-name lang))))
 
 (re-frame/reg-sub
   :application/incomplete-haut
-  incomplete-haut)
+  (fn [_ _]
+    (re-frame/subscribe [:application/application-haut]))
+  (fn [application-haut _]
+    (incomplete-haut application-haut)))
 
 (re-frame/reg-sub
   :application/incomplete-haku-count
-  (fn [db]
-    (let [{:keys [tarjonta-haut direct-form-haut]} (incomplete-haut db)]
-      (+ (count tarjonta-haut)
-         (count direct-form-haut)))))
+  (fn [_ _]
+    (re-frame/subscribe [:application/incomplete-haut]))
+  (fn [{:keys [tarjonta-haut direct-form-haut]} _]
+    (+ (count tarjonta-haut)
+       (count direct-form-haut))))
 
 (re-frame/reg-sub
   :application/complete-haut
-  complete-haut)
+  (fn [_ _]
+    [(re-frame/subscribe [:application/application-haut])
+     (re-frame/subscribe [:application/haut])
+     (re-frame/subscribe [:application/fetching-haut])
+     (re-frame/subscribe [:application/hakukohteet])
+     (re-frame/subscribe [:application/fetching-hakukohteet])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn [[application-haut haut fetching-haut hakukohteet fetching-hakukohteet lang] _]
+    (complete-haut application-haut haut fetching-haut hakukohteet fetching-hakukohteet lang)))
 
 (re-frame/reg-sub
   :application/complete-haku-count
-  (fn [db]
-    (let [{:keys [tarjonta-haut direct-form-haut]} (complete-haut db)]
-      (+ (count tarjonta-haut)
-         (count direct-form-haut)))))
+  (fn [_ _]
+    (re-frame/subscribe [:application/complete-haut]))
+  (fn [{:keys [tarjonta-haut direct-form-haut]} _]
+    (+ (count tarjonta-haut)
+       (count direct-form-haut))))
 
 (re-frame/reg-sub
  :application/search-control-all-page-view?
@@ -318,7 +362,12 @@
 
 (re-frame/reg-sub
   :application/hakukohde-name
-  (fn [db [_ hakukohde-oid]] (hakukohde-name db hakukohde-oid :fi)))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/hakukohteet])
+     (re-frame/subscribe [:application/fetching-hakukohteet])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn [[hakukohteet fetching-hakukohteet lang] [_ hakukohde-oid]]
+    (hakukohde-name hakukohteet fetching-hakukohteet hakukohde-oid lang)))
 
 (re-frame/reg-sub
   :application/hakukohde-and-tarjoaja-name
@@ -344,7 +393,12 @@
 
 (re-frame/reg-sub
   :application/haku-name
-  (fn [db [_ haku-oid]] (haku-name db haku-oid :fi)))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/haut])
+     (re-frame/subscribe [:application/fetching-haut])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn [[haut fetching-haut lang] [_ haku-oid]]
+    (haku-name haut fetching-haut haku-oid lang)))
 
 (re-frame/reg-sub
   :application/hakukohteet-header
@@ -366,7 +420,7 @@
                                   [hakukohde-oid :description])])))
 
 (re-frame/reg-sub
-  :application/hakukohteet
+  :application/hakutoiveet
   (fn [db _]
     (get-in db [:application
                 :selected-application-and-form
@@ -377,11 +431,14 @@
 
 (re-frame/reg-sub
   :application/selected-application-haku-name
-  (fn [db _]
-    (let [application      (get-in db [:application :selected-application-and-form :application])
-          application-lang (keyword (:lang application "fi"))]
-      (when-let [haku-oid (:haku application)]
-        (haku-name db haku-oid application-lang)))))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/selected-application])
+     (re-frame/subscribe [:application/haut])
+     (re-frame/subscribe [:application/fetching-haut])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn [[application haut fetching-haut lang] _]
+    (when-let [haku-oid (:haku application)]
+      (haku-name haut fetching-haut haku-oid lang))))
 
 (re-frame/reg-sub
   :application/information-request-submit-enabled?
