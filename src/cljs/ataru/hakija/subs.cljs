@@ -499,3 +499,9 @@
   (fn [db [_ id]]
     (and (= :email id)
          (-> db :form :tarjonta :yhteishaku))))
+
+(re-frame/reg-sub
+  :application/transmitting?
+  (fn [db]
+    (not-empty (mapcat keys (vals (:transmitting db))))))
+
