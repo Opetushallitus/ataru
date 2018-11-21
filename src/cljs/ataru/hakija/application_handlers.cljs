@@ -138,7 +138,6 @@
   handle-submit)
 
 (defn response->error-message [db response]
-  (prn response)
   (assoc db :error {:code    (keyword (get-in response [:response :code] :internal-server-error))
                     :message "Tapahtui virhe "
                     :detail  (str response)}))
