@@ -7,6 +7,8 @@
             [com.stuartsierra.component :as component]))
 
 (def yo-komo "1.2.246.562.5.2013061010184237348007")
+(def erityisammatillinentutkinto-komo "erikoisammattitutkinto komo oid")
+(def ammatillinentutkinto-komo "ammatillinentutkinto komo oid")
 
 (defn- ->suoritus-tila
   [data]
@@ -35,13 +37,13 @@
   (format/unparse (:date-time format/formatters)
                   modified-since))
 
-(defn- ylioppilas-suoritukset
-  [cas-client person-oid modified-since]
+(defn- suoritukset-for-komo
+  [cas-client person-oid modified-since komo]
   (match [(cas-client/cas-authenticated-get
            cas-client
            (url/resolve-url
             "suoritusrekisteri.suoritukset"
-            (cond-> {"komo" yo-komo}
+            (cond-> {"komo" komo}
                     (some? person-oid)
                     (assoc "henkilo" person-oid)
                     (some? modified-since)
@@ -53,9 +55,13 @@
     (throw (new RuntimeException
                 (str "Fetching ylioppilas suoritukset failed: " r)))))
 
+(defn- ylioppilas-ja-ammatilliset-suoritukset [cas-client person-oid modified-since]
+  (mapcat (partial suoritukset-for-komo cas-client person-oid modified-since)
+    [yo-komo ammatillinentutkinto-komo erityisammatillinentutkinto-komo]))
+
 (defprotocol SuoritusService
-  (ylioppilas-suoritukset-modified-since [this modified-since])
-  (ylioppilas? [this person-oid]))
+  (ylioppilas-ja-ammatilliset-suoritukset-modified-since [this modified-since])
+  (ylioppilas-tai-ammatillinen? [this person-oid]))
 
 (defrecord HttpSuoritusService [suoritusrekisteri-cas-client]
   component/Lifecycle
@@ -63,10 +69,10 @@
   (stop [this] this)
 
   SuoritusService
-  (ylioppilas-suoritukset-modified-since [this modified-since]
-    (ylioppilas-suoritukset suoritusrekisteri-cas-client nil modified-since))
-  (ylioppilas? [this person-oid]
+  (ylioppilas-ja-ammatilliset-suoritukset-modified-since [this modified-since]
+    (ylioppilas-ja-ammatilliset-suoritukset suoritusrekisteri-cas-client nil modified-since))
+  (ylioppilas-tai-ammatillinen? [this person-oid]
     (some #(= :valmis (:tila %))
-          (ylioppilas-suoritukset suoritusrekisteri-cas-client person-oid nil))))
+          (ylioppilas-ja-ammatilliset-suoritukset suoritusrekisteri-cas-client person-oid nil))))
 
 (defn new-suoritus-service [] (->HttpSuoritusService nil))
