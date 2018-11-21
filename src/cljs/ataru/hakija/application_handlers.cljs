@@ -32,7 +32,7 @@
 (reg-event-fx
   :application/handle-get-application-by-hakija-secret-error
   (fn [{:keys [db]} [_ {:keys [status response] :as params}]]
-    (if (and (= status 401) (:secret-expired response))
+    (if (and (= status 401) (= "secret-expired" (:code response)))
       {:db (-> db
                (assoc-in [:form :selected-language] (keyword (:lang response)))
                (assoc-in [:application :secret-expired?] true)

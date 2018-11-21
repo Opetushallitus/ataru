@@ -59,8 +59,8 @@
             (response/ok application-form-and-person))
 
           secret-expired?
-          (response/unauthorized {:secret-expired true
-                                  :lang           lang-override})
+          (response/unauthorized {:code :secret-expired
+                                  :lang lang-override})
           (:virkailija secret)
           (response/bad-request {:code :secret-expired
                                  :error "Invalid virkailija secret"})
