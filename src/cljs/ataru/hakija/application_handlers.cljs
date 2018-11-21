@@ -32,7 +32,7 @@
 (reg-event-fx
   :application/handle-get-application-by-hakija-secret-error
   (fn [{:keys [db]} [_ {:keys [status response] :as params}]]
-    (if (and (= status 401) (:secret-expired response))
+    (if (and (= status 401) (= "secret-expired" (:code response)))
       {:db (-> db
                (assoc-in [:form :selected-language] (keyword (:lang response)))
                (assoc-in [:application :secret-expired?] true)
@@ -137,11 +137,16 @@
   :application/handle-submit-response
   handle-submit)
 
+(defn response->error-message [db response]
+  (assoc db :error {:code    (keyword (get-in response [:response :code] :internal-server-error))
+                    :message "Tapahtui virhe "
+                    :detail  (str response)}))
+
 (reg-event-fx
   :application/handle-submit-error
   (fn [cofx [_ response]]
     {:db (-> (update (:db cofx) :application dissoc :submit-status)
-             (assoc :error {:message "Tapahtui virhe " :detail response}))}))
+             (response->error-message response))}))
 
 (reg-event-fx
   :application/submit
@@ -515,6 +520,20 @@
      :dispatch [:application/post-handle-form-dispatches]}))
 
 (reg-event-db
+  :application/network-online
+  (fn [db [_ flash]]
+    (if (= :network-offline (get-in db [:error :code]))
+      (dissoc db :error)
+      db)))
+
+(reg-event-db
+  :application/network-offline
+  (fn [db [_ flash]]
+    (if (get db :error)
+      db
+      (assoc-in db [:error :code] :network-offline))))
+
+(reg-event-db
   :application/initialize-db
   initialize-db)
 
@@ -697,7 +716,7 @@
     (remove-repeatable-field-value db field-descriptor data-idx question-group-idx)))
 
 (defn default-error-handler [db [_ response]]
-  (assoc db :error {:message "Tapahtui virhe " :detail (str response)}))
+  (response->error-message db response))
 
 (defn application-run-rules [db rule]
   (if (not-empty rule)

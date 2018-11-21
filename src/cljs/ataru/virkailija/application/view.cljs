@@ -1616,6 +1616,41 @@
            [application-deactivate-toggle]
            [application-review-events]]]]))))
 
+(defn notification [link-params]
+  (fn [{:keys [text link-text href on-click]}]
+    [:div.application__message-display--details-notification (get-virkailija-translation text)
+     [:a.application-handling__form-outdated--button.application-handling__button
+      {:href     href
+       :target   "_blank"
+       :on-click on-click}
+      [:span (get-virkailija-translation link-text)]]]))
+
+(defn notifications-display []
+  (let [selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
+        selected-review-hakukohde     (subscribe [:state-query [:application :selected-review-hakukohde]])
+        alternative-form              (subscribe [:state-query [:application :alternative-form]])]
+    (fn []
+      (let [application (:application @selected-application-and-form)
+            yksiloity   (-> application :person :yksiloity)
+            person-oid  (-> application :person :oid)]
+        (when (or @alternative-form (not yksiloity))
+          [:div.application__message-display.application__message-display--notification
+           [:div.application__message-display--exclamation [:i.zmdi.zmdi-alert-triangle]]
+           [:div.application__message-display--details
+            (when @alternative-form
+              [notification {:text      :form-outdated
+                             :link-text :show-newest-version
+                             :on-click  (fn [evt]
+                                          (.preventDefault evt)
+                                          (select-application (:key application) @selected-review-hakukohde true))}])
+            (when-not yksiloity
+              [:div.individualization
+               [notification {:text      :person-not-individualized
+                              :link-text :individualize-in-henkilopalvelu
+                              :href      (str "/henkilo-ui/oppija/"
+                                              person-oid
+                                              "/duplikaatit?permissionCheckService=ATARU")}]])]])))))
+
 (defn application-heading [application loading?]
   (let [answers            (:answers application)
         pref-name          (-> application :person :preferred-name)
@@ -1625,6 +1660,7 @@
         person-oid         (-> application :person :oid)
         yksiloity          (-> application :person :yksiloity)
         email              (get-in answers [:email :value])
+
         applications-count (:applications-count application)]
     [:div.application__handling-heading
      [:div.application-handling__review-area-main-heading-container
@@ -1633,17 +1669,10 @@
          [:div.application-handling__review-area-main-heading-name-row
           (when pref-name
             [:h2.application-handling__review-area-main-heading
-             (str last-name ", " pref-name " — " (or ssn birth-date))])
-          (when (> applications-count 1)
-            [:a.application-handling__review-area-main-heading-applications-link
-             {:on-click (fn [_]
-                          (dispatch [:application/navigate
-                                     (str "/lomake-editori/applications/search"
-                                          "?term=" (or ssn email))]))}
-             (str applications-count " " (get-virkailija-translation :applications))])]
-         (when person-oid
-           [:div.application-handling__review-area-main-heading-person-oid-row
-            [:div.application-handling__applicant-links
+             (str last-name ", " pref-name " — " (or ssn birth-date))])]
+         [:div.application-handling__review-area-main-heading-person-oid-row
+          [:div.application-handling__applicant-links
+           (when person-oid
              [:a
               {:href   (str "/henkilo-ui/oppija/"
                             person-oid
@@ -1651,22 +1680,24 @@
                :target "_blank"}
               [:i.zmdi.zmdi-account-circle.application-handling__review-area-main-heading-person-icon]
               [:span.application-handling__review-area-main-heading-person-oid
-               (str (get-virkailija-translation :student) " " person-oid)]]
+               (str (get-virkailija-translation :student) " " person-oid)]])
+           (when person-oid
              [:a
               {:href   (str "/suoritusrekisteri/#/opiskelijat?henkilo=" person-oid)
                :target "_blank"}
               [:i.zmdi.zmdi-collection-text.application-handling__review-area-main-heading-person-icon]
               [:span.application-handling__review-area-main-heading-person-oid
-               (get-virkailija-translation :person-completed-education)]]]
-            (when-not yksiloity
-              [:a.individualization
-               {:href   (str "/henkilo-ui/oppija/"
-                             person-oid
-                             "/duplikaatit?permissionCheckService=ATARU")
-                :target "_blank"}
-               [:i.zmdi.zmdi-account-o]
-               [:span (str (get-virkailija-translation :person-not-individualized) " ")
-                [:span.important "Tee yksilöinti henkilöpalvelussa."]]])])])
+               (get-virkailija-translation :person-completed-education)]])
+           (when (> applications-count 1)
+             [:a.application-handling__review-area-main-heading-applications-link
+              {:on-click (fn [_]
+                           (dispatch [:application/navigate
+                                      (str "/lomake-editori/applications/search"
+                                           "?term=" (or ssn email))]))}
+              [:i.zmdi.zmdi-collection-text.application-handling__review-area-main-heading-person-icon]
+              [:span.application-handling__review-area-main-heading-person-oid
+               (str (get-virkailija-translation :view-applications) " (" applications-count ")")]])]]
+         [notifications-display]])
       (when (not (contains? (:answers application) :hakukohteet))
         [:ul.application-handling__hakukohteet-list
          (for [hakukohde-oid (:hakukohde application)]
@@ -1702,11 +1733,9 @@
   (let [selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
         expanded?                     (subscribe [:state-query [:application :application-list-expanded?]])
         review-positioning            (subscribe [:state-query [:application :review-positioning]])
-        alternative-form              (subscribe [:state-query [:application :alternative-form]])
-        selected-review-hakukohde     (subscribe [:state-query [:application :selected-review-hakukohde]])
         application-loading           (subscribe [:state-query [:application :loading?]])]
     (fn []
-      (let [application        (:application @selected-application-and-form)]
+      (let [application (:application @selected-application-and-form)]
         (when-not @expanded?
           [:div.application-handling__detail-container
            [close-application]
@@ -1717,14 +1746,6 @@
                [:i.zmdi.zmdi-spinner.spin]]]
              [:div.application-handling__review-area
               [:div.application-handling__application-contents
-               (when @alternative-form
-                 [:div.application-handling__form-outdated
-                  [:div.application-handling__form-outdated--disclaimer (get-virkailija-translation :form-outdated)]
-                  [:a.application-handling__form-outdated--button.application-handling__button
-                   {:on-click (fn [evt]
-                                (.preventDefault evt)
-                                (select-application (:key application) @selected-review-hakukohde true))}
-                   [:span (get-virkailija-translation :show-newest-version)]]])
                [application-contents @selected-application-and-form]]
               [:span#application-handling__review-position-canary]
               (when (= :fixed @review-positioning) [floating-application-review-placeholder])

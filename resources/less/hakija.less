@@ -850,17 +850,65 @@ textarea.application__form-text-area__size-large {
   color: @sg-color-gray-2;
 }
 
-.application__error-display {
-    position: fixed;
-    margin-top: 0;
-    margin-left: 20px;
-    color: red;
-    font-weight: bold;
-    background-color: white;
-    z-index: 10;
-    border: solid 1px black;
-    border-radius: 3px;
-    padding: 10px;
+.application__message-display {
+  position: fixed;
+  margin-top: 0;
+  margin-left: 20px;
+  color: black;
+  z-index: 10;
+  border: solid 2px black;
+  border-radius: 4px;
+  padding: 0;
+  display: flex;
+  flex-flow: row nowrap;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+}
+.application__message-display--details {
+  padding: 12px 20px;
+  font-weight: normal;
+  font-size: 14px;
+  min-width: 500px;
+  justify-content: center;
+  align-items: flex-start;
+}
+.application__message-display--exclamation {
+  font-size: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  padding: 12px 20px;
+  .semibold;
+}
+
+.application__message-display--notification {
+  border-color: @application-error-display-border-color;
+  .application__message-display--details {
+    background-color: @application-error-display-background-color;
+  }
+  .application__message-display--exclamation {
+    background-color: @application-error-display-border-color;
+  }
+}
+.application__message-display--error {
+  border-color: @application-error-display-border-color;
+  .application__message-display--details {
+    background-color: @application-error-display-background-color;
+  }
+  .application__message-display--exclamation {
+    background-color: @application-error-display-border-color;
+  }
+}
+.application__message-display--warning {
+  border-color: @application-warning-display-border-color;
+  .application__message-display--details {
+    background-color: @application-warning-display-background-color;
+  }
+  .application__message-display--exclamation {
+    background-color: @application-warning-display-border-color;
+  }
 }
 
 .application__form-outer-checkbox-container {

@@ -211,10 +211,14 @@
          (when (not @submit-notification-hidden?) [submit-notification submit-notification-hidden?])]))))
 
 (defn error-display []
-  (let [error-message (subscribe [:state-query [:error :message]])
-        detail (subscribe [:state-query [:error :detail]])]
-    (fn [] (if @error-message
-             [:div.application__error-display @error-message (str @detail)]
+  (let [error-code (subscribe [:state-query [:error :code]])]
+    (fn [] (if @error-code
+             [:div.application__message-display
+              {:class (if (= :network-offline @error-code)
+                        "application__message-display--warning"
+                        "application__message-display--error")}
+              [:div.application__message-display--exclamation [:i.zmdi.zmdi-alert-triangle]]
+              [:div.application__message-display--details (get-translation @error-code)]]
              nil))))
 
 (defn form-view []

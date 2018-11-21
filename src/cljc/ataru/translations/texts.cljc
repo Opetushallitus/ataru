@@ -314,7 +314,16 @@ You will receive a confirmation of your application to your email."}
                                                  :en "Edit"}
    :preview-answers                             {:fi "Esikatselu"
                                                  :sv "Förhandsvisa"
-                                                 :en "Preview"}})
+                                                 :en "Preview"}
+   :network-offline                             {:fi "Ei yhteyttä verkkoon."
+                                                 :sv "Network is offline."
+                                                 :en "Network is offline."}
+   :internal-server-error                       {:fi "Tapahtui palvelinvirhe."
+                                                 :sv "Internal server error."
+                                                 :en "Internal server error."}
+   :secret-expired                              {:fi "Tämä hakemuslinkki on vanhentunut"
+                                                 :en "This application link has expired"
+                                                 :sv "Denna ansökningslänk är föråldrad"}})
 
 (def general-texts
   {:yes                {:en "Yes"
@@ -720,6 +729,9 @@ You will receive a confirmation of your application to your email."}
    :applications                                {:fi "hakemusta"
                                                  :sv "ansökningar"
                                                  :en "EN: hakemusta"}
+   :view-applications                           {:fi "Näytä oppijan hakemukset"
+                                                 :sv "SV: Näytä oppijan hakemukset"
+                                                 :en "EN: Näytä oppijan hakemukset"}
    :applications-panel                          {:fi "Hakemukset"
                                                  :sv "Ansökningar"
                                                  :en "EN: Hakemukset"}
@@ -903,7 +915,7 @@ You will receive a confirmation of your application to your email."}
    :form-section                                {:fi "Lomakeosio"
                                                  :sv "Blankettdel"
                                                  :en "EN: Lomakeosio"}
-   :form-outdated                               {:fi "Hakijan täyttämästä lomakkeesta on uudempi versio!"
+   :form-outdated                               {:fi "Lomakkeesta on uudempi versio!"
                                                  :sv "Det finns en ny version av sökandens blankett!"
                                                  :en "EN: Hakijan täyttämästä lomakkeesta on uudempi versio!"}
    :show-newest-version                         {:fi "Näytä lomake uusimmalla versiolla"
@@ -1086,6 +1098,9 @@ You will receive a confirmation of your application to your email."}
    :person-not-individualized                   {:fi "Hakijaa ei ole yksilöity."
                                                  :sv "Sökande har inte individualiserats."
                                                  :en "EN: Hakijaa ei ole yksilöity."}
+   :individualize-in-henkilopalvelu             {:fi "Tee yksilöinti henkilöpalvelussa."
+                                                 :sv "Tee yksilöinti henkilöpalvelussa."
+                                                 :en "Tee yksilöinti henkilöpalvelussa."}
    :pohjakoulutus_am                            {:fi "Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"
                                                  :sv "I Finland avlagd yrkesinriktad grundexamen, examen på skolnivå, institutnivå eller inom yrkesutbildning på högre nivå"
                                                  :en "EN: Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"}
