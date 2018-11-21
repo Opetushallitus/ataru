@@ -343,6 +343,12 @@
       (clojure.string/split #",")
       (cljs-util/get-unselected-review-states states)))
 
+(defn- ensure-filters
+  [current-filters]
+  (if (some? current-filters)
+    current-filters
+    (get-in initial-db/default-db [:application :filters])))
+
 (defn fetch-applications-fx [db path]
   {:db       (-> db
                  (assoc-in [:application :fetching-applications] true)
@@ -355,7 +361,7 @@
                  (assoc-in [:application :selection-state-filter] (extract-unselected-review-states-from-query
                                                                     :selection-state-filter
                                                                     review-states/application-hakukohde-selection-states))
-                 (assoc-in [:application :filters] (get-in initial-db/default-db [:application :filters])))
+                 (update-in [:application :filters] ensure-filters))
    :dispatch [:application/refresh-haut-and-hakukohteet]
    :http     {:method              :get
               :path                path
