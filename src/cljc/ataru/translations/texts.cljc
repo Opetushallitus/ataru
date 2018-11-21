@@ -1331,7 +1331,13 @@ You will receive a confirmation of your application to your email."}
                                                  :en "Next application"}
    :navigate-applications-back                  {:fi "Edellinen hakemus"
                                                  :sv "SV: Edellinen hakemus"
-                                                 :en "Previous application"}})
+                                                 :en "Previous application"}
+   :autosave-enabled                            {:fi "Automaattitalletus: päällä"
+                                                 :sv "SV: Automaattitalletus: päällä"
+                                                 :en "Auto-save: enabled"}
+   :autosave-disabled                           {:fi "Automaattitalletus: pois päältä"
+                                                 :sv "SV: Automaattitalletus: pois päältä"
+                                                 :en "Auto-save: disabled"}})
 
 (def state-translations
   {:active               {:fi "Aktiivinen"
