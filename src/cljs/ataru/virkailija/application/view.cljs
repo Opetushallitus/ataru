@@ -1630,27 +1630,26 @@
         selected-review-hakukohde     (subscribe [:state-query [:application :selected-review-hakukohde]])
         alternative-form              (subscribe [:state-query [:application :alternative-form]])]
     (fn []
-      (fn []
-        (let [application (:application @selected-application-and-form)
-              yksiloity   (-> application :person :yksiloity)
-              person-oid  (-> application :person :oid)]
-          (when (or @alternative-form (not yksiloity))
-            [:div.application__message-display.application__message-display--notification
-             [:div.application__message-display--exclamation [:i.zmdi.zmdi-alert-triangle]]
-             [:div.application__message-display--details
-              (when @alternative-form
-                [notification {:text      :form-outdated
-                               :link-text :show-newest-version
-                               :on-click  (fn [evt]
-                                            (.preventDefault evt)
-                                            (select-application (:key application) @selected-review-hakukohde true))}])
-              (when-not yksiloity
-                [:div.individualization
-                 [notification {:text      :person-not-individualized
-                                :link-text :individualize-in-henkilopalvelu
-                                :href      (str "/henkilo-ui/oppija/"
-                                                person-oid
-                                                "/duplikaatit?permissionCheckService=ATARU")}]])]]))))))
+      (let [application (:application @selected-application-and-form)
+            yksiloity   (-> application :person :yksiloity)
+            person-oid  (-> application :person :oid)]
+        (when (or @alternative-form (not yksiloity))
+          [:div.application__message-display.application__message-display--notification
+           [:div.application__message-display--exclamation [:i.zmdi.zmdi-alert-triangle]]
+           [:div.application__message-display--details
+            (when @alternative-form
+              [notification {:text      :form-outdated
+                             :link-text :show-newest-version
+                             :on-click  (fn [evt]
+                                          (.preventDefault evt)
+                                          (select-application (:key application) @selected-review-hakukohde true))}])
+            (when-not yksiloity
+              [:div.individualization
+               [notification {:text      :person-not-individualized
+                              :link-text :individualize-in-henkilopalvelu
+                              :href      (str "/henkilo-ui/oppija/"
+                                              person-oid
+                                              "/duplikaatit?permissionCheckService=ATARU")}]])]])))))
 
 (defn application-heading [application loading?]
   (let [answers            (:answers application)
