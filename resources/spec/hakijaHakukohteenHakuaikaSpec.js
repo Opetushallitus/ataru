@@ -57,7 +57,7 @@
                 expect(testFrame().find("#assosiaatio-hakukohderyhman-kautta").prop('disabled')).to.equal(false)
 
                 var kysymysKoskeeHakukohteitaFinder = function(id) {
-                    return testFrame().find(id).parent().siblings(".application__question_hakukohde_names_container").text()
+                    return testFrame().find(id).parent().find(".application__question_hakukohde_names_container").text()
                 };
 
                 expect(kysymysKoskeeHakukohteitaFinder("#hakuajat-ohi")).to.equal("Kysymys kuuluu hakukohteisiin: näytä hakukohteet (1)")

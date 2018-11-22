@@ -147,27 +147,15 @@
                (:belongs-to-hakukohderyhma field))))
 
 (defn- validation-error
-  [id errors]
-  (r/create-class
-   {:display-name
-    (str "validation-error-" id)
-    :component-did-mount
-    (fn [component]
-      (dispatch [:application/validation-error-did-mount id]))
-    :component-will-unmount
-    (fn [component]
-      (dispatch [:application/validation-error-will-unmount id]))
-    :reagent-render
-    (fn [id errors]
-      (let [languages @(subscribe [:application/default-languages])]
-        [:div.application__validation-error-dialog
-         [:div.application__validation-error-dialog__arrow]
-         [:div.application__validation-error-dialog__box
-          (doall
-           (map-indexed (fn [idx error]
-                          (with-meta (util/non-blank-val error languages)
-                            {:key (str "error-" idx)}))
-                        errors))]]))}))
+  [errors]
+  (let [languages @(subscribe [:application/default-languages])]
+    (when (not-empty errors)
+      [:div.application__validation-error-dialog
+       (doall
+        (map-indexed (fn [idx error]
+                       (with-meta (util/non-blank-val error languages)
+                         {:key (str "error-" idx)}))
+                     errors))])))
 
 (defn email-field [field-descriptor & {:keys [div-kwd disabled editing idx]
                                        :or   {div-kwd  :div.application__form-field
@@ -179,8 +167,7 @@
         size-class             (text-field-size->class size)
         validators-processing  (subscribe [:state-query [:application :validators-processing]])
         verify-email?          (subscribe [:application/verify-email? id])
-        edit-forbidden?        (contains? editing-forbidden-person-info-field-ids id)
-        show-validation-error? (subscribe [:application/show-validation-error? id])]
+        edit-forbidden?        (contains? editing-forbidden-person-info-field-ids id)]
     (fn []
       (let [answer      (if (and @editing edit-forbidden?)
                           {:value @(subscribe [:state-query [:application :person id]])
@@ -206,32 +193,29 @@
            [question-hakukohde-names field-descriptor])
          [:div.application__form-text-input-info-text
           [info-text field-descriptor]]
-         [:div.application__form-text-input-and-validation-errors
-          [:input.application__form-text-input
-           (merge {:id            id
-                   :type          "text"
-                   :placeholder   (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                                    (util/non-blank-val input-hint @languages))
-                   :class         (str size-class
-                                       (if show-error?
-                                         " application__form-field-error"
-                                         " application__form-text-input--normal"))
-                   :on-blur       on-blur
-                   :on-change     on-change
-                   :required      (is-required-field? field-descriptor)
-                   :aria-invalid  (not @(subscribe [:application/answer-valid? id idx nil]))
-                   :default-value (if @(subscribe [:application/cannot-view? id])
-                                    "***********"
-                                    (:value answer))}
-                  (when @verify-email?
-                    {:on-paste (fn [event]
-                                 (.preventDefault event))})
-                  (when (or disabled
-                            @(subscribe [:application/cannot-edit? id]))
-                    {:disabled true}))]
-          (when (and (not-empty (:errors answer))
-                     @show-validation-error?)
-            [validation-error id (:errors answer)])]
+         [:input.application__form-text-input
+          (merge {:id            id
+                  :type          "text"
+                  :placeholder   (when-let [input-hint (-> field-descriptor :params :placeholder)]
+                                   (util/non-blank-val input-hint @languages))
+                  :class         (str size-class
+                                      (if show-error?
+                                        " application__form-field-error"
+                                        " application__form-text-input--normal"))
+                  :on-blur       on-blur
+                  :on-change     on-change
+                  :required      (is-required-field? field-descriptor)
+                  :aria-invalid  (not @(subscribe [:application/answer-valid? id idx nil]))
+                  :default-value (if @(subscribe [:application/cannot-view? id])
+                                   "***********"
+                                   (:value answer))}
+                 (when @verify-email?
+                   {:on-paste (fn [event]
+                                (.preventDefault event))})
+                 (when (or disabled
+                           @(subscribe [:application/cannot-edit? id]))
+                   {:disabled true}))]
+         [validation-error (:errors answer)]
          (when @verify-email?
            (let [id           :verify-email
                  verify-label (get-translation :verify-email)]
@@ -240,23 +224,22 @@
                {:id  "application-form-field-label-verify-email"
                 :for id}
                [:span (str verify-label (required-hint field-descriptor))]]
-              [:div.application__form-text-input-and-validation-errors
-               [:input.application__form-text-input
-                {:id           id
-                 :type         "text"
-                 :required     true
-                 :value        (if @(subscribe [:application/cannot-view? id])
-                                 "***********"
-                                 (:verify answer))
-                 :on-blur      on-blur
-                 :on-paste     (fn [event]
-                                 (.preventDefault event))
-                 :on-change    on-change
-                 :class        (str size-class
-                                    (if show-error?
-                                      " application__form-field-error"
-                                      " application__form-text-input--normal"))
-                 :aria-invalid (not @(subscribe [:application/answer-valid? id idx nil]))}]]]))]))))
+              [:input.application__form-text-input
+               {:id           id
+                :type         "text"
+                :required     true
+                :value        (if @(subscribe [:application/cannot-view? id])
+                                "***********"
+                                (:verify answer))
+                :on-blur      on-blur
+                :on-paste     (fn [event]
+                                (.preventDefault event))
+                :on-change    on-change
+                :class        (str size-class
+                                   (if show-error?
+                                     " application__form-field-error"
+                                     " application__form-text-input--normal"))
+                :aria-invalid (not @(subscribe [:application/answer-valid? id idx nil]))}]]))]))))
 
 (defn text-field [field-descriptor & {:keys [div-kwd idx]
                                       :or   {div-kwd :div.application__form-field}}]
@@ -264,7 +247,6 @@
         size                   (get-in field-descriptor [:params :size])
         size-class             (text-field-size->class size)
         languages              (subscribe [:application/default-languages])
-        show-validation-error? (subscribe [:application/show-validation-error? id])
         editing?               (subscribe [:application/editing?])
         disabled?              (subscribe [:application/disabled? id])
         cannot-view?           (subscribe [:application/cannot-view? id])
@@ -273,7 +255,6 @@
     (fn [field-descriptor & {:keys [div-kwd idx]
                              :or   {div-kwd :div.application__form-field}}]
       (let [languages              @languages
-            show-validation-error? @show-validation-error?
             editing?               @editing?
             disabled?              @disabled?
             value                  @(subscribe [:application/answer-value id idx nil])
@@ -292,38 +273,35 @@
            [question-hakukohde-names field-descriptor])
          [:div.application__form-text-input-info-text
           [info-text field-descriptor]]
-         [:div.application__form-text-input-and-validation-errors
-          [:input.application__form-text-input
-           (merge {:id           id
-                   :type         "text"
-                   :placeholder  (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                                   (util/non-blank-val input-hint languages))
-                   :class        (str size-class
-                                      (if show-error?
-                                        " application__form-field-error"
-                                        " application__form-text-input--normal"))
-                   :on-blur      (fn [evt]
-                                   (swap! local-state assoc
-                                          :focused? false)
-                                   (on-blur evt))
-                   :on-change    (fn [evt]
-                                   (swap! local-state assoc
-                                          :focused? true
-                                          :value (-> evt .-target .-value))
-                                   (on-change evt))
-                   :required     (is-required-field? field-descriptor)
-                   :aria-invalid (not valid?)
-                   :value        (cond cannot-view?
-                                       "***********"
-                                       (:focused? @local-state)
-                                       (:value @local-state)
-                                       :else
-                                       value)}
-                  (when (or disabled? cannot-edit?)
-                    {:disabled true}))]
-          (when (and (not-empty errors)
-                     show-validation-error?)
-            [validation-error id errors])]]))))
+         [:input.application__form-text-input
+          (merge {:id           id
+                  :type         "text"
+                  :placeholder  (when-let [input-hint (-> field-descriptor :params :placeholder)]
+                                  (util/non-blank-val input-hint languages))
+                  :class        (str size-class
+                                     (if show-error?
+                                       " application__form-field-error"
+                                       " application__form-text-input--normal"))
+                  :on-blur      (fn [evt]
+                                  (swap! local-state assoc
+                                         :focused? false)
+                                  (on-blur evt))
+                  :on-change    (fn [evt]
+                                  (swap! local-state assoc
+                                         :focused? true
+                                         :value (-> evt .-target .-value))
+                                  (on-change evt))
+                  :required     (is-required-field? field-descriptor)
+                  :aria-invalid (not valid?)
+                  :value        (cond cannot-view?
+                                      "***********"
+                                      (:focused? @local-state)
+                                      (:value @local-state)
+                                      :else
+                                      value)}
+                 (when (or disabled? cannot-edit?)
+                   {:disabled true}))]
+         [validation-error errors]]))))
 
 (defn- repeatable-text-field-row
   [field-descriptor question-group-idx repeatable-idx last?]
