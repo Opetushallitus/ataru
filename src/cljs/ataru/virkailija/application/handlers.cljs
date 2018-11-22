@@ -108,6 +108,7 @@
 (defn close-application [db]
   (cljs-util/update-url-with-query-params {:application-key nil})
   (-> db
+      (assoc-in [:application :metadata-not-found] nil)
       (assoc-in [:application :previously-closed-application] (-> db :application :selected-application-and-form :application :key))
       (assoc-in [:application :selected-review-hakukohde] nil)
       (assoc-in [:application :selected-key] nil)
@@ -510,6 +511,12 @@
        :dispatch [:application/start-autosave]})))
 
 (reg-event-fx
+  :application/handle-metadata-not-found
+  (fn [{:keys [db]} _]
+    {:db       (assoc-in db [:application :metadata-not-found] true)
+     :dispatch [:application/start-autosave]}))
+
+(reg-event-fx
   :application/fetch-application-attachment-metadata
   (fn [{:keys [db]} _]
     (let [file-keys (->> (get-in db [:application :selected-application-and-form :application :answers])
@@ -524,6 +531,7 @@
          :http {:method              :post
                 :path                "/lomake-editori/api/files/metadata"
                 :params              {:keys file-keys}
+                :override-args {:error-handler #(dispatch [:application/handle-metadata-not-found file-keys])}
                 :handler-or-dispatch :application/handle-fetch-application-attachment-metadata}}))))
 
 (defn- application-has-attachments? [db]
