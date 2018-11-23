@@ -146,11 +146,12 @@
 (defn- offending-priorization [should-be-higher should-be-lower]
   [:div.application__hakukohde-selected-row-priorization-invalid
    [:i.zmdi.zmdi-alert-circle]
-   [:h3.application__hakukohde-selected-row-priorization-invalid-heading (get-translation :application-priorization-invalid)]
-   [:div (first (get-translation :should-be-higher-priorization-than))
-    [:em (str "\"" @(subscribe [:application/hakukohde-label should-be-higher]) "\"")]
-    (last (get-translation :should-be-higher-priorization-than))
-    [:em (str "\"" @(subscribe [:application/hakukohde-label should-be-lower]) "\"")]]])
+   [:div
+    [:h3.application__hakukohde-selected-row-priorization-invalid-heading (get-translation :application-priorization-invalid)]
+    [:div (first (get-translation :should-be-higher-priorization-than))
+     [:em (str "\"" @(subscribe [:application/hakukohde-label should-be-higher]) "\"")]
+     (last (get-translation :should-be-higher-priorization-than))
+     [:em (str "\"" @(subscribe [:application/hakukohde-label should-be-lower]) "\"")]]]])
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
