@@ -146,19 +146,20 @@
 (defn- offending-priorization [should-be-higher should-be-lower]
   [:div.application__hakukohde-selected-row-priorization-invalid
    [:i.zmdi.zmdi-alert-circle]
-   [:h3.application__hakukohde-selected-row-priorization-invalid-heading (get-translation :application-priorization-invalid)]
-   [:div (first (get-translation :should-be-higher-priorization-than))
-    [:em (str "\"" @(subscribe [:application/hakukohde-label should-be-higher]) "\"")]
-    (last (get-translation :should-be-higher-priorization-than))
-    [:em (str "\"" @(subscribe [:application/hakukohde-label should-be-lower]) "\"")]]])
+   [:div
+    [:h3.application__hakukohde-selected-row-priorization-invalid-heading (get-translation :application-priorization-invalid)]
+    [:div (first (get-translation :should-be-higher-priorization-than))
+     [:em (str "\"" @(subscribe [:application/hakukohde-label should-be-higher]) "\"")]
+     (last (get-translation :should-be-higher-priorization-than))
+     [:em (str "\"" @(subscribe [:application/hakukohde-label should-be-lower]) "\"")]]]])
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
-  (let [deleting?               @(subscribe [:application/hakukohde-deleting? hakukohde-oid])
-        prioritize-hakukohteet? @(subscribe [:application/prioritize-hakukohteet?])
-        haku-editable?          @(subscribe [:application/hakukohteet-editable?])
-        hakukohde-editable?     @(subscribe [:application/hakukohde-editable? hakukohde-oid])
-        [too-low too-high]      @(subscribe [:application/hakukohde-offending-priorization? hakukohde-oid])]
+  (let [deleting?                          @(subscribe [:application/hakukohde-deleting? hakukohde-oid])
+        prioritize-hakukohteet?            @(subscribe [:application/prioritize-hakukohteet?])
+        haku-editable?                     @(subscribe [:application/hakukohteet-editable?])
+        hakukohde-editable?                @(subscribe [:application/hakukohde-editable? hakukohde-oid])
+        [should-be-lower should-be-higher] @(subscribe [:application/hakukohde-offending-priorization? hakukohde-oid])]
     [:div.application__hakukohde-row.animated
      {:class (if deleting?
                "fadeOut"
@@ -175,10 +176,10 @@
          [:span.application__hakukohde-sub-header-dates
           [:i.application__hakukohde-selected-check.zmdi.zmdi-lock]
           (get-translation :not-editable-application-period-ended)]])
-      (if (seq too-high)
-        (offending-priorization hakukohde-oid (first too-high))
-        (if (seq too-low)
-          (offending-priorization (first too-low) hakukohde-oid)))]
+      (if (seq should-be-higher)
+        (offending-priorization (first should-be-higher) hakukohde-oid)
+        (if (seq should-be-lower)
+          (offending-priorization hakukohde-oid (first should-be-lower))))]
      (cond (and haku-editable? hakukohde-editable?) [selected-hakukohde-row-remove hakukohde-oid]
            (not hakukohde-editable?) [selected-hakukohde-disabled-row-remove hakukohde-oid]
            haku-editable? [selected-hakukohde-row-remove hakukohde-oid])]))
