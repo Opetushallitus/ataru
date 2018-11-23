@@ -11,7 +11,7 @@
            (let [answers     (-> application :content :answers util/answers-by-key)
                  hakukohteet (:hakukohde application)
                  person-oid  (:person_oid application)
-                 person      (get persons (keyword person-oid))
+                 person      (get persons person-oid)
                  state       (:state application)]
              (merge {:oid                    (:key application)
                      :person_oid             person-oid
