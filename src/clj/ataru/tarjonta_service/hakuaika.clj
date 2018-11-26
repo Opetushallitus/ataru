@@ -47,22 +47,23 @@
 (defn millis->localized-date-time [millis]
   (date-time->localized-date-time (c/from-long millis)))
 
+(defn- last-by-ending
+  [hakuajat]
+  (first
+   (sort-by :end
+            #(or (nil? %1)
+                 (and (some? %2)
+                      (> %1 %2)))
+            hakuajat)))
+
 (defn select-hakuaika [hakuajat]
-  (let [longest-open (->> hakuajat
-                          (filter :on)
-                          (sort-by :end >)
-                          first)
-        next-open    (->> hakuajat
-                          (remove :on)
-                          (filter #(t/after? (c/from-long (:start %)) (t/now)))
-                          (sort-by :start <)
-                          first)
-        last-open    (->> hakuajat
-                          (sort-by :end >)
-                          first)]
-    (or longest-open
-        next-open
-        last-open)))
+  (or (last-by-ending (filter :on hakuajat))
+      (->> hakuajat
+           (remove :on)
+           (filter #(t/after? (c/from-long (:start %)) (t/now)))
+           (sort-by :start <)
+           first)
+      (last-by-ending hakuajat)))
 
 (defn select-hakuaika-for-field [field hakukohteet]
   (let [field-hakukohde-and-group-oids (set (concat (:belongs-to-hakukohteet field)
