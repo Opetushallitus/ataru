@@ -47,7 +47,7 @@
 (defn millis->localized-date-time [millis]
   (date-time->localized-date-time (c/from-long millis)))
 
-(defn select-hakuaika-for-haku [hakuajat]
+(defn select-hakuaika [hakuajat]
   (let [longest-open (->> hakuajat
                           (filter :on)
                           (sort-by :end >)
@@ -64,11 +64,6 @@
         next-open
         last-open)))
 
-(defn- select-first-ongoing-hakuaika-or-hakuaika-with-last-ending [hakuajat]
-  (if-let [ongoing-hakuaika (first (filter :on hakuajat))]
-    ongoing-hakuaika
-    (first (sort-by :end > (filter :end hakuajat)))))
-
 (defn select-hakuaika-for-field [field hakukohteet]
   (let [field-hakukohde-and-group-oids (set (concat (:belongs-to-hakukohteet field)
                                                     (:belongs-to-hakukohderyhma field)))
@@ -76,8 +71,7 @@
                                                 (not-empty field-hakukohde-and-group-oids)
                                                 (filter #(not-empty (clojure.set/intersection field-hakukohde-and-group-oids
                                                                                               (set (cons (:oid %) (:hakukohderyhmat %)))))))]
-    (select-first-ongoing-hakuaika-or-hakuaika-with-last-ending
-     (map :hakuaika relevant-hakukohteet))))
+    (select-hakuaika (map :hakuaika relevant-hakukohteet))))
 
 (defn attachment-edit-end [hakuaika]
   (let [default-modify-grace-period (-> config

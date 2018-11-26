@@ -122,7 +122,7 @@
            :prioritize-hakukohteet           (:usePriority haku)
            :max-hakukohteet                  (when (and max-hakukohteet (pos? max-hakukohteet))
                                                max-hakukohteet)
-           :hakuaika                         (hakuaika/select-hakuaika-for-haku (map :hakuaika hakukohteet))
+           :hakuaika                         (hakuaika/select-hakuaika (map :hakuaika hakukohteet))
            :can-submit-multiple-applications (:canSubmitMultipleApplications haku)
            :yhteishaku                       (yhteishaku? haku)}}))))
   ([tarjonta-service organization-service ohjausparametrit-service haku-oid]
