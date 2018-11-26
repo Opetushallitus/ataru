@@ -56,11 +56,16 @@
                       (> %1 %2)))
             hakuajat)))
 
+(defn- not-yet-started
+  [now hakuaika]
+  (and (not (:on hakuaika))
+       (some? (:start hakuaika))
+       (t/after? (c/from-long (:start hakuaika)) now)))
+
 (defn select-hakuaika [hakuajat]
   (or (last-by-ending (filter :on hakuajat))
       (->> hakuajat
-           (remove :on)
-           (filter #(t/after? (c/from-long (:start %)) (t/now)))
+           (filter (partial not-yet-started (t/now)))
            (sort-by :start <)
            first)
       (last-by-ending hakuajat)))
