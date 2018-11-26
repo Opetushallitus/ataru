@@ -56,6 +56,15 @@
                       (> %1 %2)))
             hakuajat)))
 
+(defn- first-by-start
+  [hakuajat]
+  (first
+   (sort-by :start
+            #(or (nil? %1)
+                 (and (some? %2)
+                      (< %1 %2)))
+            hakuajat)))
+
 (defn- not-yet-started
   [now hakuaika]
   (and (not (:on hakuaika))
@@ -64,10 +73,7 @@
 
 (defn select-hakuaika [hakuajat]
   (or (last-by-ending (filter :on hakuajat))
-      (->> hakuajat
-           (filter (partial not-yet-started (t/now)))
-           (sort-by :start <)
-           first)
+      (first-by-start (filter (partial not-yet-started (t/now)) hakuajat))
       (last-by-ending hakuajat)))
 
 (defn select-hakuaika-for-field [field hakukohteet]
