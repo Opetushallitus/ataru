@@ -8,7 +8,6 @@
             [ataru.tarjonta-service.hakuaika :refer [millis->localized-date-time]]
             [ataru.forms.form-store :as forms]
             [ataru.tarjonta-service.hakukohde :as hakukohde]
-            [ataru.hakuaika :as hakuaika]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.tarjonta-service.hakuaika :as tarjonta-hakuaika]
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]

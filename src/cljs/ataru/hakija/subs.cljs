@@ -2,7 +2,6 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :as re-frame]
             [ataru.util :as util]
-            [ataru.hakuaika :as hakuaika]
             [ataru.application-common.application-field-common :as afc]
             [ataru.hakija.application :refer [answers->valid-status]]
             [ataru.hakija.application-validators :as validators]
