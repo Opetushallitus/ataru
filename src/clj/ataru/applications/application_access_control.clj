@@ -238,8 +238,7 @@
    (constantly nil)
    #(filter-authorized tarjonta-service
                        (every-pred (partial (:predicate query) %)
-                                   (some-fn (partial authorized-by-form? %)
-                                            (partial authorized-by-tarjoajat? %)))
+                                   (partial authorized-by-tarjoajat? %))
                        (application-store/valinta-ui-applications
                         (dissoc query :predicate)))
    #(filter-authorized tarjonta-service
