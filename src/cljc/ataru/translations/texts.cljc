@@ -48,11 +48,11 @@
                                                  :sv "Återstående ansökningstid"
                                                  :en "Time left to apply"}
    :application-priorization-invalid            {:fi "Hakukohteet ovat väärässä ensisijaisuusjärjestyksessä"
-                                                 :sv "SV: Hakukohteet ovat väärässä ensisijaisuusjärjestyksessä"
-                                                 :en "EN: Hakukohteet ovat väärässä ensisijaisuusjärjestyksessä"}
+                                                 :sv "Fel prioritetsordning för ansökningsmålen"
+                                                 :en "Application options are in an invalid order of preference"}
    :application-limit-reached-in-hakukohderyhma {:fi "Et voi hakea tähän hakukohteeseen, koska olet jo hakemassa seuraaviin hakukohteisiin:"
-                                                 :sv "SV: Et voi hakea tähän hakukohteeseen, koska olet jo hakemassa seuraaviin hakukohteisiin:"
-                                                 :en "EN: Et voi hakea tähän hakukohteeseen, koska olet jo hakemassa seuraaviin hakukohteisiin:"}
+                                                 :sv "Du kan inte söka till detta ansökningsmål, eftersom du redan söker till följande ansökningsmål:"
+                                                 :en "You can't apply to this application option because you are applying to the following application option:"}
    :application-processed-cant-modify           {:fi "Tämä hakemus on käsitelty eikä ole enää muokattavissa"
                                                  :sv "Denna ansökan har behandlats och kan inte längre bearbetas"
                                                  :en "This application has been processed and can no longer be modified"}
@@ -83,10 +83,12 @@
    :best-regards                                {:fi "Ystävällisin terveisin"
                                                  :sv "Med vänliga hälsningar"
                                                  :en "Best Regards"}
-   :should-be-higher-priorization-than          {:fi ["Hakukohde " " tulee olla korkeammalla prioriteetillä kuin "],
-                                                 :sv ["SV: Hakukohde " " SV: tulee olla korkeammalla prioriteetillä kuin "],
-                                                 :en ["EN: Hakukohde " " EN: tulee olla korkeammalla prioriteetillä kuin "]}
-   :check-answers                               {:fi ["Tarkista " " tietoa"], :sv ["Kontrollera " " uppgifter"], :en ["Check " " answers"]}
+   :should-be-higher-priorization-than          {:fi ["Hakukohde " " tulee olla korkeammalla prioriteetillä kuin "]
+                                                 :sv ["Ansökningsmålet " " bör ha en högre prioritet än "]
+                                                 :en ["Application option " " has to be in higher order of preference than "]}
+   :check-answers                               {:fi ["Tarkista " " tietoa"]
+                                                 :sv ["Kontrollera " " uppgifter"]
+                                                 :en ["Check " " answers"]}
    :contact-language                            {:fi "Asiointikieli"
                                                  :sv "Ärendespråk"
                                                  :en "Asiointikieli"}
