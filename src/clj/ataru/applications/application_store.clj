@@ -786,8 +786,7 @@
                                :lahiosoite
                                :postinumero
                                :hakukohde
-                               :hakutoiveet
-                               :organization-oid])))))
+                               :hakutoiveet])))))
 
 (defn- unwrap-person-and-hakemus-oid
   [{:keys [key person_oid]}]

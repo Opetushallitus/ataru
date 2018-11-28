@@ -671,7 +671,6 @@ SELECT
   haku AS haku_oid,
   person_oid AS person_oid,
   hakukohde AS hakukohde,
-  lf.organization_oid AS organization_oid,
   (SELECT answers->>'value'
    FROM jsonb_array_elements(a.content->'answers') AS answers
    WHERE answers->>'key' = 'address') AS lahiosoite,
@@ -683,27 +682,18 @@ SELECT
                                      'hakukohde', hakukohde))
    FROM application_hakukohde_reviews AS ahr
    WHERE ahr.application_key = a.key) AS application_hakukohde_reviews
-FROM latest_applications AS a
+FROM applications AS a
 JOIN application_reviews as ar ON ar.application_key = a.key
-JOIN forms AS f ON a.form_id = f.id
-JOIN latest_forms AS lf ON lf.key = f.key
 WHERE
-  person_oid IS NOT NULL
+  a.id = (SELECT id FROM latest_applications WHERE key = a.key)
+  AND person_oid IS NOT NULL
   AND haku IS NOT NULL
   AND state <> 'inactivated'
-  AND (:form::text IS NULL OR (lf.key = :form AND a.haku IS NULL))
-  AND (:application_oid::text IS NULL OR a.key = :application_oid)
   AND (:application_oids::text[] IS NULL OR a.key = ANY (:application_oids))
-  AND (:person_oid::text IS NULL OR a.person_oid = :person_oid)
   AND (:name::text IS NULL OR to_tsvector('simple', a.preferred_name || ' ' || a.last_name) @@ to_tsquery(:name))
-  AND (:email::text IS NULL OR lower(a.email) = lower(:email))
-  AND (:dob::text IS NULL OR a.dob = to_date(:dob, 'DD.MM.YYYY'))
-  AND (:ssn::text IS NULL OR a.ssn = :ssn)
   AND (:haku::text IS NULL OR a.haku = :haku)
   AND (:hakukohde::text IS NULL OR :hakukohde = ANY (a.hakukohde))
-  AND (:ensisijainen_hakukohde::text IS NULL OR a.hakukohde[1] = :ensisijainen_hakukohde)
 ORDER BY a.created_time DESC;
-
 
 --name: yesql-applications-for-hakurekisteri
 SELECT
