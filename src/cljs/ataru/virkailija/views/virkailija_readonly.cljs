@@ -26,6 +26,9 @@
             [taoensso.timbre :refer-macros [spy debug]]
             [reagent.core :as r]))
 
+(defn- from-multi-lang [text lang]
+  (util/non-blank-val text [lang :fi :sv :en]))
+
 (defn- belongs-to-hakukohderyhma? [field application]
   (let [hakukohteet             (-> application :hakukohde set)
         applied-hakukohderyhmat (->> (-> application :tarjonta :hakukohteet)
@@ -62,7 +65,8 @@
      {:class (when @highlight-field? "highlighted")
       :id    id}
      [:label.application__form-field-label
-      (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
+      (str (from-multi-lang (:label field-descriptor) lang)
+           (required-hint field-descriptor))]
      [:div.application__form-field-value
 
       (cond (and (sequential? values) (< 1 (count values)))
@@ -109,7 +113,8 @@
                            (nth group-idx))]
     [:div.application__form-field
      [:label.application__form-field-label
-      (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
+      (str (from-multi-lang (:label field-descriptor) lang)
+           (required-hint field-descriptor))]
      [attachment-list values]]))
 
 (declare field)
@@ -117,7 +122,7 @@
 (defn wrapper [content application lang children]
   [:div.application__wrapper-element.application__wrapper-element--border
    [:div.application__wrapper-heading
-    [:h2 (-> content :label lang)]
+    [:h2 (from-multi-lang (:label content) lang)]
     [scroll-to-anchor content]]
    (into [:div.application__wrapper-contents]
          (for [child children]
@@ -163,12 +168,15 @@
   (let [fieldset-answers (extract-values children (:answers application) group-idx)]
     [:div.application__form-field
      [:label.application__form-field-label
-      (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
+      (str (from-multi-lang (:label field-descriptor) lang)
+           (required-hint field-descriptor))]
      [:table.application__readonly-adjacent
       [:thead
        (into [:tr]
          (for [child children]
-           [:th.application__readonly-adjacent--header (str (-> child :label lang)) (required-hint field-descriptor)]))]
+           [:th.application__readonly-adjacent--header
+            (str (from-multi-lang (:label child) lang)
+                 (required-hint field-descriptor))]))]
       (if (question-group-answer? fieldset-answers)
         (map-indexed (fn [idx fieldset-answers]
                        ^{:key (str (:id field-descriptor) "-" idx)}
@@ -190,7 +198,8 @@
 (defn- selectable [content application lang question-group-idx]
   [:div.application__form-field
    [:div.application__form-field-label--selectable
-    [:div.application__form-field-label (some (:label content) [lang :fi :sv :en])]
+    [:div.application__form-field-label
+     (from-multi-lang (:label content) lang)]
     (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
                                        (some? question-group-idx)
                                        (nth question-group-idx))
@@ -209,7 +218,7 @@
           ^{:key (:value option)}
           [:div
            [:p.application__text-field-paragraph
-            (some (:label option) [lang :fi :sv :en])]
+            (from-multi-lang (:label option) lang)]
            (when (some #(visible? % application) (:followups option))
              [:div.application-handling__nested-container
               (for [followup (:followups option)]
@@ -272,7 +281,7 @@
   [:div.application__person-info-wrapper.application__wrapper-element
    [:div.application__wrapper-element.application__wrapper-element--border
     [:div.application__wrapper-heading
-     [:h2 (-> content :label lang)]
+     [:h2 (from-multi-lang (:label content) lang)]
      (when (-> application :person :turvakielto)
        [:p.security-block
         [:i.zmdi.zmdi-account-o]
@@ -295,7 +304,7 @@
 (defn- question-group [content application lang children]
   [:div.application__question-group
    [:h3.application__question-group-heading
-    (-> content :label lang)]
+    (from-multi-lang (:label content) lang)]
    (for [idx (range (repeat-count application children))]
      ^{:key (str "question-group-" (:id content) "-" idx)}
      [:div.application__question-group-repeat
@@ -315,7 +324,8 @@
      {:class (when @highlight-field? "highlighted")
       :id    id}
      [:label.application__form-field-label
-      (str (-> field :label lang) (required-hint field))]
+      (str (from-multi-lang (:label field) lang)
+           (required-hint field))]
      [:div.application__form-field-value
       [:p.application__text-field-paragraph
        (clojure.string/join ", " values)]]]))
