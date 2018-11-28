@@ -307,6 +307,72 @@
                                               (clojure.string/join ", " (:application-keys body))
                                               " käsittely ei ole sallittu")})))
 
+      (api/POST "/list" {session :session}
+        :body [{:keys [form-key hakukohde-oid hakukohderyhma-oid haku-oid ensisijaisesti rajaus-hakukohteella ssn dob
+                       email name person-oid application-oid page page-size sort-by sort-order states-and-filters] :as body}
+               {(s/optional-key :form-key)             s/Str
+                (s/optional-key :hakukohde-oid)        s/Str
+                (s/optional-key :hakukohderyhma-oid)   s/Str
+                (s/optional-key :haku-oid)             s/Str
+                (s/optional-key :ensisijaisesti)       s/Bool
+                (s/optional-key :rajaus-hakukohteella) s/Str
+                (s/optional-key :ssn)                  s/Str
+                (s/optional-key :dob)                  s/Str
+                (s/optional-key :email)                s/Str
+                (s/optional-key :name)                 s/Str
+                (s/optional-key :person-oid)           s/Str
+                (s/optional-key :application-oid)      s/Str
+                (s/optional-key :page)                 s/Int
+                (s/optional-key :page-size)            s/Int
+                (s/optional-key :sort-by)              (s/enum "created-time" "name")
+                (s/optional-key :sort-order)           (s/enum "asc" "desc")
+                (s/optional-key :states-and-filters)   {:filters                      {s/Keyword {s/Keyword s/Bool}}
+                                                        :attachment-states-to-include [s/Str]
+                                                        :processing-states-to-include [s/Str]
+                                                        :selection-states-to-include  [s/Str]
+                                                        :selected-hakukohteet         (s/maybe [s/Str])}}]
+        :summary "Return applications header-level info for form"
+        :return {:aggregate-data {:total-count             s/Int
+                                  :filtered-count          s/Int
+                                  :attachment-state-counts {s/Str s/Int}
+                                  :review-state-counts     {s/Str s/Int}}
+                 :applications   [ataru-schema/ApplicationInfo]}
+        (let [ensisijaisesti (boolean ensisijaisesti)
+              paging         {:page       (or page 0)
+                              :page-size  (or page-size 200)
+                              :sort-by    (or (keyword sort-by) :created-time)
+                              :sort-order (or (keyword sort-order) :descending)}]
+          (if-let [query (cond (some? form-key)
+                               (application-service/->form-query form-key)
+                               (some? hakukohde-oid)
+                               (application-service/->hakukohde-query hakukohde-oid ensisijaisesti)
+                               (and (some? haku-oid) (some? hakukohderyhma-oid))
+                               (application-service/->hakukohderyhma-query haku-oid hakukohderyhma-oid ensisijaisesti rajaus-hakukohteella)
+                               (some? haku-oid)
+                               (application-service/->haku-query haku-oid)
+                               (some? ssn)
+                               (application-service/->ssn-query ssn)
+                               (and (some? dob) (dob/dob? dob))
+                               (application-service/->dob-query dob)
+                               (some? email)
+                               (application-service/->email-query email)
+                               (some? name)
+                               (application-service/->name-query name)
+                               (some? person-oid)
+                               (application-service/->person-oid-query person-oid)
+                               (some? application-oid)
+                               (application-service/->application-oid-query application-oid))]
+            (response/ok
+              (application-service/get-application-list-by-query-paged
+                organization-service
+                person-service
+                tarjonta-service
+                session
+                query
+                paging
+                states-and-filters))
+            (response/bad-request))))
+
       (api/GET "/list" {session :session}
         :query-params [{formKey :- s/Str nil}
                        {hakukohdeOid :- s/Str nil}

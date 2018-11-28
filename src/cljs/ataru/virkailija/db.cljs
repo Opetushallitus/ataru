@@ -19,7 +19,7 @@
                           :sort                       application-sorting/initial-sort
                           :application-list-expanded? true
                           :mass-information-request   {:form-status :disabled}
-                          :application-list-page      1
+                          :application-list-page      0
                           :filters                    {:language-requirement {:unreviewed  true
                                                                               :fulfilled   true
                                                                               :unfulfilled true}

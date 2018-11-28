@@ -1,26 +1,29 @@
 (ns ataru.applications.application-service
   (:require
-   [ataru.applications.application-access-control :as aac]
-   [ataru.applications.application-store :as application-store]
-   [ataru.applications.excel-export :as excel]
-   [ataru.email.application-email-confirmation :as email]
-   [ataru.forms.form-access-control :as form-access-control]
-   [ataru.forms.form-store :as form-store]
-   [ataru.hakija.hakija-form-service :as hakija-form-service]
-   [ataru.information-request.information-request-store :as information-request-store]
-   [ataru.koodisto.koodisto :as koodisto]
-   [ataru.middleware.user-feedback :refer [user-feedback-exception]]
-   [ataru.person-service.birth-date-converter :as bd-converter]
-   [ataru.person-service.person-service :as person-service]
-   [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
-   [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
-   [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
-   [ataru.util :as util]
-   [clojure.data :refer [diff]]
-   [ataru.virkailija.editor.form-utils :refer [visible?]]
-   [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
-   [medley.core :refer [filter-vals]]
-   [taoensso.timbre :refer [spy debug]])
+    [ataru.applications.application-access-control :as aac]
+    [ataru.applications.application-store :as application-store]
+    [ataru.applications.excel-export :as excel]
+    [ataru.email.application-email-confirmation :as email]
+    [ataru.forms.form-access-control :as form-access-control]
+    [ataru.forms.form-store :as form-store]
+    [ataru.hakija.hakija-form-service :as hakija-form-service]
+    [ataru.information-request.information-request-store :as information-request-store]
+    [ataru.koodisto.koodisto :as koodisto]
+    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
+    [ataru.person-service.birth-date-converter :as bd-converter]
+    [ataru.person-service.person-service :as person-service]
+    [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
+    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
+    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
+    [ataru.util :as util]
+    [ataru.applications.filtering :as application-filter]
+    [clojure.data :refer [diff]]
+    [ataru.virkailija.editor.form-utils :refer [visible?]]
+    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
+    [medley.core :refer [filter-vals]]
+    [taoensso.timbre :refer [spy debug]]
+    [ataru.application.review-states :as review-states]
+    [ataru.application.application-states :as application-states])
   (:import [java.io ByteArrayInputStream]))
 
 (defn- extract-koodisto-fields [field-descriptor-list]
@@ -280,6 +283,122 @@
   ([query other-query]
    (assoc (merge query other-query)
           :predicate (every-pred (:predicate query) (:predicate other-query)))))
+
+(defn- processing-state-counts-for-application
+  [{:keys [application-hakukohde-reviews]} included-hakukohde-oid-set]
+  (->> (or
+         (->> application-hakukohde-reviews
+              (filter (fn [review]
+                        (and
+                          (= "processing-state" (:requirement review))
+                          (or (nil? included-hakukohde-oid-set)
+                              (contains? included-hakukohde-oid-set (:hakukohde review))))))
+              (not-empty))
+         [{:requirement "processing-state" :state review-states/initial-application-hakukohde-processing-state}])
+       (map :state)
+       (frequencies)))
+
+(defn review-state-counts
+  [applications included-hakukohde-oid-set]
+  (reduce
+    (fn [acc application]
+      (merge-with + acc (processing-state-counts-for-application application included-hakukohde-oid-set)))
+    {}
+    applications))
+
+(defn- map-vals-to-zero [m]
+  (into {} (for [[k v] m] [k 0])))
+
+(defn attachment-state-counts
+  [applications included-hakukohde-oid-set]
+  (reduce
+    (fn [acc application]
+      (merge-with (fn [prev new] (+ prev (if (not-empty new) 1 0)))
+                  acc
+                  (group-by :state (cond->> (application-states/attachment-reviews-with-no-requirements application)
+                                            (some? included-hakukohde-oid-set)
+                                            (filter #(contains? included-hakukohde-oid-set (:hakukohde %)))))))
+    (map-vals-to-zero review-states/attachment-hakukohde-review-types-with-no-requirements)
+    applications))
+
+(defn- sort-applications
+  [applications sort-by sort-order]
+  applications)
+
+(defn- populate-applications-with-person-data
+  [applications persons]
+  (map (fn [application]
+         (let [onr-person (get persons (:person-oid application))
+               person     (if (or (:yksiloity onr-person)
+                                  (:yksiloityVTJ onr-person))
+                            {:oid            (:oidHenkilo onr-person)
+                             :preferred-name (:kutsumanimi onr-person)
+                             :last-name      (:sukunimi onr-person)
+                             :yksiloity      true
+                             :ssn            (boolean (:hetu onr-person))}
+                            {:oid            (:person-oid application)
+                             :preferred-name (:preferred-name application)
+                             :last-name      (:last-name application)
+                             :yksiloity      false
+                             :ssn            (boolean (:ssn application))})]
+           (-> application
+               (assoc :person person)
+               (dissoc :ssn :person-oid :preferred-name :last-name))))
+       applications))
+
+(defn- filter-applications-with-person-data
+  [person-service states-and-filters applications]
+  (let [persons                   (person-service/get-persons
+                                    person-service
+                                    (distinct (keep :person-oid applications)))
+        applications-with-persons (populate-applications-with-person-data applications persons)]
+    (application-filter/filter-applications applications-with-persons states-and-filters)))
+
+(defn- filter-applications-without-person-data
+  [states-and-filters applications]
+  (application-filter/filter-applications applications states-and-filters))
+
+; TODO cleanup
+(defn get-application-list-by-query-paged
+  [organization-service person-service tarjonta-service session query
+   {:keys [page page-size sort-by sort-order]}
+   {:keys [selected-hakukohteet] :as states-and-filters}]
+  (let [selected-hakukohde-set (when selected-hakukohteet (set selected-hakukohteet))
+        applications           (time (aac/get-application-list-by-query
+                                       organization-service
+                                       tarjonta-service
+                                       session
+                                       query))
+        person-info-needed?    (application-filter/person-info-needed-to-filter? (:filters states-and-filters))] ; TODO also sorting by name
+    (if person-info-needed?
+      (let [filtered-sorted-applications (sort-applications
+                                           (filter-applications-with-person-data person-service states-and-filters applications)
+                                           sort-by
+                                           sort-order)
+            aggregate-data               {:total-count             (count applications)
+                                          :filtered-count          (count filtered-sorted-applications)
+                                          :attachment-state-counts (attachment-state-counts applications selected-hakukohde-set)
+                                          :review-state-counts     (review-state-counts applications selected-hakukohde-set)}]
+        {:aggregate-data aggregate-data
+         :applications   (->> filtered-sorted-applications
+                              (drop (* page-size page))
+                              (take page-size))})
+      (let [filtered-sorted-applications (sort-applications
+                                           (filter-applications-without-person-data states-and-filters applications)
+                                           sort-by
+                                           sort-order)
+            aggregate-data               {:total-count             (count applications)
+                                          :filtered-count          (count filtered-sorted-applications)
+                                          :attachment-state-counts (attachment-state-counts applications selected-hakukohde-set)
+                                          :review-state-counts     (review-state-counts applications selected-hakukohde-set)}
+            paged-applications           (->> filtered-sorted-applications
+                                              (drop (* page-size page))
+                                              (take page-size))
+            persons                      (person-service/get-persons
+                                           person-service
+                                           (distinct (keep :person-oid paged-applications)))]
+        {:aggregate-data aggregate-data
+         :applications   (populate-applications-with-person-data paged-applications persons)}))))
 
 (defn get-application-list-by-query
   [organization-service person-service tarjonta-service session query]

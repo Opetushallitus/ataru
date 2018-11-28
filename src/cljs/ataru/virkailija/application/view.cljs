@@ -586,7 +586,7 @@
                                         new-filter
                                         states))})
     (dispatch [:state-update #(assoc-in % [:application filter-kw] new-filter)])
-    (dispatch [:application/filter-applications])))
+    (dispatch [:application/update-application-filters])))
 
 (defn hakukohde-state-filter-controls
   [filter-kw title states state-counts-sub]
@@ -625,7 +625,7 @@
                                                                               (if all-filters-selected?
                                                                                 []
                                                                                 (map first states)))])
-                                          (dispatch [:application/filter-applications]))}]
+                                          (dispatch [:application/update-application-filters]))}]
                     [:span (get-virkailija-translation :all)]]]]
                  (mapv
                    (fn [[review-state-id review-state-label]]
@@ -682,9 +682,10 @@
 
 
 (defn application-list-loading-indicator []
-  (let [fetching (subscribe [:state-query [:application :fetching-applications]])]
-    (when @fetching
-        [:div.application-handling__list-loading-indicator
+  (let [fetching (subscribe [:state-query [:application :fetching-applications]])
+        fetching-next-page (subscribe [:state-query [:application :fetching-next-page]])]
+    (when (and @fetching (not @fetching-next-page))
+      [:div.application-handling__list-loading-indicator
          [:i.zmdi.zmdi-spinner]])))
 
 (defn- application-filter-checkbox
@@ -795,7 +796,7 @@
   []
   (let [filters                    (subscribe [:state-query [:application :filters]])
         filtered-application-count (subscribe [:application/filtered-applications-count])
-        loaded-application-count   (subscribe [:application/loaded-application-count])
+        total-application-count    (subscribe [:application/total-application-count])
         enabled-filter-count       (subscribe [:application/enabled-filter-count])
         review-settings            (subscribe [:state-query [:application :review-settings :config]])
         selected-hakukohde-oid     (subscribe [:state-query [:application :selected-hakukohde]])
@@ -813,7 +814,7 @@
         (gstring/format "%s (%d / %d)"
                         (get-virkailija-translation :filter-applications)
                         @filtered-application-count
-                        @loaded-application-count)]
+                        @total-application-count)]
        (when (pos? @enabled-filter-count)
          [:span
           [:span.application-handling__filters-count-separator "|"]
@@ -1804,28 +1805,29 @@
       (let [element-offset  (-> end-of-list-element .getBoundingClientRect .-bottom)
             viewport-offset (.-innerHeight js/window)]
         (when (< element-offset viewport-offset)
-          (dispatch [:state-update #(update-in % [:application :application-list-page] inc)]))))))
+          (dispatch [:application/load-next-page]))))))
 
 (defn application []
   (let [search-control-all-page (subscribe [:application/search-control-all-page-view?])
-        filtered-applications   (subscribe [:application/filtered-applications])
+        total-count             (subscribe [:application/total-application-count])
+        loaded-count            (subscribe [:application/loaded-applications-count])
+        filtered-count          (subscribe [:application/filtered-applications-count])
+        applications            (subscribe [:application/filtered-applications])
         fetching                (subscribe [:state-query [:application :fetching-applications]])
-        expanded                (subscribe [:state-query [:application :application-list-expanded?]])
-        page-size               100
-        page                    (subscribe [:state-query [:application :application-list-page]])]
+        fetching-next-page      (subscribe [:state-query [:application :fetching-next-page]])
+        expanded                (subscribe [:state-query [:application :application-list-expanded?]])]
     (fn []
-      (let [paged-applications (take (* @page page-size) @filtered-applications)
-            has-more?          (< (count paged-applications) (count @filtered-applications))]
+      (let [has-more? (< @loaded-count @filtered-count)]
         [:div
          [:div.application-handling__overview
           [application-search-control]
           (when (not @search-control-all-page)
             [:div.application-handling__bottom-wrapper.select_application_list
              [haku-heading]
-             [application-list-header @filtered-applications]
-             (when-not @fetching
-               [application-list-contents paged-applications])
-             (when (and has-more? @expanded (not @fetching))
+             [application-list-header @total-count]
+             (when-not (and @fetching (not @fetching-next-page))
+               [application-list-contents @applications])
+             (when (and has-more? @expanded (or (not @fetching) @fetching-next-page))
                [:div#application-handling__end-of-list-element
                 [:i.application-handling__end-of-list-element-spinner.zmdi.zmdi-spinner.spin]])
              [application-list-loading-indicator]])]

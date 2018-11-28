@@ -498,15 +498,16 @@
           hakukohde-selected?
           hakukohderyhma-selected?))))
 
+; TODO kill
 (re-frame/reg-sub
   :application/filtered-applications
   (fn [db _]
-    (-> db :application :filtered-applications)))
+    (-> db :application :applications)))
 
 (re-frame/reg-sub
   :application/filtered-applications-count
-  (fn [_ _]
-    (count @(re-frame/subscribe [:application/filtered-applications]))))
+  (fn [db _]
+    (-> db :application :filtered-count)))
 
 (re-frame/reg-sub
   :application/review-state-setting-enabled?
@@ -670,9 +671,9 @@
       (get-in db [:application :filters]))))
 
 (re-frame.core/reg-sub
-  :application/loaded-application-count
+  :application/total-application-count
   (fn [db _]
-    (-> db :application :applications (count))))
+    (-> db :application :total-count)))
 
 (re-frame.core/reg-sub
   :application/eligibility-automatically-checked?
@@ -700,3 +701,8 @@
     (->> (-> db :application :applications)
          (some #(not-empty (:base-education %)))
          (boolean))))
+
+(re-frame/reg-sub
+  :application/loaded-applications-count
+  (fn [db _]
+    (-> db :application :applications (count))))
