@@ -503,5 +503,5 @@
 (re-frame/reg-sub
   :application/attachments-uploading?
   (fn [db]
-    (not-empty (mapcat keys (vals (:transmitting db))))))
+    (not-empty (mapcat keys (vals (:attachments-uploading db))))))
 

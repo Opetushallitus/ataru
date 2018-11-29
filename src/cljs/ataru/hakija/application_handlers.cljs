@@ -973,7 +973,7 @@
                                       question-group-idx
                                       attachment-idx])]
       {:db                 (-> db
-                               (update-in [:transmitting id] dissoc (:filename @attacment-value))
+                               (update-in [:attachments-uploading id] dissoc (:filename @attacment-value))
                                (update-in path
                                  merge
                                  {:value response :valid true :status :ready})
@@ -1022,7 +1022,7 @@
                                           question-group-idx
                                           attachment-idx])]
       (-> db
-          (assoc-in [:transmitting id filename] :downloading)
+          (assoc-in [:attachments-uploading id filename] :downloading)
           (assoc-in (cond-> [:application :answers id :values]
                             (some? question-group-idx)
                             (conj question-group-idx)
@@ -1048,7 +1048,7 @@
          :delayed-dispatch {:dispatch-vec [:application/add-single-attachment-resumable field-descriptor attachment-idx file retries question-group-idx]
                             :timeout      (+ 2000 (rand-int 2000))}}
         {:db (-> db
-                 (update-in [:transmitting id] dissoc (:filename filename))
+                 (update-in [:attachments-uploading id] dissoc (:filename filename))
                  (update-in (if question-group-idx
                               [:application :answers id :values question-group-idx attachment-idx]
                               [:application :answers id :values attachment-idx])
