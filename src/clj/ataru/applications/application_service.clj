@@ -16,7 +16,8 @@
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
     [ataru.util :as util]
-    [ataru.applications.filtering :as application-filter]
+    [ataru.applications.filtering :as application-filtering]
+    [ataru.applications.application-sorting :as application-sorting]
     [clojure.data :refer [diff]]
     [ataru.virkailija.editor.form-utils :refer [visible?]]
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
@@ -322,8 +323,8 @@
     applications))
 
 (defn- sort-applications
-  [applications sort-by sort-order]
-  applications)
+  [applications {:keys [column order]}]
+  (application-sorting/sort-by-column applications (keyword column) (keyword order)))
 
 (defn- populate-applications-with-person-data
   [applications persons]
@@ -352,29 +353,31 @@
                                     person-service
                                     (distinct (keep :person-oid applications)))
         applications-with-persons (populate-applications-with-person-data applications persons)]
-    (application-filter/filter-applications applications-with-persons states-and-filters)))
+    (application-filtering/filter-applications applications-with-persons states-and-filters)))
 
 (defn- filter-applications-without-person-data
   [states-and-filters applications]
-  (application-filter/filter-applications applications states-and-filters))
+  (application-filtering/filter-applications applications states-and-filters))
 
 ; TODO cleanup
 (defn get-application-list-by-query-paged
   [organization-service person-service tarjonta-service session query
-   {:keys [page page-size sort-by sort-order]}
-   {:keys [selected-hakukohteet] :as states-and-filters}]
+   {:keys [page page-size]}
+   {:keys [selected-hakukohteet] :as states-and-filters}
+   sort]
   (let [selected-hakukohde-set (when selected-hakukohteet (set selected-hakukohteet))
         applications           (time (aac/get-application-list-by-query
                                        organization-service
                                        tarjonta-service
                                        session
                                        query))
-        person-info-needed?    (application-filter/person-info-needed-to-filter? (:filters states-and-filters))] ; TODO also sorting by name
+        person-info-needed?    (or
+                                 (application-sorting/person-info-needed-to-sort? (:column sort))
+                                 (application-filtering/person-info-needed-to-filter? (:filters states-and-filters)))]
     (if person-info-needed?
       (let [filtered-sorted-applications (sort-applications
                                            (filter-applications-with-person-data person-service states-and-filters applications)
-                                           sort-by
-                                           sort-order)
+                                           sort)
             aggregate-data               {:total-count             (count applications)
                                           :filtered-count          (count filtered-sorted-applications)
                                           :attachment-state-counts (attachment-state-counts applications selected-hakukohde-set)
@@ -385,8 +388,7 @@
                               (take page-size))})
       (let [filtered-sorted-applications (sort-applications
                                            (filter-applications-without-person-data states-and-filters applications)
-                                           sort-by
-                                           sort-order)
+                                           sort)
             aggregate-data               {:total-count             (count applications)
                                           :filtered-count          (count filtered-sorted-applications)
                                           :attachment-state-counts (attachment-state-counts applications selected-hakukohde-set)

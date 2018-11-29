@@ -2,7 +2,6 @@
   (:require [ataru.virkailija.virkailija-ajax :as ajax]
             [re-frame.core :refer [subscribe dispatch dispatch-sync reg-event-db reg-event-fx]]
             [ataru.virkailija.autosave :as autosave]
-            [ataru.virkailija.application-sorting :as application-sorting]
             [ataru.virkailija.virkailija-ajax :refer [http]]
             [ataru.application.review-states :as review-states]
             [ataru.virkailija.db :as initial-db]
@@ -255,30 +254,21 @@
 
 (defn- update-sort
   [db column-id swap-order?]
-  (let [current-applications (get-in db [:application :applications])
-        current-sort         (get-in db [:application :sort])
-        new-order            (if swap-order?
-                               (if (= :ascending (:order current-sort))
-                                 :descending
-                                 :ascending)
-                               (:order current-sort))]
+  (let [current-sort (get-in db [:application :sort])
+        new-order    (if swap-order?
+                       (if (= :ascending (:order current-sort))
+                         :descending
+                         :ascending)
+                       (:order current-sort))]
     (if (= column-id (:column current-sort))
-      (-> db
-          (update-in
-            [:application :sort]
-            assoc
-            :order
-            new-order)
-          (assoc-in
-            [:application :applications]
-            (application-sorting/sort-by-column current-applications column-id new-order)))
-      (-> db
-          (assoc-in
-            [:application :sort]
-            {:column column-id :order :descending})
-          (assoc-in
-            [:application :applications]
-            (application-sorting/sort-by-column current-applications column-id :descending))))))
+      (update-in db
+                 [:application :sort]
+                 assoc
+                 :order
+                 new-order)
+      (assoc-in db
+                [:application :sort]
+                {:column column-id :order :descending}))))
 
 (reg-event-fx
   :application/toggle-filter
@@ -320,19 +310,16 @@
 (reg-event-fx
   :application/handle-fetch-applications-response
   (fn [{:keys [db]} [_ {:keys [applications aggregate-data]}]]
-    (println "loaded" (count applications) "applications")
-    (let [db              (-> db
-                              (update-in [:application :applications] into applications)
+    (let [db              (-> (if (not-empty (-> db :application :applications))
+                                (update-in db [:application :applications] into applications)
+                                (assoc-in db [:application :applications] applications))
                               (assoc-in [:application :fetching-applications] false)
                               (assoc-in [:application :fetching-next-page] false)
                               (assoc-in [:application :total-count] (:total-count aggregate-data))
                               (assoc-in [:application :filtered-count] (:filtered-count aggregate-data))
                               (assoc-in [:application :review-state-counts] (keys->str (:review-state-counts aggregate-data)))
                               (assoc-in [:application :attachment-state-counts] (keys->str (:attachment-state-counts aggregate-data)))
-                              (assoc-in [:application :sort] application-sorting/initial-sort)
-                              (assoc-in [:application :selected-time-column] :created-time)
-                              (assoc-in [:application :information-request] nil)
-                              (update-sort (:column application-sorting/initial-sort) false))
+                              (assoc-in [:application :information-request] nil))
           application-key (if (= 1 (count applications))
                             (-> applications first :key)
                             (when-let [query-key (:application-key (cljs-util/extract-query-params))]
@@ -358,23 +345,27 @@
                                                  #{"form"}
                                                  :else
                                                  nil)
-        previous-filters                       (-> db :application :last-fetch-filters)
-        previous-params                        (-> db :application :last-fetch-params)
+        previous-filters                       (-> db :application :previous-fetch-filters)
+        previous-params                        (-> db :application :previous-fetch-params)
+        previous-sort                          (-> db :application :previous-sort)
         first-load?                            (nil? previous-params)
         reset-filters?                         (and (not first-load?) (not= previous-params params))
         filters                                (-> (if reset-filters? initial-db/default-db db) :application :filters)
         attachment-states-to-include           (-> (if reset-filters? initial-db/default-db db) :application :attachment-state-filter)
         processing-states-to-include           (-> (if reset-filters? initial-db/default-db db) :application :processing-state-filter)
         selection-states-to-include            (-> (if reset-filters? initial-db/default-db db) :application :selection-state-filter)
+        sort                                   (-> db :application :sort)
         reset-list?                            (or reset-filters?
+                                                   (not= sort previous-sort)
                                                    (not= previous-filters
                                                          [attachment-states-to-include processing-states-to-include selection-states-to-include filters]))
         page                                   (if reset-list? 0 (-> db :application :application-list-page))
         new-db                                 (cond-> (-> db
                                                            (assoc-in [:application :fetching-applications] true)
                                                            (assoc-in [:application :fetching-next-page] (not reset-list?))
-                                                           (assoc-in [:application :last-fetch-params] params)
-                                                           (assoc-in [:application :last-fetch-filters] [attachment-states-to-include processing-states-to-include selection-states-to-include filters])
+                                                           (assoc-in [:application :previous-sort] sort)
+                                                           (assoc-in [:application :previous-fetch-params] params)
+                                                           (assoc-in [:application :previous-fetch-filters] [attachment-states-to-include processing-states-to-include selection-states-to-include filters])
                                                            (assoc-in [:application :attachment-state-filter] attachment-states-to-include)
                                                            (assoc-in [:application :processing-state-filter] processing-states-to-include)
                                                            (assoc-in [:application :selection-state-filter] selection-states-to-include)
@@ -395,12 +386,12 @@
                                                        reset-list? (->
                                                                      (assoc-in [:application :application-list-page] 0)
                                                                      (assoc-in [:application :applications] [])))]
-    (println "fetch with params" page params filters)
     {:db         new-db
      :dispatch-n [(when reset-list? [:application/refresh-haut-and-hakukohteet])]
      :http       {:method              :post
                   :path                "/lomake-editori/api/applications/list"
                   :params              (merge {:page               page
+                                               :sort               sort
                                                :states-and-filters {:attachment-states-to-include (-> new-db :application :attachment-state-filter)
                                                                     :processing-states-to-include (-> new-db :application :processing-state-filter)
                                                                     :selection-states-to-include  (-> new-db :application :selection-state-filter)
@@ -415,7 +406,7 @@
   (fn [{:keys [db]} _]
     (fetch-applications-fx
       db
-      (-> db :application :last-fetch-params))))
+      (-> db :application :previous-fetch-params))))
 
 (reg-event-fx
   :application/update-application-filters

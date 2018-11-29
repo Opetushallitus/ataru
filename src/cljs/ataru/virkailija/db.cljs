@@ -1,7 +1,6 @@
 (ns ataru.virkailija.db
   (:require
-   [ataru.application.review-states :as review-states]
-   [ataru.virkailija.application-sorting :as application-sorting]))
+   [ataru.application.review-states :as review-states]))
 
 (def default-db
   {:editor               {:forms               nil
@@ -12,11 +11,13 @@
                           :email-template-lang "fi"}
    ; Initial active panel on page load.
    :active-panel         :editor
-   :application          {:review                     {}
+   :application          {:applications               []
+                          :review                     {}
                           :attachment-state-filter    (mapv first review-states/attachment-hakukohde-review-types-with-no-requirements)
                           :processing-state-filter    (mapv first review-states/application-hakukohde-processing-states)
                           :selection-state-filter     (mapv first review-states/application-hakukohde-selection-states)
-                          :sort                       application-sorting/initial-sort
+                          :sort                       {:column :created-time :order :descending}
+                          :selected-time-column       :created-time
                           :application-list-expanded? true
                           :mass-information-request   {:form-status :disabled}
                           :application-list-page      0

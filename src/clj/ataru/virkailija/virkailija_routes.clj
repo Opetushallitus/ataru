@@ -309,7 +309,7 @@
 
       (api/POST "/list" {session :session}
         :body [{:keys [form-key hakukohde-oid hakukohderyhma-oid haku-oid ensisijaisesti rajaus-hakukohteella ssn dob
-                       email name person-oid application-oid page page-size sort-by sort-order states-and-filters] :as body}
+                       email name person-oid application-oid page page-size sort states-and-filters] :as body}
                {(s/optional-key :form-key)             s/Str
                 (s/optional-key :hakukohde-oid)        s/Str
                 (s/optional-key :hakukohderyhma-oid)   s/Str
@@ -324,8 +324,7 @@
                 (s/optional-key :application-oid)      s/Str
                 (s/optional-key :page)                 s/Int
                 (s/optional-key :page-size)            s/Int
-                (s/optional-key :sort-by)              (s/enum "created-time" "name")
-                (s/optional-key :sort-order)           (s/enum "asc" "desc")
+                (s/optional-key :sort)                 s/Any ; TODO
                 (s/optional-key :states-and-filters)   {:filters                      {s/Keyword {s/Keyword s/Bool}}
                                                         :attachment-states-to-include [s/Str]
                                                         :processing-states-to-include [s/Str]
@@ -338,10 +337,8 @@
                                   :review-state-counts     {s/Str s/Int}}
                  :applications   [ataru-schema/ApplicationInfo]}
         (let [ensisijaisesti (boolean ensisijaisesti)
-              paging         {:page       (or page 0)
-                              :page-size  (or page-size 200)
-                              :sort-by    (or (keyword sort-by) :created-time)
-                              :sort-order (or (keyword sort-order) :descending)}]
+              paging         {:page      (or page 0)
+                              :page-size (or page-size 200)}]
           (if-let [query (cond (some? form-key)
                                (application-service/->form-query form-key)
                                (some? hakukohde-oid)
@@ -370,7 +367,8 @@
                 session
                 query
                 paging
-                states-and-filters))
+                states-and-filters
+                sort))
             (response/bad-request))))
 
       (api/GET "/list" {session :session}

@@ -1,11 +1,7 @@
-(ns ataru.virkailija.application-sorting
-  (:require
-   [ataru.virkailija.temporal :as t]))
-
-(def initial-sort {:column :created-time :order :descending})
+(ns ataru.applications.application-sorting)
 
 (defn- date-sort [compare-fn sort-key x y]
-  (compare-fn (sort-key x) (sort-key y)))
+  (compare-fn (.getMillis (sort-key x)) (.getMillis (sort-key y))))
 
 (defn- applicant-sort [order-fn x y]
   (order-fn
@@ -26,3 +22,7 @@
 
 (defn sort-by-column [applications column-id order]
   (sort (get-in application-sort-column-fns [column-id order]) applications))
+
+(defn person-info-needed-to-sort?
+  [column-id]
+  (= (keyword column-id) :applicant-name))
