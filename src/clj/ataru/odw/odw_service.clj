@@ -4,6 +4,20 @@
             [ataru.person-service.person-service :as person-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]))
 
+(defn- get-hakukelpoisuus
+  [application hakukohde-oid]
+  (case (get-in application [:eligibilities (keyword hakukohde-oid)] "unreviewed")
+    "unreviewed" "NOT_CHECKED"
+    "eligible"   "ELIGIBLE"
+    "uneligible" "INELIGIBLE"))
+
+(defn- get-maksuvelvollisuus
+  [application hakukohde-oid]
+  (case (get-in application [:payment-obligations (keyword hakukohde-oid)] "unreviewed")
+    "unreviewed"    "NOT_CHECKED"
+    "obligated"     "REQUIRED"
+    "not-obligated" "NOT_REQUIRED"))
+
 (defn get-applications-for-odw [person-service tarjonta-service date limit offset]
   (let [applications (application-store/get-applications-newer-than date limit offset)
         persons      (person-service/get-persons person-service (distinct (keep :person_oid applications)))]
@@ -44,12 +58,14 @@
                                                          "ACTIVE")}
                     (into {}
                           (for [index (range 1 7) ; Hard-coded amount in ODW 1-6
-                                :let [hakukohde-oid (nth hakukohteet (dec index) nil)
-                                      hakukohde     (when hakukohde-oid
-                                                      (tarjonta-protocol/get-hakukohde tarjonta-service hakukohde-oid))
-                                      tarjoaja-oid  (-> hakukohde :tarjoajaOids first)]]
+                                :let  [hakukohde-oid (nth hakukohteet (dec index) nil)
+                                       hakukohde     (when hakukohde-oid
+                                                       (tarjonta-protocol/get-hakukohde tarjonta-service hakukohde-oid))
+                                       tarjoaja-oid  (-> hakukohde :tarjoajaOids first)]]
                             {(keyword (str "pref" index "_hakukohde_oid"))     hakukohde-oid
                              (keyword (str "pref" index "_opetuspiste_oid"))   tarjoaja-oid
                              (keyword (str "pref" index "_sora"))              nil
-                             (keyword (str "pref" index "_harkinnanvarainen")) nil})))))
+                             (keyword (str "pref" index "_harkinnanvarainen")) nil
+                             (keyword (str "pref" index "_hakukelpoisuus"))    (get-hakukelpoisuus application hakukohde-oid)
+                             (keyword (str "pref" index "_maksuvelvollisuus")) (get-maksuvelvollisuus application hakukohde-oid)})))))
       applications)))

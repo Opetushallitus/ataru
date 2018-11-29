@@ -724,7 +724,15 @@ SELECT
   hakukohde,
   person_oid,
   content,
-  application_reviews.state
+  application_reviews.state,
+  (SELECT json_object_agg(hakukohde, state)
+   FROM application_hakukohde_reviews AS ahr
+   WHERE ahr.application_key = key
+     AND ahr.requirement = 'payment-obligation') AS "payment-obligations",
+  (SELECT json_object_agg(hakukohde, state)
+   FROM application_hakukohde_reviews AS ahr
+   WHERE ahr.application_key = key
+     AND ahr.requirement = 'eligibility-state') AS eligibilities
 FROM latest_applications
   LEFT JOIN application_reviews ON latest_applications.key = application_reviews.application_key
 WHERE created_time > :date :: DATE
