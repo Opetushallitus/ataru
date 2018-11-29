@@ -1042,17 +1042,13 @@
                             ; any liiteri error:
                             500 :file-type-forbidden
                             ; generic error, e.g. transfer interrupted:
-                            :file-upload-error)
-          attacment-value (subscribe [:application/answer-value
-                                      id
-                                      question-group-idx
-                                      attachment-idx])]
+                            :file-upload-error)]
       (if (and (contains? #{:file-upload-failed :retransmit} current-error) (< retries 3))
         {:db               db
          :delayed-dispatch {:dispatch-vec [:application/add-single-attachment-resumable field-descriptor attachment-idx file retries question-group-idx]
                             :timeout      (+ 2000 (rand-int 2000))}}
         {:db (-> db
-                 (update-in [:transmitting id] dissoc (:filename @attacment-value))
+                 (update-in [:transmitting id] dissoc (:filename filename))
                  (update-in (if question-group-idx
                               [:application :answers id :values question-group-idx attachment-idx]
                               [:application :answers id :values attachment-idx])
