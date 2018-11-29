@@ -622,19 +622,6 @@
   (->kebab-case-kw
     (exec-db :db yesql-add-application-feedback<! (transform-keys ->snake_case feedback))))
 
-(defn- payment-obligation-to-application [application payment-obligations]
-  (let [obligations (reduce (fn [r o]
-                              (assoc r (:hakukohde o) (:state o)))
-                            {}
-                            (get payment-obligations (:oid application)))]
-    (assoc application :paymentObligations obligations)))
-
-(defn- payment-obligations-for-applications [hakemus-oids]
-  (->> (exec-db :db
-                yesql-get-payment-obligation-for-applications
-                {:hakemus_oids hakemus-oids})
-       (group-by :application_key)))
-
 (defn- kk-base-educations-old-module [answers]
   (->> [["kk" :higher-education-qualification-in-finland-year-and-date]
         ["avoin" :studies-required-by-higher-education-field]
@@ -667,7 +654,7 @@
         nil))
 
 (defn- unwrap-hakurekisteri-application
-  [{:keys [key haku hakukohde person_oid lang email content]}]
+  [{:keys [key haku hakukohde person_oid lang email content payment-obligations eligibilities]}]
   (let [answers (answers-by-key (:answers content))]
     {:oid                         key
      :personOid                   person_oid
@@ -679,30 +666,29 @@
      :lahiosoite                  (-> answers :address :value)
      :postinumero                 (-> answers :postal-code :value)
      :postitoimipaikka            (-> answers :postal-office :value)
-     ; Default asuinmaa to finland for forms that are from before
-     ; country-of-residence was implemented, or copied from those forms.
+     ;; Default asuinmaa to finland for forms that are from before
+     ;; country-of-residence was implemented, or copied from those forms.
      :asuinmaa                    (or (-> answers :country-of-residence :value) "246")
      :kotikunta                   (-> answers :home-town :value)
      :kkPohjakoulutus             (kk-base-educations answers)
      :sahkoisenAsioinninLupa      (= "Kyllä" (-> answers :sahkoisen-asioinnin-lupa :value))
      :valintatuloksenJulkaisulupa (= "Kyllä" (-> answers :valintatuloksen-julkaisulupa :value))
      :koulutusmarkkinointilupa    (= "Kyllä" (-> answers :koulutusmarkkinointilupa :value))
-     :korkeakoulututkintoVuosi    (korkeakoulututkinto-vuosi answers)}))
+     :korkeakoulututkintoVuosi    (korkeakoulututkinto-vuosi answers)
+     :paymentObligations          (reduce-kv #(assoc %1 (name %2) %3) {} payment-obligations)
+     :eligibilities               (reduce-kv #(assoc %1 (name %2) %3) {} eligibilities)}))
 
 (defn get-hakurekisteri-applications
   [haku-oid hakukohde-oids person-oids modified-after]
-  (let [applications        (->> (exec-db :db yesql-applications-for-hakurekisteri
-                                          {:haku_oid       haku-oid
-                                           :hakukohde_oids (cons "" hakukohde-oids)
-                                           :person_oids    (cons "" person-oids)
-                                           :modified_after (some->> modified-after
-                                                                    (f/parse (f/formatter "yyyyMMddHHmm"
-                                                                                          (time/time-zone-for-id "Europe/Helsinki")))
-                                                                    str)})
-                                 (map unwrap-hakurekisteri-application))
-        payment-obligations (when (not-empty applications)
-                              (payment-obligations-for-applications (map :oid applications)))]
-    (map #(payment-obligation-to-application % payment-obligations) applications)))
+  (->> (exec-db :db yesql-applications-for-hakurekisteri
+                {:haku_oid       haku-oid
+                 :hakukohde_oids (cons "" hakukohde-oids)
+                 :person_oids    (cons "" person-oids)
+                 :modified_after (some->> modified-after
+                                          (f/parse (f/formatter "yyyyMMddHHmm"
+                                                                (time/time-zone-for-id "Europe/Helsinki")))
+                                          str)})
+       (map unwrap-hakurekisteri-application)))
 
 (defn- requirement-names-mapped-to-states
   [requirements]
