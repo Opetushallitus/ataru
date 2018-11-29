@@ -1097,6 +1097,9 @@ You will receive a confirmation of your application to your email."}
    :person-completed-education                  {:fi "Henkilön suoritukset"
                                                  :sv "Personens prestationer"
                                                  :en "EN: Henkilön suoritukset"}
+   :metadata-not-found                          {:fi "Hakijan liitteitä ei löytynyt"
+                                                 :sv "SV: Hakijan liitteitä ei löytynyt"
+                                                 :en "EN: Hakijan liitteitä ei löytynyt"}
    :person-not-individualized                   {:fi "Hakijaa ei ole yksilöity."
                                                  :sv "Sökande har inte individualiserats."
                                                  :en "EN: Hakijaa ei ole yksilöity."}

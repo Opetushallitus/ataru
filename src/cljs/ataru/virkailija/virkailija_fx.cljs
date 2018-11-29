@@ -14,12 +14,14 @@
                handler-or-dispatch
                skip-parse-times?
                handler-args
+               override-args
                cache-ttl]}]
     (case method
       :post
       (http/post path
                  params
                  handler-or-dispatch
+                 :override-args override-args
                  :skip-parse-times? skip-parse-times?
                  :handler-args handler-args
                  :cache-ttl cache-ttl)
@@ -27,6 +29,7 @@
       (http/http method
                  path
                  handler-or-dispatch
+                 :override-args override-args
                  :skip-parse-times? skip-parse-times?
                  :handler-args handler-args
                  :cache-ttl cache-ttl))))

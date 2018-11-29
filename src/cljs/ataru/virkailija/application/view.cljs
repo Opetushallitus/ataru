@@ -1628,7 +1628,8 @@
 (defn notifications-display []
   (let [selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
         selected-review-hakukohde     (subscribe [:state-query [:application :selected-review-hakukohde]])
-        alternative-form              (subscribe [:state-query [:application :alternative-form]])]
+        alternative-form              (subscribe [:state-query [:application :alternative-form]])
+        metadata-not-found            (subscribe [:state-query [:application :metadata-not-found]])]
     (fn []
       (let [application (:application @selected-application-and-form)
             yksiloity   (-> application :person :yksiloity)
@@ -1649,7 +1650,10 @@
                               :link-text :individualize-in-henkilopalvelu
                               :href      (str "/henkilo-ui/oppija/"
                                               person-oid
-                                              "/duplikaatit?permissionCheckService=ATARU")}]])]])))))
+                                              "/duplikaatit?permissionCheckService=ATARU")}]])
+            (when @metadata-not-found
+              [:div.individualization
+               [notification {:text      :metadata-not-found}]])]])))))
 
 (defn application-heading [application loading?]
   (let [answers            (:answers application)
