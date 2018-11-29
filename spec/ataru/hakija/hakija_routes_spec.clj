@@ -334,7 +334,8 @@
     (it "should not validate application with extra answers"
       (with-response :post resp application-fixtures/person-info-form-application-with-extra-answer
         (should= 400 (:status resp))
-        (should= {:failures {:extra-answers ["extra-answer-key"]}} (:body resp))))
+        (should= {:failures {:extra-answers ["extra-answer-key"]}
+                  :code :application-validation-failed-error} (:body resp))))
 
     (add-failing-post-spec "should not validate form with blank required field" application-blank-required-field)
 
@@ -503,7 +504,8 @@
         (should= 400 (:status resp))
         (should= {:failures {:adjacent-answer-1            {:passed? false}
                              :repeatable-required          {:passed? false}
-                             :more-questions-attachment-id {:passed? false}}}
+                             :more-questions-attachment-id {:passed? false}}
+                  :code :application-validation-failed-error}
                  (:body resp))))
 
     (it "should create"
@@ -527,7 +529,8 @@
       (with-response :put resp (-> (merge application-fixtures/person-info-form-application-with-modified-answers {:secret "0000000031"})
                                    (assoc-in [:answers 20 :value] "eka vaihtoehto"))
         (should= 400 (:status resp))
-        (should= {:failures {:dropdown-followup-2 {:passed? false}}} (:body resp))))
+        (should= {:failures {:dropdown-followup-2 {:passed? false}}
+                  :code :application-validation-failed-error} (:body resp))))
 
     (it "should update dropdown answer"
       (with-response :put resp (-> (merge application-fixtures/person-info-form-application-with-more-modified-answers {:secret "0000000031"})
