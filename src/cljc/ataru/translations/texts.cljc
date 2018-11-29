@@ -326,6 +326,9 @@ You will receive a confirmation of your application to your email."}
    :internal-server-error                       {:fi "Tapahtui palvelinvirhe."
                                                  :sv "Internal server error."
                                                  :en "Internal server error."}
+   :application-validation-failed-error         {:fi "Tapahtui palvelinvirhe."
+                                                 :sv "Internal server error."
+                                                 :en "Internal server error."}
    :secret-expired                              {:fi "Tämä hakemuslinkki on vanhentunut"
                                                  :en "This application link has expired"
                                                  :sv "Denna ansökningslänk är föråldrad"}})
