@@ -501,7 +501,7 @@
          (-> db :form :tarjonta :yhteishaku))))
 
 (re-frame/reg-sub
-  :application/transmitting?
+  :application/attachments-uploading?
   (fn [db]
     (not-empty (mapcat keys (vals (:transmitting db))))))
 
