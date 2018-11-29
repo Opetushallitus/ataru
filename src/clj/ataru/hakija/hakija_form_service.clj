@@ -13,7 +13,7 @@
             [clj-time.coerce :as t]
             [clj-time.format :as f]
             [schema.core :as s]
-            [ataru.hakuaika :refer [select-hakuaika-for-field attachment-edit-end]]
+            [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.hakija.form-role :as form-role]
             [ataru.component-data.component :as component]
             [medley.core :refer [find-first]]
@@ -69,12 +69,10 @@
 
 (defn- editing-allowed-by-hakuaika?
   [field hakukohteet application-in-processing-state?]
-  (let [hakuaika            (select-hakuaika-for-field field hakukohteet)
+  (let [hakuaika            (hakuaika/select-hakuaika-for-field field hakukohteet)
         hakuaika-start      (some-> hakuaika :start t/from-long)
         hakuaika-end        (some-> hakuaika :end t/from-long)
-        attachment-edit-end (attachment-edit-end hakuaika (-> config
-                                                              :public-config
-                                                              (get :attachment-modify-grace-period-days 14)))
+        attachment-edit-end (hakuaika/attachment-edit-end hakuaika)
         hakukierros-end     (some-> hakuaika :hakukierros-end t/from-long)
         after?              (fn [t] (or (nil? t)
                                         (time/after? (time/now) t)))

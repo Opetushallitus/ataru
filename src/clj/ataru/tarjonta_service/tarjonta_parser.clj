@@ -1,7 +1,6 @@
 (ns ataru.tarjonta-service.tarjonta-parser
   (:require [taoensso.timbre :as log]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
-            [ataru.hakuaika :refer [select-hakuaika-for-haku]]
             [ataru.tarjonta-service.tarjonta-service :refer [yhteishaku?]]
             [ataru.koodisto.koodisto :refer [get-koodisto-options]]
             [ataru.organization-service.organization-service :as organization-service]
@@ -123,7 +122,7 @@
            :prioritize-hakukohteet           (:usePriority haku)
            :max-hakukohteet                  (when (and max-hakukohteet (pos? max-hakukohteet))
                                                max-hakukohteet)
-           :hakuaika                         (select-hakuaika-for-haku (map :hakuaika hakukohteet))
+           :hakuaika                         (hakuaika/select-hakuaika (map :hakuaika hakukohteet))
            :can-submit-multiple-applications (:canSubmitMultipleApplications haku)
            :yhteishaku                       (yhteishaku? haku)}}))))
   ([tarjonta-service organization-service ohjausparametrit-service haku-oid]

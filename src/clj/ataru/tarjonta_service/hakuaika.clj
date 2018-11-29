@@ -47,10 +47,50 @@
 (defn millis->localized-date-time [millis]
   (date-time->localized-date-time (c/from-long millis)))
 
+(defn- last-by-ending
+  [hakuajat]
+  (first
+   (sort-by :end
+            #(or (nil? %1)
+                 (and (some? %2)
+                      (> %1 %2)))
+            hakuajat)))
 
-(defn attachment-edit-end [end hakuaika-period default-modify-grace-period]
-  (let [hakuaika-end (some-> end c/from-long)]
-    (some-> hakuaika-end (t/plus (t/days (or hakuaika-period
+(defn- first-by-start
+  [hakuajat]
+  (first
+   (sort-by :start
+            #(or (nil? %1)
+                 (and (some? %2)
+                      (< %1 %2)))
+            hakuajat)))
+
+(defn- not-yet-started
+  [now hakuaika]
+  (and (not (:on hakuaika))
+       (some? (:start hakuaika))
+       (t/after? (c/from-long (:start hakuaika)) now)))
+
+(defn select-hakuaika [hakuajat]
+  (or (last-by-ending (filter :on hakuajat))
+      (first-by-start (filter (partial not-yet-started (t/now)) hakuajat))
+      (last-by-ending hakuajat)))
+
+(defn select-hakuaika-for-field [field hakukohteet]
+  (let [field-hakukohde-and-group-oids (set (concat (:belongs-to-hakukohteet field)
+                                                    (:belongs-to-hakukohderyhma field)))
+        relevant-hakukohteet           (cond->> hakukohteet
+                                                (not-empty field-hakukohde-and-group-oids)
+                                                (filter #(not-empty (clojure.set/intersection field-hakukohde-and-group-oids
+                                                                                              (set (cons (:oid %) (:hakukohderyhmat %)))))))]
+    (select-hakuaika (map :hakuaika relevant-hakukohteet))))
+
+(defn attachment-edit-end [hakuaika]
+  (let [default-modify-grace-period (-> config
+                                        :public-config
+                                        (get :attachment-modify-grace-period-days 14))
+        hakuaika-end                (some-> hakuaika :end c/from-long)]
+    (some-> hakuaika-end (t/plus (t/days (or (:attachment-modify-grace-period-days hakuaika)
                                              default-modify-grace-period))))))
 
 (defn hakuaika-with-label

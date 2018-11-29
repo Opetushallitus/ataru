@@ -3,7 +3,6 @@
             [clojure.string :refer [join blank?]]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.config.core :refer [config]]
-            [ataru.hakuaika :as h]
             [ataru.util :as util]))
 
 (defn- koulutus->str-map
@@ -54,10 +53,7 @@
       (assoc-in form [:content hakukohteet-field-idx] updated-field))))
 
 (defn populate-attachment-deadlines [form tarjonta-info]
-  (let [hakukohteet          (get-in tarjonta-info [:tarjonta :hakukohteet])
-        default-grace-period (-> config
-                                 :public-config
-                                 (get :attachment-modify-grace-period-days 14))]
+  (let [hakukohteet (get-in tarjonta-info [:tarjonta :hakukohteet])]
     (update form :content
       (fn [content]
           (clojure.walk/prewalk
@@ -66,8 +62,8 @@
                                     (or (some-> (-> field :params :deadline)
                                                 (hakuaika/str->date-time)
                                                 (hakuaika/date-time->localized-date-time))
-                                        (some-> (h/select-hakuaika-for-field field hakukohteet)
-                                                (h/attachment-edit-end default-grace-period)
+                                        (some-> (hakuaika/select-hakuaika-for-field field hakukohteet)
+                                                hakuaika/attachment-edit-end
                                                 (hakuaika/date-time->localized-date-time))))]
                   (assoc-in field [:params :deadline-label] label)
                   field))
