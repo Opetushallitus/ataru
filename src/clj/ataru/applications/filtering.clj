@@ -101,6 +101,10 @@
   [applications {:keys [selected-hakukohteet attachment-states-to-include processing-states-to-include
                         selection-states-to-include filters]}]
   (let [selected-hakukohteet-set         (when selected-hakukohteet (set selected-hakukohteet))
+        ; TODO not necessary if no filtering for: :language-requirement :degree-requirement :eligibility-state :payment-obligation:
+        applications-with-requirements   (map
+                                           #(assoc % :application-hakukohde-reviews (application-states/get-all-reviews-for-all-requirements %))
+                                           applications)
         processing-states-to-include-set (set processing-states-to-include)
         selection-states-to-include-set  (set selection-states-to-include)
         attachment-states-to-include-set (set attachment-states-to-include)
@@ -129,4 +133,4 @@
           (filter-by-hakukohde-review application selected-hakukohteet-set "eligibility-state" (parse-enabled-filters filters :eligibility-state))
           (filter-by-hakukohde-review application selected-hakukohteet-set "payment-obligation" (parse-enabled-filters filters :payment-obligation))
           (filter-by-attachment-review application selected-hakukohteet-set attachment-states-to-include-set)))
-      applications)))
+      applications-with-requirements)))
