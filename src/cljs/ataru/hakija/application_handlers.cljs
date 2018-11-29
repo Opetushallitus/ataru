@@ -983,11 +983,16 @@
 (reg-event-fx
   :application/handle-attachment-upload
   (fn [{db :db} [_ field-descriptor attachment-idx question-group-idx response]]
-    (let [id   (keyword (:id field-descriptor))
-          path (if question-group-idx
-                 [:application :answers id :values question-group-idx attachment-idx]
-                 [:application :answers id :values attachment-idx])]
+    (let [id              (keyword (:id field-descriptor))
+          path            (if question-group-idx
+                            [:application :answers id :values question-group-idx attachment-idx]
+                            [:application :answers id :values attachment-idx])
+          attacment-value (subscribe [:application/answer-value
+                                      id
+                                      question-group-idx
+                                      attachment-idx])]
       {:db                 (-> db
+                               (update-in [:attachments-uploading id] dissoc (:filename @attacment-value))
                                (update-in path
                                  merge
                                  {:value response :valid true :status :ready})
@@ -1030,38 +1035,46 @@
 (reg-event-db
   :application/handle-attachment-upload-started
   (fn [db [_ field-descriptor attachment-idx question-group-idx request]]
-    (assoc-in db (cond-> [:application :answers (keyword (:id field-descriptor)) :values]
-                         (some? question-group-idx)
-                         (conj question-group-idx)
-                         true
-                         (conj attachment-idx :request))
-              request)))
+    (let [id (keyword (:id field-descriptor))
+          {:keys [filename]} @(subscribe [:application/answer-value
+                                          id
+                                          question-group-idx
+                                          attachment-idx])]
+      (-> db
+          (assoc-in [:attachments-uploading id filename] :downloading)
+          (assoc-in (cond-> [:application :answers id :values]
+                            (some? question-group-idx)
+                            (conj question-group-idx)
+                            true
+                            (conj attachment-idx :request))
+            request)))))
 
 (reg-event-fx
   :application/handle-attachment-upload-error
   (fn [{:keys [db]} [_ field-descriptor attachment-idx filename file retries question-group-idx response-status]]
-    (let [id            (keyword (:id field-descriptor))
-          current-error (case response-status
-                          ; misc error in resumable file transfer, retry:
-                          409 :file-upload-retransmit
-                          ; rate limited:
-                          429 :file-upload-failed
-                          ; any liiteri error:
-                          500 :file-type-forbidden
-                          ; generic error, e.g. transfer interrupted:
-                          :file-upload-error)]
+    (let [id              (keyword (:id field-descriptor))
+          current-error   (case response-status
+                            ; misc error in resumable file transfer, retry:
+                            409 :file-upload-retransmit
+                            ; rate limited:
+                            429 :file-upload-failed
+                            ; any liiteri error:
+                            500 :file-type-forbidden
+                            ; generic error, e.g. transfer interrupted:
+                            :file-upload-error)]
       (if (and (contains? #{:file-upload-failed :retransmit} current-error) (< retries 3))
         {:db               db
          :delayed-dispatch {:dispatch-vec [:application/add-single-attachment-resumable field-descriptor attachment-idx file retries question-group-idx]
                             :timeout      (+ 2000 (rand-int 2000))}}
         {:db (-> db
+                 (update-in [:attachments-uploading id] dissoc (:filename filename))
                  (update-in (if question-group-idx
                               [:application :answers id :values question-group-idx attachment-idx]
                               [:application :answers id :values attachment-idx])
-                            merge
-                            {:valid  false
-                             :status :error
-                             :errors [[current-error]]})
+                   merge
+                   {:valid  false
+                    :status :error
+                    :errors [[current-error]]})
                  (assoc-in [:application :answers id :valid] false))}))))
 
 (reg-event-fx

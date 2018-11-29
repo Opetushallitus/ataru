@@ -68,6 +68,7 @@
 (defn send-button-or-placeholder [valid-status submit-status]
   (let [secret                (subscribe [:state-query [:application :secret]])
         virkailija-secret     (subscribe [:state-query [:application :virkailija-secret]])
+        transmitting?         (subscribe [:application/attachments-uploading?])
         editing               (subscribe [:state-query [:application :editing?]])
         values-changed?       (subscribe [:state-query [:application :values-changed?]])
         validators-processing (subscribe [:state-query [:application :validators-processing]])]
@@ -80,7 +81,8 @@
                                              :modifications-saved
                                              :application-sent))]]
              :else [:button.application__send-application-button
-                    {:disabled (or (not (:valid valid-status))
+                    {:disabled (or @transmitting?
+                                   (not (:valid valid-status))
                                    (contains? #{:submitting :submitted} submit-status)
                                    (and @editing (empty? @values-changed?))
                                    (not (empty? @validators-processing)))

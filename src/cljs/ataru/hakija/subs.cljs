@@ -499,3 +499,9 @@
   (fn [db [_ id]]
     (and (= :email id)
          (-> db :form :tarjonta :yhteishaku))))
+
+(re-frame/reg-sub
+  :application/attachments-uploading?
+  (fn [db]
+    (not-empty (mapcat keys (vals (:attachments-uploading db))))))
+
