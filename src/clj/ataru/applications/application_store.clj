@@ -963,9 +963,15 @@
         (clojure.set/rename-keys {:key :hakemusOid :person_oid :personOid :haku :hakuOid}))))
 
 (defn get-applications-for-valintalaskenta [hakukohde-oid application-keys]
-  (->> (exec-db :db yesql-valintalaskenta-applications {:hakukohde_oid hakukohde-oid
-                                                        :application_keys (cons "" application-keys)})
-       (map unwrap-valintalaskenta-application)))
+  (let [partition-size 10000
+        key-partitions (partition partition-size partition-size nil application-keys)]
+    (mapcat
+      (fn [key-partition]
+        (->> (exec-db :db yesql-valintalaskenta-applications
+                      {:hakukohde_oid    hakukohde-oid
+                       :application_keys (cons "" key-partition)})
+             (map unwrap-valintalaskenta-application)))
+      key-partitions)))
 
 (defn- unwrap-siirto-application [application]
   (let [keyword-values (->> application
