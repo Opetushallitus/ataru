@@ -563,9 +563,12 @@
 
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
-        expanded?    (subscribe [:state-query [:application :application-list-expanded?]])]
+        expanded?    (subscribe [:state-query [:application :application-list-expanded?]])
+        on-update    #(when (not-empty applications)
+                        (dispatch [:application/scroll-list-to-selected-or-previously-closed-application]))]
     (r/create-class
-      {:component-did-update #(dispatch [:application/scroll-list-to-selected-or-previously-closed-application])
+      {:component-did-update on-update
+       :component-did-mount  on-update
        :reagent-render       (fn [applications]
                                (into [:div.application-handling__list
                                       {:class (str (when (= true @expanded?) "application-handling__list--expanded")

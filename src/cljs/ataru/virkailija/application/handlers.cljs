@@ -324,11 +324,10 @@
                             (= 1 (count applications)) (-> applications first :key)
                             (-> db :application :selected-key) (-> db :application :selected-key)
                             :else (:application-key (cljs-util/extract-query-params)))]
-      {:db         db
-       :dispatch-n [(if application-key
-                      [[:application/select-application application-key nil]
-                       :application/scroll-list-to-selected-or-previously-closed-application]
-                      [:application/close-application])]})))
+      {:db       db
+       :dispatch (if application-key
+                   [:application/select-application application-key nil]
+                   [:application/close-application])})))
 
 (defn- extract-unselected-review-states-from-query
   [query-param states]
@@ -1153,8 +1152,8 @@
 (reg-event-fx
   :application/load-next-page
   (fn [{:keys [db]} _]
-    (let [total-count  (-> db :application :total-count)
+    (let [total-count  (-> db :application :filtered-count)
           loaded-count (-> db :application :applications (count))]
-      (when (< total-count loaded-count)
+      (when (< loaded-count total-count)
         {:db       (update-in db [:application :application-list-page] inc)
          :dispatch [:application/update-applications-immediate]}))))
