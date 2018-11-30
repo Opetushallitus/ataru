@@ -964,14 +964,16 @@
 
 (defn get-applications-for-valintalaskenta [hakukohde-oid application-keys]
   (let [partition-size 10000
-        key-partitions (partition partition-size partition-size nil application-keys)]
-    (mapcat
-      (fn [key-partition]
-        (->> (exec-db :db yesql-valintalaskenta-applications
-                      {:hakukohde_oid    hakukohde-oid
-                       :application_keys (cons "" key-partition)})
-             (map unwrap-valintalaskenta-application)))
-      key-partitions)))
+        fetch          (fn [key-partition]
+                         (->> (exec-db :db yesql-valintalaskenta-applications
+                                       {:hakukohde_oid    hakukohde-oid
+                                        :application_keys (cons "" key-partition)})
+                              (map unwrap-valintalaskenta-application)))]
+    (if (empty? application-keys)
+      (fetch [])
+      (->> application-keys
+           (partition partition-size partition-size nil)
+           (mapcat fetch)))))
 
 (defn- unwrap-siirto-application [application]
   (let [keyword-values (->> application
