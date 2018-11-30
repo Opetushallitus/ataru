@@ -1,5 +1,6 @@
 (ns ataru.fixtures.excel-fixtures
-  (:require [clj-time.core :as c]))
+  (:require [ataru.component-data.component :as component]
+            [clj-time.core :as c]))
 
 (def form {:id           123
            :key          "form_123_key"
@@ -37,6 +38,26 @@
                                                      :fieldType            "textField"
                                                      :exclude-from-answers true
                                                      :fieldClass           "formField"}]}]})
+
+(def form-with-special-questions {:id           321
+                                  :key          "form_321_key"
+                                  :name         {:fi "Form name"}
+                                  :created-by   "IRMELI KUIKELOINEN"
+                                  :created-time (c/date-time 2016 6 14 12 34 56)
+                                  :content      [{:id         "form_field_1"
+                                                  :label      {:fi "Lomakeosio"}
+                                                  :fieldType  "fieldset"
+                                                  :fieldClass "wrapperElement"
+                                                  :children   [{:id         "form_field_1_0"
+                                                                :label      {:fi "Kysymys 4"}
+                                                                :fieldType  "textField"
+                                                                :fieldClass "formField"}
+                                                               {:id                   "should_not_be_shown"
+                                                                :label                {:fi "You should not see this"}
+                                                                :fieldType            "textField"
+                                                                :exclude-from-answers true
+                                                                :fieldClass           "formField"}]}
+                                                 (component/valintatuloksen-julkaisulupa {})]})
 
 (def application-for-form {:id                            9432
                            :key                           "application_9432_key"
@@ -94,6 +115,40 @@
                                                                  :label     "You should not see this"
                                                                  :value     "Really, no"
                                                                  :fieldType "textField"}]})
+
+(def application-with-special-answers {:id                            3424
+                                       :key                           "application_3424_key"
+                                       :created-time                  (c/date-time 2016 6 15 12 34 56)
+                                       :state                         "active"
+                                       :form                          321
+                                       :name                          {:fi "Form with hakukohde and haku"}
+                                       :lang                          "fi"
+                                       :hakukohde                     ["hakukohde.oid"]
+                                       :haku                          "haku.oid"
+                                       :person-oid                    "1.123.345456567123"
+                                       :person                        {:turvakielto true
+                                                                       :first-name  "Person-etunimi"}
+                                       :application-hakukohde-reviews [{:requirement "selection-state" :state "selected" :hakukohde "hakukohde.oid"}
+                                                                       {:requirement "processing-state" :state "processing" :hakukohde "hakukohde.oid"}]
+                                       :answers                       [{:key   "first-name"
+                                                                        :label "Etunimi"
+                                                                        :value "Lomake-etunimi"}
+                                                                       {:key       "form_field_1_0"
+                                                                        :label     "Kysymys 4"
+                                                                        :value     "Vastaus 4"
+                                                                        :fieldType "textfield"}
+                                                                       {:key       "random_0"
+                                                                        :label     "Kysymys 5"
+                                                                        :value     "Vastaus 5"
+                                                                        :fieldType "textfield"}
+                                                                       {:key       "should_not_be_shown"
+                                                                        :label     "You should not see this"
+                                                                        :value     "Really, no"
+                                                                        :fieldType "textField"}
+                                                                       {:key       "valintatuloksen-julkaisulupa"
+                                                                        :label     (:label (component/valintatuloksen-julkaisulupa {}))
+                                                                        :value     "Ei"
+                                                                        :fieldType "singleChoice"}]})
 
 (def application-review {:id              1
                          :application_key "c58df586-fdb9-4ee1-b4c4-030d4cfe9f81"
