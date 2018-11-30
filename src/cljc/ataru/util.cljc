@@ -168,7 +168,12 @@
 (defn koulutus->str
   [koulutus lang]
   (if-let [classic-name (->> [(-> koulutus :koulutuskoodi-name lang)
-                              (->> koulutus :tutkintonimike-names (mapv lang) (clojure.string/join ", "))
+                              (->> koulutus
+                                   :tutkintonimike-names
+                                   (mapv lang)
+                                   (remove clojure.string/blank?)
+                                   distinct
+                                   (clojure.string/join ", "))
                               (:tarkenne koulutus)]
                              (remove clojure.string/blank?)
                              distinct
