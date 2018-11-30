@@ -320,14 +320,15 @@
                               (assoc-in [:application :review-state-counts] (keys->str (:review-state-counts aggregate-data)))
                               (assoc-in [:application :attachment-state-counts] (keys->str (:attachment-state-counts aggregate-data)))
                               (assoc-in [:application :information-request] nil))
-          application-key (if (= 1 (count applications))
-                            (-> applications first :key)
-                            (when-let [query-key (:application-key (cljs-util/extract-query-params))]
-                              (some #{query-key} (map :key applications))))]
-      {:db       db
-       :dispatch (if application-key
-                   [:application/select-application application-key nil]
-                   [:application/close-application])})))
+          application-key (cond
+                            (= 1 (count applications)) (-> applications first :key)
+                            (-> db :application :selected-key) (-> db :application :selected-key)
+                            :else (:application-key (cljs-util/extract-query-params)))]
+      {:db         db
+       :dispatch-n [(if application-key
+                      [[:application/select-application application-key nil]
+                       :application/scroll-list-to-selected-or-previously-closed-application]
+                      [:application/close-application])]})))
 
 (defn- extract-unselected-review-states-from-query
   [query-param states]
@@ -1121,18 +1122,24 @@
 (reg-event-fx
   :application/navigate-application-list
   (fn [{:keys [db]} [_ step]]
-    (let [filtered-applications   (-> db :application :filtered-applications)
-          application-count       (count filtered-applications)
+    (let [applications            (-> db :application :applications)
+          application-count       (count applications)
           current-application-key (-> db :application :selected-key)
           selected-hakukohde      (-> db :application :selected-hakukohde)
-          current-application-idx (util/first-index-of #(= (:key %) current-application-key) filtered-applications)
-          next-application-idx    (if (nil? current-application-idx)
-                                    0
-                                    (+ current-application-idx step))
+          current-application-idx (util/first-index-of #(= (:key %) current-application-key) applications)
+          is-last?                (= current-application-idx (dec application-count))
+          next-application-idx    (if is-last?
+                                    current-application-idx
+                                    (if (nil? current-application-idx)
+                                      0
+                                      (+ current-application-idx step)))
           guarded-idx             (mod next-application-idx application-count)
-          next-application-key    (-> filtered-applications (nth guarded-idx) :key)]
-      {:update-url-query-params {:application-key next-application-key}
-       :dispatch                [:application/select-application next-application-key selected-hakukohde false]})))
+          next-application-key    (-> applications (nth guarded-idx) :key)]
+      (when next-application-key
+        (if is-last?
+          {:dispatch [:application/load-next-page]}
+          {:update-url-query-params {:application-key next-application-key}
+           :dispatch                [:application/select-application next-application-key selected-hakukohde false]})))))
 
 (reg-event-fx
   :application/scroll-list-to-selected-or-previously-closed-application
@@ -1146,6 +1153,8 @@
 (reg-event-fx
   :application/load-next-page
   (fn [{:keys [db]} _]
-    (println "load next page, now" (get-in db [:application :application-list-page]))
-    {:db       (update-in db [:application :application-list-page] inc)
-     :dispatch [:application/update-applications-immediate]}))
+    (let [total-count  (-> db :application :total-count)
+          loaded-count (-> db :application :applications (count))]
+      (when (< total-count loaded-count)
+        {:db       (update-in db [:application :application-list-page] inc)
+         :dispatch [:application/update-applications-immediate]}))))

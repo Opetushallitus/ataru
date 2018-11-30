@@ -1705,9 +1705,7 @@
         ssn                (-> application :person :ssn)
         birth-date         (-> application :person :birth-date)
         person-oid         (-> application :person :oid)
-        yksiloity          (-> application :person :yksiloity)
         email              (get-in answers [:email :value])
-
         applications-count (:applications-count application)]
     [:div.application__handling-heading
      [:div.application-handling__review-area-main-heading-container
