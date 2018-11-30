@@ -77,6 +77,9 @@
      :hakukohderyhmat            (->> (:ryhmaliitokset hakukohde)
                                       (map :ryhmaOid)
                                       (filter #(contains? hakukohderyhmat %)))
+     :kohdejoukko-korkeakoulu?   (clojure.string/starts-with?
+                                  (:kohdejoukkoUri haku)
+                                  "haunkohdejoukko_12#")
      :tarjoaja-name              (:tarjoajaNimet hakukohde)
      :form-key                   (:ataruLomakeAvain hakukohde)
      :koulutukset                (->> (map :oid (:koulutukset hakukohde))

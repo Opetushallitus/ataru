@@ -165,22 +165,6 @@
                               (:state %))))
              application-hakukohde-reviews)))
 
-(defn koulutus->str
-  [koulutus lang]
-  (if-let [classic-name (->> [(-> koulutus :koulutuskoodi-name lang)
-                              (->> koulutus
-                                   :tutkintonimike-names
-                                   (mapv lang)
-                                   (remove clojure.string/blank?)
-                                   distinct
-                                   (clojure.string/join ", "))
-                              (:tarkenne koulutus)]
-                             (remove clojure.string/blank?)
-                             distinct
-                             seq)]
-    (clojure.string/join " | " classic-name)
-    (-> koulutus :koulutusohjelma-name lang)))
-
 (defn remove-nil-values [m]
   (->> m
        (filter second)
