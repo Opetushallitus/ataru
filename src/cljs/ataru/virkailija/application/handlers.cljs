@@ -365,7 +365,10 @@
                                                            (assoc-in [:application :fetching-next-page] (not reset-list?))
                                                            (assoc-in [:application :previous-sort] sort)
                                                            (assoc-in [:application :previous-fetch-params] params)
-                                                           (assoc-in [:application :previous-fetch-filters] [attachment-states-to-include processing-states-to-include selection-states-to-include filters])
+                                                           (assoc-in [:application :previous-fetch-filters] [attachment-states-to-include
+                                                                                                             processing-states-to-include
+                                                                                                             selection-states-to-include
+                                                                                                             filters])
                                                            (assoc-in [:application :attachment-state-filter] attachment-states-to-include)
                                                            (assoc-in [:application :processing-state-filter] processing-states-to-include)
                                                            (assoc-in [:application :selection-state-filter] selection-states-to-include)

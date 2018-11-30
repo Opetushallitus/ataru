@@ -13,9 +13,9 @@
    :active-panel         :editor
    :application          {:applications               []
                           :review                     {}
-                          :attachment-state-filter    (mapv first review-states/attachment-hakukohde-review-types-with-no-requirements)
-                          :processing-state-filter    (mapv first review-states/application-hakukohde-processing-states)
-                          :selection-state-filter     (mapv first review-states/application-hakukohde-selection-states)
+                          :attachment-state-filter    (set (mapv first review-states/attachment-hakukohde-review-types-with-no-requirements))
+                          :processing-state-filter    (set (mapv first review-states/application-hakukohde-processing-states))
+                          :selection-state-filter     (set (mapv first review-states/application-hakukohde-selection-states))
                           :sort                       {:column :created-time :order :descending}
                           :selected-time-column       :created-time
                           :application-list-expanded? true
