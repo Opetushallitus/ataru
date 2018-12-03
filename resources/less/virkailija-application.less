@@ -889,7 +889,7 @@ and (max-width: 1000px) {
 
 .application-handling__review-row--notes-row {
   display: flex;
-  flex-flow: row nowrap;
+  flex-flow: column;
 }
 
 .application-handling__review-note-input {
@@ -898,6 +898,8 @@ and (max-width: 1000px) {
   border: 1px solid @section-gray-border;
   border-radius: 2px;
   flex-grow: 1;
+  margin: 0px 0px 4px 0px;
+  resize: vertical;
 }
 
 .application-handling__review-note-submit-button {
@@ -906,20 +908,13 @@ and (max-width: 1000px) {
   box-shadow :none;
   padding: 5px;
   height: 41px;
+  width: 130px;
   font-family: 'Open Sans', sans-serif;
   font-size: 14px;
   border: none;
   display: flex;
-  flex-flow: column nowrap;
   align-items: center;
   justify-content: center;
-  margin-bottom: 10px;
-}
-
-.application-handling__general-review-note-submit-button {
-  &:extend(.application-handling__review-note-submit-button);
-  flex: 0 1 130px;
-  margin-left: 10px;
 }
 
 .application-handling__review-note-submit-button--disabled {
@@ -1213,12 +1208,6 @@ and (max-width: 1000px) {
 .application-handling__review-state-selected-container {
   display: flex;
   flex-direction: column;
-}
-
-.application-handling__eligibility-state-comment {
-  height: 60px;
-  resize: none;
-  margin-bottom: 4px;
 }
 
 .application-handling__review-state-container--bottom-border {
