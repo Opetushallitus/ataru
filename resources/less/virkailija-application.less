@@ -1418,13 +1418,28 @@ and (max-width: 1000px) {
 
 .application-handling__event-row {
   .light;
-  display: flex;
   margin-bottom: 2px;
+}
+
+.application-handling__event-row--message {
+  margin: 14px 0px 14px 0px;
+}
+
+.application-handling__event-row--message-subject {
+  display: block;
+  margin-bottom: 7px;
+}
+
+.application-handling__event-row--message-body {
 }
 
 .application-handling__event-timestamp {
   flex: 0 0 125px;
   color: #999;
+}
+
+.application-handling__event-row--header {
+  display: flex;
 }
 
 .application-handling__event-caption {
@@ -1456,7 +1471,7 @@ and (max-width: 1000px) {
 .application-handling__event-row-details {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 0px 0px 0px 125px;
 }
 
 .application-handling__multi-line-event-caption {
