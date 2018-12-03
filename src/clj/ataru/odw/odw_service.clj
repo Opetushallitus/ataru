@@ -13,32 +13,34 @@
                  person-oid  (:person_oid application)
                  person      (get persons person-oid)
                  state       (:state application)]
-             (merge {:oid                    (:key application)
-                     :person_oid             person-oid
-                     :application_system_oid (:haku application)
-                     :postinumero            (-> answers :postal-code :value)
-                     :lahiosoite             (-> answers :address :value)
-                     :puhelin                (-> answers :phone :value)
-                     :sahkoposti             (-> answers :email :value)
-                     :asuinmaa               (-> answers :country-of-residence :value)
-                     :kotikunta              (-> answers :home-town :value)
-                     :student_oid            (-> person :oppijanumero)
-                     :aidinkieli             (-> person :aidinkieli :kieliKoodi)
-                     :kansalaisuus           (-> person :kansalaisuus first :kansalaisuusKoodi)
-                     :sukunimi               (-> person :sukunimi)
-                     :etunimet               (-> person :etunimet)
-                     :kutsumanimi            (-> person :kutsumanimi)
-                     :syntymaaika            (-> person :syntymaaika)
-                     :turvakielto            (-> person :turvakielto)
-                     :hetu                   (-> person :hetu)
-                     :sukupuoli              (-> person :sukupuoli util/gender-int-to-string)
-                     :Ulk_postiosoite        nil
-                     :Ulk_postinumero        nil
-                     :Ulk_kunta              nil
-                     :SahkoinenViestintaLupa nil
-                     :state                  (if (= state "inactivated")
-                                               "PASSIVE"
-                                               "ACTIVE")}
+             (merge {:oid                      (:key application)
+                     :person_oid               person-oid
+                     :application_system_oid   (:haku application)
+                     :postinumero              (-> answers :postal-code :value)
+                     :lahiosoite               (-> answers :address :value)
+                     :puhelin                  (-> answers :phone :value)
+                     :sahkoposti               (-> answers :email :value)
+                     :asuinmaa                 (-> answers :country-of-residence :value)
+                     :kotikunta                (-> answers :home-town :value)
+                     :student_oid              (-> person :oppijanumero)
+                     :aidinkieli               (-> person :aidinkieli :kieliKoodi)
+                     :kansalaisuus             (-> person :kansalaisuus first :kansalaisuusKoodi)
+                     :sukunimi                 (-> person :sukunimi)
+                     :etunimet                 (-> person :etunimet)
+                     :kutsumanimi              (-> person :kutsumanimi)
+                     :syntymaaika              (-> person :syntymaaika)
+                     :turvakielto              (-> person :turvakielto)
+                     :hetu                     (-> person :hetu)
+                     :sukupuoli                (-> person :sukupuoli util/gender-int-to-string)
+                     :Ulk_postiosoite          nil
+                     :Ulk_postinumero          nil
+                     :Ulk_kunta                nil
+                     :SahkoinenViestintaLupa   (-> answers :sahkoisen-asioinnin-lupa :value (= "Kyllä"))
+                     :julkaisulupa             (-> answers :valintatuloksen-julkaisulupa :value (= "Kyllä"))
+                     :koulutusmarkkinointilupa (-> answers :koulutusmarkkinointilupa :value (= "Kyllä"))
+                     :state                    (if (= state "inactivated")
+                                                 "PASSIVE"
+                                                 "ACTIVE")}
                     (into {}
                           (for [index (range 1 7) ; Hard-coded amount in ODW 1-6
                                 :let [hakukohde-oid (nth hakukohteet (dec index) nil)
