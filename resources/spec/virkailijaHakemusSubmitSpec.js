@@ -57,11 +57,11 @@
       it('shows readonly application with selected data', function() {
         expect(testFrame()
                .find('.application__hakukohde-selected-list')
-               .find('.application__hakukohde-selected-row-header')
+               .find('.application__hakukohde-header')
                .length).to.equal(1)
         expect(testFrame()
                .find('.application__hakukohde-selected-list')
-               .find('.application__hakukohde-selected-row-header')
+               .find('.application__hakukohde-header')
                .eq(0)
                .text()).to.equal("Testihakukohde – Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie")
 

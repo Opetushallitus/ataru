@@ -55,7 +55,7 @@ function invalidFieldNames() {
 }
 
 function selectedHakukohteet() {
-  return testFrame().find('.application__hakukohde-selected-list').find('.application__hakukohde-row')
+  return testFrame().find('.application__hakukohde-selected-list').find('.application__selected-hakukohde-row')
 }
 
 function hakukohdeSearchInput() {
@@ -67,7 +67,7 @@ function personInfoModule() {
 }
 
 function selectedHakukohdeName(hakukohdeRow) {
-  return $(hakukohdeRow).find('.application__hakukohde-selected-row-header').first().text()
+  return $(hakukohdeRow).find('.application__hakukohde-header').first().text()
 }
 
 function hasFormField(fieldId) {
@@ -115,7 +115,7 @@ function addHakukohdeLink() {
 }
 
 function hakukohdeSearchHits() {
-  return testFrame().find('.application__hakukohde-row--search-hit')
+  return testFrame().find('.application__search-hit-hakukohde-row')
 }
 
 function nthHakukohdeSearchResultButton(n) {
@@ -123,25 +123,19 @@ function nthHakukohdeSearchResultButton(n) {
 }
 
 function nthHakukohdePriorityUp(n) {
-  return testFrame().find('.application__hakukohde-row-priority-container')
+  return testFrame().find('.application__selected-hakukohde-row')
     .eq(n)
-    .find('span')
-    .eq(0)
+    .find('.application__selected-hakukohde-row--priority-increase')
 }
 
 function nthHakukohdePriorityDown(n) {
-  return testFrame().find('.application__hakukohde-row-priority-container')
+  return testFrame().find('.application__selected-hakukohde-row')
     .eq(n)
-    .find('span')
-    .eq(1)
+    .find('.application__selected-hakukohde-row--priority-decrease')
 }
 
 function selectedHakukohdeTexts() {
-  return testFrame().find('.application__hakukohde-row-text-container--selected').text()
-}
-
-function hakukohdeTexts() {
-    return testFrame().find('.application__hakukohde-row-text-container').text()
+  return testFrame().find('.application__selected-hakukohde-row--content').text()
 }
 
 function assertOnlyFinnishSsn() {

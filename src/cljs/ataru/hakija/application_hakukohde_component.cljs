@@ -71,12 +71,11 @@
                  rest-highlights))))))
 
 (defn hilighted-text->span [idx {:keys [text hilight]}]
-  (let [key (str "hilight-" idx)]
-    [:span
-     (cond-> {:key key}
-             (true? hilight)
-             (assoc :class "application__hakukohde-row--search-hit-highlight"))
-     text]))
+  [(if hilight
+     :span.application__search-hit-hakukohde-row--hilight-span.application__search-hit-hakukohde-row--hilight-span__hilight
+     :span.application__search-hit-hakukohde-row--hilight-span)
+   {:key (str "hilight-" idx)}
+   text])
 
 (defn hilight-text [text hilight-text]
   (if (some? text)
@@ -99,27 +98,19 @@
 (defn- hakukohde-search-toggle-event-handler [_]
   (dispatch [:application/hakukohde-search-toggle]))
 
-(defn- selected-hakukohde-disabled-row-remove [hakukohde-oid]
-       [:div.application__hakukohde-row-button-container
-        {:disabled "disabled"}
-        [:a.application__hakukohde-remove-link
-         {:data-hakukohde-oid hakukohde-oid
-          :role               "button"}
-         (get-translation :remove)]])
-
 (defn- selected-hakukohde-row-remove
-  [hakukohde-oid]
-  [:div.application__hakukohde-row-button-container
-   [:a.application__hakukohde-remove-link
-    {:on-click           hakukohde-remove-event-handler
-     :data-hakukohde-oid hakukohde-oid
-     :role               "button"}
-    (get-translation :remove)]])
+  [hakukohde-oid disabled?]
+  [:button.application__selected-hakukohde-row--remove
+   {:data-hakukohde-oid hakukohde-oid
+    :disabled           disabled?
+    :on-click           (when (not disabled?)
+                          hakukohde-remove-event-handler)}
+   (get-translation :remove)])
 
 (defn- selected-hakukohde-increase-priority
   [hakukohde-oid priority-number disabled?]
- (let [increase-disabled? (= priority-number 1)]
-  [:span.application__hakukohde-priority-changer.increase
+  (let [increase-disabled? (= priority-number 1)]
+    [:span.application__selected-hakukohde-row--priority-increase
      {:disabled (when disabled? "disabled")
       :class    (when increase-disabled? "disabled")
       :on-click (when-not increase-disabled?
@@ -128,8 +119,8 @@
 (defn- selected-hakukohde-decrease-priority
   [hakukohde-oid priority-number disabled?]
   (let [selected-hakukohteet @(subscribe [:application/selected-hakukohteet])
-        decrease-disabled? (= priority-number (count selected-hakukohteet))]
-    [:span.application__hakukohde-priority-changer.decrease
+        decrease-disabled?   (= priority-number (count selected-hakukohteet))]
+    [:span.application__selected-hakukohde-row--priority-decrease
      {:disabled (when disabled? "disabled")
       :class    (when decrease-disabled? "disabled")
       :on-click (when-not decrease-disabled?
@@ -138,17 +129,19 @@
 (defn- prioritize-hakukohde-buttons
   [hakukohde-oid disabled?]
   (let [priority-number @(subscribe [:application/hakukohde-priority-number hakukohde-oid])]
-    [:div.application__hakukohde-row-priority-container
+    [:div.application__selected-hakukohde-row--priority-changer
      [selected-hakukohde-increase-priority hakukohde-oid priority-number disabled?]
      priority-number
      [selected-hakukohde-decrease-priority hakukohde-oid priority-number disabled?]]))
 
 (defn- offending-priorization [should-be-higher should-be-lower]
-  [:div.application__hakukohde-selected-row-priorization-invalid
+  [:div.application__selected-hakukohde-row--offending-priorization
    [:i.zmdi.zmdi-alert-circle]
    [:div
-    [:h3.application__hakukohde-selected-row-priorization-invalid-heading (get-translation :application-priorization-invalid)]
-    [:div (first (get-translation :should-be-higher-priorization-than))
+    [:div.application__selected-hakukohde-row--offending-priorization-heading
+     (get-translation :application-priorization-invalid)]
+    [:div
+     (first (get-translation :should-be-higher-priorization-than))
      [:em (str "\"" @(subscribe [:application/hakukohde-label should-be-higher]) "\"")]
      (last (get-translation :should-be-higher-priorization-than))
      [:em (str "\"" @(subscribe [:application/hakukohde-label should-be-lower]) "\"")]]]])
@@ -160,29 +153,30 @@
         haku-editable?                     @(subscribe [:application/hakukohteet-editable?])
         hakukohde-editable?                @(subscribe [:application/hakukohde-editable? hakukohde-oid])
         [should-be-lower should-be-higher] @(subscribe [:application/hakukohde-offending-priorization? hakukohde-oid])]
-    [:div.application__hakukohde-row.animated
-     {:class (if deleting?
-               "fadeOut"
-               "fadeIn")}
+    [:div.application__selected-hakukohde-row.animated
+     {:class (if deleting? "fadeOut" "fadeIn")}
      (when prioritize-hakukohteet?
        [prioritize-hakukohde-buttons hakukohde-oid (not hakukohde-editable?)])
-     [:div.application__hakukohde-row-text-container.application__hakukohde-row-text-container--selected
-      [:div.application__hakukohde-selected-row-header
+     [:div.application__selected-hakukohde-row--content
+      [:div.application__hakukohde-header
        @(subscribe [:application/hakukohde-label hakukohde-oid])]
-      [:div.application__hakukohde-selected-row-description
+      [:div.application__hakukohde-description
        @(subscribe [:application/hakukohde-description hakukohde-oid])]
       (when (not hakukohde-editable?)
-        [:div.application__hakukohde-selected-row-description
-         [:span.application__hakukohde-sub-header-dates
-          [:i.application__hakukohde-selected-check.zmdi.zmdi-lock]
-          (get-translation :not-editable-application-period-ended)]])
+        [:div.application__hakukohde-application-period-ended
+         [:i.zmdi.zmdi-lock]
+         (get-translation :not-editable-application-period-ended)])
       (if (seq should-be-higher)
         (offending-priorization (first should-be-higher) hakukohde-oid)
         (if (seq should-be-lower)
           (offending-priorization hakukohde-oid (first should-be-lower))))]
-     (cond (and haku-editable? hakukohde-editable?) [selected-hakukohde-row-remove hakukohde-oid]
-           (not hakukohde-editable?) [selected-hakukohde-disabled-row-remove hakukohde-oid]
-           haku-editable? [selected-hakukohde-row-remove hakukohde-oid])]))
+     [:div.application__selected-hakukohde-row--buttons
+      (cond (and haku-editable? hakukohde-editable?)
+            [selected-hakukohde-row-remove hakukohde-oid false]
+            (not hakukohde-editable?)
+            [selected-hakukohde-row-remove hakukohde-oid true]
+            haku-editable?
+            [selected-hakukohde-row-remove hakukohde-oid false])]]))
 
 (defn- search-hit-hakukohde-row
   [hakukohde-oid]
@@ -193,43 +187,39 @@
         hakukohde-editable?  @(subscribe [:application/hakukohde-editable? hakukohde-oid])
         hakukohteet-full?    @(subscribe [:application/hakukohteet-full? hakukohde-oid])
         rajaavat-hakukohteet @(subscribe [:application/rajaavat-hakukohteet hakukohde-oid])]
-    [:div.application__hakukohde-row--container
-     [:div.application__hakukohde-row.application__hakukohde-row--search-hit
-      {:class         (when hakukohde-selected? "application__hakukohde-row--search-hit-selected")
-       :aria-selected hakukohde-selected?}
-      [:div.application__hakukohde-row-text-container
-       [:div.application__hakukohde-selected-row-header
-        {:id aria-header-id}
-        (hilight-text @(subscribe [:application/hakukohde-label hakukohde-oid]) search-term)]
-       [:div.application__hakukohde-selected-row-description
-        {:id aria-description-id}
-        (hilight-text @(subscribe [:application/hakukohde-description hakukohde-oid]) search-term)]]
-      (if hakukohde-editable?
-        [:div.application__hakukohde-row-button-container
-         (if hakukohde-selected?
-           [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
-           [:button.application__hakukohde-select-button
-            {:data-hakukohde-oid hakukohde-oid
-             :on-click           hakukohde-select-event-handler
-             :disabled           (or hakukohteet-full?
-                                     (not-empty rajaavat-hakukohteet))
-             :aria-labelledby    aria-header-id
-             :aria-describedby   aria-description-id}
-            (get-translation :add)])]
-        [:div.application__hakukohde-row-additional-text-container
-         {:aria-labelledby  aria-header-id
-          :aria-describedby aria-description-id
-          :aria-disabled    true}
-         (get-translation :not-selectable-application-period-ended)])]
-     (when (and (not hakukohde-selected?)
-                (not-empty rajaavat-hakukohteet))
-       [:div.application__hakukohde-row--limit-reached
-        [:h3.application__hakukohde-row--limit-reached-heading
-         (get-translation :application-limit-reached-in-hakukohderyhma)]
-        (doall (for [hakukohde rajaavat-hakukohteet]
-                 ^{:key (str "limitting-hakukohde-" (:oid hakukohde))}
-                 [:div.application__hakukohde-row--limitting-hakukohde
-                  @(subscribe [:application/hakukohde-label (:oid hakukohde)])]))])]))
+    [:div.application__search-hit-hakukohde-row
+     [:div.application__search-hit-hakukohde-row--content
+      [:div.application__hakukohde-header
+       {:id aria-header-id}
+       (hilight-text @(subscribe [:application/hakukohde-label hakukohde-oid]) search-term)]
+      [:div.application__hakukohde-description
+       {:id aria-description-id}
+       (hilight-text @(subscribe [:application/hakukohde-description hakukohde-oid]) search-term)]
+      (when (not hakukohde-editable?)
+        [:div.application__hakukohde-application-period-ended
+         [:i.zmdi.zmdi-lock]
+         (get-translation :not-selectable-application-period-ended)])
+      (when (and (not hakukohde-selected?)
+                 (not-empty rajaavat-hakukohteet))
+        [:div.application__search-hit-hakukohde-row--limit-reached
+         [:h3.application__search-hit-hakukohde-row--limit-reached-heading
+          (get-translation :application-limit-reached-in-hakukohderyhma)]
+         (doall (for [hakukohde rajaavat-hakukohteet]
+                  ^{:key (str "limitting-hakukohde-" (:oid hakukohde))}
+                  [:div.application__search-hit-hakukohde-row--limitting-hakukohde
+                   @(subscribe [:application/hakukohde-label (:oid hakukohde)])]))])]
+     [:div.application__search-hit-hakukohde-row--buttons
+      (if hakukohde-selected?
+        [:i.zmdi.zmdi-check.zmdi-hc-2x.application__search-hit-hakukohde-row--selected-check]
+        [:button.application__search-hit-hakukohde-row--select-button
+         {:data-hakukohde-oid hakukohde-oid
+          :on-click           hakukohde-select-event-handler
+          :disabled           (or hakukohteet-full?
+                                  (not hakukohde-editable?)
+                                  (not-empty rajaavat-hakukohteet))
+          :aria-labelledby    aria-header-id
+          :aria-describedby   aria-description-id}
+         (get-translation :add)])]]))
 
 (defn- hakukohde-selection-search
   []

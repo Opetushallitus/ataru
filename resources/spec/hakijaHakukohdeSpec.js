@@ -33,7 +33,7 @@
       )
       it('returns correct results', function() {
         var results = _.map(hakukohdeSearchHits(), function(e) {
-          return $(e).find('.application__hakukohde-row-text-container').text()
+          return $(e).find('.application__search-hit-hakukohde-row--content').text()
         })
         expect(results).to.eql([
           "Testihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne A",
