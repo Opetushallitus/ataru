@@ -252,7 +252,7 @@
       @(subscribe [:application/hakukohde-description hakukohde-oid])]]]])
 
 (defn- hakukohteet [content]
-  (when-let [hakukohteet (seq @(subscribe [:application/hakukohteet]))]
+  (when-let [hakukohteet (seq @(subscribe [:application/hakutoiveet]))]
     [:div.application__wrapper-element.application__wrapper-element--border
      [:div.application__wrapper-heading
       [:h2 @(subscribe [:application/hakukohteet-header])]

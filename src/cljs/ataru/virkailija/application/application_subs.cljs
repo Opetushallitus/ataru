@@ -11,6 +11,68 @@
   (u/non-blank-val text [lang :fi :sv :en]))
 
 (re-frame/reg-sub
+  :application/selected-form
+  (fn selected-form [db _]
+    (get-in db [:application :selected-application-and-form :form])))
+
+(re-frame/reg-sub
+  :application/selected-application
+  (fn selected-application [db _]
+    (get-in db [:application :selected-application-and-form :application])))
+
+(re-frame/reg-sub
+  :application/hakukohde-attachment-reviews
+  (fn hakukohde-attachment-reviews [db [_ hakukohde]]
+    (get-in db [:application :review :attachment-reviews (keyword hakukohde)])))
+
+(re-frame/reg-sub
+  :application/selected-form-fields-by-id
+  (fn [_ _]
+    (re-frame/subscribe [:application/selected-form]))
+  (fn selected-form-fields-by-id [form _]
+    (u/form-fields-by-id form)))
+
+(re-frame/reg-sub
+  :application/events
+  (fn [db _]
+    (get-in db [:application :events])))
+
+(re-frame/reg-sub
+  :application/selected-event
+  (fn [db _]
+    (get-in db [:application :selected-application-and-form :selected-event])))
+
+(re-frame/reg-sub
+  :application/change-history
+  (fn [db _]
+    (get-in db [:application :selected-application-and-form :application-change-history])))
+
+(re-frame/reg-sub
+  :application/application-haut
+  (fn [db _]
+    (get-in db [:application :haut])))
+
+(re-frame/reg-sub
+  :application/haut
+  (fn [db _]
+    (get db :haut)))
+
+(re-frame/reg-sub
+  :application/fetching-haut
+  (fn [db _]
+    (get db :fetching-haut)))
+
+(re-frame/reg-sub
+  :application/hakukohteet
+  (fn [db _]
+    (get db :hakukohteet)))
+
+(re-frame/reg-sub
+  :application/fetching-hakukohteet
+  (fn [db _]
+    (get db :fetching-hakukohteet)))
+
+(re-frame/reg-sub
  :application/list-heading
  (fn [db]
    (let [selected-haku      (get-in db [:haut (get-in db [:application :selected-haku])])
@@ -183,68 +245,87 @@
 (defn sort-hakukohteet [tarjonta-haut sort]
   (map #(update % :hakukohteet sort) tarjonta-haut))
 
-(defn- haku-name [db haku-oid lang]
-  (if-let [haku (get-in db [:haut haku-oid])]
+(defn- haku-name [haut fetching-haut haku-oid lang]
+  (if-let [haku (get haut haku-oid)]
     (or (from-multi-lang (:name haku) lang) haku-oid)
-    (when (zero? (:fetching-haut db))
+    (when (zero? fetching-haut)
       haku-oid)))
 
-(defn- hakukohde-name [db hakukohde-oid lang]
-  (if-let [hakukohde (get-in db [:hakukohteet hakukohde-oid])]
+(defn- hakukohde-name [hakukohteet fetching-hakukohteet hakukohde-oid lang]
+  (if-let [hakukohde (get hakukohteet hakukohde-oid)]
     (or (from-multi-lang (:name hakukohde) lang) hakukohde-oid)
-    (when (zero? (:fetching-hakukohteet db))
+    (when (zero? fetching-hakukohteet)
       hakukohde-oid)))
 
-(defn- sort-by-haku-name [haut db]
+(defn- sort-by-haku-name
+  [application-haut haut fetching-haut lang]
   (sort-by (comp clojure.string/lower-case
-                 #(or (haku-name db (:oid %) :fi) ""))
-           haut))
+                 #(or (haku-name haut fetching-haut (:oid %) lang) ""))
+           application-haut))
 
-(defn- sort-by-hakukohde-name [hakukohteet db]
+(defn- sort-by-hakukohde-name
+  [hakukohteet fetching-hakukohteet lang application-hakukohteet]
   (sort-by (comp clojure.string/lower-case
-                 #(or (hakukohde-name db (:oid %) :fi) ""))
-           hakukohteet))
+                 #(or (hakukohde-name hakukohteet fetching-hakukohteet (:oid %) lang) ""))
+           application-hakukohteet))
 
-(defn- sort-by-form-name [direct-form-haut]
+(defn- sort-by-form-name [direct-form-haut lang]
   (sort-by (comp clojure.string/lower-case
-                 #(or (from-multi-lang (:name %) :fi) ""))
+                 #(or (from-multi-lang (:name %) lang) ""))
            direct-form-haut))
 
-(defn- incomplete-haut [db]
-  (when-let [haut (get-in db [:application :haut])]
-    (-> (filter-haut-all-not-processed haut)
+(defn- incomplete-haut [application-haut]
+  (when (some? application-haut)
+    (-> (filter-haut-all-not-processed application-haut)
         (update :tarjonta-haut sort-by-unprocessed)
         (update :tarjonta-haut sort-hakukohteet sort-by-unprocessed)
         (update :direct-form-haut sort-by-unprocessed))))
 
-(defn- complete-haut [db]
-  (when-let [haut (get-in db [:application :haut])]
-    (-> (filter-haut-all-processed haut)
-        (update :tarjonta-haut sort-by-haku-name db)
-        (update :tarjonta-haut sort-hakukohteet sort-by-hakukohde-name)
-        (update :direct-form-haut sort-by-form-name))))
+(defn- complete-haut
+  [application-haut haut fetching-haut hakukohteet fetching-hakukohteet lang]
+  (when (some? application-haut)
+    (-> (filter-haut-all-processed application-haut)
+        (update :tarjonta-haut sort-by-haku-name haut fetching-haut lang)
+        (update :tarjonta-haut sort-hakukohteet (partial sort-by-hakukohde-name
+                                                         hakukohteet
+                                                         fetching-hakukohteet
+                                                         lang))
+        (update :direct-form-haut sort-by-form-name lang))))
 
 (re-frame/reg-sub
   :application/incomplete-haut
-  incomplete-haut)
+  (fn [_ _]
+    (re-frame/subscribe [:application/application-haut]))
+  (fn [application-haut _]
+    (incomplete-haut application-haut)))
 
 (re-frame/reg-sub
   :application/incomplete-haku-count
-  (fn [db]
-    (let [{:keys [tarjonta-haut direct-form-haut]} (incomplete-haut db)]
-      (+ (count tarjonta-haut)
-         (count direct-form-haut)))))
+  (fn [_ _]
+    (re-frame/subscribe [:application/incomplete-haut]))
+  (fn [{:keys [tarjonta-haut direct-form-haut]} _]
+    (+ (count tarjonta-haut)
+       (count direct-form-haut))))
 
 (re-frame/reg-sub
   :application/complete-haut
-  complete-haut)
+  (fn [_ _]
+    [(re-frame/subscribe [:application/application-haut])
+     (re-frame/subscribe [:application/haut])
+     (re-frame/subscribe [:application/fetching-haut])
+     (re-frame/subscribe [:application/hakukohteet])
+     (re-frame/subscribe [:application/fetching-hakukohteet])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn [[application-haut haut fetching-haut hakukohteet fetching-hakukohteet lang] _]
+    (complete-haut application-haut haut fetching-haut hakukohteet fetching-hakukohteet lang)))
 
 (re-frame/reg-sub
   :application/complete-haku-count
-  (fn [db]
-    (let [{:keys [tarjonta-haut direct-form-haut]} (complete-haut db)]
-      (+ (count tarjonta-haut)
-         (count direct-form-haut)))))
+  (fn [_ _]
+    (re-frame/subscribe [:application/complete-haut]))
+  (fn [{:keys [tarjonta-haut direct-form-haut]} _]
+    (+ (count tarjonta-haut)
+       (count direct-form-haut))))
 
 (re-frame/reg-sub
  :application/search-control-all-page-view?
@@ -263,34 +344,46 @@
 
 (re-frame/reg-sub
   :application/hakukohteet-field
-  (fn [db _]
-    (first
-     (filter #(= "hakukohteet" (:id %))
-             (get-in db [:application
-                         :selected-application-and-form
-                         :form
-                         :content])))))
+  (fn [_ _]
+    (re-frame/subscribe [:application/selected-form]))
+  (fn [form _]
+    (->> (:content form)
+         u/flatten-form-fields
+         (filter #(= "hakukohteet" (:id %)))
+         first)))
 
 (re-frame/reg-sub
   :application/hakukohde-options-by-oid
-  (fn [db _]
-    (->> @(re-frame/subscribe [:application/hakukohteet-field])
+  (fn [_ _]
+    (re-frame/subscribe [:application/hakukohteet-field]))
+  (fn hakukohde-options-by-oid [hakukohteet-field _]
+    (->> hakukohteet-field
          :options
          (map (juxt :value identity))
          (into {}))))
 
 (re-frame/reg-sub
   :application/hakukohde-name
-  (fn [db [_ hakukohde-oid]] (hakukohde-name db hakukohde-oid :fi)))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/hakukohteet])
+     (re-frame/subscribe [:application/fetching-hakukohteet])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn [[hakukohteet fetching-hakukohteet lang] [_ hakukohde-oid]]
+    (hakukohde-name hakukohteet fetching-hakukohteet hakukohde-oid lang)))
 
 (re-frame/reg-sub
   :application/hakukohde-and-tarjoaja-name
-  (fn [db [_ hakukohde-oid]]
-    (if-let [hakukohde (get-in db [:hakukohteet hakukohde-oid])]
-      (str (or (from-multi-lang (:name hakukohde) :fi) hakukohde-oid)
-           (when-let [tarjoaja-name (from-multi-lang (:tarjoaja-name hakukohde) :fi)]
+  (fn [_ _]
+    [(re-frame/subscribe [:application/hakukohteet])
+     (re-frame/subscribe [:application/fetching-hakukohteet])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn hakukohde-and-tarjoaja-name
+    [[hakukohteet fetching-hakukohteet lang] [_ hakukohde-oid]]
+    (if-let [hakukohde (get hakukohteet hakukohde-oid)]
+      (str (or (from-multi-lang (:name hakukohde) lang) hakukohde-oid)
+           (when-let [tarjoaja-name (from-multi-lang (:tarjoaja-name hakukohde) lang)]
              (str " - " tarjoaja-name)))
-      (when (zero? (:fetching-hakukohteet db))
+      (when (zero? fetching-hakukohteet)
         hakukohde-oid))))
 
 (re-frame/reg-sub
@@ -307,29 +400,39 @@
 
 (re-frame/reg-sub
   :application/haku-name
-  (fn [db [_ haku-oid]] (haku-name db haku-oid :fi)))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/haut])
+     (re-frame/subscribe [:application/fetching-haut])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn [[haut fetching-haut lang] [_ haku-oid]]
+    (haku-name haut fetching-haut haku-oid lang)))
 
 (re-frame/reg-sub
   :application/hakukohteet-header
-  (fn [db _]
-    @(re-frame/subscribe [:application/get-i18n-text
-                          (:label @(re-frame/subscribe [:application/hakukohteet-field]))])))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/hakukohteet-field])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn hakukohteet-header [[hakukohteet-field lang] _]
+    (from-multi-lang (:label hakukohteet-field) lang)))
+
 (re-frame/reg-sub
   :application/hakukohde-label
-  (fn [db [_ hakukohde-oid]]
-    @(re-frame/subscribe [:application/get-i18n-text
-                          (get-in @(re-frame/subscribe [:application/hakukohde-options-by-oid])
-                                  [hakukohde-oid :label])])))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/hakukohde-options-by-oid])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn hakukohde-label [[hakukohde-options lang] [_ hakukohde-oid]]
+    (from-multi-lang (get-in hakukohde-options [hakukohde-oid :label]) lang)))
 
 (re-frame/reg-sub
   :application/hakukohde-description
-  (fn [db [_ hakukohde-oid]]
-    @(re-frame/subscribe [:application/get-i18n-text
-                          (get-in @(re-frame/subscribe [:application/hakukohde-options-by-oid])
-                                  [hakukohde-oid :description])])))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/hakukohde-options-by-oid])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn hakukohde-description [[hakukohde-options lang] [_ hakukohde-oid]]
+    (from-multi-lang (get-in hakukohde-options [hakukohde-oid :description]) lang)))
 
 (re-frame/reg-sub
-  :application/hakukohteet
+  :application/hakutoiveet
   (fn [db _]
     (get-in db [:application
                 :selected-application-and-form
@@ -340,11 +443,14 @@
 
 (re-frame/reg-sub
   :application/selected-application-haku-name
-  (fn [db _]
-    (let [application      (get-in db [:application :selected-application-and-form :application])
-          application-lang (keyword (:lang application "fi"))]
-      (when-let [haku-oid (:haku application)]
-        (haku-name db haku-oid application-lang)))))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/selected-application])
+     (re-frame/subscribe [:application/haut])
+     (re-frame/subscribe [:application/fetching-haut])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn [[application haut fetching-haut lang] _]
+    (when-let [haku-oid (:haku application)]
+      (haku-name haut fetching-haut haku-oid lang))))
 
 (re-frame/reg-sub
   :application/information-request-submit-enabled?
@@ -454,9 +560,8 @@
     (-> db :application :selected-application-and-form :application :key)))
 
 (defn- modify-event-changes
-  [db event-id]
-  (let [modify-events  (filter util/modify-event? (-> db :application :events))
-        change-history (-> db :application :selected-application-and-form :application-change-history)]
+  [events change-history event-id]
+  (let [modify-events (filter util/modify-event? events)]
     (some (fn [[event changes]]
             (when (= event-id (:id event))
               changes))
@@ -486,28 +591,34 @@
 
 (re-frame.core/reg-sub
   :application/current-history-items
-  (fn [db _]
-    (let [lang        @(re-frame.core/subscribe [:editor/virkailija-lang])
-          form-fields (-> db :application :selected-application-and-form :form u/form-fields-by-id)
-          answers     (-> db :application :selected-application-and-form :application :answers)]
-      (when-let [changes (modify-event-changes db (-> db :application :selected-application-and-form :selected-event :id))]
-        (->> changes
-             (map (fn [[id change]]
-                    (let [field (get form-fields id)]
-                      [id (-> change
-                              (replace-change-value-with-label field lang)
-                              (assoc :label (breadcrumb-label field form-fields answers lang)))])))
-             (into {}))))))
-
-(re-frame.core/reg-sub
-  :application/selected-event
-  (fn [db _]
-    (-> db :application :selected-application-and-form :selected-event)))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/selected-form-fields-by-id])
+     (re-frame/subscribe [:application/selected-application])
+     (re-frame/subscribe [:application/events])
+     (re-frame/subscribe [:application/selected-event])
+     (re-frame/subscribe [:application/change-history])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn current-history-items
+    [[form-fields application events selected-event change-history lang] _]
+    (when-let [changes (modify-event-changes events change-history (:id selected-event))]
+      (->> changes
+           (map (fn [[id change]]
+                  (let [field (get form-fields id)]
+                    [id (-> change
+                            (replace-change-value-with-label field lang)
+                            (assoc :label (breadcrumb-label field
+                                                            form-fields
+                                                            (:answers application)
+                                                            lang)))])))
+           (into {})))))
 
 (re-frame.core/reg-sub
   :application/changes-made-for-event
-  (fn [db [_ event-id]]
-    (modify-event-changes db event-id)))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/events])
+     (re-frame/subscribe [:application/change-history])])
+  (fn [[events change-history] [_ event-id]]
+    (modify-event-changes events change-history event-id)))
 
 (re-frame.core/reg-sub
   :application/field-highlighted?
@@ -526,17 +637,19 @@
 
 (re-frame.core/reg-sub
   :application/get-attachment-reviews-for-selected-hakukohde
-  (fn [db [_ selected-hakukohde]]
-    (let [attachment-reviews (get-in db [:application :review :attachment-reviews (keyword selected-hakukohde)])
-          answers            (-> db :application :selected-application-and-form :application :answers)
-          form-fields        (-> db :application :selected-application-and-form :form u/form-fields-by-id)]
-      (for [[key state] attachment-reviews
-            :let [answer ((keyword key) answers)
-                  field  ((keyword key) form-fields)]]
-        {:key    key
-         :state  state
-         :values (:values answer)
-         :label  (:label field)}))))
+  (fn [[_ hakukohde] _]
+    [(re-frame/subscribe [:application/selected-form-fields-by-id])
+     (re-frame/subscribe [:application/selected-application])
+     (re-frame/subscribe [:application/hakukohde-attachment-reviews hakukohde])])
+  (fn get-attachment-reviews-for-selected-hakukohde
+    [[form-fields application attachment-reviews] _]
+    (for [[key state] attachment-reviews
+          :let        [answer (get-in application [:answers (keyword key)])
+                       field  ((keyword key) form-fields)]]
+      {:key    key
+       :state  state
+       :values (:values answer)
+       :label  (:label field)})))
 
 (re-frame.core/reg-sub
   :application/lang

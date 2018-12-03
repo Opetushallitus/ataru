@@ -44,13 +44,18 @@
     }
 
     function clickComponentMenuItem(title) {
-        function menuItem() { return testFrame().find('.editor-form > .editor-form__add-component-toolbar a:contains("'+ title +'")') }
+        function menuItem() {
+            triggerEvent(testFrame().find('.editor-form > .editor-form__add-component-toolbar'), 'mouseover');
+            return testFrame().find('.editor-form > .editor-form__add-component-toolbar a:contains("'+ title +'")')
+        }
         return clickElement(menuItem)
     }
 
     function clickSubComponentMenuItem(title, element) {
         function menuItem() {
-            return element().find('.editor-form__add-component-toolbar a:contains("'+ title +'")') }
+            triggerEvent(element().find('.editor-form__add-component-toolbar'), 'mouseover');
+            return element().find('.editor-form__add-component-toolbar a:contains("'+ title +'")')
+        }
         return clickElement(menuItem)
     }
 
@@ -219,7 +224,7 @@
                     clickElement(function() { return formComponents().eq(3).find('.editor-form__info-addon-checkbox label') }),
                     setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__info-addon-inputs textarea') }, 'Kolmannen kysymyksen ohjeteksti'),
                     clickElement(function() { return formComponents().eq(3).find('.editor-form__followup-question:eq(2) a:contains("Lisäkysymykset")') }),
-                    clickElement(function() { return formComponents().eq(3).find('.editor-form__followup-question-overlay a:contains("Tekstikenttä")') }),
+                    clickSubComponentMenuItem('Tekstikenttä', function () { return formComponents().eq(3); }),
                     setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__followup-question-overlay input.editor-form__text-field') }, "Jatkokysymys")
                 );
                 it('has expected contents', function() {
@@ -262,22 +267,22 @@
                     setTextFieldValue(function () { return formComponents().eq(5).find('.editor-form__text-field:last') }, 'Kolmas vaihtoehto'),
                     clickElement(function () { return formComponents().eq(5).find('.editor-form__add-dropdown-item a') }),
                     clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question:eq(1) a:contains("Lisäkysymykset")') }),
-                    clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay a:contains("Painikkeet, yksi valittavissa")') }),
+                    clickSubComponentMenuItem('Painikkeet, yksi valittavissa', function () { return formComponents().eq(5); }),
                     setTextFieldValue(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay input.editor-form__text-field') }, "Oletko punavihervärisokea?"),
                     clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__add-dropdown-item a:contains("Lisää")') }),
                     setTextFieldValue(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__multi-option-wrapper .editor-form__text-field:eq(0)') }, 'Kyllä'),
                     clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__add-dropdown-item a:contains("Lisää")') }),
                     setTextFieldValue(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__multi-option-wrapper .editor-form__text-field:eq(1)') }, 'En'),
                     clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__checkbox + .editor-form__checkbox-label') }),
-                    clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay a:contains("Vierekkäiset tekstikentät")') }),
+                    clickSubComponentMenuItem('Vierekkäiset tekstikentät', function () { return formComponents().eq(5); }),
                     setTextFieldValue(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__text-field').eq(3) }, 'Vierekkäinen tekstikenttä monivalinnan jatkokysymyksenä'),
                     clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__checkbox + label.editor-form__checkbox-label:contains("Vastaaja voi lisätä useita vastauksia")') }),
-                    clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container a:contains("Tekstikenttä")') }),
+                    clickSubComponentMenuItem('Tekstikenttä', function () { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container'); }),
                     setTextFieldValue(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field').eq(0) }, 'Jatkokysymys A'),
                     clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__checkbox + label:contains("Pakollinen tieto")').eq(0) }),
-                    clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container a:contains("Tekstikenttä")') }),
+                    clickSubComponentMenuItem('Tekstikenttä', function () { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container'); }),
                     setTextFieldValue(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field').eq(1) }, 'Jatkokysymys B'),
-                    clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container a:contains("Tekstikenttä")') }),
+                    clickSubComponentMenuItem('Tekstikenttä', function () { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container'); }),
                     setTextFieldValue(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field').eq(2) }, 'Jatkokysymys C'),
                     clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__checkbox + label:contains("Pakollinen tieto")').eq(2) })
                 );
@@ -314,7 +319,7 @@
                 before(
                     clickComponentMenuItem('Lomakeosio'),
                     setTextFieldValue(function() { return formSections().eq(0).find('.editor-form__text-field').eq(0) }, 'Testiosio'),
-                    clickElement(function() { return formSections().eq(0).find('.form__add-component-toolbar--list li a:contains("Tekstialue")') }),
+                    clickSubComponentMenuItem('Tekstialue', function () { return formSections().eq(0); }),
                     clickElement(function() { return formSections().eq(0).find('.editor-form__checkbox-wrapper label')}),
                     setTextFieldValue(function() { return formSections().eq(0).find('.editor-form__text-field').eq(1) }, 'Osiokysymys'),
                     clickElement(function() { return formSections().eq(0).find('.editor-form__button-group div:eq(0) label')})
@@ -372,22 +377,22 @@
                     clickElement(function() { return formComponents().eq(11).find('.editor-form__add-dropdown-item a') }),
                     setTextFieldValue(function () { return formComponents().eq(11).find('.editor-form__text-field:last') }, 'Toinen vaihtoehto'),
                     clickElement(function() { return formComponents().eq(11).find('.editor-form__followup-question:eq(0) a:contains("Lisäkysymykset")') }),
-                    clickElement(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay a:contains("Lista, monta valittavissa")') }),
+                    clickSubComponentMenuItem('Lista, monta valittavissa', function () { return formComponents().eq(11); }),
                     setTextFieldValue(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay input.editor-form__text-field') }, "Monivalinta jatkokysymyksenä"),
                     clickElement(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay .editor-form__checkbox + .editor-form__checkbox-label') }),
                     clickElement(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay .editor-form__add-dropdown-item a:contains("Lisää")') }),
                     setTextFieldValue(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay .editor-form__multi-option-wrapper .editor-form__text-field:eq(0)') }, 'Jatkokysymys A'),
                     clickElement(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay .editor-form__add-dropdown-item a:contains("Lisää")') }),
                     setTextFieldValue(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay .editor-form__multi-option-wrapper .editor-form__text-field:eq(1)') }, 'Jatkokysymys B'),
-                    clickElement(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay a:contains("Vierekkäiset tekstikentät")') }),
+                    clickSubComponentMenuItem('Vierekkäiset tekstikentät', function () { return formComponents().eq(11); }),
                     setTextFieldValue(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay .editor-form__text-field').eq(3) }, 'Vierekkäinen tekstikenttä painikkeiden jatkokysymyksenä'),
                     clickElement(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay .editor-form__checkbox + label.editor-form__checkbox-label:contains("Vastaaja voi lisätä useita vastauksia")') }),
-                    clickElement(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container a:contains("Tekstikenttä")') }),
+                    clickSubComponentMenuItem('Tekstikenttä', function () { return formComponents().eq(11).find('.editor-form__adjacent-fieldset-container'); }),
                     setTextFieldValue(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field').eq(0) }, 'Jatkokysymys A'),
                     clickElement(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__checkbox + label:contains("Pakollinen tieto")').eq(0) }),
-                    clickElement(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container a:contains("Tekstikenttä")') }),
+                    clickSubComponentMenuItem('Tekstikenttä', function () { return formComponents().eq(11).find('.editor-form__adjacent-fieldset-container'); }),
                     setTextFieldValue(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field').eq(1) }, 'Jatkokysymys B'),
-                    clickElement(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container a:contains("Tekstikenttä")') }),
+                    clickSubComponentMenuItem('Tekstikenttä', function () { return formComponents().eq(11).find('.editor-form__adjacent-fieldset-container'); }),
                     setTextFieldValue(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field').eq(2) }, 'Jatkokysymys C'),
                     clickElement(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__checkbox + label:contains("Pakollinen tieto")').eq(2) })
                 );
@@ -428,15 +433,15 @@
                     clickElement(function() { return formComponents().eq(15).find('.editor-form__multi-options_wrapper a:contains("Lisää")') }),
                     setTextFieldValue(function() { return formComponents().eq(15).find('.editor-form__multi-options-wrapper-outer .editor-form__text-field').eq(1) }, 'Pudotusvalikon 2. kysymys'),
                     clickElement(function() { return formComponents().eq(15).find('.editor-form__multi-options-container a:contains("Lisäkysymykset")') }),
-                    clickElement(function() { return formComponents().eq(15).find('.editor-form__followup-question-overlay a:contains("Vierekkäiset tekstikentät")') }),
+                    clickSubComponentMenuItem('Vierekkäiset tekstikentät', function () { return formComponents().eq(15); }),
                     setTextFieldValue(function() { return formComponents().eq(15).find('.editor-form__followup-question-overlay .editor-form__text-field') }, 'Vierekkäinen tekstikenttä jatkokysymyksenä'),
                     clickElement(function() { return formComponents().eq(15).find('.editor-form__followup-question-overlay .editor-form__checkbox + label.editor-form__checkbox-label:contains("Vastaaja voi lisätä useita vastauksia")') }),
-                    clickElement(function() { return formComponents().eq(15).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container a:contains("Tekstikenttä")') }),
+                    clickSubComponentMenuItem('Tekstikenttä', function () { return formComponents().eq(15).find('.editor-form__adjacent-fieldset-container'); }),
                     setTextFieldValue(function() { return formComponents().eq(15).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field').eq(0) }, 'Jatkokysymys A'),
                     clickElement(function() { return formComponents().eq(15).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__checkbox + label:contains("Pakollinen tieto")').eq(0) }),
-                    clickElement(function() { return formComponents().eq(15).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container a:contains("Tekstikenttä")') }),
+                    clickSubComponentMenuItem('Tekstikenttä', function () { return formComponents().eq(15).find('.editor-form__adjacent-fieldset-container'); }),
                     setTextFieldValue(function() { return formComponents().eq(15).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field').eq(1) }, 'Jatkokysymys B'),
-                    clickElement(function() { return formComponents().eq(15).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container a:contains("Tekstikenttä")') }),
+                    clickSubComponentMenuItem('Tekstikenttä', function () { return formComponents().eq(15).find('.editor-form__adjacent-fieldset-container'); }),
                     setTextFieldValue(function() { return formComponents().eq(15).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field').eq(2) }, 'Jatkokysymys C'),
                     clickElement(function() { return formComponents().eq(15).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__checkbox + label:contains("Pakollinen tieto")').eq(2) })
                 );

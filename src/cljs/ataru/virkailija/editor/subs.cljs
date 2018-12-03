@@ -6,9 +6,65 @@
             [markdown.core :as md]))
 
 (re-frame/reg-sub
+  :editor/ui
+  (fn ui [db]
+    (get-in db [:editor :ui])))
+
+(re-frame/reg-sub
+  :editor/form-keys
+  (fn form-keys [db _]
+    (get-in db [:editor :sorted-form-keys])))
+
+(re-frame/reg-sub
+  :editor/selected-form-key
+  (fn selected-form-key [db _]
+    (get-in db [:editor :selected-form-key])))
+
+(re-frame/reg-sub
+  :editor/form
+  (fn form [db [_ key]]
+    (get-in db [:editor :forms key])))
+
+(re-frame/reg-sub
+  :editor/form-name
+  (fn [[_ key] _]
+    [(re-frame/subscribe [:editor/form key])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn form-name [[form lang] _]
+    (util/non-blank-val (:name form) [lang :fi :sv :en])))
+
+(re-frame/reg-sub
+  :editor/form-created-by
+  (fn [[_ key] _]
+    (re-frame/subscribe [:editor/form key]))
+  (fn form-created-by [form _]
+    (:created-by form)))
+
+(re-frame/reg-sub
+  :editor/form-created-time
+  (fn [[_ key] _]
+    (re-frame/subscribe [:editor/form key]))
+  (fn form-created-time [form _]
+    (:created-time form)))
+
+(re-frame/reg-sub
   :editor/selected-form
   (fn [db]
     (get-in db [:editor :forms (get-in db [:editor :selected-form-key])])))
+
+(re-frame/reg-sub
+  :editor/top-level-content
+  (fn [_ _]
+    (re-frame/subscribe [:editor/selected-form]))
+  (fn top-level-content [form [_ i]]
+    (get-in form [:content i])))
+
+(re-frame/reg-sub
+  :editor/get-component-value
+  (fn [[_ & path] _]
+    (re-frame/subscribe [:editor/top-level-content (first (flatten path))]))
+  (fn get-component-value [component [_ & path]]
+    (get-in component (rest (flatten path)))))
 
 (re-frame/reg-sub
   :editor/languages
@@ -39,6 +95,16 @@
                      (assoc haut oid (assoc haku :hakukohteet hakukohteet)))))
                {}
                haut)))
+
+(re-frame/reg-sub
+  :editor/used-by-haut-haut
+  (fn [db _]
+    (get-in db [:editor :used-by-haut :haut])))
+
+(re-frame/reg-sub
+  :editor/used-by-haut-hakukohderyhmat
+  (fn [db _]
+    (get-in db [:editor :used-by-haut :hakukohderyhmat])))
 
 (re-frame/reg-sub
   :editor/filtered-haut
@@ -82,11 +148,6 @@
         haut))
 
 (re-frame/reg-sub
-  :editor/get-some-name
-  (fn [db [_ {:keys [name]}]]
-    (some #(get name %) [:fi :sv :en])))
-
-(re-frame/reg-sub
   :editor/get-hakukohde-name
   (fn [db [_ hakukohde]]
     (let [hakukohde-name (some #(get (:name hakukohde) %) [:fi :sv :en])
@@ -105,90 +166,97 @@
 
 (re-frame/reg-sub
   :editor/belongs-to-hakukohderyhma-name
-  (fn [db [_ oid]]
-    (let [l (get-in db [:editor :used-by-haut :hakukohderyhmat])
-          s (filter #(= oid (:oid %)) l)]
-      @(re-frame/subscribe [:editor/get-some-name (first s)]))))
+  (fn [_ _]
+    [(re-frame/subscribe [:editor/used-by-haut-hakukohderyhmat])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn [[hakukohderyhmat lang] [_ oid]]
+    (when-let [hakukohderyhma (some #(when (= oid (:oid %)) %)
+                                    hakukohderyhmat)]
+      (str (util/non-blank-val (:name hakukohderyhma) [lang :fi :sv :en])))))
 
 (re-frame/reg-sub
   :editor/belongs-to-hakukohde-name
-  (fn [db [_ oid]]
-    (let [multiple-haku? (< 1 (count (get-in db [:editor :used-by-haut :haut] {})))
-          [haku hakukohde] (find-haku-and-hakukohde
-                             (map second (get-in db [:editor :used-by-haut :haut]))
-                             oid)
-          hakukohde-name (some #(get (:name hakukohde) %) [:fi :sv :en])
-          tarjoaja-name (some #(get (:tarjoaja-name hakukohde) %) [:fi :sv :en])
-          haku-name (some #(get (:name haku) %) [:fi :sv :en])]
-      (str hakukohde-name
+  (fn [_ _]
+    [(re-frame/subscribe [:editor/used-by-haut-haut])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn [[haut lang] [_ oid]]
+    (let [multiple-haku?   (< 1 (count haut))
+          [haku hakukohde] (find-haku-and-hakukohde (map second haut) oid)]
+      (str (util/non-blank-val (:name hakukohde) [lang :fi :sv :en])
            " - "
-           tarjoaja-name
+           (util/non-blank-val (:tarjoaja-name hakukohde) [lang :fi :sv :en])
            (when multiple-haku?
-             (str " - " haku-name))))))
+             (str " - " (util/non-blank-val (:name haku) [lang :fi :sv :en])))))))
 
 (re-frame/reg-sub
   :editor/show-belongs-to-hakukohteet-modal
-  (fn [db [_ id]]
-    (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :show] false)))
+  (fn [_ _]
+    (re-frame/subscribe [:editor/ui]))
+  (fn [ui [_ id]]
+    (get-in ui [id :belongs-to-hakukohteet :modal :show] false)))
 
 (re-frame/reg-sub
   :editor/belongs-to-hakukohteet-modal-search-term-value
-  (fn [db [_ id]]
-    (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term-value] "")))
+  (fn [_ _]
+    (re-frame/subscribe [:editor/ui]))
+  (fn [ui [_ id]]
+    (get-in ui [id :belongs-to-hakukohteet :modal :search-term-value] "")))
 
 (re-frame/reg-sub
   :editor/belongs-to-hakukohteet-modal-show-more-value
-  (fn [db [_ id haku-oid]]
-    (get-in db [:editor :ui id :belongs-to-hakukohteet :modal haku-oid :show-more-value] 15)))
-
-(re-frame/reg-sub
-  :editor/belongs-to-other-organization?
-  (fn [db [_ {:keys [belongs-to-hakukohteet belongs-to-hakukohderyhma]}]]
-    (let [my-hakukohteet (->> (get-in db [:editor :used-by-haut :haut])
-                              vals
-                              (mapcat :hakukohteet)
-                              (map :oid)
-                              set)
-          my-hakukohderyhmat (->> (get-in db [:editor :used-by-haut :hakukohderyhmat])
-                                  (map :oid)
-                                  set)]
-      (and (or (not-empty belongs-to-hakukohteet)
-               (not-empty belongs-to-hakukohderyhma))
-           (empty? (clojure.set/intersection (set belongs-to-hakukohteet)
-                                             my-hakukohteet))
-           (empty? (clojure.set/intersection (set belongs-to-hakukohderyhma)
-                                             my-hakukohderyhmat))))))
+  (fn [_ _]
+    (re-frame/subscribe [:editor/ui]))
+  (fn [ui [_ id haku-oid]]
+    (get-in ui [id :belongs-to-hakukohteet :modal haku-oid :show-more-value] 15)))
 
 (re-frame/reg-sub
   :editor/folded?
-  (fn [db [_ id]]
-    (get-in db [:editor :ui id :folded?] false)))
-
-(defn- current-form-locked? [db]
-  (let [current-form (get-in db [:editor :forms (get-in db [:editor :selected-form-key])])]
-    (when (some? (:locked current-form))
-      (select-keys current-form [:locked :locked-by]))))
+  (fn [_ _]
+    (re-frame/subscribe [:editor/ui]))
+  (fn [ui [_ id]]
+    (get-in ui [id :folded?] false)))
 
 (re-frame/reg-sub
-  :editor/current-form-locked
-  (fn [db _]
-    (current-form-locked? db)))
+  :editor/form-locked-info
+  (fn [_ _]
+    (re-frame/subscribe [:editor/selected-form]))
+  (fn form-locked-info [form _]
+    (when (some? (:locked form))
+      (select-keys form [:locked :locked-by]))))
+
+(re-frame/reg-sub
+  :editor/form-locked?
+  (fn [_ _]
+    (re-frame/subscribe [:editor/selected-form]))
+  (fn form-locked? [form _]
+    (some? (:locked form))))
+
+(re-frame/reg-sub
+  :editor/this-form-locked?
+  (fn [[_ key] _]
+    (re-frame/subscribe [:editor/form key]))
+  (fn this-form-locked? [form _]
+    (some? (:locked form))))
 
 (re-frame/reg-sub
   :editor/remove-form-button-state
-  (fn [db _]
-    (get-in db [:editor :ui :remove-form-button-state]
-            (if (and (some? (get-in db [:editor :selected-form-key]))
-                     (nil? (current-form-locked? db)))
-              :active
-              :disabled))))
+  (fn [_ _]
+    [(re-frame/subscribe [:editor/ui])
+     (re-frame/subscribe [:editor/form-locked?])])
+  (fn remove-form-button-state [[ui form-locked?] _]
+    (if form-locked?
+      :disabled
+      (get ui :remove-form-button-state :active))))
 
 (re-frame/reg-sub
   :editor/remove-component-button-state
-  (fn [db [_ path]]
-    (if (current-form-locked? db)
+  (fn [_ _]
+    [(re-frame/subscribe [:editor/ui])
+     (re-frame/subscribe [:editor/form-locked?])])
+  (fn remove-component-button-state [[ui form-locked?] [_ path]]
+    (if form-locked?
       :disabled
-      (get-in db [:editor :ui :remove-component-button-state path] :active))))
+      (get-in ui [:remove-component-button-state path] :active))))
 
 (re-frame/reg-sub
   :editor/email-templates-altered

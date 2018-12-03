@@ -11,35 +11,33 @@
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]))
 
-(defn form-row [form selected? used-in-haku-count]
+(defn form-row [key selected? used-in-haku-count]
   [:a.editor-form__row
-   {:class (when selected? "editor-form__selected-row")
-    :on-click (partial routes/navigate-to-click-handler (str "/lomake-editori/editor/" (:key form)))}
-   [:span.editor-form__list-form-name (some #(get-in form [:name %])
-                                            [:fi :sv :en])]
-   [:span.editor-form__list-form-time (temporal/time->str (:created-time form))]
-   [:span.editor-form__list-form-editor (:created-by form)]
-   (when (:locked form)
+   {:class    (when selected? "editor-form__selected-row")
+    :on-click (partial routes/navigate-to-click-handler (str "/lomake-editori/editor/" key))}
+   [:span.editor-form__list-form-name @(subscribe [:editor/form-name key])]
+   [:span.editor-form__list-form-time (temporal/time->str @(subscribe [:editor/form-created-time key]))]
+   [:span.editor-form__list-form-editor @(subscribe [:editor/form-created-by key])]
+   (when @(subscribe [:editor/this-form-locked? key])
      [:i.zmdi.zmdi-lock.editor-form__list-form-locked])
    (when (< 0 used-in-haku-count)
      [:span.editor-form__list-form-used-in-haku-count used-in-haku-count])])
 
 (defn form-list []
-  (let [forms             (subscribe [:state-query [:editor :forms]])
-        selected-form-key (subscribe [:state-query [:editor :selected-form-key]])
+  (let [form-keys         (subscribe [:editor/form-keys])
+        selected-form-key (subscribe [:editor/selected-form-key])
         forms-in-use      (subscribe [:state-query [:editor :forms-in-use]])]
-    (fn []
+    (fn form-list []
       (into (if @selected-form-key
               [:div.editor-form__list]
               [:div.editor-form__list.editor-form__list_expanded])
-            (for [[key form] @forms
-                  :when (not (:deleted form))
+            (for [key  @form-keys
                   :let [selected?          (= key @selected-form-key)
                         used-in-haku-count (count (keys (get @forms-in-use (keyword key))))]]
               ^{:key (str "form-list-item-" key)}
               (if selected?
-                [wrap-scroll-to [form-row form selected? used-in-haku-count]]
-                [form-row form selected? used-in-haku-count]))))))
+                [wrap-scroll-to [form-row key selected? used-in-haku-count]]
+                [form-row key selected? used-in-haku-count]))))))
 
 (defn- add-form []
   [:button.editor-form__control-button.editor-form__control-button--enabled
@@ -51,7 +49,7 @@
 (defn- copy-form []
   (let [form-key    (subscribe [:state-query [:editor :selected-form-key]])
         disabled?   (reaction (nil? @form-key))]
-    (fn []
+    (fn copy-form []
       [:button.editor-form__control-button
        {:on-click (fn [event]
                     (.preventDefault event)
@@ -91,22 +89,22 @@
 (defn- editor-name-input [lang focus?]
   (let [form              (subscribe [:editor/selected-form])
         new-form-created? (subscribe [:state-query [:editor :new-form-created?]])
-        form-locked       (subscribe [:editor/current-form-locked])]
+        form-locked?      (subscribe [:editor/form-locked?])]
     (r/create-class
      {:component-did-update (fn [this]
                               (when (and focus? @new-form-created?)
                                 (do
                                   (.focus (r/dom-node this))
                                   (.select (r/dom-node this)))))
-      :reagent-render (fn [lang focus?]
-                        [:input.editor-form__form-name-input
-                         {:type        "text"
-                          :value       (get-in @form [:name lang])
-                          :disabled    (some? @form-locked)
-                          :placeholder (get-virkailija-translation :form-name)
-                          :on-change   #(do (dispatch [:editor/change-form-name lang (.-value (.-target %))])
-                                            (dispatch [:set-state [:editor :new-form-created?] false]))
-                          :on-blur     #(dispatch [:set-state [:editor :new-form-created?] false])}])})))
+      :reagent-render       (fn [lang focus?]
+                              [:input.editor-form__form-name-input
+                               {:type        "text"
+                                :value       (get-in @form [:name lang])
+                                :disabled    @form-locked?
+                                :placeholder (get-virkailija-translation :form-name)
+                                :on-change   #(do (dispatch [:editor/change-form-name lang (.-value (.-target %))])
+                                                  (dispatch [:set-state [:editor :new-form-created?] false]))
+                                :on-blur     #(dispatch [:set-state [:editor :new-form-created?] false])}])})))
 
 (defn- editor-name-wrapper [lang focus? lang-tag?]
   [:div.editor-form__form-name-input-wrapper
@@ -173,25 +171,23 @@
     (clojure.string/upper-case (name lang-kwd))]])
 
 (defn- lock-form-editing []
-  (let [form-locked (subscribe [:editor/current-form-locked])]
-    (fn []
-      (let [locked? (some? (:locked @form-locked))]
-        [:div.editor-form__preview-buttons
-         (when locked?
-           [:div.editor-form__form-editing-locked
-            (get-virkailija-translation :form-locked)
-            [:i.zmdi.zmdi-lock.editor-form__form-editing-lock-icon]
-            [:div.editor-form__form-editing-locked-by
-             (str "("
-                  (:locked-by @form-locked)
-                  " "
-                  (-> @form-locked :locked temporal/str->googdate temporal/time->short-str)
-                  ")")]])
-         [:div#lock-form.editor-form__fold-clickable-text
-          {:on-click #(dispatch [:editor/toggle-form-editing-lock])}
-          (if locked?
-            (get-virkailija-translation :remove-lock)
-            (get-virkailija-translation :lock-form))]]))))
+  (let [form-locked-info @(subscribe [:editor/form-locked-info])]
+    [:div.editor-form__preview-buttons
+     (when (some? form-locked-info)
+       [:div.editor-form__form-editing-locked
+        (get-virkailija-translation :form-locked)
+        [:i.zmdi.zmdi-lock.editor-form__form-editing-lock-icon]
+        [:div.editor-form__form-editing-locked-by
+         (str "("
+              (:locked-by form-locked-info)
+              " "
+              (-> form-locked-info :locked temporal/str->googdate temporal/time->short-str)
+              ")")]])
+     [:div#lock-form.editor-form__fold-clickable-text
+      {:on-click #(dispatch [:editor/toggle-form-editing-lock])}
+      (if (some? form-locked-info)
+        (get-virkailija-translation :remove-lock)
+        (get-virkailija-translation :lock-form))]]))
 
 (defn- disable-autosave
   []

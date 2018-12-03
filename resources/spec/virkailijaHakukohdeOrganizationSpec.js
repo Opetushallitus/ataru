@@ -44,13 +44,10 @@
     }
 
     function clickComponentMenuItem(title) {
-        function menuItem() { return testFrame().find('.editor-form > .editor-form__add-component-toolbar a:contains("'+ title +'")') }
-        return clickElement(menuItem)
-    }
-
-    function clickSubComponentMenuItem(title, element) {
         function menuItem() {
-            return element().find('.editor-form__add-component-toolbar a:contains("'+ title +'")') }
+          triggerEvent(testFrame().find('.editor-form > .editor-form__add-component-toolbar'), 'mouseover');
+          return testFrame().find('.editor-form > .editor-form__add-component-toolbar a:contains("'+ title +'")')
+        }
         return clickElement(menuItem)
     }
 

@@ -970,21 +970,8 @@
   }
 
   .form__add-component-toolbar--list {
-    display: none;
-  }
-
-  &:hover {
-    .form__add-component-toolbar--list {
-      display: block;
-      text-align: center;
-    }
-
-    .plus-component:not(.disabled) {
-      display: none;
-    }
-  }
-
-  .form__add-component-toolbar--list {
+    display: block;
+    text-align: center;
     margin: 0;
     padding: 0;
   }
@@ -1012,7 +999,7 @@
     font-size: 125%;
     align-items: center;
 
-    &.disabled {
+    &--disabled {
       background-color: @gray;
       cursor: default;
     }

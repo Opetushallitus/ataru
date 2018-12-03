@@ -6,7 +6,6 @@
             [cljs.core.async :as async]
             [cljs.core.match :refer-macros [match]]
             [ataru.component-data.value-transformers :refer [update-options-while-keeping-existing-followups]]
-            [ataru.virkailija.form-sorting :refer [sort-by-time-and-deletedness]]
             [ataru.virkailija.autosave :as autosave]
             [ataru.component-data.component :as component]
             [ataru.component-data.person-info-module :as pm]
@@ -318,12 +317,25 @@
    :get
    "/lomake-editori/api/forms"
    (fn [db {:keys [forms]}]
-     (assoc-in db [:editor :forms] (->> forms
-                                        (mapv parse-form-created-times)
-                                        (mapv languages->kwd)
-                                        (mapv (keep-selected-form-as-is db))
-                                        (util/group-by-first :key)
-                                        (sort-by-time-and-deletedness))))
+     (let [forms (->> forms
+                      (mapv parse-form-created-times)
+                      (mapv languages->kwd)
+                      (mapv (keep-selected-form-as-is db))
+                      (util/group-by-first :key))
+           keys  (->> forms
+                      (sort (fn [[k1 v1] [k2 v2]]
+                              (let [now (c/now)
+                                    c1  (get v1 :created-time now)
+                                    c2  (get v2 :created-time now)]
+                                (cond (= k1 k2)        0
+                                      (c/equal? c1 c2) (compare (:id v1)
+                                                                (:id v2))
+                                      (c/after? c1 c2) -1
+                                      :else            1))))
+                      (map first))]
+       (-> db
+           (assoc-in [:editor :forms] forms)
+           (assoc-in [:editor :sorted-form-keys] keys))))
    :skip-parse-times? true))
 
 (reg-event-db
