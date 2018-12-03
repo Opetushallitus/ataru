@@ -5,6 +5,10 @@
   (:require [ataru.forms.form-store :as form-store]
             [ataru.util.language-label :as label]
             [ataru.applications.application-store :as application-store]
+            [ataru.component-data.base-education-module :as bem]
+            [ataru.component-data.component :as component]
+            [ataru.component-data.higher-education-base-education-module :as hebem]
+            [ataru.component-data.person-info-module :as pim]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.files.file-store :as file-store]
             [ataru.util :as util]
@@ -20,42 +24,41 @@
             [ataru.application.review-states :as review-states]
             [ataru.application.application-states :as application-states]))
 
+(def higher-education-base-education-questions
+  (->> (hebem/module {})
+       :children
+       util/flatten-form-fields
+       (map (comp name :id))
+       set))
+
+(def base-education-questions
+  (->> (bem/module {})
+       :children
+       util/flatten-form-fields
+       (map (comp name :id))
+       set))
+
+(def person-info-questions
+  (->> (pim/person-info-module)
+       :children
+       util/flatten-form-fields
+       (map (comp name :id))
+       set))
+
+(def lupatiedot-questions
+  (->> (component/lupatiedot {})
+       :children
+       util/flatten-form-fields
+       (map (comp name :id))
+       set))
+
 (def answers-to-always-include
-  #{"higher-education-qualification-in-finland-institution"
-    "studies-required-by-higher-education-field"
-    "studies-required-by-higher-education-institution"
-    "address"
-    "email"
-    "preferred-name"
-    "last-name"
-    "country-of-residence"
-    "higher-education-qualification-outside-finland-country"
-    "other-eligibility-description"
-    "phone"
-    "passport-number"
-    "nationality"
-    "city"
-    "ssn"
-    "first-name"
-    "birth-date"
-    "postal-code"
-    "hakukohteet"
-    "higher-education-qualification-outside-finland-qualification"
-    "higher-education-qualification-in-finland-qualification"
-    "higher-education-qualification-outside-finland-institution"
-    "higher-education-qualification-outside-finland-level"
-    "studies-required-by-higher-education-scope"
-    "birthplace"
-    "language"
-    "upper-secondary-school-completed-country"
-    "higher-education-qualification-in-finland-year-and-date"
-    "higher-education-qualification-outside-finland-year-and-date"
-    "higher-education-qualification-in-finland-level"
-    "national-id-number"
-    "gender"
-    "postal-office"
-    "home-town"
-    "other-eligibility-year-of-completion"})
+  (clojure.set/union
+   #{"hakukohteet"}
+   higher-education-base-education-questions
+   base-education-questions
+   person-info-questions
+   lupatiedot-questions))
 
 (def max-value-length 5000)
 

@@ -30,7 +30,7 @@
     (should= 1 (.getHorizontalSplitTopRow info))
     (should= 0 (.getVerticalSplitLeftColumn info))))
 
-(defmacro with-excel [bindings & body]
+(defmacro with-excel [skip-answers? bindings & body]
   `(let [~(first bindings) (File/createTempFile (str "excel-" (UUID/randomUUID)) ".xlsx")]
      (try
        (with-open [output# (FileOutputStream. (.getPath ~(first bindings)))]
@@ -41,7 +41,7 @@
                                         fixtures/application-review-notes
                                         nil
                                         nil
-                                        false
+                                        ~skip-answers?
                                         :fi
                                         (tarjonta-service/new-tarjonta-service)
                                         (organization-service/new-organization-service)
@@ -66,7 +66,7 @@
       (spec)))
 
   (it "should export applications for a form without hakukohde or haku"
-    (with-excel [file [fixtures/application-for-form]]
+    (with-excel false [file [fixtures/application-for-form]]
       (let [workbook          (WorkbookFactory/create file)
             metadata-sheet    (.getSheetAt workbook 0)
             application-sheet (.getSheetAt workbook 1)]
@@ -79,7 +79,7 @@
         (verify-pane-information application-sheet))))
 
   (it "should export applications for a hakukohde with haku"
-    (with-excel [file [fixtures/application-for-hakukohde]]
+    (with-excel false [file [fixtures/application-for-hakukohde]]
       (let [workbook          (WorkbookFactory/create file)
             metadata-sheet    (.getSheetAt workbook 0)
             application-sheet (.getSheetAt workbook 1)]
@@ -91,7 +91,7 @@
         (verify-row application-sheet 2 nil))))
 
   (it "should export applications to separate sheets, grouped by form"
-    (with-excel [file [fixtures/application-for-form fixtures/application-for-hakukohde]]
+    (with-excel false [file [fixtures/application-for-form fixtures/application-for-hakukohde]]
       (let [workbook                    (WorkbookFactory/create file)
             metadata-sheet              (.getSheetAt workbook 0)
             form-application-sheet      (.getSheetAt workbook 1)
@@ -105,4 +105,18 @@
         (verify-row form-application-sheet 2 nil)
         (verify-row hakukohde-application-sheet 0 ["Id" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Maksuvelvollisuus" "Valinnan tila" "Pisteet" "Hakijan henkilö-OID" "Turvakielto" "Muistiinpanot" "Kysymys 4" "Etunimi" "Kysymys 5" "Hakukohteet"])
         (verify-row hakukohde-application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" "Hyväksytty" "12" "1.123.345456567123" "kyllä" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari" "Vastaus 4" "Person-etunimi" "Vastaus 5" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"])
-        (verify-row hakukohde-application-sheet 2 nil)))))
+        (verify-row hakukohde-application-sheet 2 nil))))
+
+  (it "should always export answers to special questions"
+    (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-with-special-questions)
+                  form-store/fetch-by-key (fn [_] fixtures/form-with-special-questions)]
+      (with-excel true [file [fixtures/application-with-special-answers]]
+        (let [workbook          (WorkbookFactory/create file)
+              metadata-sheet    (.getSheetAt workbook 0)
+              application-sheet (.getSheetAt workbook 1)]
+          (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+          (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+          (verify-row metadata-sheet 2 nil)
+          (verify-row application-sheet 0 ["Id" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Maksuvelvollisuus" "Valinnan tila" "Pisteet" "Hakijan henkilö-OID" "Turvakielto" "Muistiinpanot" "Opiskelijavalinnan tulokseni saa julkaista internetissä?" "Etunimi" "Hakukohteet"])
+          (verify-row application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" "Hyväksytty" "12" "1.123.345456567123" "kyllä" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari" "Ei" "Person-etunimi" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"])
+          (verify-row application-sheet 2 nil))))))
