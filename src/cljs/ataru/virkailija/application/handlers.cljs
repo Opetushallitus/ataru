@@ -336,64 +336,75 @@
       (clojure.string/split #",")
       (cljs-util/get-unselected-review-states states)))
 
-(defn fetch-applications-fx [db params]
-  (let [hakukohde-oids-from-hakukohde-or-ryhma @(subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])
-        selected-hakukohteet-set               (cond
-                                                 (some? hakukohde-oids-from-hakukohde-or-ryhma)
-                                                 hakukohde-oids-from-hakukohde-or-ryhma
-                                                 (some? (-> db :application :selected-form-key))
-                                                 #{"form"}
-                                                 :else
-                                                 nil)
-        previous-filters                       (-> db :application :previous-fetch-filters)
-        previous-params                        (-> db :application :previous-fetch-params)
-        previous-sort                          (-> db :application :previous-sort)
-        first-load?                            (nil? previous-params)
-        reset-filters?                         (and (not first-load?) (not= previous-params params))
-        filters                                (-> (if reset-filters? initial-db/default-db db) :application :filters)
-        attachment-states-to-include           (-> (if reset-filters? initial-db/default-db db) :application :attachment-state-filter)
-        processing-states-to-include           (-> (if reset-filters? initial-db/default-db db) :application :processing-state-filter)
-        selection-states-to-include            (-> (if reset-filters? initial-db/default-db db) :application :selection-state-filter)
-        sort                                   (-> db :application :sort)
-        reset-list?                            (or reset-filters?
-                                                   (not= sort previous-sort)
-                                                   (not= previous-filters
-                                                         [attachment-states-to-include processing-states-to-include selection-states-to-include filters]))
-        page                                   (if reset-list? 0 (-> db :application :application-list-page))
-        new-db                                 (cond-> (-> db
-                                                           (assoc-in [:application :fetching-applications] true)
-                                                           (assoc-in [:application :fetching-next-page] (not reset-list?))
-                                                           (assoc-in [:application :previous-sort] sort)
-                                                           (assoc-in [:application :previous-fetch-params] params)
-                                                           (assoc-in [:application :previous-fetch-filters] [attachment-states-to-include
-                                                                                                             processing-states-to-include
-                                                                                                             selection-states-to-include
-                                                                                                             filters])
-                                                           (assoc-in [:application :attachment-state-filter] attachment-states-to-include)
-                                                           (assoc-in [:application :processing-state-filter] processing-states-to-include)
-                                                           (assoc-in [:application :selection-state-filter] selection-states-to-include)
-                                                           (assoc-in [:application :filters] filters))
-                                                       first-load? (->
-                                                                     (assoc-in [:application :attachment-state-filter]
-                                                                               (extract-unselected-review-states-from-query
-                                                                                 :attachment-state-filter
-                                                                                 review-states/attachment-hakukohde-review-types-with-no-requirements))
-                                                                     (assoc-in [:application :processing-state-filter]
-                                                                               (extract-unselected-review-states-from-query
-                                                                                 :processing-state-filter
-                                                                                 review-states/application-hakukohde-processing-states))
-                                                                     (assoc-in [:application :selection-state-filter]
-                                                                               (extract-unselected-review-states-from-query
-                                                                                 :selection-state-filter
-                                                                                 review-states/application-hakukohde-selection-states)))
-                                                       reset-list? (->
-                                                                     (assoc-in [:application :application-list-page] 0)
-                                                                     (assoc-in [:application :applications] [])))]
+(defn- get-previous-fetch-request-data
+  [db]
+  (let [previous-fetch (-> db :application :previous-fetch)]
+    (merge
+      {:states-and-filters
+       {:attachment-states-to-include (:attachment-states previous-fetch)
+        :processing-states-to-include (:processing-states previous-fetch)
+        :selection-states-to-include  (:selection-states previous-fetch)
+        :selected-hakukohteet         @(subscribe [:application/selected-hakukohde-oid-set])
+        :filters                      (:filters previous-fetch)}}
+      (:params previous-fetch))))
+
+(defn fetch-applications-fx
+  [db params]
+  (let [{previous-attachment-states :attachment-states
+         previous-processing-states :processing-states
+         previous-selection-states  :selection-states
+         previous-filters           :filters
+         previous-params            :params
+         previous-sort              :sort} (-> db :application :previous-fetch)
+        selected-hakukohteet-set     @(subscribe [:application/selected-hakukohde-oid-set])
+        first-load?                  (nil? previous-params)
+        reset-filters?               (and (not first-load?) (not= previous-params params))
+        filters                      (-> (if reset-filters? initial-db/default-db db) :application :filters)
+        attachment-states-to-include (-> (if reset-filters? initial-db/default-db db) :application :attachment-state-filter)
+        processing-states-to-include (-> (if reset-filters? initial-db/default-db db) :application :processing-state-filter)
+        selection-states-to-include  (-> (if reset-filters? initial-db/default-db db) :application :selection-state-filter)
+        sort                         (-> db :application :sort)
+        reset-list?                  (or reset-filters?
+                                         (not= sort previous-sort)
+                                         (not= [previous-attachment-states previous-processing-states previous-selection-states previous-filters]
+                                               [attachment-states-to-include processing-states-to-include selection-states-to-include filters]))
+        page                         (if reset-list? 0 (-> db :application :application-list-page))
+        page-size                    200
+        new-db                       (cond-> (-> db
+                                                 (assoc-in [:application :fetching-applications] true)
+                                                 (assoc-in [:application :fetching-next-page] (not reset-list?))
+                                                 (assoc-in [:application :previous-fetch :sort] sort)
+                                                 (assoc-in [:application :previous-fetch :params] params)
+                                                 (assoc-in [:application :previous-fetch :filters] filters)
+                                                 (assoc-in [:application :previous-fetch :attachment-states] attachment-states-to-include)
+                                                 (assoc-in [:application :previous-fetch :processing-states] processing-states-to-include)
+                                                 (assoc-in [:application :previous-fetch :selection-states] selection-states-to-include)
+                                                 (assoc-in [:application :attachment-state-filter] attachment-states-to-include)
+                                                 (assoc-in [:application :processing-state-filter] processing-states-to-include)
+                                                 (assoc-in [:application :selection-state-filter] selection-states-to-include)
+                                                 (assoc-in [:application :filters] filters))
+                                             first-load? (->
+                                                           (assoc-in [:application :attachment-state-filter]
+                                                                     (extract-unselected-review-states-from-query
+                                                                       :attachment-state-filter
+                                                                       review-states/attachment-hakukohde-review-types-with-no-requirements))
+                                                           (assoc-in [:application :processing-state-filter]
+                                                                     (extract-unselected-review-states-from-query
+                                                                       :processing-state-filter
+                                                                       review-states/application-hakukohde-processing-states))
+                                                           (assoc-in [:application :selection-state-filter]
+                                                                     (extract-unselected-review-states-from-query
+                                                                       :selection-state-filter
+                                                                       review-states/application-hakukohde-selection-states)))
+                                             reset-list? (->
+                                                           (assoc-in [:application :application-list-page] 0)
+                                                           (assoc-in [:application :applications] [])))]
     {:db         new-db
      :dispatch-n [(when reset-list? [:application/refresh-haut-and-hakukohteet])]
      :http       {:method              :post
                   :path                "/lomake-editori/api/applications/list"
                   :params              (merge {:page               page
+                                               :page-size          page-size
                                                :sort               sort
                                                :states-and-filters {:attachment-states-to-include (-> new-db :application :attachment-state-filter)
                                                                     :processing-states-to-include (-> new-db :application :processing-state-filter)
@@ -409,7 +420,7 @@
   (fn [{:keys [db]} _]
     (fetch-applications-fx
       db
-      (-> db :application :previous-fetch-params))))
+      (-> db :application :previous-fetch :params))))
 
 (reg-event-fx
   :application/update-application-filters
@@ -797,14 +808,15 @@
 
 (reg-event-fx
   :application/submit-mass-information-request
-  (fn [{:keys [db]} [_ application-keys]]
+  (fn [{:keys [db]} _]
     (let [message-and-subject (-> db :application :mass-information-request
                                   (select-keys [:message :subject]))
-          requests            (map #(assoc message-and-subject :application-key %) application-keys)]
+          application-query   (get-previous-fetch-request-data db)]
       {:dispatch [:application/set-mass-information-request-form-state :submitting]
        :http     {:method              :post
                   :path                "/lomake-editori/api/applications/mass-information-request"
-                  :params              requests
+                  :params              {:application-query   application-query
+                                        :message-and-subject message-and-subject}
                   :handler-or-dispatch :application/handle-submit-mass-information-request-response}})))
 
 (reg-event-fx

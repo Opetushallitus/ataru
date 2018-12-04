@@ -243,12 +243,12 @@
 
 (defn- mass-information-request-link
   []
-  (let [element-visible?      (r/atom false)
-        subject               (subscribe [:state-query [:application :mass-information-request :subject]])
-        message               (subscribe [:state-query [:application :mass-information-request :message]])
-        form-status           (subscribe [:application/mass-information-request-form-status])
-        filtered-applications (subscribe [:application/filtered-applications])
-        button-enabled?       (subscribe [:application/mass-information-request-button-enabled?])]
+  (let [element-visible? (r/atom false)
+        subject          (subscribe [:state-query [:application :mass-information-request :subject]])
+        message          (subscribe [:state-query [:application :mass-information-request :message]])
+        form-status      (subscribe [:application/mass-information-request-form-status])
+        filtered-count   (subscribe [:application/filtered-applications-count])
+        button-enabled?  (subscribe [:application/mass-information-request-button-enabled?])]
     (fn []
       [:span.application-handling__mass-information-request-container
        [:a.application-handling__mass-information-request-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
@@ -262,7 +262,7 @@
            [:button.virkailija-close-button
             {:on-click #(reset! element-visible? false)}
             [:i.zmdi.zmdi-close]]]
-          [:p (get-virkailija-translation :mass-information-request-email-n-recipients (count @filtered-applications))]
+          [:p (get-virkailija-translation :mass-information-request-email-n-recipients @filtered-count)]
           [:div.application-handling__information-request-row
            [:div.application-handling__information-request-info-heading (get-virkailija-translation :mass-information-request-subject)]
            [:div.application-handling__information-request-text-input-container
@@ -288,8 +288,8 @@
 
              :confirm
              [:button.application-handling__send-information-request-button.application-handling__send-information-request-button--confirm
-              {:on-click #(dispatch [:application/submit-mass-information-request (map :key @filtered-applications)])}
-              (get-virkailija-translation :mass-information-request-confirm-n-messages (count @filtered-applications))]
+              {:on-click #(dispatch [:application/submit-mass-information-request])}
+              (get-virkailija-translation :mass-information-request-confirm-n-messages @filtered-count)]
 
              :submitting
              [:div.application-handling__information-request-status

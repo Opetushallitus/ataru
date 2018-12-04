@@ -359,6 +359,14 @@
   [states-and-filters applications]
   (application-filtering/filter-applications applications states-and-filters))
 
+(defn- get-applications-page
+  [applications page-size page]
+  (if (and page-size page)
+    (->> applications
+         (drop (* page-size page))
+         (take page-size))
+    applications))
+
 ; TODO cleanup
 (defn get-application-list-by-query-paged
   [organization-service person-service tarjonta-service session query
@@ -383,9 +391,7 @@
                                           :attachment-state-counts (attachment-state-counts applications selected-hakukohde-set)
                                           :review-state-counts     (review-state-counts applications selected-hakukohde-set)}]
         {:aggregate-data aggregate-data
-         :applications   (->> filtered-sorted-applications
-                              (drop (* page-size page))
-                              (take page-size))})
+         :applications   (get-applications-page filtered-sorted-applications page-size page)})
       (let [filtered-sorted-applications (sort-applications
                                            (filter-applications-without-person-data states-and-filters applications)
                                            sort)
@@ -393,9 +399,7 @@
                                           :filtered-count          (count filtered-sorted-applications)
                                           :attachment-state-counts (attachment-state-counts applications selected-hakukohde-set)
                                           :review-state-counts     (review-state-counts applications selected-hakukohde-set)}
-            paged-applications           (->> filtered-sorted-applications
-                                              (drop (* page-size page))
-                                              (take page-size))
+            paged-applications           (get-applications-page filtered-sorted-applications page-size page)
             persons                      (person-service/get-persons
                                            person-service
                                            (distinct (keep :person-oid paged-applications)))]

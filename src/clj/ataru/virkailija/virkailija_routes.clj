@@ -144,6 +144,76 @@
                               :cookie-attrs {:secure (not (:dev? env))}
                               :store (create-store)}))
 
+(s/defschema ApplicationQueryResponse
+  {:aggregate-data {:total-count             s/Int
+                    :filtered-count          s/Int
+                    :attachment-state-counts {s/Str s/Int}
+                    :review-state-counts     {s/Str s/Int}}
+   :applications   [ataru-schema/ApplicationInfo]})
+
+(s/defschema ApplicationQuery
+  {(s/optional-key :form-key)             s/Str
+   (s/optional-key :hakukohde-oid)        s/Str
+   (s/optional-key :hakukohderyhma-oid)   s/Str
+   (s/optional-key :haku-oid)             s/Str
+   (s/optional-key :ensisijaisesti)       s/Bool
+   (s/optional-key :rajaus-hakukohteella) s/Str
+   (s/optional-key :ssn)                  s/Str
+   (s/optional-key :dob)                  s/Str
+   (s/optional-key :email)                s/Str
+   (s/optional-key :name)                 s/Str
+   (s/optional-key :person-oid)           s/Str
+   (s/optional-key :application-oid)      s/Str
+   (s/optional-key :page)                 s/Int
+   (s/optional-key :page-size)            s/Int
+   (s/optional-key :sort)                 {:column s/Str
+                                           :order  s/Str}
+   (s/optional-key :states-and-filters)   {:filters                      {s/Keyword {s/Keyword s/Bool}}
+                                           :attachment-states-to-include [s/Str]
+                                           :processing-states-to-include [s/Str]
+                                           :selection-states-to-include  [s/Str]
+                                           :selected-hakukohteet         (s/maybe [s/Str])}})
+
+(s/defn ^:always-validate query-applications
+  [organization-service person-service tarjonta-service session
+   params :- ApplicationQuery] :- ApplicationQueryResponse
+  (let [{:keys [form-key hakukohde-oid hakukohderyhma-oid haku-oid ensisijaisesti rajaus-hakukohteella ssn dob
+                email name person-oid application-oid page page-size sort states-and-filters]} params
+        ensisijaisesti (boolean ensisijaisesti)
+        paging         {:page      page
+                        :page-size page-size}
+        sort           (or sort {:column :created-time
+                                 :order  :descending})]
+    (when-let [query (cond (some? form-key)
+                           (application-service/->form-query form-key)
+                           (some? hakukohde-oid)
+                           (application-service/->hakukohde-query hakukohde-oid ensisijaisesti)
+                           (and (some? haku-oid) (some? hakukohderyhma-oid))
+                           (application-service/->hakukohderyhma-query haku-oid hakukohderyhma-oid ensisijaisesti rajaus-hakukohteella)
+                           (some? haku-oid)
+                           (application-service/->haku-query haku-oid)
+                           (some? ssn)
+                           (application-service/->ssn-query ssn)
+                           (and (some? dob) (dob/dob? dob))
+                           (application-service/->dob-query dob)
+                           (some? email)
+                           (application-service/->email-query email)
+                           (some? name)
+                           (application-service/->name-query name)
+                           (some? person-oid)
+                           (application-service/->person-oid-query person-oid)
+                           (some? application-oid)
+                           (application-service/->application-oid-query application-oid))]
+      (application-service/get-application-list-by-query-paged
+        organization-service
+        person-service
+        tarjonta-service
+        session
+        query
+        paging
+        states-and-filters
+        sort))))
+
 (api/defroutes test-routes
   (api/undocumented
    (api/GET "/virkailija-test.html" []
@@ -308,68 +378,12 @@
                                               " käsittely ei ole sallittu")})))
 
       (api/POST "/list" {session :session}
-        :body [{:keys [form-key hakukohde-oid hakukohderyhma-oid haku-oid ensisijaisesti rajaus-hakukohteella ssn dob
-                       email name person-oid application-oid page page-size sort states-and-filters] :as body}
-               {(s/optional-key :form-key)             s/Str
-                (s/optional-key :hakukohde-oid)        s/Str
-                (s/optional-key :hakukohderyhma-oid)   s/Str
-                (s/optional-key :haku-oid)             s/Str
-                (s/optional-key :ensisijaisesti)       s/Bool
-                (s/optional-key :rajaus-hakukohteella) s/Str
-                (s/optional-key :ssn)                  s/Str
-                (s/optional-key :dob)                  s/Str
-                (s/optional-key :email)                s/Str
-                (s/optional-key :name)                 s/Str
-                (s/optional-key :person-oid)           s/Str
-                (s/optional-key :application-oid)      s/Str
-                (s/optional-key :page)                 s/Int
-                (s/optional-key :page-size)            s/Int
-                (s/optional-key :sort)                 s/Any ; TODO
-                (s/optional-key :states-and-filters)   {:filters                      {s/Keyword {s/Keyword s/Bool}}
-                                                        :attachment-states-to-include [s/Str]
-                                                        :processing-states-to-include [s/Str]
-                                                        :selection-states-to-include  [s/Str]
-                                                        :selected-hakukohteet         (s/maybe [s/Str])}}]
+        :body [body ApplicationQuery]
         :summary "Return applications header-level info for form"
-        :return {:aggregate-data {:total-count             s/Int
-                                  :filtered-count          s/Int
-                                  :attachment-state-counts {s/Str s/Int}
-                                  :review-state-counts     {s/Str s/Int}}
-                 :applications   [ataru-schema/ApplicationInfo]}
-        (let [ensisijaisesti (boolean ensisijaisesti)
-              paging         {:page      (or page 0)
-                              :page-size (or page-size 200)}]
-          (if-let [query (cond (some? form-key)
-                               (application-service/->form-query form-key)
-                               (some? hakukohde-oid)
-                               (application-service/->hakukohde-query hakukohde-oid ensisijaisesti)
-                               (and (some? haku-oid) (some? hakukohderyhma-oid))
-                               (application-service/->hakukohderyhma-query haku-oid hakukohderyhma-oid ensisijaisesti rajaus-hakukohteella)
-                               (some? haku-oid)
-                               (application-service/->haku-query haku-oid)
-                               (some? ssn)
-                               (application-service/->ssn-query ssn)
-                               (and (some? dob) (dob/dob? dob))
-                               (application-service/->dob-query dob)
-                               (some? email)
-                               (application-service/->email-query email)
-                               (some? name)
-                               (application-service/->name-query name)
-                               (some? person-oid)
-                               (application-service/->person-oid-query person-oid)
-                               (some? application-oid)
-                               (application-service/->application-oid-query application-oid))]
-            (response/ok
-              (application-service/get-application-list-by-query-paged
-                organization-service
-                person-service
-                tarjonta-service
-                session
-                query
-                paging
-                states-and-filters
-                sort))
-            (response/bad-request))))
+        :return ApplicationQueryResponse
+        (if-let [result (query-applications organization-service person-service tarjonta-service session body)]
+          (response/ok result)
+          (response/bad-request)))
 
       (api/GET "/list" {session :session}
         :query-params [{formKey :- s/Str nil}
@@ -529,10 +543,16 @@
         (ok (information-request/store information-request session job-runner)))
 
       (api/POST "/mass-information-request" {session :session}
-        :body [information-requests [ataru-schema/NewInformationRequest]]
+        :body [body {:message-and-subject {:message s/Str
+                                           :subject s/Str}
+                     :application-query   ApplicationQuery}]
         :summary "Send information requests to multiple applicants"
         :return [ataru-schema/InformationRequest]
-        (ok (information-request/mass-store information-requests session job-runner)))
+        (let [application-keys     (->> (query-applications organization-service person-service tarjonta-service session (:application-query body))
+                                        :applications
+                                        (map :key))
+              information-requests (map #(assoc (:message-and-subject body) :application-key %) application-keys)]
+          (ok (information-request/mass-store information-requests session job-runner))))
 
       (api/POST "/excel" {session :session}
         :form-params [application-keys :- s/Str

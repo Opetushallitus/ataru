@@ -143,15 +143,30 @@
                    (some #(= hakukohderyhma-oid %)
                          (:ryhmaliitokset hakukohde)))))))
 
+(defn- hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
+  [db]
+  (let [selected-by (application-list-selected-by db)
+        oid-or-oids (when selected-by (-> db :application selected-by))]
+    (case selected-by
+      :selected-hakukohde #{oid-or-oids}
+      :selected-ryhman-ensisijainen-hakukohde #{oid-or-oids}
+      :selected-hakukohderyhma (set (map :oid (selected-hakukohderyhma-hakukohteet db)))
+      nil)))
+
 (re-frame/reg-sub
   :application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
+  hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma)
+
+(re-frame/reg-sub
+  :application/selected-hakukohde-oid-set
   (fn [db]
-    (let [selected-by (application-list-selected-by db)
-          oid-or-oids (when selected-by (-> db :application selected-by))]
-      (case selected-by
-        :selected-hakukohde                     #{oid-or-oids}
-        :selected-ryhman-ensisijainen-hakukohde #{oid-or-oids}
-        :selected-hakukohderyhma                (set (map :oid (selected-hakukohderyhma-hakukohteet db)))
+    (let [hakukohde-oids-from-hakukohde-or-ryhma (hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma db)]
+      (cond
+        (some? hakukohde-oids-from-hakukohde-or-ryhma)
+        hakukohde-oids-from-hakukohde-or-ryhma
+        (some? (-> db :application :selected-form-key))
+        #{"form"}
+        :else
         nil))))
 
 (re-frame/reg-sub
