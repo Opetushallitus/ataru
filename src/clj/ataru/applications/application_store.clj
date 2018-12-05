@@ -349,10 +349,10 @@
 
 (defn get-application-heading-list
   [query]
-  (time (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-                                 (yesql-get-application-list-for-virkailija
-                                   (query->db-query connection query)
-                                   {:connection connection}))))
+  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+                           (yesql-get-application-list-for-virkailija
+                             (query->db-query connection query)
+                             {:connection connection})))
 
 (defn get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
   [person-oid]
