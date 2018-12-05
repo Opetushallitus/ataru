@@ -478,6 +478,10 @@
           },
           wait.until(function () {
             return includedSelectionStateFilters() === 4 && filteredApplicationsCount() === 2
+          }),
+          clickElement(function() { return testFrame().find('.application-handling__mass-information-request-link') }),
+          wait.until(function() {
+            return massInformationRequestPopup().is(':visible')
           })
         )
         it('reduces application list and recipient count', function () {
