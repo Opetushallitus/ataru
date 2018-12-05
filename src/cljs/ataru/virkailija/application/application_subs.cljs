@@ -157,17 +157,20 @@
   :application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
   hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma)
 
+(defn- selected-hakukohde-oid-set
+  [db]
+  (let [hakukohde-oids-from-hakukohde-or-ryhma (hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma db)]
+    (cond
+      (some? hakukohde-oids-from-hakukohde-or-ryhma)
+      hakukohde-oids-from-hakukohde-or-ryhma
+      (some? (-> db :application :selected-form-key))
+      #{"form"}
+      :else
+      nil)))
+
 (re-frame/reg-sub
   :application/selected-hakukohde-oid-set
-  (fn [db]
-    (let [hakukohde-oids-from-hakukohde-or-ryhma (hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma db)]
-      (cond
-        (some? hakukohde-oids-from-hakukohde-or-ryhma)
-        hakukohde-oids-from-hakukohde-or-ryhma
-        (some? (-> db :application :selected-form-key))
-        #{"form"}
-        :else
-        nil))))
+  selected-hakukohde-oid-set)
 
 (re-frame/reg-sub
   :application/show-ensisijaisesti?
@@ -721,3 +724,16 @@
   :application/loaded-applications-count
   (fn [db _]
     (-> db :application :applications (count))))
+
+(re-frame/reg-sub
+  :application/previous-application-fetch-params
+  (fn [db _]
+    (let [previous-fetch (-> db :application :previous-fetch)]
+      (merge
+        {:states-and-filters
+         {:attachment-states-to-include (:attachment-states previous-fetch)
+          :processing-states-to-include (:processing-states previous-fetch)
+          :selection-states-to-include  (:selection-states previous-fetch)
+          :selected-hakukohteet         (selected-hakukohde-oid-set db)
+          :filters                      (:filters previous-fetch)}}
+        (:params previous-fetch)))))

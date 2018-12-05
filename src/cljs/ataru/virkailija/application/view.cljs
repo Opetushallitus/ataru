@@ -46,37 +46,36 @@
     [:i.zmdi.zmdi-square-o.zmdi-hc-stack-1x]])
 
 (defn excel-download-link
-  [applications selected-hakukohde selected-hakukohderyhma filename]
-  (when (not-empty applications)
-    [:div
-     [:form#excel-download-link
-      {:action "/lomake-editori/api/applications/excel"
-       :method "POST"}
+  [selected-hakukohde selected-hakukohderyhma filename]
+  [:div
+   [:form#excel-download-link
+    {:action "/lomake-editori/api/applications/excel"
+     :method "POST"}
+    [:input {:type  "hidden"
+             :name  "application-filter"
+             :value (.stringify js/JSON (clj->js @(subscribe [:application/previous-application-fetch-params])))}]
+    [:input {:type  "hidden"
+             :name  "filename"
+             :value filename}]
+    [:input {:type  "hidden"
+             :name  "skip-answers"
+             :value "false"}]
+    (when-let [csrf-token (cljs-util/csrf-token)]
       [:input {:type  "hidden"
-               :name  "application-keys"
-               :value (clojure.string/join "," (map :key applications))}]
+               :name  "CSRF"
+               :value csrf-token}])
+    (when selected-hakukohde
       [:input {:type  "hidden"
-               :name  "filename"
-               :value filename}]
+               :name  "selected-hakukohde"
+               :value selected-hakukohde}])
+    (when selected-hakukohderyhma
       [:input {:type  "hidden"
-               :name  "skip-answers"
-               :value "false"}]
-      (when-let [csrf-token (cljs-util/csrf-token)]
-        [:input {:type  "hidden"
-                 :name  "CSRF"
-                 :value csrf-token}])
-      (when selected-hakukohde
-        [:input {:type  "hidden"
-                 :name  "selected-hakukohde"
-                 :value selected-hakukohde}])
-      (when selected-hakukohderyhma
-        [:input {:type  "hidden"
-                 :name  "selected-hakukohderyhma"
-                 :value selected-hakukohderyhma}])]
-     [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
-      {:on-click (fn [e]
-                   (.submit (.getElementById js/document "excel-download-link")))}
-      (get-virkailija-translation :load-excel)]]))
+               :name  "selected-hakukohderyhma"
+               :value selected-hakukohderyhma}])]
+   [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
+    {:on-click (fn [e]
+                 (.submit (.getElementById js/document "excel-download-link")))}
+    (get-virkailija-translation :load-excel)]])
 
 (defn- selected-or-default-mass-review-state
   [selected all]
@@ -389,7 +388,7 @@
       (when @show-mass-update-link?
         [mass-update-applications-link])
       (when @show-excel-link?
-        [excel-download-link @applications (second @haku-header) (nth @haku-header 2) @header])]]))
+        [excel-download-link (second @haku-header) (nth @haku-header 2) @header])]]))
 
 (defn- select-application
   ([application-key selected-hakukohde-oid]

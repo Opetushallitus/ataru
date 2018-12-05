@@ -273,7 +273,6 @@
 (reg-event-fx
   :application/toggle-filter
   (fn [{:keys [db]} [_ filter-id state]]
-    (println "toggle" filter-id state (get-in db [:application :filters filter-id state]))
     {:db       (update-in db [:application :filters filter-id state] not)
      :dispatch [:application/update-application-filters]}))
 
@@ -811,7 +810,7 @@
   (fn [{:keys [db]} _]
     (let [message-and-subject (-> db :application :mass-information-request
                                   (select-keys [:message :subject]))
-          application-query   (get-previous-fetch-request-data db)]
+          application-query   @(subscribe [:application/previous-application-fetch-params])]
       {:dispatch [:application/set-mass-information-request-form-state :submitting]
        :http     {:method              :post
                   :path                "/lomake-editori/api/applications/mass-information-request"
@@ -913,7 +912,7 @@
   (fn [{:keys [db]} [_ from-state to-state]]
     {:db   (assoc-in db [:application :fetching-applications] true)
      :http {:method              :post
-            :params              {:application-filter (get-previous-fetch-request-data db)
+            :params              {:application-filter @(subscribe [:application/previous-application-fetch-params])
                                   :from-state         from-state
                                   :to-state           to-state
                                   :hakukohde-oid      (-> db :application :selected-hakukohde)}
