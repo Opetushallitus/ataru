@@ -144,39 +144,9 @@
                               :cookie-attrs {:secure (not (:dev? env))}
                               :store (create-store)}))
 
-(s/defschema ApplicationQueryResponse
-  {:aggregate-data {:total-count             s/Int
-                    :filtered-count          s/Int
-                    :attachment-state-counts {s/Str s/Int}
-                    :review-state-counts     {s/Str s/Int}}
-   :applications   [ataru-schema/ApplicationInfo]})
-
-(s/defschema ApplicationQuery
-  {(s/optional-key :form-key)             s/Str
-   (s/optional-key :hakukohde-oid)        s/Str
-   (s/optional-key :hakukohderyhma-oid)   s/Str
-   (s/optional-key :haku-oid)             s/Str
-   (s/optional-key :ensisijaisesti)       s/Bool
-   (s/optional-key :rajaus-hakukohteella) s/Str
-   (s/optional-key :ssn)                  s/Str
-   (s/optional-key :dob)                  s/Str
-   (s/optional-key :email)                s/Str
-   (s/optional-key :name)                 s/Str
-   (s/optional-key :person-oid)           s/Str
-   (s/optional-key :application-oid)      s/Str
-   (s/optional-key :page)                 s/Int
-   (s/optional-key :page-size)            s/Int
-   (s/optional-key :sort)                 {:column s/Str
-                                           :order  s/Str}
-   (s/optional-key :states-and-filters)   {:filters                      {s/Keyword {s/Keyword s/Bool}}
-                                           :attachment-states-to-include [s/Str]
-                                           :processing-states-to-include [s/Str]
-                                           :selection-states-to-include  [s/Str]
-                                           :selected-hakukohteet         (s/maybe [s/Str])}})
-
 (s/defn ^:always-validate query-applications
   [organization-service person-service tarjonta-service session
-   params :- ApplicationQuery] :- ApplicationQueryResponse
+   params :- ataru-schema/ApplicationQuery] :- ataru-schema/ApplicationQueryResponse
   (let [{:keys [form-key hakukohde-oid hakukohderyhma-oid haku-oid ensisijaisesti rajaus-hakukohteella ssn dob
                 email name person-oid application-oid page page-size sort states-and-filters]} params
         ensisijaisesti (boolean ensisijaisesti)
@@ -378,9 +348,9 @@
                                               " käsittely ei ole sallittu")})))
 
       (api/POST "/list" {session :session}
-        :body [body ApplicationQuery]
+        :body [body ataru-schema/ApplicationQuery]
         :summary "Return applications header-level info for form"
-        :return ApplicationQueryResponse
+        :return ataru-schema/ApplicationQueryResponse
         (if-let [result (query-applications organization-service person-service tarjonta-service session body)]
           (response/ok result)
           (response/bad-request)))
@@ -545,7 +515,7 @@
       (api/POST "/mass-information-request" {session :session}
         :body [body {:message-and-subject {:message s/Str
                                            :subject s/Str}
-                     :application-query   ApplicationQuery}]
+                     :application-query   ataru-schema/ApplicationQuery}]
         :summary "Send information requests to multiple applicants"
         :return [ataru-schema/InformationRequest]
         (let [application-keys     (->> (query-applications organization-service person-service tarjonta-service session (:application-query body))
