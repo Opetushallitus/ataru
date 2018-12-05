@@ -422,6 +422,14 @@
       (-> db :application :previous-fetch :params))))
 
 (reg-event-fx
+  :application/reload-applications
+  (fn [{:keys [db]} _]
+    {:db       (-> db
+                   (assoc-in [:application :application-list-page] 0)
+                   (assoc-in [:application :applications] []))
+     :dispatch [:application/update-applications-immediate]}))
+
+(reg-event-fx
   :application/update-application-filters
   (fn [_ _]
     {:dispatch-debounced {:id       :update-applications-list
@@ -895,17 +903,9 @@
 
 (reg-event-fx
   :application/handle-mass-update-application-reviews
-  (fn [{:keys [db]} [_ _]]
-    (let [selected-type  @(subscribe [:application/application-list-selected-by])
-          dispatch-kw    (case selected-type
-                           :selected-form-key :application/fetch-applications
-                           :selected-haku :application/fetch-applications-by-haku
-                           :selected-hakukohde :application/fetch-applications-by-hakukohde
-                           nil)]
-      (if dispatch-kw
-        {:db db
-         :dispatch [dispatch-kw (-> db :application selected-type)]}
-        {:db db}))))
+  (fn [_ _]
+    {:delayed-dispatch {:dispatch-vec [:application/reload-applications]
+                        :delay        500}}))
 
 (reg-event-fx
   :application/mass-update-application-reviews

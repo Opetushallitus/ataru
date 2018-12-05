@@ -294,14 +294,16 @@
                      :from-state         (apply s/enum (map first review-states/application-hakukohde-processing-states))
                      :to-state           (apply s/enum (map first review-states/application-hakukohde-processing-states))}]
         :summary "Update list of application-hakukohde with given state to new state"
-        (let [application-keys (->> (application-service/query-applications-paged
-                                      organization-service
-                                      person-service
-                                      tarjonta-service
-                                      session
-                                      (:application-filter body))
-                                    :applications
-                                    (map :key))]
+        (let [filter-with-from-state (-> (:application-filter body)
+                                         (assoc-in [:states-and-filters :processing-states-to-include] [(:from-state body)]))
+              application-keys       (->> (application-service/query-applications-paged
+                                            organization-service
+                                            person-service
+                                            tarjonta-service
+                                            session
+                                            filter-with-from-state)
+                                          :applications
+                                          (map :key))]
           (if (application-service/mass-update-application-states
                 organization-service
                 tarjonta-service

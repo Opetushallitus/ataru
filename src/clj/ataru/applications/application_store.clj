@@ -821,9 +821,10 @@
       (yesql-upsert-application-hakukohde-review! new-review connection)
       (yesql-add-application-event<! (assoc new-event :hakukohde (:hakukohde new-review))
                                      connection))
-    {:new       new-event
-     :id        (-> session :identity :oid)
-     :operation audit-log/operation-new}))
+    (when new-reviews
+      {:new       new-event
+       :id        (-> session :identity :oid)
+       :operation audit-log/operation-new})))
 
 (defn applications-authorization-data [application-keys]
   (map ->kebab-case-kw
@@ -842,7 +843,7 @@
                               (mapv
                                (partial update-hakukohde-process-state! connection session hakukohde-oid from-state to-state)
                                application-keys)))]
-    (doseq [audit-log-entry audit-log-entries]
+    (doseq [audit-log-entry (filter some? audit-log-entries)]
       (audit-log/log audit-log-entry))
     true))
 
