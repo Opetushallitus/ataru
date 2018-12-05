@@ -296,7 +296,7 @@
         .then(clickElement(searchApplicationsBySsnLink))
         .then(wait.until(ssnSearchFieldHasValue('020202A0202')))
         .then(wait.until(function() {
-          return _.isEqual(applicantNames(), ['Tyrni, Johanna Irmeli', 'Kuikeloinen, Seija Susanna'])
+          return _.isEqual(applicantNames(), ['Kuikeloinen, Seija Susanna', 'Tyrni, Johanna Irmeli'])
         }))
         .then(done)
         .fail(done)
