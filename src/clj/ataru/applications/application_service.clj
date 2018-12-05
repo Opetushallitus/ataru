@@ -24,7 +24,10 @@
     [medley.core :refer [filter-vals]]
     [taoensso.timbre :refer [spy debug]]
     [ataru.application.review-states :as review-states]
-    [ataru.application.application-states :as application-states])
+    [ataru.application.application-states :as application-states]
+    [ataru.schema.form-schema :as ataru-schema]
+    [schema.core :as s]
+    [ataru.dob :as dob])
   (:import [java.io ByteArrayInputStream]))
 
 (defn- extract-koodisto-fields [field-descriptor-list]
@@ -416,24 +419,7 @@
         persons      (person-service/get-persons
                       person-service
                       (distinct (keep :person-oid applications)))]
-    (map (fn [application]
-           (let [onr-person (get persons (:person-oid application))
-                 person     (if (or (:yksiloity onr-person)
-                                    (:yksiloityVTJ onr-person))
-                              {:oid            (:oidHenkilo onr-person)
-                               :preferred-name (:kutsumanimi onr-person)
-                               :last-name      (:sukunimi onr-person)
-                               :yksiloity      true
-                               :ssn            (boolean (:hetu onr-person))}
-                              {:oid            (:person-oid application)
-                               :preferred-name (:preferred-name application)
-                               :last-name      (:last-name application)
-                               :yksiloity      false
-                               :ssn            (boolean (:ssn application))})]
-             (-> application
-                 (assoc :person person)
-                 (dissoc :ssn :person-oid :preferred-name :last-name))))
-         applications)))
+    (map populate-applications-with-person-data applications persons)))
 
 (defn get-excel-report-of-applications-by-key
   [application-keys selected-hakukohde selected-hakukohderyhma user-wants-to-skip-answers? session organization-service tarjonta-service koodisto-cache ohjausparametrit-service person-service]
@@ -633,3 +619,43 @@
       {:yksiloimattomat yksiloimattomat
        :applications    (map (partial add-henkilo henkilot) applications)})
     {:unauthorized nil}))
+
+(s/defn ^:always-validate query-applications-paged
+  [organization-service person-service tarjonta-service session
+   params :- ataru-schema/ApplicationQuery] :- ataru-schema/ApplicationQueryResponse
+  (let [{:keys [form-key hakukohde-oid hakukohderyhma-oid haku-oid ensisijaisesti rajaus-hakukohteella ssn dob
+                email name person-oid application-oid page page-size sort states-and-filters]} params
+        ensisijaisesti (boolean ensisijaisesti)
+        paging         {:page      page
+                        :page-size page-size}
+        sort           (or sort {:column :created-time
+                                 :order  :descending})]
+    (when-let [query (cond (some? form-key)
+                           (->form-query form-key)
+                           (some? hakukohde-oid)
+                           (->hakukohde-query hakukohde-oid ensisijaisesti)
+                           (and (some? haku-oid) (some? hakukohderyhma-oid))
+                           (->hakukohderyhma-query haku-oid hakukohderyhma-oid ensisijaisesti rajaus-hakukohteella)
+                           (some? haku-oid)
+                           (->haku-query haku-oid)
+                           (some? ssn)
+                           (->ssn-query ssn)
+                           (and (some? dob) (dob/dob? dob))
+                           (->dob-query dob)
+                           (some? email)
+                           (->email-query email)
+                           (some? name)
+                           (->name-query name)
+                           (some? person-oid)
+                           (->person-oid-query person-oid)
+                           (some? application-oid)
+                           (->application-oid-query application-oid))]
+      (get-application-list-by-query-paged
+        organization-service
+        person-service
+        tarjonta-service
+        session
+        query
+        paging
+        states-and-filters
+        sort))))

@@ -636,7 +636,7 @@
                     :filtered-count          s/Int
                     :attachment-state-counts {s/Str s/Int}
                     :review-state-counts     {s/Str s/Int}}
-   :applications   [ataru-schema/ApplicationInfo]})
+   :applications   [ApplicationInfo]})
 
 (s/defschema ApplicationQuery
   {(s/optional-key :form-key)             s/Str

@@ -144,46 +144,6 @@
                               :cookie-attrs {:secure (not (:dev? env))}
                               :store (create-store)}))
 
-(s/defn ^:always-validate query-applications
-  [organization-service person-service tarjonta-service session
-   params :- ataru-schema/ApplicationQuery] :- ataru-schema/ApplicationQueryResponse
-  (let [{:keys [form-key hakukohde-oid hakukohderyhma-oid haku-oid ensisijaisesti rajaus-hakukohteella ssn dob
-                email name person-oid application-oid page page-size sort states-and-filters]} params
-        ensisijaisesti (boolean ensisijaisesti)
-        paging         {:page      page
-                        :page-size page-size}
-        sort           (or sort {:column :created-time
-                                 :order  :descending})]
-    (when-let [query (cond (some? form-key)
-                           (application-service/->form-query form-key)
-                           (some? hakukohde-oid)
-                           (application-service/->hakukohde-query hakukohde-oid ensisijaisesti)
-                           (and (some? haku-oid) (some? hakukohderyhma-oid))
-                           (application-service/->hakukohderyhma-query haku-oid hakukohderyhma-oid ensisijaisesti rajaus-hakukohteella)
-                           (some? haku-oid)
-                           (application-service/->haku-query haku-oid)
-                           (some? ssn)
-                           (application-service/->ssn-query ssn)
-                           (and (some? dob) (dob/dob? dob))
-                           (application-service/->dob-query dob)
-                           (some? email)
-                           (application-service/->email-query email)
-                           (some? name)
-                           (application-service/->name-query name)
-                           (some? person-oid)
-                           (application-service/->person-oid-query person-oid)
-                           (some? application-oid)
-                           (application-service/->application-oid-query application-oid))]
-      (application-service/get-application-list-by-query-paged
-        organization-service
-        person-service
-        tarjonta-service
-        session
-        query
-        paging
-        states-and-filters
-        sort))))
-
 (api/defroutes test-routes
   (api/undocumented
    (api/GET "/virkailija-test.html" []
@@ -351,7 +311,12 @@
         :body [body ataru-schema/ApplicationQuery]
         :summary "Return applications header-level info for form"
         :return ataru-schema/ApplicationQueryResponse
-        (if-let [result (query-applications organization-service person-service tarjonta-service session body)]
+        (if-let [result (application-service/query-applications-paged
+                          organization-service
+                          person-service
+                          tarjonta-service
+                          session
+                          body)]
           (response/ok result)
           (response/bad-request)))
 
@@ -518,7 +483,12 @@
                      :application-query   ataru-schema/ApplicationQuery}]
         :summary "Send information requests to multiple applicants"
         :return [ataru-schema/InformationRequest]
-        (let [application-keys     (->> (query-applications organization-service person-service tarjonta-service session (:application-query body))
+        (let [application-keys     (->> (application-service/query-applications-paged
+                                          organization-service
+                                          person-service
+                                          tarjonta-service
+                                          session
+                                          (:application-query body))
                                         :applications
                                         (map :key))
               information-requests (map #(assoc (:message-and-subject body) :application-key %) application-keys)]
