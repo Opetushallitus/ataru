@@ -621,8 +621,7 @@
     {:unauthorized nil}))
 
 (s/defn ^:always-validate query-applications-paged
-  [organization-service person-service tarjonta-service session
-   params :- ataru-schema/ApplicationQuery] :- ataru-schema/ApplicationQueryResponse
+  [organization-service person-service tarjonta-service session params :- ataru-schema/ApplicationQuery] :- ataru-schema/ApplicationQueryResponse
   (let [{:keys [form-key hakukohde-oid hakukohderyhma-oid haku-oid ensisijaisesti rajaus-hakukohteella ssn dob
                 email name person-oid application-oid page page-size sort states-and-filters]} params
         ensisijaisesti (boolean ensisijaisesti)

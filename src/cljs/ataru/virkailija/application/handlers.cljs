@@ -910,13 +910,13 @@
 
 (reg-event-fx
   :application/mass-update-application-reviews
-  (fn [{:keys [db]} [_ application-keys from-state to-state]]
+  (fn [{:keys [db]} [_ from-state to-state]]
     {:db   (assoc-in db [:application :fetching-applications] true)
      :http {:method              :post
-            :params              {:application-keys application-keys
-                                  :from-state       from-state
-                                  :to-state         to-state
-                                  :hakukohde-oid    (-> db :application :selected-hakukohde)}
+            :params              {:application-filter (get-previous-fetch-request-data db)
+                                  :from-state         from-state
+                                  :to-state           to-state
+                                  :hakukohde-oid      (-> db :application :selected-hakukohde)}
             :path                "/lomake-editori/api/applications/mass-update"
             :handler-or-dispatch :application/handle-mass-update-application-reviews}}))
 

@@ -157,20 +157,7 @@
                                      review-states/application-hakukohde-processing-states)]
     (fn []
       (when-not (empty? @filtered-applications)
-        (let [from-states (reduce
-                            (fn [acc application]
-                              (merge-with
-                                +
-                                acc
-                                (frequencies
-                                  (map :state
-                                       (filter
-                                         #(= "processing-state" (:requirement %))
-                                         (application-states/get-all-reviews-for-all-requirements
-                                          application
-                                          (seq (second @haku-header))))))))
-                            all-states
-                            @filtered-applications)]
+        (let [from-states (merge all-states @review-state-counts)]
           [:span.application-handling__mass-edit-review-states-container
            (when @massamuokkaus?
              [:a.application-handling__mass-edit-review-states-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
@@ -226,10 +213,8 @@
                 [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button--confirm
                  {:on-click (fn []
                               (let [from-state-name              (selected-or-default-mass-review-state selected-from-review-state from-states)
-                                    to-state-name                (selected-or-default-mass-review-state selected-to-review-state all-states)
-                                    application-keys             (map :key @filtered-applications)]
+                                    to-state-name                (selected-or-default-mass-review-state selected-to-review-state all-states)]
                                 (dispatch [:application/mass-update-application-reviews
-                                           application-keys
                                            from-state-name
                                            to-state-name])
                                 (reset! selected-from-review-state nil)

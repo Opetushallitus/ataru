@@ -350,7 +350,6 @@
 (defn get-application-heading-list
   [query]
   (time (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-                                 (println "query" (query->db-query connection query))
                                  (yesql-get-application-list-for-virkailija
                                    (query->db-query connection query)
                                    {:connection connection}))))
