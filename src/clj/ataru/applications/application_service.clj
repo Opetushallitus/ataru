@@ -377,11 +377,11 @@
    {:keys [selected-hakukohteet] :as states-and-filters}
    sort]
   (let [selected-hakukohde-set (when selected-hakukohteet (set selected-hakukohteet))
-        applications           (time (aac/get-application-list-by-query
-                                       organization-service
-                                       tarjonta-service
-                                       session
-                                       query))
+        applications           (aac/get-application-list-by-query
+                                 organization-service
+                                 tarjonta-service
+                                 session
+                                 query)
         person-info-needed?    (or
                                  (application-sorting/person-info-needed-to-sort? (:column sort))
                                  (application-filtering/person-info-needed-to-filter? (:filters states-and-filters)))]
