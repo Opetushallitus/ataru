@@ -1725,10 +1725,6 @@ th.application__readonly-adjacent--header {
   font-size: 2em;
 }
 
-.application__form-text-input-and-validation-errors {
-  position: relative
-}
-
 .application__pohjakoulutusristiriita-alert {
   color: @sg-color-red;
   font-size: 48px;
@@ -1791,63 +1787,27 @@ th.application__readonly-adjacent--header {
 }
 
 .application__validation-error-dialog {
-  display: flex;
-  position: absolute;
-  left: 340px;
-  top: -46px;
-  width: 396px;
+  width: 610px;
+  margin-top: 18px;
+  background: @pale-blue;
+  color: white;
+  padding: 20px;
+  font-size: 16px;
+  border-radius: 6px;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+
+  & p:first-child {
+    margin-top: 0px;
+  }
+
+  & p:last-child {
+    margin-bottom: 0px;
+  }
+
+  .arrow(top, @pale-blue, 16px, 38px);
 
   @media only screen and (max-width: @desktop-content-width) {
-    flex-direction: column;
-    position: relative;
-    left: 0px;
-    top: 0px;
     width: 305px;
-  }
-
-  &__arrow {
-    flex: none;
-    width: 15px;
-    overflow: hidden;
-    z-index: 9;
-
-    @media only screen and (max-width: @desktop-content-width) {
-      width: auto;
-      height: 15px;
-    }
-
-    &:after {
-      content: "";
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      background: @pale-blue;
-      transform: rotate(45deg);
-      top: 57px;
-      left: 5px;
-
-      @media only screen and (max-width: @desktop-content-width) {
-        top: 5px;
-        left: 25px;
-      }
-    }
-  }
-
-  &__box {
-    flex: auto;
-    background: @pale-blue;
-    color: white;
-    padding: 20px;
-    font-size: 16px;
-    border-radius: 6px;
-
-    & p:first-child {
-      margin-top: 0px;
-    }
-
-    & p:last-child {
-      margin-bottom: 0px;
-    }
   }
 }
 

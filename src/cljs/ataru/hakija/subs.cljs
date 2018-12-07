@@ -450,13 +450,6 @@
     (-> db :form :tarjonta :hakukohteet)))
 
 (re-frame/reg-sub
-  :application/visible-validation-error
-  (fn [_ _]
-    (re-frame/subscribe [:application/application]))
-  (fn [application _]
-    (:visible-validation-error application)))
-
-(re-frame/reg-sub
   :application/validators-processing
   (fn [_ _]
     (re-frame/subscribe [:application/application]))
@@ -485,13 +478,6 @@
            (not (clojure.string/blank? value))
            (not (empty? value)))
          (not validator-processing?))))
-
-(re-frame/reg-sub
-  :application/show-validation-error?
-  (fn [_ _]
-    (re-frame/subscribe [:application/visible-validation-error]))
-  (fn [visible-validation-error [_ id]]
-    (or (nil? visible-validation-error) (= id visible-validation-error))))
 
 (re-frame/reg-sub
   :application/verify-email?
