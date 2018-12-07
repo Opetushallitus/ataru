@@ -326,7 +326,7 @@
     applications))
 
 (defn- sort-applications
-  [applications {:keys [column order]}]
+  [{:keys [column order]} applications]
   (application-sorting/sort-by-column applications (keyword column) (keyword order)))
 
 (defn- populate-applications-with-person-data
@@ -370,7 +370,6 @@
          (take page-size))
     applications))
 
-; TODO cleanup
 (defn get-application-list-by-query-paged
   [organization-service person-service tarjonta-service session query
    {:keys [page page-size]}
@@ -382,31 +381,26 @@
                                  tarjonta-service
                                  session
                                  query)
+        aggregate-data         {:total-count             (count applications)
+                                :attachment-state-counts (attachment-state-counts applications selected-hakukohde-set)
+                                :review-state-counts     (review-state-counts applications selected-hakukohde-set)}
         person-info-needed?    (or
                                  (application-sorting/person-info-needed-to-sort? (:column sort))
                                  (application-filtering/person-info-needed-to-filter? (:filters states-and-filters)))]
     (if person-info-needed?
-      (let [filtered-sorted-applications (sort-applications
-                                           (filter-applications-with-person-data person-service states-and-filters applications)
-                                           sort)
-            aggregate-data               {:total-count             (count applications)
-                                          :filtered-count          (count filtered-sorted-applications)
-                                          :attachment-state-counts (attachment-state-counts applications selected-hakukohde-set)
-                                          :review-state-counts     (review-state-counts applications selected-hakukohde-set)}]
-        {:aggregate-data aggregate-data
+      (let [filtered-sorted-applications (->> applications
+                                              (filter-applications-with-person-data person-service states-and-filters)
+                                              (sort-applications sort))]
+        {:aggregate-data (merge aggregate-data {:filtered-count (count filtered-sorted-applications)})
          :applications   (get-applications-page filtered-sorted-applications page-size page)})
-      (let [filtered-sorted-applications (sort-applications
-                                           (filter-applications-without-person-data states-and-filters applications)
-                                           sort)
-            aggregate-data               {:total-count             (count applications)
-                                          :filtered-count          (count filtered-sorted-applications)
-                                          :attachment-state-counts (attachment-state-counts applications selected-hakukohde-set)
-                                          :review-state-counts     (review-state-counts applications selected-hakukohde-set)}
+      (let [filtered-sorted-applications (->> applications
+                                              (filter-applications-without-person-data states-and-filters)
+                                              (sort-applications sort))
             paged-applications           (get-applications-page filtered-sorted-applications page-size page)
             persons                      (person-service/get-persons
                                            person-service
                                            (distinct (keep :person-oid paged-applications)))]
-        {:aggregate-data aggregate-data
+        {:aggregate-data (merge aggregate-data {:filtered-count (count filtered-sorted-applications)})
          :applications   (populate-applications-with-person-data paged-applications persons)}))))
 
 (defn get-application-list-by-query
