@@ -1,9 +1,25 @@
 (ns ataru.tarjonta-service.hakukohde
-  (:require [ataru.util :refer [koulutus->str non-blank-val]]
+  (:require [ataru.util :refer [non-blank-val]]
             [clojure.string :refer [join blank?]]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.config.core :refer [config]]
             [ataru.util :as util]))
+
+(defn- koulutus->str
+  [koulutus lang]
+  (if-let [classic-name (->> [(-> koulutus :koulutuskoodi-name lang)
+                              (->> koulutus
+                                   :tutkintonimike-names
+                                   (mapv lang)
+                                   (remove clojure.string/blank?)
+                                   distinct
+                                   (clojure.string/join ", "))
+                              (:tarkenne koulutus)]
+                             (remove clojure.string/blank?)
+                             distinct
+                             seq)]
+    (clojure.string/join " | " classic-name)
+    (-> koulutus :koulutusohjelma-name lang)))
 
 (defn- koulutus->str-map
   [koulutus]
@@ -22,20 +38,18 @@
        (remove (comp blank? second))
        (into {})))
 
-(defn- ensure-finnish
-  [m]
-  (assoc m :fi (or (:fi m) (:en m) (:sv m))))
-
 (defn- as-hakukohde-name [name tarjoaja-name lang]
   (let [ks [lang :fi :en :sv]]
     [lang (str (non-blank-val name ks) " – " (non-blank-val tarjoaja-name ks))]))
 
 (defn- hakukohde->option
-  [{:keys [oid name koulutukset tarjoaja-name]}]
+  [{:keys [oid name koulutukset tarjoaja-name kohdejoukko-korkeakoulu?]}]
   (let [langs (distinct (concat [:fi] (keys name) (keys tarjoaja-name)))]
     {:value       oid
      :label       (into {} (map (partial as-hakukohde-name name tarjoaja-name) langs))
-     :description (ensure-finnish (koulutukset->str koulutukset))}))
+     :description (if kohdejoukko-korkeakoulu?
+                    {}
+                    (koulutukset->str koulutukset))}))
 
 (defn- populate-hakukohteet-field
   [field tarjonta-info]
