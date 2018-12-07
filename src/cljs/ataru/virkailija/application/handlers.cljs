@@ -368,7 +368,7 @@
                                          (not= [previous-attachment-states previous-processing-states previous-selection-states previous-filters]
                                                [attachment-states-to-include processing-states-to-include selection-states-to-include filters]))
         page                         (if reset-list? 0 (-> db :application :application-list-page))
-        page-size                    200
+        page-size                    1000
         new-db                       (cond-> (-> db
                                                  (assoc-in [:application :fetching-applications] true)
                                                  (assoc-in [:application :fetching-next-page] (not reset-list?))
