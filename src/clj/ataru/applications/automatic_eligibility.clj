@@ -78,9 +78,9 @@
                        " not found"))))
     hakukohteet))
 
-(defn- get-ylioppilas?
+(defn- get-ylioppilas-tai-ammatillinen?
   [suoritus-service application]
-  (suoritus-service/ylioppilas? suoritus-service (:person-oid application)))
+  (suoritus-service/ylioppilas-tai-ammatillinen? suoritus-service (:person-oid application)))
 
 (defn- query-eligibility-automatically-set?
   [connection application hakukohde]
@@ -153,13 +153,13 @@
    ohjausparametrit
    now
    hakukohteet
-   ylioppilas?
+   ylioppilas-tai-ammatillinen?
    eligibility-automatically-set?]
   (when (automatic-eligibility-if-ylioppilas-in-use? haku ohjausparametrit now)
     (->> hakukohteet
          (filter :ylioppilastutkintoAntaaHakukelpoisuuden)
          (keep (fn [hakukohde]
-                 (cond ylioppilas?
+                 (cond ylioppilas-tai-ammatillinen?
                        {:from        "unreviewed"
                         :to          "eligible"
                         :application application
@@ -181,25 +181,25 @@
    {:keys [ohjausparametrit-service
            tarjonta-service
            suoritus-service]}]
-  (let [application      (get-application application-id)
-        haku             (get-haku tarjonta-service application)
-        ohjausparametrit (get-ohjausparametrit ohjausparametrit-service
-                                               application)
-        now              (time/now)
-        hakukohteet      (get-hakukohteet tarjonta-service application)
-        ylioppilas?      (get-ylioppilas? suoritus-service application)]
+  (let [application                  (get-application application-id)
+        haku                         (get-haku tarjonta-service application)
+        ohjausparametrit             (get-ohjausparametrit ohjausparametrit-service
+                                       application)
+        now                          (time/now)
+        hakukohteet                  (get-hakukohteet tarjonta-service application)
+        ylioppilas-tai-ammatillinen? (get-ylioppilas-tai-ammatillinen? suoritus-service application)]
     (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}
                                {:isolation :serializable}]
       (doseq [update (automatic-eligibility-if-ylioppilas
-                      application
-                      haku
-                      ohjausparametrit
-                      now
-                      hakukohteet
-                      ylioppilas?
-                      (partial query-eligibility-automatically-set?
-                               connection
-                               application))]
+                       application
+                       haku
+                       ohjausparametrit
+                       now
+                       hakukohteet
+                       ylioppilas-tai-ammatillinen?
+                       (partial query-eligibility-automatically-set?
+                         connection
+                         application))]
         (update-application-hakukohde-review connection update))))
   {:transition {:id :final}})
 
@@ -221,7 +221,7 @@
 (defn start-automatic-eligibility-if-ylioppilas-job-job-step
   [{:keys [last-run-long]} job-runner]
   (let [now         (time/now)
-        suoritukset (suoritus-service/ylioppilas-suoritukset-modified-since
+        suoritukset (suoritus-service/ylioppilas-ja-ammatilliset-suoritukset-modified-since
                      (:suoritus-service job-runner)
                      (coerce/from-long last-run-long))]
     (doseq [application-id (get-application-ids suoritukset)]
