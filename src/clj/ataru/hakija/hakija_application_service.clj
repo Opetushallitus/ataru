@@ -202,27 +202,36 @@
     (cond
       (and (some? (:virkailija-secret application))
            (nil? virkailija-secret))
-      {:passed? false :failures ["Tried to edit application with invalid virkailija secret."]}
+      {:passed? false
+       :failures ["Tried to edit application with invalid virkailija secret."]
+       :code :internal-server-error}
 
       (and (:secret application)
            virkailija-secret)
-      {:passed? false :failures ["Tried to edit hakemus with both virkailija and hakija secret."]}
+      {:passed? false
+       :failures ["Tried to edit hakemus with both virkailija and hakija secret."]
+       :code :internal-server-error}
 
       (and (:haku application)
            (empty? (:hakukohde application)))
-      {:passed? false :failures ["Hakukohde must be specified"]}
+      {:passed? false
+       :failures ["Hakukohde must be specified"]
+       :code :internal-server-error}
 
       (and (not is-modify?)
            (nil? virkailija-secret)
            (some #(not (:on (:hakuaika %))) applied-hakukohteet))
       (do
         (log-late-submitted-application application now)
-        {:passed? false :failures ["Application period is not open."]})
+        {:passed? false
+         :failures ["Application period is not open."]
+         :code :application-period-closed})
 
       (not-empty edited-cannot-edit-questions)
       {:passed?  false
        :failures (into {} (map #(vector % "Cannot edit answer to question")
-                               edited-cannot-edit-questions))}
+                               edited-cannot-edit-questions))
+       :code :internal-server-error}
 
       (not (:passed? validation-result))
       validation-result

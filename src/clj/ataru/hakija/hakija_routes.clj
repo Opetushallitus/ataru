@@ -179,13 +179,13 @@
       :summary "Submit application"
       :body [application ataru-schema/Application]
       (match (hakija-application-service/handle-application-submit
-              tarjonta-service
-              job-runner
-              organization-service
-              ohjausparametrit-service
-              application)
-             {:passed? false :failures failures}
-             (response/bad-request {:failures failures})
+               tarjonta-service
+               job-runner
+               organization-service
+               ohjausparametrit-service
+               application)
+             {:passed? false :failures failures :code code}
+             (response/bad-request {:failures failures :code code})
 
              {:passed? true :id application-id}
              (response/ok {:id application-id})))
@@ -193,13 +193,13 @@
       :summary "Edit application"
       :body [application ataru-schema/Application]
       (match (hakija-application-service/handle-application-edit
-              tarjonta-service
-              job-runner
-              organization-service
-              ohjausparametrit-service
-              application)
-             {:passed? false :failures failures}
-             (response/bad-request {:failures failures})
+               tarjonta-service
+               job-runner
+               organization-service
+               ohjausparametrit-service
+               application)
+             {:passed? false :failures failures :code code}
+             (response/bad-request {:failures failures :code code})
 
              {:passed? true :id application-id}
              (response/ok {:id application-id})))

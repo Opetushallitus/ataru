@@ -242,4 +242,5 @@
      (merge
        (when (not-empty extra-answers) {:extra-answers extra-answers})
        failed-results
-       failed-meta-fields)}))
+       failed-meta-fields)
+     :code :application-validation-failed-error}))
