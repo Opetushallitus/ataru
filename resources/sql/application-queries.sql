@@ -587,13 +587,6 @@ SELECT
 FROM application_hakukohde_attachment_reviews
 WHERE application_key = :application_key;
 
--- name: yesql-get-payment-obligation-for-applications
-SELECT DISTINCT ON (application_key, hakukohde) application_key, hakukohde, state
-FROM application_hakukohde_reviews
-WHERE application_key IN (:hakemus_oids)
-AND requirement = 'payment-obligation'
-ORDER BY application_key, hakukohde, id DESC;
-
 -- name: yesql-upsert-application-hakukohde-review!
 INSERT INTO application_hakukohde_reviews (application_key, requirement, state, hakukohde)
 VALUES (:application_key, :requirement, :state, :hakukohde)
@@ -703,7 +696,15 @@ SELECT
   person_oid,
   lang,
   email,
-  content
+  content,
+  (SELECT json_object_agg(hakukohde, state)
+   FROM application_hakukohde_reviews AS ahr
+   WHERE ahr.application_key = key
+     AND ahr.requirement = 'payment-obligation') AS "payment-obligations",
+  (SELECT json_object_agg(hakukohde, state)
+   FROM application_hakukohde_reviews AS ahr
+   WHERE ahr.application_key = key
+     AND ahr.requirement = 'eligibility-state') AS eligibilities
 FROM latest_applications
 JOIN application_reviews ON application_key = key
 WHERE person_oid IS NOT NULL
@@ -723,7 +724,15 @@ SELECT
   hakukohde,
   person_oid,
   content,
-  application_reviews.state
+  application_reviews.state,
+  (SELECT json_object_agg(hakukohde, state)
+   FROM application_hakukohde_reviews AS ahr
+   WHERE ahr.application_key = key
+     AND ahr.requirement = 'payment-obligation') AS "payment-obligations",
+  (SELECT json_object_agg(hakukohde, state)
+   FROM application_hakukohde_reviews AS ahr
+   WHERE ahr.application_key = key
+     AND ahr.requirement = 'eligibility-state') AS eligibilities
 FROM latest_applications
   LEFT JOIN application_reviews ON latest_applications.key = application_reviews.application_key
 WHERE created_time > :date :: DATE
