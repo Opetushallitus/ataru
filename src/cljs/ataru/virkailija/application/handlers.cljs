@@ -837,7 +837,7 @@
   :application/reset-submit-mass-information-request-state
   (fn [{:keys [db]} _]
     (let [current-application (-> db :application :selected-key)
-          application-keys    (->> @(subscribe [:application/filtered-applications])
+          application-keys    (->> @(subscribe [:application/loaded-applications])
                                    (map :key)
                                    set)]
       {:dispatch-n [[:application/set-mass-information-request-message ""]

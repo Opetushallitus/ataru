@@ -217,14 +217,14 @@
 (re-frame/reg-sub
  :application/show-mass-update-link?
  (fn [db]
-   (and (not-empty @(re-frame/subscribe [:application/filtered-applications]))
+   (and (not-empty @(re-frame/subscribe [:application/loaded-applications]))
         (contains? #{:selected-form-key :selected-haku :selected-hakukohde}
                    @(re-frame/subscribe [:application/application-list-selected-by])))))
 
 (re-frame/reg-sub
  :application/show-excel-link?
  (fn [db]
-   (and (not-empty @(re-frame/subscribe [:application/filtered-applications]))
+   (and (not-empty @(re-frame/subscribe [:application/loaded-applications]))
         (contains? #{:selected-form-key :selected-haku :selected-hakukohde :selected-hakukohderyhma}
                    @(re-frame/subscribe [:application/application-list-selected-by])))))
 
@@ -516,9 +516,8 @@
           hakukohde-selected?
           hakukohderyhma-selected?))))
 
-; TODO kill
 (re-frame/reg-sub
-  :application/filtered-applications
+  :application/loaded-applications
   (fn [db _]
     (-> db :application :applications)))
 

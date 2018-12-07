@@ -147,7 +147,7 @@
         selected-from-review-state (r/atom nil)
         selected-to-review-state   (r/atom nil)
         massamuokkaus?             (subscribe [:application/massamuutos-enabled?])
-        filtered-applications      (subscribe [:application/filtered-applications])
+        filtered-applications      (subscribe [:application/loaded-applications])
         haku-header                (subscribe [:application/list-heading-data-for-haku])
         review-state-counts        (subscribe [:state-query [:application :review-state-counts]])
         all-states                 (reduce (fn [acc [state _]]
@@ -377,7 +377,7 @@
   []
   (let [show-mass-update-link? (subscribe [:application/show-mass-update-link?])
         show-excel-link?       (subscribe [:application/show-excel-link?])
-        applications           (subscribe [:application/filtered-applications])
+        applications           (subscribe [:application/loaded-applications])
         header                 (subscribe [:application/list-heading])
         haku-header            (subscribe [:application/list-heading-data-for-haku])]
     [:div.application-handling__header
@@ -1797,7 +1797,7 @@
         total-count             (subscribe [:application/total-application-count])
         loaded-count            (subscribe [:application/loaded-applications-count])
         filtered-count          (subscribe [:application/filtered-applications-count])
-        applications            (subscribe [:application/filtered-applications])
+        applications            (subscribe [:application/loaded-applications])
         fetching                (subscribe [:state-query [:application :fetching-applications]])
         fetching-next-page      (subscribe [:state-query [:application :fetching-next-page]])
         expanded                (subscribe [:state-query [:application :application-list-expanded?]])]
