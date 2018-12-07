@@ -9,7 +9,6 @@
       (let [states (->> (application-states/attachment-reviews-with-no-requirements application)
                         (filter #(or (nil? selected-hakukohteet) (contains? selected-hakukohteet (:hakukohde %))))
                         (map :state))]
-        ;(println states-to-include "x" states "x" selected-hakukohteet "x" (application-states/attachment-reviews-with-no-requirements application))
         (not (empty? (clojure.set/intersection
                        states-to-include
                        (set states)))))))
@@ -101,7 +100,6 @@
   [applications {:keys [selected-hakukohteet attachment-states-to-include processing-states-to-include
                         selection-states-to-include filters]}]
   (let [selected-hakukohteet-set         (when selected-hakukohteet (set selected-hakukohteet))
-        ; TODO not necessary if no filtering for: :language-requirement :degree-requirement :eligibility-state :payment-obligation:
         applications-with-requirements   (map
                                            #(assoc % :application-hakukohde-reviews (application-states/get-all-reviews-for-all-requirements %))
                                            applications)
