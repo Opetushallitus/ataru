@@ -24,23 +24,6 @@
   :application/hakukohteet-wo-applicable-base-education
   (fn [db _] (hakukohteet-wo-applicable-base-education db)))
 
-(re-frame/reg-sub
-  :application/applicable-base-educations
-  (fn [db [_ oid]]
-    (let [lang    (get-in db [:form :selected-language] :fi)
-          options (->> (get-in db [:form :content])
-                       util/flatten-form-fields
-                       (filter #(= "higher-completed-base-education" (:id %)))
-                       first
-                       :options)]
-      (->> (get-in db [:form :tarjonta :hakukohteet])
-           (some #(when (= oid (:oid %)) %))
-           :applicable-base-educations
-           (map (fn [v]
-                  (some #(when (= v (:value %))
-                           (get-in % [:label lang]))
-                        options)))))))
-
 (defn pohjakoulutusristiriita [field-descriptor]
   [:div.application__wrapper-element
    [:div.application__wrapper-heading
@@ -60,13 +43,7 @@
           [:p.application__pohjakoulutusristiriita-hakukohde-label
            @(re-frame/subscribe [:application/hakukohde-label oid])]
           [:p.application__pohjakoulutusristiriita-hakukohde-description
-           @(re-frame/subscribe [:application/hakukohde-description oid])]
-          [:p.application__pohjakoulutusristiriita-hakukohde-applicable-base-education
-           [:span.application__pohjakoulutusristiriita-hakukohde-applicable-base-education-label
-            (get-translation :pohjakoulutusvaatimus) ": "]
-           (clojure.string/join
-            ", "
-            @(re-frame/subscribe [:application/applicable-base-educations oid]))]]))]
+           @(re-frame/subscribe [:application/hakukohde-description oid])]]))]
      [:div.application__pohjakoulutusristiriita-hakukohteet-link
       [:a {:href "#scroll-to-hakukohteet"}
        (get-translation :muokkaa-hakukohteita)]]]]])

@@ -236,9 +236,9 @@ You will receive a confirmation of your application to your email."}
    :no-hakukohde-search-hits                    {:fi "Ei hakutuloksia"
                                                  :en "No search results found"
                                                  :sv "Inga sökresultat"}
-   :not-applicable-for-hakukohteet              {:fi "Ilmoittamasi pohjakoulutuksen perusteella et voi tulla valituksi seuraaviin hakukohteisiin"
-                                                 :sv "På basis av den grundutbildning u har angett, kan du inte antas till följande ansökningsmål"
-                                                 :en "You cannot be admitted to the following programmes on the basis of your educational background"}
+   :not-applicable-for-hakukohteet              {:fi "Huomaathan, että pohjakoulutuksesi perusteella et ole halukelpoinen seuraaviin hakukohteisiin. Tarkista hakukelpoisuusvaatimukset hakukohteen valintaperusteista."
+                                                 :sv "Märk, att du på basis av din grundutbildning inte är behörig att söka till detta ansökningsmål. Kontrollera behörighetskraven för ansökan i ansökningsmålets antagningsgrunder."
+                                                 :en "Please note that the education you have given does not provide eligibility for these study programmes. Please check the required eligibility from the study programme’s admission criteria."}
    :not-editable-application-period-ended       {:fi "Tämä hakutoive ei ole muokattavissa koska sen hakuaika on päättynyt."
                                                  :sv "Ansökningsmålet kan inte bearbetas eftersom ansökningstiden har utgått."
                                                  :en "You can't modify this application option because the application period has ended."}
