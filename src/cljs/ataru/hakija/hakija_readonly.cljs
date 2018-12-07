@@ -21,6 +21,9 @@
                                                                        answers->read-only-format]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
+(defn- from-multi-lang [text lang]
+  (util/non-blank-val text [lang :fi :sv :en]))
+
 (defn- split-if-string [s]
   (if (string? s)
     (clojure.string/split s #"\s*,\s*")
@@ -38,7 +41,8 @@
         answer (get-in application [:answers id])]
     [:div.application__form-field
      [:label.application__form-field-label
-      (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
+      (str (from-multi-lang (:label field-descriptor) lang)
+           (required-hint field-descriptor))]
      (if @(subscribe [:application/cannot-view? id])
        [:div.application__text-field-paragraph "***********"]
        [:div.application__readonly-text
@@ -77,7 +81,8 @@
                      (-> application :answers answer-key :values))]
     [:div.application__form-field
      [:label.application__form-field-label
-      (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
+      (str (from-multi-lang (:label field-descriptor) lang)
+           (required-hint field-descriptor))]
      [attachment-list values]]))
 
 (declare field)
@@ -92,7 +97,7 @@
     (fn [content application lang children]
       [:div.application__wrapper-element
        [:div.application__wrapper-heading
-        [:h2 (-> content :label lang)]
+        [:h2 (from-multi-lang (:label content) lang)]
         [scroll-to-anchor content]]
        (into [:div.application__wrapper-contents]
          (child-fields children application lang @ui nil))])))
@@ -109,7 +114,8 @@
     (fn [content application lang children]
       (let [groups-amount (->> content :id keyword (get @ui) :count)]
         [:div.application__question-group.application__read-only
-         [:p.application__read-only-heading-text (-> content :label lang)]
+         [:p.application__read-only-heading-text
+          (from-multi-lang (:label content) lang)]
          [:div
           (for [idx (range groups-amount)]
             ^{:key (str "question-group-row-" idx)}
@@ -152,17 +158,21 @@
                            (nth question-group-idx))]
     [:div.application__form-field
      [:label.application__form-field-label
-      (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
+      (str (from-multi-lang (:label field-descriptor) lang)
+           (required-hint field-descriptor))]
      [:table.application__readonly-adjacent
       [:thead
        (into [:tr]
          (for [child children]
-           [:th.application__readonly-adjacent--header (str (-> child :label lang)) (required-hint field-descriptor)]))]
+           [:th.application__readonly-adjacent--header
+            (str (from-multi-lang (:label child) lang)
+                 (required-hint field-descriptor))]))]
       [fieldset-answer-table fieldset-answers]]]))
 
 (defn- selectable [content application lang question-group-idx]
   [:div.application__form-field
-   [:div.application__form-field-label (some (:label content) [lang :fi :sv :en])]
+   [:div.application__form-field-label
+    (from-multi-lang (:label content) lang)]
    [:div.application-handling__nested-container
     (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
 
@@ -177,7 +187,8 @@
         (for [option selected-options]
           ^{:key (:value option)}
           [:div
-           [:p.application__text-field-paragraph (some (:label option) [lang :fi :sv :en])]
+           [:p.application__text-field-paragraph
+            (from-multi-lang (:label option) lang)]
            (when (some #(visible? ui %) (:followups option))
              [:div.application-handling__nested-container
               (for [followup (:followups option)]

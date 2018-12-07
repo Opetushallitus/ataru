@@ -3,6 +3,7 @@
             [reagent.core :as reagent]
             [clojure.string :as string]
             [goog.string :as s]
+            [ataru.util :as util]
             [ataru.cljs-util :refer [get-translation get-virkailija-translation]])
   (:import (goog.html.sanitizer HtmlSanitizer)))
 
@@ -133,7 +134,8 @@
   (if (sequential? values)
     (map #(replace-with-option-label % options lang) values)
     (let [option (some #(when (= values (:value %)) %) options)]
-      (get-in option [:label lang] values))))
+      (or (util/non-blank-val (:label option) [lang :fi :sv :en])
+          values))))
 
 (defn predefined-value-answer?
   "Does the answer have predefined values? Form elements like dropdowns
