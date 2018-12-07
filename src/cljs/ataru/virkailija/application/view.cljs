@@ -1253,39 +1253,49 @@
          {:event-type "modification-link-sent"}
          (get-virkailija-translation :confirmation-sent)
 
-         {:subject _ :message message :message-type message-type}
+         {:subject _ :message _ :message-type message-type}
          [:div.application-handling__multi-line-event-caption
-          [:span.application-handling__event-caption--inner
+          [:span.application-handling__event-caption--inner.application-handling__event-caption-modify-event
+           {:on-click #(swap! show-details? not)}
            (str
-             (if (= message-type "mass-information-request")
-               (get-virkailija-translation :mass-information-request-sent)
-               (get-virkailija-translation :information-request-sent))
-             " ")
-           (virkailija-initials-span event)]
-          [:span.application-handling__event-caption--inner.application-handling__event-caption--extra-info (str "\"" message "\"")]]
+            (if (= message-type "mass-information-request")
+              (get-virkailija-translation :mass-information-request-sent)
+              (get-virkailija-translation :information-request-sent))
+            " ")
+           (virkailija-initials-span event)
+           (if @show-details?
+             [:i.zmdi.zmdi-chevron-up.application-handling__event-caption-chevron]
+             [:i.zmdi.zmdi-chevron-down.application-handling__event-caption-chevron])]]
 
          :else (get-virkailija-translation :unknown)))
 
 (defn event-row
   [_]
   (let [show-details? (r/atom false)
-        lang (subscribe [:editor/virkailija-lang])]
+        lang          (subscribe [:editor/virkailija-lang])]
     (fn [event]
       [:div.application-handling__event-row
-       [:span.application-handling__event-timestamp
-        (t/time->short-str (or (:time event) (:created-time event)))]
-       [:div.application-handling__event-caption-container
+       [:div.application-handling__event-row--header
+        [:span.application-handling__event-timestamp
+         (t/time->short-str (or (:time event) (:created-time event)))]
         [:div.application-handling__event-caption
-         (event-caption event show-details? @lang)]
-        (when @show-details?
-          [:ul.application-handling__event-row-details
-           (for [[key field] @(subscribe [:application/changes-made-for-event (:id event)])]
-             [:li
-              {:on-click (fn [e]
-                           (.stopPropagation e)
-                           (dispatch [:application/highlight-field key]))
-               :key      (str "event-list-row-for-" (:id event) "-" key)}
-              [:a (:label field)]])])]])))
+         (event-caption event show-details? @lang)]]
+       (when @show-details?
+         (if (or (= (:event-type event) "updated-by-applicant")
+                 (= (:event-type event) "updated-by-virkailija"))
+           [:ul.application-handling__event-row-details
+            (for [[key field] @(subscribe [:application/changes-made-for-event (:id event)])]
+              [:li
+               {:on-click (fn [e]
+                            (.stopPropagation e)
+                            (dispatch [:application/highlight-field key]))
+                :key      (str "event-list-row-for-" (:id event) "-" key)}
+               [:a (:label field)]])]
+           [:div.application-handling__event-row--message
+            [:span.application-handling__event-row--message-subject
+             (:subject event)]
+            [:span.application-handling__event-row--message-body
+             (:message event)]]))])))
 
 (defn application-review-events []
   [:div.application-handling__event-list
