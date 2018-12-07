@@ -30,14 +30,19 @@
 
 (reg-event-db
   :application/hakukohde-query-process
-  (fn [db [_ hakukohde-query]]
+  (fn hakukohde-query-process [db [_ hakukohde-query]]
     (if (= hakukohde-query (get-in db [:application :hakukohde-query]))
       (let [lang              (-> db :form :selected-language)
-            order-by-hakuaika (fn [hk] (not @(subscribe [:application/hakukohde-editable? (:value hk)])))
+            order-by-hakuaika (if (some? (get-in db [:application :virkailija-secret]))
+                                #{}
+                                (->> (get-in db [:form :tarjonta :hakukohteet])
+                                     (remove #(:on (:hakuaika %)))
+                                     (map :oid)
+                                     set))
             order-by-name     #(util/non-blank-val (:label %) [lang :fi :sv :en])
             hakukohde-options (->> (hakukohteet-field db)
                                    :options
-                                   (sort-by (juxt order-by-hakuaika
+                                   (sort-by (juxt (comp order-by-hakuaika :value)
                                                   order-by-name)))
             query-parts       (map string/lower-case (string/split hakukohde-query #"\s+"))
             results           (if (or (string/blank? hakukohde-query)
