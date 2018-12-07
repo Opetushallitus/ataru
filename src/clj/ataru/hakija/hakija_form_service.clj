@@ -68,8 +68,8 @@
            (time/before? (time/now))))
 
 (defn- editing-allowed-by-hakuaika?
-  [field hakukohteet application-in-processing-state?]
-  (let [hakuaika            (hakuaika/select-hakuaika-for-field field hakukohteet)
+  [field hakuajat application-in-processing-state?]
+  (let [hakuaika            (hakuaika/select-hakuaika-for-field field hakuajat)
         hakuaika-start      (some-> hakuaika :start t/from-long)
         hakuaika-end        (some-> hakuaika :end t/from-long)
         attachment-edit-end (hakuaika/attachment-edit-end hakuaika)
@@ -89,16 +89,16 @@
                         (keyword (:id field)))))))))
 
 (defn- uneditable?
-  [field hakukohteet roles application-in-processing-state?]
+  [field hakuajat roles application-in-processing-state?]
   (not (and (or (and (form-role/virkailija? roles)
                      (not (form-role/with-henkilo? roles)))
                 (not (contains? editing-forbidden-person-info-field-ids (keyword (:id field)))))
             (or (form-role/virkailija? roles)
                 (if (custom-deadline field)
                   (editing-allowed-by-custom-deadline? field)
-                  (editing-allowed-by-hakuaika? field hakukohteet application-in-processing-state?)))
+                  (editing-allowed-by-hakuaika? field hakuajat application-in-processing-state?)))
             (or (form-role/virkailija? roles)
-                (not (and (nil? hakukohteet)
+                (not (and (empty? (:uniques hakuajat))
                           application-in-processing-state?))))))
 
 (s/defn ^:always-validate flag-uneditable-and-unviewable-fields :- s/Any
@@ -106,22 +106,23 @@
    hakukohteet :- s/Any
    roles :- [form-role/FormRole]
    application-in-processing-state? :- s/Bool]
-  (update form :content
-          (fn [content]
-            (clojure.walk/prewalk
-             (fn [field]
-               (if (= "formField" (:fieldClass field))
-                 (let [cannot-view? (and (contains? viewing-forbidden-person-info-field-ids
-                                                    (keyword (:id field)))
-                                         (not (form-role/virkailija? roles)))
-                       cannot-edit? (or cannot-view?
-                                        (uneditable? field hakukohteet roles application-in-processing-state?))
-                       field        (assoc field
-                                           :cannot-view cannot-view?
-                                           :cannot-edit cannot-edit?)]
-                   field)
-                 field))
-             content))))
+  (let [hakuajat (hakuaika/index-hakuajat hakukohteet)]
+    (update form :content
+            (fn [content]
+              (clojure.walk/prewalk
+               (fn [field]
+                 (if (= "formField" (:fieldClass field))
+                   (let [cannot-view? (and (contains? viewing-forbidden-person-info-field-ids
+                                                      (keyword (:id field)))
+                                           (not (form-role/virkailija? roles)))
+                         cannot-edit? (or cannot-view?
+                                          (uneditable? field hakuajat roles application-in-processing-state?))
+                         field        (assoc field
+                                             :cannot-view cannot-view?
+                                             :cannot-edit cannot-edit?)]
+                     field)
+                   field))
+               content)))))
 
 (s/defn ^:always-validate remove-required-hakija-validator-if-virkailija :- s/Any
   [form :- s/Any
