@@ -117,7 +117,6 @@
   (fn [db _]
     (close-application db)))
 
-; TODO REMOVE BEGIN?
 (defn- processing-state-counts-for-application
   [{:keys [application-hakukohde-reviews]} included-hakukohde-oid-set]
   (->> (or
@@ -155,8 +154,6 @@
                                             (filter #(contains? included-hakukohde-oid-set (:hakukohde %)))))))
     (map-vals-to-zero review-states/attachment-hakukohde-review-types-with-no-requirements)
     applications))
-
-; TODO REMOVE END?
 
 (defn- update-review-field-of-selected-application-in-list
   [application selected-application-key field value]
@@ -211,7 +208,6 @@
           (update-in [:application :review] assoc field value)
           (assoc-in [:application :applications] updated-applications)
           (assoc-in [:application :review-state-counts] (review-state-counts updated-applications))))))
-
 
 (reg-event-db
   :application/update-review-field
