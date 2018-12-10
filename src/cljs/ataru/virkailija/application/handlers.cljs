@@ -117,29 +117,6 @@
   (fn [db _]
     (close-application db)))
 
-(defn- processing-state-counts-for-application
-  [{:keys [application-hakukohde-reviews]} included-hakukohde-oid-set]
-  (->> (or
-         (->> application-hakukohde-reviews
-              (filter (fn [review]
-                        (and
-                          (= "processing-state" (:requirement review))
-                          (or (nil? included-hakukohde-oid-set)
-                              (contains? included-hakukohde-oid-set (:hakukohde review))))))
-              (not-empty))
-         [{:requirement "processing-state" :state review-states/initial-application-hakukohde-processing-state}])
-       (map :state)
-       (frequencies)))
-
-(defn review-state-counts
-  [applications]
-  (let [included-hakukohde-oid-set @(subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])]
-    (reduce
-      (fn [acc application]
-        (merge-with + acc (processing-state-counts-for-application application included-hakukohde-oid-set)))
-      {}
-      applications)))
-
 (defn- map-vals-to-zero [m]
   (into {} (for [[k v] m] [k 0])))
 
@@ -206,16 +183,16 @@
           (assoc-in [:application :applications] updated-applications))
       (-> db
           (update-in [:application :review] assoc field value)
-          (assoc-in [:application :applications] updated-applications)
-          (assoc-in [:application :review-state-counts] (review-state-counts updated-applications))))))
+          (assoc-in [:application :applications] updated-applications)))))
 
 (reg-event-db
   :application/update-review-field
   (fn [db [_ field value]]
-    (let [hakukohde-oids       (-> db :application :selected-review-hakukohde-oids)]
-      (-> (reduce (fn [db oid] (update-review-field db field value oid)) db hakukohde-oids)
-          ;(filter-applications)
-          ))))
+    (let [hakukohde-oids (-> db :application :selected-review-hakukohde-oids)]
+      (reduce
+        (fn [db oid] (update-review-field db field value oid))
+        db
+        hakukohde-oids))))
 
 (defn- update-attachment-hakukohde-review-field-of-selected-application-in-list
   [application selected-application-key hakukohde attachment-key state]
