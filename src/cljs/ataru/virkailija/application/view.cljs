@@ -2,7 +2,7 @@
   (:require [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]
             [ataru.cljs-util :as cljs-util :refer [get-virkailija-translation]]
-            [ataru.translations.texts :refer [virkailija-texts]]
+            [ataru.translations.texts :refer [virkailija-texts state-translations]]
             [ataru.util :as util]
             [ataru.virkailija.application.application-search-control :refer [application-search-control]]
             [ataru.virkailija.application.application-subs]
@@ -24,8 +24,25 @@
             [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn- icon-check []
-  [:img.application-handling__review-state-selected-icon
-   {:src "/lomake-editori/images/icon_check.png"}])
+  [:span.application-handling__review-state-selected-icon.zmdi-hc-stack.zmdi-hc-lg
+  [:i.zmdi.zmdi-check.zmdi-hc-stack-1x]])
+
+(defn- icon-many-checked []
+  [:span.application-handling__review-state-selected-icon.zmdi-hc-stack.zmdi-hc-lg
+   [:i.zmdi.zmdi-check-all.zmdi-hc-stack-1x]])
+
+(defn- icon-unselected []
+  [:span.application-handling__review-state-selected-icon.zmdi-hc-stack.zmdi-hc-lg
+    [:i.zmdi.zmdi-hc-stack-1x]])
+
+(defn- icon-multi-check []
+  [:span.application-handling__review-state-selected-icon.zmdi-hc-stack.zmdi-hc-lg
+    [:i.zmdi.zmdi-square-o.zmdi-hc-stack-1x]
+    [:i.zmdi.zmdi-check.zmdi-hc-stack-1x]])
+
+(defn- icon-select []
+  [:span.application-handling__review-state-selected-icon.zmdi-hc-stack.zmdi-hc-lg
+    [:i.zmdi.zmdi-square-o.zmdi-hc-stack-1x]])
 
 (defn excel-download-link
   [applications selected-hakukohde selected-hakukohderyhma filename]
@@ -91,7 +108,7 @@
 
 (defn- mass-review-state-selected-row
   [on-click label]
-  [:div.application-handling__review-state-row.application-handling__review-state-row--mass-update.application-handling__review-state-selected-row
+  [:div.application-handling__review-state-row.application-handling__review-state-row--mass-update.application-handling__review-state-row--selected
    {:on-click on-click}
    [icon-check] label])
 
@@ -107,7 +124,7 @@
       [:div.application-handling__review-state-row.application-handling__review-state-row--mass-update
        {:on-click (when-not disabled? on-click)
         :class    (when disabled? "application-handling__review-state-row--disabled")}
-       label-with-count])))
+       [icon-unselected] label-with-count])))
 
 (defn- opened-mass-review-state-list
   [current-state states review-state-counts disable-empty-rows?]
@@ -173,10 +190,9 @@
               [:h4.application-handling__mass-edit-review-states-heading (get-virkailija-translation :from-state)]
 
               (if @from-list-open?
-                [:div.application-handling__review-state-list-opened-anchor
-                 (into [:div.application-handling__review-state-list-opened
-                        {:on-click #(swap! from-list-open? not)}]
-                       (opened-mass-review-state-list selected-from-review-state from-states @review-state-counts true))]
+                (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
+                       {:on-click #(swap! from-list-open? not)}]
+                  (opened-mass-review-state-list selected-from-review-state from-states @review-state-counts true))
                 (mass-review-state-selected-row
                   (fn []
                     (swap! from-list-open? not)
@@ -186,10 +202,9 @@
               [:h4.application-handling__mass-edit-review-states-heading (get-virkailija-translation :to-state)]
 
               (if @to-list-open?
-                [:div.application-handling__review-state-list-opened-anchor
-                 (into [:div.application-handling__review-state-list-opened
-                        {:on-click #(when (-> from-states (keys) (count) (pos?)) (swap! to-list-open? not))}]
-                       (opened-mass-review-state-list selected-to-review-state all-states @review-state-counts false))]
+                (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
+                       {:on-click #(when (-> from-states (keys) (count) (pos?)) (swap! to-list-open? not))}]
+                  (opened-mass-review-state-list selected-to-review-state all-states @review-state-counts false))
                 (mass-review-state-selected-row
                   (fn []
                     (swap! to-list-open? not)
@@ -220,9 +235,7 @@
                                 (toggle-mass-update-popup-visibility element-visible? submit-button-state false)
                                 (reset! from-list-open? false)
                                 (reset! to-list-open? false)))}
-                 (get-virkailija-translation :confirm-change)]
-
-                [:div])])])))))
+                 (get-virkailija-translation :confirm-change)])])])))))
 
 (declare application-information-request-contains-modification-link)
 
@@ -465,7 +478,7 @@
      [:span.application-handling_list-row-attachment-state-counts.unchecked (:unchecked states)])])
 
 (defn applications-hakukohde-rows
-  [review-settings application selected-hakukohde filtered-hakukohde attachment-states]
+  [review-settings application review-hakukohde-oids filtered-hakukohde attachment-states]
   (let [direct-form-application?      (empty? (:hakukohde application))
         application-hakukohde-oids    (if direct-form-application?
                                         ["form"]
@@ -495,7 +508,7 @@
                        "application-handling__list-row-hakukohde--not-in-selection")}
              (when (not direct-form-application?)
                [:span.application-handling__application-hakukohde-cell
-                {:class    (when (= selected-hakukohde hakukohde-oid)
+                {:class    (when (contains? (set review-hakukohde-oids) hakukohde-oid)
                              "application-handling__application-hakukohde-cell--selected")
                  :on-click (fn [evt]
                              (.preventDefault evt)
@@ -553,19 +566,19 @@
             hakukohteet)))
 
 (defn application-list-row [application selected?]
-  (let [selected-time-column   (subscribe [:state-query [:application :selected-time-column]])
-        day-date-time          (-> (get application @selected-time-column)
-                                   (t/str->googdate)
-                                   (t/time->str)
-                                   (clojure.string/split #"\s"))
-        day                    (first day-date-time)
-        date-time              (->> day-date-time (rest) (clojure.string/join " "))
-        applicant              (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
-        review-settings        (subscribe [:state-query [:application :review-settings :config]])
-        selected-hakukohde     (subscribe [:state-query [:application :selected-review-hakukohde]])
-        filtered-hakukohde     (subscribe [:state-query [:application :selected-hakukohde]])
-        attachment-states      (application-attachment-states application)
-        form-attachment-states (:form attachment-states)]
+  (let [selected-time-column    (subscribe [:state-query [:application :selected-time-column]])
+        day-date-time           (-> (get application @selected-time-column)
+                                    (t/str->googdate)
+                                    (t/time->str)
+                                    (clojure.string/split #"\s"))
+        day                     (first day-date-time)
+        date-time               (->> day-date-time (rest) (clojure.string/join " "))
+        applicant               (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
+        review-settings         (subscribe [:state-query [:application :review-settings :config]])
+        selected-hakukohde-oids (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+        filtered-hakukohde      (subscribe [:state-query [:application :selected-hakukohde]])
+        attachment-states       (application-attachment-states application)
+        form-attachment-states  (:form attachment-states)]
     [:div.application-handling__list-row
      {:on-click #(select-application (:key application) @filtered-hakukohde)
       :class    (clojure.string/join " " [(when selected?
@@ -584,7 +597,7 @@
       [:span.application-handling__list-row--state]
       (when (:selection-state @review-settings true)
         [:span.application-handling__hakukohde-selection-cell])]
-     [applications-hakukohde-rows @review-settings application @selected-hakukohde @filtered-hakukohde attachment-states]]))
+     [applications-hakukohde-rows @review-settings application @selected-hakukohde-oids @filtered-hakukohde attachment-states]]))
 
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
@@ -918,26 +931,44 @@
 (defn application-contents [{:keys [form application]}]
   [readonly-contents/readonly-fields form application])
 
-(defn review-state-selected-row [on-click label]
+(defn review-state-selected-row [on-click label multiple-values?]
   (let [settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
         can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])
         enabled?          (and (not @settings-visible?) @can-edit?)]
-    [:div.application-handling__review-state-row.application-handling__review-state-selected-row
+    [:div.application-handling__review-state-row.application-handling__review-state-row--selected
      {:on-click #(when enabled? (on-click))
       :class    (if enabled?
                   "application-handling__review-state-row--enabled"
                   "application-handling__review-state-row--disabled")}
-     [icon-check] label]))
+     (if multiple-values?
+       [:span
+        [icon-many-checked]
+        [:span (get-virkailija-translation :multiple-values)]
+        ]
+       [:span
+        [icon-check]
+        [:span label]
+        ])]))
 
-(defn review-state-row [state-name current-review-state lang [review-state-id review-state-label]]
-  (if (= current-review-state review-state-id)
-    [review-state-selected-row #() (get review-state-label lang)]
+(defn review-state-row [state-name current-review-state lang multiple-values? [review-state-id review-state-label]]
+  (if (or (= current-review-state review-state-id)
+          multiple-values?)
+    [review-state-selected-row #() (get review-state-label lang) multiple-values?]
     [:div.application-handling__review-state-row
-     {:on-click #(dispatch [:application/update-review-field state-name review-state-id])}
-     (get review-state-label lang)]))
+     {:on-click (fn []
+                  (let [selected-hakukohde-oids @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])]
+                    (dispatch [:application/update-review-field state-name review-state-id])))}
+     [icon-unselected] (get review-state-label lang)]))
 
-(defn opened-review-state-list [state-name current-state all-states lang]
-  (mapv (partial review-state-row state-name (or @current-state (ffirst all-states)) lang) all-states))
+(defn opened-review-state-list [state-name current-state all-states lang multiple-values?]
+  (let [current-state (if (and (not multiple-values?)
+                               (not current-state))
+                        (ffirst all-states)
+                        current-state)
+        review-rows (mapv (fn [state] [review-state-row state-name current-state lang false state]) all-states)]
+    (if multiple-values?
+      (cons [review-state-row state-name current-state lang true nil] review-rows)
+      review-rows)))
 
 (defn- toggle-review-list-visibility [list-kwd]
   (dispatch [:application/toggle-review-list-visibility list-kwd]))
@@ -971,46 +1002,54 @@
     [:i.zmdi.zmdi-spinner.spin]))
 
 (defn- opened-review-hakukohde-list-row
-  [selected-hakukohde-oid hakukohde-oid]
-  (let [selected? (= selected-hakukohde-oid hakukohde-oid)]
-    [:div.application-handling__review-state-row.application-handling__review-state-row-hakukohde
-     {:data-hakukohde-oid hakukohde-oid
-      :class              (when selected? "application-handling__review-state-selected-row-hakukohde")
-      :on-click           #(dispatch [:application/select-review-hakukohde hakukohde-oid])}
-     (when selected? [icon-check])
-     [hakukohde-and-tarjoaja-name hakukohde-oid]]))
-
-(defn- selected-review-hakukohde-row
-  [selected-hakukohde-oid on-click application-hakukohde-oids]
-  (let [application-has-multiple-hakukohde? (< 1 (count application-hakukohde-oids))
-        settings-visible?                   (subscribe [:state-query [:application :review-settings :visible?]])]
-    [:div.application-handling__review-state-row.application-handling__review-state-row-hakukohde.application-handling__review-state-selected-row-hakukohde
-     {:on-click (when (and application-has-multiple-hakukohde?
-                           (not @settings-visible?))
-                  on-click)
-      :class (str (when-not application-has-multiple-hakukohde? "application-handling__review-state-row-hakukohde--single-option")
-                  (when-not @settings-visible? " application-handling__review-state-row--enabled"))}
-     [icon-check]
-     [hakukohde-and-tarjoaja-name  selected-hakukohde-oid]]))
+  [toggle-list-open list-opened hakukohde-oid disabled?]
+  (let [selected-hakukohde-oids (subscribe [:state-query [:application :selected-review-hakukohde-oids]])]
+    (fn []
+      (let [selected? (contains? (set @selected-hakukohde-oids) hakukohde-oid)]
+        (when (or @list-opened
+                  selected?)
+          [:div.application-handling__review-state-row.application-handling__review-state-row-hakukohde
+           {:data-hakukohde-oid hakukohde-oid
+            :class (when disabled?
+                     "application-handling__review-state-row--disabled")
+            :on-click (when-not disabled? (fn [event] (if @list-opened
+                                              (dispatch [:application/select-review-hakukohde hakukohde-oid])
+                                              (toggle-list-open))))}
+           (if selected?
+             (if @list-opened
+               [icon-multi-check]
+               [icon-check])
+             [icon-select])
+           [hakukohde-and-tarjoaja-name hakukohde-oid]])))))
 
 (defn- application-hakukohde-selection
   []
-  (let [selected-hakukohde-oid     (subscribe [:state-query [:application :selected-review-hakukohde]])
-        application-hakukohde-oids (subscribe [:state-query [:application :selected-application-and-form :application :hakukohde]])
-        list-opened                (subscribe [:application/review-list-visible? :hakukohde])
-        select-list-item           (partial toggle-review-list-visibility :hakukohde)]
+  (let [application-hakukohde-oids (subscribe [:state-query [:application :selected-application-and-form :application :hakukohde]])
+        list-opened                (r/atom false)
+        toggle-list-open           #(swap! list-opened not)]
     (fn []
-      (when (not-empty @application-hakukohde-oids)
-        [:div.application-handling__review-state-container.application-handling__review-state-container--columnar
-         [:div.application-handling__review-header (gstring/format "%s (%d)"
-                                                                   (get-virkailija-translation :hakukohteet)
-                                                                   (count @application-hakukohde-oids))]
-         (if @list-opened
-           [:div.application-handling__review-state-list-opened-anchor
-            (into
-              [:div.application-handling__review-state-list-opened {:on-click select-list-item}]
-              (map #(opened-review-hakukohde-list-row @selected-hakukohde-oid %) @application-hakukohde-oids))]
-           (selected-review-hakukohde-row @selected-hakukohde-oid select-list-item @application-hakukohde-oids))]))))
+      (let [hakukohde-count (count @application-hakukohde-oids)]
+        (when (not= 0 hakukohde-count)
+          [:div.application-handling__review-state-container.application-handling__review-state-container--columnar
+           (into
+             [:div.application-handling__review-state-list
+              {:class (when (not @list-opened)
+                        "application-handling__review-state-list--closed")}
+              [:div.application-handling__review-state-row.application-handling__review-state-row-hakukohde
+               {:on-click (when-not (= 1 hakukohde-count) toggle-list-open)
+                :class (when (= 1 hakukohde-count) "application-handling__review-state-row--disabled")}
+               (gstring/format "%s (%d)"
+                 (get-virkailija-translation :hakukohteet)
+                 hakukohde-count)
+               (when-not (= 1 hakukohde-count)
+                 (if @list-opened
+                   [:i.zmdi.zmdi-chevron-up.application-handling__review-state-selected-icon]
+                   [:i.zmdi.zmdi-chevron-down.application-handling__review-state-selected-icon]))]]
+             (map (fn [oid]
+                    [opened-review-hakukohde-list-row
+                     toggle-list-open
+                     list-opened oid
+                     (= 1 hakukohde-count)]) @application-hakukohde-oids))])))))
 
 (defn- review-settings-checkbox [setting-kwd]
   (let [checked?  (subscribe [:application/review-state-setting-enabled? setting-kwd])
@@ -1066,24 +1105,29 @@
         @notes]])))
 
 (defn- review-state-comment
-  [state-name selected-hakukohde]
-  (fn [state-name selected-hakukohde]
-    (let [review-note        (subscribe [:state-query [:application :notes selected-hakukohde state-name]])
-          selected-notes-idx (subscribe [:application/review-note-indexes-on-eligibility selected-hakukohde])
-          button-enabled?    (and (-> @review-note clojure.string/blank? not)
-                                  (or (nil? (first @selected-notes-idx))
-                                      (not= @review-note (:notes @(subscribe [:state-query [:application :review-notes
-                                                                                            (first @selected-notes-idx)]])))))]
+  [state-name]
+  (fn [state-name]
+    (let [current-hakukohteet @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+          note-state-path     (if (and (seq current-hakukohteet)
+                                       (empty? (rest current-hakukohteet)))
+                                (first current-hakukohteet)
+                                "multiple-selected")
+          review-note         (subscribe [:state-query [:application :notes note-state-path state-name]])
+          selected-notes-idx  (subscribe [:application/review-note-indexes-on-eligibility])
+          button-enabled?     (and (-> @review-note clojure.string/blank? not)
+                                   (or (nil? (first @selected-notes-idx))
+                                       (not= @review-note (:notes @(subscribe [:state-query [:application :review-notes
+                                                                                             (first @selected-notes-idx)]])))))]
       [:div.application-handling__review-state-selected-container
        [:textarea.application-handling__review-note-input
         {:value       @review-note
          :placeholder (get-virkailija-translation :rejection-reason)
          :on-change   (fn [event]
                         (let [note (.. event -target -value)]
-                          (dispatch [:state-update #(assoc-in % [:application :notes selected-hakukohde state-name] note)])))}]
+                          (dispatch [:state-update #(assoc-in % [:application :notes note-state-path state-name] note)])))}]
        [:button.application-handling__review-note-submit-button
         {:type     "button"
-         :on-click #(dispatch [:application/add-review-note @review-note state-name])
+         :on-click #(dispatch [:application/add-review-notes @review-note state-name])
          :disabled (not button-enabled?)
          :class    (if button-enabled?
                      "application-handling__review-note-submit-button--enabled"
@@ -1092,21 +1136,23 @@
        (->> @selected-notes-idx
             (map (fn [idx]
                    ^{:key (str "application-review-note-" idx)}
-                   [application-review-note idx])))
-       ])))
+                   [application-review-note idx])))])))
 
 (defn- application-hakukohde-review-input
   [label kw states]
-  (let [current-hakukohde                  (subscribe [:state-query [:application :selected-review-hakukohde]])
-        list-opened                        (subscribe [:application/review-list-visible? kw])
+  (let [current-hakukohteet                (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
         list-click                         (partial toggle-review-list-visibility kw)
+        list-opened                        (subscribe [:state-query [:application :ui/review kw]])
         settings-visible?                  (subscribe [:state-query [:application :review-settings :visible?]])
         input-visible?                     (subscribe [:application/review-state-setting-enabled? kw])
         eligibility-automatically-checked? (subscribe [:application/eligibility-automatically-checked?])
         lang                               (subscribe [:editor/virkailija-lang])]
     (fn [_ _ _]
       (when (or @settings-visible? @input-visible?)
-        (let [review-state-for-current-hakukohde (subscribe [:state-query [:application :review :hakukohde-reviews (keyword @current-hakukohde) kw]])]
+        (let [review-states-for-hakukohteet (set (doall (map (fn [oid] @(subscribe [:state-query [:application :review :hakukohde-reviews (keyword oid) kw]]))
+                                                          @current-hakukohteet)))
+              multiple-values? (< 1 (count review-states-for-hakukohteet))
+              review-state-for-current (when-not multiple-values? (first review-states-for-hakukohteet))]
           [:div.application-handling__review-state-container
            {:class (str "application-handling__review-state-container-" (name kw))}
            (when @settings-visible?
@@ -1119,20 +1165,20 @@
               [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
                {:title (get-virkailija-translation :eligibility-set-automatically)}])]
            (if @list-opened
-             [:div.application-handling__review-state-list-opened-anchor
-              (into [:div.application-handling__review-state-list-opened
+             (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
                      {:on-click list-click}]
-                    (opened-review-state-list kw review-state-for-current-hakukohde states @lang))]
-             [:div.application-handling__review-state-selected-container
+                    (opened-review-state-list kw review-state-for-current states @lang multiple-values?))
+             [:div.application-handling__review-state-list
               [review-state-selected-row
                list-click
                (application-states/get-review-state-label-by-name
                 states
-                (or @review-state-for-current-hakukohde (ffirst states))
-                @lang)]
+                (or review-state-for-current (ffirst states))
+                @lang)
+               multiple-values?]
               (when (and (= :eligibility-state kw)
-                         (= "uneligible" @review-state-for-current-hakukohde))
-                [review-state-comment kw (keyword @current-hakukohde)])])])))))
+                         (= "uneligible" review-state-for-current))
+                [review-state-comment kw])])])))))
 
 (defn- application-hakukohde-review-inputs
   [review-types]
@@ -1308,7 +1354,8 @@
      @(subscribe [:application/events-and-information-requests])))])
 
 (defn update-review-field [field convert-fn evt]
-  (let [new-value (-> evt .-target .-value)]
+  (let [new-value (-> evt .-target .-value)
+        selected-hakukohde-oids @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])]
     (dispatch [:application/update-review-field field (convert-fn new-value)])))
 
 (defn convert-score [review new-value]
@@ -1348,13 +1395,23 @@
                      (dispatch [:application/add-review-note @input-value nil]))}
         (get-virkailija-translation :add)]])))
 
+(defn application-review-notes []
+  (let [notes (subscribe [:application/review-note-indexes-excluding-eligibility])]
+    (fn []
+      [:div.application-handling__review-row--nocolumn
+       [:div.application-handling__review-header (get-virkailija-translation :notes)]
+       [application-review-note-input]
+       (->> @notes
+            (map (fn [idx]
+                   ^{:key (str "application-review-note-" idx)}
+                   [application-review-note idx])))])))
+
 (defn application-review-inputs []
   (let [review            (subscribe [:state-query [:application :review]])
         ; React doesn't like null, it leaves the previous value there, hence:
         review-field->str (fn [review field] (if-let [notes (field @review)] notes ""))
         settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
         input-visible?    (subscribe [:application/review-state-setting-enabled? :score])
-        notes             (subscribe [:application/review-note-indexes-excluding-eligibility])
         can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
     (fn []
       [:div.application-handling__review-inputs
@@ -1371,14 +1428,7 @@
             :value      (review-field->str review :score)
             :disabled   (or @settings-visible? (not @can-edit?))
             :on-change  (when-not @settings-visible?
-                          (partial update-review-field :score (partial convert-score @review)))}]])
-       [:div.application-handling__review-row--nocolumn
-        [:div.application-handling__review-header (get-virkailija-translation :notes)]
-        [application-review-note-input]
-        (->> @notes
-             (map (fn [idx]
-                    ^{:key (str "application-review-note-" idx)}
-                    [application-review-note idx])))]])))
+                          (partial update-review-field :score (partial convert-score @review)))}]])])))
 
 (defn- application-modify-link []
   (let [application-key   (subscribe [:state-query [:application :selected-key]])
@@ -1506,47 +1556,61 @@
        [:div.application-handling__resend-modify-link-confirmation-indicator]
        (get-virkailija-translation :send-edit-link-to-applicant)])))
 
-(defn- attachment-review-row [review selected-hakukohde lang]
+(defn- attachment-review-row [all-similar-attachments lang]
   (let [list-opened (r/atom false)]
-    (fn [review selected-hakukohde lang]
-      (let [attachment-key (-> review :key keyword)
-            selected-state (or (:state review)
-                               "not-checked")
-            can-edit?      (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])
-            virkailija-lang (subscribe [:editor/virkailija-lang])]
+    (fn [all-similar-attachments lang]
+      (let [all-reviews          (map first all-similar-attachments)
+            all-states           (set (map :state all-reviews))
+            multiple-values?     (seq (rest all-states))
+            review               (first all-reviews)
+            selected-hakukohteet (map second all-similar-attachments)
+            attachment-key       (-> review :key keyword)
+            selected-state       (or (when multiple-values?
+                                       "multiple-values")
+                                     (:state review)
+                                     "not-checked")
+            can-edit?            (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])
+            virkailija-lang      (subscribe [:editor/virkailija-lang])
+            review-types         (if multiple-values?
+                                   review-states/attachment-hakukohde-review-types-with-multiple-values
+                                   review-states/attachment-hakukohde-review-types)]
         [:div.application__attachment-review-row
          [:div.application__attachment-review-row-answer-information
           [:p.application__attachment-review-row-label (some #(-> review :label % not-empty) [lang :fi :sv :en])]
           (for [attachment-file (filter identity (-> review :values flatten))
                 :let [text (str (:filename attachment-file) " (" (util/size-bytes->str (:size attachment-file)) ")")]]
-            ^{:key (:key attachment-file)}
+            ^{:key (:key (str "attachment-file-" attachment-file))}
             [:div
              (if (= (:virus-scan-status attachment-file) "done")
                [:a {:href (str "/lomake-editori/api/files/content/" (:key attachment-file))}
                 text]
                text)])]
          (if @list-opened
-           [:div.application-handling__review-state-list-opened
+           [:div.application-handling__review-state-list
             (doall
-              (for [[state labels] review-states/attachment-hakukohde-review-types]
+              (for [[state labels]
+                    review-types]
                 (let [label (get labels lang)]
                   [:div.application-handling__review-state-row.application-handling__review-state-row--small
-                   {:class    (when (= state selected-state) "application-handling__review-state-selected-row application-handling__review-state-row--enabled")
-                    :on-click (fn []
-                                (swap! list-opened not)
-                                (dispatch [:application/update-attachment-review attachment-key selected-hakukohde state]))
+                   {:class    (when (= state selected-state) "application-handling__review-state-row--selected application-handling__review-state-row--enabled")
+                    :on-click (if (= state selected-state)
+                                #(swap! list-opened not)
+                                (fn []
+                                  (swap! list-opened not)
+                                  (doall (map #(dispatch [:application/update-attachment-review attachment-key % state]) selected-hakukohteet))))
                     :key      (str attachment-key label)}
-                   (when (= state selected-state) (icon-check)) label])))]
-           [:div.application-handling__review-state-row.application-handling__review-state-row--small.application-handling__review-state-selected-row
+                   (if (= state selected-state) [icon-check]
+                                                [icon-unselected]) label])))]
+           [:div.application-handling__review-state-row.application-handling__review-state-row--small.application-handling__review-state-row--selected
             {:class    (if @can-edit?
                          "application-handling__review-state-row--enabled"
                          "application-handling__review-state-row--disabled")
              :on-click #(when @can-edit? (swap! list-opened not))}
-            (icon-check)
-            (application-states/get-review-state-label-by-name review-states/attachment-hakukohde-review-types selected-state @virkailija-lang)])]))))
+            [icon-check]
+            (application-states/get-review-state-label-by-name review-types selected-state @virkailija-lang)])]))))
 
-(defn- attachment-review-area [hakukohde reviews review-positioning lang]
-  (fn [hakukohde reviews review-positioning lang]
+(defn- attachment-review-area [reviews review-positioning lang]
+  (fn [reviews review-positioning lang]
     [:div.application-handling__attachment-review-container.animated
      {:class (str (when (= :fixed review-positioning)
                     "application-handling__attachment-review-container-floating")
@@ -1557,21 +1621,24 @@
        [:div
         [:p.application-handling__attachment-review-header
          (gstring/format "%s %s (%d)"
-                         (if (= "form" hakukohde) (get-virkailija-translation :of-form) (get-virkailija-translation :of-hakukohde))
-                         (.toLowerCase (get-virkailija-translation :attachments))
-                         (count reviews))]
-        (doall
-          (for [attachment reviews]
-            ^{:key (:id attachment)}
-            [attachment-review-row attachment hakukohde lang]))])]))
+           (if (= "form" (second (first (vals reviews)))) (get-virkailija-translation :of-form) (get-virkailija-translation :of-hakukohde))
+           (.toLowerCase (get-virkailija-translation :attachments))
+           (count (keys reviews)))]
+        (doall (for [all-similar-attachments (vals reviews)]
+                 ^{:key (:key (ffirst all-similar-attachments))}
+                 [attachment-review-row all-similar-attachments lang]))])]))
 
 (defn application-review []
   (let [review-positioning      (subscribe [:state-query [:application :review-positioning]])
         settings-visible        (subscribe [:state-query [:application :review-settings :visible?]])
         show-attachment-review? (r/atom false)]
     (fn []
-      (let [selected-review-hakukohde        (subscribe [:state-query [:application :selected-review-hakukohde]])
-            attachment-reviews-for-hakukohde (subscribe [:application/get-attachment-reviews-for-selected-hakukohde @selected-review-hakukohde])
+      (let [selected-review-hakukohde        @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+            attachment-reviews-for-hakukohde (group-by #(:key (first %))
+                                               (mapcat (fn [oid]
+                                                         (map (fn [attachments]
+                                                                [attachments oid])
+                                                           @(subscribe [:application/get-attachment-reviews-for-selected-hakukohde oid]))) selected-review-hakukohde))
             lang                             (subscribe [:application/lang])]
         [:div.application-handling__review-outer
          {:class (when (= :fixed @review-positioning)
@@ -1594,32 +1661,35 @@
              [:span.application-handling__review-settings-header-text (get-virkailija-translation :settings)]])]
          [:div.application-handling__review
           (when @show-attachment-review?
-            [attachment-review-area @selected-review-hakukohde @attachment-reviews-for-hakukohde @review-positioning @lang])
+            [attachment-review-area attachment-reviews-for-hakukohde @review-positioning @lang])
           [:div.application-handling__review-outer-container
            [application-hakukohde-selection]
-           (when (not-empty @attachment-reviews-for-hakukohde)
-             [:div.application-handling__attachment-review-toggle-container
-              (when @settings-visible
-                [review-settings-checkbox :attachment-handling])
-              [:span.application-handling__attachment-review-toggle-container-link
-               {:on-click (fn []
-                            (when-not @settings-visible
-                              (let [show? (not @show-attachment-review?)]
-                                (dispatch [:state-update #(assoc-in % [:application :show-attachment-reviews?] show?)])
-                                (if show?
-                                  (reset! show-attachment-review? show?)
-                                  (js/setTimeout #(reset! show-attachment-review? show?) 500)))))}
-               [:span.application-handling__attachment-review-toggle
-                (if @show-attachment-review?
-                  [:span [:i.zmdi.zmdi-chevron-right] [:i.zmdi.zmdi-chevron-right]]
-                  [:span [:i.zmdi.zmdi-chevron-left] [:i.zmdi.zmdi-chevron-left]])]
-               (gstring/format "%s (%d)"
-                               (get-virkailija-translation :attachments)
-                               (count @attachment-reviews-for-hakukohde))]])
-           [application-hakukohde-review-inputs review-states/hakukohde-review-types]
+           (when (not-empty selected-review-hakukohde)
+             [:div
+              (when (not-empty attachment-reviews-for-hakukohde)
+                [:div.application-handling__attachment-review-toggle-container
+                 (when @settings-visible
+                   [review-settings-checkbox :attachment-handling])
+                 [:span.application-handling__attachment-review-toggle-container-link
+                  {:on-click (fn []
+                               (when-not @settings-visible
+                                 (let [show? (not @show-attachment-review?)]
+                                   (dispatch [:state-update #(assoc-in % [:application :show-attachment-reviews?] show?)])
+                                   (if show?
+                                     (reset! show-attachment-review? show?)
+                                     (js/setTimeout #(reset! show-attachment-review? show?) 500)))))}
+                  [:span.application-handling__attachment-review-toggle
+                   (if @show-attachment-review?
+                     [:span [:i.zmdi.zmdi-chevron-right] [:i.zmdi.zmdi-chevron-right]]
+                     [:span [:i.zmdi.zmdi-chevron-left] [:i.zmdi.zmdi-chevron-left]])]
+                  (gstring/format "%s (%d)"
+                    (get-virkailija-translation :attachments)
+                    (count (keys attachment-reviews-for-hakukohde)))]])
+              [application-hakukohde-review-inputs review-states/hakukohde-review-types]])
            (when @(subscribe [:application/show-info-request-ui?])
              [application-information-request])
            [application-review-inputs]
+           [application-review-notes]
            [application-modify-link]
            [application-resend-modify-link]
            [application-resend-modify-link-confirmation]
@@ -1637,7 +1707,7 @@
 
 (defn notifications-display []
   (let [selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
-        selected-review-hakukohde     (subscribe [:state-query [:application :selected-review-hakukohde]])
+        selected-review-hakukohde     (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
         alternative-form              (subscribe [:state-query [:application :alternative-form]])
         metadata-not-found            (subscribe [:state-query [:application :metadata-not-found]])]
     (fn []

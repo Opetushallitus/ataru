@@ -17,9 +17,15 @@ a {
   color: @link-color;
   cursor: pointer;
   text-decoration: none;
+  &[disabled] {
+    color: @sg-color-gray-2;
+  }
 }
 a:hover {
   color: @selected-blue;
+  &[disabled] {
+    color: @sg-color-gray-2;
+  }
 }
 
 input, textarea {

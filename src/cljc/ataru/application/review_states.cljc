@@ -67,6 +67,11 @@
    ["checked" (:checked state-translations)]
    ["incomplete" (:incomplete-answer state-translations)]])
 
+(def attachment-hakukohde-review-types-with-multiple-values
+  (cons
+   ["multiple-values" (:multiple-values state-translations)]
+   attachment-hakukohde-review-types))
+
 (def no-attachment-requirements "no-requirements")
 
 (def attachment-hakukohde-review-types-with-no-requirements

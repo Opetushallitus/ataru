@@ -89,7 +89,7 @@
                                            (assoc-in [:application :application-list-expanded?] false)
                                            (assoc-in [:application :information-request] nil))
                                     db (if selected-hakukohde-oid
-                                         (assoc-in db [:application :selected-review-hakukohde] selected-hakukohde-oid)
+                                         (assoc-in db [:application :selected-review-hakukohde-oids] [selected-hakukohde-oid])
                                          db)]
                                 {:db         db
                                  :dispatch-n [[:application/stop-autosave]
@@ -97,11 +97,11 @@
        with-newest-form? {:db         (-> db
                                           (assoc-in [:application :selected-application-and-form] nil)
                                           (assoc-in [:application :alternative-form] nil)
-                                          (assoc-in [:application :selected-review-hakukohde] selected-hakukohde-oid))
+                                          (assoc-in [:application :selected-review-hakukohde-oids] [selected-hakukohde-oid]))
                           :dispatch-n [[:application/select-review-hakukohde selected-hakukohde-oid]
                                        [:application/fetch-application application-key true]]}
        selected-hakukohde-oid {:db         (-> db
-                                               (assoc-in [:application :selected-review-hakukohde] selected-hakukohde-oid))
+                                               (assoc-in [:application :selected-review-hakukohde-oids] [selected-hakukohde-oid]))
                                :dispatch-n [[:application/select-review-hakukohde selected-hakukohde-oid]]}
        :else nil))))
 
@@ -110,7 +110,7 @@
   (-> db
       (assoc-in [:application :metadata-not-found] nil)
       (assoc-in [:application :previously-closed-application] (-> db :application :selected-application-and-form :application :key))
-      (assoc-in [:application :selected-review-hakukohde] nil)
+      (assoc-in [:application :selected-review-hakukohde-oids] nil)
       (assoc-in [:application :selected-key] nil)
       (assoc-in [:application :selected-application-and-form] nil)
       (assoc-in [:application :application-list-expanded?] true)))
@@ -180,42 +180,45 @@
       (assoc application :application-hakukohde-reviews (conj reviews-with-existing-removed new-review)))
     application))
 
-(reg-event-db
- :application/update-review-field
- (fn [db [_ field value]]
-   (let [selected-key           (get-in db [:application :selected-key])
-         application-list       (get-in db [:application :applications])
-         selected-hakukohde-oid (get-in db [:application :selected-review-hakukohde])
-         is-hakukohde-review?   (-> (map first review-states/hakukohde-review-types)
-                                    (set)
-                                    (contains? field))
-         updated-applications   (cond
-                                  (some #{field} [:state :score])
-                                  (mapv
-                                    #(update-review-field-of-selected-application-in-list % selected-key field value)
-                                    application-list)
-
-                                  is-hakukohde-review?
-                                  (mapv
-                                    #(update-hakukohde-review-field-of-selected-application-in-list % selected-key selected-hakukohde-oid field value)
-                                    application-list)
-
-                                  :else
+(defn update-review-field [db field value hakukohde-oid]
+  (let [selected-key           (get-in db [:application :selected-key])
+        application-list       (get-in db [:application :applications])
+        is-hakukohde-review?   (-> (map first review-states/hakukohde-review-types)
+                                   (set)
+                                   (contains? field))
+        updated-applications   (cond
+                                (some #{field} [:state :score])
+                                (mapv
+                                  #(update-review-field-of-selected-application-in-list % selected-key field value)
                                   application-list)
-         db                     (cond-> db
-                                  (and (= field :processing-state)
-                                       (= value "information-request"))
-                                  (assoc-in [:application :information-request :visible?] true))]
-     (if is-hakukohde-review?
-       (-> db
-           (assoc-in [:application :review :hakukohde-reviews (keyword selected-hakukohde-oid) field] value)
-           (assoc-in [:application :applications] updated-applications)
-           (filter-applications))
-       (-> db
-           (update-in [:application :review] assoc field value)
-           (assoc-in [:application :applications] updated-applications)
-           (assoc-in [:application :review-state-counts] (review-state-counts updated-applications))
-           (filter-applications))))))
+
+                                is-hakukohde-review?
+                                (mapv
+                                  #(update-hakukohde-review-field-of-selected-application-in-list % selected-key hakukohde-oid field value)
+                                  application-list)
+
+                                :else
+                                application-list)
+        db                     (cond-> db
+                                       (and (= field :processing-state)
+                                            (= value "information-request"))
+                                       (assoc-in [:application :information-request :visible?] true))]
+    (if is-hakukohde-review?
+      (-> db
+          (assoc-in [:application :review :hakukohde-reviews (keyword hakukohde-oid) field] value)
+          (assoc-in [:application :applications] updated-applications))
+      (-> db
+          (update-in [:application :review] assoc field value)
+          (assoc-in [:application :applications] updated-applications)
+          (assoc-in [:application :review-state-counts] (review-state-counts updated-applications))))))
+
+
+(reg-event-db
+  :application/update-review-field
+  (fn [db [_ field value]]
+    (let [hakukohde-oids       (-> db :application :selected-review-hakukohde-oids)]
+      (-> (reduce (fn [db oid] (update-review-field db field value oid)) db hakukohde-oids)
+          (filter-applications)))))
 
 (defn- update-attachment-hakukohde-review-field-of-selected-application-in-list
   [application selected-application-key hakukohde attachment-key state]
@@ -464,11 +467,14 @@
       (assoc-in [:application :review :hakukohde-reviews] hakukohde-reviews)
       (assoc-in [:application :review :attachment-reviews] attachment-reviews)
       (assoc-in [:application :information-requests] information-requests)
-      (update-in [:application :selected-review-hakukohde]
-        (fn [current-hakukohde]
-          (if (contains? (set (:hakukohde application)) current-hakukohde)
-            current-hakukohde
-            (or (first (:hakukohde application)) "form"))))))
+      (update-in [:application :selected-review-hakukohde-oids]
+        (fn [current-hakukohde-oids]
+          (if (and (not-empty (:hakukohde application))
+                   (not-empty current-hakukohde-oids)
+                   (clojure.set/superset? (set (:hakukohde application))
+                                          (set current-hakukohde-oids)))
+            current-hakukohde-oids
+            [(or (first (:hakukohde application)) "form")])))))
 
 (defn review-autosave-predicate [current prev]
   (if (not= (:id current) (:id prev))
@@ -711,7 +717,11 @@
 (reg-event-db
   :application/select-review-hakukohde
   (fn [db [_ selected-hakukohde-oid]]
-    (assoc-in db [:application :selected-review-hakukohde] selected-hakukohde-oid)))
+    (update-in db [:application :selected-review-hakukohde-oids]
+      (fn [hakukohde-oids]
+        (if (contains? (set hakukohde-oids) selected-hakukohde-oid)
+          (filter #(not= selected-hakukohde-oid %) hakukohde-oids)
+          (cons selected-hakukohde-oid hakukohde-oids))))))
 
 (reg-event-db
   :application/set-mass-information-request-form-state
@@ -945,25 +955,31 @@
     (update-in db [:application :ui/review list-kwd] (fnil not false))))
 
 (reg-event-fx
-  :application/add-review-note
+  :application/add-review-notes
   (fn [{:keys [db]} [_ text state-name]]
-    (let [application-key (-> db :application :selected-key)
-          hakukohde       (-> db :application :selected-review-hakukohde)
-          tmp-id          (cljs-util/new-uuid)
-          note            (merge {:notes           text
-                                  :application-key application-key}
-                                 (when state-name
-                                   {:hakukohde  hakukohde
-                                    :state-name (name state-name)}))
-          db              (-> db
-                              (update-in [:application :review-notes]
-                                         (fn [notes]
-                                           (vec (cons (merge note
-                                                             {:created-time (t/now)
-                                                              :id           tmp-id
-                                                              :animated?    true})
-                                                      notes))))
-                              (assoc-in [:application :review-comment] nil))]
+    (let [selected-hakukohde-oids (get-in db [:application :selected-review-hakukohde-oids])]
+      {:db         db
+       :dispatch-n (map (fn [hakukohde] [:application/add-review-note text state-name hakukohde]) selected-hakukohde-oids)})))
+
+(reg-event-fx
+  :application/add-review-note
+  (fn [{:keys [db]} [_ text state-name hakukohde]]
+    (let [application-key         (-> db :application :selected-key)
+          tmp-id                  (cljs-util/new-uuid)
+          note                    (merge {:notes           text
+                                          :application-key application-key}
+                                    (when state-name
+                                      {:hakukohde  hakukohde
+                                       :state-name (name state-name)}))
+          db                      (-> db
+                                      (update-in [:application :review-notes]
+                                        (fn [notes]
+                                          (vec (cons (merge note
+                                                       {:created-time (t/now)
+                                                        :id           tmp-id
+                                                        :animated?    true})
+                                                     notes))))
+                                      (assoc-in [:application :review-comment] nil))]
       {:db   db
        :http {:method              :post
               :params              note

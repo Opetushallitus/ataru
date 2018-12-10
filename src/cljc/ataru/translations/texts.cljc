@@ -1361,6 +1361,9 @@ You will receive a confirmation of your application to your email."}
    :autosave-enabled                            {:fi "Automaattitalletus: päällä"
                                                  :sv "SV: Automaattitalletus: päällä"
                                                  :en "Auto-save: enabled"}
+   :multiple-values                             {:fi "Monta arvoa"
+                                                 :sv "SV: Monta arvoa"
+                                                 :en "EN: Monta arvoa"}
    :autosave-disabled                           {:fi "Automaattitalletus: pois päältä"
                                                  :sv "SV: Automaattitalletus: pois päältä"
                                                  :en "Auto-save: disabled"}})

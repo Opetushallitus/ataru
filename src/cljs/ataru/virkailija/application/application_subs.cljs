@@ -521,18 +521,14 @@
     (-> db :application :review-settings :config setting-kwd (= :updating))))
 
 (re-frame/reg-sub
-  :application/review-list-visible?
-  (fn [db [_ list-kwd]]
-    (-> db :application :ui/review list-kwd)))
-
-(re-frame/reg-sub
   :application/review-note-indexes-on-eligibility
-  (fn [db [_ hakukohde-oid]]
-    (->> (-> db :application :review-notes)
-         (keep-indexed (fn [index {:keys [state-name hakukohde]}]
-                         (when (and (= "eligibility-state" state-name)
-                                    (= (name hakukohde-oid) hakukohde))
-                           index))))))
+  (fn [db [_]]
+    (let [selected-hakukohde-oids (set (get-in db [:application :selected-review-hakukohde-oids]))]
+      (->> (-> db :application :review-notes)
+           (keep-indexed (fn [index {:keys [state-name hakukohde]}]
+                           (when (and (= "eligibility-state" state-name)
+                                      (contains? selected-hakukohde-oids (str hakukohde)))
+                             index)))))))
 
 (re-frame/reg-sub
   :application/review-note-indexes-excluding-eligibility
@@ -628,12 +624,14 @@
 (re-frame.core/reg-sub
   :application/show-info-request-ui?
   (fn [db _]
-    (let [selected-hakukohde (get-in db [:application :selected-review-hakukohde])]
-      (= "information-request" (get-in db [:application
-                                           :review
-                                           :hakukohde-reviews
-                                           (keyword selected-hakukohde)
-                                           :processing-state])))))
+    (let [selected-hakukohde-oids (seq (get-in db [:application :selected-review-hakukohde-oids]))
+          get-processing-state (fn [oid] (get-in db [:application
+                                                     :review
+                                                     :hakukohde-reviews
+                                                     (keyword oid)
+                                                     :processing-state]))]
+      (and selected-hakukohde-oids
+           (every? #(= "information-request" %) (map get-processing-state selected-hakukohde-oids))))))
 
 (re-frame.core/reg-sub
   :application/get-attachment-reviews-for-selected-hakukohde
@@ -679,14 +677,15 @@
 (re-frame.core/reg-sub
   :application/eligibility-automatically-checked?
   (fn [db _]
-    (let [hakukohde (get-in db [:application :selected-review-hakukohde])]
-      (->> (get-in db [:application :events])
-           (filter #(and (= "eligibility-state" (:review-key %))
-                         (= hakukohde (:hakukohde %))))
-           (sort-by :id >)
-           first
-           :event-type
-           (= "eligibility-state-automatically-changed")))))
+    (let [hakukohde-oids (get-in db [:application :selected-review-hakukohde-oids])
+          newest-event-automatically-changed (fn [hakukohde-oid] (->> (get-in db [:application :events])
+                                                                      (filter #(and (= "eligibility-state" (:review-key %))
+                                                                                    (= hakukohde-oid (:hakukohde %))))
+                                                                      (sort-by :id >)
+                                                                      first
+                                                                      :event-type
+                                                                      (= "eligibility-state-automatically-changed")))]
+      (every? newest-event-automatically-changed hakukohde-oids))))
 
 (re-frame/reg-sub
   :application/all-pohjakoulutus-filters-selected?
