@@ -187,18 +187,18 @@ and (max-width: 1000px) {
 }
 
 .application-handling__filter-state-selection {
+  .arrow(top, white, 8px, 70px);
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.30));
   border-radius: 3px;
   position: absolute;
   z-index: 10;
-  top: 30px;
-  left: -56px;
+  top: 36px;
+  left: -36px;
   text-align: start;
   background-color: white;
   min-width: 240px;
   padding: 11px 0 12px 1px;
-  box-shadow: @modal-shadow;
   font-size: 13px;
-  overflow: hidden;
   line-height: 21px;
 }
 
@@ -235,27 +235,6 @@ and (max-width: 1000px) {
 
 .application-handling__filter-state-selection-row.application-handling__filter-state-selected-row {
   color: #06526B;
-}
-
-.application-handling__filter-state-selection-arrow-up {
-  top: 15px;
-  width: 21px;
-  height: 15px;
-  position: absolute;
-  overflow: hidden;
-  z-index: 11;
-}
-
-.application-handling__filter-state-selection-arrow-up:after {
-  content: "";
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background: white;
-  transform: rotate(135deg);
-  top: 10px;
-  left: 7px;
-  box-shadow: 0px -1px 3px #b3b3b3;
 }
 
 #application-handling__end-of-list-element {

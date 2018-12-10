@@ -680,8 +680,7 @@
                          [:span (str (get review-state-label @lang)
                                      (when state-counts-sub
                                        (str " (" (get-state-count @state-counts-sub review-state-id) ")")))]]]))
-                   states)))
-         (when @filter-opened [:div.application-handling__filter-state-selection-arrow-up])]))))
+                   states)))]))))
 
 (defn sortable-column-click [column-id evt]
   (dispatch [:application/update-sort column-id]))
