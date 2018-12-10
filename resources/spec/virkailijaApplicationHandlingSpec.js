@@ -91,9 +91,9 @@
         })
       })
 
-      function selectionStateSelected() { return testFrame().find('.application-handling__review-state-container-selection-state .application-handling__review-state-selected-row') }
+      function selectionStateSelected() { return testFrame().find('.application-handling__review-state-container-selection-state .application-handling__review-state-row--selected') }
 
-      function selectionStateOpened() { return testFrame().find('.application-handling__review-state-container-selection-state .application-handling__review-state-list-opened') }
+      function selectionStateOpened() { return testFrame().find('.application-handling__review-state-container-selection-state .application-handling__review-state-list--opened') }
 
       function firstApplication() { return testFrame().find('.application-handling__list-row--application-applicant:contains(Vatanen)').closest('.application-handling__list-row') }
 
@@ -128,11 +128,11 @@
       }
 
       function selectedState() {
-        return testFrame().find('.application-handling__review-state-selected-row')
+        return testFrame().find('.application-handling__review-state-row--selected')
       }
 
       function notSelectedStates() {
-        return testFrame().find('.application-handling__review-state-row:not(.application-handling__review-state-selected-row)')
+        return testFrame().find('.application-handling__review-state-row:not(.application-handling__review-state-row--selected)')
       }
 
       function reviewHeader() {
@@ -393,11 +393,11 @@
         it('have the correct contents', function() {
           expect(massUpdateFromStateSelectionOpened().find('.application-handling__review-state-row').length === 7)
           expect(massUpdateFromStateSelectionOpened().find('.application-handling__review-state-row--disabled').length === 5)
-          expect(massUpdateFromStateSelectionOpened().find('.application-handling__review-state-selected-row').text()).to.equal('Käsittelemättä (2)')
+          expect(massUpdateFromStateSelectionOpened().find('.application-handling__review-state-row--selected').text()).to.equal('Käsittelemättä (2)')
 
           expect(massUpdateToStateSelectionOpened().find('.application-handling__review-state-row').length === 7)
           expect(massUpdateToStateSelectionOpened().find('.application-handling__review-state-row--disabled').length === 0)
-          expect(massUpdateToStateSelectionOpened().find('.application-handling__review-state-selected-row').text()).to.equal('Käsittelemättä (2)')
+          expect(massUpdateToStateSelectionOpened().find('.application-handling__review-state-row--selected').text()).to.equal('Käsittelemättä (2)')
 
           expect(massUpdateSubmitButton().attr('disabled')).to.equal('disabled')
         })
@@ -561,7 +561,7 @@
     }
 
     function massUpdateFromStateSelectionOpened() {
-      return massUpdateFromState().find('.application-handling__review-state-list-opened')
+      return massUpdateFromState()
     }
 
     function massUpdateFromStateSelectionClosed() {
@@ -574,7 +574,7 @@
     }
 
     function massUpdateToStateSelectionOpened() {
-      return massUpdateToState().find('.application-handling__review-state-list-opened')
+      return massUpdateToState()
     }
 
     function massUpdateToStateSelectionClosed() {

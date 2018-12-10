@@ -784,8 +784,8 @@ and (max-width: 1000px) {
 
 .application-handling__review-header {
   color: @text-color;
+  padding-top: 12px;
   .semibold;
-  margin-bottom: 15px;
 }
 
 .application-handling__review-hakukohde-inputs {
@@ -825,10 +825,6 @@ and (max-width: 1000px) {
 
 .application-handling__review-state-container--columnar {
   flex-flow: column;
-}
-
-.application-handling__review-state-container .application-handling__review-header {
-  padding-top: 8px;
 }
 
 .application-handling__review-state-container--columnar .application-handling__review-header {
@@ -1216,36 +1212,32 @@ and (max-width: 1000px) {
   margin-bottom: 20px;
 }
 
-.application-handling__review-state-list-opened-anchor {
-  position: relative;
-}
-
-.application-handling__review-state-list-opened {
-  background-color: @very-light-gray;
-  border-radius: 3px;
-  box-shadow: @modal-shadow;
-}
-
 .application-handling__review-state-row {
   position: relative;
-  color: @text-color;
-  padding: 11px 11px 11px 32px;
-  margin-bottom: 3px;
-  width: 219px;
+  padding-left: 11px;
+  padding-right: 11px;
+  padding-top: 5px;
+  padding-bottom: 5px;
   box-shadow: @modal-shadow;
-  background: @white;
-  cursor: default;
+  color: @link-color;
+  cursor: inherit;
+  width: 219px;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+}
+
+.application-handling__review-state-selected-icon {
+  align-self: center;
+  display: inline-block;
+  padding-left: 5px;
+  min-width: 40px;
 }
 
 .application-handling__review-state-row--small {
   width: 150px;
   height: 41px;
   flex-shrink: 0;
-}
-
-.application-handling__review-state-row:hover {
-  background-color: @application-form-list-background-color;
-  cursor: pointer;
 }
 
 .application-handling__review-state-row--mass-update {
@@ -1260,30 +1252,52 @@ and (max-width: 1000px) {
   background-color: @application-form-list-background-color
 }
 
-.application-handling__review-state-row--disabled:hover {
-  background-color: @white;
+.application-handling__review-state-row-hakukohde {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-flow: row nowrap;
+  min-height: 45px;
+}
+.application-handling__review-state-row-hakukohde {
+  &:hover {
+    color: @selected-blue;
+  }
 }
 
-.application-handling__review-state-selected-row {
-  color: @text-color;
+.application-handling__review-state-list {
+  background-color: @very-light-gray;
   border-radius: 3px;
-  margin-left: 0;
-  padding-left: 25px;
-  margin-bottom: 8px;
-  display: inline-block;
+  box-shadow: @modal-shadow;
+  cursor: pointer;
 }
 
-.application-handling__review-state-row--disabled {
+.application-handling__review-state-list--closed:hover {
+  background-color: @application-form-list-background-color;
+
+  .application-handling__review-state-row:hover {
+    background-color: inherit;
+    color: @link-color;
+  }
+  .application-handling__review-state-row.application-handling__review-state-row--disabled {
+    background-color: @very-light-gray;
+    color: @disabled-font-gray;
+  }
+}
+
+.application-handling__review-state-row.application-handling__review-state-row--disabled:hover {
+  background-color: @very-light-gray;
+  color: @disabled-font-gray;
+}
+
+.application-handling__review-state-row.application-handling__review-state-row--disabled {
   color: @disabled-font-gray;
   cursor: default;
 }
 
-.application-handling__review-state-row-hakukohde {
-  width: 100%;
-  padding-left: 32px;
-  max-width: 500px;
-  display: flex;
-  margin-left: 2px;
+.application-handling__review-state-row:hover {
+  color: @selected-blue;
+  background-color: @application-form-list-background-color;
 }
 
 .application-handling__review-state-row-selection-label {
@@ -1291,7 +1305,6 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review-state-row-hakukohde--single-option {
-  cursor: default;
   box-shadow: none;
   background: #fcfcfc;
 }
@@ -1300,19 +1313,9 @@ and (max-width: 1000px) {
   background-color: #fcfcfc;
 }
 
-.application-handling__review-state-selected-row-hakukohde {
-  padding-left: 25px;
-}
-
-.application-handling__review-state-list-opened .application-handling__review-state-row {
+.application-handling__review-state-list .application-handling__review-state-row {
   box-shadow: none;
   margin-bottom: 0;
-}
-
-.application-handling__review-state-selected-icon {
-  margin-left: -10px;
-  align-self: center;
-  margin-right: 7px;
 }
 
 .application-handling__review-state-initials {

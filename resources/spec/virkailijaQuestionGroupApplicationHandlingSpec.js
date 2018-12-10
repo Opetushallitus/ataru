@@ -78,7 +78,7 @@
   })
 
   function reviewStateButton() {
-    return testFrame().find('.application-handling__review-state-selected-row')
+    return testFrame().find('.application-handling__review-state-row--selected')
   }
 
   function informationRequestStateButton() {
