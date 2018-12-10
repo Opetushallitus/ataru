@@ -88,10 +88,11 @@
 
 (defn render-paragraphs [s]
   (->> (clojure.string/split s "\n")
-       (remove clojure.string/blank?)
        (map-indexed (fn [i p]
                       ^{:key (str "paragraph-" i)}
-                      [:p.application__text-field-paragraph p]))))
+                      (if (clojure.string/blank? p)
+                        [:br]
+                        [:p.application__text-field-paragraph p])))))
 
 (defn is-required-field?
   [field-descriptor]
