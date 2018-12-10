@@ -48,8 +48,8 @@
             )
 
             it('check that components are disabled when hakuaika is over (and enabled when some hakuaika is on going)', function() {
-                expect(testFrame().find('.application__hakukohde-row-button-container').length).to.equal(2)
-                expect(testFrame().find('.application__hakukohde-row-button-container[disabled]').length).to.equal(1)
+                expect(testFrame().find('.application__selected-hakukohde-row--remove').length).to.equal(2)
+                expect(testFrame().find('.application__selected-hakukohde-row--remove[disabled]').length).to.equal(1)
 
                 expect(testFrame().find("#hakuajat-ohi").prop('disabled')).to.equal(true)
                 expect(testFrame().find("#osa-hakuajoista-ohi").prop('disabled')).to.equal(false)
@@ -84,11 +84,11 @@
             )
 
             it('doesnt allow to add hakutoive in wrong priority order', function() {
-                expect(testFrame().find('.application__hakukohde-selected-row-priorization-invalid').length).to.equal(2)
+                expect(testFrame().find('.application__selected-hakukohde-row--offending-priorization').length).to.equal(2)
                 expect(invalidFieldNames().join(";")).to.equal("Hakukohteet")
             })
             it('doesnt allow adding hakutoive when limit is reached', function() {
-                expect(testFrame().find('.application__hakukohde-row--limit-reached-heading').length).to.equal(1)
+                expect(testFrame().find('.application__search-hit-hakukohde-row--limit-reached').length).to.equal(1)
             })
         })
 

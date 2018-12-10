@@ -197,14 +197,14 @@
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
-  [:div.application__hakukohde-row
+  [:div.application__selected-hakukohde-row
    (when @(subscribe [:application/prioritize-hakukohteet?])
      [:p.application__hakukohde-priority-number-readonly
       @(subscribe [:application/hakukohde-priority-number hakukohde-oid])])
-   [:div.application__hakukohde-row-text-container
-    [:div.application__hakukohde-selected-row-header
+   [:div.application__selected-hakukohde-row--content
+    [:div.application__hakukohde-header
      @(subscribe [:application/hakukohde-label hakukohde-oid])]
-    [:div.application__hakukohde-selected-row-description
+    [:div.application__hakukohde-description
      @(subscribe [:application/hakukohde-description hakukohde-oid])]]])
 
 (defn- hakukohde-selection-header

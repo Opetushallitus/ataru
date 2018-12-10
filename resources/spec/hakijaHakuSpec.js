@@ -69,7 +69,7 @@
 
     describe('clicking remove on selected hakukohde', function () {
       before(
-        clickElement(function() { return selectedHakukohteet().eq(0).find('a') }),
+        clickElement(function() { return selectedHakukohteet().eq(0).find('button') }),
         wait.until(function () {
           return selectedHakukohteet().length === 0
         }),
