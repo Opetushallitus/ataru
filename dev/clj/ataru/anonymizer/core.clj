@@ -4,41 +4,49 @@
             [taoensso.timbre :as log]
             [ataru.anonymizer.ssn-generator :as ssn-gen]))
 
-(defn- anonymize [fake-persons applications {:keys [key preferred_name last_name content person_oid] :as application}]
+(defn- date-to-iso8601
+  [date]
+  (let [[_ d m y] (re-matches #"(\d{2}).(\d{2}).(\d{4})" date)]
+    (str y "-" m "-" d)))
+
+(defn- anonymize [fake-persons applications {:keys [key content person_oid] :as application}]
   (if-let [fake-person (get fake-persons person_oid)]
-    (let [{:keys [gender first-name last-name address fake-ssn phone email postal-code]} (first fake-person)
+    (let [{:keys [gender first-name last-name preferred-name address fake-ssn phone email postal-code birth-date]} (first fake-person)
           anonymize-answer (fn [{:keys [key value] :as answer}]
-                               (let [value (case key
-                                             "gender"         gender
-                                             "first-name"     first-name
-                                             "preferred-name" first-name
-                                             "last-name"      last-name
-                                             "address"        address
-                                             "ssn"            fake-ssn
-                                             "phone"          phone
-                                             "email"          email
-                                             "postal-code"    postal-code
-                                             "postal-office"  "Helsinki"
-                                             "home-town"      "Äkäslompolo"
-                                             value)]
-                                 (assoc answer :value value)))
+                             (let [value (case key
+                                           "gender" gender
+                                           "first-name" first-name
+                                           "preferred-name" preferred-name
+                                           "last-name" last-name
+                                           "address" address
+                                           "ssn" fake-ssn
+                                           "phone" phone
+                                           "email" email
+                                           "postal-code" postal-code
+                                           "birth-date" birth-date
+                                           "postal-office" "Helsinki"
+                                           "home-town" "Helsinki"
+                                           value)]
+                               (assoc answer :value value)))
           content          (clojure.walk/prewalk (fn [x]
-                                                     (cond-> x
-                                                       (map? x)
-                                                       (anonymize-answer)))
-                             content)
-          application      (merge application {:preferred_name first-name
+                                                   (cond-> x
+                                                           (map? x)
+                                                           (anonymize-answer)))
+                                                 content)
+          application      (merge application {:preferred_name preferred-name
                                                :last_name      last-name
                                                :ssn            fake-ssn
+                                               :email          email
+                                               :dob            (date-to-iso8601 birth-date)
                                                :content        content})]
       (cond-> (update applications :applications conj application)
-        (not (contains? applications key))
-        (update key merge {:first-name  first-name
-                           :last-name   last-name
-                           :address     address
-                           :phone       phone
-                           :email       email
-                           :postal-code postal-code})))
+              (not (contains? applications key))
+              (update key merge {:first-name  first-name
+                                 :last-name   last-name
+                                 :address     address
+                                 :phone       phone
+                                 :email       email
+                                 :postal-code postal-code})))
     applications))
 
 (defn fake-person->ataru-person [{:keys [sukupuoli
@@ -53,15 +61,17 @@
                                          puhelinnumero
                                          personOid
                                          lahiosoite]}]
-  {:person-oid  personOid
-   :fake-ssn    hetu
-   :address     lahiosoite
-   :email       sahkopostiosoite
-   :last-name   sukunimi
-   :phone       puhelinnumero
-   :first-name  (str etunimi " " toinennimi)
-   :postal-code "00100"
-   :gender      sukupuoli})
+  {:person-oid     personOid
+   :fake-ssn       hetu
+   :address        lahiosoite
+   :email          sahkopostiosoite
+   :last-name      sukunimi
+   :phone          puhelinnumero
+   :first-name     (str etunimi " " toinennimi)
+   :preferred-name etunimi
+   :postal-code    "00100"
+   :gender         sukupuoli
+   :birth-date     syntymaaika})
 
 (defn file->fake-persons [file]
   (->> file
