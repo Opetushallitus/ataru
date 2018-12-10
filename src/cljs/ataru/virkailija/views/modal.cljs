@@ -6,9 +6,7 @@
   [:div.virkailija-modal__backdrop
    [:div.virkailija-modal__container
     [:div.virkailija-modal__close-link-container
-     [:span.virkailija-modal__close-text
-      (clojure.string/capitalize (cljs-util/get-virkailija-translation :close))]
-     [:button.virkailija-modal__close-button
+     [:button.virkailija-close-button
       {:on-click close-handler}
       [:i.zmdi.zmdi-close]]]
     [:div.virkailija-modal__content-container

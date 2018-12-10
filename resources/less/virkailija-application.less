@@ -98,6 +98,11 @@
   left: -180px;
 }
 
+.application-handling__mass-edit-review-states-title-container {
+  display: flex;
+  margin-bottom: 10px;
+}
+
 .application-handling__popup-close-button {
   font-size: 18px;
   color: @sg-color-gray-2;
@@ -111,12 +116,15 @@
   color: @text-color;
 }
 
-.application-handling__mass-edit-review-states-heading--title {
+.application-handling__mass-edit-review-states-title {
+  flex-grow: 2;
   text-transform: uppercase;
+  margin: 0px;
+  color: @text-color;
 }
 
 .application-handling__mass-edit-review-states-heading {
-  margin: 0 0 10px 0;
+  margin: 0px 0px 10px 0px;
   color: @text-color;
 }
 
@@ -192,6 +200,16 @@ and (max-width: 1000px) {
   font-size: 13px;
   overflow: hidden;
   line-height: 21px;
+}
+
+.application-handling__filter-state-selection-close-button-container {
+  display: flex;
+  margin-bottom: -23px;
+}
+
+.application-handling__filter-state-selection-close-button {
+  margin-left: auto;
+  margin-right: 3px;
 }
 
 .application-handling__filter-state-selection-row {
@@ -2333,7 +2351,6 @@ th.application__readonly-adjacent--header {
   .arrow(top, white, 8px, 80px);
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.30));
   box-sizing: border-box;
-  display: flex;
   border-radius: 3px;
   position: absolute;
   z-index: 10;
@@ -2341,14 +2358,27 @@ th.application__readonly-adjacent--header {
   left: -56px;
   text-align: start;
   background-color: white;
-  width: 300px;
   padding: 15px;
   font-size: 13px;
   line-height: 21px;
   color: @text-color;
 }
 
-.application-handling__filters-popup--two-cols {
+.application-handling__filters-popup-close-button-container {
+  display: flex;
+  margin-bottom: -23px;
+}
+
+.application-handling__filters-popup-close-button {
+  margin-left: auto;
+}
+
+.application-handling__filters-popup-content-container {
+  display: flex;
+  width: 300px;
+}
+
+.application-handling__filters-popup-content-container--two-cols {
   width: 800px;
 }
 

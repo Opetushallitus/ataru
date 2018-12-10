@@ -100,7 +100,7 @@
                 [:div.profile__organization-select-username-container
                  [:i.profile__organization-select-username-icon.zmdi.zmdi-account.zmdi-hc-lg]
                  [:span.profile__organization-select-username-name (str (:name @user-info) " (" (:oid @user-info) ")")]]
-                [:button.profile__organization-select-close-button
+                [:button.virkailija-close-button
                  {:on-click #(swap! org-select-visible? not)}
                  [:i.zmdi.zmdi-close]]]
                [:div.profile__organization-select-content
