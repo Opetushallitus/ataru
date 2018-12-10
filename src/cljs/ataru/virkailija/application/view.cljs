@@ -1354,8 +1354,7 @@
      @(subscribe [:application/events-and-information-requests])))])
 
 (defn update-review-field [field convert-fn evt]
-  (let [new-value (-> evt .-target .-value)
-        selected-hakukohde-oids @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])]
+  (let [new-value (-> evt .-target .-value)]
     (dispatch [:application/update-review-field field (convert-fn new-value)])))
 
 (defn convert-score [review new-value]
