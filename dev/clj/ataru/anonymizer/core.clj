@@ -4,6 +4,11 @@
             [taoensso.timbre :as log]
             [ataru.anonymizer.ssn-generator :as ssn-gen]))
 
+(defn- date-to-iso8601
+  [date]
+  (let [[_ d m y] (re-matches #"(\d{2}).(\d{2}).(\d{4})" date)]
+    (str y "-" m "-" d)))
+
 (defn- anonymize [fake-persons applications {:keys [key content person_oid] :as application}]
   (if-let [fake-person (get fake-persons person_oid)]
     (let [{:keys [gender first-name last-name preferred-name address fake-ssn phone email postal-code birth-date]} (first fake-person)
@@ -32,6 +37,7 @@
                                                :last_name      last-name
                                                :ssn            fake-ssn
                                                :email          email
+                                               :dob            (date-to-iso8601 birth-date)
                                                :content        content})]
       (cond-> (update applications :applications conj application)
               (not (contains? applications key))
