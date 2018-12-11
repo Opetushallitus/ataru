@@ -6,10 +6,12 @@
 
 (def populate-form-koodisto-fields-cache (atom (cache/lru-cache-factory {})))
 
+(defn encode-koodisto-key [{:keys [uri version]}]
+  (str uri "#" version))
+
 (defn get-koodisto-options
   [koodisto-cache uri version]
-  (let [koodisto-uri (str uri "#" version)]
-    (cache-service/get-from koodisto-cache koodisto-uri)))
+  (cache-service/get-from koodisto-cache (encode-koodisto-key {:uri uri :version version})))
 
 (defn populate-form-koodisto-fields
   [koodisto-cache form]
