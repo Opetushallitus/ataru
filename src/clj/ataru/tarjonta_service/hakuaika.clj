@@ -76,14 +76,23 @@
       (first-by-start (filter (partial not-yet-started (t/now)) hakuajat))
       (last-by-ending hakuajat)))
 
-(defn select-hakuaika-for-field [field hakukohteet]
-  (let [field-hakukohde-and-group-oids (set (concat (:belongs-to-hakukohteet field)
-                                                    (:belongs-to-hakukohderyhma field)))
-        relevant-hakukohteet           (cond->> hakukohteet
-                                                (not-empty field-hakukohde-and-group-oids)
-                                                (filter #(not-empty (clojure.set/intersection field-hakukohde-and-group-oids
-                                                                                              (set (cons (:oid %) (:hakukohderyhmat %)))))))]
-    (select-hakuaika (map :hakuaika relevant-hakukohteet))))
+(defn index-hakuajat
+  [hakukohteet]
+  (reduce (fn [{:keys [uniques by-oid]} {:keys [oid hakuaika hakukohderyhmat]}]
+            {:uniques (conj uniques hakuaika)
+             :by-oid  (reduce #(assoc %1 %2 hakuaika)
+                              (assoc by-oid oid hakuaika)
+                              hakukohderyhmat)})
+          {:uniques #{}
+           :by-oid  {}}
+          hakukohteet))
+
+(defn select-hakuaika-for-field [field {:keys [uniques by-oid]}]
+  (select-hakuaika
+   (if-let [field-hakukohde-and-group-oids (seq (concat (:belongs-to-hakukohteet field)
+                                                        (:belongs-to-hakukohderyhma field)))]
+     (map by-oid field-hakukohde-and-group-oids)
+     uniques)))
 
 (defn attachment-edit-end [hakuaika]
   (let [default-modify-grace-period (-> config

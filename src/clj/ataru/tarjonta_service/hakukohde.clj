@@ -67,7 +67,7 @@
       (assoc-in form [:content hakukohteet-field-idx] updated-field))))
 
 (defn populate-attachment-deadlines [form tarjonta-info]
-  (let [hakukohteet (get-in tarjonta-info [:tarjonta :hakukohteet])]
+  (let [hakuajat (hakuaika/index-hakuajat (get-in tarjonta-info [:tarjonta :hakukohteet]))]
     (update form :content
       (fn [content]
           (clojure.walk/prewalk
@@ -76,7 +76,7 @@
                                     (or (some-> (-> field :params :deadline)
                                                 (hakuaika/str->date-time)
                                                 (hakuaika/date-time->localized-date-time))
-                                        (some-> (hakuaika/select-hakuaika-for-field field hakukohteet)
+                                        (some-> (hakuaika/select-hakuaika-for-field field hakuajat)
                                                 hakuaika/attachment-edit-end
                                                 (hakuaika/date-time->localized-date-time))))]
                   (assoc-in field [:params :deadline-label] label)
