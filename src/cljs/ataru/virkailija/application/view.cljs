@@ -177,11 +177,12 @@
               (get-virkailija-translation :mass-edit)])
            (when @element-visible?
              [:div.application-handling__mass-edit-review-states-popup.application-handling__popup
-              [:div.application-handling__popup-close-button
-               {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state false)}
-               [:i.zmdi.zmdi-close]]
-              [:h4.application-handling__mass-edit-review-states-heading.application-handling__mass-edit-review-states-heading--title
-               (get-virkailija-translation :mass-edit)]
+              [:div.application-handling__mass-edit-review-states-title-container
+               [:h4.application-handling__mass-edit-review-states-title
+                (get-virkailija-translation :mass-edit)]
+               [:button.virkailija-close-button
+                {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state false)}
+                [:i.zmdi.zmdi-close]]]
               (when-let [[haku-oid hakukohde-oid _] @haku-header]
                 [:p
                  @(subscribe [:application/haku-name haku-oid])
@@ -254,11 +255,12 @@
         (get-virkailija-translation :mass-information-request)]
        (when @element-visible?
          [:div.application-handling__popup.application-handling__mass-information-request-popup
-          [:div.application-handling__popup-close-button
-           {:on-click #(reset! element-visible? false)}
-           [:i.zmdi.zmdi-close]]
-          [:h4.application-handling__mass-edit-review-states-heading.application-handling__mass-edit-review-states-heading--title
-           (get-virkailija-translation :mass-information-request)]
+          [:div.application-handling__mass-edit-review-states-title-container
+           [:h4.application-handling__mass-edit-review-states-title
+            (get-virkailija-translation :mass-information-request)]
+           [:button.virkailija-close-button
+            {:on-click #(reset! element-visible? false)}
+            [:i.zmdi.zmdi-close]]]
           [:p (get-virkailija-translation :mass-information-request-email-n-recipients (count @filtered-applications))]
           [:div.application-handling__information-request-row
            [:div.application-handling__information-request-info-heading (get-virkailija-translation :mass-information-request-subject)]
@@ -644,9 +646,10 @@
            {:class (when-not all-filters-selected? "application-handling__filter-state-link-icon--enabled")}]]
          (when @filter-opened
            (into [:div.application-handling__filter-state-selection
-                  [:div.application-handling__popup-close-button
-                   {:on-click #(reset! filter-opened false)}
-                   [:i.zmdi.zmdi-close]]
+                  [:div.application-handling__filter-state-selection-close-button-container
+                   [:button.virkailija-close-button.application-handling__filter-state-selection-close-button
+                    {:on-click #(reset! filter-opened false)}
+                    [:i.zmdi.zmdi-close]]]
                   [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selection-row--all
                    {:class (when all-filters-selected? "application-handling__filter-state-selected-row")}
                    [:label
@@ -677,8 +680,7 @@
                          [:span (str (get review-state-label @lang)
                                      (when state-counts-sub
                                        (str " (" (get-state-count @state-counts-sub review-state-id) ")")))]]]))
-                   states)))
-         (when @filter-opened [:div.application-handling__filter-state-selection-arrow-up])]))))
+                   states)))]))))
 
 (defn sortable-column-click [column-id evt]
   (dispatch [:application/update-sort column-id]))
@@ -860,44 +862,46 @@
            {:on-click #(dispatch [:application/remove-filters])} (get-virkailija-translation :remove-filters)]])
        (when @filters-visible
          [:div.application-handling__filters-popup
-          {:class (when @has-base-education-answers "application-handling__filters-popup--two-cols")}
-          [:div.application-handling__popup-close-button
-           {:on-click #(reset! filters-visible false)}
-           [:i.zmdi.zmdi-close]]
-          [:div.application-handling__popup-column-left
-           (when @show-ensisijaisesti?
-             [:div.application-handling__ensisijaisesti-group
-              [:h3.application-handling__filter-group-heading (get-virkailija-translation :ensisijaisuus)]
-              [ensisijaisesti]
-              (when @show-rajaa-hakukohteella?
-                [select-rajaava-hakukohde rajaava-hakukohde-opened?])])
-           [:h3.application-handling__filter-group-heading (get-virkailija-translation :ssn)]
-           [:div.application-handling__filter-group
-            [application-filter-checkbox filters (:without-ssn virkailija-texts) @lang :only-ssn :without-ssn]
-            [application-filter-checkbox filters (:with-ssn virkailija-texts) @lang :only-ssn :with-ssn]]
-           [:h3.application-handling__filter-group-heading (get-virkailija-translation :identifying)]
-           [:div.application-handling__filter-group
-            [application-filter-checkbox filters (:unidentified virkailija-texts) @lang :only-identified :unidentified]
-            [application-filter-checkbox filters (:identified virkailija-texts) @lang :only-identified :identified]]
-           [:h3.application-handling__filter-group-heading (get-virkailija-translation :active-status)]
-           [:div.application-handling__filter-group
-            [application-filter-checkbox filters (:active-status-active virkailija-texts) @lang :active-status :active]
-            [application-filter-checkbox filters (:active-status-passive virkailija-texts) @lang :active-status :passive]]
-           [:h3.application-handling__filter-group-heading (get-virkailija-translation :handling-notes)]
-           (when (some? @selected-hakukohde-oid)
-             [:div.application-handling__filter-hakukohde-name
-              @(subscribe [:application/hakukohde-name @selected-hakukohde-oid])])
-           (->> review-states/hakukohde-review-types
-                (filter (fn [[kw _ _]]
-                          (and
+          [:div.application-handling__filters-popup-close-button-container
+           [:button.virkailija-close-button.application-handling__filters-popup-close-button
+            {:on-click #(reset! filters-visible false)}
+            [:i.zmdi.zmdi-close]]]
+          [:div.application-handling__filters-popup-content-container
+           {:class (when @has-base-education-answers "application-handling__filters-popup-content-container--two-cols")}
+           [:div.application-handling__popup-column-left
+            (when @show-ensisijaisesti?
+              [:div.application-handling__ensisijaisesti-group
+               [:h3.application-handling__filter-group-heading (get-virkailija-translation :ensisijaisuus)]
+               [ensisijaisesti]
+               (when @show-rajaa-hakukohteella?
+                 [select-rajaava-hakukohde rajaava-hakukohde-opened?])])
+            [:h3.application-handling__filter-group-heading (get-virkailija-translation :ssn)]
+            [:div.application-handling__filter-group
+             [application-filter-checkbox filters (:without-ssn virkailija-texts) @lang :only-ssn :without-ssn]
+             [application-filter-checkbox filters (:with-ssn virkailija-texts) @lang :only-ssn :with-ssn]]
+            [:h3.application-handling__filter-group-heading (get-virkailija-translation :identifying)]
+            [:div.application-handling__filter-group
+             [application-filter-checkbox filters (:unidentified virkailija-texts) @lang :only-identified :unidentified]
+             [application-filter-checkbox filters (:identified virkailija-texts) @lang :only-identified :identified]]
+            [:h3.application-handling__filter-group-heading (get-virkailija-translation :active-status)]
+            [:div.application-handling__filter-group
+             [application-filter-checkbox filters (:active-status-active virkailija-texts) @lang :active-status :active]
+             [application-filter-checkbox filters (:active-status-passive virkailija-texts) @lang :active-status :passive]]
+            [:h3.application-handling__filter-group-heading (get-virkailija-translation :handling-notes)]
+            (when (some? @selected-hakukohde-oid)
+              [:div.application-handling__filter-hakukohde-name
+               @(subscribe [:application/hakukohde-name @selected-hakukohde-oid])])
+            (->> review-states/hakukohde-review-types
+                 (filter (fn [[kw _ _]]
+                           (and
                             (contains? filters-to-include kw)
                             (-> @review-settings (get kw) (false?) (not)))))
-                (map (partial review-type-filter filters @lang))
-                (doall))]
-          (when @has-base-education-answers
-            [:div.application-handling__popup-column-right
-             [:h3.application-handling__filter-group-heading (get-virkailija-translation :base-education)]
-             [application-base-education-filters filters @lang]])])])))
+                 (map (partial review-type-filter filters @lang))
+                 (doall))]
+           (when @has-base-education-answers
+             [:div.application-handling__popup-column-right
+              [:h3.application-handling__filter-group-heading (get-virkailija-translation :base-education)]
+              [application-base-education-filters filters @lang]])]])])))
 
 (defn- application-list-header [applications]
   (let [review-settings (subscribe [:state-query [:application :review-settings :config]])]

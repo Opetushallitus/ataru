@@ -128,6 +128,7 @@
 .profile__organization-link {
   display: block;
   position: relative;
+  color: white;
   &:hover {
     color: @pale-blue;
   }
@@ -161,13 +162,23 @@
   text-align: start;
   background-color: white;
   width: 450px;
-  padding: 15px;
   font-size: 13px;
   line-height: 21px;
   color: @text-color;
 }
 
+.profile__organization-select-content {
+  padding: 0 15px 15px 15px;
+}
+
+.profile__organization-select-header {
+  padding: 15px 15px 0px 15px;
+  display: flex;
+  align-items: center;
+}
+
 .profile__organization-select-username-container {
+  flex: 1;
   margin-left: 7px;
 }
 
