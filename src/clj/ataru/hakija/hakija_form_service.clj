@@ -140,30 +140,32 @@
 
 (s/defn ^:always-validate fetch-form-by-key :- s/Any
   [key :- s/Any
-   roles :- [form-role/FormRole]]
+   roles :- [form-role/FormRole]
+   koodisto-cache :- s/Any]
   (when-let [form (form-store/fetch-by-key key)]
     (when (not (:deleted form))
-      (-> form
-          (remove-required-hakija-validator-if-virkailija roles)
-          (populate-attachment-deadlines nil)
-          koodisto/populate-form-koodisto-fields))))
+          (-> (koodisto/populate-form-koodisto-fields-cached koodisto-cache form)
+              (remove-required-hakija-validator-if-virkailija roles)
+              (populate-attachment-deadlines nil)))))
 
 (s/defn ^:always-validate fetch-form-by-key-with-flagged-fields :- s/Any
   [key :- s/Any
    roles :- [form-role/FormRole]
+   koodisto-cache :- s/Any
    hakukohteet :- s/Any
    application-in-processing-state? :- s/Bool]
-  (some-> (fetch-form-by-key key roles)
+  (some-> (fetch-form-by-key key roles koodisto-cache)
           (flag-uneditable-and-unviewable-fields hakukohteet roles application-in-processing-state?)))
 
 (s/defn ^:always-validate fetch-form-by-haku-oid :- s/Any
   [tarjonta-service :- s/Any
+   koodisto-cache :- s/Any
    organization-service :- s/Any
    ohjausparametrit-service :- s/Any
    haku-oid :- s/Any
    application-in-processing-state? :- s/Bool
    roles :- [form-role/FormRole]]
-  (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service organization-service ohjausparametrit-service haku-oid)
+  (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku koodisto-cache tarjonta-service organization-service ohjausparametrit-service haku-oid)
         form-keys     (->> (-> tarjonta-info :tarjonta :hakukohteet)
                            (map :form-key)
                            (distinct)
@@ -172,7 +174,7 @@
         priorisoivat  (:ryhmat (hakukohderyhmat/priorisoivat-hakukohderyhmat tarjonta-service haku-oid))
         rajaavat      (:ryhmat (hakukohderyhmat/rajaavat-hakukohderyhmat haku-oid))
         form          (when (= 1 (count form-keys))
-                            (fetch-form-by-key-with-flagged-fields (first form-keys) roles hakukohteet application-in-processing-state?))]
+                            (fetch-form-by-key-with-flagged-fields (first form-keys) roles koodisto-cache hakukohteet application-in-processing-state?))]
     (when (not tarjonta-info)
       (throw (Exception. (str "No haku found for haku " haku-oid " and keys " (pr-str form-keys)))))
     (if form
@@ -188,6 +190,7 @@
 
 (s/defn ^:always-validate fetch-form-by-hakukohde-oid :- s/Any
   [tarjonta-service :- s/Any
+   koodisto-cache :- s/Any
    organization-service :- s/Any
    ohjausparametrit-service :- s/Any
    hakukohde-oid :- s/Any
@@ -195,6 +198,7 @@
    roles :- [form-role/FormRole]]
   (let [hakukohde (.get-hakukohde tarjonta-service hakukohde-oid)
         form      (fetch-form-by-haku-oid tarjonta-service
+                                          koodisto-cache
                                           organization-service
                                           ohjausparametrit-service
                                           (:hakuOid hakukohde)

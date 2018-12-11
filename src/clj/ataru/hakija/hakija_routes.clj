@@ -41,10 +41,11 @@
   (true? deleted))
 
 (defn- get-application
-  [secret tarjonta-service organization-service ohjausparametrit-service person-client]
+  [secret tarjonta-service koodisto-cache organization-service ohjausparametrit-service person-client]
   (let [[application-form-and-person secret-expired? lang-override inactivated?]
         (hakija-application-service/get-latest-application-by-secret secret
                                                                      tarjonta-service
+                                                                     koodisto-cache
                                                                      organization-service
                                                                      ohjausparametrit-service
                                                                      person-client)]
@@ -124,12 +125,13 @@
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
 
-(defn api-routes [tarjonta-service
+(defn api-routes [{:keys [tarjonta-service
                   job-runner
                   organization-service
                   ohjausparametrit-service
                   person-service
-                  temp-file-store]
+                  koodisto-cache
+                  temp-file-store]}]
   (api/context "/api" []
     :tags ["application-api"]
     (api/GET ["/haku/:haku-oid" :haku-oid #"[0-9\.]+"] []
@@ -139,6 +141,7 @@
       :return ataru-schema/FormWithContentAndTarjontaMetadata
       (if-let [form-with-tarjonta (form-service/fetch-form-by-haku-oid
                                    tarjonta-service
+                                   koodisto-cache
                                    organization-service
                                    ohjausparametrit-service
                                    haku-oid
@@ -153,6 +156,7 @@
       :return ataru-schema/FormWithContentAndTarjontaMetadata
       (if-let [form-with-tarjonta (form-service/fetch-form-by-hakukohde-oid
                                    tarjonta-service
+                                   koodisto-cache
                                    organization-service
                                    ohjausparametrit-service
                                    hakukohde-oid
@@ -164,7 +168,7 @@
       :path-params [key :- s/Str]
       :query-params [role :- [form-role/FormRole]]
       :return ataru-schema/FormWithContent
-      (if-let [form (form-service/fetch-form-by-key key role)]
+      (if-let [form (form-service/fetch-form-by-key key role koodisto-cache)]
         (response/ok form)
         (response/not-found)))
     (api/POST "/feedback" []
@@ -179,11 +183,12 @@
       :summary "Submit application"
       :body [application ataru-schema/Application]
       (match (hakija-application-service/handle-application-submit
-               tarjonta-service
-               job-runner
-               organization-service
-               ohjausparametrit-service
-               application)
+              koodisto-cache
+              tarjonta-service
+              job-runner
+              organization-service
+              ohjausparametrit-service
+              application)
              {:passed? false :failures failures :code code}
              (response/bad-request {:failures failures :code code})
 
@@ -193,11 +198,12 @@
       :summary "Edit application"
       :body [application ataru-schema/Application]
       (match (hakija-application-service/handle-application-edit
-               tarjonta-service
-               job-runner
-               organization-service
-               ohjausparametrit-service
-               application)
+              koodisto-cache
+              tarjonta-service
+              job-runner
+              organization-service
+              ohjausparametrit-service
+              application)
              {:passed? false :failures failures :code code}
              (response/bad-request {:failures failures :code code})
 
@@ -211,6 +217,7 @@
       (cond (not-blank? secret)
             (get-application {:hakija secret}
                              tarjonta-service
+                             koodisto-cache
                              organization-service
                              ohjausparametrit-service
                              person-service)
@@ -218,6 +225,7 @@
             (not-blank? virkailija-secret)
             (get-application {:virkailija virkailija-secret}
                              tarjonta-service
+                             koodisto-cache
                              organization-service
                              ohjausparametrit-service
                              person-service)
@@ -276,7 +284,7 @@
       (handle-client-error error-details))
     (api/GET "/postal-codes/:postal-code" [postal-code]
       :summary "Get name of postal office by postal code"
-      (let [code (koodisto/get-postal-office-by-postal-code postal-code)]
+      (let [code (koodisto/get-postal-office-by-postal-code koodisto-cache postal-code)]
         (if-let [labels (:label code)]
           (response/ok labels)
           (response/not-found))))
@@ -321,12 +329,7 @@
                               (api/routes
                                (api/context "/hakemus" []
                                   test-routes
-                                  (api-routes (:tarjonta-service this)
-                                              (:job-runner this)
-                                              (:organization-service this)
-                                              (:ohjausparametrit-service this)
-                                              (:person-service this)
-                                              (:temp-file-store this))
+                                  (api-routes this)
                                   (route/resources "/")
                                   (api/undocumented
                                     (api/GET "/haku/:oid" []

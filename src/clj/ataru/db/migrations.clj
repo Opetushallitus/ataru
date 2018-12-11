@@ -15,6 +15,7 @@
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.koodisto.koodisto :as koodisto]
+            [ataru.koodisto.koodisto-db-cache :as koodisto-cache]
             [ataru.person-service.person-service :as person-service]
             [ataru.person-service.person-integration :as person-integration]
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
@@ -376,7 +377,7 @@
                                       (clojure.string/lower-case (:sv (:label %2)))
                                       (:value %2))
                               {}
-                              (koodisto/get-koodisto-options "kunta" 1))]
+                              (koodisto-cache/get-koodi-options {:uri "kunta" :version 1}))]
     (doseq [form (migration-app-store/get-1.86-forms connection)
             :let [new-form (update-home-town new-home-town form)]]
       (if (= (:content new-form) (:content form))

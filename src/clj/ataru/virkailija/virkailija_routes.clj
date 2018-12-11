@@ -179,6 +179,7 @@
                           statistics-month-cache
                           statistics-week-cache
                           statistics-day-cache
+                          koodisto-cache
                           person-service]
                    :as dependencies}]
   (api/context "/api" []
@@ -372,6 +373,7 @@
                  (s/optional-key :alternative-form) ataru-schema/Form
                  :information-requests              [ataru-schema/InformationRequest]}
         (if-let [application (application-service/get-application-with-human-readable-koodis
+                              koodisto-cache
                               application-key
                               session
                               organization-service
@@ -484,6 +486,7 @@
                     session
                     organization-service
                     tarjonta-service
+                    koodisto-cache
                     ohjausparametrit-service
                     person-service)]
           (if xls
