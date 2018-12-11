@@ -410,7 +410,7 @@
         :summary "Send the modify application link to the applicant via email"
         :return ataru-schema/Event
         (if-let [resend-event (application-service/send-modify-application-link-email
-                                application-key
+                                koodisto-cache application-key
                                 session
                                 organization-service
                                 ohjausparametrit-service

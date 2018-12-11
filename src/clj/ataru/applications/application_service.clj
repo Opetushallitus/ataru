@@ -400,14 +400,14 @@
      to-state)))
 
 (defn send-modify-application-link-email
-  [application-key session organization-service ohjausparametrit-service tarjonta-service job-runner]
+  [koodisto-cache application-key session organization-service ohjausparametrit-service tarjonta-service job-runner]
   (when-let [application-id (:id (aac/get-latest-application-by-key
                                   organization-service
                                   tarjonta-service
                                   session
                                   application-key))]
     (application-store/add-new-secret-to-application application-key)
-    (email/start-email-submit-confirmation-job tarjonta-service organization-service ohjausparametrit-service job-runner application-id)
+    (email/start-email-submit-confirmation-job koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id)
     (application-store/add-application-event {:application-key application-key
                                               :event-type      "modification-link-sent"}
                                              session)))
