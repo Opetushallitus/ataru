@@ -223,7 +223,7 @@
   (tags :unit :hakija-routes)
 
   (around [spec]
-    (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _ _ _ _])
+    (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
                   koodisto/all-koodisto-values                          (constantly nil)]
       (spec)))
 
@@ -317,7 +317,7 @@
 
   (describe "POST application"
             (around [spec]
-              (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _ _ _ _])
+              (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
                             hakuaika/get-hakuaika-info                            hakuaika-ongoing
                             koodisto/all-koodisto-values                          (constantly nil)]
                 (spec)))
@@ -365,7 +365,7 @@
 
   (describe "GET application"
     (around [spec]
-      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _ _ _ _])
+      (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
                     hakuaika/get-hakuaika-info                            hakuaika-ongoing
                     koodisto/all-koodisto-values                          (constantly nil)]
         (spec)))
@@ -400,8 +400,8 @@
 
   (describe "PUT application"
     (around [spec]
-      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _ _ _ _])
-                    application-email/start-email-edit-confirmation-job   (fn [_ _ _ _ _])
+      (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
+                    application-email/start-email-edit-confirmation-job   (constantly nil)
                     application-service/remove-orphan-attachments         (fn [_ _])
                     hakuaika/get-hakuaika-info                            hakuaika-ongoing
                     koodisto/all-koodisto-values                          (constantly nil)]
@@ -459,8 +459,8 @@
 
   (describe "PUT application after hakuaika ended"
     (around [spec]
-      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _ _ _ _])
-                    application-email/start-email-edit-confirmation-job   (fn [_ _ _ _ _])
+      (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
+                    application-email/start-email-edit-confirmation-job   (constantly nil)
                     application-service/remove-orphan-attachments         (fn [_ _])
                     koodisto/all-koodisto-values                          (constantly nil)]
         (spec)))
@@ -507,8 +507,8 @@
 
   (describe "Tests for a more complicated form"
     (around [spec]
-      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _ _ _ _])
-                    application-email/start-email-edit-confirmation-job   (fn [_ _ _ _ _])
+      (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
+                    application-email/start-email-edit-confirmation-job   (constantly nil)
                     application-service/remove-orphan-attachments         (fn [_ _])
                     hakuaika/get-hakuaika-info                            hakuaika-ongoing
                     koodisto/all-koodisto-values                          (constantly nil)]
