@@ -2,6 +2,7 @@
   (:require [ataru.applications.application-store :as application-store]
             [ataru.applications.excel-export :as j2ee]
             [ataru.fixtures.excel-fixtures :as fixtures]
+            [ataru.cache.cache-service :as cache-service]
             [ataru.forms.form-store :as form-store]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [speclj.core :refer :all]
@@ -10,6 +11,13 @@
   (:import [java.io FileOutputStream File]
            [java.util UUID]
            [org.apache.poi.ss.usermodel WorkbookFactory]))
+
+(def koodisto-cache (reify cache-service/Cache
+                      (get-from [this key])
+                      (get-many-from [this keys])
+                      (put-to [this key value])
+                      (remove-from [this key])
+                      (clear-all [this])))
 
 (defn- verify-row
   [sheet row-num expected-values]
@@ -44,6 +52,7 @@
                                         ~skip-answers?
                                         :fi
                                         (tarjonta-service/new-tarjonta-service)
+                                        koodisto-cache
                                         (organization-service/new-organization-service)
                                         (ohjausparametrit-service/new-ohjausparametrit-service))
               (.write output#)))

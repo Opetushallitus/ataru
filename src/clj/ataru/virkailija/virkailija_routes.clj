@@ -179,6 +179,7 @@
                           statistics-month-cache
                           statistics-week-cache
                           statistics-day-cache
+                          koodisto-cache
                           person-service]
                    :as dependencies}]
   (api/context "/api" []
@@ -372,6 +373,7 @@
                  (s/optional-key :alternative-form) ataru-schema/Form
                  :information-requests              [ataru-schema/InformationRequest]}
         (if-let [application (application-service/get-application-with-human-readable-koodis
+                              koodisto-cache
                               application-key
                               session
                               organization-service
@@ -408,7 +410,7 @@
         :summary "Send the modify application link to the applicant via email"
         :return ataru-schema/Event
         (if-let [resend-event (application-service/send-modify-application-link-email
-                                application-key
+                                koodisto-cache application-key
                                 session
                                 organization-service
                                 ohjausparametrit-service
@@ -484,6 +486,7 @@
                     session
                     organization-service
                     tarjonta-service
+                    koodisto-cache
                     ohjausparametrit-service
                     person-service)]
           (if xls

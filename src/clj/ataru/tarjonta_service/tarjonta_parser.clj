@@ -90,7 +90,7 @@
                                                              pohjakoulutusvaatimuskorkeakoulut)}))
 
 (defn parse-tarjonta-info-by-haku
-  ([tarjonta-service organization-service ohjausparametrit-service haku-oid included-hakukohde-oids]
+  ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service haku-oid included-hakukohde-oids]
    {:pre [(some? tarjonta-service)
           (some? organization-service)
           (some? ohjausparametrit-service)]}
@@ -105,7 +105,7 @@
            ohjausparametrit                  (ohjausparametrit-protocol/get-parametri
                                                ohjausparametrit-service
                                                haku-oid)
-           pohjakoulutusvaatimuskorkeakoulut (get-koodisto-options "pohjakoulutusvaatimuskorkeakoulut" 1)
+           pohjakoulutusvaatimuskorkeakoulut (get-koodisto-options koodisto-cache "pohjakoulutusvaatimuskorkeakoulut" 1)
            hakukohteet                       (->> included-hakukohde-oids
                                                   (keep #(tarjonta-protocol/get-hakukohde
                                                            tarjonta-service
@@ -128,9 +128,10 @@
            :hakuaika                         (hakuaika/select-hakuaika (map :hakuaika hakukohteet))
            :can-submit-multiple-applications (:canSubmitMultipleApplications haku)
            :yhteishaku                       (yhteishaku? haku)}}))))
-  ([tarjonta-service organization-service ohjausparametrit-service haku-oid]
+  ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service haku-oid]
    (when haku-oid
-     (parse-tarjonta-info-by-haku tarjonta-service
+     (parse-tarjonta-info-by-haku koodisto-cache
+                                  tarjonta-service
                                   organization-service
                                   ohjausparametrit-service
                                   haku-oid

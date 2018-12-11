@@ -139,10 +139,11 @@
                   :operation audit-log/operation-new
                   :id        (util/extract-email application)}))
 
-(defn- validate-and-store [tarjonta-service organization-service ohjausparametrit-service application is-modify?]
+(defn- validate-and-store [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application is-modify?]
   (let [now                           (time/now)
         tarjonta-info                 (when (:haku application)
                                         (tarjonta-parser/parse-tarjonta-info-by-haku
+                                         koodisto-cache
                                          tarjonta-service
                                          organization-service
                                          ohjausparametrit-service
@@ -189,6 +190,7 @@
                                             (assoc :person-oid (:person-oid latest-application)))
                                         application)
         validation-result             (validator/valid-application?
+                                       koodisto-cache
                                        has-applied
                                        (set-original-values latest-application final-application)
                                        form
@@ -253,8 +255,8 @@
                            (:type attachment-finalizer-job/job-definition)
                            {:application-id application-id})))
 
-(defn- start-submit-jobs [tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
-  (application-email/start-email-submit-confirmation-job tarjonta-service
+(defn- start-submit-jobs [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
+  (application-email/start-email-submit-confirmation-job koodisto-cache tarjonta-service
                                                          organization-service
                                                          ohjausparametrit-service
                                                          job-runner
@@ -272,14 +274,15 @@
     (start-person-creation-job job-runner application-id))
   (start-attachment-finalizer-job job-runner application-id))
 
-(defn- start-hakija-edit-jobs [tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
-  (application-email/start-email-edit-confirmation-job tarjonta-service organization-service ohjausparametrit-service
+(defn- start-hakija-edit-jobs [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
+  (application-email/start-email-edit-confirmation-job koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                                                        job-runner
                                                        application-id)
   (start-attachment-finalizer-job job-runner application-id))
 
 (defn handle-application-submit
-  [tarjonta-service
+  [koodisto-cache
+   tarjonta-service
    job-runner
    organization-service
    ohjausparametrit-service
@@ -287,13 +290,13 @@
   (log/info "Application submitted:" application)
   (let [{:keys [passed? id]
          :as   result}
-        (validate-and-store tarjonta-service organization-service ohjausparametrit-service application false)
+        (validate-and-store koodisto-cache tarjonta-service organization-service ohjausparametrit-service application false)
         virkailija-secret (:virkailija-secret application)]
     (if passed?
       (do
         (when virkailija-secret
           (virkailija-edit/invalidate-virkailija-create-secret virkailija-secret))
-        (start-submit-jobs tarjonta-service organization-service ohjausparametrit-service job-runner id))
+        (start-submit-jobs koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id))
       (do
         (audit-log/log {:new       application
                         :operation audit-log/operation-failed
@@ -302,7 +305,8 @@
     result))
 
 (defn handle-application-edit
-  [tarjonta-service
+  [koodisto-cache
+   tarjonta-service
    job-runner
    organization-service
    ohjausparametrit-service
@@ -310,7 +314,7 @@
   (log/info "Application edited:" application)
   (let [{:keys [passed? id application]
          :as   result}
-        (validate-and-store tarjonta-service organization-service ohjausparametrit-service application true)
+        (validate-and-store koodisto-cache tarjonta-service organization-service ohjausparametrit-service application true)
         virkailija-secret (:virkailija-secret application)]
     (if passed?
       (if virkailija-secret
@@ -318,7 +322,7 @@
           virkailija-secret
           id
           application)
-        (start-hakija-edit-jobs tarjonta-service organization-service ohjausparametrit-service job-runner id))
+        (start-hakija-edit-jobs koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id))
       (do
         (audit-log/log {:new       application
                         :operation audit-log/operation-failed
@@ -354,7 +358,7 @@
         false))
 
 (defn get-latest-application-by-secret
-  [secret tarjonta-service organization-service ohjausparametrit-service person-client]
+  [secret tarjonta-service koodisto-cache organization-service ohjausparametrit-service person-client]
   (let [[actor-role secret] (match [secret]
                               [{:virkailija s}]
                               [:virkailija s]
@@ -380,6 +384,7 @@
         inactivated?               (is-inactivated? application)
         form                       (cond (some? (:haku application)) (hakija-form-service/fetch-form-by-haku-oid
                                                                        tarjonta-service
+                                                                       koodisto-cache
                                                                        organization-service
                                                                        ohjausparametrit-service
                                                                        (:haku application)
@@ -391,6 +396,7 @@
                                                                             form-store/fetch-by-id
                                                                             :key)
                                                                        form-roles
+                                                                       koodisto-cache
                                                                        nil
                                                                        application-in-processing?))
         person                     (if (= actor-role :virkailija)
@@ -414,9 +420,9 @@
      inactivated?]))
 
 (defn create-new-secret-and-send-link
-  [tarjonta-service organization-service ohjausparametrit-service job-runner old-secret]
+  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner old-secret]
   (let [application-id (application-store/add-new-secret-to-application-by-old-secret old-secret)]
-    (application-email/start-email-refresh-secret-confirmation-job tarjonta-service
+    (application-email/start-email-refresh-secret-confirmation-job koodisto-cache tarjonta-service
                                                                    organization-service ohjausparametrit-service
                                                                    job-runner
                                                                    application-id)))

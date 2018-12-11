@@ -497,6 +497,7 @@
    skip-answers?
    lang
    tarjonta-service
+   koodisto-cache
    organization-service
    ohjausparametrit-service]
   (let [[^XSSFWorkbook workbook styles] (create-workbook-and-styles)
@@ -508,6 +509,7 @@
         get-koodisto-options         (memoize koodisto/get-koodisto-options)
         get-tarjonta-info            (memoize (fn [haku-oid]
                                                   (tarjonta-parser/parse-tarjonta-info-by-haku
+                                                   koodisto-cache
                                                    tarjonta-service
                                                    organization-service
                                                    ohjausparametrit-service

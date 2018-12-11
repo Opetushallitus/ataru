@@ -4,6 +4,7 @@
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
             [ataru.ohjausparametrit.ohjausparametrit-client :as ohjausparametrit-client]
             [ataru.statistics.statistics-service :as s]
+            [ataru.koodisto.koodisto-db-cache :as koodisto-cache]
             [com.stuartsierra.component :as component])
   (:import java.util.concurrent.TimeUnit))
 
@@ -79,4 +80,12 @@
       {:name            "statistics-day"
        :loader          (cache/->FunctionCacheLoader s/get-and-parse-application-stats)
        :ttl-after-write [5 TimeUnit/MINUTES]})
-     [:redis])]])
+     [:redis])]
+   [:koodisto-cache
+    (component/using
+      (redis/map->Cache
+        {:name            "koodisto"
+         :loader          (cache/->FunctionCacheLoader koodisto-cache/get-koodi-options)
+         :ttl-after-write [3 TimeUnit/DAYS]
+         :update-period   [15 TimeUnit/MINUTES]})
+      [:redis])]])

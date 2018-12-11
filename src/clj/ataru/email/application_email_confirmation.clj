@@ -130,9 +130,10 @@
   (let [attachment {:label (-> field :label lang)}]
     (assoc attachment :deadline (-> field :params :deadline-label lang))))
 
-(defn- create-email [tarjonta-service organization-service ohjausparametrit-service subject template-name application-id]
+(defn- create-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id]
   (let [application                     (application-store/get-application application-id)
         tarjonta-info                   (tarjonta-parser/parse-tarjonta-info-by-haku
+                                          koodisto-cache
                                           tarjonta-service
                                           organization-service
                                           ohjausparametrit-service
@@ -179,8 +180,8 @@
      :subject    subject
      :body       body}))
 
-(defn- create-submit-email [tarjonta-service organization-service ohjausparametrit-service application-id]
-  (create-email tarjonta-service
+(defn- create-submit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id]
+  (create-email koodisto-cache tarjonta-service
                 organization-service
                 ohjausparametrit-service
                 nil
@@ -196,8 +197,8 @@
       (preview-submit-email lang subject content content-ending)) previews))
 
 
-(defn- create-edit-email [tarjonta-service organization-service ohjausparametrit-service application-id]
-  (create-email tarjonta-service organization-service ohjausparametrit-service
+(defn- create-edit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id]
+  (create-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                 edit-email-subjects
                 #(str "templates/email_edit_confirmation_template_"
                       (name %)
@@ -205,8 +206,8 @@
                 application-id))
 
 (defn- create-refresh-secret-email
-  [tarjonta-service organization-service ohjausparametrit-service application-id]
-  (create-email tarjonta-service organization-service ohjausparametrit-service
+  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id]
+  (create-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                 refresh-secret-email-subjects
                 #(str "templates/email_refresh_secret_template_" (name %) ".html")
                 application-id))
@@ -219,20 +220,20 @@
     (log/info email)))
 
 (defn start-email-submit-confirmation-job
-  [tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
-  (start-email-job job-runner (create-submit-email tarjonta-service
+  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
+  (start-email-job job-runner (create-submit-email koodisto-cache tarjonta-service
                                                    organization-service
                                                    ohjausparametrit-service
                                                    application-id)))
 
 (defn start-email-edit-confirmation-job
-  [tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
-  (start-email-job job-runner (create-edit-email tarjonta-service organization-service ohjausparametrit-service
+  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
+  (start-email-job job-runner (create-edit-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                                                  application-id)))
 
 (defn start-email-refresh-secret-confirmation-job
-  [tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
-  (start-email-job job-runner (create-refresh-secret-email tarjonta-service organization-service ohjausparametrit-service
+  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
+  (start-email-job job-runner (create-refresh-secret-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                                                            application-id)))
 
 (defn store-email-templates

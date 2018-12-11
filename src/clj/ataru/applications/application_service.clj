@@ -43,12 +43,6 @@
     {}
     field-descriptor-list))
 
-(defn- get-koodi [koodisto koodi-value]
-  (let [koodi-pred (comp (partial = koodi-value) :value)]
-    (->> koodisto
-         (filter koodi-pred)
-         first)))
-
 (defn- parse-application-hakukohde-reviews
   [application-key]
   (reduce
@@ -106,9 +100,8 @@
     (parse-person application person-from-onr)))
 
 (defn- populate-form-fields
-  [form tarjonta-info]
-  (-> form
-      koodisto/populate-form-koodisto-fields-cached
+  [form koodisto-cache tarjonta-info]
+  (-> (koodisto/populate-form-koodisto-fields-cached koodisto-cache form)
       (populate-hakukohde-answer-options tarjonta-info)
       (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)))
 
@@ -133,13 +126,14 @@
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
-  [application-key session organization-service tarjonta-service ohjausparametrit-service person-client with-newest-form?]
+  [koodisto-cache application-key session organization-service tarjonta-service ohjausparametrit-service person-client with-newest-form?]
   (when-let [application (aac/get-latest-application-by-key
                            organization-service
                            tarjonta-service
                            session
                            application-key)]
     (let [tarjonta-info        (tarjonta-parser/parse-tarjonta-info-by-haku
+                                 koodisto-cache
                                  tarjonta-service
                                  organization-service
                                  ohjausparametrit-service
@@ -149,10 +143,10 @@
           newest-form          (form-store/fetch-by-key (:key form-in-application))
           form                 (populate-form-fields (if with-newest-form?
                                                        newest-form
-                                                       form-in-application) tarjonta-info)
+                                                       form-in-application) koodisto-cache tarjonta-info)
           forms-differ?        (and (not with-newest-form?)
                                     (forms-differ? application tarjonta-info form
-                                                   (populate-form-fields newest-form tarjonta-info)))
+                                                   (populate-form-fields newest-form koodisto-cache tarjonta-info)))
           alternative-form     (some-> (when forms-differ?
                                              newest-form)
                                        (assoc :content [])
@@ -317,7 +311,7 @@
          applications)))
 
 (defn get-excel-report-of-applications-by-key
-  [application-keys selected-hakukohde selected-hakukohderyhma user-wants-to-skip-answers? session organization-service tarjonta-service ohjausparametrit-service person-service]
+  [application-keys selected-hakukohde selected-hakukohderyhma user-wants-to-skip-answers? session organization-service tarjonta-service koodisto-cache ohjausparametrit-service person-service]
   (when (aac/applications-access-authorized? organization-service tarjonta-service session application-keys [:view-applications :edit-applications])
     (let [applications                     (application-store/get-applications-by-keys application-keys)
           application-reviews              (->> applications
@@ -350,6 +344,7 @@
                                                         skip-answers?
                                                         lang
                                                         tarjonta-service
+                                                        koodisto-cache
                                                         organization-service
                                                         ohjausparametrit-service)))))
 
@@ -405,14 +400,14 @@
      to-state)))
 
 (defn send-modify-application-link-email
-  [application-key session organization-service ohjausparametrit-service tarjonta-service job-runner]
+  [koodisto-cache application-key session organization-service ohjausparametrit-service tarjonta-service job-runner]
   (when-let [application-id (:id (aac/get-latest-application-by-key
                                   organization-service
                                   tarjonta-service
                                   session
                                   application-key))]
     (application-store/add-new-secret-to-application application-key)
-    (email/start-email-submit-confirmation-job tarjonta-service organization-service ohjausparametrit-service job-runner application-id)
+    (email/start-email-submit-confirmation-job koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id)
     (application-store/add-application-event {:application-key application-key
                                               :event-type      "modification-link-sent"}
                                              session)))

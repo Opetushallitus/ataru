@@ -15,6 +15,7 @@
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.koodisto.koodisto :as koodisto]
+            [ataru.koodisto.koodisto-db-cache :as koodisto-cache]
             [ataru.person-service.person-service :as person-service]
             [ataru.person-service.person-integration :as person-integration]
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
@@ -361,14 +362,14 @@
 
 (defn- migrate-kotikunta-from-text-to-code
   [connection]
-  (let [new-home-town {:fieldClass "formField"
-                       :fieldType "dropdown"
-                       :id "home-town"
-                       :label {:fi "Kotikunta" :sv "Hemkommun" :en "Home town"}
-                       :params {}
-                       :options [{:value "" :label {:fi "" :sv "" :en ""}}]
-                       :validators ["home-town"]
-                       :koodisto-source {:uri "kunta" :version 1}
+  (let [new-home-town {:fieldClass                     "formField"
+                       :fieldType                      "dropdown"
+                       :id                             "home-town"
+                       :label                          {:fi "Kotikunta" :sv "Hemkommun" :en "Home town"}
+                       :params                         {}
+                       :options                        [{:value "" :label {:fi "" :sv "" :en ""}}]
+                       :validators                     ["home-town"]
+                       :koodisto-source                {:uri "kunta" :version 1}
                        :exclude-from-answers-if-hidden true}
         kunnat        (reduce #(assoc %1
                                       (clojure.string/lower-case (:fi (:label %2)))
@@ -376,7 +377,7 @@
                                       (clojure.string/lower-case (:sv (:label %2)))
                                       (:value %2))
                               {}
-                              (koodisto/get-koodisto-options "kunta" 1))]
+                              (koodisto-cache/get-koodi-options (koodisto/encode-koodisto-key {:uri "kunta" :version 1})))]
     (doseq [form (migration-app-store/get-1.86-forms connection)
             :let [new-form (update-home-town new-home-town form)]]
       (if (= (:content new-form) (:content form))

@@ -83,12 +83,6 @@
              :sv (->> element :relationMetadata (extract-name-with-language "SV"))
              :en (->> element :relationMetadata (extract-name-with-language "EN"))}})
 
-(defn list-koodistos []
-  (->> (fetch-all-koodisto-groups)
-       (koodisto-groups->uris-and-latest)
-       (mapv koodisto-version->uri-and-name)
-       (sort compare-case-insensitively)))
-
 (defn- add-within
   [koodi-option]
   (->> (do-get (resolve-url :koodisto-service.koodi-detail
@@ -121,7 +115,7 @@
     {:value number
      :label (:nimi institution)}))
 
-(defn get-vocational-institutions [version]
+(defn- get-vocational-institutions [version]
   (->> institution-type-codes
        (pmap #(get-vocational-institutions-by-type % version))
        flatten
@@ -129,42 +123,30 @@
        (pmap get-institution)
        (filter some?)))
 
-(defn get-koodi-options [koodisto-uri version]
-  (condp = koodisto-uri
+(defn get-koodi-options [koodisto-uri]
+  (let [[uri version] (clojure.string/split koodisto-uri #"#")]
+    (condp = uri
 
-    "AmmatillisetOPSperustaiset" (get-vocational-degree-options version)
+           "AmmatillisetOPSperustaiset" (get-vocational-degree-options version)
 
-    "oppilaitostyyppi" (get-vocational-institutions version)
+           "oppilaitostyyppi" (get-vocational-institutions version)
 
-    "pohjakoulutusvaatimuskorkeakoulut" (->> (resolve-url :koodisto-service.koodi koodisto-uri
-                                                          {"koodistoVersio"  (str version)
-                                                           "onlyValidKoodis" "true"})
-                                             do-get
-                                             (mapv koodi-value->soresu-option)
-                                             (mapv add-within))
+           "pohjakoulutusvaatimuskorkeakoulut" (->> (resolve-url :koodisto-service.koodi uri
+                                                      {"koodistoVersio"  (str version)
+                                                       "onlyValidKoodis" "true"})
+                                                    do-get
+                                                    (mapv koodi-value->soresu-option)
+                                                    (mapv add-within))
 
-    (let [url (resolve-url :koodisto-service.koodi koodisto-uri
-                           {"koodistoVersio"  (str version)
-                            "onlyValidKoodis" "true"})]
-      (->> (do-get url)
-           (mapv koodi-value->soresu-option)
-           (sort-by (comp :fi :label) compare-case-insensitively)))))
+           (let [url (resolve-url :koodisto-service.koodi uri
+                       {"koodistoVersio"  (str version)
+                        "onlyValidKoodis" "true"})]
+             (->> (do-get url)
+                  (mapv koodi-value->soresu-option)
+                  (sort-by (comp :fi :label) compare-case-insensitively))))))
 
-(defn- get-cached-koodisto [db-key koodisto-uri version checksum]
-  (->> {:koodisto_uri koodisto-uri
-        :version      version
-        :checksum     checksum}
-       (db/exec db-key yesql-get-koodisto)
-       first))
-
-(defn get-cached-koodi-options [db-key koodisto-uri version]
-  (if-let [cached-koodisto (get-cached-koodisto db-key koodisto-uri version nil)]
-    cached-koodisto
-    (let [koodisto (get-koodi-options koodisto-uri version)
-          checksum (->> (cheshire/generate-string koodisto)
-                        (sha256))]
-      (db/exec db-key yesql-create-koodisto<! {:koodisto_uri koodisto-uri
-                                               :version      version
-                                               :checksum     checksum
-                                               :content      [koodisto]})
-      (get-cached-koodisto db-key koodisto-uri version checksum))))
+(defn list-koodistos []
+  (->> (fetch-all-koodisto-groups)
+       (koodisto-groups->uris-and-latest)
+       (mapv koodisto-version->uri-and-name)
+       (sort compare-case-insensitively)))

@@ -1,5 +1,6 @@
 (ns ataru.hakija.hakija-routes-spec
   (:require [ataru.util :as util]
+            [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.application-store :as store]
             [ataru.background-job.job :as job]
             [ataru.fixtures.application :as application-fixtures]
@@ -9,6 +10,7 @@
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
+            [ataru.cache.cache-service :as cache-service]
             [ataru.hakija.hakija-routes :as routes]
             [ataru.hakija.hakija-application-service :as application-service]
             [ataru.config.core :refer [config]]
@@ -49,6 +51,12 @@
                  (assoc :organization-service (organization-service/new-organization-service))
                  (assoc :ohjausparametrit-service (ohjausparametrit-service/new-ohjausparametrit-service))
                  (assoc :person-service (person-service/new-person-service))
+                 (assoc :koodisto-cache (reify cache-service/Cache
+                                          (get-from [this key])
+                                          (get-many-from [this keys])
+                                          (put-to [this key value])
+                                          (remove-from [this key])
+                                          (clear-all [this])))
                  .start
                  :routes))
 
@@ -215,7 +223,8 @@
   (tags :unit :hakija-routes)
 
   (around [spec]
-    (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _ _ _ _])]
+    (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
+                  koodisto/all-koodisto-values                          (constantly nil)]
       (spec)))
 
   (before
@@ -307,10 +316,11 @@
   (tags :unit :hakija-routes)
 
   (describe "POST application"
-    (around [spec]
-      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _ _ _ _])
-                    hakuaika/get-hakuaika-info                            hakuaika-ongoing]
-        (spec)))
+            (around [spec]
+              (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
+                            hakuaika/get-hakuaika-info                            hakuaika-ongoing
+                            koodisto/all-koodisto-values                          (constantly nil)]
+                (spec)))
 
     (before
       (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
@@ -318,24 +328,24 @@
     (it "should validate application for hakukohde"
         (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
           (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
-                         (should= 200 (:status resp))
-                         (should (have-application-for-hakukohde-in-db (get-in resp [:body :id]))))))
+            (should= 200 (:status resp))
+            (should (have-application-for-hakukohde-in-db (get-in resp [:body :id]))))))
 
     (it "should validate application"
-      (with-response :post resp application-fixtures/person-info-form-application
-        (should= 200 (:status resp))
-        (should (have-application-in-db (get-in resp [:body :id])))))
+        (with-response :post resp application-fixtures/person-info-form-application
+          (should= 200 (:status resp))
+          (should (have-application-in-db (get-in resp [:body :id])))))
 
     (it "should validate application for hakukohde"
-      (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
-        (should= 200 (:status resp))
-        (should (have-application-for-hakukohde-in-db (get-in resp [:body :id])))))
+        (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
+          (should= 200 (:status resp))
+          (should (have-application-for-hakukohde-in-db (get-in resp [:body :id])))))
 
     (it "should not validate application with extra answers"
-      (with-response :post resp application-fixtures/person-info-form-application-with-extra-answer
-        (should= 400 (:status resp))
-        (should= {:failures {:extra-answers ["extra-answer-key"]}
-                  :code "application-validation-failed-error"} (:body resp))))
+        (with-response :post resp application-fixtures/person-info-form-application-with-extra-answer
+          (should= 400 (:status resp))
+          (should= {:code "application-validation-failed-error"
+                    :failures {:extra-answers ["extra-answer-key"]}} (:body resp))))
 
     (add-failing-post-spec "should not validate form with blank required field" application-blank-required-field)
 
@@ -347,12 +357,17 @@
 
     (add-failing-post-spec "should not validate form with invalid postal code field" application-invalid-postal-code)
 
-    (add-failing-post-spec "should not validate form with invalid dropdown field" application-invalid-dropdown-value))
+    (it "should not validate form with invalid dropdown field"
+        (with-redefs [koodisto/all-koodisto-values (constantly #{"Some-koodi"})]
+          (with-response :post resp application-invalid-dropdown-value
+            (should= 400 (:status resp))
+            (should-not (have-any-application-in-db))))))
 
   (describe "GET application"
     (around [spec]
-      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _ _ _ _])
-                    hakuaika/get-hakuaika-info                            hakuaika-ongoing]
+      (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
+                    hakuaika/get-hakuaika-info                            hakuaika-ongoing
+                    koodisto/all-koodisto-values                          (constantly nil)]
         (spec)))
 
     (before-all
@@ -385,10 +400,11 @@
 
   (describe "PUT application"
     (around [spec]
-      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _ _ _ _])
-                    application-email/start-email-edit-confirmation-job   (fn [_ _ _ _ _])
+      (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
+                    application-email/start-email-edit-confirmation-job   (constantly nil)
                     application-service/remove-orphan-attachments         (fn [_ _])
-                    hakuaika/get-hakuaika-info                            hakuaika-ongoing]
+                    hakuaika/get-hakuaika-info                            hakuaika-ongoing
+                    koodisto/all-koodisto-values                          (constantly nil)]
         (spec)))
 
     (before-all
@@ -443,9 +459,10 @@
 
   (describe "PUT application after hakuaika ended"
     (around [spec]
-      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _ _ _ _])
-                    application-email/start-email-edit-confirmation-job   (fn [_ _ _ _ _])
-                    application-service/remove-orphan-attachments         (fn [_ _])]
+      (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
+                    application-email/start-email-edit-confirmation-job   (constantly nil)
+                    application-service/remove-orphan-attachments         (fn [_ _])
+                    koodisto/all-koodisto-values                          (constantly nil)]
         (spec)))
 
     (before-all
@@ -490,10 +507,11 @@
 
   (describe "Tests for a more complicated form"
     (around [spec]
-      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _ _ _ _])
-                    application-email/start-email-edit-confirmation-job   (fn [_ _ _ _ _])
+      (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
+                    application-email/start-email-edit-confirmation-job   (constantly nil)
                     application-service/remove-orphan-attachments         (fn [_ _])
-                    hakuaika/get-hakuaika-info                            hakuaika-ongoing]
+                    hakuaika/get-hakuaika-info                            hakuaika-ongoing
+                    koodisto/all-koodisto-values                          (constantly nil)]
         (spec)))
 
     (before-all
