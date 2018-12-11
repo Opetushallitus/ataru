@@ -67,13 +67,13 @@
 
     :handler (component/using
                (handler/new-handler)
-               (into [:tarjonta-service
-                      :job-runner
-                      :organization-service
-                      :ohjausparametrit-service
-                      :person-service
-                      :temp-file-store]
-                     (map first caches)))
+               (vec (concat [:tarjonta-service
+                             :job-runner
+                             :organization-service
+                             :ohjausparametrit-service
+                             :person-service
+                             :temp-file-store]
+                            (map first caches))))
 
     :server-setup {:port      http-port
                    :repl-port repl-port}
