@@ -196,3 +196,69 @@
        (filter #(some? (second %)))
        (map vec)
        (into m)))
+
+(defn should-search? [search-term]
+  (> (count search-term) 1))
+
+(defn- term-text-matches
+  [text matches index term]
+  (if-let [match-start (clojure.string/index-of text term index)]
+    (let [match-end (+ match-start (count term))]
+      (recur text (conj matches [match-start match-end]) match-end term))
+    matches))
+
+(defn- text-matches
+  [text search-terms all-terms-must-match?]
+  (let [text         (clojure.string/lower-case text)
+        search-terms (->> search-terms
+                          (filter should-search?)
+                          (map clojure.string/lower-case))
+        matches      (map (partial term-text-matches text [] 0) search-terms)]
+    (if (and all-terms-must-match?
+             (some empty? matches))
+      []
+      (mapcat identity matches))))
+
+(defn- combine-overlapping-matches
+  [text-matches]
+  (reduce
+    (fn [acc [match-start match-end]]
+      (let [[previous-start previous-end] (last acc)]
+        (if (and previous-start (<= match-start previous-end))
+          (conj (vec (butlast acc)) [previous-start match-end])
+          (conj acc [match-start match-end]))))
+    []
+    (sort text-matches)))
+
+(defn match-text [text search-terms all-terms-must-match?]
+  (if (or (empty? search-terms)
+          (every? false? (map should-search? search-terms)))
+    [{:text text :hilight false}]
+    (let [highlights (-> text
+                         (text-matches search-terms all-terms-must-match?)
+                         (combine-overlapping-matches))]
+      (loop [res           []
+             current-index 0
+             [[match-begin match-end] & rest-highlights] highlights]
+        (cond
+          (nil? match-begin)
+          (if (= current-index (count text))
+            res
+            (conj res {:text    (subs text current-index)
+                       :hilight false}))
+
+          (< current-index match-begin)
+          (recur (conj res
+                       {:text    (subs text current-index match-begin)
+                        :hilight false}
+                       {:text    (subs text match-begin match-end)
+                        :hilight true})
+                 match-end
+                 rest-highlights)
+
+          :else
+          (recur (conj res
+                       {:text    (subs text current-index match-end)
+                        :hilight true})
+                 match-end
+                 rest-highlights))))))

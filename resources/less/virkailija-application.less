@@ -62,6 +62,31 @@
   cursor: pointer;
 }
 
+.application-handling__ensisijaisesti-hakukohteeseen {
+  padding-left: 23px;
+}
+
+.application-handling__ensisijaisesti-hakukohteeseen-popup-button {
+  font-size: 14px;
+  color: @pale-blue;
+  background-color: white;
+  border: 0px;
+  padding: 0px;
+  cursor: pointer;
+  text-align: left;
+  &:focus {
+    border: 0px;
+    outline: none;
+  }
+  &::-moz-focus-inner {
+    border: 0px;
+  }
+  &:hover {
+    border: 0px;
+    color: @selected-blue;
+  }
+}
+
 .application-handling__mass-information-request-container {
   position: relative;
 }
@@ -2153,88 +2178,25 @@ th.application__readonly-adjacent--header {
   .semibold;
   margin-left: 0px;
 }
-.application-handling__dropdown-box-item-selected-icon {
-  width: 10px;
-  margin-right: 10px;
-  min-width: 10px;
-  margin-top: 10px;
-  align-self: flex-start;
-}
-.application-handling__dropdown-box-item--label {
-  display: flex;
-}
-.application-handling__dropdown-box-item--description {
-  display: flex;
-  color: @gray-of-the-beast;
-  height: 16px;
-}
-.application-handling__dropdown-box-item {
-  position: relative;
-  height: 44px;
-  color: @text-color;
-  padding: 0 10px;
-  margin-bottom: 3px;
-  cursor: pointer;
-  box-shadow: @modal-shadow;
-  background: @white;
-  width: 100%;
-  font-size: 14px;
-  justify-content: left;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  align-content: center;
-}
 
-.application-handling__dropdown-box-item--selected {
-  color: @text-color;
-  border-radius: 3px;
-  margin-left: 0;
-}
-
-.application-handling__dropdown-box-container {
-  box-shadow: none;
-  margin-bottom: 0;
-}
-
-.application-handling__dropdown-box-opened {
-  background-color: @very-light-gray;
-  border-radius: 3px;
-  box-shadow: @modal-shadow;
-  z-index: 10;
-  position: absolute;
-}
-
-.application-handling__dropdown-box-opened__rajaus-hakukohteella {
-  width: 800px;
-}
-
-.application-handling__dropdown-box-opened .application-handling__dropdown-box-item {
-  box-shadow: none;
-  margin-bottom: 0;
-}
-
-.application-handling__dropdown-box-item:hover {
-  background-color: #e8f3f6;
-}
-
-.application-handling__dropdown-box-item-link {
-  color: @text-color;
-}
-
-.application-handling__dropdown-box-closed {
+.application-handling__hakukohde-rajaus-toggle-button {
+  display: inline-block;
   color: @pale-blue;
+  background-color: white;
+  border: 0px;
+  padding: 0px;
   cursor: pointer;
-  margin-top: 2px;
-  margin-left: 3px;
+  &:focus {
+    border: 0px;
+    outline: none;
+  }
+  &::-moz-focus-inner {
+    border: 0px;
+  }
   &:hover {
+    border: 0px;
     color: @selected-blue;
   }
-}
-
-.application-handling__dropdown-box-closed-label {
-  margin-left: 7px;
-  display: inline;
 }
 
 .application-handling__review-deactivate-toggle {

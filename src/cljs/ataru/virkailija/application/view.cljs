@@ -10,6 +10,7 @@
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :as t]
             [ataru.virkailija.temporal :as temporal]
+            [ataru.virkailija.views.hakukohde-and-hakukohderyhma-search :as h-and-h]
             [ataru.virkailija.views.modal :as modal]
             [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
             [ataru.virkailija.virkailija-ajax :as ajax]
@@ -183,7 +184,7 @@
                [:button.virkailija-close-button
                 {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state false)}
                 [:i.zmdi.zmdi-close]]]
-              (when-let [[haku-oid hakukohde-oid _] @haku-header]
+              (when-let [[haku-oid hakukohde-oid _ _ _] @haku-header]
                 [:p
                  @(subscribe [:application/haku-name haku-oid])
                  (when hakukohde-oid
@@ -302,56 +303,9 @@
 
 (defn- closed-row
   [on-click label]
-  [:div.application-handling__dropdown-box-closed
+  [:button.application-handling__hakukohde-rajaus-toggle-button
    {:on-click on-click}
-   [:i.zmdi.zmdi-chevron-down]
-   [:p.application-handling__dropdown-box-closed-label
-    (or label [:i.zmdi.zmdi-spinner.spin])]])
-
-(defn- row-component
-  [close-list href label description selected?]
-  [:a.application-handling__dropdown-box-item
-   {:href     href
-    :on-click close-list}
-   (if selected?
-     [:img.application-handling__dropdown-box-item-selected-icon
-      {:src "/lomake-editori/images/icon_check.png"}]
-     [:span.application-handling__dropdown-box-item-selected-icon])
-   (if label
-     [:div
-      [:span.application-handling__dropdown-box-item--label label]
-      [:span.application-handling__dropdown-box-item--description description]]
-     [:i.zmdi.zmdi-spinner.spin])])
-
-(defn- hakukohde-row
-  [close-list oid selected?]
-  (let [name        @(subscribe [:application/hakukohde-name oid])
-        description @(subscribe [:application/tarjoaja-name oid])]
-    (row-component close-list
-                   (str "/lomake-editori/applications/hakukohde/" oid)
-                   name
-                   description
-                   selected?)))
-
-(defn- hakukohderyhma-row
-  [close-list haku-oid oid selected?]
-  (let [name @(subscribe [:application/hakukohderyhma-name oid])]
-    (row-component close-list
-                   (str "/lomake-editori/applications/haku/"
-                     haku-oid
-                     "/hakukohderyhma/"
-                     oid)
-                   name
-                   nil
-                   selected?)))
-
-(defn- haku-row
-  [close-list oid selected?]
-  (row-component close-list
-                 (str "/lomake-editori/applications/haku/" oid)
-                 (get-virkailija-translation :all-hakukohteet)
-                 nil
-                 selected?))
+   (or label [:i.zmdi.zmdi-spinner.spin])])
 
 (defn- ensisijaisesti
   []
@@ -372,56 +326,62 @@
     (fn [[haku-oid
           selected-hakukohde-oid
           selected-hakukohderyhma-oid
-          hakukohde-oids
-          hakukohderyhma-oids]]
-      [:div.application-handling__header-haku-and-hakukohde
-       [:div.application-handling__header-haku
-        (if-let [haku-name @(subscribe [:application/haku-name haku-oid])]
-          haku-name
-          [:i.zmdi.zmdi-spinner.spin])]
-       (when @list-opened
-         [:div.application-handling__dropdown-box-opened
-          (haku-row close-list
-            haku-oid
-            (and (nil? selected-hakukohde-oid)
-                 (nil? selected-hakukohderyhma-oid)))
-          (let [hakukohde-sorted-oids (->> hakukohde-oids
-                                           (map (fn [hakukohde-oid]
-                                                  [@(subscribe [:application/hakukohde-name hakukohde-oid])
-                                                   hakukohde-oid]))
-                                           (sort-by first)
-                                           (map second))]
-            (doall
-              (for [hakukohde-oid hakukohde-sorted-oids]
-                ^{:key hakukohde-oid}
-                [hakukohde-row
-                 close-list
-                 hakukohde-oid
-                 (= hakukohde-oid selected-hakukohde-oid)])))
-          (let [hakukohderyhma-sorted-oids (->> hakukohderyhma-oids
-                                                (map (fn [hakukohderyhma-oid]
-                                                       [@(subscribe [:application/hakukohderyhma-name hakukohderyhma-oid])
-                                                        hakukohderyhma-oid]))
-                                                (sort-by first)
-                                                (map second))]
-            (doall
-              (for [hakukohderyhma-oid hakukohderyhma-sorted-oids]
-                ^{:key hakukohderyhma-oid}
-                [hakukohderyhma-row
-                 close-list
-                 haku-oid
-                 hakukohderyhma-oid
-                 (= hakukohderyhma-oid selected-hakukohderyhma-oid)])))])
-       (closed-row open-list
-                   (cond (some? selected-hakukohde-oid)
-                         @(subscribe [:application/hakukohde-name
-                                      selected-hakukohde-oid])
-                         (some? selected-hakukohderyhma-oid)
-                         @(subscribe [:application/hakukohderyhma-name
-                                      selected-hakukohderyhma-oid])
-                         :else
-                         (get-virkailija-translation :all-hakukohteet)))
-       ])))
+          hakukohteet
+          hakukohderyhmat]]
+      (let [hakukohde-oids      (map :oid hakukohteet)
+            hakukohderyhma-oids (map :oid hakukohderyhmat)]
+        [:div.application-handling__header-haku-and-hakukohde
+         [:div.application-handling__header-haku
+          (if-let [haku-name @(subscribe [:application/haku-name haku-oid])]
+            haku-name
+            [:i.zmdi.zmdi-spinner.spin])]
+         (closed-row (if @list-opened close-list open-list)
+                     (cond (some? selected-hakukohde-oid)
+                           @(subscribe [:application/hakukohde-name
+                                        selected-hakukohde-oid])
+                           (some? selected-hakukohderyhma-oid)
+                           @(subscribe [:application/hakukohderyhma-name
+                                        selected-hakukohderyhma-oid])
+                           :else
+                           (get-virkailija-translation :all-hakukohteet)))
+         (when @list-opened
+           [h-and-h/popup
+            [h-and-h/search-input
+             {:id                       haku-oid
+              :haut                     [{:oid         haku-oid
+                                          :name        (get virkailija-texts :hakukohteet)
+                                          :hakukohteet hakukohteet}]
+              :hakukohderyhmat          hakukohderyhmat
+              :hakukohde-selected?      #(= selected-hakukohde-oid %)
+              :hakukohderyhma-selected? #(= selected-hakukohderyhma-oid %)}]
+            [h-and-h/search-listing
+             {:id                         haku-oid
+              :haut                       [{:oid         haku-oid
+                                            :name        (get virkailija-texts :hakukohteet)
+                                            :hakukohteet hakukohteet}]
+              :hakukohderyhmat            hakukohderyhmat
+              :hakukohde-selected?        #(= selected-hakukohde-oid %)
+              :hakukohderyhma-selected?   #(= selected-hakukohderyhma-oid %)
+              :on-hakukohde-select        #(do (close-list)
+                                               (dispatch
+                                                [:application/navigate
+                                                 (str "/lomake-editori/applications/hakukohde/" %)]))
+              :on-hakukohde-unselect      #(do (close-list)
+                                               (dispatch
+                                                [:application/navigate
+                                                 (str "/lomake-editori/applications/haku/" haku-oid)]))
+              :on-hakukohderyhma-select   #(do (close-list)
+                                               (dispatch
+                                                [:application/navigate
+                                                 (str "/lomake-editori/applications/haku/"
+                                                      haku-oid
+                                                      "/hakukohderyhma/"
+                                                      %)]))
+              :on-hakukohderyhma-unselect #(do (close-list)
+                                               (dispatch
+                                                [:application/navigate
+                                                 (str "/lomake-editori/applications/haku/" haku-oid)]))}]
+            close-list])]))))
 
 (defn selected-applications-heading
   [haku-data list-heading]
@@ -784,53 +744,52 @@
             (map (fn [[id label]] (application-filter-checkbox filters label nil :base-education id)))
             (doall))])))
 
-(defn- rajaava-hakukohde-row
-  [close-list oid haku-oid hakukohderyhma-oid selected?]
-  (let [name        @(subscribe [:application/hakukohde-name oid])
-        description @(subscribe [:application/tarjoaja-name oid])]
-    (row-component close-list
-                   (str "/lomake-editori/applications/haku/" haku-oid "/hakukohderyhma/" hakukohderyhma-oid "?ensisijaisesti=true&rajaus-hakukohteella=" oid)
-                   name
-                   description
-                   selected?)))
-
 (defn- select-rajaava-hakukohde [opened?]
-  (if @opened?
-    (let [close                         #(reset! opened? false)
-          [haku-oid hakukohderyhma-oid] @(subscribe [:state-query [:application :selected-hakukohderyhma]])
-          ryhman-ensisijainen-hakukohde @(subscribe [:state-query [:application :selected-ryhman-ensisijainen-hakukohde]])
-          ryhman-hakukohteet            @(subscribe [:application/selected-hakukohderyhma-hakukohteet])]
-      [:div.application-handling__dropdown-box-opened.application-handling__dropdown-box-opened__rajaus-hakukohteella
-       (row-component close
-                      (str "/lomake-editori/applications/haku/" haku-oid "/hakukohderyhma/" hakukohderyhma-oid "?ensisijaisesti=true")
-                      (get-virkailija-translation :all-hakukohteet)
-                      nil
-                      (nil? ryhman-ensisijainen-hakukohde))
-       (let [hakukohde-sorted-oids (->> ryhman-hakukohteet
-                                        (map (fn [hakukohde-oid]
-                                               [@(subscribe [:application/hakukohde-name hakukohde-oid])
-                                                hakukohde-oid]))
-                                        (sort-by first)
-                                        (map second))]
-         (doall
-           (for [hakukohde-oid hakukohde-sorted-oids]
-             ^{:key hakukohde-oid}
-             [rajaava-hakukohde-row
-              close
-              hakukohde-oid
-              haku-oid
-              hakukohderyhma-oid
-              (= ryhman-ensisijainen-hakukohde hakukohde-oid)])))])
-    (let [ryhman-ensisijainen-hakukohde @(subscribe [:state-query [:application :selected-ryhman-ensisijainen-hakukohde]])
-          label                         (if (nil? ryhman-ensisijainen-hakukohde)
-                                          (get-virkailija-translation :all-hakukohteet)
-                                          @(subscribe [:application/hakukohde-name ryhman-ensisijainen-hakukohde]))]
-      [:div.application-handling__dropdown-box-closed
-       {:on-click (fn []
-                    (reset! opened? true))}
-       [:i.zmdi.zmdi-chevron-down]
-       [:p.application-handling__dropdown-box-closed-label
-        (or label [:i.zmdi.zmdi-spinner.spin])]])))
+  (let [ryhman-ensisijainen-hakukohde @(subscribe [:state-query [:application :selected-ryhman-ensisijainen-hakukohde]])]
+    [:div.application-handling__ensisijaisesti-hakukohteeseen
+     [:button.application-handling__ensisijaisesti-hakukohteeseen-popup-button
+      {:on-click #(swap! opened? not)}
+      (if (nil? ryhman-ensisijainen-hakukohde)
+        (get-virkailija-translation :all-hakukohteet)
+        (or @(subscribe [:application/hakukohde-name ryhman-ensisijainen-hakukohde])
+            [:i.zmdi.zmdi-spinner.spin]))]
+     (when @opened?
+       (let [close                         #(reset! opened? false)
+             [haku-oid hakukohderyhma-oid] @(subscribe [:state-query [:application :selected-hakukohderyhma]])
+             ryhman-ensisijainen-hakukohde @(subscribe [:state-query [:application :selected-ryhman-ensisijainen-hakukohde]])
+             ryhman-hakukohteet            @(subscribe [:application/selected-hakukohderyhma-hakukohteet])]
+         [h-and-h/popup
+          [h-and-h/search-input
+           {:id                       (str haku-oid "-" hakukohderyhma-oid)
+            :haut                     [{:oid         haku-oid
+                                        :hakukohteet ryhman-hakukohteet}]
+            :hakukohderyhmat          []
+            :hakukohde-selected?      #(= ryhman-ensisijainen-hakukohde %)
+            :hakukohderyhma-selected? (constantly false)}]
+          [h-and-h/search-listing
+           {:id                         (str haku-oid "-" hakukohderyhma-oid)
+            :haut                       [{:oid         haku-oid
+                                          :hakukohteet ryhman-hakukohteet}]
+            :hakukohderyhmat            []
+            :hakukohde-selected?        #(= ryhman-ensisijainen-hakukohde %)
+            :hakukohderyhma-selected?   (constantly false)
+            :on-hakukohde-select        #(do (close)
+                                             (dispatch
+                                              [:application/navigate
+                                               (str "/lomake-editori/applications/haku/"
+                                                    haku-oid
+                                                    "/hakukohderyhma/" hakukohderyhma-oid
+                                                    "?ensisijaisesti=true&rajaus-hakukohteella=" %)]))
+            :on-hakukohde-unselect      #(do (close)
+                                             (dispatch
+                                              [:application/navigate
+                                               (str "/lomake-editori/applications/haku/"
+                                                    haku-oid
+                                                    "/hakukohderyhma/" hakukohderyhma-oid
+                                                    "?ensisijaisesti=true")]))
+            :on-hakukohderyhma-select   (fn [])
+            :on-hakukohderyhma-unselect (fn [])}]
+          close]))]))
 
 (defn- application-filters
   []

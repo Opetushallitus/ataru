@@ -102,16 +102,17 @@
                                         (first selected-hakukohderyhma)
                                         :else
                                         (get-in db [:application :selected-haku]))
-          haun-hakukohteet        (map :oid (get-in db [:application
-                                                        :haut
-                                                        :tarjonta-haut
-                                                        selected-haku-oid
-                                                        :hakukohteet]))
-          haun-hakukohderyhmat    (distinct (mapcat (fn [hakukohde-oid]
-                                                      (get-in db [:hakukohteet
-                                                                  hakukohde-oid
-                                                                  :ryhmaliitokset]))
-                                                    haun-hakukohteet))]
+          haun-hakukohteet        (->> (get-in db [:application
+                                                   :haut
+                                                   :tarjonta-haut
+                                                   selected-haku-oid
+                                                   :hakukohteet])
+                                       (map :oid)
+                                       (keep #(get-in db [:hakukohteet %])))
+          haun-hakukohderyhmat    (->> haun-hakukohteet
+                                       (mapcat :ryhmaliitokset)
+                                       distinct
+                                       (keep #(get-in db [:hakukohderyhmat %])))]
       (when selected-haku-oid
         [selected-haku-oid
          selected-hakukohde-oid
@@ -135,13 +136,12 @@
 
 (defn- selected-hakukohderyhma-hakukohteet
   [db]
-  (if-let [[_ hakukohderyhma-oid] (get-in db [:application :selected-hakukohderyhma])]
-    (map first
-         (filter
-           (fn [[_ hakukohde]]
-             (if-let [ryhmaliitokset (:ryhmaliitokset hakukohde)]
-               (some #(= hakukohderyhma-oid %) ryhmaliitokset)))
-           (get-in db [:hakukohteet])))))
+  (when-let [[_ hakukohderyhma-oid] (get-in db [:application :selected-hakukohderyhma])]
+    (->> (:hakukohteet db)
+         vals
+         (filter (fn [hakukohde]
+                   (some #(= hakukohderyhma-oid %)
+                         (:ryhmaliitokset hakukohde)))))))
 
 (re-frame/reg-sub
   :application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
@@ -149,9 +149,9 @@
     (let [selected-by (application-list-selected-by db)
           oid-or-oids (when selected-by (-> db :application selected-by))]
       (case selected-by
-        :selected-hakukohde #{oid-or-oids}
+        :selected-hakukohde                     #{oid-or-oids}
         :selected-ryhman-ensisijainen-hakukohde #{oid-or-oids}
-        :selected-hakukohderyhma (set (selected-hakukohderyhma-hakukohteet db))
+        :selected-hakukohderyhma                (set (map :oid (selected-hakukohderyhma-hakukohteet db)))
         nil))))
 
 (re-frame/reg-sub

@@ -953,6 +953,12 @@ You will receive a confirmation of your application to your email."}
    :hakukohteet                                 {:fi "Hakukohteet"
                                                  :sv "Ansökningsmål"
                                                  :en "EN: Hakukohteet"}
+   :hakukohderyhmat                             {:fi "Hakukohderyhmät"
+                                                 :sv "SV: Hakukohderyhmät"
+                                                 :en "EN: Hakukohderyhmät"}
+   :search-hakukohde-placeholder                {:fi "Etsi hakukohteita ja hakukohderyhmiä"
+                                                 :sv "SV: Etsi hakukohteita ja hakukohderyhmiä"
+                                                 :en "EN: Etsi hakukohteita ja hakukohderyhmiä"}
    :handling-notes                              {:fi "Käsittelymerkinnät"
                                                  :sv "Anteckningar om behandling"
                                                  :en "EN: Käsittelymerkinnät"}
