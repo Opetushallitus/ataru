@@ -8,7 +8,7 @@
                    :schema        "public"}
  :yksiloimattomat {:allow false}
  :cache           {:type :redis}
- :redis           {:uri "redis://localhost:6379"}
+ :redis           {:uri "redis://localhost:6380"}
  :cas             {}
  :public-config   {:applicant                           {:service_url "http://localhost:8351"}
                    :virkailija                          {:service_url "http://localhost:8350/lomake-editori/"}
