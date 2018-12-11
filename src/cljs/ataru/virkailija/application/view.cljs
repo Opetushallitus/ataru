@@ -458,6 +458,7 @@
                              "application-handling__application-hakukohde-cell--selected")
                  :on-click (fn [evt]
                              (.preventDefault evt)
+                             (.stopPropagation evt)
                              (select-application (:key application) (or filtered-hakukohde
                                                                         hakukohde-oid)))}
                 [hakukohde-and-tarjoaja-name hakukohde-oid]])
