@@ -52,7 +52,7 @@
        (map (comp name :id))
        set))
 
-(def answers-to-always-include
+(def answer-to-always-include?
   (clojure.set/union
    #{"hakukohteet"}
    higher-education-base-education-questions
@@ -342,106 +342,61 @@
       (when (and value-truncated column)
         (writer 0 (+ column (count application-meta-fields)) value-truncated)))))
 
-(defn- form-label? [form-element]
-  (and (not= "infoElement" (:fieldClass form-element))
-       (not (:exclude-from-answers form-element))))
+(defn- pick-header
+  [form-fields-by-id form-field]
+  (str (match form-field
+         {:params      {:adjacent true}
+          :children-of parent-id}
+         (str (label/get-language-label-in-preferred-order
+               (get-in form-fields-by-id [parent-id :label]))
+              " - ")
+         {:fieldType "attachment"}
+         "Liitepyyntö: "
+         :else
+         "")
+       (label/get-language-label-in-preferred-order (:label form-field))))
 
-(defn- hidden-answer? [form-element]
-  (:exclude-from-answers form-element))
+(defn- belongs-to-other-hakukohde?
+  [selected-oids form-field]
+  (and (not-empty selected-oids)
+       (let [belongs-to (set (concat (:belongs-to-hakukohderyhma form-field)
+                                     (:belongs-to-hakukohteet form-field)))]
+         (and (not-empty belongs-to)
+              (empty? (clojure.set/intersection selected-oids belongs-to))))))
 
-(defn- pick-label
-  [form-element]
-  [(:id form-element)
-   (label/get-language-label-in-preferred-order (:label form-element))])
+(defn- headers-from-form
+  [form-fields form-fields-by-id skip-answers? selected-oids]
+  (->> form-fields
+       (remove #(or (:exclude-from-answers %)
+                    (and skip-answers?
+                         (not (answer-to-always-include? (:id %))))
+                    (belongs-to-other-hakukohde? selected-oids %)))
+       (map #(vector (:id %) (pick-header form-fields-by-id %)))))
 
-(defn pick-form-labels
-  [flat-fields pick-cond]
-  (->> flat-fields
-       (filter pick-cond)
-       (map pick-label)))
-
-(defn- find-parent [element fields]
-  (let [contains-element? (fn [children] (some? ((set (map :id children)) (:id element))))
-        followup-dropdown (fn [field] (mapcat :followups (:options field)))]
-    (reduce
-      (fn [parent field]
-        (or parent
-          (match field
-            ((_ :guard contains-element?) :<< :children) field
-
-            ((followups :guard not-empty) :<< followup-dropdown)
-            (or
-              (when (contains-element? followups)
-                field)
-              (find-parent element followups))
-
-            ((children :guard not-empty) :<< :children)
-            (find-parent element children)
-
-            :else nil)))
-      nil
-      fields)))
-
-(defn- decorate [flat-fields fields id header]
-  (let [element (first (filter #(= (:id %) id) flat-fields))]
-    (match element
-      {:params {:adjacent true}}
-      (if-let [parent-element (find-parent element fields)]
-        (str (-> parent-element :label :fi) " - " header)
-        header)
-      {:fieldType "attachment"}
-      (str "Liitepyyntö: " (label/get-language-label-in-preferred-order (:label element)))
-      :else header)))
-
-(defn- extract-headers-from-applications [applications pick-answers]
+(defn- headers-from-applications
+  [form-fields-by-id skip-answers? applications]
   (->> applications
-       (mapcat (fn [application]
-                   (map (fn [{:keys [key label]}] [key label])
-                        (:answers application))))
-       (into {})
-       (filter (fn [[key _]]
-                   (pick-answers key)))))
+       (mapcat :answers)
+       (remove #(or (contains? form-fields-by-id (:key %))
+                    (and skip-answers?
+                         (not (answer-to-always-include? (:key %))))))
+       (map #(vector (:key %) (label/get-language-label-in-preferred-order (:label %))))))
 
 (defn- extract-headers
-  [applications form selected-oids skip-answers? yhteishaku?]
-  (let [flat-fields            (util/flatten-form-fields (:content form))
-        hidden-answers         (->> (pick-form-labels flat-fields hidden-answer?)
-                                    (map first)
-                                    set)
-        belongs-to             (delay (->> flat-fields
-                                           (map (fn [field] [(:id field)
-                                                             (clojure.set/union
-                                                               (set (:belongs-to-hakukohderyhma field))
-                                                               (set (:belongs-to-hakukohteet field)))]))
-                                           (into {})))
-        selected-field         (fn [id]
-                                   (cond
-                                     (not yhteishaku?) true
-                                     (not-empty selected-oids) (-> (get @belongs-to id)
-                                                                   (clojure.set/intersection selected-oids)
-                                                                   (not-empty))
-                                     yhteishaku? false
-                                     :else true))
-        pick-answers           (fn [id]
-                                   (and (or (and (not skip-answers?)
-                                                 (selected-field id))
-                                            (contains? answers-to-always-include id))
-                                        (not (contains? hidden-answers id))))
-        labels-in-form         (pick-form-labels flat-fields
-                                                 #(and (form-label? %)
-                                                       (pick-answers (:id %))))
-        labels-in-applications (let [form-ids (set (map first labels-in-form))]
-                                 (remove #(contains? form-ids (first %))
-                                         (extract-headers-from-applications
-                                          applications
-                                          pick-answers)))
-        all-labels             (concat labels-in-form labels-in-applications)]
-    (for [[idx [id header]] (map vector (range) all-labels)
-          :let [header (or header "")]]
-      {:id               id
-       :decorated-header (decorate flat-fields (:content form) id header)
-       :header           header
-       :column           idx})))
+  [applications form selected-oids skip-answers?]
+  (let [form-fields       (util/flatten-form-fields (:content form))
+        form-fields-by-id (util/group-by-first :id form-fields)]
+    (map-indexed (fn [idx [id header]]
+                   {:id               id
+                    :decorated-header (or header "")
+                    :column           idx})
+                 (concat (headers-from-form form-fields
+                                            form-fields-by-id
+                                            skip-answers?
+                                            selected-oids)
+                         (headers-from-applications form-fields-by-id
+                                                    skip-answers?
+                                                    applications)))))
 
 (defn- create-form-meta-sheet [workbook styles meta-fields lang]
   (let [sheet  (.createSheet workbook "Lomakkeiden tiedot")
@@ -589,8 +544,7 @@
          (map second)
          (map-indexed (fn [sheet-idx {:keys [^String sheet-name form applications]}]
                         (let [applications-sheet (.createSheet workbook sheet-name)
-                              yhteishaku? (->  (get-tarjonta-info (:haku (first applications))) :tarjonta :yhteishaku)
-                              headers            (extract-headers applications form selected-oids skip-answers? yhteishaku?)
+                              headers            (extract-headers applications form selected-oids skip-answers?)
                               meta-writer        (make-writer styles form-meta-sheet (inc sheet-idx))
                               header-writer      (make-writer styles applications-sheet 0)
                               form-fields-by-key (reduce #(assoc %1 (:id %2) %2)
