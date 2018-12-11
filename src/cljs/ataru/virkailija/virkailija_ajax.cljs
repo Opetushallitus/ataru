@@ -36,7 +36,7 @@
   (when (and ttl (< (.getTime (js/Date.)) ttl))
     response))
 
-(defn http [method path handler-or-dispatch & {:keys [override-args handler-args skip-parse-times? cache-ttl]}]
+(defn http [method path handler-or-dispatch & {:keys [override-args handler-args skip-parse-times? cache-ttl skip-flasher?]}]
   (let [f             (case method
                         :get GET
                         :post POST
@@ -52,20 +52,22 @@
                         response)
         on-response   (fn [response]
                         (dispatch [:flasher {:loading? false
-                                             :message
-                                                       (match method
-                                                         (:or :post :put) "Kaikki muutokset tallennettu"
-                                                         :delete "Tiedot poistettu"
-                                                         :else nil)}])
+                                             :message  (if skip-flasher?
+                                                         nil
+                                                         (match method
+                                                                (:or :post :put) "Kaikki muutokset tallennettu"
+                                                                :delete "Tiedot poistettu"
+                                                                :else nil))}])
                         (match [handler-or-dispatch]
                           [(dispatch-keyword :guard keyword?)] (dispatch [dispatch-keyword response handler-args])
                           [nil] nil
                           :else (dispatch [:state-update (fn [db] (handler-or-dispatch db response handler-args))])))]
-    (dispatch [:flasher {:loading? true
-                         :message  (match method
-                                     (:or :post :put) "Tietoja tallennetaan"
-                                     :delete "Tietoja poistetaan"
-                                     :else nil)}])
+    (when-not skip-flasher?
+      (dispatch [:flasher {:loading? true
+                           :message  (match method
+                                            (:or :post :put) "Tietoja tallennetaan"
+                                            :delete "Tietoja poistetaan"
+                                            :else nil)}]))
     (if-let [response (when cache-ttl
                         (-> (get @http-cache {method path})
                             response-when-ttl-left))]
@@ -92,16 +94,18 @@
               {:headers {"CSRF" csrf-token}}))
           override-args)))))
 
-(defn post [path params handler-or-dispatch & {:keys [override-args handler-args skip-parse-times? cache-ttl]}]
+(defn post [path params handler-or-dispatch & {:keys [override-args handler-args skip-parse-times? cache-ttl skip-flasher?]}]
   (http :post path handler-or-dispatch
     :override-args (merge override-args {:params params})
     :handler-args handler-args
     :skip-parse-times? skip-parse-times?
+    :skip-flasher? skip-flasher?
     :cache-ttl cache-ttl))
 
-(defn put [path params handler-or-dispatch & {:keys [override-args handler-args skip-parse-times? cache-ttl]}]
+(defn put [path params handler-or-dispatch & {:keys [override-args handler-args skip-parse-times? cache-ttl skip-flasher?]}]
   (http :put path handler-or-dispatch
     :override-args (merge override-args {:params params})
     :handler-args handler-args
     :skip-parse-times? skip-parse-times?
+    :skip-flasher? skip-flasher?
     :cache-ttl cache-ttl))

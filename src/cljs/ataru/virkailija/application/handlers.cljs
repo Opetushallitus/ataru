@@ -385,6 +385,7 @@
                                                                     :filters                      filters}}
                                               params)
                   :skip-parse-times?   true
+                  :skip-flasher?       true
                   :handler-or-dispatch :application/handle-fetch-applications-response}}))
 
 (reg-event-fx
