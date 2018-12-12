@@ -443,7 +443,8 @@
                                          (< 0 (:new-application-modifications application))
                                          (->> application
                                               :application-hakukohde-reviews
-                                              (filter #(and (= (:requirement %) "processing-state")
+                                              (filter #(and (= hakukohde-oid (:hakukohde %))
+                                                            (= (:requirement %) "processing-state")
                                                             (= (:state %) "information-request")))
                                               (seq)))
                 hakukohde-attachment-states ((keyword hakukohde-oid) attachment-states)]
