@@ -143,16 +143,34 @@
                    (some #(= hakukohderyhma-oid %)
                          (:ryhmaliitokset hakukohde)))))))
 
+(defn- hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
+  [db]
+  (let [selected-by (application-list-selected-by db)
+        oid-or-oids (when selected-by (-> db :application selected-by))]
+    (case selected-by
+      :selected-hakukohde #{oid-or-oids}
+      :selected-ryhman-ensisijainen-hakukohde #{oid-or-oids}
+      :selected-hakukohderyhma (set (map :oid (selected-hakukohderyhma-hakukohteet db)))
+      nil)))
+
 (re-frame/reg-sub
   :application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
-  (fn [db]
-    (let [selected-by (application-list-selected-by db)
-          oid-or-oids (when selected-by (-> db :application selected-by))]
-      (case selected-by
-        :selected-hakukohde                     #{oid-or-oids}
-        :selected-ryhman-ensisijainen-hakukohde #{oid-or-oids}
-        :selected-hakukohderyhma                (set (map :oid (selected-hakukohderyhma-hakukohteet db)))
-        nil))))
+  hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma)
+
+(defn- selected-hakukohde-oid-set
+  [db]
+  (let [hakukohde-oids-from-hakukohde-or-ryhma (hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma db)]
+    (cond
+      (some? hakukohde-oids-from-hakukohde-or-ryhma)
+      hakukohde-oids-from-hakukohde-or-ryhma
+      (some? (-> db :application :selected-form-key))
+      #{"form"}
+      :else
+      nil)))
+
+(re-frame/reg-sub
+  :application/selected-hakukohde-oid-set
+  selected-hakukohde-oid-set)
 
 (re-frame/reg-sub
   :application/show-ensisijaisesti?
@@ -199,14 +217,14 @@
 (re-frame/reg-sub
  :application/show-mass-update-link?
  (fn [db]
-   (and (not-empty @(re-frame/subscribe [:application/filtered-applications]))
+   (and (not-empty @(re-frame/subscribe [:application/loaded-applications]))
         (contains? #{:selected-form-key :selected-haku :selected-hakukohde}
                    @(re-frame/subscribe [:application/application-list-selected-by])))))
 
 (re-frame/reg-sub
  :application/show-excel-link?
  (fn [db]
-   (and (not-empty @(re-frame/subscribe [:application/filtered-applications]))
+   (and (not-empty @(re-frame/subscribe [:application/loaded-applications]))
         (contains? #{:selected-form-key :selected-haku :selected-hakukohde :selected-hakukohderyhma}
                    @(re-frame/subscribe [:application/application-list-selected-by])))))
 
@@ -499,14 +517,14 @@
           hakukohderyhma-selected?))))
 
 (re-frame/reg-sub
-  :application/filtered-applications
+  :application/loaded-applications
   (fn [db _]
-    (-> db :application :filtered-applications)))
+    (-> db :application :applications)))
 
 (re-frame/reg-sub
   :application/filtered-applications-count
-  (fn [_ _]
-    (count @(re-frame/subscribe [:application/filtered-applications]))))
+  (fn [db _]
+    (-> db :application :filtered-count)))
 
 (re-frame/reg-sub
   :application/review-state-setting-enabled?
@@ -670,9 +688,9 @@
       (get-in db [:application :filters]))))
 
 (re-frame.core/reg-sub
-  :application/loaded-application-count
+  :application/total-application-count
   (fn [db _]
-    (-> db :application :applications (count))))
+    (-> db :application :total-count)))
 
 (re-frame.core/reg-sub
   :application/eligibility-automatically-checked?
@@ -700,3 +718,21 @@
     (->> (-> db :application :applications)
          (some #(not-empty (:base-education %)))
          (boolean))))
+
+(re-frame/reg-sub
+  :application/loaded-applications-count
+  (fn [db _]
+    (-> db :application :applications (count))))
+
+(re-frame/reg-sub
+  :application/previous-application-fetch-params
+  (fn [db _]
+    (let [previous-fetch (-> db :application :previous-fetch)]
+      (merge
+        {:states-and-filters
+         {:attachment-states-to-include (:attachment-states previous-fetch)
+          :processing-states-to-include (:processing-states previous-fetch)
+          :selection-states-to-include  (:selection-states previous-fetch)
+          :selected-hakukohteet         (selected-hakukohde-oid-set db)
+          :filters                      (:filters previous-fetch)}}
+        (:params previous-fetch)))))

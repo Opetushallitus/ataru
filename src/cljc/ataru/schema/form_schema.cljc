@@ -630,3 +630,33 @@
                             :content        s/Str
                             :content-ending s/Str
                             :subject        (s/constrained s/Str (comp not clojure.string/blank?))})
+
+(s/defschema ApplicationQueryResponse
+  {:aggregate-data {:total-count             s/Int
+                    :filtered-count          s/Int
+                    :attachment-state-counts {s/Str s/Int}
+                    :review-state-counts     {s/Str s/Int}}
+   :applications   [ApplicationInfo]})
+
+(s/defschema ApplicationQuery
+  {(s/optional-key :form-key)             s/Str
+   (s/optional-key :hakukohde-oid)        s/Str
+   (s/optional-key :hakukohderyhma-oid)   s/Str
+   (s/optional-key :haku-oid)             s/Str
+   (s/optional-key :ensisijaisesti)       s/Bool
+   (s/optional-key :rajaus-hakukohteella) s/Str
+   (s/optional-key :ssn)                  s/Str
+   (s/optional-key :dob)                  s/Str
+   (s/optional-key :email)                s/Str
+   (s/optional-key :name)                 s/Str
+   (s/optional-key :person-oid)           s/Str
+   (s/optional-key :application-oid)      s/Str
+   (s/optional-key :page)                 s/Int
+   (s/optional-key :page-size)            s/Int
+   (s/optional-key :sort)                 {:column s/Str
+                                           :order  s/Str}
+   (s/optional-key :states-and-filters)   {:filters                      {s/Keyword {s/Keyword s/Bool}}
+                                           :attachment-states-to-include [s/Str]
+                                           :processing-states-to-include [s/Str]
+                                           :selection-states-to-include  [s/Str]
+                                           :selected-hakukohteet         (s/maybe [s/Str])}})

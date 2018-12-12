@@ -1,26 +1,33 @@
 (ns ataru.applications.application-service
   (:require
-   [ataru.applications.application-access-control :as aac]
-   [ataru.applications.application-store :as application-store]
-   [ataru.applications.excel-export :as excel]
-   [ataru.email.application-email-confirmation :as email]
-   [ataru.forms.form-access-control :as form-access-control]
-   [ataru.forms.form-store :as form-store]
-   [ataru.hakija.hakija-form-service :as hakija-form-service]
-   [ataru.information-request.information-request-store :as information-request-store]
-   [ataru.koodisto.koodisto :as koodisto]
-   [ataru.middleware.user-feedback :refer [user-feedback-exception]]
-   [ataru.person-service.birth-date-converter :as bd-converter]
-   [ataru.person-service.person-service :as person-service]
-   [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
-   [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
-   [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
-   [ataru.util :as util]
-   [clojure.data :refer [diff]]
-   [ataru.virkailija.editor.form-utils :refer [visible?]]
-   [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
-   [medley.core :refer [filter-vals]]
-   [taoensso.timbre :refer [spy debug]])
+    [ataru.applications.application-access-control :as aac]
+    [ataru.applications.application-store :as application-store]
+    [ataru.applications.excel-export :as excel]
+    [ataru.email.application-email-confirmation :as email]
+    [ataru.forms.form-access-control :as form-access-control]
+    [ataru.forms.form-store :as form-store]
+    [ataru.hakija.hakija-form-service :as hakija-form-service]
+    [ataru.information-request.information-request-store :as information-request-store]
+    [ataru.koodisto.koodisto :as koodisto]
+    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
+    [ataru.person-service.birth-date-converter :as bd-converter]
+    [ataru.person-service.person-service :as person-service]
+    [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
+    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
+    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
+    [ataru.util :as util]
+    [ataru.applications.filtering :as application-filtering]
+    [ataru.applications.application-sorting :as application-sorting]
+    [clojure.data :refer [diff]]
+    [ataru.virkailija.editor.form-utils :refer [visible?]]
+    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
+    [medley.core :refer [filter-vals]]
+    [taoensso.timbre :refer [spy debug]]
+    [ataru.application.review-states :as review-states]
+    [ataru.application.application-states :as application-states]
+    [ataru.schema.form-schema :as ataru-schema]
+    [schema.core :as s]
+    [ataru.dob :as dob])
   (:import [java.io ByteArrayInputStream]))
 
 (defn- extract-koodisto-fields [field-descriptor-list]
@@ -281,6 +288,121 @@
    (assoc (merge query other-query)
           :predicate (every-pred (:predicate query) (:predicate other-query)))))
 
+(defn- processing-state-counts-for-application
+  [{:keys [application-hakukohde-reviews]} included-hakukohde-oid-set]
+  (->> (or
+         (->> application-hakukohde-reviews
+              (filter (fn [review]
+                        (and
+                          (= "processing-state" (:requirement review))
+                          (or (nil? included-hakukohde-oid-set)
+                              (contains? included-hakukohde-oid-set (:hakukohde review))))))
+              (not-empty))
+         [{:requirement "processing-state" :state review-states/initial-application-hakukohde-processing-state}])
+       (map :state)
+       (frequencies)))
+
+(defn review-state-counts
+  [applications included-hakukohde-oid-set]
+  (reduce
+    (fn [acc application]
+      (merge-with + acc (processing-state-counts-for-application application included-hakukohde-oid-set)))
+    {}
+    applications))
+
+(defn- map-vals-to-zero [m]
+  (into {} (for [[k v] m] [k 0])))
+
+(defn attachment-state-counts
+  [applications included-hakukohde-oid-set]
+  (reduce
+    (fn [acc application]
+      (merge-with (fn [prev new] (+ prev (if (not-empty new) 1 0)))
+                  acc
+                  (group-by :state (cond->> (application-states/attachment-reviews-with-no-requirements application)
+                                            (some? included-hakukohde-oid-set)
+                                            (filter #(contains? included-hakukohde-oid-set (:hakukohde %)))))))
+    (map-vals-to-zero review-states/attachment-hakukohde-review-types-with-no-requirements)
+    applications))
+
+(defn- sort-applications
+  [{:keys [column order]} applications]
+  (application-sorting/sort-by-column applications (keyword column) (keyword order)))
+
+(defn- populate-applications-with-person-data
+  [applications persons]
+  (map (fn [application]
+         (let [onr-person (get persons (:person-oid application))
+               person     (if (or (:yksiloity onr-person)
+                                  (:yksiloityVTJ onr-person))
+                            {:oid            (:oidHenkilo onr-person)
+                             :preferred-name (:kutsumanimi onr-person)
+                             :last-name      (:sukunimi onr-person)
+                             :yksiloity      true
+                             :ssn            (boolean (:hetu onr-person))}
+                            {:oid            (:person-oid application)
+                             :preferred-name (:preferred-name application)
+                             :last-name      (:last-name application)
+                             :yksiloity      false
+                             :ssn            (boolean (:ssn application))})]
+           (-> application
+               (assoc :person person)
+               (dissoc :ssn :person-oid :preferred-name :last-name))))
+       applications))
+
+(defn- filter-applications-with-person-data
+  [person-service states-and-filters applications]
+  (let [persons                   (person-service/get-persons
+                                    person-service
+                                    (distinct (keep :person-oid applications)))
+        applications-with-persons (populate-applications-with-person-data applications persons)]
+    (application-filtering/filter-applications applications-with-persons states-and-filters)))
+
+(defn- filter-applications-without-person-data
+  [states-and-filters applications]
+  (application-filtering/filter-applications applications states-and-filters))
+
+(defn- get-applications-page
+  [applications page-size page]
+  (if (and page-size page)
+    (->> applications
+         (drop (* page-size page))
+         (take page-size))
+    applications))
+
+(defn get-application-list-by-query-paged
+  [organization-service person-service tarjonta-service session query
+   {:keys [page page-size]}
+   {:keys [selected-hakukohteet] :as states-and-filters}
+   sort]
+  (let [selected-hakukohde-set (when selected-hakukohteet (set selected-hakukohteet))
+        applications           (aac/get-application-list-by-query
+                                 organization-service
+                                 tarjonta-service
+                                 session
+                                 query)
+        aggregate-data         {:total-count             (count applications)
+                                :attachment-state-counts (attachment-state-counts applications selected-hakukohde-set)
+                                :review-state-counts     (review-state-counts applications selected-hakukohde-set)}
+        person-info-needed?    (or
+                                 (application-sorting/person-info-needed-to-sort? (:column sort))
+                                 (application-filtering/person-info-needed-to-filter? (:filters states-and-filters)))]
+    (if person-info-needed?
+      (let [filtered-sorted-applications (->> applications
+                                              (filter-applications-with-person-data person-service states-and-filters)
+                                              (sort-applications sort))]
+        {:aggregate-data (merge aggregate-data {:filtered-count (count filtered-sorted-applications)})
+         :applications   (get-applications-page filtered-sorted-applications page-size page)})
+      (let [filtered-sorted-applications (->> applications
+                                              (filter-applications-without-person-data states-and-filters)
+                                              (sort-applications sort))
+            paged-applications           (get-applications-page filtered-sorted-applications page-size page)
+            persons                      (person-service/get-persons
+                                           person-service
+                                           (distinct (keep :person-oid paged-applications)))]
+        {:aggregate-data (merge aggregate-data {:filtered-count (count filtered-sorted-applications)})
+         :applications   (populate-applications-with-person-data paged-applications persons)}))))
+
 (defn get-application-list-by-query
   [organization-service person-service tarjonta-service session query]
   (let [applications (aac/get-application-list-by-query
@@ -291,24 +413,7 @@
         persons      (person-service/get-persons
                       person-service
                       (distinct (keep :person-oid applications)))]
-    (map (fn [application]
-           (let [onr-person (get persons (:person-oid application))
-                 person     (if (or (:yksiloity onr-person)
-                                    (:yksiloityVTJ onr-person))
-                              {:oid            (:oidHenkilo onr-person)
-                               :preferred-name (:kutsumanimi onr-person)
-                               :last-name      (:sukunimi onr-person)
-                               :yksiloity      true
-                               :ssn            (boolean (:hetu onr-person))}
-                              {:oid            (:person-oid application)
-                               :preferred-name (:preferred-name application)
-                               :last-name      (:last-name application)
-                               :yksiloity      false
-                               :ssn            (boolean (:ssn application))})]
-             (-> application
-                 (assoc :person person)
-                 (dissoc :ssn :person-oid :preferred-name :last-name))))
-         applications)))
+    (map populate-applications-with-person-data applications persons)))
 
 (defn get-excel-report-of-applications-by-key
   [application-keys selected-hakukohde selected-hakukohderyhma user-wants-to-skip-answers? session organization-service tarjonta-service koodisto-cache ohjausparametrit-service person-service]
@@ -508,3 +613,42 @@
       {:yksiloimattomat yksiloimattomat
        :applications    (map (partial add-henkilo henkilot) applications)})
     {:unauthorized nil}))
+
+(s/defn ^:always-validate query-applications-paged
+  [organization-service person-service tarjonta-service session params :- ataru-schema/ApplicationQuery] :- ataru-schema/ApplicationQueryResponse
+  (let [{:keys [form-key hakukohde-oid hakukohderyhma-oid haku-oid ensisijaisesti rajaus-hakukohteella ssn dob
+                email name person-oid application-oid page page-size sort states-and-filters]} params
+        ensisijaisesti (boolean ensisijaisesti)
+        paging         {:page      page
+                        :page-size page-size}
+        sort           (or sort {:column :created-time
+                                 :order  :descending})]
+    (when-let [query (cond (some? form-key)
+                           (->form-query form-key)
+                           (some? hakukohde-oid)
+                           (->hakukohde-query hakukohde-oid ensisijaisesti)
+                           (and (some? haku-oid) (some? hakukohderyhma-oid))
+                           (->hakukohderyhma-query haku-oid hakukohderyhma-oid ensisijaisesti rajaus-hakukohteella)
+                           (some? haku-oid)
+                           (->haku-query haku-oid)
+                           (some? ssn)
+                           (->ssn-query ssn)
+                           (and (some? dob) (dob/dob? dob))
+                           (->dob-query dob)
+                           (some? email)
+                           (->email-query email)
+                           (some? name)
+                           (->name-query name)
+                           (some? person-oid)
+                           (->person-oid-query person-oid)
+                           (some? application-oid)
+                           (->application-oid-query application-oid))]
+      (get-application-list-by-query-paged
+        organization-service
+        person-service
+        tarjonta-service
+        session
+        query
+        paging
+        states-and-filters
+        sort))))

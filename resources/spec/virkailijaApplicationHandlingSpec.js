@@ -296,7 +296,7 @@
         .then(clickElement(searchApplicationsBySsnLink))
         .then(wait.until(ssnSearchFieldHasValue('020202A0202')))
         .then(wait.until(function() {
-          return _.isEqual(applicantNames(), ['Tyrni, Johanna Irmeli', 'Kuikeloinen, Seija Susanna'])
+          return _.isEqual(applicantNames(), ['Kuikeloinen, Seija Susanna', 'Tyrni, Johanna Irmeli'])
         }))
         .then(done)
         .fail(done)
@@ -478,6 +478,10 @@
           },
           wait.until(function () {
             return includedSelectionStateFilters() === 4 && filteredApplicationsCount() === 2
+          }),
+          clickElement(function() { return testFrame().find('.application-handling__mass-information-request-link') }),
+          wait.until(function() {
+            return massInformationRequestPopup().is(':visible')
           })
         )
         it('reduces application list and recipient count', function () {

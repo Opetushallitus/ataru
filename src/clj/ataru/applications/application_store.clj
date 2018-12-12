@@ -350,9 +350,9 @@
 (defn get-application-heading-list
   [query]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-    (yesql-get-application-list-for-virkailija
-     (query->db-query connection query)
-     {:connection connection})))
+                           (yesql-get-application-list-for-virkailija
+                             (query->db-query connection query)
+                             {:connection connection})))
 
 (defn get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
   [person-oid]
@@ -821,9 +821,10 @@
       (yesql-upsert-application-hakukohde-review! new-review connection)
       (yesql-add-application-event<! (assoc new-event :hakukohde (:hakukohde new-review))
                                      connection))
-    {:new       new-event
-     :id        (-> session :identity :oid)
-     :operation audit-log/operation-new}))
+    (when new-reviews
+      {:new       new-event
+       :id        (-> session :identity :oid)
+       :operation audit-log/operation-new})))
 
 (defn applications-authorization-data [application-keys]
   (map ->kebab-case-kw
@@ -842,7 +843,7 @@
                               (mapv
                                (partial update-hakukohde-process-state! connection session hakukohde-oid from-state to-state)
                                application-keys)))]
-    (doseq [audit-log-entry audit-log-entries]
+    (doseq [audit-log-entry (filter some? audit-log-entries)]
       (audit-log/log audit-log-entry))
     true))
 

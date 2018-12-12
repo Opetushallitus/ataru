@@ -289,23 +289,46 @@
       :tags ["applications-api"]
 
       (api/POST "/mass-update" {session :session}
-        :body [body {:application-keys [s/Str]
-                     :hakukohde-oid    (s/maybe s/Str)
-                     :from-state       (apply s/enum (map first review-states/application-hakukohde-processing-states))
-                     :to-state         (apply s/enum (map first review-states/application-hakukohde-processing-states))}]
+        :body [body {:application-filter ataru-schema/ApplicationQuery
+                     :hakukohde-oid      (s/maybe s/Str)
+                     :from-state         (apply s/enum (map first review-states/application-hakukohde-processing-states))
+                     :to-state           (apply s/enum (map first review-states/application-hakukohde-processing-states))}]
         :summary "Update list of application-hakukohde with given state to new state"
-        (if (application-service/mass-update-application-states
-             organization-service
-             tarjonta-service
-             session
-             (:application-keys body)
-             (:hakukohde-oid body)
-             (:from-state body)
-             (:to-state body))
-          (response/ok {})
-          (response/unauthorized {:error (str "Hakemusten "
-                                              (clojure.string/join ", " (:application-keys body))
-                                              " käsittely ei ole sallittu")})))
+        (let [filter-with-from-state (-> (:application-filter body)
+                                         (assoc-in [:states-and-filters :processing-states-to-include] [(:from-state body)]))
+              application-keys       (->> (application-service/query-applications-paged
+                                            organization-service
+                                            person-service
+                                            tarjonta-service
+                                            session
+                                            filter-with-from-state)
+                                          :applications
+                                          (map :key))]
+          (if (application-service/mass-update-application-states
+                organization-service
+                tarjonta-service
+                session
+                application-keys
+                (:hakukohde-oid body)
+                (:from-state body)
+                (:to-state body))
+            (response/ok {:updated-count (count application-keys)})
+            (response/unauthorized {:error (str "Hakemusten "
+                                                (clojure.string/join ", " (:application-keys body))
+                                                " käsittely ei ole sallittu")}))))
+
+      (api/POST "/list" {session :session}
+        :body [body ataru-schema/ApplicationQuery]
+        :summary "Return applications header-level info for form"
+        :return ataru-schema/ApplicationQueryResponse
+        (if-let [result (application-service/query-applications-paged
+                          organization-service
+                          person-service
+                          tarjonta-service
+                          session
+                          body)]
+          (response/ok result)
+          (response/bad-request)))
 
       (api/GET "/list" {session :session}
         :query-params [{formKey :- s/Str nil}
@@ -465,30 +488,50 @@
         (ok (information-request/store information-request session job-runner)))
 
       (api/POST "/mass-information-request" {session :session}
-        :body [information-requests [ataru-schema/NewInformationRequest]]
+        :body [body {:message-and-subject {:message s/Str
+                                           :subject s/Str}
+                     :application-query   ataru-schema/ApplicationQuery}]
         :summary "Send information requests to multiple applicants"
         :return [ataru-schema/InformationRequest]
-        (ok (information-request/mass-store information-requests session job-runner)))
+        (let [application-keys     (->> (application-service/query-applications-paged
+                                          organization-service
+                                          person-service
+                                          tarjonta-service
+                                          session
+                                          (:application-query body))
+                                        :applications
+                                        (map :key))
+              information-requests (map #(assoc (:message-and-subject body) :application-key %) application-keys)]
+          (ok (information-request/mass-store information-requests session job-runner))))
 
       (api/POST "/excel" {session :session}
-        :form-params [application-keys :- s/Str
+        :form-params [application-filter :- s/Str
                       filename :- s/Str
                       {selected-hakukohde :- s/Str nil}
                       {selected-hakukohderyhma :- s/Str nil}
                       {skip-answers :- s/Bool false}
                       {CSRF :- s/Str nil}]
         :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
-        (let [xls (application-service/get-excel-report-of-applications-by-key
-                    (clojure.string/split application-keys #",")
-                    selected-hakukohde
-                    selected-hakukohderyhma
-                    skip-answers
-                    session
-                    organization-service
-                    tarjonta-service
-                    koodisto-cache
-                    ohjausparametrit-service
-                    person-service)]
+        (let [application-filter (json/parse-string application-filter keyword)
+              application-keys   (->> (application-service/query-applications-paged
+                                        organization-service
+                                        person-service
+                                        tarjonta-service
+                                        session
+                                        application-filter)
+                                      :applications
+                                      (map :key))
+              xls                (application-service/get-excel-report-of-applications-by-key
+                                   application-keys
+                                   selected-hakukohde
+                                   selected-hakukohderyhma
+                                   skip-answers
+                                   session
+                                   organization-service
+                                   tarjonta-service
+                                   koodisto-cache
+                                   ohjausparametrit-service
+                                   person-service)]
           (if xls
             {:status  200
              :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
