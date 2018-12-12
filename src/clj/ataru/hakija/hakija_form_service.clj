@@ -1,5 +1,6 @@
 (ns ataru.hakija.hakija-form-service
-  (:require [ataru.config.core :refer [config]]
+  (:require [ataru.cache.cache-service :as cache]
+            [ataru.config.core :refer [config]]
             [ataru.forms.form-store :as form-store]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
@@ -206,3 +207,45 @@
                                           roles)]
     (some-> form
             (assoc :load-time (System/currentTimeMillis)))))
+
+(s/defn ^:always-validate fetch-form-by-haku-oid-cached :- s/Any
+  [form-by-haku-oid-cache :- s/Any
+   haku-oid :- s/Str
+   application-in-processing-state? :- s/Bool
+   roles :- [form-role/FormRole]]
+  (cache/get-from form-by-haku-oid-cache
+                  (apply str
+                         haku-oid
+                         "#" application-in-processing-state?
+                         (sort (map #(str "#" (name %)) roles)))))
+
+(s/defn ^:always-validate fetch-form-by-hakukohde-oid-cached :- s/Any
+  [tarjonta-service :- s/Any
+   form-by-haku-oid-cache :- s/Any
+   hakukohde-oid :- s/Str
+   application-in-processing-state? :- s/Bool
+   roles :- [form-role/FormRole]]
+  (let [hakukohde (.get-hakukohde tarjonta-service hakukohde-oid)
+        form      (fetch-form-by-haku-oid-cached form-by-haku-oid-cache
+                                                 (:hakuOid hakukohde)
+                                                 false
+                                                 roles)]
+    (some-> form
+            (assoc :load-time (System/currentTimeMillis)))))
+
+(defrecord FormByHakuOidCacheLoader [tarjonta-service
+                                     koodisto-cache
+                                     organization-service
+                                     ohjausparametrit-service]
+  cache/CacheLoader
+  (load [_ key]
+    (let [[haku-oid aips? & roles] (clojure.string/split key #"#")]
+      (fetch-form-by-haku-oid tarjonta-service
+                              koodisto-cache
+                              organization-service
+                              ohjausparametrit-service
+                              haku-oid
+                              (Boolean/valueOf aips?)
+                              (map keyword roles))))
+  (load-many [this keys]
+    (into {} (keep #(when-let [v (cache/load this %)] [% v]) keys))))

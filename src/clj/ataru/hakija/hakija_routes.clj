@@ -126,12 +126,13 @@
   (not (clojure.string/blank? x)))
 
 (defn api-routes [{:keys [tarjonta-service
-                  job-runner
-                  organization-service
-                  ohjausparametrit-service
-                  person-service
-                  koodisto-cache
-                  temp-file-store]}]
+                          job-runner
+                          organization-service
+                          ohjausparametrit-service
+                          person-service
+                          koodisto-cache
+                          form-by-haku-oid-cache
+                          temp-file-store]}]
   (api/context "/api" []
     :tags ["application-api"]
     (api/GET ["/haku/:haku-oid" :haku-oid #"[0-9\.]+"] []
@@ -139,11 +140,8 @@
       :path-params [haku-oid :- s/Str]
       :query-params [role :- [form-role/FormRole]]
       :return ataru-schema/FormWithContentAndTarjontaMetadata
-      (if-let [form-with-tarjonta (form-service/fetch-form-by-haku-oid
-                                   tarjonta-service
-                                   koodisto-cache
-                                   organization-service
-                                   ohjausparametrit-service
+      (if-let [form-with-tarjonta (form-service/fetch-form-by-haku-oid-cached
+                                   form-by-haku-oid-cache
                                    haku-oid
                                    false
                                    role)]
@@ -154,11 +152,9 @@
       :path-params [hakukohde-oid :- s/Str]
       :query-params [role :- [form-role/FormRole]]
       :return ataru-schema/FormWithContentAndTarjontaMetadata
-      (if-let [form-with-tarjonta (form-service/fetch-form-by-hakukohde-oid
+      (if-let [form-with-tarjonta (form-service/fetch-form-by-hakukohde-oid-cached
                                    tarjonta-service
-                                   koodisto-cache
-                                   organization-service
-                                   ohjausparametrit-service
+                                   form-by-haku-oid-cache
                                    hakukohde-oid
                                    false
                                    role)]

@@ -88,4 +88,11 @@
          :loader          (cache/->FunctionCacheLoader koodisto-cache/get-koodi-options)
          :ttl-after-write [3 TimeUnit/DAYS]
          :update-period   [15 TimeUnit/MINUTES]})
-      [:redis])]])
+      [:redis])]
+   [:form-by-haku-oid-cache
+    (component/using
+     (redis/map->Cache
+      {:name            "form-by-haku-oid"
+       :ttl-after-write [5 TimeUnit/SECONDS]})
+     {:redis  :redis
+      :loader :form-by-haku-oid-cache-loader})]])
