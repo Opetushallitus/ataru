@@ -442,12 +442,22 @@
       db
       {:haku-oid haku-oid})))
 
+
+(comment
+  :application/incomplete-haut
+  (fn [_ _]
+    (re-frame/subscribe [:application/application-haut]))
+  (fn [application-haut _]
+    (incomplete-haut application-haut)))
+
+
 (reg-event-fx
   :application/fetch-applications-by-term
   (fn [{:keys [db]} [_ term type]]
     (fetch-applications-fx
       db
-      {type term})))
+      (util/remove-nil-values {type      term
+                               :haku-oid @(subscribe [:application/selected-haku-oid])}))))
 
 (reg-event-db
  :application/review-updated

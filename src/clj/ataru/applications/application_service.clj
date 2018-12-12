@@ -21,7 +21,7 @@
     [clojure.data :refer [diff]]
     [ataru.virkailija.editor.form-utils :refer [visible?]]
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
-    [medley.core :refer [filter-vals]]
+    [medley.core :refer [find-first filter-vals]]
     [taoensso.timbre :refer [spy debug]]
     [ataru.application.review-states :as review-states]
     [ataru.application.application-states :as application-states]
@@ -283,10 +283,14 @@
   {:predicate (constantly true)})
 
 (defn ->and-query
-  ([] (->empty-query))
-  ([query other-query]
-   (assoc (merge query other-query)
-          :predicate (every-pred (:predicate query) (:predicate other-query)))))
+  [& queries]
+  (if-let [queries (seq (remove nil? queries))]
+    (let [query (first queries)]
+      (if-let [other-query (second queries)]
+        (assoc (merge query other-query)
+               :predicate (every-pred (:predicate query) (:predicate other-query)))
+        query))
+    (->empty-query)))
 
 (defn- processing-state-counts-for-application
   [{:keys [application-hakukohde-reviews]} included-hakukohde-oid-set]
@@ -623,26 +627,27 @@
                         :page-size page-size}
         sort           (or sort {:column :created-time
                                  :order  :descending})]
-    (when-let [query (cond (some? form-key)
-                           (->form-query form-key)
-                           (some? hakukohde-oid)
-                           (->hakukohde-query hakukohde-oid ensisijaisesti)
-                           (and (some? haku-oid) (some? hakukohderyhma-oid))
-                           (->hakukohderyhma-query haku-oid hakukohderyhma-oid ensisijaisesti rajaus-hakukohteella)
-                           (some? haku-oid)
-                           (->haku-query haku-oid)
-                           (some? ssn)
-                           (->ssn-query ssn)
-                           (and (some? dob) (dob/dob? dob))
-                           (->dob-query dob)
-                           (some? email)
-                           (->email-query email)
-                           (some? name)
-                           (->name-query name)
-                           (some? person-oid)
-                           (->person-oid-query person-oid)
-                           (some? application-oid)
-                           (->application-oid-query application-oid))]
+    (when-let [query (or (cond (some? form-key)
+                               (->form-query form-key)
+                               (some? hakukohde-oid)
+                               (->hakukohde-query hakukohde-oid ensisijaisesti)
+                               (and (some? haku-oid) (some? hakukohderyhma-oid))
+                               (->hakukohderyhma-query haku-oid hakukohderyhma-oid ensisijaisesti rajaus-hakukohteella))
+                         (->and-query
+                           (when haku-oid
+                                 (->haku-query haku-oid))
+                           (cond (some? ssn)
+                                 (->ssn-query ssn)
+                                 (and (some? dob) (dob/dob? dob))
+                                 (->dob-query dob)
+                                 (some? email)
+                                 (->email-query email)
+                                 (some? name)
+                                 (->name-query name)
+                                 (some? person-oid)
+                                 (->person-oid-query person-oid)
+                                 (some? application-oid)
+                                 (->application-oid-query application-oid))))]
       (get-application-list-by-query-paged
         organization-service
         person-service

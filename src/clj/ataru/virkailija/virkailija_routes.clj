@@ -330,49 +330,6 @@
           (response/ok result)
           (response/bad-request)))
 
-      (api/GET "/list" {session :session}
-        :query-params [{formKey :- s/Str nil}
-                       {hakukohdeOid :- s/Str nil}
-                       {hakukohderyhmaOid :- s/Str nil}
-                       {hakuOid :- s/Str nil}
-                       {ensisijaisesti :- s/Bool false}
-                       {rajausHakukohteella :- s/Str nil}
-                       {ssn :- s/Str nil}
-                       {dob :- s/Str nil}
-                       {email :- s/Str nil}
-                       {name :- s/Str nil}
-                       {personOid :- s/Str nil}
-                       {applicationOid :- s/Str nil}]
-        :summary "Return applications header-level info for form"
-        :return {:applications [ataru-schema/ApplicationInfo]}
-        (if-let [query (cond (some? formKey)
-                             (application-service/->form-query formKey)
-                             (some? hakukohdeOid)
-                             (application-service/->hakukohde-query hakukohdeOid ensisijaisesti)
-                             (and (some? hakuOid) (some? hakukohderyhmaOid))
-                             (application-service/->hakukohderyhma-query hakuOid hakukohderyhmaOid ensisijaisesti rajausHakukohteella)
-                             (some? hakuOid)
-                             (application-service/->haku-query hakuOid)
-                             (some? ssn)
-                             (application-service/->ssn-query ssn)
-                             (and (some? dob) (dob/dob? dob))
-                             (application-service/->dob-query dob)
-                             (some? email)
-                             (application-service/->email-query email)
-                             (some? name)
-                             (application-service/->name-query name)
-                             (some? personOid)
-                             (application-service/->person-oid-query personOid)
-                             (some? applicationOid)
-                             (application-service/->application-oid-query applicationOid))]
-          (response/ok
-           {:applications (application-service/get-application-list-by-query
-                           organization-service
-                           person-service
-                           tarjonta-service
-                           session
-                           query)})
-          (response/bad-request)))
       (api/GET "/virkailija-settings" {session :session}
         :return ataru-schema/VirkailijaSettings
         (ok (virkailija-edit/get-review-settings session)))
