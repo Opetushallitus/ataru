@@ -65,6 +65,7 @@
   [tarjonta-service
    hakukohderyhmat
    haku
+   tarjonta-koulutukset
    ohjausparametrit
    pohjakoulutusvaatimuskorkeakoulut
    hakukohde]
@@ -83,7 +84,7 @@
      :tarjoaja-name              (:tarjoajaNimet hakukohde)
      :form-key                   (:ataruLomakeAvain hakukohde)
      :koulutukset                (->> (map :oid (:koulutukset hakukohde))
-                                      (map #(tarjonta-protocol/get-koulutus tarjonta-service %))
+                                      (map #(get tarjonta-koulutukset %))
                                       (map parse-koulutus))
      :hakuaika                   (hakuaika/get-hakuaika-info haku ohjausparametrit hakukohde)
      :applicable-base-educations (applicable-base-educations hakukohde
@@ -106,16 +107,21 @@
                                                ohjausparametrit-service
                                                haku-oid)
            pohjakoulutusvaatimuskorkeakoulut (get-koodisto-options koodisto-cache "pohjakoulutusvaatimuskorkeakoulut" 1)
-           hakukohteet                       (->> included-hakukohde-oids
-                                                  (keep #(tarjonta-protocol/get-hakukohde
-                                                           tarjonta-service
-                                                           %))
-                                                  (map #(parse-hakukohde tarjonta-service
-                                                          hakukohderyhmat
-                                                          haku
-                                                          ohjausparametrit
-                                                          pohjakoulutusvaatimuskorkeakoulut
-                                                          %)))
+           tarjonta-hakukohteet              (tarjonta-protocol/get-hakukohteet tarjonta-service
+                                                                                included-hakukohde-oids)
+           tarjonta-koulutukset              (->> tarjonta-hakukohteet
+                                                  (mapcat :koulutukset)
+                                                  (map :oid)
+                                                  distinct
+                                                  (tarjonta-protocol/get-koulutukset tarjonta-service))
+           hakukohteet                       (map #(parse-hakukohde tarjonta-service
+                                                                    hakukohderyhmat
+                                                                    haku
+                                                                    tarjonta-koulutukset
+                                                                    ohjausparametrit
+                                                                    pohjakoulutusvaatimuskorkeakoulut
+                                                                    %)
+                                                  tarjonta-hakukohteet)
            max-hakukohteet                   (:maxHakukohdes haku)]
        (when (not-empty hakukohteet)
          {:tarjonta
