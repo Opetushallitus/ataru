@@ -92,7 +92,9 @@
    [:form-by-haku-oid-cache
     (component/using
      (redis/map->Cache
-      {:name            "form-by-haku-oid"
-       :ttl-after-write [5 TimeUnit/SECONDS]})
+      {:name               "form-by-haku-oid"
+       :ttl-after-read     [10 TimeUnit/SECONDS]
+       :ttl-after-write    [10 TimeUnit/SECONDS]
+       :update-after-read? true})
      {:redis  :redis
       :loader :form-by-haku-oid-cache-loader})]])
