@@ -200,7 +200,7 @@
         (.scheduleAtFixedRate
          scheduler
          (update-to-update-keys-runnable redis loader name update-period)
-         10 10 TimeUnit/SECONDS)
+         1 1 TimeUnit/SECONDS)
         (assoc this
                :scheduler scheduler
                :mq-worker mq-worker
