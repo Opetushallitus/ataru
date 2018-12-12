@@ -442,15 +442,6 @@
       db
       {:haku-oid haku-oid})))
 
-
-(comment
-  :application/incomplete-haut
-  (fn [_ _]
-    (re-frame/subscribe [:application/application-haut]))
-  (fn [application-haut _]
-    (incomplete-haut application-haut)))
-
-
 (reg-event-fx
   :application/fetch-applications-by-term
   (fn [{:keys [db]} [_ term type]]
