@@ -590,7 +590,7 @@
       (api/GET "/:koodisto-uri/:version" [koodisto-uri version]
         :path-params [koodisto-uri :- s/Str version :- Long]
         :return s/Any
-        (let [koodi-options (koodisto/get-koodisto-options koodisto-uri version)]
+        (let [koodi-options (koodisto/get-koodisto-options koodisto-cache koodisto-uri version)]
           (ok koodi-options))))
 
     (api/context "/organization" []
