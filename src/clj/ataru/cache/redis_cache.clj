@@ -7,7 +7,8 @@
             [ataru.cache.cache-service :as cache])
   (:import [java.util.concurrent
             ScheduledThreadPoolExecutor
-            TimeUnit]))
+            TimeUnit]
+           java.util.concurrent.locks.ReentrantLock))
 
 (defn- ->cache-key
   [name key]
@@ -98,18 +99,28 @@
            :misses []}
           (partition 5000 5000 nil keys)))
 
+(defn- get-lock
+  [locks lock-name]
+  (get (if (contains? @locks lock-name)
+         @locks
+         (swap! locks #(if (contains? % lock-name)
+                         %
+                         (assoc % lock-name (new ReentrantLock)))))
+       lock-name))
+
 (defn- redis-with-lock
-  [redis name lock-name timeout-ms wait-ms thunk]
+  [locks name lock-name wait-ms thunk]
   (let [l-name (->lock-key name lock-name)
-        result (carlocks/with-lock
-                 (:connection-opts redis)
-                 l-name
-                 timeout-ms wait-ms
-                 (thunk))]
-    (if (some? result)
-      (:result result)
-      (do (warn (str "Failed to acquire lock " l-name " in " wait-ms " ms"))
-          (thunk)))))
+        lock   (get-lock locks l-name)]
+    (try
+      (try
+        (when-not (.tryLock lock wait-ms TimeUnit/MILLISECONDS)
+          (warn (str "Failed to acquire lock " l-name " in " wait-ms " ms")))
+        (catch Exception e
+          (error e (str "Error while acquiring lock " l-name))))
+      (thunk)
+      (finally
+        (.unlock lock)))))
 
 (defn- update-to-update-keys [redis loader name]
   (loop [updated-count 0]
@@ -171,7 +182,8 @@
                   update-after-read?
                   update-period
                   scheduler
-                  mq-worker]
+                  mq-worker
+                  locks]
   component/Lifecycle
 
   (start [this]
@@ -191,7 +203,8 @@
          10 10 TimeUnit/SECONDS)
         (assoc this
                :scheduler scheduler
-               :mq-worker mq-worker))
+               :mq-worker mq-worker
+               :locks (atom {})))
       this))
   (stop [this]
     (when (some? scheduler)
@@ -200,7 +213,8 @@
       (car-mq/stop mq-worker))
     (assoc this
            :scheduler nil
-           :mq-worker nil))
+           :mq-worker nil
+           :locks nil))
 
   cache/Cache
 
@@ -210,8 +224,8 @@
         (if (some? from-cache)
           from-cache
           (redis-with-lock
-           redis name (str "single:" key)
-           (.toMillis TimeUnit/MINUTES 2) (.toMillis TimeUnit/MINUTES 2)
+           locks name (str "single:" key)
+           (.toMillis TimeUnit/MINUTES 2)
            (fn []
              (let [from-cache (redis-get redis name key ttl-after-read update-after-read?)]
                (if (some? from-cache)
@@ -228,8 +242,8 @@
           hits
           (merge hits
                  (redis-with-lock
-                  redis name "many"
-                  (.toMillis TimeUnit/MINUTES 2) (.toMillis TimeUnit/MINUTES 2)
+                  locks name "many"
+                  (.toMillis TimeUnit/MINUTES 2)
                   (fn []
                     (let [{:keys [hits misses]} (redis-mget redis name keys ttl-after-read update-after-read?)]
                       (if (empty? misses)
