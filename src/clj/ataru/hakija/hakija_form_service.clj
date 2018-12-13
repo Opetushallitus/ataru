@@ -102,28 +102,30 @@
                 (not (and (empty? (:uniques hakuajat))
                           application-in-processing-state?))))))
 
+(defn flag-uneditable-and-unviewable-field
+  [hakuajat roles application-in-processing-state? field]
+  (if (= "formField" (:fieldClass field))
+    (let [cannot-view? (and (contains? viewing-forbidden-person-info-field-ids
+                                       (keyword (:id field)))
+                            (not (form-role/virkailija? roles)))
+          cannot-edit? (or cannot-view?
+                           (uneditable? field hakuajat roles application-in-processing-state?))]
+      (assoc field
+             :cannot-view cannot-view?
+             :cannot-edit cannot-edit?))
+    field))
+
 (s/defn ^:always-validate flag-uneditable-and-unviewable-fields :- s/Any
   [form :- s/Any
    hakukohteet :- s/Any
    roles :- [form-role/FormRole]
    application-in-processing-state? :- s/Bool]
   (let [hakuajat (hakuaika/index-hakuajat hakukohteet)]
-    (update form :content
-            (fn [content]
-              (clojure.walk/prewalk
-               (fn [field]
-                 (if (= "formField" (:fieldClass field))
-                   (let [cannot-view? (and (contains? viewing-forbidden-person-info-field-ids
-                                                      (keyword (:id field)))
-                                           (not (form-role/virkailija? roles)))
-                         cannot-edit? (or cannot-view?
-                                          (uneditable? field hakuajat roles application-in-processing-state?))
-                         field        (assoc field
-                                             :cannot-view cannot-view?
-                                             :cannot-edit cannot-edit?)]
-                     field)
-                   field))
-               content)))))
+    (update form :content (partial util/map-form-fields
+                                   (partial flag-uneditable-and-unviewable-field
+                                            hakuajat
+                                            roles
+                                            application-in-processing-state?)))))
 
 (s/defn ^:always-validate remove-required-hakija-validator-if-virkailija :- s/Any
   [form :- s/Any
