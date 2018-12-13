@@ -10,15 +10,6 @@
             TimeUnit]
            java.util.concurrent.locks.ReentrantLock))
 
-(defn- timed
-  [msg threshold fn]
-  (let [start (System/currentTimeMillis)
-        r     (fn)
-        t     (- (System/currentTimeMillis) start)]
-    (when (< threshold t)
-      (warn (format msg t)))
-    r))
-
 (defn- ->cache-key
   [name key]
   (str "ataru:cache:item:" name ":" key))
@@ -227,18 +218,14 @@
 
   (get-from [this key]
     (try
-      (let [from-cache (timed (str "Reading key " key " from Redis cache " name " took %d ms")
-                              1000
-                              (fn [] (redis-get redis name key ttl-after-read-ms update-after-read?)))]
+      (let [from-cache (redis-get redis name key ttl-after-read-ms update-after-read?)]
         (if (some? from-cache)
           from-cache
           (redis-with-lock
            locks name (str "single:" key)
            (.toMillis TimeUnit/MINUTES 2)
            (fn []
-             (let [from-cache (timed (str "Reading key " key " from Redis cache " name " under lock took %d ms")
-                                     1000
-                                     (fn [] (redis-get redis name key ttl-after-read-ms update-after-read?)))]
+             (let [from-cache (redis-get redis name key ttl-after-read-ms update-after-read?)]
                (if (some? from-cache)
                  from-cache
                  (redis-set redis name key (cache/load loader key) ttl-after-write)))))))
