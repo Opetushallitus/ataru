@@ -18,7 +18,8 @@
 
 (defn initialize-db [_ _]
   {:form        nil
-   :application {:answers {}}})
+   :application {:attachments-id (random-uuid)
+                 :answers        {}}})
 
 (defn- required? [field-descriptor]
   (some (partial = "required")
@@ -905,10 +906,13 @@
 
 (reg-event-fx
   :application/add-single-attachment-resumable
-  (fn [_ [_ field-descriptor attachment-idx file retries question-group-idx]]
+  (fn [{:keys [db]} [_ field-descriptor attachment-idx file retries question-group-idx]]
     (resumable-upload/upload-file
       "/hakemus/api/files/resumable"
       file
+      (:id field-descriptor)
+      attachment-idx
+      (get-in db [:application :attachments-id])
       {:handler          [:application/handle-attachment-upload field-descriptor attachment-idx question-group-idx]
        :error-handler    [:application/handle-attachment-upload-error field-descriptor attachment-idx name file (inc retries) question-group-idx]
        :progress-handler [:application-file-upload/handle-attachment-progress-resumable field-descriptor attachment-idx question-group-idx]

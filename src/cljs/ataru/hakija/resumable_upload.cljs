@@ -16,14 +16,20 @@
     (crypt/byteArrayToHex (.digest md5))))
 
 (defn upload-file
-  [url file handlers]
+  [url file field-id attachment-idx application-attachments-id handlers]
+  {:pre [(every? (complement clojure.string/blank?) [url field-id application-attachments-id])
+         (every? some? [file attachment-idx handlers])]}
   (let [fr (js/FileReader.)]
     (.addEventListener
       fr
       "loadend"
       (fn []
         (let [file-buffer (.-result fr)
-              id          (hex-md5-hash file-buffer)
+              id          (str
+                            application-attachments-id "-"
+                            field-id "-"
+                            attachment-idx "-"
+                            (hex-md5-hash file-buffer))
               dispatch-kw (if (<= (.-size file) max-part-size)
                             :application-file-upload/upload-file-part
                             :application-file-upload/check-file-part-status-and-upload)]
