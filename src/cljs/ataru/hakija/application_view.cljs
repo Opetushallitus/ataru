@@ -88,12 +88,17 @@
 
 (defn application-contents []
   (let [form            (subscribe [:state-query [:form]])
+        load-failure?   (subscribe [:state-query [:error :code]])
         can-apply?      (subscribe [:application/can-apply?])
         editing?        (subscribe [:state-query [:application :editing?]])
         expired         (subscribe [:state-query [:application :secret-expired?]])
         delivery-status (subscribe [:state-query [:application :secret-delivery-status]])]
     (fn []
       [:div.application__form-content-area
+       (when-not (or @load-failure?
+                     @form)
+         [:div.application__form-loading-spinner
+          [:i.zmdi.zmdi-hc-3x.zmdi-spinner.spin]])
        (when @expired
          [:div.application__secret-expired
           [:div.application__secret-expired-icon
