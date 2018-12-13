@@ -74,4 +74,6 @@
         {:db (-> db
                  (set-search-term search-term)
                  (assoc-in [:application :applications] nil)
-                 (assoc-in [:application :filtered-applications] nil))}))))
+                 (assoc-in [:application :application-list-page] 0)
+                 (assoc-in [:application :total-count] nil)
+                 (assoc-in [:application :filtered-count] nil))}))))

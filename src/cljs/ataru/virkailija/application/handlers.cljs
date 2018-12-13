@@ -430,10 +430,12 @@
   (fn [{:keys [db]} [_ [haku-oid hakukohderyhma-oid]]]
     (fetch-applications-fx
       db
-      {:haku-oid haku-oid
-       :hakukohderyhma-oid hakukohderyhma-oid
-       :ensisijaisesti (get-in db [:application :ensisijaisesti?] false)
-       :rajaus-hakukohteella (get-in db [:application :selected-ryhman-ensisijainen-hakukohde] nil)})))
+      (merge
+        {:haku-oid           haku-oid
+         :hakukohderyhma-oid hakukohderyhma-oid
+         :ensisijaisesti     (get-in db [:application :ensisijaisesti?] false)}
+        (when-let [ryhman-ensisijainen-hakukohde (get-in db [:application :selected-ryhman-ensisijainen-hakukohde] nil)]
+          {:rajaus-hakukohteella ryhman-ensisijainen-hakukohde})))))
 
 (reg-event-fx
   :application/fetch-applications-by-haku
@@ -447,7 +449,8 @@
   (fn [{:keys [db]} [_ term type]]
     (fetch-applications-fx
       db
-      {type term})))
+      (util/remove-nil-values {type      term
+                               :haku-oid @(subscribe [:application/selected-haku-oid])}))))
 
 (reg-event-db
  :application/review-updated

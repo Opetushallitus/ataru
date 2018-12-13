@@ -90,9 +90,10 @@
   (->> (clojure.string/split s "\n")
        (map-indexed (fn [i p]
                       ^{:key (str "paragraph-" i)}
-                      (if (clojure.string/blank? p)
-                        [:br]
-                        [:p.application__text-field-paragraph p])))))
+                      [:div
+                       (if (clojure.string/blank? p)
+                         [:br]
+                         [:p.application__text-field-paragraph p])]))))
 
 (defn is-required-field?
   [field-descriptor]

@@ -87,21 +87,28 @@
            (str "Löytyi " (count applications) " hakemusta"))))))
 
 (re-frame/reg-sub
+  :application/selected-haku-oid
+  (fn [db]
+    (let [selected-hakukohde-oid  (get-in db [:application :selected-hakukohde])
+          selected-hakukohderyhma (get-in db [:application :selected-hakukohderyhma])]
+      (cond (some? selected-hakukohde-oid)
+            (->> (get-in db [:application :haut :tarjonta-haut])
+                 (filter (fn [[_ {:keys [hakukohteet]}]]
+                           (some (fn [{:keys [oid]}]
+                                   (= selected-hakukohde-oid oid))
+                             hakukohteet)))
+                 ffirst)
+            (some? selected-hakukohderyhma)
+            (first selected-hakukohderyhma)
+            :else
+            (get-in db [:application :selected-haku])))))
+
+(re-frame/reg-sub
   :application/list-heading-data-for-haku
   (fn [db]
     (let [selected-hakukohde-oid  (get-in db [:application :selected-hakukohde])
           selected-hakukohderyhma (get-in db [:application :selected-hakukohderyhma])
-          selected-haku-oid       (cond (some? selected-hakukohde-oid)
-                                        (->> (get-in db [:application :haut :tarjonta-haut])
-                                             (filter (fn [[_ {:keys [hakukohteet]}]]
-                                                       (some (fn [{:keys [oid]}]
-                                                               (= selected-hakukohde-oid oid))
-                                                             hakukohteet)))
-                                             ffirst)
-                                        (some? selected-hakukohderyhma)
-                                        (first selected-hakukohderyhma)
-                                        :else
-                                        (get-in db [:application :selected-haku]))
+          selected-haku-oid       @(re-frame/subscribe [:application/selected-haku-oid])
           haun-hakukohteet        (->> (get-in db [:application
                                                    :haut
                                                    :tarjonta-haut

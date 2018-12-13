@@ -800,11 +800,12 @@
       [:span.application-handling__filters
        [:a
         {:on-click #(swap! filters-visible not)}
-        (gstring/format "%s (%d / %d)"
-                        (get-virkailija-translation :filter-applications)
-                        @filtered-application-count
-                        @total-application-count)]
-       (when (pos? @enabled-filter-count)
+        (when (and @filtered-application-count @total-application-count)
+          (gstring/format "%s (%d / %d)"
+                          (get-virkailija-translation :filter-applications)
+                          @filtered-application-count
+                          @total-application-count))]
+       (when (and @filtered-application-count @total-application-count (pos? @enabled-filter-count))
          [:span
           [:span.application-handling__filters-count-separator "|"]
           [:a
