@@ -64,22 +64,15 @@
   value)
 
 (defn- redis-get
-  [redis name key ttl-after-read update-after-read?]
-  (let [value (timed (str "get of key " key " took %d ms")
-                     1000
-                     (fn []
-                       (wcar (:connection-opts redis)
-                             (car/get (->cache-key name key)))))]
-    (when (some? value)
-      (timed (str "post-get of key " key " took %d ms")
-             1000
-             (fn []
-               (wcar (:connection-opts redis)
-                     (when (some? ttl-after-read)
-                       (car-set name key value ttl-after-read))
-                     (when update-after-read?
-                       (car-mark-to-update name [key]))))))
-    value))
+  [redis name key ttl-after-read-ms update-after-read?]
+  (let [cache-key (->cache-key name key)
+        result    (wcar (:connection-opts redis) :as-pipeline
+                        (car/get cache-key)
+                        (when (some? ttl-after-read-ms)
+                          (car/pexpire cache-key ttl-after-read-ms))
+                        (when update-after-read?
+                          (car/sadd (->to-update-key name) key)))]
+    (first result)))
 
 (defn- redis-scan
   [redis name cursor]
@@ -193,6 +186,7 @@
                   loader
                   name
                   ttl-after-read
+                  ttl-after-read-ms
                   ttl-after-write
                   update-after-read?
                   update-period
@@ -217,6 +211,8 @@
          (update-to-update-keys-runnable redis loader name update-period)
          1 1 TimeUnit/SECONDS)
         (assoc this
+               :ttl-after-read-ms (when-let [[ttl timeunit] ttl-after-read]
+                                    (.toMillis timeunit ttl))
                :scheduler scheduler
                :mq-worker mq-worker
                :locks (atom {})))
@@ -237,7 +233,7 @@
     (try
       (let [from-cache (timed (str "Reading key " key " from Redis cache " name " took %d ms")
                               1000
-                              (fn [] (redis-get redis name key ttl-after-read update-after-read?)))]
+                              (fn [] (redis-get redis name key ttl-after-read-ms update-after-read?)))]
         (if (some? from-cache)
           from-cache
           (redis-with-lock
@@ -246,7 +242,7 @@
            (fn []
              (let [from-cache (timed (str "Reading key " key " from Redis cache " name " under lock took %d ms")
                                      1000
-                                     (fn [] (redis-get redis name key ttl-after-read update-after-read?)))]
+                                     (fn [] (redis-get redis name key ttl-after-read-ms update-after-read?)))]
                (if (some? from-cache)
                  from-cache
                  (redis-set redis name key (cache/load loader key) ttl-after-write)))))))
