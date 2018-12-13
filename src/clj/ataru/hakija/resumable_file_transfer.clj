@@ -27,10 +27,15 @@
       (Math/ceil)
       (int)))
 
+(defn- md5-from-file-id
+  [file-id]
+  (let [md5-length 32]
+    (subs file-id (- (count file-id) md5-length))))
+
 (defn- assert-valid-file
   [file file-id file-size]
   (assert (= file-size (.length file)) "invalid combined file size")
-  (assert (= file-id (md5 file))) "invalid combined file hash")
+  (assert (= (md5-from-file-id file-id) (md5 file))) "invalid combined file hash")
 
 (defn- assert-valid-part-number
   [num-parts part-number]
