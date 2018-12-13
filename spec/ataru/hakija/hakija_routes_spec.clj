@@ -82,7 +82,11 @@
 (defn- parse-body
   [resp]
   (if-not (nil? (:body resp))
-    (update resp :body (comp #(json/parse-string % true) slurp))
+    (assoc resp :body (cond-> (:body resp)
+                              (not (string? (:body resp)))
+                              slurp
+                              true
+                              (json/parse-string true)))
     resp))
 
 (defmacro with-response

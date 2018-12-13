@@ -139,26 +139,26 @@
       :summary "Gets form for haku"
       :path-params [haku-oid :- s/Str]
       :query-params [role :- [form-role/FormRole]]
-      :return ataru-schema/FormWithContentAndTarjontaMetadata
-      (if-let [form-with-tarjonta (form-service/fetch-form-by-haku-oid-cached
+      (if-let [form-with-tarjonta (form-service/fetch-form-by-haku-oid-cached-str
                                    form-by-haku-oid-cache
                                    haku-oid
                                    false
                                    role)]
-        (response/ok form-with-tarjonta)
+        (response/content-type (response/ok form-with-tarjonta)
+                               "application/json")
         (response/not-found)))
     (api/GET ["/hakukohde/:hakukohde-oid", :hakukohde-oid #"[0-9\.]+"] []
       :summary "Gets form for hakukohde"
       :path-params [hakukohde-oid :- s/Str]
       :query-params [role :- [form-role/FormRole]]
-      :return ataru-schema/FormWithContentAndTarjontaMetadata
-      (if-let [form-with-tarjonta (form-service/fetch-form-by-hakukohde-oid-cached
+      (if-let [form-with-tarjonta (form-service/fetch-form-by-hakukohde-oid-cached-str
                                    tarjonta-service
                                    form-by-haku-oid-cache
                                    hakukohde-oid
                                    false
                                    role)]
-        (response/ok form-with-tarjonta)
+        (response/content-type (response/ok form-with-tarjonta)
+                               "application/json")
         (response/not-found)))
     (api/GET "/form/:key" []
       :path-params [key :- s/Str]

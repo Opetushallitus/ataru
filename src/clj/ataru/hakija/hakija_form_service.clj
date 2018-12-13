@@ -13,7 +13,11 @@
             [clj-time.core :as time]
             [clj-time.coerce :as t]
             [clj-time.format :as f]
+            [cheshire.core :as json]
             [schema.core :as s]
+            [schema.coerce :as sc]
+            [ring.swagger.coerce :as coerce]
+            [ataru.schema.form-schema :as form-schema]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.hakija.form-role :as form-role]
             [ataru.component-data.component :as component]
@@ -210,7 +214,7 @@
     (some-> form
             (assoc :load-time (System/currentTimeMillis)))))
 
-(s/defn ^:always-validate fetch-form-by-haku-oid-cached :- s/Any
+(s/defn ^:always-validate fetch-form-by-haku-oid-cached-str :- s/Any
   [form-by-haku-oid-cache :- s/Any
    haku-oid :- s/Str
    application-in-processing-state? :- s/Bool
@@ -221,19 +225,20 @@
                          "#" application-in-processing-state?
                          (sort (map #(str "#" (name %)) roles)))))
 
-(s/defn ^:always-validate fetch-form-by-hakukohde-oid-cached :- s/Any
+(s/defn ^:always-validate fetch-form-by-hakukohde-oid-cached-str :- s/Any
   [tarjonta-service :- s/Any
    form-by-haku-oid-cache :- s/Any
    hakukohde-oid :- s/Str
    application-in-processing-state? :- s/Bool
    roles :- [form-role/FormRole]]
-  (let [hakukohde (.get-hakukohde tarjonta-service hakukohde-oid)
-        form      (fetch-form-by-haku-oid-cached form-by-haku-oid-cache
-                                                 (:hakuOid hakukohde)
-                                                 false
-                                                 roles)]
-    (some-> form
-            (assoc :load-time (System/currentTimeMillis)))))
+  (let [hakukohde (.get-hakukohde tarjonta-service hakukohde-oid)]
+    (fetch-form-by-haku-oid-cached-str form-by-haku-oid-cache
+                                       (:hakuOid hakukohde)
+                                       false
+                                       roles)))
+
+(def form-coercer (sc/coercer! form-schema/FormWithContentAndTarjontaMetadata
+                               coerce/json-schema-coercion-matcher))
 
 (defrecord FormByHakuOidCacheLoader [tarjonta-service
                                      koodisto-cache
@@ -242,12 +247,14 @@
   cache/CacheLoader
   (load [_ key]
     (let [[haku-oid aips? & roles] (clojure.string/split key #"#")]
-      (fetch-form-by-haku-oid tarjonta-service
-                              koodisto-cache
-                              organization-service
-                              ohjausparametrit-service
-                              haku-oid
-                              (Boolean/valueOf aips?)
-                              (map keyword roles))))
+      (json/generate-string
+       (form-coercer
+        (fetch-form-by-haku-oid tarjonta-service
+                                koodisto-cache
+                                organization-service
+                                ohjausparametrit-service
+                                haku-oid
+                                (Boolean/valueOf aips?)
+                                (map keyword roles))))))
   (load-many [this keys]
     (into {} (keep #(when-let [v (cache/load this %)] [% v]) keys))))
