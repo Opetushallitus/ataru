@@ -52,10 +52,6 @@
   (doseq [[key value] m]
     (car-set name key value ttl)))
 
-(defn- car-mark-to-update
-  [name keys]
-  (apply car/sadd (->to-update-key name) keys))
-
 (defn- redis-set
   [redis name key value ttl]
   (when (some? value)
@@ -87,22 +83,22 @@
   m)
 
 (defn- redis-mget
-  [redis name keys ttl-after-read update-after-read?]
+  [redis name keys ttl-after-read-ms update-after-read?]
   (reduce (fn [acc keys]
-            (let [from-cache (map vector
-                                  keys
-                                  (wcar (:connection-opts redis)
-                                        (apply car/mget (map #(->cache-key name %) keys))))
-                  hits       (filter #(some? (second %)) from-cache)]
-              (when (not-empty hits)
-                (wcar (:connection-opts redis)
-                      (when (some? ttl-after-read)
-                        (car-mset name hits ttl-after-read))
-                      (when update-after-read?
-                        (car-mark-to-update name (map first hits)))))
-              (-> acc
-                  (update :hits into hits)
-                  (update :misses concat (keep #(when (nil? (second %)) (first %)) from-cache)))))
+            (let [cache-keys (map #(->cache-key name %) keys)
+                  result     (wcar (:connection-opts redis) :as-pipeline
+                                   (apply car/mget cache-keys)
+                                   (when (some? ttl-after-read-ms)
+                                     (doseq [cache-key cache-keys]
+                                       (car/pexpire cache-key ttl-after-read-ms)))
+                                   (when update-after-read?
+                                     (apply car/sadd (->to-update-key name) keys)))]
+              (reduce (fn [acc [key value]]
+                        (if (some? value)
+                          (update acc :hits assoc key value)
+                          (update acc :misses conj key)))
+                      acc
+                      (map vector keys (first result)))))
           {:hits   {}
            :misses []}
           (partition 5000 5000 nil keys)))
@@ -152,7 +148,7 @@
          key-count     0]
     (when (not-empty keys)
       (wcar (:connection-opts redis)
-            (car-mark-to-update name (map #(cache-key->key name %) keys))))
+            (apply car/sadd (->to-update-key name) (map #(cache-key->key name %) keys))))
     (if (= "0" cursor)
       (when (< 0 (+ key-count (count keys)))
         (info "Marked" (+ key-count (count keys)) name "keys to update"))
@@ -252,7 +248,7 @@
 
   (get-many-from [this keys]
     (try
-      (let [{:keys [hits misses]} (redis-mget redis name keys ttl-after-read update-after-read?)]
+      (let [{:keys [hits misses]} (redis-mget redis name keys ttl-after-read-ms update-after-read?)]
         (if (empty? misses)
           hits
           (merge hits
@@ -260,7 +256,7 @@
                   locks name "many"
                   (.toMillis TimeUnit/MINUTES 2)
                   (fn []
-                    (let [{:keys [hits misses]} (redis-mget redis name keys ttl-after-read update-after-read?)]
+                    (let [{:keys [hits misses]} (redis-mget redis name keys ttl-after-read-ms update-after-read?)]
                       (if (empty? misses)
                         hits
                         (merge hits (redis-mset redis name (cache/load-many loader misses) ttl-after-write)))))))))
