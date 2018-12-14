@@ -164,7 +164,7 @@
       :path-params [key :- s/Str]
       :query-params [role :- [form-role/FormRole]]
       :return ataru-schema/FormWithContent
-      (if-let [form (form-service/fetch-form-by-key key role koodisto-cache)]
+      (if-let [form (form-service/fetch-form-by-key key role koodisto-cache nil false)]
         (response/ok form)
         (response/not-found)))
     (api/POST "/feedback" []

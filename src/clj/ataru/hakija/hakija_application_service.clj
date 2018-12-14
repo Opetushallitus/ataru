@@ -390,7 +390,7 @@
                                                                        (:haku application)
                                                                        application-in-processing?
                                                                        form-roles)
-                                         (some? (:form application)) (hakija-form-service/fetch-form-by-key-with-flagged-fields
+                                         (some? (:form application)) (hakija-form-service/fetch-form-by-key
                                                                        (->> application
                                                                             :form
                                                                             form-store/fetch-by-id

@@ -148,21 +148,15 @@
 (s/defn ^:always-validate fetch-form-by-key :- s/Any
   [key :- s/Any
    roles :- [form-role/FormRole]
-   koodisto-cache :- s/Any]
-  (when-let [form (form-store/fetch-by-key key)]
-    (when (not (:deleted form))
-          (-> (koodisto/populate-form-koodisto-fields-cached koodisto-cache form)
-              (remove-required-hakija-validator-if-virkailija roles)
-              (populate-attachment-deadlines nil)))))
-
-(s/defn ^:always-validate fetch-form-by-key-with-flagged-fields :- s/Any
-  [key :- s/Any
-   roles :- [form-role/FormRole]
    koodisto-cache :- s/Any
    hakukohteet :- s/Any
    application-in-processing-state? :- s/Bool]
-  (some-> (fetch-form-by-key key roles koodisto-cache)
-          (flag-uneditable-and-unviewable-fields hakukohteet roles application-in-processing-state?)))
+  (when-let [form (form-store/fetch-by-key key)]
+    (when (not (:deleted form))
+      (-> (koodisto/populate-form-koodisto-fields-cached koodisto-cache form)
+          (remove-required-hakija-validator-if-virkailija roles)
+          (populate-attachment-deadlines nil)
+          (flag-uneditable-and-unviewable-fields hakukohteet roles application-in-processing-state?)))))
 
 (s/defn ^:always-validate fetch-form-by-haku-oid :- s/Any
   [tarjonta-service :- s/Any
@@ -181,7 +175,7 @@
         priorisoivat  (:ryhmat (hakukohderyhmat/priorisoivat-hakukohderyhmat tarjonta-service haku-oid))
         rajaavat      (:ryhmat (hakukohderyhmat/rajaavat-hakukohderyhmat haku-oid))
         form          (when (= 1 (count form-keys))
-                            (fetch-form-by-key-with-flagged-fields (first form-keys) roles koodisto-cache hakukohteet application-in-processing-state?))]
+                        (fetch-form-by-key (first form-keys) roles koodisto-cache hakukohteet application-in-processing-state?))]
     (when (not tarjonta-info)
       (throw (Exception. (str "No haku found for haku " haku-oid " and keys " (pr-str form-keys)))))
     (if form
