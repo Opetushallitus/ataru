@@ -1661,17 +1661,17 @@
 (defn notifications-display []
   (let [selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
         selected-review-hakukohde     (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-        alternative-form              (subscribe [:state-query [:application :alternative-form]])
+        latest-form                   (subscribe [:state-query [:application :latest-form]])
         metadata-not-found            (subscribe [:state-query [:application :metadata-not-found]])]
     (fn []
       (let [application (:application @selected-application-and-form)
             yksiloity   (-> application :person :yksiloity)
             person-oid  (-> application :person :oid)]
-        (when (or @alternative-form (not yksiloity))
+        (when (or @latest-form (not yksiloity))
           [:div.application__message-display.application__message-display--notification
            [:div.application__message-display--exclamation [:i.zmdi.zmdi-alert-triangle]]
            [:div.application__message-display--details
-            (when @alternative-form
+            (when @latest-form
               [notification {:text      :form-outdated
                              :link-text :show-newest-version
                              :on-click  (fn [evt]
