@@ -166,22 +166,23 @@
         application-hakukohde-reviews (some-> latest-application
                                               :key
                                               application-store/get-application-hakukohde-reviews)
-        priorisoivat-and-rajaavat     (fn [form]
-                                          (merge form
-                                                 (when (:haku application)
-                                                       {:priorisoivat-hakukohderyhmat (:ryhmat (hakukohderyhmat/priorisoivat-hakukohderyhmat tarjonta-service (:haku application)))
-                                                        :rajaavat-hakukohderyhmat     (:ryhmat (hakukohderyhmat/rajaavat-hakukohderyhmat (:haku application)))})))
-        form                          (-> application
-                                          (:form)
-                                          (form-store/fetch-by-id)
-                                          (merge tarjonta-info)
-                                          (hakukohde/populate-hakukohde-answer-options tarjonta-info)
-                                          (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)
-                                          (priorisoivat-and-rajaavat)
-                                          (hakija-form-service/flag-uneditable-and-unviewable-fields
-                                           hakukohteet
-                                           form-roles
-                                           (util/application-in-processing? application-hakukohde-reviews)))
+        form                          (cond (some? (:haku application))
+                                            (hakija-form-service/fetch-form-by-haku-oid-and-id
+                                             tarjonta-service
+                                             koodisto-cache
+                                             organization-service
+                                             ohjausparametrit-service
+                                             (:haku application)
+                                             (:form application)
+                                             (util/application-in-processing? application-hakukohde-reviews)
+                                             form-roles)
+                                            (some? (:form application))
+                                            (hakija-form-service/fetch-form-by-id
+                                             (:form application)
+                                             form-roles
+                                             koodisto-cache
+                                             nil
+                                             (util/application-in-processing? application-hakukohde-reviews)))
         final-application             (if is-modify?
                                         (-> application
                                             (merge-unviewable-answers-from-previous

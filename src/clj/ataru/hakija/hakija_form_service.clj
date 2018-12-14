@@ -145,6 +145,19 @@
                 content)))
     form))
 
+(s/defn ^:always-validate fetch-form-by-id :- s/Any
+  [id :- s/Any
+   roles :- [form-role/FormRole]
+   koodisto-cache :- s/Any
+   hakukohteet :- s/Any
+   application-in-processing-state? :- s/Bool]
+  (when-let [form (form-store/fetch-by-id id)]
+    (when (not (:deleted form))
+      (-> (koodisto/populate-form-koodisto-fields-cached koodisto-cache form)
+          (remove-required-hakija-validator-if-virkailija roles)
+          (populate-attachment-deadlines hakukohteet)
+          (flag-uneditable-and-unviewable-fields hakukohteet roles application-in-processing-state?)))))
+
 (s/defn ^:always-validate fetch-form-by-key :- s/Any
   [key :- s/Any
    roles :- [form-role/FormRole]
@@ -187,6 +200,32 @@
           (populate-hakukohde-answer-options tarjonta-info)
           (populate-can-submit-multiple-applications tarjonta-info))
       (warn "could not find local form for haku" haku-oid "with keys" (pr-str form-keys)))))
+
+(s/defn ^:always-validate fetch-form-by-haku-oid-and-id :- s/Any
+  [tarjonta-service :- s/Any
+   koodisto-cache :- s/Any
+   organization-service :- s/Any
+   ohjausparametrit-service :- s/Any
+   haku-oid :- s/Any
+   id :- s/Int
+   application-in-processing-state? :- s/Bool
+   roles :- [form-role/FormRole]]
+  (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku koodisto-cache tarjonta-service organization-service ohjausparametrit-service haku-oid)
+        hakukohteet   (get-in tarjonta-info [:tarjonta :hakukohteet])
+        priorisoivat  (:ryhmat (hakukohderyhmat/priorisoivat-hakukohderyhmat tarjonta-service haku-oid))
+        rajaavat      (:ryhmat (hakukohderyhmat/rajaavat-hakukohderyhmat haku-oid))
+        form          (fetch-form-by-id id roles koodisto-cache hakukohteet application-in-processing-state?)]
+    (when (not tarjonta-info)
+      (throw (Exception. (str "No haku found for haku " haku-oid))))
+    (if form
+      (-> form
+          (merge tarjonta-info)
+          (assoc? :priorisoivat-hakukohderyhmat priorisoivat)
+          (assoc? :rajaavat-hakukohderyhmat rajaavat)
+          (assoc :load-time (System/currentTimeMillis))
+          (populate-hakukohde-answer-options tarjonta-info)
+          (populate-can-submit-multiple-applications tarjonta-info))
+      (warn "could not find local form for haku" haku-oid "with id" id))))
 
 (s/defn ^:always-validate fetch-form-by-hakukohde-oid :- s/Any
   [tarjonta-service :- s/Any
