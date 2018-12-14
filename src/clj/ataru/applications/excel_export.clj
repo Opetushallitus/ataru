@@ -258,12 +258,12 @@
                    first)]
     (get-in koodi [:label lang])))
 
-(defn- raw-values->human-readable-value [field-descriptor {:keys [lang]} get-koodisto-options value]
+(defn- raw-values->human-readable-value [field-descriptor {:keys [lang]} koodisto-cache get-koodisto-options value]
   (let [lang (-> lang clojure.string/lower-case keyword)
         koodisto-source (:koodisto-source field-descriptor)
         options (:options field-descriptor)]
     (cond (some? koodisto-source)
-          (let [koodisto (get-koodisto-options (:uri koodisto-source) (:version koodisto-source))
+          (let [koodisto (get-koodisto-options koodisto-cache (:uri koodisto-source) (:version koodisto-source))
                 koodi-uri->label (partial get-label koodisto lang)]
             (->> (clojure.string/split value #"\s*,\s*")
                  (mapv koodi-uri->label)
@@ -295,7 +295,7 @@
                            headers
                            application-meta-fields
                            form-fields-by-key
-                           get-koodisto-options
+                           koodisto-cache get-koodisto-options
                            lang]
   (doseq [meta-field application-meta-fields]
     (let [format-fn  (:format-fn meta-field)
@@ -315,7 +315,7 @@
           field-descriptor       (get form-fields-by-key answer-key)
           column                 (:column (first (filter #(= answer-key (:id %)) headers)))
           value-or-values        (get person (keyword answer-key) (:value answer))
-          ->human-readable-value (partial raw-values->human-readable-value field-descriptor application get-koodisto-options)
+          ->human-readable-value (partial raw-values->human-readable-value field-descriptor application koodisto-cache get-koodisto-options)
           value                  (cond
                                    (kysymysryhma-answer? value-or-values)
                                    (->> value-or-values
@@ -571,7 +571,7 @@
                                                                     headers
                                                                     application-meta-fields
                                                                     form-fields-by-key
-                                                                    get-koodisto-options
+                                                                    koodisto-cache get-koodisto-options
                                                                     lang))))
                                (dorun))
                           (.createFreezePane applications-sheet 0 1 0 1))))
