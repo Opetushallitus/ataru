@@ -170,11 +170,11 @@
                                           (merge form
                                                  (when (:haku application)
                                                        {:priorisoivat-hakukohderyhmat (:ryhmat (hakukohderyhmat/priorisoivat-hakukohderyhmat tarjonta-service (:haku application)))
-                                                        :tarjonta-hakukohteet         hakukohteet
                                                         :rajaavat-hakukohderyhmat     (:ryhmat (hakukohderyhmat/rajaavat-hakukohderyhmat (:haku application)))})))
         form                          (-> application
                                           (:form)
                                           (form-store/fetch-by-id)
+                                          (merge tarjonta-info)
                                           (hakukohde/populate-hakukohde-answer-options tarjonta-info)
                                           (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)
                                           (priorisoivat-and-rajaavat)

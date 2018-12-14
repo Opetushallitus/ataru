@@ -45,7 +45,7 @@
                                                      :validator                    validator
                                                      :value                        answer
                                                      :answers-by-key               answers-by-key
-                                                     :tarjonta-hakukohteet         (:tarjonta-hakukohteet form)
+                                                     :tarjonta-hakukohteet         (get-in form [:tarjonta :hakukohteet])
                                                      :priorisoivat-hakukohderyhmat (:priorisoivat-hakukohderyhmat form)
                                                      :rajaavat-hakukohderyhmat     (:rajaavat-hakukohderyhmat form)
                                                      :virkailija?                  virkailija?
