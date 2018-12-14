@@ -290,6 +290,9 @@ You will receive a confirmation of your application to your email."}
    :remove-row                                  {:fi "Poista rivi"
                                                  :sv "Ta bort rad"
                                                  :en "Remove row"}
+   :attachments-disabled-under-load             {:fi "Liitteiden syöttö on tänään tilapäisesti poissa käytöstä. Voit syöttää liitteitä myöhemmin muokkaamalla jätettyä hakemusta."
+                                                 :sv "Liitteiden syöttö on tänään tilapäisesti poissa käytöstä. Voit syöttää liitteitä myöhemmin muokkaamalla jätettyä hakemusta."
+                                                 :en "Liitteiden syöttö on tänään tilapäisesti poissa käytöstä. Voit syöttää liitteitä myöhemmin muokkaamalla jätettyä hakemusta."}
    :search-application-options                  {:fi "Etsi tämän haun koulutuksia"
                                                  :sv "Sök ansökningsmål i denna ansökan"
                                                  :en "Search for application options"}

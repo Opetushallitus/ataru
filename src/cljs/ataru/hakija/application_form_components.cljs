@@ -905,27 +905,34 @@
 
 (defn attachment [{:keys [id] :as field-descriptor} & {question-group-idx :idx}]
   (let [languages (subscribe [:application/default-languages])
-        text      (reaction (util/non-blank-val (get-in field-descriptor [:params :info-text :value]) @languages))]
+        text      (reaction (util/non-blank-val (get-in field-descriptor [:params :info-text :value]) @languages))
+        mail?     (reaction (get-in field-descriptor [:params :mail-attachment?]))
+        hide?     (subscribe [:application/hide-attachments-under-heavy-load?])]
     (fn [{:keys [id] :as field-descriptor} & {question-group-idx :idx}]
-      (let [attachment-count (reaction (count @(subscribe [:state-query [:application :answers (keyword id) :values question-group-idx]])))]
-        [:div.application__form-field
-         [label field-descriptor]
-         (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
-           [question-hakukohde-names field-descriptor :liitepyynto-for-hakukohde])
-         (when-not (clojure.string/blank? @text)
-           [markdown-paragraph @text (-> field-descriptor :params :info-text-collapse)])
-         (when (> @attachment-count 0)
-           [:ol.application__attachment-filename-list
-            (->> (range @attachment-count)
-                 (map (fn [attachment-idx]
-                        ^{:key (str "attachment-" (when question-group-idx (str question-group-idx "-")) id "-" attachment-idx)}
-                        [attachment-row field-descriptor id attachment-idx question-group-idx])))])
-         (if (get-in field-descriptor [:params :mail-attachment?])
-           (when-let [deadline @(subscribe [:application/attachment-deadline field-descriptor])]
-             [:div.application__mail-attachment--deadline
-              [deadline-info deadline]])
-           (when-not @(subscribe [:application/cannot-edit? (keyword id)])
-             [attachment-upload field-descriptor id @attachment-count question-group-idx]))]))))
+      (if (or @mail?
+              (not @hide?))
+        (let [attachment-count (reaction (count @(subscribe [:state-query [:application :answers (keyword id) :values question-group-idx]])))]
+          [:div.application__form-field
+           [label field-descriptor]
+           (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
+             [question-hakukohde-names field-descriptor :liitepyynto-for-hakukohde])
+           (when-not (clojure.string/blank? @text)
+             [markdown-paragraph @text (-> field-descriptor :params :info-text-collapse)])
+           (when (> @attachment-count 0)
+             [:ol.application__attachment-filename-list
+              (->> (range @attachment-count)
+                   (map (fn [attachment-idx]
+                          ^{:key (str "attachment-" (when question-group-idx (str question-group-idx "-")) id "-" attachment-idx)}
+                          [attachment-row field-descriptor id attachment-idx question-group-idx])))])
+           (if @mail?
+             (when-let [deadline @(subscribe [:application/attachment-deadline field-descriptor])]
+               [:div.application__mail-attachment--deadline
+                [deadline-info deadline]])
+             (when-not @(subscribe [:application/cannot-edit? (keyword id)])
+               [attachment-upload field-descriptor id @attachment-count question-group-idx]))])
+        [:div.application__form-field-label (get-translation :attachments-disabled-under-load)
+         (when-let [deadline @(subscribe [:application/attachment-deadline field-descriptor])]
+           [deadline-info deadline])]))))
 
 (defn info-element [field-descriptor]
   (let [languages  (subscribe [:application/default-languages])

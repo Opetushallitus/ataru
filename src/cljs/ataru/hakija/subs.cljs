@@ -399,6 +399,12 @@
             [:fi :sv :en])))
 
 (re-frame/reg-sub
+  :application/hide-attachments-under-heavy-load?
+  (fn [db _]
+    (let [yhteishaku? (-> db :form :tarjonta :yhteishaku)]
+      yhteishaku?)))
+
+(re-frame/reg-sub
   :application/hakukohde-label
   (fn [db [_ hakukohde-oid]]
     (util/non-blank-val
