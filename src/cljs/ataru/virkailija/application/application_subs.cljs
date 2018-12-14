@@ -73,6 +73,36 @@
     (get db :fetching-hakukohteet)))
 
 (re-frame/reg-sub
+  :application/path-to-haku-search
+  (fn [db [_ haku-oid]]
+    (when haku-oid
+      (str "/lomake-editori/applications/haku/" haku-oid))))
+
+(re-frame/reg-sub
+  :application/path-to-search-without-term
+  (fn [db _]
+    (let [selected-hakukohde-oid  (get-in db [:application :selected-hakukohde])
+          selected-hakukohderyhma (second (get-in db [:application :selected-hakukohderyhma]))
+          selected-haku-oid       @(re-frame/subscribe [:application/selected-haku-oid])]
+      (or @(re-frame/subscribe [:application/path-to-hakukohde-search selected-hakukohde-oid])
+          @(re-frame/subscribe [:application/path-to-hakukohderyhma-search selected-haku-oid selected-hakukohderyhma])
+          @(re-frame/subscribe [:application/path-to-haku-search selected-haku-oid])))))
+
+(re-frame/reg-sub
+  :application/path-to-hakukohderyhma-search
+  (fn [db [_ haku-oid hakukohderyhma-oid]]
+    (when (and haku-oid
+               hakukohderyhma-oid)
+      (str "/lomake-editori/applications/haku/" haku-oid "/hakukohderyhma/" hakukohderyhma-oid))))
+
+(re-frame/reg-sub
+  :application/path-to-hakukohde-search
+  (fn [db [_ hakukohde-oid]]
+    (when hakukohde-oid
+      (str "/lomake-editori/applications/hakukohde/" hakukohde-oid))))
+
+
+(re-frame/reg-sub
  :application/list-heading
  (fn [db]
    (let [selected-haku      (get-in db [:haut (get-in db [:application :selected-haku])])
