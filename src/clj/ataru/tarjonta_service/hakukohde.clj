@@ -78,8 +78,8 @@
     (assoc-in field [:params :deadline-label] label)
     field))
 
-(defn populate-attachment-deadlines [form tarjonta-info]
-  (let [hakuajat (hakuaika/index-hakuajat (get-in tarjonta-info [:tarjonta :hakukohteet]))]
+(defn populate-attachment-deadlines [form hakukohteet]
+  (let [hakuajat (hakuaika/index-hakuajat hakukohteet)]
     (update form :content (partial util/map-form-fields
                                    (partial populate-attachment-deadline
                                             hakuajat)))))

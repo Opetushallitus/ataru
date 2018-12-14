@@ -155,7 +155,7 @@
     (when (not (:deleted form))
       (-> (koodisto/populate-form-koodisto-fields-cached koodisto-cache form)
           (remove-required-hakija-validator-if-virkailija roles)
-          (populate-attachment-deadlines nil)
+          (populate-attachment-deadlines hakukohteet)
           (flag-uneditable-and-unviewable-fields hakukohteet roles application-in-processing-state?)))))
 
 (s/defn ^:always-validate fetch-form-by-haku-oid :- s/Any
@@ -184,7 +184,6 @@
           (assoc? :priorisoivat-hakukohderyhmat priorisoivat)
           (assoc? :rajaavat-hakukohderyhmat rajaavat)
           (assoc :load-time (System/currentTimeMillis))
-          (populate-attachment-deadlines tarjonta-info)
           (populate-hakukohde-answer-options tarjonta-info)
           (populate-can-submit-multiple-applications tarjonta-info))
       (warn "could not find local form for haku" haku-oid "with keys" (pr-str form-keys)))))
