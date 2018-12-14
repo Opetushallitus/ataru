@@ -29,9 +29,9 @@
   [name]
   (str "ataru:cache:to-update:" name))
 
-(defn- ->mark-all-keys-to-update-queue-name
+(defn- ->mark-all-keys-to-update-key
   [name]
-  (str "mark-all-keys-to-update-queue:" name))
+  (str "ataru:cache:mark-all-keys-to-update:" name))
 
 (defn- car-set
   [name key value ttl]
@@ -146,28 +146,21 @@
       (recur (redis-scan redis name cursor)
              (+ key-count (count keys))))))
 
-(defn- update-to-update-keys-runnable [redis loader name update-period]
+(defn- update-to-update-keys-runnable [redis loader name]
   (fn []
     (try
-      (when (some? update-period)
-        (wcar (:connection-opts redis)
-              (car-mq/enqueue (->mark-all-keys-to-update-queue-name name) name name)))
       (update-to-update-keys redis loader name)
       (catch Exception e
         (error e "Error while updating" name "keys")))))
 
-(defn- mark-all-keys-to-update-handler [redis name [update-period time-unit]]
-  (fn [{:keys [attempt]}]
+(defn- mark-all-keys-to-update-runnable [redis name update-period-ms]
+  (fn []
     (try
-      (mark-all-keys-to-update redis name)
-      {:status     :success
-       :backoff-ms (.toMillis time-unit update-period)}
+      (when (some? (wcar (:connection-opts redis)
+                         (car/set (->mark-all-keys-to-update-key name) "mark" :px update-period-ms :nx)))
+        (mark-all-keys-to-update redis name))
       (catch Exception e
-        (if (< attempt 2)
-          (do (warn "Error while marking all" name "keys to update, retrying")
-              {:status :retry})
-          (do (error e "Error while marking all" name "keys to update")
-              {:status :success}))))))
+        (error e "Error while marking all" name "keys to update")))))
 
 (defrecord Cache [redis
                   loader
@@ -184,19 +177,19 @@
 
   (start [this]
     (if (nil? scheduler)
-      (let [scheduler (ScheduledThreadPoolExecutor. 1)
-            mq-worker (when (some? update-period)
-                          (car-mq/worker
-                           (:connection-opts redis)
-                           (->mark-all-keys-to-update-queue-name name)
-                           {:handler        (mark-all-keys-to-update-handler redis name update-period)
-                            :lock-ms        (.toMillis TimeUnit/MINUTES 2)
-                            :eoq-backoff-ms (.toMillis TimeUnit/SECONDS 10)
-                            :throttle-ms    (.toMillis TimeUnit/SECONDS 10)}))]
-        (.scheduleAtFixedRate
-         scheduler
-         (update-to-update-keys-runnable redis loader name update-period)
-         1 1 TimeUnit/SECONDS)
+      (let [scheduler (when (or update-after-read?
+                                (some? update-period))
+                        (ScheduledThreadPoolExecutor. 2))]
+        (when (some? scheduler)
+          (.scheduleAtFixedRate
+           scheduler
+           (update-to-update-keys-runnable redis loader name)
+           1 1 TimeUnit/SECONDS))
+        (when-let [[t unit] update-period]
+          (.scheduleAtFixedRate
+           scheduler
+           (mark-all-keys-to-update-runnable redis name (.toMillis unit t))
+           1 1 TimeUnit/SECONDS))
         (assoc this
                :ttl-after-read-ms (when-let [[ttl timeunit] ttl-after-read]
                                     (.toMillis timeunit ttl))
