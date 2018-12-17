@@ -577,26 +577,24 @@
 (reg-event-fx
   :application/set-application-field
   (fn [{db :db} [_ field value value-key]]
-    (let [value   (transform-value value field)
-          id      (keyword (:id field))
-          answers (get-in db [:application :answers])
-          key     (or value-key :value)
-          new-db  (-> db
-                      (assoc-in [:application :answers id key] value)
-                      (set-validator-processing id)
-                      (set-multi-value-changed id key)
-                      (set-field-visibility field))]
+    (let [value  (transform-value value field)
+          id     (keyword (:id field))
+          key    (or value-key :value)
+          new-db (-> db
+                     (assoc-in [:application :answers id key] value)
+                     (set-validator-processing id)
+                     (set-multi-value-changed id key)
+                     (set-field-visibility field))]
       {:db                 new-db
        :validate-debounced {:value                        value
                             :priorisoivat-hakukohderyhmat (get-in new-db [:form :priorisoivat-hakukohderyhmat])
-                            :answers-by-key               answers
+                            :answers-by-key               (get-in new-db [:application :answers])
                             :field-descriptor             field
                             :editing?                     (get-in new-db [:application :editing?])
                             :virkailija?                  (contains? (:application new-db) :virkailija-secret)
                             :on-validated                 (fn [[valid? errors]]
                                                             (dispatch [:application/set-application-field-valid
                                                                        field valid? errors]))}})))
-
 
 (defn- set-repeatable-field-values
   [db field-descriptor value data-idx question-group-idx]

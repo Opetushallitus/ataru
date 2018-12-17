@@ -37,13 +37,11 @@
          :else "application__form-text-input__size-medium"))
 
 (defn- email-verify-field-change [field-descriptor answer evt]
-  (let [id        (-> evt .-target .-id)
-        value     (clojure.string/trim (or (-> evt .-target .-value) ""))
-        verify?   (= (keyword id) :verify-email)
-        value-key (if verify? :verify :value)
-        verify    (clojure.string/trim (get answer (if verify? :value :verify) ""))]
-    (dispatch [:application/set-application-field
-               (assoc-in field-descriptor [:params :verify] verify) value value-key])))
+  (let [id          (-> evt .-target .-id)
+        this-value  (clojure.string/trim (or (-> evt .-target .-value) ""))
+        verify?     (= (keyword id) :verify-email)
+        value-key   (if verify? :verify :value)]
+    (dispatch [:application/set-application-field field-descriptor this-value value-key])))
 
 (defn- textual-field-change [field-descriptor evt]
   (let [value (-> evt .-target .-value)]
@@ -175,9 +173,10 @@
                           @(subscribe [:state-query
                                        (cond-> [:application :answers id]
                                                idx (concat [:values idx 0]))]))
-            on-change   (cond @verify-email? (partial email-verify-field-change field-descriptor answer)
-                              idx            (partial multi-value-field-change field-descriptor 0 idx)
-                              :else          (partial textual-field-change field-descriptor))
+            on-change   (fn [evt]
+                          (cond @verify-email? (email-verify-field-change field-descriptor answer evt)
+                                idx (multi-value-field-change field-descriptor 0 idx evt)
+                                :else (textual-field-change field-descriptor evt)))
             on-blur     (fn [evt]
                           (if idx
                             (multi-value-field-change field-descriptor 0 idx evt)
@@ -231,7 +230,7 @@
                 :value        (if @(subscribe [:application/cannot-view? id])
                                 "***********"
                                 (:verify answer))
-                :on-blur      on-blur
+                :on-blur      #(email-verify-field-change field-descriptor answer %)
                 :on-paste     (fn [event]
                                 (.preventDefault event))
                 :on-change    on-change
