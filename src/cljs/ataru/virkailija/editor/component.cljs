@@ -94,34 +94,15 @@
          nil
          #(dispatch [:editor/hide-belongs-to-hakukohteet-modal id])]))))
 
-(defn- belongs-to-hakukohderyhma
-  [path oid]
-  (let [name      (subscribe [:editor/belongs-to-hakukohderyhma-name oid])
-        fetching? (subscribe [:editor/fetching-haut?])
-        on-click  (fn [_] (dispatch [:editor/remove-from-belongs-to-hakukohderyhma
-                                     path oid]))]
-    (fn [_ _]
+(defn- belongs-to
+  [path oid name on-click]
+  (let [fetching? (subscribe [:editor/fetching-haut?])]
+    (fn [_ _ _ _]
       [:li.belongs-to-hakukohteet__hakukohde-list-item.animated.fadeIn
        [:span.belongs-to-hakukohteet__hakukohde-label
         (if @fetching?
           [:i.zmdi.zmdi-spinner.spin]
-          @name)]
-       [:button.belongs-to-hakukohteet__hakukohde-remove
-        {:on-click on-click}
-        [:i.zmdi.zmdi-close.zmdi-hc-lg]]])))
-
-(defn- belongs-to-hakukohde
-  [path oid]
-  (let [name      (subscribe [:editor/belongs-to-hakukohde-name oid])
-        fetching? (subscribe [:editor/fetching-haut?])
-        on-click  (fn [_] (dispatch [:editor/remove-from-belongs-to-hakukohteet
-                                     path oid]))]
-    (fn [_ _]
-      [:li.belongs-to-hakukohteet__hakukohde-list-item.animated.fadeIn
-       [:span.belongs-to-hakukohteet__hakukohde-label
-        (if @fetching?
-          [:i.zmdi.zmdi-spinner.spin]
-          @name)]
+          name)]
        [:button.belongs-to-hakukohteet__hakukohde-remove
         {:on-click on-click}
         [:i.zmdi.zmdi-close.zmdi-hc-lg]]])))
@@ -136,8 +117,18 @@
         show-modal?   (subscribe [:editor/show-belongs-to-hakukohteet-modal id])
         form-locked?  (subscribe [:editor/form-locked?])]
     (fn [path initial-content]
-      (let [visible-to                 (:belongs-to-hakukohteet initial-content)
-            visible-to-hakukohderyhmat (:belongs-to-hakukohderyhma initial-content)]
+      (let [visible-hakukohteet     (doall (map (fn [oid] {:oid      oid
+                                                           :name     @(subscribe [:editor/belongs-to-hakukohde-name oid])
+                                                           :on-click (fn [_] (dispatch [:editor/remove-from-belongs-to-hakukohteet
+                                                                                        path oid]))})
+                                                (:belongs-to-hakukohteet initial-content)))
+            visible-hakukohderyhmat (doall (map (fn [oid] {:oid      oid
+                                                           :name     @(subscribe [:editor/belongs-to-hakukohderyhma-name oid])
+                                                           :on-click (fn [_] (dispatch [:editor/remove-from-belongs-to-hakukohderyhma
+                                                                                        path oid]))})
+                                                (:belongs-to-hakukohderyhma initial-content)))
+            visible                 (sort-by :name (concat visible-hakukohteet
+                                                           visible-hakukohderyhmat))]
         [:div.belongs-to-hakukohteet
          [:button.belongs-to-hakukohteet__modal-toggle
           {:disabled @form-locked?
@@ -146,18 +137,18 @@
                        (if @show-modal? on-click-hide on-click-show))}
           (str (get-virkailija-translation :visibility-on-form) " ")]
          [:span.belongs-to-hakukohteet__modal-toggle-label
-          (if (and (empty? visible-to) (empty? visible-to-hakukohderyhmat))
+          (if (and (empty? visible))
             (get-virkailija-translation :visible-to-all)
             (get-virkailija-translation :visible-to-hakukohteet))]
          (when @show-modal?
-           [belongs-to-hakukohteet-modal path (:id initial-content) visible-to visible-to-hakukohderyhmat])
+           [belongs-to-hakukohteet-modal path
+            (:id initial-content)
+            (map :oid visible-hakukohteet)
+            (map :oid visible-hakukohderyhmat)])
          [:ul.belongs-to-hakukohteet__hakukohde-list
-          (for [oid visible-to]
+          (for [{:keys [oid name on-click]} visible]
             ^{:key oid}
-            [belongs-to-hakukohde path oid])
-          (for [oid visible-to-hakukohderyhmat]
-            ^{:key oid}
-            [belongs-to-hakukohderyhma path oid])]]))))
+            [belongs-to path oid name on-click])]]))))
 
 (defn- on-drag-start
   [path]
