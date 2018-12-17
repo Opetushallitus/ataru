@@ -94,26 +94,22 @@
            (filter some?)
            first))))
 
-(defn answers->valid-status [all-answers ui flat-form-content content]
-  (let [answer-validity (for [[_ answers] all-answers] (:valid answers))
-        question-ids    (set (map #(-> % :id keyword) flat-form-content))
-        invalid-fields  (for [[key answers]
-                              (sort-by (fn [[_ answers]] (:order-idx answers)) all-answers)
-                              :when (and key
-                                         (not (:valid answers))
-                                         (get-in ui [key :visible?] true)
-                                         (not-extra-answer? key question-ids))]
-                          (assoc (select-keys answers [:label]) :key key))]
-    {:invalid-fields invalid-fields
-     :valid          (if (empty? answer-validity)
-                       false
-                       (= 0 (count invalid-fields)))}))
+(defn answers->valid-status [all-answers ui flat-form-content]
+  (let [question-ids   (set (map #(-> % :id keyword) flat-form-content))
+        invalid-fields (for [[key answers] all-answers
+                             :when         (and key
+                                                (not (:valid answers))
+                                                (get-in ui [key :visible?] true)
+                                                (not-extra-answer? key question-ids))]
+                         {:key       key
+                          :label     (:label answers)
+                          :order-idx (:order-idx answers)})]
+    {:invalid-fields invalid-fields}))
 
 (defn db->valid-status [db]
   (answers->valid-status (-> db :application :answers)
                          (-> db :application :ui)
-                         (-> db :flat-form-content)
-                         (-> db :form :content)))
+                         (-> db :flat-form-content)))
 
 (defn form->flat-form-map [form]
   (into {}
