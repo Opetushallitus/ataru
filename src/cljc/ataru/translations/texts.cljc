@@ -174,16 +174,16 @@
                                                  :en "File failed to upload, try again"
                                                  :sv "Filen kunde inte laddas, försök igen"}
    :cancel-remove                               {:fi "Älä poista"
-                                                 :sv "SV: Älä poista"
+                                                 :sv "Radera inte"
                                                  :en "Don't remove"}
    :confirm-remove                              {:fi "Vahvista poisto"
-                                                 :sv "SV: Vahvista poisto"
+                                                 :sv "Bekräfta raderingen"
                                                  :en "Confirm removal"}
    :cancel-upload                               {:fi "Keskeytä"
-                                                 :sv "SV: Keskeytä"
+                                                 :sv "Avbryta"
                                                  :en "Cancel"}
    :cancel-cancel-upload                        {:fi "Älä keskeytä"
-                                                 :sv "SV: Älä keskeytä"
+                                                 :sv "Avbryta inte"
                                                  :en "Don't cancel"}
    :confirm-cancel-upload                       {:fi "Vahvista keskeytys"
                                                  :sv "SV: Vahvista keskeytys"
