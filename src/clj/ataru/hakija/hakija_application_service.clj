@@ -139,7 +139,13 @@
                   :operation audit-log/operation-new
                   :id        (util/extract-email application)}))
 
-(defn- validate-and-store [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application is-modify?]
+(defn- validate-and-store [koodisto-cache
+                           tarjonta-service
+                           organization-service
+                           ohjausparametrit-service
+                           form-by-haku-oid-and-id-cache
+                           application
+                           is-modify?]
   (let [now                           (time/now)
         tarjonta-info                 (when (:haku application)
                                         (tarjonta-parser/parse-tarjonta-info-by-haku
@@ -167,11 +173,8 @@
                                               :key
                                               application-store/get-application-hakukohde-reviews)
         form                          (cond (some? (:haku application))
-                                            (hakija-form-service/fetch-form-by-haku-oid-and-id
-                                             tarjonta-service
-                                             koodisto-cache
-                                             organization-service
-                                             ohjausparametrit-service
+                                            (hakija-form-service/fetch-form-by-haku-oid-and-id-cached
+                                             form-by-haku-oid-and-id-cache
                                              (:haku application)
                                              (:form application)
                                              (util/application-in-processing? application-hakukohde-reviews)
@@ -287,11 +290,18 @@
    job-runner
    organization-service
    ohjausparametrit-service
+   form-by-haku-oid-and-id-cache
    application]
   (log/info "Application submitted:" application)
   (let [{:keys [passed? id]
          :as   result}
-        (validate-and-store koodisto-cache tarjonta-service organization-service ohjausparametrit-service application false)
+        (validate-and-store koodisto-cache
+                            tarjonta-service
+                            organization-service
+                            ohjausparametrit-service
+                            form-by-haku-oid-and-id-cache
+                            application
+                            false)
         virkailija-secret (:virkailija-secret application)]
     (if passed?
       (do
@@ -311,11 +321,18 @@
    job-runner
    organization-service
    ohjausparametrit-service
+   form-by-haku-oid-and-id-cache
    application]
   (log/info "Application edited:" application)
   (let [{:keys [passed? id application]
          :as   result}
-        (validate-and-store koodisto-cache tarjonta-service organization-service ohjausparametrit-service application true)
+        (validate-and-store koodisto-cache
+                            tarjonta-service
+                            organization-service
+                            ohjausparametrit-service
+                            form-by-haku-oid-and-id-cache
+                            application
+                            true)
         virkailija-secret (:virkailija-secret application)]
     (if passed?
       (if virkailija-secret

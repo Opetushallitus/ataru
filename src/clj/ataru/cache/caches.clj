@@ -89,12 +89,19 @@
          :ttl-after-write [3 TimeUnit/DAYS]
          :update-period   [15 TimeUnit/MINUTES]})
       [:redis])]
-   [:form-by-haku-oid-cache
+   [:form-by-haku-oid-and-id-cache
     (component/using
      (redis/map->Cache
-      {:name               "form-by-haku-oid"
+      {:name            "form-by-haku-oid-and-id"
+       :ttl-after-write [15 TimeUnit/MINUTES]})
+     {:redis  :redis
+      :loader :form-by-haku-oid-and-id-cache-loader})]
+   [:form-by-haku-oid-str-cache
+    (component/using
+     (redis/map->Cache
+      {:name               "form-by-haku-oid-str"
        :ttl-after-read     [10 TimeUnit/SECONDS]
        :ttl-after-write    [10 TimeUnit/SECONDS]
        :update-after-read? true})
      {:redis  :redis
-      :loader :form-by-haku-oid-cache-loader})]])
+      :loader :form-by-haku-oid-str-cache-loader})]])

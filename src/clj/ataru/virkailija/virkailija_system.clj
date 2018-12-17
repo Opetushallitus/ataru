@@ -57,12 +57,19 @@
                            (person-client/map->PersonCacheLoader {})
                            [:oppijanumerorekisteri-cas-client])
 
-    :form-by-haku-oid-cache-loader (component/using
-                                    (hakija-form-service/map->FormByHakuOidCacheLoader {})
-                                    [:tarjonta-service
-                                     :koodisto-cache
-                                     :organization-service
-                                     :ohjausparametrit-service])
+    :form-by-haku-oid-and-id-cache-loader (component/using
+                                           (hakija-form-service/map->FormByHakuOidAndIdCacheLoader {})
+                                           [:tarjonta-service
+                                            :koodisto-cache
+                                            :organization-service
+                                            :ohjausparametrit-service])
+
+    :form-by-haku-oid-str-cache-loader (component/using
+                                        (hakija-form-service/map->FormByHakuOidStrCacheLoader {})
+                                        [:tarjonta-service
+                                         :koodisto-cache
+                                         :organization-service
+                                         :ohjausparametrit-service])
 
     :person-service (component/using
                      (person-service/new-person-service)

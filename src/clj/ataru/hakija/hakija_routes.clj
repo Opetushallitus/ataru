@@ -131,7 +131,8 @@
                           ohjausparametrit-service
                           person-service
                           koodisto-cache
-                          form-by-haku-oid-cache
+                          form-by-haku-oid-and-id-cache
+                          form-by-haku-oid-str-cache
                           temp-file-store]}]
   (api/context "/api" []
     :tags ["application-api"]
@@ -139,8 +140,8 @@
       :summary "Gets form for haku"
       :path-params [haku-oid :- s/Str]
       :query-params [role :- [form-role/FormRole]]
-      (if-let [form-with-tarjonta (form-service/fetch-form-by-haku-oid-cached-str
-                                   form-by-haku-oid-cache
+      (if-let [form-with-tarjonta (form-service/fetch-form-by-haku-oid-str-cached
+                                   form-by-haku-oid-str-cache
                                    haku-oid
                                    false
                                    role)]
@@ -151,9 +152,9 @@
       :summary "Gets form for hakukohde"
       :path-params [hakukohde-oid :- s/Str]
       :query-params [role :- [form-role/FormRole]]
-      (if-let [form-with-tarjonta (form-service/fetch-form-by-hakukohde-oid-cached-str
+      (if-let [form-with-tarjonta (form-service/fetch-form-by-hakukohde-oid-str-cached
                                    tarjonta-service
-                                   form-by-haku-oid-cache
+                                   form-by-haku-oid-str-cache
                                    hakukohde-oid
                                    false
                                    role)]
@@ -184,6 +185,7 @@
               job-runner
               organization-service
               ohjausparametrit-service
+              form-by-haku-oid-and-id-cache
               application)
              {:passed? false :failures failures :code code}
              (response/bad-request {:failures failures :code code})
@@ -199,6 +201,7 @@
               job-runner
               organization-service
               ohjausparametrit-service
+              form-by-haku-oid-and-id-cache
               application)
              {:passed? false :failures failures :code code}
              (response/bad-request {:failures failures :code code})

@@ -48,33 +48,45 @@
                                                           (assoc-in [:answers 17 :value] [ "1.2.246.562.20.49028196524" "1.2.246.562.20.49028196523"])))
 
 (def handler
-  (let [tarjonta-service              (tarjonta-service/new-tarjonta-service)
-        organization-service          (organization-service/new-organization-service)
-        ohjausparametrit-service      (ohjausparametrit-service/new-ohjausparametrit-service)
-        koodisto-cache                (reify cache-service/Cache
-                                        (get-from [this key])
-                                        (get-many-from [this keys])
-                                        (put-to [this key value])
-                                        (remove-from [this key])
-                                        (clear-all [this]))
-        form-by-haku-oid-cache-loader (hakija-form-service/map->FormByHakuOidCacheLoader
-                                       {:tarjonta-service         tarjonta-service
-                                        :koodisto-cache           koodisto-cache
-                                        :organization-service     organization-service
-                                        :ohjausparametrit-service ohjausparametrit-service})]
+  (let [tarjonta-service                     (tarjonta-service/new-tarjonta-service)
+        organization-service                 (organization-service/new-organization-service)
+        ohjausparametrit-service             (ohjausparametrit-service/new-ohjausparametrit-service)
+        koodisto-cache                       (reify cache-service/Cache
+                                               (get-from [this key])
+                                               (get-many-from [this keys])
+                                               (put-to [this key value])
+                                               (remove-from [this key])
+                                               (clear-all [this]))
+        form-by-haku-oid-and-id-cache-loader (hakija-form-service/map->FormByHakuOidAndIdCacheLoader
+                                              {:tarjonta-service         tarjonta-service
+                                               :koodisto-cache           koodisto-cache
+                                               :organization-service     organization-service
+                                               :ohjausparametrit-service ohjausparametrit-service})
+        form-by-haku-oid-str-cache-loader    (hakija-form-service/map->FormByHakuOidStrCacheLoader
+                                              {:tarjonta-service         tarjonta-service
+                                               :koodisto-cache           koodisto-cache
+                                               :organization-service     organization-service
+                                               :ohjausparametrit-service ohjausparametrit-service})]
     (-> (routes/new-handler)
         (assoc :tarjonta-service tarjonta-service)
         (assoc :job-runner (job/new-job-runner hakija-jobs/job-definitions))
         (assoc :organization-service organization-service)
         (assoc :ohjausparametrit-service ohjausparametrit-service)
         (assoc :person-service (person-service/new-person-service))
-        (assoc :form-by-haku-oid-cache (reify cache-service/Cache
-                                         (get-from [this key]
-                                           (.load form-by-haku-oid-cache-loader key))
-                                         (get-many-from [this keys])
-                                         (put-to [this key value])
-                                         (remove-from [this key])
-                                         (clear-all [this])))
+        (assoc :form-by-haku-oid-and-id-cache (reify cache-service/Cache
+                                                (get-from [this key]
+                                                  (.load form-by-haku-oid-and-id-cache-loader key))
+                                                (get-many-from [this keys])
+                                                (put-to [this key value])
+                                                (remove-from [this key])
+                                                (clear-all [this])))
+        (assoc :form-by-haku-oid-str-cache (reify cache-service/Cache
+                                             (get-from [this key]
+                                               (.load form-by-haku-oid-str-cache-loader key))
+                                             (get-many-from [this keys])
+                                             (put-to [this key value])
+                                             (remove-from [this key])
+                                             (clear-all [this])))
         (assoc :koodisto-cache koodisto-cache)
         .start
         :routes)))
