@@ -41,13 +41,12 @@
   (true? deleted))
 
 (defn- get-application
-  [secret tarjonta-service koodisto-cache organization-service ohjausparametrit-service person-client]
+  [secret tarjonta-service form-by-haku-oid-and-id-cache koodisto-cache person-client]
   (let [[application-form-and-person secret-expired? lang-override inactivated?]
         (hakija-application-service/get-latest-application-by-secret secret
                                                                      tarjonta-service
+                                                                     form-by-haku-oid-and-id-cache
                                                                      koodisto-cache
-                                                                     organization-service
-                                                                     ohjausparametrit-service
                                                                      person-client)]
     (cond inactivated?
           (response/bad-request {:error "Inactivated"})
@@ -216,17 +215,15 @@
       (cond (not-blank? secret)
             (get-application {:hakija secret}
                              tarjonta-service
+                             form-by-haku-oid-and-id-cache
                              koodisto-cache
-                             organization-service
-                             ohjausparametrit-service
                              person-service)
 
             (not-blank? virkailija-secret)
             (get-application {:virkailija virkailija-secret}
                              tarjonta-service
+                             form-by-haku-oid-and-id-cache
                              koodisto-cache
-                             organization-service
-                             ohjausparametrit-service
                              person-service)
 
             :else

@@ -376,7 +376,7 @@
         false))
 
 (defn get-latest-application-by-secret
-  [secret tarjonta-service koodisto-cache organization-service ohjausparametrit-service person-client]
+  [secret tarjonta-service form-by-haku-oid-and-id-cache koodisto-cache person-client]
   (let [[actor-role secret] (match [secret]
                               [{:virkailija s}]
                               [:virkailija s]
@@ -400,11 +400,9 @@
         lang-override              (when secret-expired? (application-store/get-application-language-by-secret secret))
         application-in-processing? (util/application-in-processing? (:application-hakukohde-reviews application))
         inactivated?               (is-inactivated? application)
-        form                       (cond (some? (:haku application)) (hakija-form-service/fetch-form-by-haku-oid
+        form                       (cond (some? (:haku application)) (hakija-form-service/fetch-form-by-haku-oid-cached
                                                                        tarjonta-service
-                                                                       koodisto-cache
-                                                                       organization-service
-                                                                       ohjausparametrit-service
+                                                                       form-by-haku-oid-and-id-cache
                                                                        (:haku application)
                                                                        application-in-processing?
                                                                        form-roles)

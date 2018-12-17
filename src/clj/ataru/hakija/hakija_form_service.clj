@@ -249,6 +249,22 @@
                          "#" application-in-processing-state?
                          (sort (map #(str "#" (name %)) roles)))))
 
+(s/defn ^:always-validate fetch-form-by-haku-oid-cached :- s/Any
+  [tarjonta-service
+   form-by-haku-oid-and-id-cache
+   haku-oid :- s/Any
+   application-in-processing-state? :- s/Bool
+   roles :- [form-role/FormRole]]
+  (if-let [latest-id (some-> (tarjonta/get-haku tarjonta-service haku-oid)
+                             :ataruLomakeAvain
+                             form-store/latest-id-by-key)]
+    (fetch-form-by-haku-oid-and-id-cached form-by-haku-oid-and-id-cache
+                                          haku-oid
+                                          latest-id
+                                          application-in-processing-state?
+                                          roles)
+    (throw (RuntimeException. (str "No form found for haku " haku-oid)))))
+
 (s/defn ^:always-validate fetch-form-by-haku-oid-str-cached :- s/Any
   [form-by-haku-oid-str-cache :- s/Any
    haku-oid :- s/Str
