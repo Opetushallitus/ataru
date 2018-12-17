@@ -244,7 +244,8 @@
 (defn set-field-visibilities
   [db]
   (rules/run-all-rules
-   (reduce set-field-visibility db (get-in db [:form :content]))))
+   (reduce set-field-visibility db (get-in db [:form :content]))
+   (:flat-form-content db)))
 
 (defn- set-multi-value-changed [db id value-key]
   (let [answer (-> db :application :answers id)
@@ -724,7 +725,7 @@
 (defn application-run-rules [db rule]
   (if (not-empty rule)
     (rules/run-rules db rule)
-    (rules/run-all-rules db)))
+    (rules/run-all-rules db (:flat-form-content db))))
 
 (reg-event-db
   :application/run-rules

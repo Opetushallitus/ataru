@@ -254,9 +254,8 @@
      (assoc-in db-after-rules [:application :answers-validity] (db->valid-status db-after-rules)))))
 
 (defn run-all-rules
-  [db]
-  (->> (get-in db [:form :content])
-       util/flatten-form-fields
+  [db flat-form-content]
+  (->> flat-form-content
        (map :rules)
        (remove empty?)
        (reduce run-rules db)))
