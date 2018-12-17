@@ -154,7 +154,7 @@
    application-in-processing-state? :- s/Bool]
   (when-let [form (form-store/fetch-by-id id)]
     (when (not (:deleted form))
-      (-> (koodisto/populate-form-koodisto-fields-cached koodisto-cache form)
+      (-> (koodisto/populate-form-koodisto-fields koodisto-cache form)
           (remove-required-hakija-validator-if-virkailija roles)
           (populate-attachment-deadlines hakukohteet)
           (flag-uneditable-and-unviewable-fields hakukohteet roles application-in-processing-state?)))))

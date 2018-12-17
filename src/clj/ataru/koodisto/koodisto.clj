@@ -5,8 +5,6 @@
             [clojure.core.cache :as cache]
             [ataru.cache.cache-service :as cache-service]))
 
-(def populate-form-koodisto-fields-cache (atom (cache/lru-cache-factory {})))
-
 (defn encode-koodisto-key [{:keys [uri version]}]
   (str uri "#" version))
 
@@ -42,12 +40,6 @@
   (update form :content (partial util/map-form-fields
                                  (partial populate-form-koodisto-field
                                           koodisto-cache))))
-
-(defn populate-form-koodisto-fields-cached
-  [koodisto-cache form]
-  (let [cached-data (swap! populate-form-koodisto-fields-cache cache/through-cache form
-                      (partial populate-form-koodisto-fields koodisto-cache))]
-    (get cached-data form)))
 
 (defn get-postal-office-by-postal-code
   [koodisto-cache postal-code]

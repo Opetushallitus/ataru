@@ -108,7 +108,7 @@
 
 (defn- populate-form-fields
   [form koodisto-cache tarjonta-info]
-  (-> (koodisto/populate-form-koodisto-fields-cached koodisto-cache form)
+  (-> (koodisto/populate-form-koodisto-fields koodisto-cache form)
       (populate-hakukohde-answer-options tarjonta-info)
       (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)))
 
