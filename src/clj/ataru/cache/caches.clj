@@ -14,6 +14,7 @@
      (redis/map->Cache
       {:name            "hakukohde"
        :loader          (cache/->FunctionCacheLoader tarjonta-client/get-hakukohde)
+       :ttl-after-read  [3 TimeUnit/DAYS]
        :ttl-after-write [3 TimeUnit/DAYS]
        :update-period   [15 TimeUnit/MINUTES]})
      [:redis])]
@@ -22,27 +23,34 @@
      (redis/map->Cache
       {:name            "haku"
        :loader          (cache/->FunctionCacheLoader tarjonta-client/get-haku)
-       :ttl-after-write [1 TimeUnit/HOURS]})
+       :ttl-after-read  [3 TimeUnit/DAYS]
+       :ttl-after-write [3 TimeUnit/DAYS]
+       :update-period   [15 TimeUnit/MINUTES]})
      [:redis])]
    [:forms-in-use-cache
     (component/using
      (redis/map->Cache
       {:name            "forms-in-use"
        :loader          (cache/->FunctionCacheLoader tarjonta-client/get-forms-in-use)
-       :ttl-after-write [5 TimeUnit/MINUTES]})
+       :ttl-after-read  [3 TimeUnit/DAYS]
+       :ttl-after-write [3 TimeUnit/DAYS]
+       :update-period   [15 TimeUnit/MINUTES]})
      [:redis])]
    [:ohjausparametrit-cache
     (component/using
      (redis/map->Cache
       {:name            "ohjausparametrit"
        :loader          (cache/->FunctionCacheLoader ohjausparametrit-client/get-ohjausparametrit)
-       :ttl-after-write [1 TimeUnit/HOURS]})
+       :ttl-after-read  [3 TimeUnit/DAYS]
+       :ttl-after-write [3 TimeUnit/DAYS]
+       :update-period   [15 TimeUnit/MINUTES]})
      [:redis])]
    [:koulutus-cache
     (component/using
      (redis/map->Cache
       {:name            "koulutus"
        :loader          (cache/->FunctionCacheLoader tarjonta-client/get-koulutus)
+       :ttl-after-read  [3 TimeUnit/DAYS]
        :ttl-after-write [3 TimeUnit/DAYS]
        :update-period   [15 TimeUnit/MINUTES]})
      [:redis])]
@@ -83,25 +91,28 @@
      [:redis])]
    [:koodisto-cache
     (component/using
-      (redis/map->Cache
-        {:name            "koodisto"
-         :loader          (cache/->FunctionCacheLoader koodisto-cache/get-koodi-options)
-         :ttl-after-write [3 TimeUnit/DAYS]
-         :update-period   [15 TimeUnit/MINUTES]})
-      [:redis])]
+     (redis/map->Cache
+      {:name            "koodisto"
+       :loader          (cache/->FunctionCacheLoader koodisto-cache/get-koodi-options)
+       :ttl-after-read  [3 TimeUnit/DAYS]
+       :ttl-after-write [3 TimeUnit/DAYS]
+       :update-period   [15 TimeUnit/MINUTES]})
+     [:redis])]
    [:form-by-haku-oid-and-id-cache
     (component/using
      (redis/map->Cache
       {:name            "form-by-haku-oid-and-id"
-       :ttl-after-write [15 TimeUnit/MINUTES]})
+       :ttl-after-read  [3 TimeUnit/DAYS]
+       :ttl-after-write [3 TimeUnit/DAYS]
+       :update-period   [5 TimeUnit/MINUTES]})
      {:redis  :redis
       :loader :form-by-haku-oid-and-id-cache-loader})]
    [:form-by-haku-oid-str-cache
     (component/using
      (redis/map->Cache
-      {:name               "form-by-haku-oid-str"
-       :ttl-after-read     [10 TimeUnit/SECONDS]
-       :ttl-after-write    [10 TimeUnit/SECONDS]
-       :update-after-read? true})
+      {:name            "form-by-haku-oid-str"
+       :ttl-after-read  [3 TimeUnit/DAYS]
+       :ttl-after-write [3 TimeUnit/DAYS]
+       :update-period   [5 TimeUnit/MINUTES]})
      {:redis  :redis
       :loader :form-by-haku-oid-str-cache-loader})]])
