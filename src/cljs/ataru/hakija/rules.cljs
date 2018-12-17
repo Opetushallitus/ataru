@@ -255,8 +255,7 @@
 
 (defn run-all-rules
   [db]
-  (->> (get-in db [:form :content])
-       util/flatten-form-fields
+  (->> (get db :flat-form-content)
        (map :rules)
        (remove empty?)
        (reduce run-rules db)))

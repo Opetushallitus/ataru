@@ -71,8 +71,8 @@
 (defn create-initial-answers
   "Create initial answer structure based on form structure.
   Validity, dropdown default value and default hakukohde for now."
-  [form preselected-hakukohde-oids]
-  (initial-valid-status (util/flatten-form-fields (:content form)) preselected-hakukohde-oids))
+  [flat-form-content preselected-hakukohde-oids]
+  (initial-valid-status flat-form-content preselected-hakukohde-oids))
 
 (defn not-extra-answer? [answer-key question-ids]
   "Check that the answer (key) has a corresponding quesiton in the form.

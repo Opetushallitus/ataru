@@ -218,17 +218,19 @@
 
 (defn- set-field-visibility
   ([db field-descriptor]
-   (set-field-visibility db field-descriptor true))
+   (set-field-visibility db field-descriptor true nil))
   ([db field-descriptor visible?]
+   (set-field-visibility db field-descriptor visible? nil))
+  ([db field-descriptor visible? hakukohteet-and-ryhmat]
    (let [id         (keyword (:id field-descriptor))
          belongs-to (set (concat (:belongs-to-hakukohderyhma field-descriptor)
                                  (:belongs-to-hakukohteet field-descriptor)))
          visible?   (and visible?
                          (or (empty? belongs-to)
                              (not-empty (clojure.set/intersection
-                                         belongs-to
-                                         (selected-hakukohteet-and-ryhmat db)))))]
-     (cond-> (reduce #(set-field-visibility %1 %2 visible?)
+                                          belongs-to
+                                          (or hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat db))))))]
+     (cond-> (reduce #(set-field-visibility %1 %2 visible? hakukohteet-and-ryhmat)
                      (assoc-in db [:application :ui id :visible?] visible?)
                      (:children field-descriptor))
              (or (= "dropdown" (:fieldType field-descriptor))
@@ -239,8 +241,12 @@
 
 (defn set-field-visibilities
   [db]
-  (rules/run-all-rules
-   (reduce set-field-visibility db (get-in db [:form :content]))))
+  (let [hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat db)]
+    (rules/run-all-rules
+      (reduce
+        (fn [db field-descriptor] (set-field-visibility db field-descriptor true hakukohteet-and-ryhmat))
+        db
+        (get-in db [:form :content])))))
 
 (defn- set-multi-value-changed [db id value-key]
   (let [answer (-> db :application :answers id)
@@ -461,8 +467,8 @@
                                              (map :oid)))
         preselected-hakukohde-oids (->> db :application :preselected-hakukohde-oids
                                         (filter #(contains? valid-hakukohde-oids %)))
-        initial-answers            (create-initial-answers form preselected-hakukohde-oids)
-        flat-form-content          (autil/flatten-form-fields (:content form))]
+        flat-form-content          (autil/flatten-form-fields (:content form))
+        initial-answers            (create-initial-answers flat-form-content preselected-hakukohde-oids)]
     (-> db
         (update :form (fn [{:keys [selected-language]}]
                         (cond-> form
