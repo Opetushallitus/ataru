@@ -28,4 +28,5 @@
        [:div
         {:class (if @expanded?
                   "editor-form__drag_n_drop_spacer--dashbox-visible"
-                  "editor-form__drag_n_drop_spacer--dashbox-hidden")}]])))
+                  "editor-form__drag_n_drop_spacer--dashbox-hidden")}
+        [:div.editor-form__drag_n_drop_spacer--dashbox]]])))

@@ -1014,7 +1014,7 @@
 }
 
 .editor-form__drag_n_drop_spacer_container_for_component {
-  height: 17px;
+  padding-top: 17px;
 }
 
 .editor-form__drag_n_drop_spacer--dashbox-hidden {
@@ -1022,11 +1022,16 @@
 }
 
 .editor-form__drag_n_drop_spacer--dashbox-visible {
-  height: 100px;
-  margin: 14px 0px;
+  height: 51px;
+  margin-left: 0;
+  margin-right: 0;
+  margin-top: -17px;
+}
+.editor-form__drag_n_drop_spacer--dashbox-visible .editor-form__drag_n_drop_spacer--dashbox {
+  margin-top: 8px;
+  height: 41px;
   border: 1px dashed #cccccc;
 }
-
 .editor-form__koodisto-popover {
   position: absolute;
   left: 407px;
