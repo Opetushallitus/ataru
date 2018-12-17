@@ -299,9 +299,9 @@ You will receive a confirmation of your application to your email."}
    :seconds                                     {:fi "sekuntia"
                                                  :en "seconds"
                                                  :sv "sekunder"}
-   :show-more                                   {:fi "Näytä lisää.."
-                                                 :en "Show more.."
-                                                 :sv "Visa mer.."}
+   :show-more                                   {:fi "Näytä lisää..."
+                                                 :en "Show more..."
+                                                 :sv "Visa mer..."}
    :swedish                                     {:fi "Ruotsi"
                                                  :sv "Svenska"
                                                  :en "Swedish"}
