@@ -186,7 +186,7 @@
                                                  :sv "Avbryta inte"
                                                  :en "Don't cancel"}
    :confirm-cancel-upload                       {:fi "Vahvista keskeytys"
-                                                 :sv "SV: Vahvista keskeytys"
+                                                 :sv "Bekräfta avbrytning"
                                                  :en "Confirm cancel"}
    :finnish                                     {:fi "Suomi"
                                                  :sv "Finska"
