@@ -611,10 +611,10 @@ You will receive a confirmation of your application to your email."}
 (def person-info-module-texts
   {:forenames            {:fi "Etunimet"
                           :sv "Förnamn"
-                          :en "Forenames"}
+                          :en "First/given names"}
    :main-forename        {:fi "Kutsumanimi"
                           :sv "Tilltalsnamn"
-                          :en "Main forename"}
+                          :en "Preferred first or given name"}
    :surname              {:fi "Sukunimi"
                           :sv "Efternamn"
                           :en "Surname"}
@@ -656,7 +656,7 @@ You will receive a confirmation of your application to your email."}
                           :en "Address"}
    :home-town            {:fi "Kotikunta"
                           :sv "Hemkommun"
-                          :en "Home town"}
+                          :en "Municipality of residence"}
    :city                 {:fi "Kaupunki ja maa"
                           :sv "Stad och land"
                           :en "City and country"}
@@ -665,7 +665,7 @@ You will receive a confirmation of your application to your email."}
                           :en "Postal code"}
    :postal-office        {:fi "Postitoimipaikka"
                           :sv "Postkontor"
-                          :en "Postal office"}
+                          :en "Town/city"}
    :language             {:fi "Äidinkieli"
                           :sv "Modersmål"
                           :en "Native language"}
