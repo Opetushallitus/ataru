@@ -461,8 +461,8 @@
                                              (map :oid)))
         preselected-hakukohde-oids (->> db :application :preselected-hakukohde-oids
                                         (filter #(contains? valid-hakukohde-oids %)))
-        initial-answers            (create-initial-answers form preselected-hakukohde-oids)
-        flat-form-content          (autil/flatten-form-fields (:content form))]
+        flat-form-content          (autil/flatten-form-fields (:content form))
+        initial-answers            (create-initial-answers flat-form-content preselected-hakukohde-oids)]
     (-> db
         (update :form (fn [{:keys [selected-language]}]
                         (cond-> form

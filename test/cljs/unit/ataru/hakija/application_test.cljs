@@ -159,7 +159,7 @@
     (is (= expected actual))))
 
 (deftest correct-initial-validity-for-nested-form
-  (let [initial-answers (create-initial-answers form1 nil)]
+  (let [initial-answers (create-initial-answers (util/flatten-form-fields (:content form1)) nil)]
     (is (= {:G__2 {:valid false, :label {:fi "kenttä1", :sv ""} :order-idx 0}
             :G__14 {:valid true, :label {:fi "kenttä2", :sv ""} :order-idx 1}
             :G__25 {:valid true, :label {:fi "ulkokenttä", :sv ""} :order-idx 2}}
