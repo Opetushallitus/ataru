@@ -316,7 +316,9 @@
   (let [field            (first children)
         id               (keyword (:id field-descriptor))
         use-onr-info?    (contains? (:person application) id)
-        values           (flatten (replace-with-option-label (-> application :person :nationality)
+        values           (flatten (replace-with-option-label (if use-onr-info?
+                                                               (-> application :person :nationality)
+                                                               (get-in application [:answers :nationality :value]))
                                                              (:options field)
                                                              lang))
         highlight-field? (subscribe [:application/field-highlighted? id])]
