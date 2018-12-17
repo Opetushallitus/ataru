@@ -188,10 +188,12 @@
 
 (defn selected-hakukohteet-and-ryhmat [db]
   (let [selected-hakukohteet     (set (selected-hakukohteet db))
-        selected-hakukohderyhmat (->> (get-in db [:form :tarjonta :hakukohteet])
+        selected-hakukohderyhmat (->> (when (not-empty selected-hakukohteet)
+                                        (get-in db [:form :tarjonta :hakukohteet]))
                                       (filter #(contains? selected-hakukohteet (:oid %)))
-                                      (mapcat :hakukohderyhmat))]
-    (set (concat selected-hakukohteet selected-hakukohderyhmat))))
+                                      (mapcat :hakukohderyhmat)
+                                      set)]
+    (clojure.set/union selected-hakukohteet selected-hakukohderyhmat)))
 
 (declare set-field-visibility)
 
