@@ -327,22 +327,20 @@
     x))
 
 (defn set-question-group-row-amounts [db]
-  (reduce-kv (fn [db answer-key {:keys [value values]}]
-               (let [field-descriptor  (->> (:flat-form-content db)
-                                            (filter (comp (partial = answer-key) keyword :id))
-                                            (first))
-                     question-group-id (-> field-descriptor :params :question-group-id)]
-                 (cond-> db
-                   question-group-id
-                   (update-in [:application :ui question-group-id :count] #(let [provided-val ((some-fn >0?)
-                                                                                               (-> values count)
-                                                                                               (-> value count)
-                                                                                               1)]
-                                                                             (if (> % provided-val)
-                                                                               %
-                                                                               provided-val))))))
-             db
-             (-> db :application :answers)))
+  (reduce (fn [db field-descriptor]
+            (let [{:keys [value values]} (-> db :application :answers (get (keyword (:id field-descriptor))))
+                  question-group-id      (-> field-descriptor :params :question-group-id)]
+              (cond-> db
+                      question-group-id
+                      (update-in [:application :ui question-group-id :count] #(let [provided-val ((some-fn >0?)
+                                                                                                  (-> values count)
+                                                                                                  (-> value count)
+                                                                                                  1)]
+                                                                                (if (> % provided-val)
+                                                                                  %
+                                                                                  provided-val))))))
+          db
+          (:flat-form-content db)))
 
 (defn- merge-single-choice-values [value answer]
   (if (and (vector? value)
