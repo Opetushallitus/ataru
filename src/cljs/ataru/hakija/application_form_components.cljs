@@ -553,15 +553,7 @@
         languages    (subscribe [:application/default-languages])
         id           (answer-key field-descriptor)
         disabled?    @(subscribe [:application/cannot-edit? id])
-        use-onr-info? (contains? (:person application) id)
-        value-path   (if (and @editing
-                              (contains? editing-forbidden-person-info-field-ids id)
-                              use-onr-info?)
-                       [:application :person id]
-                       (cond-> [:application :answers id]
-                         idx (concat [:values idx 0])
-                         :always (concat [:value])))
-        value        (subscribe [:state-query value-path])
+        value        (subscribe [:application/answer-value id idx nil])
         on-change    (fn [e]
                        (dispatch [:application/dropdown-change
                                   field-descriptor
