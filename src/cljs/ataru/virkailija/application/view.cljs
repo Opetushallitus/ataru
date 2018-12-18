@@ -424,12 +424,13 @@
      [:span.application-handling_list-row-attachment-state-counts.unchecked (:unchecked states)])])
 
 (defn applications-hakukohde-rows
-  [review-settings application review-hakukohde-oids filtered-hakukohde attachment-states]
+  [review-settings application filtered-hakukohde attachment-states]
   (let [direct-form-application?      (empty? (:hakukohde application))
         application-hakukohde-oids    (if direct-form-application?
                                         ["form"]
                                         (:hakukohde application))
         application-hakukohde-reviews (:application-hakukohde-reviews application)
+        review-hakukohde-oids         @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
         lang                          (subscribe [:editor/virkailija-lang])
         selected-hakukohde-oids       (subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])]
     (into
@@ -523,7 +524,6 @@
         date-time               (->> day-date-time (rest) (clojure.string/join " "))
         applicant               (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
         review-settings         (subscribe [:state-query [:application :review-settings :config]])
-        selected-hakukohde-oids (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
         filtered-hakukohde      (subscribe [:state-query [:application :selected-hakukohde]])
         attachment-states       (application-attachment-states application)
         form-attachment-states  (:form attachment-states)]
@@ -545,7 +545,7 @@
       [:span.application-handling__list-row--state]
       (when (:selection-state @review-settings true)
         [:span.application-handling__hakukohde-selection-cell])]
-     [applications-hakukohde-rows @review-settings application @selected-hakukohde-oids @filtered-hakukohde attachment-states]]))
+     [applications-hakukohde-rows @review-settings application @filtered-hakukohde attachment-states]]))
 
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
