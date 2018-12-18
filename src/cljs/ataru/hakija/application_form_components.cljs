@@ -161,15 +161,14 @@
                                        :or   {div-kwd  :div.application__form-field
                                               disabled false
                                               editing  false}}]
-  (let [id                     (keyword (:id field-descriptor))
-        languages              (subscribe [:application/default-languages])
-        size                   (get-in field-descriptor [:params :size])
-        size-class             (text-field-size->class size)
-        validators-processing  (subscribe [:state-query [:application :validators-processing]])
-        verify-email?          (subscribe [:application/verify-email? id])
-        edit-forbidden?        (contains? editing-forbidden-person-info-field-ids id)]
+  (let [id                    (keyword (:id field-descriptor))
+        languages             (subscribe [:application/default-languages])
+        size                  (get-in field-descriptor [:params :size])
+        size-class            (text-field-size->class size)
+        validators-processing (subscribe [:state-query [:application :validators-processing]])
+        verify-email?         (subscribe [:application/verify-email? id])]
     (fn []
-      (let [answer      (if (and @editing edit-forbidden?)
+      (let [answer      (if (and @editing)
                           {:value @(subscribe [:state-query [:application :person id]])
                            :valid true}
                           @(subscribe [:state-query
