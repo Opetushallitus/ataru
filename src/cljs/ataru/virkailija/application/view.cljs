@@ -422,7 +422,6 @@
                                         (:hakukohde application))
         application-hakukohde-reviews (group-by #(vector (:hakukohde %) (:requirement %))
                                                 (:application-hakukohde-reviews application))
-        review-hakukohde-oids         @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
         lang                          (subscribe [:editor/virkailija-lang])
         selected-hakukohde-oids       (subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])]
     (into
@@ -443,7 +442,7 @@
                        "application-handling__list-row-hakukohde--not-in-selection")}
              (when (not direct-form-application?)
                [:span.application-handling__application-hakukohde-cell
-                {:class    (when (contains? (set review-hakukohde-oids) hakukohde-oid)
+                {:class    (when @(subscribe [:application/hakukohde-selected-for-review? hakukohde-oid])
                              "application-handling__application-hakukohde-cell--selected")
                  :on-click (fn [evt]
                              (.preventDefault evt)
