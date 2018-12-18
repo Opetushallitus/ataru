@@ -116,6 +116,9 @@
   (and (nil? new-in-left)
        (nil? new-in-right)))
 
+(defn- remove-irrelevant-changes [field]
+  (update field :params dissoc :info-text))
+
 (defn forms-differ? [application tarjonta-info form-left form-right]
   (and (not= (:id form-left) (:id form-right))
        (let [answers        (group-by :key (:answers application))
@@ -125,7 +128,8 @@
                                       field-by-id (util/group-by-first :id flat-form-fields)]
                                   (->> flat-form-fields
                                        (filter #(visible? % field-by-id answers hakutoiveet
-                                                          (-> tarjonta-info :tarjonta :hakukohteet))))))
+                                                          (-> tarjonta-info :tarjonta :hakukohteet)))
+                                       (map remove-irrelevant-changes))))
              fields-left    (visible-fields form-left)
              fields-right   (visible-fields form-right)]
          (not (fields-equal? (diff fields-left fields-right))))))
@@ -169,7 +173,7 @@
                                                          (assoc :person (get-person application person-client))
                                                          (merge tarjonta-info))
                                :form                 form
-                               :alternative-form     alternative-form
+                               :latest-form          alternative-form
                                :hakukohde-reviews    @hakukohde-reviews
                                :attachment-reviews   @attachment-reviews
                                :events               @events

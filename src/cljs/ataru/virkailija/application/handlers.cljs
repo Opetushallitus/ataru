@@ -93,7 +93,7 @@
                                               [:application/fetch-application application-key]]})
        with-newest-form? {:db         (-> db
                                           (assoc-in [:application :selected-application-and-form] nil)
-                                          (assoc-in [:application :alternative-form] nil)
+                                          (assoc-in [:application :latest-form] nil)
                                           (assoc-in [:application :selected-review-hakukohde-oids] [selected-hakukohde-oid]))
                           :dispatch-n [[:application/select-review-hakukohde selected-hakukohde-oid]
                                        [:application/fetch-application application-key true]]}
@@ -482,7 +482,7 @@
                notes-by-hakukohde)))
 
 (defn update-application-details [db {:keys [form
-                                             alternative-form
+                                             latest-form
                                              application
                                              events
                                              review
@@ -494,7 +494,7 @@
       (assoc-in [:application :selected-application-and-form]
         {:form        form
          :application (answers-indexed application)})
-      (assoc-in [:application :alternative-form] alternative-form)
+      (assoc-in [:application :latest-form] latest-form)
       (assoc-in [:application :events] events)
       (assoc-in [:application :review] review)
       (assoc-in [:application :review-notes] review-notes)

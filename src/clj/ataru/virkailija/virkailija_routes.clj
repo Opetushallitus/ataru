@@ -350,7 +350,7 @@
                  :attachment-reviews                ataru-schema/AttachmentReviews
                  :hakukohde-reviews                 ataru-schema/HakukohdeReviews
                  :form                              ataru-schema/FormWithContent
-                 (s/optional-key :alternative-form) ataru-schema/Form
+                 (s/optional-key :latest-form) ataru-schema/Form
                  :information-requests              [ataru-schema/InformationRequest]}
         (if-let [application (application-service/get-application-with-human-readable-koodis
                               koodisto-cache
