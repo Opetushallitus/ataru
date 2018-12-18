@@ -781,10 +781,18 @@ and (max-width: 1000px) {
   display: flex;
   align-items: center;
 }
+.application-handling__hakukohde--selected {
+  color: @gray-of-the-beast;
+  border-left: 7px solid @pale-blue;
+  padding-left: 15px;
+  margin-left: -22px;
+}
+.application-handling__hakukohde--selectable {
+  cursor: pointer;
+}
 
 .application__hakukohde-priority-number-readonly {
   font-size: 30px;
-  cursor: default;
   margin: 0;
   padding-right: 10px;
 }
