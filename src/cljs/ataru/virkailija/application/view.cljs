@@ -399,16 +399,7 @@
 
 (defn hakukohde-review-state
   [hakukohde-reviews hakukohde-oid requirement]
-  (:state (find-first #(and (= (:hakukohde %) hakukohde-oid)
-                            (= (:requirement %) requirement))
-                      hakukohde-reviews)))
-
-(defn review-label-for-hakukohde
-  [reviews states hakukohde-oid requirement lang]
-  (application-states/get-review-state-label-by-name
-    states
-    (hakukohde-review-state reviews hakukohde-oid requirement)
-    lang))
+  (:state (first (get hakukohde-reviews [hakukohde-oid requirement]))))
 
 (defn- hakukohde-and-tarjoaja-name [hakukohde-oid]
   (if-let [hakukohde-and-tarjoaja-name @(subscribe [:application/hakukohde-and-tarjoaja-name
@@ -429,7 +420,8 @@
         application-hakukohde-oids    (if direct-form-application?
                                         ["form"]
                                         (:hakukohde application))
-        application-hakukohde-reviews (:application-hakukohde-reviews application)
+        application-hakukohde-reviews (group-by #(vector (:hakukohde %) (:requirement %))
+                                                (:application-hakukohde-reviews application))
         review-hakukohde-oids         @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
         lang                          (subscribe [:editor/virkailija-lang])
         selected-hakukohde-oids       (subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])]
@@ -442,12 +434,7 @@
                 selection-state        (hakukohde-review-state application-hakukohde-reviews hakukohde-oid "selection-state")
                 show-state-email-icon? (and
                                          (< 0 (:new-application-modifications application))
-                                         (->> application
-                                              :application-hakukohde-reviews
-                                              (filter #(and (= hakukohde-oid (:hakukohde %))
-                                                            (= (:requirement %) "processing-state")
-                                                            (= (:state %) "information-request")))
-                                              (seq)))
+                                         (= "information-request" processing-state))
                 hakukohde-attachment-states ((keyword hakukohde-oid) attachment-states)]
             [:div.application-handling__list-row-hakukohde
              {:class (when (and (not direct-form-application?)
@@ -474,11 +461,9 @@
                [:span.application-handling__state-label
                 {:class (str "application-handling__state-label--" (or processing-state "unprocessed"))}]
                (or
-                 (review-label-for-hakukohde
-                   application-hakukohde-reviews
+                 (application-states/get-review-state-label-by-name
                    review-states/application-hakukohde-processing-states
-                   hakukohde-oid
-                   "processing-state"
+                   processing-state
                    @lang)
                  (get-virkailija-translation :unprocessed))
                (when show-state-email-icon?
@@ -489,11 +474,9 @@
                  [:span.application-handling__state-label
                   {:class (str "application-handling__state-label--" (or selection-state "incomplete"))}]
                  (or
-                   (review-label-for-hakukohde
-                     application-hakukohde-reviews
+                   (application-states/get-review-state-label-by-name
                      review-states/application-hakukohde-selection-states
-                     hakukohde-oid
-                     "selection-state"
+                     selection-state
                      @lang)
                    (get-virkailija-translation :incomplete))]])]))
         application-hakukohde-oids))))
