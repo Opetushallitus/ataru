@@ -310,20 +310,16 @@
                                coerce/json-schema-coercion-matcher))
 
 (defrecord FormByHakuOidStrCacheLoader [tarjonta-service
-                                        koodisto-cache
-                                        organization-service
-                                        ohjausparametrit-service]
+                                        form-by-haku-oid-and-id-cache]
   cache/CacheLoader
   (load [_ key]
     (let [[haku-oid aips? & roles] (clojure.string/split key #"#")]
       (json/generate-string
        (form-coercer
-        (fetch-form-by-haku-oid tarjonta-service
-                                koodisto-cache
-                                organization-service
-                                ohjausparametrit-service
-                                haku-oid
-                                (Boolean/valueOf aips?)
-                                (map keyword roles))))))
+        (fetch-form-by-haku-oid-cached tarjonta-service
+                                       form-by-haku-oid-and-id-cache
+                                       haku-oid
+                                       (Boolean/valueOf aips?)
+                                       (map keyword roles))))))
   (load-many [this keys]
     (into {} (keep #(when-let [v (cache/load this %)] [% v]) keys))))

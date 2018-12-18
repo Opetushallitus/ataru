@@ -101,18 +101,20 @@
    [:form-by-haku-oid-and-id-cache
     (component/using
      (redis/map->Cache
-      {:name            "form-by-haku-oid-and-id"
-       :ttl-after-read  [3 TimeUnit/DAYS]
-       :ttl-after-write [3 TimeUnit/DAYS]
-       :update-period   [5 TimeUnit/MINUTES]})
+      {:name               "form-by-haku-oid-and-id"
+       :ttl-after-read     [3 TimeUnit/DAYS]
+       :ttl-after-write    [3 TimeUnit/DAYS]
+       :update-period      [1 TimeUnit/MINUTES]
+       :update-after-read? true})
      {:redis  :redis
       :loader :form-by-haku-oid-and-id-cache-loader})]
    [:form-by-haku-oid-str-cache
     (component/using
      (redis/map->Cache
-      {:name            "form-by-haku-oid-str"
-       :ttl-after-read  [3 TimeUnit/DAYS]
-       :ttl-after-write [3 TimeUnit/DAYS]
-       :update-period   [5 TimeUnit/MINUTES]})
+      {:name               "form-by-haku-oid-str"
+       :ttl-after-read     [3 TimeUnit/DAYS]
+       :ttl-after-write    [3 TimeUnit/DAYS]
+       :update-period      [1 TimeUnit/MINUTES]
+       :update-after-read? true})
      {:redis  :redis
       :loader :form-by-haku-oid-str-cache-loader})]])

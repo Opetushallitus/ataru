@@ -58,9 +58,7 @@
     :form-by-haku-oid-str-cache-loader (component/using
                                         (hakija-form-service/map->FormByHakuOidStrCacheLoader {})
                                         [:tarjonta-service
-                                         :koodisto-cache
-                                         :organization-service
-                                         :ohjausparametrit-service])
+                                         :form-by-haku-oid-and-id-cache])
 
     :person-service (component/using
                      (person-service/new-person-service)
