@@ -95,9 +95,9 @@
          #(dispatch [:editor/hide-belongs-to-hakukohteet-modal id])]))))
 
 (defn- belongs-to
-  [path oid name on-click]
+  [_ _ _ _]
   (let [fetching? (subscribe [:editor/fetching-haut?])]
-    (fn [_ _ _ _]
+    (fn [path oid name on-click]
       [:li.belongs-to-hakukohteet__hakukohde-list-item.animated.fadeIn
        [:span.belongs-to-hakukohteet__hakukohde-label
         (if @fetching?
@@ -117,16 +117,16 @@
         show-modal?   (subscribe [:editor/show-belongs-to-hakukohteet-modal id])
         form-locked?  (subscribe [:editor/form-locked?])]
     (fn [path initial-content]
-      (let [visible-hakukohteet     (doall (map (fn [oid] {:oid      oid
-                                                           :name     @(subscribe [:editor/belongs-to-hakukohde-name oid])
-                                                           :on-click (fn [_] (dispatch [:editor/remove-from-belongs-to-hakukohteet
-                                                                                        path oid]))})
-                                                (:belongs-to-hakukohteet initial-content)))
-            visible-hakukohderyhmat (doall (map (fn [oid] {:oid      oid
-                                                           :name     @(subscribe [:editor/belongs-to-hakukohderyhma-name oid])
-                                                           :on-click (fn [_] (dispatch [:editor/remove-from-belongs-to-hakukohderyhma
-                                                                                        path oid]))})
-                                                (:belongs-to-hakukohderyhma initial-content)))
+      (let [visible-hakukohteet     (mapv (fn [oid] {:oid      oid
+                                                     :name     @(subscribe [:editor/belongs-to-hakukohde-name oid])
+                                                     :on-click (fn [_] (dispatch [:editor/remove-from-belongs-to-hakukohteet
+                                                                                  path oid]))})
+                                      (:belongs-to-hakukohteet initial-content))
+            visible-hakukohderyhmat (mapv (fn [oid] {:oid      oid
+                                                     :name     @(subscribe [:editor/belongs-to-hakukohderyhma-name oid])
+                                                     :on-click (fn [_] (dispatch [:editor/remove-from-belongs-to-hakukohderyhma
+                                                                                  path oid]))})
+                                      (:belongs-to-hakukohderyhma initial-content))
             visible                 (sort-by :name (concat visible-hakukohteet
                                                            visible-hakukohderyhmat))]
         [:div.belongs-to-hakukohteet
