@@ -575,15 +575,25 @@
     (or (t value) value)))
 
 (reg-event-fx
+  :application/set-email-verify-field
+  (fn [{:keys [db]} [_ field-descriptor value verify-value]]
+    (let [id     (keyword (:id field-descriptor))
+          new-db (-> db
+                     (assoc-in [:application :answers id :verify] verify-value)
+                     (set-validator-processing id)
+                     (set-multi-value-changed id :value))]
+      {:db new-db
+       :dispatch [:application/set-application-field field-descriptor value]})))
+
+(reg-event-fx
   :application/set-application-field
-  (fn [{db :db} [_ field value value-key]]
+  (fn [{db :db} [_ field value]]
     (let [value  (transform-value value field)
           id     (keyword (:id field))
-          key    (or value-key :value)
           new-db (-> db
-                     (assoc-in [:application :answers id key] value)
+                     (assoc-in [:application :answers id :value] value)
                      (set-validator-processing id)
-                     (set-multi-value-changed id key)
+                     (set-multi-value-changed id :value)
                      (set-field-visibility field))]
       {:db                 new-db
        :validate-debounced {:value                        value
@@ -1296,7 +1306,7 @@
   (fn [_ [_ field-descriptor value group-idx]]
     {:dispatch (if (some? group-idx)
                  [:application/set-repeatable-application-field field-descriptor value 0 group-idx]
-                 [:application/set-application-field field-descriptor value nil])}))
+                 [:application/set-application-field field-descriptor value])}))
 
 (reg-event-db
   :application/remove-question-group-mouse-over
