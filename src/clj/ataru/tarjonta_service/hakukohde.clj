@@ -66,22 +66,23 @@
           updated-field     (populate-hakukohteet-field hakukohteet-field tarjonta-info)]
       (assoc-in form [:content hakukohteet-field-idx] updated-field))))
 
-(defn populate-attachment-deadlines [form tarjonta-info]
-  (let [hakuajat (hakuaika/index-hakuajat (get-in tarjonta-info [:tarjonta :hakukohteet]))]
-    (update form :content
-      (fn [content]
-          (clojure.walk/prewalk
-            (fn [field]
-                (if-let [label (and (= (:fieldType field) "attachment")
-                                    (or (some-> (-> field :params :deadline)
-                                                (hakuaika/str->date-time)
-                                                (hakuaika/date-time->localized-date-time))
-                                        (some-> (hakuaika/select-hakuaika-for-field field hakuajat)
-                                                hakuaika/attachment-edit-end
-                                                (hakuaika/date-time->localized-date-time))))]
-                  (assoc-in field [:params :deadline-label] label)
-                  field))
-            content)))))
+(defn- populate-attachment-deadline
+  [hakuajat field]
+  (if-let [label (and (= (:fieldType field) "attachment")
+                      (or (some-> (-> field :params :deadline)
+                                  (hakuaika/str->date-time)
+                                  (hakuaika/date-time->localized-date-time))
+                          (some-> (hakuaika/select-hakuaika-for-field field hakuajat)
+                                  hakuaika/attachment-edit-end
+                                  (hakuaika/date-time->localized-date-time))))]
+    (assoc-in field [:params :deadline-label] label)
+    field))
+
+(defn populate-attachment-deadlines [form hakukohteet]
+  (let [hakuajat (hakuaika/index-hakuajat hakukohteet)]
+    (update form :content (partial util/map-form-fields
+                                   (partial populate-attachment-deadline
+                                            hakuajat)))))
 
 (defn populate-hakukohde-answer-options [form tarjonta-info]
   ; walking through entire content is very slow for large forms, so try a naive optimization first

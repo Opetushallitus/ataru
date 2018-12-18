@@ -2,6 +2,7 @@
   (:require [com.stuartsierra.component :as component]
             [ataru.cas.client :as cas]
             [ataru.http.server :as server]
+            [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
@@ -55,6 +56,18 @@
     :henkilo-cache-loader (component/using
                            (person-client/map->PersonCacheLoader {})
                            [:oppijanumerorekisteri-cas-client])
+
+    :form-by-haku-oid-and-id-cache-loader (component/using
+                                           (hakija-form-service/map->FormByHakuOidAndIdCacheLoader {})
+                                           [:tarjonta-service
+                                            :koodisto-cache
+                                            :organization-service
+                                            :ohjausparametrit-service])
+
+    :form-by-haku-oid-str-cache-loader (component/using
+                                        (hakija-form-service/map->FormByHakuOidStrCacheLoader {})
+                                        [:tarjonta-service
+                                         :form-by-haku-oid-and-id-cache])
 
     :person-service (component/using
                      (person-service/new-person-service)

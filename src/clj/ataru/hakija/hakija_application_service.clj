@@ -139,7 +139,13 @@
                   :operation audit-log/operation-new
                   :id        (util/extract-email application)}))
 
-(defn- validate-and-store [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application is-modify?]
+(defn- validate-and-store [koodisto-cache
+                           tarjonta-service
+                           organization-service
+                           ohjausparametrit-service
+                           form-by-haku-oid-and-id-cache
+                           application
+                           is-modify?]
   (let [now                           (time/now)
         tarjonta-info                 (when (:haku application)
                                         (tarjonta-parser/parse-tarjonta-info-by-haku
@@ -166,22 +172,20 @@
         application-hakukohde-reviews (some-> latest-application
                                               :key
                                               application-store/get-application-hakukohde-reviews)
-        priorisoivat-and-rajaavat     (fn [form]
-                                          (merge form
-                                                 (when (:haku application)
-                                                       {:priorisoivat-hakukohderyhmat (:ryhmat (hakukohderyhmat/priorisoivat-hakukohderyhmat tarjonta-service (:haku application)))
-                                                        :tarjonta-hakukohteet         hakukohteet
-                                                        :rajaavat-hakukohderyhmat     (:ryhmat (hakukohderyhmat/rajaavat-hakukohderyhmat (:haku application)))})))
-        form                          (-> application
-                                          (:form)
-                                          (form-store/fetch-by-id)
-                                          (hakukohde/populate-hakukohde-answer-options tarjonta-info)
-                                          (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)
-                                          (priorisoivat-and-rajaavat)
-                                          (hakija-form-service/flag-uneditable-and-unviewable-fields
-                                           hakukohteet
-                                           form-roles
-                                           (util/application-in-processing? application-hakukohde-reviews)))
+        form                          (cond (some? (:haku application))
+                                            (hakija-form-service/fetch-form-by-haku-oid-and-id-cached
+                                             form-by-haku-oid-and-id-cache
+                                             (:haku application)
+                                             (:form application)
+                                             (util/application-in-processing? application-hakukohde-reviews)
+                                             form-roles)
+                                            (some? (:form application))
+                                            (hakija-form-service/fetch-form-by-id
+                                             (:form application)
+                                             form-roles
+                                             koodisto-cache
+                                             nil
+                                             (util/application-in-processing? application-hakukohde-reviews)))
         final-application             (if is-modify?
                                         (-> application
                                             (merge-unviewable-answers-from-previous
@@ -286,11 +290,18 @@
    job-runner
    organization-service
    ohjausparametrit-service
+   form-by-haku-oid-and-id-cache
    application]
   (log/info "Application submitted:" application)
   (let [{:keys [passed? id]
          :as   result}
-        (validate-and-store koodisto-cache tarjonta-service organization-service ohjausparametrit-service application false)
+        (validate-and-store koodisto-cache
+                            tarjonta-service
+                            organization-service
+                            ohjausparametrit-service
+                            form-by-haku-oid-and-id-cache
+                            application
+                            false)
         virkailija-secret (:virkailija-secret application)]
     (if passed?
       (do
@@ -310,11 +321,18 @@
    job-runner
    organization-service
    ohjausparametrit-service
+   form-by-haku-oid-and-id-cache
    application]
   (log/info "Application edited:" application)
   (let [{:keys [passed? id application]
          :as   result}
-        (validate-and-store koodisto-cache tarjonta-service organization-service ohjausparametrit-service application true)
+        (validate-and-store koodisto-cache
+                            tarjonta-service
+                            organization-service
+                            ohjausparametrit-service
+                            form-by-haku-oid-and-id-cache
+                            application
+                            true)
         virkailija-secret (:virkailija-secret application)]
     (if passed?
       (if virkailija-secret
@@ -358,7 +376,7 @@
         false))
 
 (defn get-latest-application-by-secret
-  [secret tarjonta-service koodisto-cache organization-service ohjausparametrit-service person-client]
+  [secret tarjonta-service form-by-haku-oid-and-id-cache koodisto-cache person-client]
   (let [[actor-role secret] (match [secret]
                               [{:virkailija s}]
                               [:virkailija s]
@@ -382,15 +400,13 @@
         lang-override              (when secret-expired? (application-store/get-application-language-by-secret secret))
         application-in-processing? (util/application-in-processing? (:application-hakukohde-reviews application))
         inactivated?               (is-inactivated? application)
-        form                       (cond (some? (:haku application)) (hakija-form-service/fetch-form-by-haku-oid
+        form                       (cond (some? (:haku application)) (hakija-form-service/fetch-form-by-haku-oid-cached
                                                                        tarjonta-service
-                                                                       koodisto-cache
-                                                                       organization-service
-                                                                       ohjausparametrit-service
+                                                                       form-by-haku-oid-and-id-cache
                                                                        (:haku application)
                                                                        application-in-processing?
                                                                        form-roles)
-                                         (some? (:form application)) (hakija-form-service/fetch-form-by-key-with-flagged-fields
+                                         (some? (:form application)) (hakija-form-service/fetch-form-by-key
                                                                        (->> application
                                                                             :form
                                                                             form-store/fetch-by-id

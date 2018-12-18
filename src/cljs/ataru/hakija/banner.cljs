@@ -82,7 +82,7 @@
                                              :application-sent))]]
              :else [:button.application__send-application-button
                     {:disabled (or @transmitting?
-                                   (not (:valid valid-status))
+                                   (not-empty (:invalid-fields valid-status))
                                    (contains? #{:submitting :submitted} submit-status)
                                    (and @editing (empty? @values-changed?))
                                    (not (empty? @validators-processing)))

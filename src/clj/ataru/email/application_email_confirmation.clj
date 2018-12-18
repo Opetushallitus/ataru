@@ -132,16 +132,17 @@
 
 (defn- create-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id]
   (let [application                     (application-store/get-application application-id)
-        tarjonta-info                   (tarjonta-parser/parse-tarjonta-info-by-haku
-                                          koodisto-cache
-                                          tarjonta-service
-                                          organization-service
-                                          ohjausparametrit-service
-                                          (:haku application)
-                                          (:hakukohde application))
+        hakukohteet                     (get-in (tarjonta-parser/parse-tarjonta-info-by-haku
+                                                 koodisto-cache
+                                                 tarjonta-service
+                                                 organization-service
+                                                 ohjausparametrit-service
+                                                 (:haku application)
+                                                 (:hakukohde application))
+                                                [:tarjonta :hakukohteet])
         answers-by-key                  (-> application :answers util/answers-by-key)
         form                            (-> (forms/fetch-by-id (:form application))
-                                            (hakukohde/populate-attachment-deadlines tarjonta-info))
+                                            (hakukohde/populate-attachment-deadlines hakukohteet))
         lang                            (keyword (:lang application))
         attachment-keys-without-answers (->> (application-store/get-application-attachment-reviews (:key application))
                                              (map :attachment-key)

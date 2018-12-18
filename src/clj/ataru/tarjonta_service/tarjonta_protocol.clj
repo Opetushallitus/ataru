@@ -7,7 +7,8 @@
   (hakukohde-search [this haku-oid organization-oid])
   (get-haku [this haku-oid])
   (get-haku-name [this haku-oid])
-  (get-koulutus [this haku-oid]))
+  (get-koulutus [this haku-oid])
+  (get-koulutukset [this koulutus-oids]))
 
 (defprotocol VirkailijaTarjontaService
   (get-forms-in-use [this session]))

@@ -188,38 +188,42 @@
 
 (defn selected-hakukohteet-and-ryhmat [db]
   (let [selected-hakukohteet     (set (selected-hakukohteet db))
-        selected-hakukohderyhmat (->> (get-in db [:form :tarjonta :hakukohteet])
+        selected-hakukohderyhmat (->> (when (not-empty selected-hakukohteet)
+                                        (get-in db [:form :tarjonta :hakukohteet]))
                                       (filter #(contains? selected-hakukohteet (:oid %)))
-                                      (mapcat :hakukohderyhmat))]
-    (set (concat selected-hakukohteet selected-hakukohderyhmat))))
+                                      (mapcat :hakukohderyhmat)
+                                      set)]
+    (clojure.set/union selected-hakukohteet selected-hakukohderyhmat)))
 
 (declare set-field-visibility)
 
 (defn- set-followups-visibility
-  [db field-descriptor option-selected?]
+  [db selected-hakukohteet-and-ryhmat field-descriptor option-selected?]
   (let [visible? (get-in db [:application :ui (keyword (:id field-descriptor)) :visible?] true)]
     (reduce (fn [db option]
               (let [selected? (option-selected? option)]
-                (reduce #(set-field-visibility %1 %2 (and visible? selected?))
+                (reduce #(set-field-visibility %1 %2 (and visible? selected?) selected-hakukohteet-and-ryhmat)
                         db
                         (:followups option))))
             db
             (:options field-descriptor))))
 
 (defn- set-single-choice-followups-visibility
-  [db field-descriptor]
+  [db field-descriptor selected-hakukohteet-and-ryhmat]
   (let [value (get-in db [:application :answers (keyword (:id field-descriptor)) :value])]
-    (set-followups-visibility db field-descriptor #(= value (:value %)))))
+    (set-followups-visibility db selected-hakukohteet-and-ryhmat field-descriptor #(= value (:value %)))))
 
 (defn- set-multi-choice-followups-visibility
-  [db field-descriptor]
+  [db field-descriptor selected-hakukohteet-and-ryhmat]
   (let [options (get-in db [:application :answers (keyword (:id field-descriptor)) :options])]
-    (set-followups-visibility db field-descriptor #(get options (:value %)))))
+    (set-followups-visibility db selected-hakukohteet-and-ryhmat field-descriptor #(get options (:value %)))))
 
 (defn- set-field-visibility
   ([db field-descriptor]
    (set-field-visibility db field-descriptor true))
   ([db field-descriptor visible?]
+   (set-field-visibility db field-descriptor visible? (selected-hakukohteet-and-ryhmat db)))
+  ([db field-descriptor visible? selected-hakukohteet-and-ryhmat]
    (let [id         (keyword (:id field-descriptor))
          belongs-to (set (concat (:belongs-to-hakukohderyhma field-descriptor)
                                  (:belongs-to-hakukohteet field-descriptor)))
@@ -227,20 +231,21 @@
                          (or (empty? belongs-to)
                              (not-empty (clojure.set/intersection
                                          belongs-to
-                                         (selected-hakukohteet-and-ryhmat db)))))]
-     (cond-> (reduce #(set-field-visibility %1 %2 visible?)
+                                         selected-hakukohteet-and-ryhmat))))]
+     (cond-> (reduce #(set-field-visibility %1 %2 visible? selected-hakukohteet-and-ryhmat)
                      (assoc-in db [:application :ui id :visible?] visible?)
                      (:children field-descriptor))
              (or (= "dropdown" (:fieldType field-descriptor))
                  (= "singleChoice" (:fieldType field-descriptor)))
-             (set-single-choice-followups-visibility field-descriptor)
+             (set-single-choice-followups-visibility field-descriptor selected-hakukohteet-and-ryhmat)
              (= "multipleChoice" (:fieldType field-descriptor))
-             (set-multi-choice-followups-visibility field-descriptor)))))
+             (set-multi-choice-followups-visibility field-descriptor selected-hakukohteet-and-ryhmat)))))
 
 (defn set-field-visibilities
   [db]
   (rules/run-all-rules
-   (reduce set-field-visibility db (get-in db [:form :content]))))
+   (reduce set-field-visibility db (get-in db [:form :content]))
+   (:flat-form-content db)))
 
 (defn- set-multi-value-changed [db id value-key]
   (let [answer (-> db :application :answers id)
@@ -327,22 +332,20 @@
     x))
 
 (defn set-question-group-row-amounts [db]
-  (reduce-kv (fn [db answer-key {:keys [value values]}]
-               (let [field-descriptor  (->> (:flat-form-content db)
-                                            (filter (comp (partial = answer-key) keyword :id))
-                                            (first))
-                     question-group-id (-> field-descriptor :params :question-group-id)]
-                 (cond-> db
-                   question-group-id
-                   (update-in [:application :ui question-group-id :count] #(let [provided-val ((some-fn >0?)
-                                                                                               (-> values count)
-                                                                                               (-> value count)
-                                                                                               1)]
-                                                                             (if (> % provided-val)
-                                                                               %
-                                                                               provided-val))))))
-             db
-             (-> db :application :answers)))
+  (reduce (fn [db field-descriptor]
+            (let [{:keys [value values]} (-> db :application :answers (get (keyword (:id field-descriptor))))
+                  question-group-id      (-> field-descriptor :params :question-group-id)]
+              (cond-> db
+                      question-group-id
+                      (update-in [:application :ui question-group-id :count] #(let [provided-val ((some-fn >0?)
+                                                                                                  (-> values count)
+                                                                                                  (-> value count)
+                                                                                                  1)]
+                                                                                (if (> % provided-val)
+                                                                                  %
+                                                                                  provided-val))))))
+          db
+          (:flat-form-content db)))
 
 (defn- merge-single-choice-values [value answer]
   (if (and (vector? value)
@@ -461,8 +464,8 @@
                                              (map :oid)))
         preselected-hakukohde-oids (->> db :application :preselected-hakukohde-oids
                                         (filter #(contains? valid-hakukohde-oids %)))
-        initial-answers            (create-initial-answers form preselected-hakukohde-oids)
-        flat-form-content          (autil/flatten-form-fields (:content form))]
+        flat-form-content          (autil/flatten-form-fields (:content form))
+        initial-answers            (create-initial-answers flat-form-content preselected-hakukohde-oids)]
     (-> db
         (update :form (fn [{:keys [selected-language]}]
                         (cond-> form
@@ -722,7 +725,7 @@
 (defn application-run-rules [db rule]
   (if (not-empty rule)
     (rules/run-rules db rule)
-    (rules/run-all-rules db)))
+    (rules/run-all-rules db (:flat-form-content db))))
 
 (reg-event-db
   :application/run-rules

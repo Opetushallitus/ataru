@@ -51,22 +51,13 @@
    :tarkenne             (:tarkenne response)
    :koulutusohjelma-name (parse-koulutusohjelma response)})
 
-(defn- applicable-base-educations
-  [hakukohde pohjakoulutusvaatimuskorkeakoulut]
-  (mapcat (fn [uri]
-            (->> pohjakoulutusvaatimuskorkeakoulut
-                 (filter #(= uri (:uri %)))
-                 (mapcat :within)
-                 (filter #(clojure.string/starts-with? (:uri %) "pohjakoulutuskklomake_"))
-                 (map :value)))
-          (:hakukelpoisuusvaatimusUris hakukohde)))
-
 (defn- parse-hakukohde
   [tarjonta-service
    hakukohderyhmat
    haku
+   tarjonta-koulutukset
    ohjausparametrit
-   pohjakoulutusvaatimuskorkeakoulut
+   pohjakoulutukset-by-vaatimus
    hakukohde]
   (when (:oid hakukohde)
     {:oid                        (:oid hakukohde)
@@ -83,11 +74,19 @@
      :tarjoaja-name              (:tarjoajaNimet hakukohde)
      :form-key                   (:ataruLomakeAvain hakukohde)
      :koulutukset                (->> (map :oid (:koulutukset hakukohde))
-                                      (map #(tarjonta-protocol/get-koulutus tarjonta-service %))
+                                      (map #(get tarjonta-koulutukset %))
                                       (map parse-koulutus))
      :hakuaika                   (hakuaika/get-hakuaika-info haku ohjausparametrit hakukohde)
-     :applicable-base-educations (applicable-base-educations hakukohde
-                                                             pohjakoulutusvaatimuskorkeakoulut)}))
+     :applicable-base-educations (mapcat pohjakoulutukset-by-vaatimus (:hakukelpoisuusvaatimusUris hakukohde))}))
+
+(defn- pohjakoulutukset-by-vaatimus
+  [pohjakoulutusvaatimuskorkeakoulut]
+  (reduce (fn [m {:keys [uri within]}]
+            (assoc m uri (->> within
+                              (filter #(clojure.string/starts-with? (:uri %) "pohjakoulutuskklomake_"))
+                              (map :value))))
+          {}
+          pohjakoulutusvaatimuskorkeakoulut))
 
 (defn parse-tarjonta-info-by-haku
   ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service haku-oid included-hakukohde-oids]
@@ -105,17 +104,25 @@
            ohjausparametrit                  (ohjausparametrit-protocol/get-parametri
                                                ohjausparametrit-service
                                                haku-oid)
-           pohjakoulutusvaatimuskorkeakoulut (get-koodisto-options koodisto-cache "pohjakoulutusvaatimuskorkeakoulut" 1)
-           hakukohteet                       (->> included-hakukohde-oids
-                                                  (keep #(tarjonta-protocol/get-hakukohde
-                                                           tarjonta-service
-                                                           %))
-                                                  (map #(parse-hakukohde tarjonta-service
-                                                          hakukohderyhmat
-                                                          haku
-                                                          ohjausparametrit
-                                                          pohjakoulutusvaatimuskorkeakoulut
-                                                          %)))
+           pohjakoulutukset-by-vaatimus      (pohjakoulutukset-by-vaatimus
+                                              (get-koodisto-options koodisto-cache
+                                                                    "pohjakoulutusvaatimuskorkeakoulut"
+                                                                    1))
+           tarjonta-hakukohteet              (tarjonta-protocol/get-hakukohteet tarjonta-service
+                                                                                included-hakukohde-oids)
+           tarjonta-koulutukset              (->> tarjonta-hakukohteet
+                                                  (mapcat :koulutukset)
+                                                  (map :oid)
+                                                  distinct
+                                                  (tarjonta-protocol/get-koulutukset tarjonta-service))
+           hakukohteet                       (map #(parse-hakukohde tarjonta-service
+                                                                    hakukohderyhmat
+                                                                    haku
+                                                                    tarjonta-koulutukset
+                                                                    ohjausparametrit
+                                                                    pohjakoulutukset-by-vaatimus
+                                                                    %)
+                                                  tarjonta-hakukohteet)
            max-hakukohteet                   (:maxHakukohdes haku)]
        (when (not-empty hakukohteet)
          {:tarjonta

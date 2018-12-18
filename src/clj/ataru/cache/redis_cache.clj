@@ -7,7 +7,8 @@
             [ataru.cache.cache-service :as cache])
   (:import [java.util.concurrent
             ScheduledThreadPoolExecutor
-            TimeUnit]))
+            TimeUnit]
+           java.util.concurrent.locks.ReentrantLock))
 
 (defn- ->cache-key
   [name key]
@@ -28,9 +29,9 @@
   [name]
   (str "ataru:cache:to-update:" name))
 
-(defn- ->mark-all-keys-to-update-queue-name
+(defn- ->mark-all-keys-to-update-key
   [name]
-  (str "mark-all-keys-to-update-queue:" name))
+  (str "ataru:cache:mark-all-keys-to-update:" name))
 
 (defn- car-set
   [name key value ttl]
@@ -42,10 +43,6 @@
   (doseq [[key value] m]
     (car-set name key value ttl)))
 
-(defn- car-mark-to-update
-  [name keys]
-  (apply car/sadd (->to-update-key name) keys))
-
 (defn- redis-set
   [redis name key value ttl]
   (when (some? value)
@@ -54,16 +51,15 @@
   value)
 
 (defn- redis-get
-  [redis name key ttl-after-read update-after-read?]
-  (let [value (wcar (:connection-opts redis)
-                    (car/get (->cache-key name key)))]
-    (when (some? value)
-      (wcar (:connection-opts redis)
-            (when (some? ttl-after-read)
-              (car-set name key value ttl-after-read))
-            (when update-after-read?
-              (car-mark-to-update name [key]))))
-    value))
+  [redis name key ttl-after-read-ms update-after-read?]
+  (let [cache-key (->cache-key name key)
+        result    (wcar (:connection-opts redis) :as-pipeline
+                        (car/get cache-key)
+                        (when (some? ttl-after-read-ms)
+                          (car/pexpire cache-key ttl-after-read-ms))
+                        (when update-after-read?
+                          (car/sadd (->to-update-key name) key)))]
+    (first result)))
 
 (defn- redis-scan
   [redis name cursor]
@@ -78,38 +74,48 @@
   m)
 
 (defn- redis-mget
-  [redis name keys ttl-after-read update-after-read?]
+  [redis name keys ttl-after-read-ms update-after-read?]
   (reduce (fn [acc keys]
-            (let [from-cache (map vector
-                                  keys
-                                  (wcar (:connection-opts redis)
-                                        (apply car/mget (map #(->cache-key name %) keys))))
-                  hits       (filter #(some? (second %)) from-cache)]
-              (when (not-empty hits)
-                (wcar (:connection-opts redis)
-                      (when (some? ttl-after-read)
-                        (car-mset name hits ttl-after-read))
-                      (when update-after-read?
-                        (car-mark-to-update name (map first hits)))))
-              (-> acc
-                  (update :hits into hits)
-                  (update :misses concat (keep #(when (nil? (second %)) (first %)) from-cache)))))
+            (let [cache-keys (map #(->cache-key name %) keys)
+                  result     (wcar (:connection-opts redis) :as-pipeline
+                                   (apply car/mget cache-keys)
+                                   (when (some? ttl-after-read-ms)
+                                     (doseq [cache-key cache-keys]
+                                       (car/pexpire cache-key ttl-after-read-ms)))
+                                   (when update-after-read?
+                                     (apply car/sadd (->to-update-key name) keys)))]
+              (reduce (fn [acc [key value]]
+                        (if (some? value)
+                          (update acc :hits assoc key value)
+                          (update acc :misses conj key)))
+                      acc
+                      (map vector keys (first result)))))
           {:hits   {}
            :misses []}
           (partition 5000 5000 nil keys)))
 
+(defn- get-lock
+  [locks lock-name]
+  (get (if (contains? @locks lock-name)
+         @locks
+         (swap! locks #(if (contains? % lock-name)
+                         %
+                         (assoc % lock-name (new ReentrantLock)))))
+       lock-name))
+
 (defn- redis-with-lock
-  [redis name lock-name timeout-ms wait-ms thunk]
+  [locks name lock-name wait-ms thunk]
   (let [l-name (->lock-key name lock-name)
-        result (carlocks/with-lock
-                 (:connection-opts redis)
-                 l-name
-                 timeout-ms wait-ms
-                 (thunk))]
-    (if (some? result)
-      (:result result)
-      (do (warn (str "Failed to acquire lock " l-name " in " wait-ms " ms"))
-          (thunk)))))
+        lock   (get-lock locks l-name)]
+    (try
+      (try
+        (when-not (.tryLock lock wait-ms TimeUnit/MILLISECONDS)
+          (warn (str "Failed to acquire lock " l-name " in " wait-ms " ms")))
+        (catch Exception e
+          (error e (str "Error while acquiring lock " l-name))))
+      (thunk)
+      (finally
+        (.unlock lock)))))
 
 (defn- update-to-update-keys [redis loader name]
   (loop [updated-count 0]
@@ -133,65 +139,63 @@
          key-count     0]
     (when (not-empty keys)
       (wcar (:connection-opts redis)
-            (car-mark-to-update name (map #(cache-key->key name %) keys))))
+            (apply car/sadd (->to-update-key name) (map #(cache-key->key name %) keys))))
     (if (= "0" cursor)
       (when (< 0 (+ key-count (count keys)))
         (info "Marked" (+ key-count (count keys)) name "keys to update"))
       (recur (redis-scan redis name cursor)
              (+ key-count (count keys))))))
 
-(defn- update-to-update-keys-runnable [redis loader name update-period]
+(defn- update-to-update-keys-runnable [redis loader name]
   (fn []
     (try
-      (when (some? update-period)
-        (wcar (:connection-opts redis)
-              (car-mq/enqueue (->mark-all-keys-to-update-queue-name name) name name)))
       (update-to-update-keys redis loader name)
       (catch Exception e
         (error e "Error while updating" name "keys")))))
 
-(defn- mark-all-keys-to-update-handler [redis name [update-period time-unit]]
-  (fn [{:keys [attempt]}]
+(defn- mark-all-keys-to-update-runnable [redis name update-period-ms]
+  (fn []
     (try
-      (mark-all-keys-to-update redis name)
-      {:status     :success
-       :backoff-ms (.toMillis time-unit update-period)}
+      (when (some? (wcar (:connection-opts redis)
+                         (car/set (->mark-all-keys-to-update-key name) "mark" :px update-period-ms :nx)))
+        (mark-all-keys-to-update redis name))
       (catch Exception e
-        (if (< attempt 2)
-          (do (warn "Error while marking all" name "keys to update, retrying")
-              {:status :retry})
-          (do (error e "Error while marking all" name "keys to update")
-              {:status :success}))))))
+        (error e "Error while marking all" name "keys to update")))))
 
 (defrecord Cache [redis
                   loader
                   name
                   ttl-after-read
+                  ttl-after-read-ms
                   ttl-after-write
                   update-after-read?
                   update-period
                   scheduler
-                  mq-worker]
+                  mq-worker
+                  locks]
   component/Lifecycle
 
   (start [this]
     (if (nil? scheduler)
-      (let [scheduler (ScheduledThreadPoolExecutor. 1)
-            mq-worker (when (some? update-period)
-                          (car-mq/worker
-                           (:connection-opts redis)
-                           (->mark-all-keys-to-update-queue-name name)
-                           {:handler        (mark-all-keys-to-update-handler redis name update-period)
-                            :lock-ms        (.toMillis TimeUnit/MINUTES 2)
-                            :eoq-backoff-ms (.toMillis TimeUnit/SECONDS 10)
-                            :throttle-ms    (.toMillis TimeUnit/SECONDS 10)}))]
-        (.scheduleAtFixedRate
-         scheduler
-         (update-to-update-keys-runnable redis loader name update-period)
-         10 10 TimeUnit/SECONDS)
+      (let [scheduler (when (or update-after-read?
+                                (some? update-period))
+                        (ScheduledThreadPoolExecutor. 2))]
+        (when (some? scheduler)
+          (.scheduleAtFixedRate
+           scheduler
+           (update-to-update-keys-runnable redis loader name)
+           1 1 TimeUnit/SECONDS))
+        (when-let [[t unit] update-period]
+          (.scheduleAtFixedRate
+           scheduler
+           (mark-all-keys-to-update-runnable redis name (.toMillis unit t))
+           1 1 TimeUnit/SECONDS))
         (assoc this
+               :ttl-after-read-ms (when-let [[ttl timeunit] ttl-after-read]
+                                    (.toMillis timeunit ttl))
                :scheduler scheduler
-               :mq-worker mq-worker))
+               :mq-worker mq-worker
+               :locks (atom {})))
       this))
   (stop [this]
     (when (some? scheduler)
@@ -200,20 +204,21 @@
       (car-mq/stop mq-worker))
     (assoc this
            :scheduler nil
-           :mq-worker nil))
+           :mq-worker nil
+           :locks nil))
 
   cache/Cache
 
   (get-from [this key]
     (try
-      (let [from-cache (redis-get redis name key ttl-after-read update-after-read?)]
+      (let [from-cache (redis-get redis name key ttl-after-read-ms update-after-read?)]
         (if (some? from-cache)
           from-cache
           (redis-with-lock
-           redis name (str "single:" key)
-           (.toMillis TimeUnit/MINUTES 2) (.toMillis TimeUnit/MINUTES 2)
+           locks name (str "single:" key)
+           (.toMillis TimeUnit/MINUTES 2)
            (fn []
-             (let [from-cache (redis-get redis name key ttl-after-read update-after-read?)]
+             (let [from-cache (redis-get redis name key ttl-after-read-ms update-after-read?)]
                (if (some? from-cache)
                  from-cache
                  (redis-set redis name key (cache/load loader key) ttl-after-write)))))))
@@ -223,15 +228,15 @@
 
   (get-many-from [this keys]
     (try
-      (let [{:keys [hits misses]} (redis-mget redis name keys ttl-after-read update-after-read?)]
+      (let [{:keys [hits misses]} (redis-mget redis name keys ttl-after-read-ms update-after-read?)]
         (if (empty? misses)
           hits
           (merge hits
                  (redis-with-lock
-                  redis name "many"
-                  (.toMillis TimeUnit/MINUTES 2) (.toMillis TimeUnit/MINUTES 2)
+                  locks name "many"
+                  (.toMillis TimeUnit/MINUTES 2)
                   (fn []
-                    (let [{:keys [hits misses]} (redis-mget redis name keys ttl-after-read update-after-read?)]
+                    (let [{:keys [hits misses]} (redis-mget redis name keys ttl-after-read-ms update-after-read?)]
                       (if (empty? misses)
                         hits
                         (merge hits (redis-mset redis name (cache/load-many loader misses) ttl-after-write)))))))))

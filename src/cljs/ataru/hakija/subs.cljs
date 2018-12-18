@@ -3,7 +3,6 @@
   (:require [re-frame.core :as re-frame]
             [ataru.util :as util]
             [ataru.application-common.application-field-common :as afc]
-            [ataru.hakija.application :refer [answers->valid-status]]
             [ataru.hakija.application-validators :as validators]
             [ataru.hakija.person-info-fields :as person-info-fields]))
 
@@ -172,7 +171,9 @@
 (re-frame/reg-sub
   :application/valid-status
   (fn [db]
-    (-> db :application :answers-validity)))
+    (-> db
+        (get-in [:application :answers-validity])
+        (update :invalid-fields (partial sort-by :order-idx)))))
 
 (re-frame/reg-sub
  :application/can-apply?

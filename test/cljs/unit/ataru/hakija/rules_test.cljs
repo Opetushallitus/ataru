@@ -1,5 +1,6 @@
 (ns ataru.hakija.rules-test
   (:require [cljs.test :refer-macros [deftest are is]]
+            [ataru.util :as util]
             [ataru.hakija.rules :as rules]
             [taoensso.timbre :refer-macros [spy debug]]))
 
@@ -105,6 +106,7 @@
               (map keys
                    (:rules-that-have-ran
                     (rules/run-all-rules {:form                {:content test-content}
-                                          :rules-that-have-ran []})))))))))
+                                          :rules-that-have-ran []}
+                                         (util/flatten-form-fields test-content))))))))))
 
 

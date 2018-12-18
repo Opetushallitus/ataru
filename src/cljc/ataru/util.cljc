@@ -51,6 +51,22 @@
                      options))
        :else field))))
 
+(declare map-form-fields)
+
+(defn map-form-field [f field]
+  (let [new-field (f field)]
+    (cond-> new-field
+            (contains? new-field :children)
+            (update :children (partial map-form-fields f))
+            (contains? new-field :options)
+            (update :options (partial mapv (fn [option]
+                                             (cond-> option
+                                                     (contains? option :followups)
+                                                     (update :followups (partial map-form-fields f)))))))))
+
+(defn map-form-fields [f fields]
+  (mapv (partial map-form-field f) fields))
+
 (defn form-fields-by-id [form]
   (->> form
        :content

@@ -41,13 +41,12 @@
   (true? deleted))
 
 (defn- get-application
-  [secret tarjonta-service koodisto-cache organization-service ohjausparametrit-service person-client]
+  [secret tarjonta-service form-by-haku-oid-and-id-cache koodisto-cache person-client]
   (let [[application-form-and-person secret-expired? lang-override inactivated?]
         (hakija-application-service/get-latest-application-by-secret secret
                                                                      tarjonta-service
+                                                                     form-by-haku-oid-and-id-cache
                                                                      koodisto-cache
-                                                                     organization-service
-                                                                     ohjausparametrit-service
                                                                      person-client)]
     (cond inactivated?
           (response/bad-request {:error "Inactivated"})
@@ -126,49 +125,46 @@
   (not (clojure.string/blank? x)))
 
 (defn api-routes [{:keys [tarjonta-service
-                  job-runner
-                  organization-service
-                  ohjausparametrit-service
-                  person-service
-                  koodisto-cache
-                  temp-file-store]}]
+                          job-runner
+                          organization-service
+                          ohjausparametrit-service
+                          person-service
+                          koodisto-cache
+                          form-by-haku-oid-and-id-cache
+                          form-by-haku-oid-str-cache
+                          temp-file-store]}]
   (api/context "/api" []
     :tags ["application-api"]
     (api/GET ["/haku/:haku-oid" :haku-oid #"[0-9\.]+"] []
       :summary "Gets form for haku"
       :path-params [haku-oid :- s/Str]
       :query-params [role :- [form-role/FormRole]]
-      :return ataru-schema/FormWithContentAndTarjontaMetadata
-      (if-let [form-with-tarjonta (form-service/fetch-form-by-haku-oid
-                                   tarjonta-service
-                                   koodisto-cache
-                                   organization-service
-                                   ohjausparametrit-service
+      (if-let [form-with-tarjonta (form-service/fetch-form-by-haku-oid-str-cached
+                                   form-by-haku-oid-str-cache
                                    haku-oid
                                    false
                                    role)]
-        (response/ok form-with-tarjonta)
+        (response/content-type (response/ok form-with-tarjonta)
+                               "application/json")
         (response/not-found)))
     (api/GET ["/hakukohde/:hakukohde-oid", :hakukohde-oid #"[0-9\.]+"] []
       :summary "Gets form for hakukohde"
       :path-params [hakukohde-oid :- s/Str]
       :query-params [role :- [form-role/FormRole]]
-      :return ataru-schema/FormWithContentAndTarjontaMetadata
-      (if-let [form-with-tarjonta (form-service/fetch-form-by-hakukohde-oid
+      (if-let [form-with-tarjonta (form-service/fetch-form-by-hakukohde-oid-str-cached
                                    tarjonta-service
-                                   koodisto-cache
-                                   organization-service
-                                   ohjausparametrit-service
+                                   form-by-haku-oid-str-cache
                                    hakukohde-oid
                                    false
                                    role)]
-        (response/ok form-with-tarjonta)
+        (response/content-type (response/ok form-with-tarjonta)
+                               "application/json")
         (response/not-found)))
     (api/GET "/form/:key" []
       :path-params [key :- s/Str]
       :query-params [role :- [form-role/FormRole]]
       :return ataru-schema/FormWithContent
-      (if-let [form (form-service/fetch-form-by-key key role koodisto-cache)]
+      (if-let [form (form-service/fetch-form-by-key key role koodisto-cache nil false)]
         (response/ok form)
         (response/not-found)))
     (api/POST "/feedback" []
@@ -188,6 +184,7 @@
               job-runner
               organization-service
               ohjausparametrit-service
+              form-by-haku-oid-and-id-cache
               application)
              {:passed? false :failures failures :code code}
              (response/bad-request {:failures failures :code code})
@@ -203,6 +200,7 @@
               job-runner
               organization-service
               ohjausparametrit-service
+              form-by-haku-oid-and-id-cache
               application)
              {:passed? false :failures failures :code code}
              (response/bad-request {:failures failures :code code})
@@ -217,17 +215,15 @@
       (cond (not-blank? secret)
             (get-application {:hakija secret}
                              tarjonta-service
+                             form-by-haku-oid-and-id-cache
                              koodisto-cache
-                             organization-service
-                             ohjausparametrit-service
                              person-service)
 
             (not-blank? virkailija-secret)
             (get-application {:virkailija virkailija-secret}
                              tarjonta-service
+                             form-by-haku-oid-and-id-cache
                              koodisto-cache
-                             organization-service
-                             ohjausparametrit-service
                              person-service)
 
             :else

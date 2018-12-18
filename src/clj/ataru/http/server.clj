@@ -5,7 +5,10 @@
             [ring.middleware.reload :refer [wrap-reload]]
             [nrepl.server :as nrepl]
             [aleph.http :as http]
-            [com.stuartsierra.component :as component]))
+            [aleph.flow :as flow]
+            [com.stuartsierra.component :as component])
+  (:import [java.util EnumSet]
+           [io.aleph.dirigiste Stats$Metric]))
 
 ; When restarting, we want to keep the same repl running, otherwise our repl-session is lost
 ; and restarting the repl is meaningless
@@ -25,8 +28,13 @@
           port         (:port server-setup)
           repl-port    (:repl-port server-setup)
           handler      (cond-> (get-in this [:handler :routes])
-                         (:dev? env) (wrap-reload))
-          server       (http/start-server handler {:port port})]
+                               (:dev? env) (wrap-reload))
+          executor     (flow/utilization-executor 0.9 512
+                                                  {:metrics (EnumSet/of Stats$Metric/UTILIZATION)
+                                                   :stats-callback (fn [stats]
+                                                                     (info "HTTP server executor stats" stats))})
+          server       (http/start-server handler {:port port
+                                                   :executor executor})]
       (start-repl! repl-port)
       (info (str "Started server on port " port))
       (assoc this :server server)))

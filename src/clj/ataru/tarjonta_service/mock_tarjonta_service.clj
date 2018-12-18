@@ -334,7 +334,12 @@
       {:fi "testing2"}))
 
   (get-koulutus [this koulutus-id]
-    ((keyword koulutus-id) koulutus)))
+    ((keyword koulutus-id) koulutus))
+
+  (get-koulutukset [this koulutus-oids]
+    (into {} (keep #(when-let [v (get koulutus (keyword %))]
+                      [% v])
+                   koulutus-oids))))
 
 (defrecord MockVirkailijaTarjontaService []
   VirkailijaTarjontaService

@@ -7,10 +7,12 @@
             [ataru.fixtures.db.unit-test-db :as db]
             [ataru.email.application-email-confirmation :as application-email]
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
+            [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.cache.cache-service :as cache-service]
+            [ataru.cache.redis-cache :as redis-cache]
             [ataru.hakija.hakija-routes :as routes]
             [ataru.hakija.hakija-application-service :as application-service]
             [ataru.config.core :refer [config]]
@@ -45,25 +47,57 @@
                                                           (assoc :hakukohde [ "1.2.246.562.20.49028196524" "1.2.246.562.20.49028196523"])
                                                           (assoc-in [:answers 17 :value] [ "1.2.246.562.20.49028196524" "1.2.246.562.20.49028196523"])))
 
-(def handler (-> (routes/new-handler)
-                 (assoc :tarjonta-service (tarjonta-service/new-tarjonta-service))
-                 (assoc :job-runner (job/new-job-runner hakija-jobs/job-definitions))
-                 (assoc :organization-service (organization-service/new-organization-service))
-                 (assoc :ohjausparametrit-service (ohjausparametrit-service/new-ohjausparametrit-service))
-                 (assoc :person-service (person-service/new-person-service))
-                 (assoc :koodisto-cache (reify cache-service/Cache
-                                          (get-from [this key])
-                                          (get-many-from [this keys])
-                                          (put-to [this key value])
-                                          (remove-from [this key])
-                                          (clear-all [this])))
-                 .start
-                 :routes))
+(def handler
+  (let [tarjonta-service                     (tarjonta-service/new-tarjonta-service)
+        organization-service                 (organization-service/new-organization-service)
+        ohjausparametrit-service             (ohjausparametrit-service/new-ohjausparametrit-service)
+        koodisto-cache                       (reify cache-service/Cache
+                                               (get-from [this key])
+                                               (get-many-from [this keys])
+                                               (put-to [this key value])
+                                               (remove-from [this key])
+                                               (clear-all [this]))
+        form-by-haku-oid-and-id-cache-loader (hakija-form-service/map->FormByHakuOidAndIdCacheLoader
+                                              {:tarjonta-service         tarjonta-service
+                                               :koodisto-cache           koodisto-cache
+                                               :organization-service     organization-service
+                                               :ohjausparametrit-service ohjausparametrit-service})
+        form-by-haku-oid-and-id-cache        (reify cache-service/Cache
+                                               (get-from [this key]
+                                                 (.load form-by-haku-oid-and-id-cache-loader key))
+                                               (get-many-from [this keys])
+                                               (put-to [this key value])
+                                               (remove-from [this key])
+                                               (clear-all [this]))
+        form-by-haku-oid-str-cache-loader    (hakija-form-service/map->FormByHakuOidStrCacheLoader
+                                              {:tarjonta-service              tarjonta-service
+                                               :form-by-haku-oid-and-id-cache form-by-haku-oid-and-id-cache})]
+    (-> (routes/new-handler)
+        (assoc :tarjonta-service tarjonta-service)
+        (assoc :job-runner (job/new-job-runner hakija-jobs/job-definitions))
+        (assoc :organization-service organization-service)
+        (assoc :ohjausparametrit-service ohjausparametrit-service)
+        (assoc :person-service (person-service/new-person-service))
+        (assoc :form-by-haku-oid-and-id-cache form-by-haku-oid-and-id-cache)
+        (assoc :form-by-haku-oid-str-cache (reify cache-service/Cache
+                                             (get-from [this key]
+                                               (.load form-by-haku-oid-str-cache-loader key))
+                                             (get-many-from [this keys])
+                                             (put-to [this key value])
+                                             (remove-from [this key])
+                                             (clear-all [this])))
+        (assoc :koodisto-cache koodisto-cache)
+        .start
+        :routes)))
 
 (defn- parse-body
   [resp]
   (if-not (nil? (:body resp))
-    (update resp :body (comp #(json/parse-string % true) slurp))
+    (assoc resp :body (cond-> (:body resp)
+                              (not (string? (:body resp)))
+                              slurp
+                              true
+                              (json/parse-string true)))
     resp))
 
 (defmacro with-response

@@ -4,6 +4,7 @@
             [ataru.hakija.hakija-routes :as handler]
             [ataru.background-job.job :as job]
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
+            [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.http.server :as server]
             [ataru.person-service.person-service :as person-service]
             [ataru.person-service.person-client :as person-client]
@@ -46,6 +47,18 @@
     :henkilo-cache-loader (component/using
                            (person-client/map->PersonCacheLoader {})
                            [:oppijanumerorekisteri-cas-client])
+
+    :form-by-haku-oid-and-id-cache-loader (component/using
+                                           (hakija-form-service/map->FormByHakuOidAndIdCacheLoader {})
+                                           [:tarjonta-service
+                                            :koodisto-cache
+                                            :organization-service
+                                            :ohjausparametrit-service])
+
+    :form-by-haku-oid-str-cache-loader (component/using
+                                        (hakija-form-service/map->FormByHakuOidStrCacheLoader {})
+                                        [:tarjonta-service
+                                         :form-by-haku-oid-and-id-cache])
 
     :person-service (component/using
                      (person-service/new-person-service)

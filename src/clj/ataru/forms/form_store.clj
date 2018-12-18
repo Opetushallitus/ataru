@@ -94,6 +94,9 @@
 (defn fetch-by-key [key & [conn]]
   (first (execute yesql-fetch-latest-version-by-key {:key key} conn)))
 
+(defn latest-id-by-key [key]
+  (:id (first (execute yesql-latest-id-by-key {:key key}))))
+
 (defn latest-version-same? [form latest-version]
   (= (:id form) (:id latest-version)))
 

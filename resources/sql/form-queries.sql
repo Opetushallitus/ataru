@@ -102,6 +102,11 @@ WHERE id = (SELECT max(id)
             WHERE key = (SELECT key FROM forms WHERE id = :id))
 FOR UPDATE;
 
+-- name: yesql-latest-id-by-key
+SELECT max(id) AS id
+FROM forms
+WHERE key = :key;
+
 -- name: yesql-get-latest-version-organization-by-key
 SELECT organization_oid
 FROM latest_forms

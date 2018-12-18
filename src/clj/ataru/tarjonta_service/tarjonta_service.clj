@@ -146,7 +146,10 @@
       (parse-multi-lang-text (:nimi haku))))
 
   (get-koulutus [this koulutus-oid]
-    (cache/get-from koulutus-cache koulutus-oid)))
+    (cache/get-from koulutus-cache koulutus-oid))
+
+  (get-koulutukset [this koulutus-oids]
+    (cache/get-many-from koulutus-cache koulutus-oids)))
 
 (defrecord VirkailijaTarjontaFormsService [forms-in-use-cache
                                            organization-service]
