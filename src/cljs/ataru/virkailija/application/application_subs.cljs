@@ -743,3 +743,9 @@
           :selected-hakukohteet         (selected-hakukohde-oid-set db)
           :filters                      (:filters previous-fetch)}}
         (:params previous-fetch)))))
+
+(re-frame/reg-sub
+  :application/hakukohde-selected-for-review?
+  (fn [db [_ hakukohde-oid]]
+    (contains? (set (get-in db [:application :selected-review-hakukohde-oids]))
+               hakukohde-oid)))
