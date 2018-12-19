@@ -998,19 +998,19 @@
 (reg-event-fx
   :application/handle-attachment-upload
   (fn [{db :db} [_ field-descriptor attachment-idx question-group-idx response]]
-    (let [id              (keyword (:id field-descriptor))
-          path            (if question-group-idx
-                            [:application :answers id :values question-group-idx attachment-idx]
-                            [:application :answers id :values attachment-idx])
-          attacment-value (subscribe [:application/answer-value
-                                      id
-                                      question-group-idx
-                                      attachment-idx])]
+    (let [id       (keyword (:id field-descriptor))
+          path     (if question-group-idx
+                     [:application :answers id :values question-group-idx attachment-idx]
+                     [:application :answers id :values attachment-idx])
+          filename (:filename (:value @(subscribe [:application/answer
+                                                   id
+                                                   question-group-idx
+                                                   attachment-idx])))]
       {:db                 (-> db
-                               (update-in [:attachments-uploading id] dissoc (:filename @attacment-value))
+                               (update-in [:attachments-uploading id] dissoc filename)
                                (update-in path
-                                 merge
-                                 {:value response :valid true :status :ready})
+                                          merge
+                                          {:value response :valid true :status :ready})
                                (set-validator-processing id)
                                (set-multi-value-changed id :values))
        :validate-debounced {:value                        (get-in db path)
@@ -1050,11 +1050,11 @@
 (reg-event-db
   :application/handle-attachment-upload-started
   (fn [db [_ field-descriptor attachment-idx question-group-idx request]]
-    (let [id (keyword (:id field-descriptor))
-          {:keys [filename]} @(subscribe [:application/answer-value
-                                          id
-                                          question-group-idx
-                                          attachment-idx])]
+    (let [id       (keyword (:id field-descriptor))
+          filename (:filename (:value @(subscribe [:application/answer
+                                                   id
+                                                   question-group-idx
+                                                   attachment-idx])))]
       (-> db
           (assoc-in [:attachments-uploading id filename] :downloading)
           (assoc-in (cond-> [:application :answers id :values]
@@ -1062,7 +1062,7 @@
                             (conj question-group-idx)
                             true
                             (conj attachment-idx :request))
-            request)))))
+                    request)))))
 
 (reg-event-fx
   :application/handle-attachment-upload-error
@@ -1245,25 +1245,16 @@
       {:fieldClass "infoElement"}
       [])))
 
-(defn- set-empty-value-dispatches
-  [db id group-idx]
-  (autil/reduce-form-fields (fn [dispatches field]
-                              (if (= id (:id field))
-                                (mapcat (partial set-empty-value-dispatch group-idx)
-                                        (:children field))
-                                dispatches))
-                            []
-                            (get-in db [:form :content])))
-
 (reg-event-fx
   :application/add-question-group-row
-  (fn add-question-group-row [{db :db} [_ field-descriptor-id]]
-    (let [id (keyword field-descriptor-id)
+  (fn add-question-group-row [{db :db} [_ field-descriptor]]
+    (let [id           (keyword (:id field-descriptor))
           repeat-count (get-in db [:application :ui id :count] 1)]
-      {:db (-> db
-               (assoc-in [:application :ui id :count] (inc repeat-count))
-               (update-in [:application :ui id] dissoc :mouse-over-remove-button))
-       :dispatch-n (set-empty-value-dispatches db field-descriptor-id repeat-count)})))
+      {:db         (-> db
+                       (assoc-in [:application :ui id :count] (inc repeat-count))
+                       (update-in [:application :ui id] dissoc :mouse-over-remove-button))
+       :dispatch-n (mapcat (partial set-empty-value-dispatch repeat-count)
+                           (:children field-descriptor))})))
 
 (reg-event-fx
   :application/remove-question-group-row

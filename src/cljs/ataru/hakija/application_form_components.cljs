@@ -162,12 +162,7 @@
         validators-processing (subscribe [:state-query [:application :validators-processing]])
         verify-email?         (subscribe [:application/verify-email? id])]
     (fn []
-      (let [answer      (if (and @editing)
-                          {:value @(subscribe [:state-query [:application :person id]])
-                           :valid true}
-                          @(subscribe [:state-query
-                                       (cond-> [:application :answers id]
-                                               idx (concat [:values idx 0]))]))
+      (let [answer      @(subscribe [:application/answer id idx nil])
             on-change   #(if idx
                            (multi-value-field-change field-descriptor 0 idx %)
                            (textual-field-change field-descriptor %))
@@ -198,7 +193,7 @@
                   :on-blur       on-blur
                   :on-change     on-change
                   :required      (is-required-field? field-descriptor)
-                  :aria-invalid  (not @(subscribe [:application/answer-valid? id idx nil]))
+                  :aria-invalid  (not (:valid answer))
                   :default-value (if @(subscribe [:application/cannot-view? id])
                                    "***********"
                                    (:value answer))}
@@ -232,7 +227,7 @@
                                    (if show-error?
                                      " application__form-field-error"
                                      " application__form-text-input--normal"))
-                :aria-invalid (not @(subscribe [:application/answer-valid? id idx nil]))}]]))]))))
+                :aria-invalid (not (:valid answer))}]]))]))))
 
 (defn text-field [field-descriptor & {:keys [div-kwd idx]
                                       :or   {div-kwd :div.application__form-field}}]
@@ -250,9 +245,9 @@
       (let [languages              @languages
             editing?               @editing?
             disabled?              @disabled?
-            value                  @(subscribe [:application/answer-value id idx nil])
-            valid?                 @(subscribe [:application/answer-valid? id idx nil])
-            errors                 @(subscribe [:application/answer-errors id idx nil])
+            {:keys [value
+                    valid
+                    errors]}       @(subscribe [:application/answer id idx nil])
             cannot-view?           @cannot-view?
             cannot-edit?           @cannot-edit?
             show-error?            @(subscribe [:application/show-validation-error-class? id idx nil])
@@ -285,7 +280,7 @@
                                          :value (-> evt .-target .-value))
                                   (on-change evt))
                   :required     (is-required-field? field-descriptor)
-                  :aria-invalid (not valid?)
+                  :aria-invalid (not valid)
                   :value        (cond cannot-view?
                                       "***********"
                                       (:focused? @local-state)
@@ -304,9 +299,9 @@
         local-state  (r/atom {:focused? false :value nil})]
     (fn [field-descriptor question-group-idx repeatable-idx last?]
       (let [padded?                      (or (zero? repeatable-idx) last?)
-            first-is-empty?              (empty? @(subscribe [:application/answer-value id question-group-idx 0]))
-            value                        @(subscribe [:application/answer-value id question-group-idx repeatable-idx])
-            valid?                       @(subscribe [:application/answer-valid? id question-group-idx repeatable-idx])
+            first-is-empty?              (empty? (:value @(subscribe [:application/answer id question-group-idx 0])))
+            {:keys [value
+                    valid]}              @(subscribe [:application/answer id question-group-idx repeatable-idx])
             show-validation-error-class? @(subscribe [:application/show-validation-error-class? id question-group-idx repeatable-idx])
             cannot-edit?                 @cannot-edit?
             remove-field                 (fn [_]
@@ -353,7 +348,7 @@
                                value)
            :placeholder  (when last? (get-translation :add-more))
            :disabled     (or cannot-edit? (and last? first-is-empty?))
-           :aria-invalid (not valid?)
+           :aria-invalid (not valid)
            :on-blur      on-blur
            :on-change    on-change}]
          (when (and (not cannot-edit?) (not last?))
@@ -407,12 +402,12 @@
         local-state  (r/atom {:focused? false :value nil})]
     (fn [field-descriptor & {:keys [div-kwd idx]
                              :or   {div-kwd :div.application__form-field}}]
-      (let [value        @(subscribe [:application/answer-value id idx nil])
-            valid?       @(subscribe [:application/answer-valid? id idx nil])
-            cannot-edit? @cannot-edit?
-            on-change    (if idx
-                           (->multi-value-field-change field-descriptor 0 idx)
-                           (->textual-field-change field-descriptor))]
+      (let [{:keys [value
+                    valid]} @(subscribe [:application/answer id idx nil])
+            cannot-edit?    @cannot-edit?
+            on-change       (if idx
+                              (->multi-value-field-change field-descriptor 0 idx)
+                              (->textual-field-change field-descriptor))]
         [div-kwd
          [label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
@@ -435,7 +430,7 @@
                                          :value (-> evt .-target .-value))
                                   (on-change evt))
                   :required     (is-required-field? field-descriptor)
-                  :aria-invalid (not valid?)}
+                  :aria-invalid (not valid)}
                  (when cannot-edit?
                    {:disabled true}))]
          (when max-length
@@ -517,7 +512,7 @@
         [:a {:href     "#"
              :on-click (fn add-question-group-row [event]
                          (.preventDefault event)
-                         (dispatch [:application/add-question-group-row (:id field-descriptor)]))}
+                         (dispatch [:application/add-question-group-row field-descriptor]))}
          [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
          (get-translation :add)]])]))
 
@@ -542,16 +537,16 @@
   (util/non-blank-val (:label option) langs))
 
 (defn dropdown [field-descriptor & {:keys [div-kwd editing idx] :or {div-kwd :div.application__form-field editing false}}]
-  (let [application  (subscribe [:state-query [:application]])
-        languages    (subscribe [:application/default-languages])
-        id           (answer-key field-descriptor)
-        disabled?    @(subscribe [:application/cannot-edit? id])
-        value        (subscribe [:application/answer-value id idx nil])
-        on-change    (fn [e]
-                       (dispatch [:application/dropdown-change
-                                  field-descriptor
-                                  (.-value (.-target e))
-                                  idx]))]
+  (let [application (subscribe [:state-query [:application]])
+        languages   (subscribe [:application/default-languages])
+        id          (answer-key field-descriptor)
+        disabled?   @(subscribe [:application/cannot-edit? id])
+        answer      @(subscribe [:application/answer id idx nil])
+        on-change   (fn [e]
+                      (dispatch [:application/dropdown-change
+                                 field-descriptor
+                                 (.-value (.-target e))
+                                 idx]))]
     [div-kwd
      [label field-descriptor]
      (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
@@ -566,11 +561,11 @@
          [:i.zmdi.zmdi-chevron-down]])
       [(keyword (str "select.application__form-select" (when (not disabled?) ".application__form-select--enabled")))
        {:id           (:id field-descriptor)
-        :value        (or @value "")
+        :value        (or (:value answer) "")
         :on-change    on-change
         :disabled     disabled?
         :required     (is-required-field? field-descriptor)
-        :aria-invalid (not @(subscribe [:application/answer-valid? id idx nil]))}
+        :aria-invalid (not (:valid answer))}
        (doall
          (concat
            (when
@@ -589,7 +584,7 @@
                            (not (:koodisto-ordered-by-user field-descriptor)))
                       (sort-by #(non-blank-option-label % @languages))))))]]
      (when-not idx
-       (dropdown-followups field-descriptor @value))]))
+       (dropdown-followups field-descriptor (:value answer)))]))
 
 (defn- multi-choice-followups [followups]
   [:div.application__form-multi-choice-followups-outer-container
@@ -643,7 +638,7 @@
         [info-text field-descriptor]]
        [:div.application__form-outer-checkbox-container
         {:aria-labelledby (id-for-label field-descriptor)
-         :aria-invalid    (not @(subscribe [:application/answer-valid? id idx nil]))
+         :aria-invalid    (not (:valid @(subscribe [:application/answer id idx nil])))
          :role       "listbox"}
         (doall
           (map-indexed (fn [option-idx option]
@@ -700,11 +695,11 @@
         languages               (subscribe [:application/default-languages])
         use-multi-choice-style? (use-multi-choice-style? field-descriptor @languages)]
     (fn [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
-      (let [single-choice-value (subscribe [:state-query [:application :answers (keyword (:id field-descriptor)) :value]])
-            followups           (->> (:options field-descriptor)
-                                     (filter (comp (partial = @single-choice-value) :value))
-                                     (map :followups)
-                                     (first))]
+      (let [answer    @(subscribe [:application/answer button-id idx nil])
+            followups (->> (:options field-descriptor)
+                           (filter (comp (partial = (:value answer)) :value))
+                           (map :followups)
+                           (first))]
         [div-kwd
          {:class "application__form-single-choice-button-container"}
          [label field-descriptor]
@@ -714,7 +709,7 @@
           [info-text field-descriptor]]
          [:div.application__form-single-choice-button-outer-container
           {:aria-labelledby (id-for-label field-descriptor)
-           :aria-invalid    (not @(subscribe [:application/answer-valid? button-id idx nil]))
+           :aria-invalid    (not (:valid answer))
            :role            "radiogroup"
            :class           (when use-multi-choice-style? "application__form-single-choice-button-container--column")}
           (doall
@@ -757,7 +752,7 @@
        :key          (str "upload-button-" component-id "-" attachment-count)
        :on-change    (partial upload-attachment field-descriptor question-group-idx)
        :required     (is-required-field? field-descriptor)
-       :aria-invalid (not @(subscribe [:application/answer-valid? id question-group-idx nil]))}]
+       :aria-invalid (not (:valid @(subscribe [:application/answer id question-group-idx nil])))}]
      [:label.application__form-upload-label
       {:for id}
       [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
@@ -770,10 +765,10 @@
 
 (defn- attachment-filename
   [id question-group-idx attachment-idx show-size?]
-  (let [{:keys [filename size]} @(subscribe [:application/answer-value
-                                             id
-                                             question-group-idx
-                                             attachment-idx])]
+  (let [{:keys [filename size]} (:value @(subscribe [:application/answer
+                                                     id
+                                                     question-group-idx
+                                                     attachment-idx]))]
     [:div
      [:span.application__form-attachment-filename
       filename]
@@ -927,7 +922,7 @@
   (let [id          (keyword (:id field-descriptor))
         local-state (r/atom {:focused? false :value nil})]
     (fn [field-descriptor row-idx question-group-idx]
-      (let [value        @(subscribe [:application/answer-value id question-group-idx row-idx])
+      (let [value        (:value @(subscribe [:application/answer id question-group-idx row-idx]))
             cannot-edit? @(subscribe [:application/cannot-edit? id])
             on-blur      (fn [_]
                            (swap! local-state assoc

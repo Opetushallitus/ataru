@@ -46,24 +46,39 @@
     (:answers application)))
 
 (re-frame/reg-sub
-  :application/answer
-  (fn [_ _]
-    (re-frame/subscribe [:application/answers]))
-  (fn [answers [_ id question-group-idx repeatable-idx]]
-    (let [id (keyword id)]
-      (cond (some? question-group-idx)
-            (get-in answers [id :values question-group-idx (or repeatable-idx 0)])
-            (some? repeatable-idx)
-            (get-in answers [id :values repeatable-idx])
-            :else
-            (get answers id)))))
-
-(re-frame/reg-sub
   :application/person
   (fn [_ _]
     (re-frame/subscribe [:application/application]))
   (fn [application _]
     (:person application)))
+
+(defn- value-from-person
+  [person id question-group-idx repeatable-idx]
+  (cond (some? question-group-idx)
+        (get-in person [id question-group-idx (or repeatable-idx 0)])
+        (some? repeatable-idx)
+        (get-in person [id repeatable-idx])
+        :else
+        (get person id)))
+
+(re-frame/reg-sub
+  :application/answer
+  (fn [_ _]
+    [(re-frame/subscribe [:application/answers])
+     (re-frame/subscribe [:application/person])
+     (re-frame/subscribe [:application/editing?])])
+  (fn [[answers person editing?] [_ id question-group-idx repeatable-idx]]
+    (let [id (keyword id)]
+      (cond-> (cond (some? question-group-idx)
+                    (get-in answers [id :values question-group-idx (or repeatable-idx 0)])
+                    (some? repeatable-idx)
+                    (get-in answers [id :values repeatable-idx])
+                    :else
+                    (get answers id))
+              (and editing?
+                   (contains? person-info-fields/editing-forbidden-person-info-field-ids id))
+              (assoc :value (value-from-person person id question-group-idx repeatable-idx)
+                     :valid true)))))
 
 (re-frame/reg-sub
   :application/attachment-deadline
@@ -79,59 +94,14 @@
     (-> db :form :tarjonta :hakuaika)))
 
 (re-frame/reg-sub
-  :application/answer-value
-  (fn [[_ id question-group-idx repeatable-idx] _]
-    [(re-frame/subscribe [:application/answer
-                          id
-                          question-group-idx
-                          repeatable-idx])
-     (re-frame/subscribe [:application/person])
-     (re-frame/subscribe [:application/editing?])])
-  (fn [[answer person editing?] [_ id question-group-idx repeatable-idx]]
-    (let [id (keyword id)]
-      (if (and editing?
-               (contains? person-info-fields/editing-forbidden-person-info-field-ids id))
-        (cond (some? question-group-idx)
-              (get-in person [id question-group-idx (or repeatable-idx 0)])
-              (some? repeatable-idx)
-              (get-in person [id repeatable-idx])
-              :else
-              (get person id))
-        (:value answer)))))
-
-(re-frame/reg-sub
-  :application/answer-valid?
-  (fn [[_ id question-group-idx repeatable-idx] _]
-    [(re-frame/subscribe [:application/answer
-                          id
-                          question-group-idx
-                          repeatable-idx])
-     (re-frame/subscribe [:application/editing?])])
-  (fn [[answer editing?] [_ id _ _]]
-    (if (and editing?
-             (contains? person-info-fields/editing-forbidden-person-info-field-ids (keyword id)))
-      true
-      (:valid answer))))
-
-(re-frame/reg-sub
-  :application/answer-errors
-  (fn [[_ id question-group-idx repeatable-idx] _]
-    (re-frame/subscribe [:application/answer
-                         id
-                         question-group-idx
-                         repeatable-idx]))
-  (fn [answer [_ _ _ _]]
-    (:errors answer)))
-
-(re-frame/reg-sub
   :application/repeatable-answer-count
-  (fn [[_ id _] _]
-    (re-frame/subscribe [:application/answer id nil nil]))
-  (fn [answer [_ _ question-group-idx]]
+  (fn [_ _]
+    (re-frame/subscribe [:application/answers]))
+  (fn [answers [_ id question-group-idx]]
     (max 1 (count
             (if (some? question-group-idx)
-              (get-in answer [:values question-group-idx])
-              (:values answer))))))
+              (get-in answers [id :values question-group-idx])
+              (get-in answers [id :values]))))))
 
 (re-frame/reg-sub
   :application/submitted?
@@ -473,11 +443,10 @@
   :application/show-validation-error-class?
   (fn [[_ id question-group-idx repeatable-idx] _]
     [(re-frame/subscribe [:application/form-field id])
-     (re-frame/subscribe [:application/answer-value id question-group-idx repeatable-idx])
-     (re-frame/subscribe [:application/answer-valid? id question-group-idx repeatable-idx])
+     (re-frame/subscribe [:application/answer id question-group-idx repeatable-idx])
      (re-frame/subscribe [:application/validator-processing? id])])
-  (fn [[field value valid? validator-processing?] _]
-    (and (not valid?)
+  (fn [[field {:keys [value valid]} validator-processing?] _]
+    (and (not valid)
          (or (afc/is-required-field? field)
              (-> field :params :numeric))
          (if (string? value)
