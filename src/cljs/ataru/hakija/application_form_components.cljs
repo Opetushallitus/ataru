@@ -512,7 +512,7 @@
         [:a {:href     "#"
              :on-click (fn add-question-group-row [event]
                          (.preventDefault event)
-                         (dispatch [:application/add-question-group-row (:id field-descriptor)]))}
+                         (dispatch [:application/add-question-group-row field-descriptor]))}
          [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
          (get-translation :add)]])]))
 

@@ -1245,25 +1245,16 @@
       {:fieldClass "infoElement"}
       [])))
 
-(defn- set-empty-value-dispatches
-  [db id group-idx]
-  (autil/reduce-form-fields (fn [dispatches field]
-                              (if (= id (:id field))
-                                (mapcat (partial set-empty-value-dispatch group-idx)
-                                        (:children field))
-                                dispatches))
-                            []
-                            (get-in db [:form :content])))
-
 (reg-event-fx
   :application/add-question-group-row
-  (fn add-question-group-row [{db :db} [_ field-descriptor-id]]
-    (let [id (keyword field-descriptor-id)
+  (fn add-question-group-row [{db :db} [_ field-descriptor]]
+    (let [id           (keyword (:id field-descriptor))
           repeat-count (get-in db [:application :ui id :count] 1)]
-      {:db (-> db
-               (assoc-in [:application :ui id :count] (inc repeat-count))
-               (update-in [:application :ui id] dissoc :mouse-over-remove-button))
-       :dispatch-n (set-empty-value-dispatches db field-descriptor-id repeat-count)})))
+      {:db         (-> db
+                       (assoc-in [:application :ui id :count] (inc repeat-count))
+                       (update-in [:application :ui id] dissoc :mouse-over-remove-button))
+       :dispatch-n (mapcat (partial set-empty-value-dispatch repeat-count)
+                           (:children field-descriptor))})))
 
 (reg-event-fx
   :application/remove-question-group-row
