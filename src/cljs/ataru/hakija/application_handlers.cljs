@@ -998,19 +998,19 @@
 (reg-event-fx
   :application/handle-attachment-upload
   (fn [{db :db} [_ field-descriptor attachment-idx question-group-idx response]]
-    (let [id              (keyword (:id field-descriptor))
-          path            (if question-group-idx
-                            [:application :answers id :values question-group-idx attachment-idx]
-                            [:application :answers id :values attachment-idx])
-          attacment-value (subscribe [:application/answer-value
-                                      id
-                                      question-group-idx
-                                      attachment-idx])]
+    (let [id       (keyword (:id field-descriptor))
+          path     (if question-group-idx
+                     [:application :answers id :values question-group-idx attachment-idx]
+                     [:application :answers id :values attachment-idx])
+          filename (:filename (:value @(subscribe [:application/answer
+                                                   id
+                                                   question-group-idx
+                                                   attachment-idx])))]
       {:db                 (-> db
-                               (update-in [:attachments-uploading id] dissoc (:filename @attacment-value))
+                               (update-in [:attachments-uploading id] dissoc filename)
                                (update-in path
-                                 merge
-                                 {:value response :valid true :status :ready})
+                                          merge
+                                          {:value response :valid true :status :ready})
                                (set-validator-processing id)
                                (set-multi-value-changed id :values))
        :validate-debounced {:value                        (get-in db path)
@@ -1050,11 +1050,11 @@
 (reg-event-db
   :application/handle-attachment-upload-started
   (fn [db [_ field-descriptor attachment-idx question-group-idx request]]
-    (let [id (keyword (:id field-descriptor))
-          {:keys [filename]} @(subscribe [:application/answer-value
-                                          id
-                                          question-group-idx
-                                          attachment-idx])]
+    (let [id       (keyword (:id field-descriptor))
+          filename (:filename (:value @(subscribe [:application/answer
+                                                   id
+                                                   question-group-idx
+                                                   attachment-idx])))]
       (-> db
           (assoc-in [:attachments-uploading id filename] :downloading)
           (assoc-in (cond-> [:application :answers id :values]
@@ -1062,7 +1062,7 @@
                             (conj question-group-idx)
                             true
                             (conj attachment-idx :request))
-            request)))))
+                    request)))))
 
 (reg-event-fx
   :application/handle-attachment-upload-error
