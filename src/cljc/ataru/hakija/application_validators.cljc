@@ -65,10 +65,12 @@
   (let [multiple?      (get-in field-descriptor [:params :can-submit-multiple-applications] true)
         haku-oid       (get-in field-descriptor [:params :haku-oid])
         yhteishaku?    (get-in field-descriptor [:params :yhteishaku] false)
+        this-answer    (get answers-by-key (keyword (:id field-descriptor)))
         preferred-name (:preferred-name answers-by-key)
-        original-value (get-in answers-by-key [(keyword (:id field-descriptor)) :original-value])
+        original-value (:original-value this-answer)
         modifying?     (some? original-value)
-        verify-value   (get-in field-descriptor [:params :verify])]
+        value          (if yhteishaku? (:value this-answer) value)
+        verify-value   (:verify this-answer)]
     (asyncm/go
       (cond (or (not (email/email? value))
                 (and yhteishaku?
