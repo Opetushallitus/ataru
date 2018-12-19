@@ -330,13 +330,15 @@
          previous-sort              :sort} (-> db :application :previous-fetch)
         selected-hakukohteet-set     @(subscribe [:application/selected-hakukohde-oid-set])
         first-load?                  (nil? previous-params)
-        reset-filters?               (and (not first-load?) (not= previous-params params))
+        reset-filters?               (not= (dissoc previous-params :ensisijaisesti :rajaus-hakukohteella)
+                                           (dissoc params :ensisijaisesti :rajaus-hakukohteella))
         filters                      (-> (if reset-filters? initial-db/default-db db) :application :filters)
         attachment-states-to-include (-> (if reset-filters? initial-db/default-db db) :application :attachment-state-filter)
         processing-states-to-include (-> (if reset-filters? initial-db/default-db db) :application :processing-state-filter)
         selection-states-to-include  (-> (if reset-filters? initial-db/default-db db) :application :selection-state-filter)
         sort                         (-> db :application :sort)
-        reset-list?                  (or reset-filters?
+        reset-list?                  (or (and (not first-load?)
+                                              (not= previous-params params))
                                          (not= sort previous-sort)
                                          (not= [previous-attachment-states previous-processing-states previous-selection-states previous-filters]
                                                [attachment-states-to-include processing-states-to-include selection-states-to-include filters]))
