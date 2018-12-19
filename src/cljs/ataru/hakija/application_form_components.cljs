@@ -695,11 +695,11 @@
         languages               (subscribe [:application/default-languages])
         use-multi-choice-style? (use-multi-choice-style? field-descriptor @languages)]
     (fn [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
-      (let [single-choice-value (subscribe [:state-query [:application :answers (keyword (:id field-descriptor)) :value]])
-            followups           (->> (:options field-descriptor)
-                                     (filter (comp (partial = @single-choice-value) :value))
-                                     (map :followups)
-                                     (first))]
+      (let [answer    @(subscribe [:application/answer button-id idx nil])
+            followups (->> (:options field-descriptor)
+                           (filter (comp (partial = (:value answer)) :value))
+                           (map :followups)
+                           (first))]
         [div-kwd
          {:class "application__form-single-choice-button-container"}
          [label field-descriptor]
@@ -709,7 +709,7 @@
           [info-text field-descriptor]]
          [:div.application__form-single-choice-button-outer-container
           {:aria-labelledby (id-for-label field-descriptor)
-           :aria-invalid    (not (:valid @(subscribe [:application/answer button-id idx nil])))
+           :aria-invalid    (not (:valid answer))
            :role            "radiogroup"
            :class           (when use-multi-choice-style? "application__form-single-choice-button-container--column")}
           (doall
