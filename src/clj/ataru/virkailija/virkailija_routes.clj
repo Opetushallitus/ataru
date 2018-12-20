@@ -511,12 +511,12 @@
                                               " käsittely ei ole sallittu")}))))
 
     (api/context "/cache" []
-      (api/GET "/clear" {session :session}
+      (api/POST "/clear" {session :session}
         :summary "Clear all caches"
         {:status 200
          :body   (do
-                   (doseq [[key dep] (keys dependencies)
-                           :when     (clojure.string/ends-with? (name key) "-cache")]
+                   (doseq [[key dep] dependencies
+                           :when (clojure.string/ends-with? (name key) "-cache")]
                      (cache/clear-all dep))
                    {})})
       (api/POST "/clear/:cache" {session :session}
