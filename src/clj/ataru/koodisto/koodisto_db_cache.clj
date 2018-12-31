@@ -94,34 +94,25 @@
        (assoc koodi-option :within)))
 
 (defn- get-vocational-degree-options [version]
-  (let [koodisto-uri (str koodisto-base-url "codeelement/ammatillisetopsperustaiset_1/" version)]
-    (->> (do-get koodisto-uri)
-         :withinCodeElements
-         (filter #(-> % :passive not))
-         (sort-by :codeElementVersion)
-         (group-by :codeElementValue)
-         (map (fn [[key values]]
-                (-> values last code-element->soresu-option))))))
+  (->> {:uri     "ammatillisetopsperustaiset_1"
+        :version version}
+       add-within
+       :within
+       (filter #(clojure.string/starts-with? (:uri %) "koulutus_"))
+       (group-by :value)
+       (map (fn [[_ versions]] (apply max-key :version versions)))))
 
 (defn- get-vocational-institutions-by-type [type version]
-  (let [koodisto-uri (str koodisto-base-url "codeelement/oppilaitostyyppi_" type "/" version)]
-    (->> (do-get koodisto-uri)
-         :withinCodeElements
-         (filter #(-> % :passive not))
-         (map :codeElementValue))))
-
-(defn- get-institution [number]
-  (when-let [institution (organization-client/get-organization-by-oid-or-number number)]
-    {:value number
-     :label (:nimi institution)}))
+  (->> {:uri     (str "oppilaitostyyppi_" type)
+        :version version}
+       add-within
+       :within
+       (filter #(clojure.string/starts-with? (:uri %) "oppilaitosnumero_"))
+       (map #(assoc % :label (:nimi (organization-client/get-organization-by-oid-or-number (:value %)))))))
 
 (defn- get-vocational-institutions [version]
-  (->> institution-type-codes
-       (pmap #(get-vocational-institutions-by-type % version))
-       flatten
-       set
-       (pmap get-institution)
-       (filter some?)))
+  (mapcat #(get-vocational-institutions-by-type % version)
+          institution-type-codes))
 
 (defn get-koodi-options [koodisto-uri]
   (let [[uri version] (clojure.string/split koodisto-uri #"#")]
