@@ -91,6 +91,8 @@
        :withinCodeElements
        (filter #(not (:passive %)))
        (map code-element->soresu-option)
+       (group-by :uri)
+       (map (fn [[_ versions]] (apply max-key :version versions)))
        (assoc koodi-option :within)))
 
 (defn- get-vocational-degree-options [version]
@@ -98,9 +100,7 @@
         :version version}
        add-within
        :within
-       (filter #(clojure.string/starts-with? (:uri %) "koulutus_"))
-       (group-by :value)
-       (map (fn [[_ versions]] (apply max-key :version versions)))))
+       (filter #(clojure.string/starts-with? (:uri %) "koulutus_"))))
 
 (defn- get-vocational-institutions-by-type [type version]
   (->> {:uri     (str "oppilaitostyyppi_" type)
