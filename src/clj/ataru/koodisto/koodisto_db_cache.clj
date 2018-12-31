@@ -94,14 +94,13 @@
        (assoc koodi-option :within)))
 
 (defn- get-vocational-degree-options [version]
-  (let [koodisto-uri (str koodisto-base-url "codeelement/ammatillisetopsperustaiset_1/" version)]
-    (->> (do-get koodisto-uri)
-         :withinCodeElements
-         (filter #(-> % :passive not))
-         (sort-by :codeElementVersion)
-         (group-by :codeElementValue)
-         (map (fn [[key values]]
-                (-> values last code-element->soresu-option))))))
+  (->> {:uri     "ammatillisetopsperustaiset_1"
+        :version version}
+       add-within
+       :within
+       (filter #(clojure.string/starts-with? (:uri %) "koulutus_"))
+       (group-by :value)
+       (map (fn [[_ versions]] (apply max-key :version versions)))))
 
 (defn- get-vocational-institutions-by-type [type version]
   (->> {:uri     (str "oppilaitostyyppi_" type)
