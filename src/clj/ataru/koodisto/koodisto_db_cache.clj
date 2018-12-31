@@ -3,14 +3,12 @@
             [ataru.koodisto.koodisto-codes :refer [institution-type-codes]]
             [ataru.util.http-util :as http-util]
             [cheshire.core :as cheshire]
-            [clojure.string :as str]
-            [clojure.tools.logging :as log]))
+            [clojure.string :as str]))
 
 (defn- do-get [url]
   (let [{:keys [status headers body error] :as resp} (http-util/do-get url)]
     (if (= 200 status)
-      (do (log/info (str "Fetched koodisto from URL: " url))
-          (cheshire/parse-string body true))
+      (cheshire/parse-string body true)
       (throw (ex-info "Error when fetching doing HTTP GET" {:status  status
                                                             :url     url
                                                             :body    body
