@@ -985,12 +985,13 @@
 (defn get-application-keys []
   (exec-db :db yesql-get-latest-application-ids-distinct-by-person-oid nil))
 
-(defn get-application-version-changes [application-key]
+(defn get-application-version-changes [koodisto-cache application-key]
   (let [all-versions         (exec-db :db
                                       yesql-get-application-versions
                                       {:application_key application-key})
         all-versions-paired  (map vector all-versions (rest all-versions))
-        get-koodisto-options (memoize koodisto/get-koodisto-options)]
+        get-koodisto-options (partial koodisto/get-koodisto-options
+                                      koodisto-cache)]
     (map (fn [[older-application newer-application]]
            (let [older-version-answers (util/application-answers-by-key older-application)
                  newer-version-answers (util/application-answers-by-key newer-application)

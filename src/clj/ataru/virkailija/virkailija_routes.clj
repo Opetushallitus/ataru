@@ -501,6 +501,7 @@
         :path-params [application-key :- s/Str]
         :return [s/Any]
         (if-let [result (application-service/get-application-version-changes
+                         koodisto-cache
                          organization-service
                          tarjonta-service
                          session
