@@ -125,7 +125,7 @@
                     :G__117 {:label "Toistuva kysymys"
                              :old   ["x" "y" "z"]
                              :new   ["x" "y" "a"]}}]
-                  (store/get-application-version-changes "9d24af7d-f672-4c0e-870f-aaaa"))))))
+                  (store/get-application-version-changes nil "9d24af7d-f672-4c0e-870f-aaaa"))))))
 
 (describe "creating application attachment reviews"
   (tags :unit :attachments)

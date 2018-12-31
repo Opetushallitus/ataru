@@ -538,14 +538,15 @@
   (application-store/remove-review-note note-id))
 
 (defn get-application-version-changes
-  [organization-service tarjonta-service session application-key]
+  [koodisto-cache organization-service tarjonta-service session application-key]
   (when (aac/applications-access-authorized?
          organization-service
          tarjonta-service
          session
          [application-key]
          [:view-applications :edit-applications])
-    (application-store/get-application-version-changes application-key)))
+    (application-store/get-application-version-changes koodisto-cache
+                                                       application-key)))
 
 (defn omatsivut-applications
   [organization-service person-service session person-oid]
