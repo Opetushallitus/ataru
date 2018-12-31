@@ -107,8 +107,9 @@
         :version version}
        add-within
        :within
-       (filter #(and (= version (:version %))
-                     (clojure.string/starts-with? (:uri %) "oppilaitosnumero_")))))
+       (filter #(clojure.string/starts-with? (:uri %) "oppilaitosnumero_"))
+       (group-by :value)
+       (map (fn [[_ versions]] (apply max-key :version versions)))))
 
 (defn- get-vocational-institutions [version]
   (mapcat #(get-vocational-institutions-by-type % version)
