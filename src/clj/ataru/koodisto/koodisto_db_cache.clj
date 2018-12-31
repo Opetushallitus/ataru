@@ -104,24 +104,16 @@
                 (-> values last code-element->soresu-option))))))
 
 (defn- get-vocational-institutions-by-type [type version]
-  (let [koodisto-uri (str koodisto-base-url "codeelement/oppilaitostyyppi_" type "/" version)]
-    (->> (do-get koodisto-uri)
-         :withinCodeElements
-         (filter #(-> % :passive not))
-         (map :codeElementValue))))
-
-(defn- get-institution [number]
-  (when-let [institution (organization-client/get-organization-by-oid-or-number number)]
-    {:value number
-     :label (:nimi institution)}))
+  (->> {:uri     (str "oppilaitostyyppi_" type)
+        :version version}
+       add-within
+       :within
+       (filter #(and (= version (:version %))
+                     (clojure.string/starts-with? (:uri %) "oppilaitosnumero_")))))
 
 (defn- get-vocational-institutions [version]
-  (->> institution-type-codes
-       (pmap #(get-vocational-institutions-by-type % version))
-       flatten
-       set
-       (pmap get-institution)
-       (filter some?)))
+  (mapcat #(get-vocational-institutions-by-type % version)
+          institution-type-codes))
 
 (defn get-koodi-options [koodisto-uri]
   (let [[uri version] (clojure.string/split koodisto-uri #"#")]

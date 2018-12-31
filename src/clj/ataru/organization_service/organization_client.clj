@@ -76,17 +76,6 @@
       (->> response read-body (map group->map))
       (throw (Exception. (str "Got status code " (:status response) " While reading groups"))))))
 
-(defn get-organization-by-oid-or-number
-  "Get organization by oid or number."
-  [oid-or-number]
-  (let [url (resolve-url :organisaatio-service.get-by-oid oid-or-number)
-        {:keys [status headers body error] :as resp} (http-util/do-get url)]
-    (if (= 200 status)
-      (let [body (json/parse-string body true)]
-        (log/info (str "Fetched organization from URL: " url))
-        body)
-      (log/error (str "Couldn't fetch organization by number from url: " url)))))
-
 (defn fake-hakukohderyhma [index]
   (group->map {:oid         (format "1.2.246.562.28.0000000000%d" index)
                :nimi        {:fi (format "Testihakukohderyhma %d" index)}
