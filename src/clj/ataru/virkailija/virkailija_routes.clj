@@ -541,10 +541,6 @@
 
     (api/context "/koodisto" []
       :tags ["koodisto-api"]
-      (api/GET "/" []
-        :return s/Any
-        (let [koodisto-list (koodisto/list-all-koodistos)]
-          (ok koodisto-list)))
       (api/GET "/:koodisto-uri/:version" [koodisto-uri version]
         :path-params [koodisto-uri :- s/Str version :- Long]
         :return s/Any
