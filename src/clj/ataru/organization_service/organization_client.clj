@@ -82,9 +82,7 @@
   (let [url (resolve-url :organisaatio-service.get-by-oid oid-or-number)
         {:keys [status headers body error] :as resp} (http-util/do-get url)]
     (if (= 200 status)
-      (let [body (json/parse-string body true)]
-        (log/info (str "Fetched organization from URL: " url))
-        body)
+      (json/parse-string body true)
       (log/error (str "Couldn't fetch organization by number from url: " url)))))
 
 (defn fake-hakukohderyhma [index]
