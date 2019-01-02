@@ -120,7 +120,7 @@
 (defn- update-to-update-keys [redis loader name]
   (loop [updated-count 0]
     (if-let [keys (seq (wcar (:connection-opts redis)
-                             (car/spop (->to-update-key name) 100)))]
+                             (car/spop (->to-update-key name) 10)))]
       (let [ttls      (wcar (:connection-opts redis) :as-pipeline
                             (doseq [key keys]
                               (car/pttl (->cache-key name key))))
