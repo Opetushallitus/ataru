@@ -12,11 +12,11 @@
     (if (env :dev?)
       (timbre/merge-config! {:appenders
                              {:println
-                              {:ns-blacklist ["ataru.cache.redis-cache"]}
+                              {:ns-blacklist ["ataru.cache.redis-cache" "ataru.http.server"]}
                               :cache-error-appender
                               (assoc (appenders/println-appender)
                                      :min-level :warn
-                                     :ns-whitelist ["ataru.cache.redis-cache"])}
+                                     :ns-whitelist ["ataru.cache.redis-cache" "ataru.http.server"])}
                              :timestamp-opts timestamp-opts})
       (let [log-kwd  (case app-id
                        :virkailija :virkailija-base-path
