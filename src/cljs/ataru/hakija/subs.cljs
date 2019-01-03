@@ -76,6 +76,7 @@
                     :else
                     (get answers id))
               (and editing?
+                   (not= :have-finnish-ssn id)
                    (contains? person-info-fields/editing-forbidden-person-info-field-ids id))
               (assoc :value (value-from-person person id question-group-idx repeatable-idx)
                      :valid true)))))
