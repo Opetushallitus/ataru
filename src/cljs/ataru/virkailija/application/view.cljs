@@ -1289,24 +1289,6 @@
        [event-row event])
      @(subscribe [:application/events-and-information-requests])))])
 
-(defn update-review-field [field convert-fn evt]
-  (let [new-value (-> evt .-target .-value)]
-    (dispatch [:application/update-review-field field (convert-fn new-value)])))
-
-(defn convert-score [review new-value]
-  (let [maybe-number (js/Number new-value)]
-    (cond
-      (= "" new-value)
-      nil
-
-      ;; JS NaN is the only thing not equal with itself
-      ;; and this is the way to detect it
-      (not= maybe-number maybe-number)
-      (:score review)
-
-      :else
-      maybe-number)))
-
 (defn- application-review-note-input []
   (let [input-value     (subscribe [:state-query [:application :review-comment]])
         review-notes    (subscribe [:state-query [:application :review-notes]])
@@ -1341,13 +1323,29 @@
                    ^{:key (str "application-review-note-" idx)}
                    [application-review-note idx])))])))
 
+(defn- score->number
+  [score]
+  (let [maybe-number (js/Number (clojure.string/replace score #"," "."))]
+    (cond
+      (clojure.string/blank? score) nil
+      ; NaN:
+      (not= maybe-number maybe-number) nil
+      :else maybe-number)))
+
+(defn- valid-display-score?
+  [score]
+  (or
+    (clojure.string/blank? score)
+    (if (re-matches #"^[0-9]+[,.]$" score)
+      (some? (score->number (apply str (butlast score))))
+      (some? (score->number score)))))
+
 (defn application-review-inputs []
-  (let [review            (subscribe [:state-query [:application :review]])
-        ; React doesn't like null, it leaves the previous value there, hence:
-        review-field->str (fn [review field] (if-let [notes (field @review)] notes ""))
+  (let [score             (subscribe [:state-query [:application :review :score]])
         settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
         input-visible?    (subscribe [:application/review-state-setting-enabled? :score])
-        can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
+        can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])
+        display-value     (r/atom (clojure.string/replace (str @score) #"\." ","))]
     (fn []
       [:div.application-handling__review-inputs
        (when (or @settings-visible? @input-visible?)
@@ -1357,13 +1355,16 @@
           [:div.application-handling__review-header.application-handling__review-header--points
            (get-virkailija-translation :points)]
           [:input.application-handling__score-input
-           {:type       "text"
-            :max-length "2"
-            :size       "2"
-            :value      (review-field->str review :score)
-            :disabled   (or @settings-visible? (not @can-edit?))
-            :on-change  (when-not @settings-visible?
-                          (partial update-review-field :score (partial convert-score @review)))}]])])))
+           {:type      "text"
+            :value     @display-value
+            :disabled  (or @settings-visible? (not @can-edit?))
+            :on-change (when-not @settings-visible?
+                         (fn [evt]
+                           (let [new-value (-> evt .-target .-value)]
+                             (when (valid-display-score? new-value)
+                               (reset! display-value new-value))
+                             (when-let [number (score->number new-value)]
+                               (dispatch [:application/update-review-field :score number])))))}]])])))
 
 (defn- application-modify-link []
   (let [application-key   (subscribe [:state-query [:application :selected-key]])
