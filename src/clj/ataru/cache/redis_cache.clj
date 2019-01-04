@@ -124,9 +124,10 @@
         to-update (filter #(< 0 (second %)) (map vector keys ttls))
         values    (cache/load-many loader (map first to-update))]
     (wcar (:connection-opts redis)
-          (doseq [[key ttl] to-update
-                  :when     (contains? values key)]
-            (car/set (->cache-key name key) (get values key) :px ttl)))
+          (doseq [[key ttl] to-update]
+            (if (contains? values key)
+              (car/set (->cache-key name key) (get values key) :px ttl)
+              (car/del (->cache-key name key)))))
     (count to-update)))
 
 (defn- update-to-update-keys [redis loader name]
