@@ -139,36 +139,36 @@
                   (remove updated-keys)
                   (update-keys redis loader name)
                   (into updated-keys)))
-      (when (seq updated-keys)
-        (info "Updated" (count updated-keys) name "keys")))))
+      (count updated-keys))))
 
-(defn- mark-all-keys-to-update [redis name]
-  (loop [[cursor keys] (redis-scan redis name 0)
-         key-count     0]
-    (when (not-empty keys)
-      (wcar (:connection-opts redis)
-            (apply car/sadd (->to-update-key name) (map #(cache-key->key name %) keys))))
-    (if (= "0" cursor)
-      (when (< 0 (+ key-count (count keys)))
-        (info "Marked" (+ key-count (count keys)) name "keys to update"))
-      (recur (redis-scan redis name cursor)
-             (+ key-count (count keys))))))
+(defn- mark-all-keys-to-update [redis name update-period-ms]
+  (if (some? (wcar (:connection-opts redis)
+                   (car/set (->mark-all-keys-to-update-key name) "mark" :px update-period-ms :nx)))
+    (loop [[cursor keys] (redis-scan redis name 0)
+           key-count     0]
+      (when (not-empty keys)
+        (wcar (:connection-opts redis)
+              (apply car/sadd (->to-update-key name) (map #(cache-key->key name %) keys))))
+      (if (= "0" cursor)
+        (+ key-count (count keys))
+        (recur (redis-scan redis name cursor)
+               (+ key-count (count keys)))))
+    0))
 
-(defn- update-to-update-keys-runnable [redis loader name]
+(defn- ->runnable [msg name duration-limit-ms thunk]
   (fn []
     (try
-      (update-to-update-keys redis loader name)
-      (catch Exception e
-        (error e "Error while updating" name "keys")))))
-
-(defn- mark-all-keys-to-update-runnable [redis name update-period-ms]
-  (fn []
-    (try
-      (when (some? (wcar (:connection-opts redis)
-                         (car/set (->mark-all-keys-to-update-key name) "mark" :px update-period-ms :nx)))
-        (mark-all-keys-to-update redis name))
-      (catch Exception e
-        (error e "Error while marking all" name "keys to update")))))
+      (let [start-ms (System/currentTimeMillis)
+            c        (thunk)
+            duration (- (System/currentTimeMillis) start-ms)]
+        (when (pos? c)
+          (info (str "[" msg "]")
+                (str "[" name "]")
+                (str "[" c "]")
+                (str "[" duration "]")
+                (str "[" (or duration-limit-ms duration) "]"))))
+      (catch Throwable e
+        (error e (str "[" msg "]") (str "[" name "]"))))))
 
 (defrecord Cache [redis
                   loader
@@ -185,18 +185,26 @@
 
   (start [this]
     (if (nil? scheduler)
-      (let [scheduler (when (or update-after-read?
-                                (some? update-period))
-                        (ScheduledThreadPoolExecutor. 2))]
+      (let [update-period-ms (when-let [[t unit] update-period]
+                               (.toMillis unit t))
+            scheduler        (when (or update-after-read?
+                                       (some? update-period-ms))
+                               (ScheduledThreadPoolExecutor. 2))]
         (when (some? scheduler)
           (.scheduleAtFixedRate
            scheduler
-           (update-to-update-keys-runnable redis loader name)
+           (->runnable "Update cache keys"
+                       name
+                       update-period-ms
+                       (fn [] (update-to-update-keys redis loader name)))
            1 1 TimeUnit/SECONDS))
-        (when-let [[t unit] update-period]
+        (when (some? update-period-ms)
           (.scheduleAtFixedRate
            scheduler
-           (mark-all-keys-to-update-runnable redis name (.toMillis unit t))
+           (->runnable "Mark cache keys to update"
+                       name
+                       1000
+                       (fn [] (mark-all-keys-to-update redis name update-period-ms)))
            1 1 TimeUnit/SECONDS))
         (assoc this
                :ttl-after-read-ms (when-let [[ttl timeunit] ttl-after-read]
