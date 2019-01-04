@@ -11,6 +11,7 @@
    [ataru.aws.sqs :as sqs]
    [ataru.aws.sns :as sns]
    [ataru.background-job.job :as job]
+   [ataru.cache.cache-service :as cache]
    [ataru.db.db :as db]
    [ataru.person-service.person-service :as person-service]
    [yesql.core :refer [defqueries]])
@@ -67,8 +68,9 @@
                  {:person_oid person-oid})))
 
 (defn- update-person-info
-  [person-service person-oid]
+  [henkilo-cache person-service person-oid]
   (log/info "Checking person info of" person-oid)
+  (cache/remove-from henkilo-cache person-oid)
   (let [person (person-service/get-person person-service person-oid)]
     (if (or (:yksiloity person)
             (:yksiloityVTJ person))
@@ -81,8 +83,8 @@
 
 (defn update-person-info-job-step
   [{:keys [person-oid]}
-   {:keys [person-service]}]
-  (update-person-info person-service person-oid)
+   {:keys [henkilo-cache person-service]}]
+  (update-person-info henkilo-cache person-service person-oid)
   {:transition {:id :final}})
 
 (def job-type (str (ns-name *ns*)))
@@ -98,14 +100,14 @@
                 (str "Could not find key oidHenkilo from message '" s "'")))))
 
 (defn- try-handle-message
-  [person-service sns-message-manager drain-failed? message]
+  [henkilo-cache person-service sns-message-manager drain-failed? message]
   (try
     (some->> message
              .getBody
              (sns/handle-message sns-message-manager)
              .getMessage
              parse-henkilo-modified-message
-             (update-person-info person-service))
+             (update-person-info henkilo-cache person-service))
     message
     (catch Exception e
       (if drain-failed?
@@ -115,6 +117,7 @@
 
 (defn- try-handle-messages
   [amazon-sqs
+   henkilo-cache
    person-service
    sns-message-manager
    drain-failed?
@@ -124,6 +127,7 @@
     (->> (repeatedly #(sqs/batch-receive amazon-sqs queue-url receive-wait))
          (take-while not-empty)
          (map (partial keep (partial try-handle-message
+                                     henkilo-cache
                                      person-service
                                      sns-message-manager
                                      drain-failed?)))
@@ -133,6 +137,7 @@
       (log/warn e "Handling henkilö modified messages failed"))))
 
 (defrecord UpdatePersonInfoWorker [amazon-sqs
+                                   henkilo-cache
                                    person-service
                                    sns-message-manager
                                    enabled?
@@ -150,6 +155,7 @@
          executor
          (partial try-handle-messages
                   amazon-sqs
+                  henkilo-cache
                   person-service
                   sns-message-manager
                   drain-failed?

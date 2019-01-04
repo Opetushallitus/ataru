@@ -113,6 +113,7 @@
                                   :queue-url     (:queue-url (:henkilo-modified-queue (:aws config)))
                                   :receive-wait  (Duration/ofSeconds 20)})
                                 [:amazon-sqs
+                                 :henkilo-cache
                                  :person-service
                                  :sns-message-manager])
 

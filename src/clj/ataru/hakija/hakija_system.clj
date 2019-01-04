@@ -103,6 +103,7 @@
     :job-runner (component/using
                  (job/new-job-runner hakija-jobs/job-definitions)
                  [:ohjausparametrit-service
+                  :henkilo-cache
                   :person-service
                   :tarjonta-service
                   :suoritus-service])
