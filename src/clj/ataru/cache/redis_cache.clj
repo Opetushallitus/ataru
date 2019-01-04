@@ -118,25 +118,29 @@
         (.unlock lock)))))
 
 (defn- update-keys [redis loader name keys]
-  (let [ttls      (wcar (:connection-opts redis) :as-pipeline
-                        (doseq [key keys]
-                          (car/pttl (->cache-key name key))))
-        to-update (filter #(< 0 (second %)) (map vector keys ttls))
-        values    (cache/load-many loader (map first to-update))]
-    (wcar (:connection-opts redis)
-          (doseq [[key ttl] to-update]
-            (if (contains? values key)
-              (car/set (->cache-key name key) (get values key) :px ttl)
-              (car/del (->cache-key name key)))))
-    (count to-update)))
+  (when (seq keys)
+    (let [ttls      (wcar (:connection-opts redis) :as-pipeline
+                          (doseq [key keys]
+                            (car/pttl (->cache-key name key))))
+          to-update (filter #(< 0 (second %)) (map vector keys ttls))
+          values    (cache/load-many loader (map first to-update))]
+      (wcar (:connection-opts redis)
+            (doseq [[key ttl] to-update]
+              (if (contains? values key)
+                (car/set (->cache-key name key) (get values key) :px ttl)
+                (car/del (->cache-key name key)))))
+      (map first to-update))))
 
 (defn- update-to-update-keys [redis loader name]
-  (loop [updated-count 0]
+  (loop [updated-keys #{}]
     (if-let [keys (seq (wcar (:connection-opts redis)
                              (car/spop (->to-update-key name) 10)))]
-      (recur (+ updated-count (update-keys redis loader name keys)))
-      (when (< 0 updated-count)
-        (info "Updated" updated-count name "keys")))))
+      (recur (->> keys
+                  (remove updated-keys)
+                  (update-keys redis loader name)
+                  (into updated-keys)))
+      (when (seq updated-keys)
+        (info "Updated" (count updated-keys) name "keys")))))
 
 (defn- mark-all-keys-to-update [redis name]
   (loop [[cursor keys] (redis-scan redis name 0)
