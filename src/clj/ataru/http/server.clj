@@ -1,5 +1,5 @@
 (ns ataru.http.server
-  (:require [taoensso.timbre :refer [info]]
+  (:require [taoensso.timbre :refer [info report]]
             [clojure.core.async :as a]
             [environ.core :refer [env]]
             [ring.middleware.reload :refer [wrap-reload]]
@@ -18,7 +18,7 @@
   (when (and (:dev? env) (compare-and-set! repl-started false true))
     (do
       (nrepl/start-server :port repl-port)
-      (info "nREPL started on port" repl-port))))
+      (report "nREPL started on port" repl-port))))
 
 (defrecord Server []
   component/Lifecycle
@@ -32,17 +32,17 @@
           executor     (flow/utilization-executor 0.9 512
                                                   {:metrics (EnumSet/of Stats$Metric/UTILIZATION)
                                                    :stats-callback (fn [stats]
-                                                                     (info "HTTP server executor stats" stats))})
+                                                                     (info "[HTTP server executor stats]" stats))})
           server       (http/start-server handler {:port port
                                                    :executor executor})]
       (start-repl! repl-port)
-      (info (str "Started server on port " port))
+      (report (str "Started server on port " port))
       (assoc this :server server)))
 
   (stop [this]
-    (info "Stopping server")
+    (report "Stopping server")
     (try (.close (:server this)) (catch Exception e))
-    (info "Stopped server")
+    (report "Stopped server")
     (assoc this :server nil)))
 
 (defn new-server
