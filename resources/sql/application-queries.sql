@@ -286,20 +286,24 @@ FROM applications a
 WHERE a.id = :application_id;
 
 -- name: yesql-has-ssn-applied
-SELECT EXISTS (SELECT 1 FROM latest_applications
-               JOIN application_reviews
-               ON application_key = key
-               WHERE haku = :haku_oid
-                   AND ssn = upper(:ssn)
-                   AND state <> 'inactivated') AS has_applied;
+SELECT EXISTS (SELECT 1 FROM (SELECT a.id, a.key FROM applications AS a
+                              JOIN application_reviews
+                              ON application_key = a.key
+                              WHERE a.haku = :haku_oid AND
+                                    a.ssn = upper(:ssn) AND
+                                    state <> 'inactivated') AS t
+               WHERE t.id = (SELECT max(id) FROM applications
+                             WHERE key = t.key)) AS has_applied;
 
 -- name: yesql-has-email-applied
-SELECT EXISTS (SELECT 1 FROM latest_applications
-               JOIN application_reviews
-               ON application_key = key
-               WHERE haku = :haku_oid
-                   AND email = :email
-                   AND state <> 'inactivated') AS has_applied;
+SELECT EXISTS (SELECT 1 FROM (SELECT a.id, a.key FROM applications AS a
+                              JOIN application_reviews
+                              ON application_key = a.key
+                              WHERE a.haku = :haku_oid AND
+                                    a.email = :email AND
+                                    state <> 'inactivated') AS t
+               WHERE t.id = (SELECT max(id) FROM applications
+                             WHERE key = t.key)) AS has_applied;
 
 -- name: yesql-get-latest-application-by-key
 SELECT
