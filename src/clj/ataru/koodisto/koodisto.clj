@@ -52,7 +52,3 @@
   (->> (get-koodisto-options koodisto-cache uri version)
        (map :value)
        (into #{})))
-
-(defn list-all-koodistos
-  []
-  (koodisto-cache/list-koodistos))
