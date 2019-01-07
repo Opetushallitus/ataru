@@ -36,8 +36,10 @@
        :value       @search-term
        :on-change   (fn [evt] (dispatch [:application/search-by-term (-> evt .-target .-value)]))}]
      (when-not (clojure.string/blank? @search-term)
-       [:span.application__search-control-clear-search-term
-        {:on-click #(dispatch [:application/clear-applications-haku-and-form-selections])}
+       [:a.application__search-control-clear-search-term
+        (if-let [link-to-original-search @(subscribe [:application/path-to-search-without-term])]
+          {:href link-to-original-search}
+          {:on-click #(dispatch [:application/clear-applications-haku-and-form-selections])})
         [:i.zmdi.zmdi-close]])]))
 
 (defn search-term-tab [tab-id selected-tab link-url label-text title-text]
@@ -119,13 +121,13 @@
 
 (defn haku-info-link
   [{:keys [oid] :as haku}]
-  (hakemus-list-link (str "/lomake-editori/applications/haku/" oid)
+  (hakemus-list-link @(subscribe [:application/path-to-haku-search oid])
                      @(subscribe [:application/haku-name oid])
                      haku))
 
 (defn hakukohde-info-link
   [{:keys [oid] :as hakukohde}]
-  (hakemus-list-link (str "/lomake-editori/applications/hakukohde/" oid)
+  (hakemus-list-link @(subscribe [:application/path-to-hakukohde-search oid])
                      @(subscribe [:application/hakukohde-and-tarjoaja-name oid])
                      hakukohde
                      true))
