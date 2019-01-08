@@ -1378,99 +1378,102 @@ You will receive a confirmation of your application to your email."}
                                                  :en "Auto-save: disabled"}})
 
 (def state-translations
-  {:active               {:fi "Aktiivinen"
-                          :sv "Aktiv"
-                          :en "EN: Aktiivinen"}
-   :passive              {:fi "Passiivinen"
-                          :sv "Passiv"
-                          :en "EN: Passiivinen"}
-   :unprocessed          {:fi "Käsittelemättä"
-                          :sv "Obehandlad"
-                          :en "EN: Käsittelemättä"}
-   :processing           {:fi "Käsittelyssä"
-                          :sv "Under behandling"
-                          :en "EN: Käsittelyssä"}
-   :invited-to-interview {:fi "Kutsuttu haast."
-                          :sv "Kallade till intervju"
-                          :en "EN: Kutsuttu haast."}
-   :invited-to-exam      {:fi "Kutsuttu valintak."
-                          :sv "Kallade till urvalsprov"
-                          :en "EN: Kutsuttu valintak."}
-   :evaluating           {:fi "Arvioinnissa"
-                          :sv "Under bedömning"
-                          :en "EN: Arvioinnissa"}
-   :processed            {:fi "Käsitelty"
-                          :sv "Behandlad"
-                          :en "EN: Käsitelty"}
-   :information-request  {:fi "Täydennyspyyntö"
-                          :sv "Begäran om komplettering"
-                          :en "EN: Täydennyspyyntö"}
-   :incomplete           {:fi "Kesken"
-                          :sv "Inte färdig"
-                          :en "EN: Kesken"}
-   :selection            {:fi "Valintaesitys"
-                          :sv "Antagningsförslag"
-                          :en "EN: Valintaesitys"}
-   :reserve              {:fi "Varalla"
-                          :sv "På reserv"
-                          :en "EN: Varalla"}
-   :selected             {:fi "Hyväksytty"
-                          :sv "Godkänd"
-                          :en "EN: Hyväksytty"}
-   :rejected             {:fi "Hylätty"
-                          :sv "Underkänd"
-                          :en "EN: Hylätty"}
-   :unreviewed           {:fi "Tarkastamatta"
-                          :sv "Inte granskad"
-                          :en "EN: Tarkastamatta"}
-   :fulfilled            {:fi "Täyttyy"
-                          :sv "Fylls"
-                          :en "EN: Täyttyy"}
-   :unfulfilled          {:fi "Ei täyty"
-                          :sv "Fylls inte"
-                          :en "EN: Ei täyty"}
-   :eligible             {:fi "Hakukelpoinen"
-                          :sv "Ansökningsbehörig"
-                          :en "EN: Hakukelpoinen"}
-   :uneligible           {:fi "Ei hakukelpoinen"
-                          :sv "Inte ansökningsbehörig"
-                          :en "EN: Ei hakukelpoinen"}
-   :obligated            {:fi "Velvollinen"
-                          :sv "Förpliktad"
-                          :en "EN: Velvollinen"}
-   :not-obligated        {:fi "Ei velvollinen"
-                          :sv "Inte förpliktad"
-                          :en "EN: Ei velvollinen"}
-   :processing-state     {:fi "Käsittelyvaihe"
-                          :sv "Behandlingsskede"
-                          :en "EN: Käsittelyvaihe"}
-   :language-requirement {:fi "Kielitaitovaatimus"
-                          :sv "Språkkunskapskrav"
-                          :en "EN: Kielitaitovaatimus"}
-   :degree-requirement   {:fi "Tutkinnon kelpoisuus"
-                          :sv "Examens behörighet"
-                          :en "EN: Tutkinnon kelpoisuus"}
-   :eligibility-state    {:fi "Hakukelpoisuus"
-                          :sv "Ansökningsbehörighet"
-                          :en "EN: Hakukelpoisuus"}
-   :payment-obligation   {:fi "Maksuvelvollisuus"
-                          :sv "Betalningsskyldighet"
-                          :en "EN: Maksuvelvollisuus"}
-   :selection-state      {:fi "Valinta"
-                          :sv "Antagning"
-                          :en "EN: Valinta"}
-   :not-checked          {:fi "Tarkastamatta"
-                          :sv "Inte granskad"
-                          :en "EN: Tarkastamatta"}
-   :checked              {:fi "Tarkistettu"
-                          :sv "Granskad"
-                          :en "EN: Tarkistettu"}
-   :incomplete-answer    {:fi "Puutteellinen"
-                          :sv "Bristfällig"
-                          :en "EN: Puutteellinen"}
-   :attachmentless       {:fi "Liitteettömät"
-                          :sv "Utan bilagor"
-                          :en "EN: Liitteettömät"}})
+  {:active                 {:fi "Aktiivinen"
+                            :sv "Aktiv"
+                            :en "EN: Aktiivinen"}
+   :passive                {:fi "Passiivinen"
+                            :sv "Passiv"
+                            :en "EN: Passiivinen"}
+   :unprocessed            {:fi "Käsittelemättä"
+                            :sv "Obehandlad"
+                            :en "EN: Käsittelemättä"}
+   :processing             {:fi "Käsittelyssä"
+                            :sv "Under behandling"
+                            :en "EN: Käsittelyssä"}
+   :invited-to-interview   {:fi "Kutsuttu haast."
+                            :sv "Kallade till intervju"
+                            :en "EN: Kutsuttu haast."}
+   :invited-to-exam        {:fi "Kutsuttu valintak."
+                            :sv "Kallade till urvalsprov"
+                            :en "EN: Kutsuttu valintak."}
+   :evaluating             {:fi "Arvioinnissa"
+                            :sv "Under bedömning"
+                            :en "EN: Arvioinnissa"}
+   :processed              {:fi "Käsitelty"
+                            :sv "Behandlad"
+                            :en "EN: Käsitelty"}
+   :information-request    {:fi "Täydennyspyyntö"
+                            :sv "Begäran om komplettering"
+                            :en "EN: Täydennyspyyntö"}
+   :incomplete             {:fi "Kesken"
+                            :sv "Inte färdig"
+                            :en "EN: Kesken"}
+   :selection              {:fi "Valintaesitys"
+                            :sv "Antagningsförslag"
+                            :en "EN: Valintaesitys"}
+   :reserve                {:fi "Varalla"
+                            :sv "På reserv"
+                            :en "EN: Varalla"}
+   :selected               {:fi "Hyväksytty"
+                            :sv "Godkänd"
+                            :en "EN: Hyväksytty"}
+   :rejected               {:fi "Hylätty"
+                            :sv "Underkänd"
+                            :en "EN: Hylätty"}
+   :unreviewed             {:fi "Tarkastamatta"
+                            :sv "Inte granskad"
+                            :en "EN: Tarkastamatta"}
+   :fulfilled              {:fi "Täyttyy"
+                            :sv "Fylls"
+                            :en "EN: Täyttyy"}
+   :unfulfilled            {:fi "Ei täyty"
+                            :sv "Fylls inte"
+                            :en "EN: Ei täyty"}
+   :eligible               {:fi "Hakukelpoinen"
+                            :sv "Ansökningsbehörig"
+                            :en "EN: Hakukelpoinen"}
+   :uneligible             {:fi "Ei hakukelpoinen"
+                            :sv "Inte ansökningsbehörig"
+                            :en "EN: Ei hakukelpoinen"}
+   :conditionally-eligible {:fi "Ehdollisesti hakukelpoinen"
+                            :sv "SV: Ehdollisesti hakukelpoinen"
+                            :en "EN: Ehdollisesti hakukelpoinen"}
+   :obligated              {:fi "Velvollinen"
+                            :sv "Förpliktad"
+                            :en "EN: Velvollinen"}
+   :not-obligated          {:fi "Ei velvollinen"
+                            :sv "Inte förpliktad"
+                            :en "EN: Ei velvollinen"}
+   :processing-state       {:fi "Käsittelyvaihe"
+                            :sv "Behandlingsskede"
+                            :en "EN: Käsittelyvaihe"}
+   :language-requirement   {:fi "Kielitaitovaatimus"
+                            :sv "Språkkunskapskrav"
+                            :en "EN: Kielitaitovaatimus"}
+   :degree-requirement     {:fi "Tutkinnon kelpoisuus"
+                            :sv "Examens behörighet"
+                            :en "EN: Tutkinnon kelpoisuus"}
+   :eligibility-state      {:fi "Hakukelpoisuus"
+                            :sv "Ansökningsbehörighet"
+                            :en "EN: Hakukelpoisuus"}
+   :payment-obligation     {:fi "Maksuvelvollisuus"
+                            :sv "Betalningsskyldighet"
+                            :en "EN: Maksuvelvollisuus"}
+   :selection-state        {:fi "Valinta"
+                            :sv "Antagning"
+                            :en "EN: Valinta"}
+   :not-checked            {:fi "Tarkastamatta"
+                            :sv "Inte granskad"
+                            :en "EN: Tarkastamatta"}
+   :checked                {:fi "Tarkistettu"
+                            :sv "Granskad"
+                            :en "EN: Tarkistettu"}
+   :incomplete-answer      {:fi "Puutteellinen"
+                            :sv "Bristfällig"
+                            :en "EN: Puutteellinen"}
+   :attachmentless         {:fi "Liitteettömät"
+                            :sv "Utan bilagor"
+                            :en "EN: Liitteettömät"}})
 
 (def excel-texts
   {:name                     {:fi "Nimi"

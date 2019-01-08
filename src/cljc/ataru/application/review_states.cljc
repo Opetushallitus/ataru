@@ -35,7 +35,8 @@
 (def application-hakukohde-eligibility-states
   [["unreviewed" (:unreviewed state-translations)]
    ["eligible" (:eligible state-translations)]
-   ["uneligible" (:uneligible state-translations)]])
+   ["uneligible" (:uneligible state-translations)]
+   ["conditionally-eligible" (:conditionally-eligible state-translations)]])
 
 (def application-payment-obligation-states
   [["unreviewed" (:unreviewed state-translations)]

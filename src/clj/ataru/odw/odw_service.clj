@@ -7,9 +7,10 @@
 (defn- get-hakukelpoisuus
   [application hakukohde-oid]
   (case (get-in application [:eligibilities (keyword hakukohde-oid)] "unreviewed")
-    "unreviewed" "NOT_CHECKED"
-    "eligible"   "ELIGIBLE"
-    "uneligible" "INELIGIBLE"))
+    "unreviewed"             "NOT_CHECKED"
+    "eligible"               "ELIGIBLE"
+    "uneligible"             "INELIGIBLE"
+    "conditionally-eligible" "CONDITIONALLY_ELIGIBLE"))
 
 (defn- get-maksuvelvollisuus
   [application hakukohde-oid]

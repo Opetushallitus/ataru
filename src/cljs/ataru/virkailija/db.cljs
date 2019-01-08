@@ -27,9 +27,10 @@
                                                        :degree-requirement   {:unreviewed  true
                                                                               :fulfilled   true
                                                                               :unfulfilled true}
-                                                       :eligibility-state    {:unreviewed true
-                                                                              :eligible   true
-                                                                              :uneligible true}
+                                                       :eligibility-state    {:unreviewed             true
+                                                                              :eligible               true
+                                                                              :uneligible             true
+                                                                              :conditionally-eligible true}
                                                        :payment-obligation   {:unreviewed    true
                                                                               :obligated     true
                                                                               :not-obligated true}
