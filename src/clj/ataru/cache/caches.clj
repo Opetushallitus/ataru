@@ -67,7 +67,9 @@
      (redis/map->Cache
       {:name            "hakukohde-search"
        :loader          (cache/->FunctionCacheLoader tarjonta-service/hakukohde-search-cache-loader-fn)
-       :ttl-after-write [1 TimeUnit/HOURS]})
+       :ttl-after-read  [3 TimeUnit/DAYS]
+       :ttl-after-write [3 TimeUnit/DAYS]
+       :update-period   [15 TimeUnit/MINUTES]})
      [:redis])]
    [:statistics-month-cache
     (component/using
