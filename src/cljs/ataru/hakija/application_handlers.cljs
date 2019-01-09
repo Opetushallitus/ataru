@@ -19,7 +19,8 @@
 (defn initialize-db [_ _]
   {:form        nil
    :application {:attachments-id (random-uuid)
-                 :answers        {}}})
+                 :answers        {}
+                 :feedback       {:hidden? true}}})
 
 (defn- required? [field-descriptor]
   (some (partial = "required")
@@ -123,7 +124,10 @@
             :handler [:application/handle-form]}}))
 
 (defn handle-submit [db _]
-  (assoc-in db [:application :submit-status] :submitted))
+  (let [feedback-status (-> db :application :feedback :status)]
+    (cond-> (assoc-in db [:application :submit-status] :submitted)
+            (not= feedback-status :feedback-submitted)
+            (assoc-in [:application :feedback :hidden?] false))))
 
 (defn send-application [db method]
   (when-not (-> db :application :submit-status)

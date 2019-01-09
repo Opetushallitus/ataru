@@ -140,67 +140,73 @@
 
 (defn feedback-form
   [feedback-hidden?]
-  (let [submit-status     (subscribe [:state-query [:application :submit-status]])
-        star-hovered      (subscribe [:state-query [:application :feedback :star-hovered]])
+  (let [star-hovered      (subscribe [:state-query [:application :feedback :star-hovered]])
         stars             (subscribe [:state-query [:application :feedback :stars]])
         rating-status     (subscribe [:state-query [:application :feedback :status]])
-        virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])
-        show-feedback?    (reaction (and (= :submitted @submit-status)
-                                         (not @feedback-hidden?)))]
+        virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])]
     (fn []
       (let [rated?     (= :rating-given @rating-status)
             submitted? (= :feedback-submitted @rating-status)]
-        (when (and @show-feedback? (nil? @virkailija-secret))
-          [:div.application-feedback-form
-           [:a.application-feedback-form__close-button
-            {:on-click #(dispatch [:application/rating-form-toggle])}
-            [:i.zmdi.zmdi-close.close-details-button-mark]]
-           [:div.application-feedback-form-container
-            (when (not submitted?)
-              [:h2.application-feedback-form__header (get-translation :feedback-header)])
-            (when (not submitted?)
-              [:div.application-feedback-form__rating-container.animated.zoomIn
-               {:on-click      #(dispatch [:application/rating-submit (star-number-from-event %)])
-                :on-mouse-out  #(dispatch [:application/rating-hover 0])
-                :on-mouse-over #(dispatch [:application/rating-hover (star-number-from-event %)])}
-               (let [stars-active (or @stars @star-hovered 0)]
-                 (map (fn [n]
-                        (let [star-classes (if (< n stars-active)
-                                             :i.application-feedback-form__rating-star.application-feedback-form__rating-star--active.zmdi.zmdi-star
-                                             :i.application-feedback-form__rating-star.application-feedback-form__rating-star--inactive.zmdi.zmdi-star-outline)]
-                          [star-classes
-                           {:key         (str "rating-star-" n)
-                            :data-star-n (inc n)}])) (range 5)))])
-            (when (not submitted?)
-              [:div.application-feedback-form__rating-text
-               (let [stars-selected (or @stars @star-hovered)]
-                 (if (and (int? stars-selected)
-                          (< 0 stars-selected 6))
-                   (get (get-translation :feedback-ratings) stars-selected)
-                   (gstring/unescapeEntities "&nbsp;")))])
-            (when (not submitted?)
-              [:div.application-feedback-form__text-feedback-container
-               [:textarea.application__form-text-input.application__form-text-area.application__form-text-area__size-medium
-                {:on-change   #(dispatch [:application/rating-update-feedback (.-value (.-target %))])
-                 :placeholder (get-translation :feedback-text-placeholder)
-                 :max-length  2000}]])
-            (when (and (not submitted?)
-                       rated?)
-              [:a.application__send-feedback-button.application__send-feedback-button--enabled
-               {:on-click (fn [evt]
-                            (.preventDefault evt)
-                            (dispatch [:application/rating-feedback-submit]))}
-               (get-translation :feedback-send)])
-            (when (and (not submitted?)
-                       (not rated?))
-              [:a.application__send-feedback-button.application__send-feedback-button--disabled
-               (get-translation :feedback-send)])
-            (when (not submitted?)
-              [:div.application-feedback-form__disclaimer (get-translation :feedback-disclaimer)])
-            (when submitted?
-              [:div.application__thanks
-               [:i.zmdi.zmdi-thumb-up.application__thanks-icon]
-               [:span.application__thanks-text (get-translation :feedback-thanks)]])]])))))
+        [:div.application-feedback-form
+         (when (not submitted?)
+           [:div.application-feedback-form-handle
+            [:a
+             {:on-click #(dispatch [:application/rating-form-toggle])}
+             (get-translation :feedback-handle)
+             (if @feedback-hidden?
+               [:i.zmdi.zmdi-chevron-up]
+               [:i.zmdi.zmdi-chevron-down])]])
+         (when (and (not @feedback-hidden?) (nil? @virkailija-secret))
+           [:div.application-feedback-form-inner
+            [:a.application-feedback-form__close-button
+             {:on-click #(dispatch [:application/rating-form-toggle])}
+             [:i.zmdi.zmdi-close.close-details-button-mark]]
+            [:div.application-feedback-form-container
+             (when (not submitted?)
+               [:h2.application-feedback-form__header (get-translation :feedback-header)])
+             (when (not submitted?)
+               [:div.application-feedback-form__rating-container.animated.zoomIn
+                {:on-click      #(dispatch [:application/rating-submit (star-number-from-event %)])
+                 :on-mouse-out  #(dispatch [:application/rating-hover 0])
+                 :on-mouse-over #(dispatch [:application/rating-hover (star-number-from-event %)])}
+                (let [stars-active (or @stars @star-hovered 0)]
+                  (map (fn [n]
+                         (let [star-classes (if (< n stars-active)
+                                              :i.application-feedback-form__rating-star.application-feedback-form__rating-star--active.zmdi.zmdi-star
+                                              :i.application-feedback-form__rating-star.application-feedback-form__rating-star--inactive.zmdi.zmdi-star-outline)]
+                           [star-classes
+                            {:key         (str "rating-star-" n)
+                             :data-star-n (inc n)}])) (range 5)))])
+             (when (not submitted?)
+               [:div.application-feedback-form__rating-text
+                (let [stars-selected (or @stars @star-hovered)]
+                  (if (and (int? stars-selected)
+                           (< 0 stars-selected 6))
+                    (get (get-translation :feedback-ratings) stars-selected)
+                    (gstring/unescapeEntities "&nbsp;")))])
+             (when (not submitted?)
+               [:div.application-feedback-form__text-feedback-container
+                [:textarea.application__form-text-input.application__form-text-area.application__form-text-area__size-medium
+                 {:on-change   #(dispatch [:application/rating-update-feedback (.-value (.-target %))])
+                  :placeholder (get-translation :feedback-text-placeholder)
+                  :max-length  2000}]])
+             (when (and (not submitted?)
+                        rated?)
+               [:a.application__send-feedback-button.application__send-feedback-button--enabled
+                {:on-click (fn [evt]
+                             (.preventDefault evt)
+                             (dispatch [:application/rating-feedback-submit]))}
+                (get-translation :feedback-send)])
+             (when (and (not submitted?)
+                        (not rated?))
+               [:a.application__send-feedback-button.application__send-feedback-button--disabled
+                (get-translation :feedback-send)])
+             (when (not submitted?)
+               [:div.application-feedback-form__disclaimer (get-translation :feedback-disclaimer)])
+             (when submitted?
+               [:div.application__thanks
+                [:i.zmdi.zmdi-thumb-up.application__thanks-icon]
+                [:span.application__thanks-text (get-translation :feedback-thanks)]])]])]))))
 
 (defn- submitted-overlay
   []
@@ -208,12 +214,13 @@
         submit-notification-hidden? (r/atom false)
         feedback-hidden?            (subscribe [:state-query [:application :feedback :hidden?]])]
     (fn []
-      (when (and (= :submitted @submit-status)
-                 (or (not @feedback-hidden?)
-                     (not @submit-notification-hidden?)))
+      (let [submitted? (= :submitted @submit-status)]
         [:div.application__submitted-overlay
-         (when (not @feedback-hidden?) [feedback-form feedback-hidden?])
-         (when (not @submit-notification-hidden?) [submit-notification submit-notification-hidden?])]))))
+         {:class (when (= :submitted @submit-status) "application__submitted-overlay--submitted")}
+         [feedback-form feedback-hidden?]
+         (when (and submitted?
+                    (not @submit-notification-hidden?))
+           [submit-notification submit-notification-hidden?])]))))
 
 (defn error-display []
   (let [error-code (subscribe [:state-query [:error :code]])]

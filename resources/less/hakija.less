@@ -1646,6 +1646,11 @@ th.application__readonly-adjacent--header {
   display: flex;
   flex-flow: column-reverse nowrap;
   justify-content: space-between;
+  pointer-events: none;
+}
+
+.application__submitted-overlay--submitted {
+  pointer-events: auto;
 }
 
 .application__submitted-submit-notification {
@@ -1676,13 +1681,30 @@ th.application__readonly-adjacent--header {
 }
 
 .application-feedback-form {
-  padding: 10px 20px;
+  flex: 0 0 auto;
+  align-self: flex-end;
+  position: relative;
+  width: 100%;
+  pointer-events: auto;
+}
+
+.application-feedback-form-inner {
   background-color: @white;
   border: 1px solid @separator-color;
   box-shadow: @modal-shadow;
-  flex: 0 0 auto;
-  width: 100%;
-  align-self: flex-end;
+  padding: 10px 20px;
+}
+
+.application-feedback-form-handle {
+  position: absolute;
+  top: -40px;
+  right: 10%;
+  height: 40px;
+  border: 1px solid @separator-color;
+  border-bottom: none;
+  border-radius: 5px 5px 0 0;
+  padding: 10px;
+  background-color: @white;
 }
 
 .application-feedback-form__close-button {

@@ -122,9 +122,9 @@
    :feedback-disclaimer                         {:fi "Yhteystietojasi ei käytetä tai yhdistetä palautteen tietoihin."
                                                  :en "Your personal information is not sent or associated with the feedback given."
                                                  :sv "Dina kontaktuppgifter används inte och kopplas inte heller ihop med responsuppgifterna."}
-   :feedback-header                             {:fi "Kerro vielä mitä pidit hakulomakkeesta"
-                                                 :en "Care to take a moment to rate our application form?"
-                                                 :sv "Berätta ännu vad du tyckte om ansökningsblanketten"}
+   :feedback-header                             {:fi "Kerro mitä pidit hakulomakkeesta!"
+                                                 :en "Please provide feedback on our application form!"
+                                                 :sv "Berätta vad du tyckte om ansökningsblanketten!"}
    :feedback-ratings                            {:fi {1 "Huono"
                                                       2 "Välttävä"
                                                       3 "Tyydyttävä"
@@ -149,6 +149,9 @@
    :feedback-thanks                             {:fi "Kiitos palautteestasi!"
                                                  :en "Thank you for your feedback!"
                                                  :sv "Tack för din respons!"}
+   :feedback-handle                             {:fi "Anna palautetta "
+                                                 :sv "SV Anna palautetta"
+                                                 :en "Give feedback"}
    :file-size-info                              {:fi "Tiedoston maksimikoko on %s"
                                                  :en "Maximum file size is %s"
                                                  :sv "Den maximala filstorleken är %s"}
