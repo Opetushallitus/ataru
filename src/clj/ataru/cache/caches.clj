@@ -2,6 +2,7 @@
   (:require [ataru.cache.cache-service :as cache]
             [ataru.cache.redis-cache :as redis]
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
+            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.ohjausparametrit.ohjausparametrit-client :as ohjausparametrit-client]
             [ataru.statistics.statistics-service :as s]
             [ataru.koodisto.koodisto-db-cache :as koodisto-cache]
@@ -65,7 +66,7 @@
     (component/using
      (redis/map->Cache
       {:name            "hakukohde-search"
-       :loader          (cache/->FunctionCacheLoader tarjonta-client/hakukohde-search)
+       :loader          (cache/->FunctionCacheLoader tarjonta-service/hakukohde-search-cache-loader-fn)
        :ttl-after-write [1 TimeUnit/HOURS]})
      [:redis])]
    [:statistics-month-cache

@@ -87,8 +87,12 @@
   [hakukohde-search-cache haku-oid organization-oid]
   (parse-search-result (cache/get-from
                         hakukohde-search-cache
-                        {:haku-oid         haku-oid
-                         :organization-oid organization-oid})))
+                        (str haku-oid "#" organization-oid))))
+
+(defn hakukohde-search-cache-loader-fn
+  [key]
+  (let [[haku-oid organization-oid] (clojure.string/split key #"#")]
+    (client/hakukohde-search haku-oid organization-oid)))
 
 (defrecord CachedTarjontaService [koulutus-cache
                                   hakukohde-cache
