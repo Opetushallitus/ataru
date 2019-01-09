@@ -150,7 +150,7 @@
                                                  :en "Thank you for your feedback!"
                                                  :sv "Tack för din respons!"}
    :feedback-handle                             {:fi "Anna palautetta "
-                                                 :sv "SV Anna palautetta"
+                                                 :sv "Ge feedback"
                                                  :en "Give feedback"}
    :file-size-info                              {:fi "Tiedoston maksimikoko on %s"
                                                  :en "Maximum file size is %s"
