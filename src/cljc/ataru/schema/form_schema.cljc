@@ -346,7 +346,7 @@
    :key                                             s/Str
    :lang                                            s/Str
    :state                                           s/Str
-   :score                                           (s/maybe s/Int)
+   :score                                           (s/maybe s/Num)
    :new-application-modifications                   s/Int
    :person                                          {:oid            (s/maybe s/Str)
                                                      :preferred-name s/Str
@@ -556,7 +556,7 @@
    :application-key                     s/Str
    (s/optional-key :modified-time)      org.joda.time.DateTime
    :state                               s/Str
-   (s/optional-key :score)              (s/maybe s/Int)
+   (s/optional-key :score)              (s/maybe s/Num)
    (s/optional-key :hakukohde-reviews)  HakukohdeReviews
    (s/optional-key :attachment-reviews) AttachmentReviews})
 
