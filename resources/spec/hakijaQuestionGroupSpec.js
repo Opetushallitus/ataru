@@ -204,7 +204,7 @@
           })
         )
         it('submits the application and shows the feedback form', function() {
-          expect(testFrame().find('.application-feedback-form').length).to.equal(1)
+          expect(testFrame().find('.application-feedback-form-inner').length).to.equal(1)
         })
       })
 
@@ -213,7 +213,7 @@
           clickElement(function() { return testFrame().find('.application-feedback-form__close-button') })
         )
         it('closes the feedback form and shows the read-only view', function() {
-          expect(testFrame().find('.application-feedback-form').length).to.equal(0)
+          expect(testFrame().find('.application-feedback-form-inner').length).to.equal(0)
           expect(readonlyAnswer(0)).to.equal('Etunimi Tokanimi')
           expect(readonlyAnswer(1)).to.equal('Etunimi')
           expect(readonlyAnswer(2)).to.equal('Sukunimi')
