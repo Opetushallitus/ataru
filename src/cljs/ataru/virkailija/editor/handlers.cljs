@@ -507,7 +507,9 @@
                                     (reduce-kv #(assoc %1 %2 (str %3 " - KOPIO"))
                                                {}
                                                name))))]
-    (post-new-form (select-keys form [:name :content :languages :organization-oid]))
+    (post-new-form (merge
+                     (select-keys form [:name :content :languages :organization-oid])
+                     {:locked nil :locked-by nil}))
     db))
 
 (reg-event-db :editor/copy-form copy-form)
