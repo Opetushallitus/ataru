@@ -117,7 +117,9 @@
        (nil? new-in-right)))
 
 (defn- remove-irrelevant-changes [field]
-  (update field :params dissoc :info-text))
+  (-> field
+      (update :params dissoc :info-text)
+      (dissoc :metadata)))
 
 (defn forms-differ? [application tarjonta-info form-left form-right]
   (and (not= (:id form-left) (:id form-right))
@@ -130,8 +132,8 @@
                                        (filter #(visible? % field-by-id answers hakutoiveet
                                                           (-> tarjonta-info :tarjonta :hakukohteet)))
                                        (map remove-irrelevant-changes))))
-             fields-left    (visible-fields form-left)
-             fields-right   (visible-fields form-right)]
+             fields-left    (sort-by :id (visible-fields form-left))
+             fields-right   (sort-by :id (visible-fields form-right))]
          (not (fields-equal? (diff fields-left fields-right))))))
 
 (defn get-application-with-human-readable-koodis
