@@ -67,21 +67,22 @@
       (assoc-in form [:content hakukohteet-field-idx] updated-field))))
 
 (defn- populate-attachment-deadline
-  [hakuajat field]
+  [now hakuajat field]
   (if-let [label (and (= (:fieldType field) "attachment")
                       (or (some-> (-> field :params :deadline)
                                   (hakuaika/str->date-time)
                                   (hakuaika/date-time->localized-date-time))
-                          (some-> (hakuaika/select-hakuaika-for-field field hakuajat)
+                          (some-> (hakuaika/select-hakuaika-for-field now field hakuajat)
                                   hakuaika/attachment-edit-end
                                   (hakuaika/date-time->localized-date-time))))]
     (assoc-in field [:params :deadline-label] label)
     field))
 
-(defn populate-attachment-deadlines [form hakukohteet]
+(defn populate-attachment-deadlines [form now hakukohteet]
   (let [hakuajat (hakuaika/index-hakuajat hakukohteet)]
     (update form :content (partial util/map-form-fields
                                    (partial populate-attachment-deadline
+                                            now
                                             hakuajat)))))
 
 (defn populate-hakukohde-answer-options [form tarjonta-info]

@@ -68,22 +68,22 @@
 
 (def deadline-format (f/formatter "dd.MM.yyyy HH:mm" (time/time-zone-for-id "Europe/Helsinki")))
 
-(defn- editing-allowed-by-custom-deadline? [field]
+(defn- editing-allowed-by-custom-deadline? [now field]
   (some->> (custom-deadline field)
            (f/parse deadline-format)
-           (time/before? (time/now))))
+           (time/before? now)))
 
 (defn- editing-allowed-by-hakuaika?
-  [field hakuajat application-in-processing-state?]
-  (let [hakuaika            (hakuaika/select-hakuaika-for-field field hakuajat)
+  [now field hakuajat application-in-processing-state?]
+  (let [hakuaika            (hakuaika/select-hakuaika-for-field now field hakuajat)
         hakuaika-start      (some-> hakuaika :start t/from-long)
         hakuaika-end        (some-> hakuaika :end t/from-long)
         attachment-edit-end (hakuaika/attachment-edit-end hakuaika)
         hakukierros-end     (some-> hakuaika :hakukierros-end t/from-long)
         after?              (fn [t] (or (nil? t)
-                                        (time/after? (time/now) t)))
+                                        (time/after? now t)))
         before?             (fn [t] (and (some? t)
-                                         (time/before? (time/now) t)))]
+                                         (time/before? now t)))]
     (or (nil? hakuaika)
         (and (not (and application-in-processing-state? (:jatkuva-haku? hakuaika)))
              (after? hakuaika-start)
@@ -95,26 +95,26 @@
                         (keyword (:id field)))))))))
 
 (defn- uneditable?
-  [field hakuajat roles application-in-processing-state?]
+  [now field hakuajat roles application-in-processing-state?]
   (not (and (or (and (form-role/virkailija? roles)
                      (not (form-role/with-henkilo? roles)))
                 (not (contains? editing-forbidden-person-info-field-ids (keyword (:id field)))))
             (or (form-role/virkailija? roles)
                 (if (custom-deadline field)
-                  (editing-allowed-by-custom-deadline? field)
-                  (editing-allowed-by-hakuaika? field hakuajat application-in-processing-state?)))
+                  (editing-allowed-by-custom-deadline? now field)
+                  (editing-allowed-by-hakuaika? now field hakuajat application-in-processing-state?)))
             (or (form-role/virkailija? roles)
                 (not (and (empty? (:uniques hakuajat))
                           application-in-processing-state?))))))
 
 (defn flag-uneditable-and-unviewable-field
-  [hakuajat roles application-in-processing-state? field]
+  [now hakuajat roles application-in-processing-state? field]
   (if (= "formField" (:fieldClass field))
     (let [cannot-view? (and (contains? viewing-forbidden-person-info-field-ids
                                        (keyword (:id field)))
                             (not (form-role/virkailija? roles)))
           cannot-edit? (or cannot-view?
-                           (uneditable? field hakuajat roles application-in-processing-state?))]
+                           (uneditable? now field hakuajat roles application-in-processing-state?))]
       (assoc field
              :cannot-view cannot-view?
              :cannot-edit cannot-edit?))
@@ -122,12 +122,14 @@
 
 (s/defn ^:always-validate flag-uneditable-and-unviewable-fields :- s/Any
   [form :- s/Any
+   now :- s/Any
    hakukohteet :- s/Any
    roles :- [form-role/FormRole]
    application-in-processing-state? :- s/Bool]
   (let [hakuajat (hakuaika/index-hakuajat hakukohteet)]
     (update form :content (partial util/map-form-fields
                                    (partial flag-uneditable-and-unviewable-field
+                                            now
                                             hakuajat
                                             roles
                                             application-in-processing-state?)))))
@@ -152,12 +154,13 @@
    koodisto-cache :- s/Any
    hakukohteet :- s/Any
    application-in-processing-state? :- s/Bool]
-  (when-let [form (form-store/fetch-by-id id)]
-    (when (not (:deleted form))
-      (-> (koodisto/populate-form-koodisto-fields koodisto-cache form)
-          (remove-required-hakija-validator-if-virkailija roles)
-          (populate-attachment-deadlines hakukohteet)
-          (flag-uneditable-and-unviewable-fields hakukohteet roles application-in-processing-state?)))))
+  (let [now (time/now)]
+    (when-let [form (form-store/fetch-by-id id)]
+      (when (not (:deleted form))
+        (-> (koodisto/populate-form-koodisto-fields koodisto-cache form)
+            (remove-required-hakija-validator-if-virkailija roles)
+            (populate-attachment-deadlines now hakukohteet)
+            (flag-uneditable-and-unviewable-fields now hakukohteet roles application-in-processing-state?))))))
 
 (s/defn ^:always-validate fetch-form-by-key :- s/Any
   [key :- s/Any

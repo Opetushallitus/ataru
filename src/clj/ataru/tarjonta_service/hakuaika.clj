@@ -27,11 +27,10 @@
 (defn- jatkuva-haku? [haku]
   (clojure.string/starts-with? (:hakutapaUri haku) "hakutapa_03#"))
 
-(defn- hakuaika-on [start end]
-  (let [now (t/now)]
-    (and (t/after? now (c/from-long start))
-         (or (nil? end)
-             (t/before? now (c/from-long end))))))
+(defn hakuaika-on [now start end]
+  (and (t/after? now (c/from-long start))
+       (or (nil? end)
+           (t/before? now (c/from-long end)))))
 
 (defn- hakukohteen-hakuaika [haku hakukohde]
   (some #(when (= (:hakuaikaId hakukohde)
@@ -71,9 +70,9 @@
        (some? (:start hakuaika))
        (t/after? (c/from-long (:start hakuaika)) now)))
 
-(defn select-hakuaika [hakuajat]
+(defn select-hakuaika [now hakuajat]
   (or (last-by-ending (filter :on hakuajat))
-      (first-by-start (filter (partial not-yet-started (t/now)) hakuajat))
+      (first-by-start (filter (partial not-yet-started now) hakuajat))
       (last-by-ending hakuajat)))
 
 (defn index-hakuajat
@@ -87,8 +86,9 @@
            :by-oid  {}}
           hakukohteet))
 
-(defn select-hakuaika-for-field [field {:keys [uniques by-oid]}]
+(defn select-hakuaika-for-field [now field {:keys [uniques by-oid]}]
   (select-hakuaika
+   now
    (if-let [field-hakukohde-and-group-oids (seq (concat (:belongs-to-hakukohteet field)
                                                         (:belongs-to-hakukohderyhma field)))]
      (map by-oid field-hakukohde-and-group-oids)
@@ -107,7 +107,7 @@
   (assoc hakuaika :label {:start                 (millis->localized-date-time start)
                           :end                   (millis->localized-date-time end)})))
 
-(defn get-hakuaika-info [haku ohjausparametrit hakukohde]
+(defn get-hakuaika-info [now haku ohjausparametrit hakukohde]
   (let [[start end] (if (:kaytetaanHakukohdekohtaistaHakuaikaa hakukohde)
                       [(:hakuaikaAlkuPvm hakukohde)
                        (:hakuaikaLoppuPvm hakukohde)]
@@ -116,7 +116,7 @@
                          (:loppuPvm hakuaika)]))]
     (hakuaika-with-label {:start                               start
                           :end                                 end
-                          :on                                  (hakuaika-on start end)
+                          :on                                  (hakuaika-on now start end)
                           :attachment-modify-grace-period-days (-> ohjausparametrit :PH_LMT :value)
                           :jatkuva-haku?                       (jatkuva-haku? haku)
                           :hakukierros-end                     (-> ohjausparametrit :PH_HKP :date)})))

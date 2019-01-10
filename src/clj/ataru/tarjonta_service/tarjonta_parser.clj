@@ -1,5 +1,6 @@
 (ns ataru.tarjonta-service.tarjonta-parser
-  (:require [taoensso.timbre :as log]
+  (:require [clj-time.core :as t]
+            [taoensso.timbre :as log]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.tarjonta-service.tarjonta-service :refer [yhteishaku?]]
             [ataru.koodisto.koodisto :refer [get-koodisto-options]]
@@ -53,6 +54,7 @@
 
 (defn- parse-hakukohde
   [tarjonta-service
+   now
    hakukohderyhmat
    haku
    tarjonta-koulutukset
@@ -76,7 +78,7 @@
      :koulutukset                (->> (map :oid (:koulutukset hakukohde))
                                       (map #(get tarjonta-koulutukset %))
                                       (map parse-koulutus))
-     :hakuaika                   (hakuaika/get-hakuaika-info haku ohjausparametrit hakukohde)
+     :hakuaika                   (hakuaika/get-hakuaika-info now haku ohjausparametrit hakukohde)
      :applicable-base-educations (mapcat pohjakoulutukset-by-vaatimus (:hakukelpoisuusvaatimusUris hakukohde))}))
 
 (defn- pohjakoulutukset-by-vaatimus
@@ -94,7 +96,8 @@
           (some? organization-service)
           (some? ohjausparametrit-service)]}
    (when haku-oid
-     (let [hakukohderyhmat                   (->> (organization-service/get-hakukohde-groups
+     (let [now                               (t/now)
+           hakukohderyhmat                   (->> (organization-service/get-hakukohde-groups
                                                     organization-service)
                                                   (map :oid)
                                                   (set))
@@ -116,6 +119,7 @@
                                                   distinct
                                                   (tarjonta-protocol/get-koulutukset tarjonta-service))
            hakukohteet                       (map #(parse-hakukohde tarjonta-service
+                                                                    now
                                                                     hakukohderyhmat
                                                                     haku
                                                                     tarjonta-koulutukset
@@ -132,7 +136,7 @@
            :prioritize-hakukohteet           (:usePriority haku)
            :max-hakukohteet                  (when (and max-hakukohteet (pos? max-hakukohteet))
                                                max-hakukohteet)
-           :hakuaika                         (hakuaika/select-hakuaika (map :hakuaika hakukohteet))
+           :hakuaika                         (hakuaika/select-hakuaika now (map :hakuaika hakukohteet))
            :can-submit-multiple-applications (:canSubmitMultipleApplications haku)
            :yhteishaku                       (yhteishaku? haku)}}))))
   ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service haku-oid]
