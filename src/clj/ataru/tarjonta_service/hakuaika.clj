@@ -79,9 +79,9 @@
   [hakukohteet]
   (reduce (fn [{:keys [uniques by-oid]} {:keys [oid hakuaika hakukohderyhmat]}]
             {:uniques (conj uniques hakuaika)
-             :by-oid  (reduce #(assoc %1 %2 hakuaika)
-                              (assoc by-oid oid hakuaika)
-                              hakukohderyhmat)})
+             :by-oid  (reduce #(merge-with clojure.set/union %1 {%2 #{hakuaika}})
+                              by-oid
+                              (cons oid hakukohderyhmat))})
           {:uniques #{}
            :by-oid  {}}
           hakukohteet))
@@ -91,7 +91,9 @@
    now
    (if-let [field-hakukohde-and-group-oids (seq (concat (:belongs-to-hakukohteet field)
                                                         (:belongs-to-hakukohderyhma field)))]
-     (map by-oid field-hakukohde-and-group-oids)
+     (reduce #(clojure.set/union %1 (by-oid %2))
+             #{}
+             field-hakukohde-and-group-oids)
      uniques)))
 
 (defn attachment-edit-end [hakuaika]
