@@ -15,6 +15,7 @@
             [ataru.translations.texts :refer [email-default-texts]]
             [ataru.util :as util]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
+            [clj-time.core :as t]
             [clojure.string :as string]
             [markdown.core :as md]
             [medley.core :refer [find-first]]
@@ -131,7 +132,8 @@
     (assoc attachment :deadline (-> field :params :deadline-label lang))))
 
 (defn- create-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id]
-  (let [application                     (application-store/get-application application-id)
+  (let [now                             (t/now)
+        application                     (application-store/get-application application-id)
         hakukohteet                     (get-in (tarjonta-parser/parse-tarjonta-info-by-haku
                                                  koodisto-cache
                                                  tarjonta-service
@@ -142,7 +144,7 @@
                                                 [:tarjonta :hakukohteet])
         answers-by-key                  (-> application :answers util/answers-by-key)
         form                            (-> (forms/fetch-by-id (:form application))
-                                            (hakukohde/populate-attachment-deadlines hakukohteet))
+                                            (hakukohde/populate-attachment-deadlines now hakukohteet))
         lang                            (keyword (:lang application))
         attachment-keys-without-answers (->> (application-store/get-application-attachment-reviews (:key application))
                                              (map :attachment-key)
