@@ -752,9 +752,9 @@
 (re-frame/reg-sub
   :application/applications-have-base-education-answers
   (fn [db _]
-    (->> (-> db :application :applications)
-         (some #(not-empty (:base-education %)))
-         (boolean))))
+    (if-let [applications (-> db :application :applications seq)]
+      (some #(not-empty (:base-education %)) applications)
+      true)))
 
 (re-frame/reg-sub
   :application/loaded-applications-count
