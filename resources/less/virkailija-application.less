@@ -49,19 +49,6 @@
   user-select: none;
 }
 
-.application-handling__ensisijaisesti {
-  display: flex;
-  align-items: center;
-  color: @gray-of-the-beast;
-  font-size: 14px;
-  margin-left: 0px;
-  cursor: pointer;
-}
-
-.application-handling__ensisijaisesti-checkbox {
-  cursor: pointer;
-}
-
 .application-handling__ensisijaisesti-hakukohteeseen {
   padding-left: 23px;
 }
@@ -2327,26 +2314,20 @@ th.application__readonly-adjacent--header {
 
 .application-handling__filters-popup-content-container {
   display: flex;
-  width: 300px;
 }
 
-.application-handling__filters-popup-content-container--two-cols {
-  width: 800px;
+.application-handling__popup-column {
+  margin-right: 30px;
 }
 
-.application-handling__popup-column-left {
-  flex: 0 0 240px;
-}
-
-.application-handling__popup-column-right {
-  flex: 0 0 530px;
+.application-handling__popup-column--large {
+  min-width: 530px;
 }
 
 .application-handling__filter-checkbox-label {
-  display: block;
+  display: flex;
+  align-items: flex-start;
   .light;
-  padding-left: 19px;
-  text-indent: -19px;
   color: @gray;
   cursor: pointer;
   margin-bottom: 2px;
@@ -2364,8 +2345,9 @@ th.application__readonly-adjacent--header {
   margin-bottom: 10px;
 }
 
-.application-handling__filter-group-heading:first-child {
+.application-handling__filter-group-heading {
   margin-top: 0px;
+  margin-bottom: 10px;
 }
 
 .application-handling__filter-group-title {
