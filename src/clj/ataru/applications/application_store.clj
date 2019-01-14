@@ -815,8 +815,6 @@
                           :first_name       (:first-name session)
                           :last_name        (:last-name session)
                           :review_key       "processing-state"}]
-    (when (seq new-reviews)
-      (info "Updating" (count new-reviews) "application-hakukohde-reviews"))
     (doseq [new-review new-reviews]
       (yesql-upsert-application-hakukohde-review! new-review connection)
       (yesql-add-application-event<! (assoc new-event :hakukohde (:hakukohde new-review))
@@ -838,6 +836,7 @@
 
 (defn mass-update-application-states
   [session application-keys hakukohde-oid from-state to-state]
+  (info "Mass updating" (count application-keys) "applications from" from-state "to" to-state "with hakukohde" hakukohde-oid)
   (let [audit-log-entries (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (let [connection {:connection conn}]
                               (mapv
