@@ -543,17 +543,6 @@
     (-> db :application :modify-application-link :state nil?)))
 
 (re-frame/reg-sub
-  :application/massamuutos-enabled?
-  (fn [db _]
-    (let [applications             (-> db :application :applications)
-          yhteishaku?              (get-in db [:haut (-> db :application :selected-haku) :yhteishaku])
-          hakukohde-selected?      (-> db :application :selected-hakukohde)
-          hakukohderyhma-selected? (-> db :application :selected-hakukohderyhma)]
-      (or (not yhteishaku?)
-          hakukohde-selected?
-          hakukohderyhma-selected?))))
-
-(re-frame/reg-sub
   :application/loaded-applications
   (fn [db _]
     (-> db :application :applications)))
