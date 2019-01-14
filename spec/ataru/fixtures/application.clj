@@ -269,6 +269,19 @@
                                            :value     "toka vaihtoehto"
                                            :fieldType "dropdown"}])))
 
+(def person-info-form-application-with-empty-answers
+  (-> person-info-form-application-with-more-answers
+      (assoc :haku      "1.2.246.562.29.65950024186"
+             :hakukohde ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"])
+      (update :answers (comp vec concat)
+              [{:key       "more-answers-dropdown-id"
+                :value     nil
+                :fieldType "dropdown"}
+               {:key       "hakukohteet"
+                :value     ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
+                :fieldType "hakukohteet"
+                :label     {:fi "Hakukohteet" :sv "Ansökningsmål" :en "Application options"}}])))
+
 (def dropdown-followups
   [{:key       "dropdown-followup-1"
     :value     "followup-attachment"

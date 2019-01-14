@@ -83,7 +83,9 @@
          util/flatten-form-fields
          (keep (fn [{:keys [id cannot-edit]}]
                  (when (and cannot-edit
-                            (not= (:value (new-answers id))
+                            (not= (if (sequential? (:value (new-answers id)))
+                                    (seq (:value (new-answers id)))
+                                    (:value (new-answers id)))
                                   (:value (old-answers id))))
                    id))))))
 
