@@ -255,14 +255,14 @@
  :application/show-mass-update-link?
  (fn [db]
    (and (not-empty @(re-frame/subscribe [:application/loaded-applications]))
-        (contains? #{:selected-form-key :selected-haku :selected-hakukohde}
+        (contains? #{:selected-form-key :selected-haku :selected-hakukohde :selected-ryhman-ensisijainen-hakukohde}
                    @(re-frame/subscribe [:application/application-list-selected-by])))))
 
 (re-frame/reg-sub
  :application/show-excel-link?
  (fn [db]
    (and (not-empty @(re-frame/subscribe [:application/loaded-applications]))
-        (contains? #{:selected-form-key :selected-haku :selected-hakukohde :selected-hakukohderyhma}
+        (contains? #{:selected-form-key :selected-haku :selected-hakukohde :selected-hakukohderyhma :selected-ryhman-ensisijainen-hakukohde}
                    @(re-frame/subscribe [:application/application-list-selected-by])))))
 
 (defn- mass-information-request-button-enabled?
