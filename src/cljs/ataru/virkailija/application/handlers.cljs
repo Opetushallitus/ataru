@@ -279,6 +279,19 @@
   [m]
   (into {} (map (fn [[k v]] [(name k) v]) m)))
 
+(defn- reset-list
+  [db]
+  (-> db
+      (assoc-in [:application :applications] nil)
+      (assoc-in [:application :application-list-page] 0)
+      (assoc-in [:application :total-count] nil)
+      (assoc-in [:application :filtered-count] nil)))
+
+(reg-event-db
+  :application/reset-list
+  (fn [db _]
+    (reset-list db)))
+
 (reg-event-fx
   :application/handle-fetch-applications-response
   (fn [{:keys [db]} [_ {:keys [applications aggregate-data]}]]
@@ -370,9 +383,7 @@
                                                                      (extract-unselected-review-states-from-query
                                                                        :selection-state-filter
                                                                        review-states/application-hakukohde-selection-states)))
-                                             reset-list? (->
-                                                           (assoc-in [:application :application-list-page] 0)
-                                                           (assoc-in [:application :applications] [])))]
+                                             reset-list? (reset-list))]
     {:db         new-db
      :dispatch-n [(when reset-list? [:application/refresh-haut-and-hakukohteet])]
      :http       {:method              :post
@@ -399,11 +410,9 @@
 
 (reg-event-fx
   :application/reload-applications
-  (fn [{:keys [db]} _]
-    {:db       (-> db
-                   (assoc-in [:application :application-list-page] 0)
-                   (assoc-in [:application :applications] []))
-     :dispatch [:application/update-applications-immediate]}))
+  (fn [_ _]
+    {:dispatch-n [[:application/reset-list]
+                  [:application/update-applications-immediate]]}))
 
 (reg-event-fx
   :application/update-application-filters

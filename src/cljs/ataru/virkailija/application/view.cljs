@@ -340,32 +340,32 @@
               :hakukohde-selected?      #(= selected-hakukohde-oid %)
               :hakukohderyhma-selected? #(= selected-hakukohderyhma-oid %)}]
             [h-and-h/search-listing
-             {:id                         haku-oid
-              :haut                       [{:oid         haku-oid
-                                            :name        (get virkailija-texts :hakukohteet)
-                                            :hakukohteet hakukohteet}]
-              :hakukohderyhmat            hakukohderyhmat
-              :hakukohde-selected?        #(= selected-hakukohde-oid %)
-              :hakukohderyhma-selected?   #(= selected-hakukohderyhma-oid %)
-              :on-hakukohde-select        #(do (close-list)
-                                               (dispatch
-                                                [:application/navigate
-                                                 (str "/lomake-editori/applications/hakukohde/" %)]))
+             {:id                       haku-oid
+              :haut                     [{:oid         haku-oid
+                                          :name        (get virkailija-texts :hakukohteet)
+                                          :hakukohteet hakukohteet}]
+              :hakukohderyhmat          hakukohderyhmat
+              :hakukohde-selected?      #(= selected-hakukohde-oid %)
+              :hakukohderyhma-selected? #(= selected-hakukohderyhma-oid %)
+              :on-hakukohde-select      #(do (close-list)
+                                             (dispatch [:application/reset-list])
+                                             (dispatch [:application/navigate
+                                                (str "/lomake-editori/applications/hakukohde/" %)]))
               :on-hakukohde-unselect      #(do (close-list)
-                                               (dispatch
-                                                [:application/navigate
-                                                 (str "/lomake-editori/applications/haku/" haku-oid)]))
+                                               (dispatch [:application/reset-list])
+                                               (dispatch [:application/navigate
+                                                          (str "/lomake-editori/applications/haku/" haku-oid)]))
               :on-hakukohderyhma-select   #(do (close-list)
-                                               (dispatch
-                                                [:application/navigate
-                                                 (str "/lomake-editori/applications/haku/"
-                                                      haku-oid
-                                                      "/hakukohderyhma/"
-                                                      %)]))
+                                               (dispatch [:application/reset-list])
+                                               (dispatch [:application/navigate
+                                                          (str "/lomake-editori/applications/haku/"
+                                                               haku-oid
+                                                               "/hakukohderyhma/"
+                                                               %)]))
               :on-hakukohderyhma-unselect #(do (close-list)
-                                               (dispatch
-                                                [:application/navigate
-                                                 (str "/lomake-editori/applications/haku/" haku-oid)]))}]
+                                               (dispatch [:application/reset-list])
+                                               (dispatch [:application/navigate
+                                                          (str "/lomake-editori/applications/haku/" haku-oid)]))}]
             close-list])]))))
 
 (defn selected-applications-heading
