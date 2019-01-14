@@ -71,9 +71,6 @@
          :dispatch-debounced {:timeout  500
                               :id       :application-search
                               :dispatch [:application/fetch-applications-by-term term type]}}
-        {:db (-> db
-                 (set-search-term search-term)
-                 (assoc-in [:application :applications] nil)
-                 (assoc-in [:application :application-list-page] 0)
-                 (assoc-in [:application :total-count] nil)
-                 (assoc-in [:application :filtered-count] nil))}))))
+        {:dispatch [:application/reset-list]
+         :db       (-> db
+                       (set-search-term search-term))}))))
