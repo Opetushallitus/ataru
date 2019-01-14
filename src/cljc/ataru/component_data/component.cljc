@@ -33,7 +33,7 @@
    :params     {}})
 
 (defn dropdown-option []
-  {:value ""
+  {:value "0"
    :label {:fi "" :sv ""}})
 
 (defn dropdown [metadata]
