@@ -894,7 +894,9 @@
             :params              {:application-filter @(subscribe [:application/previous-application-fetch-params])
                                   :from-state         from-state
                                   :to-state           to-state
-                                  :hakukohde-oid      (-> db :application :selected-hakukohde)}
+                                  :hakukohde-oid      (or
+                                                        (-> db :application :selected-ryhman-ensisijainen-hakukohde)
+                                                        (-> db :application :selected-hakukohde))}
             :path                "/lomake-editori/api/applications/mass-update"
             :handler-or-dispatch :application/handle-mass-update-application-reviews}}))
 

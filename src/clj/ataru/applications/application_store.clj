@@ -802,7 +802,7 @@
                           application-key)
         existing-reviews (filter
                            #(= (:state %) from-state)
-                           (application-states/get-all-reviews-for-requirement "processing-state" application (seq hakukohde-oid)))
+                           (application-states/get-all-reviews-for-requirement "processing-state" application [hakukohde-oid]))
         new-reviews      (map
                            #(-> %
                                 (assoc :state to-state)
