@@ -321,18 +321,6 @@
       (clojure.string/split #",")
       (cljs-util/get-unselected-review-states states)))
 
-(defn- get-previous-fetch-request-data
-  [db]
-  (let [previous-fetch (-> db :application :previous-fetch)]
-    (merge
-      {:states-and-filters
-       {:attachment-states-to-include (:attachment-states previous-fetch)
-        :processing-states-to-include (:processing-states previous-fetch)
-        :selection-states-to-include  (:selection-states previous-fetch)
-        :selected-hakukohteet         @(subscribe [:application/selected-hakukohde-oid-set])
-        :filters                      (:filters previous-fetch)}}
-      (:params previous-fetch))))
-
 (defn fetch-applications-fx
   [db params]
   (let [{previous-attachment-states :attachment-states
