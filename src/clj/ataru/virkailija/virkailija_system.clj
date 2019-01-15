@@ -1,5 +1,8 @@
 (ns ataru.virkailija.virkailija-system
   (:require [com.stuartsierra.component :as component]
+            [ataru.aws.auth :as aws-auth]
+            [ataru.aws.sns :as sns]
+            [ataru.aws.sqs :as sqs]
             [ataru.cas.client :as cas]
             [ataru.http.server :as server]
             [ataru.hakija.hakija-form-service :as hakija-form-service]
@@ -15,7 +18,9 @@
             [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]
             [ataru.person-service.person-client :as person-client]
             [ataru.person-service.person-service :as person-service]
-            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]))
+            [ataru.person-service.person-integration :as person-integration]
+            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service])
+  (:import java.time.Duration))
 
 (defn new-system
   ([]
@@ -92,6 +97,25 @@
              [:server-setup :handler])
 
     :job-runner (job/new-job-runner virkailija-jobs/job-definitions)
+
+    :credentials-provider (aws-auth/map->CredentialsProvider {})
+
+    :amazon-sqs (component/using
+                 (sqs/map->AmazonSQS {})
+                 [:credentials-provider])
+
+    :sns-message-manager (sns/map->SNSMessageManager {})
+
+    :update-person-info-worker (component/using
+                                (person-integration/map->UpdatePersonInfoWorker
+                                 {:enabled?      (:enabled? (:henkilo-modified-queue (:aws config)))
+                                  :drain-failed? (:drain-failed? (:henkilo-modified-queue (:aws config)))
+                                  :queue-url     (:queue-url (:henkilo-modified-queue (:aws config)))
+                                  :receive-wait  (Duration/ofSeconds 20)})
+                                [:amazon-sqs
+                                 :henkilo-cache
+                                 :person-service
+                                 :sns-message-manager])
 
     :redis (redis/map->Redis {})
 

@@ -1,5 +1,6 @@
 (ns ataru.hakija.hakija-system
   (:require [com.stuartsierra.component :as component]
+            [ataru.aws.auth :as aws-auth]
             [ataru.cas.client :as cas]
             [ataru.hakija.hakija-routes :as handler]
             [ataru.background-job.job :as job]
@@ -70,7 +71,11 @@
                        (suoritus-service/new-suoritus-service)
                        [:suoritusrekisteri-cas-client])
 
-    :s3-client (s3-client/new-client)
+    :credentials-provider (aws-auth/map->CredentialsProvider {})
+
+    :s3-client (component/using
+                (s3-client/new-client)
+                [:credentials-provider])
 
     :temp-file-store (if (get-in config [:aws :temp-files])
                        (component/using
@@ -98,6 +103,7 @@
     :job-runner (component/using
                  (job/new-job-runner hakija-jobs/job-definitions)
                  [:ohjausparametrit-service
+                  :henkilo-cache
                   :person-service
                   :tarjonta-service
                   :suoritus-service])
