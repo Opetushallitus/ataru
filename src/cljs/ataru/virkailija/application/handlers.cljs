@@ -398,9 +398,9 @@
 
 (reg-event-fx
   :application/reload-applications
-  (fn [_ _]
-    {:dispatch-n [[:application/reset-list]
-                  [:application/update-applications-immediate]]}))
+  (fn [{:keys [db]} _]
+    {:db       (reset-list db)
+     :dispatch [:application/update-applications-immediate]}))
 
 (reg-event-fx
   :application/update-application-filters
