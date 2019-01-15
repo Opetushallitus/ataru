@@ -134,35 +134,31 @@
         (+ (count (ataru-db/exec
                     :db
                     yesql-get-application-list-for-virkailija
-                    (merge {:form                   nil
-                            :application_oid        nil
-                            :application_oids       nil
-                            :person_oid             nil
-                            :name                   nil
-                            :email                  nil
-                            :dob                    nil
-                            :ssn                    nil
-                            :haku                   nil
-                            :hakukohde              nil
-                            :ensisijainen_hakukohde nil}
-                           {:query_key   "hakukohde"
-                            :query_value (:hakukohde @form)})))
+                    {:form                   nil
+                     :application_oid        nil
+                     :application_oids       nil
+                     :person_oid             nil
+                     :name                   nil
+                     :email                  nil
+                     :dob                    nil
+                     :ssn                    nil
+                     :haku                   nil
+                     :hakukohde              (:hakukohde @form)
+                     :ensisijainen_hakukohde nil}))
            (count (ataru-db/exec
                    :db
                    yesql-get-application-list-for-virkailija
-                   (merge {:form                   nil
-                           :application_oid        nil
-                           :application_oids       nil
-                           :person_oid             nil
-                           :name                   nil
-                           :email                  nil
-                           :dob                    nil
-                           :ssn                    nil
-                           :haku                   nil
-                           :hakukohde              nil
-                           :ensisijainen_hakukohde nil}
-                          {:query_key   "form"
-                           :query_value (:key @form)}))))]
+                   {:form                   (:key @form)
+                    :application_oid        nil
+                    :application_oids       nil
+                    :person_oid             nil
+                    :name                   nil
+                    :email                  nil
+                    :dob                    nil
+                    :ssn                    nil
+                    :haku                   nil
+                    :hakukohde              nil
+                    :ensisijainen_hakukohde nil})))]
     (< 0 app-count)))
 
 (defmacro add-failing-post-spec
@@ -538,6 +534,22 @@
                     store/generate-new-application-secret (constantly "0000000022")]
         (with-response :put resp (merge application-fixtures/person-info-form-application-for-hakukohde {:secret "0000000021"})
           (should= 400 (:status resp))))))
+
+  (describe "PUT application with empty answers"
+    (it "should work"
+      (reset! form (db/init-db-fixture form-fixtures/person-info-form-with-more-questions))
+      (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
+                    application-email/start-email-edit-confirmation-job   (constantly nil)
+                    application-service/remove-orphan-attachments         (fn [_ _])
+                    koodisto/all-koodisto-values                          (constantly nil)]
+        (with-redefs [hakuaika/get-hakuaika-info            hakuaika-ongoing
+                      store/generate-new-application-secret (constantly "0000000023")]
+          (with-response :post resp application-fixtures/person-info-form-application-with-empty-answers
+            (should= 200 (:status resp))))
+        (with-redefs [hakuaika/get-hakuaika-info            hakuaika-ended-grace-period-passed-hakukierros-ongoing
+                      store/generate-new-application-secret (constantly "0000000024")]
+          (with-response :put resp (merge application-fixtures/person-info-form-application-with-empty-answers {:secret "0000000023"})
+            (should= 200 (:status resp)))))))
 
   (describe "Tests for a more complicated form"
     (around [spec]
