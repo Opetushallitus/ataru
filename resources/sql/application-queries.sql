@@ -343,14 +343,13 @@ JOIN latest_forms AS lf on lf.key = f.key
 WHERE a.key IN (:application_keys);
 
 -- name: yesql-persons-applications-authorization-data
-SELECT
-  a.haku,
-  a.hakukohde,
-  lf.organization_oid
-FROM latest_applications as a
-JOIN forms AS f ON f.id = a.form_id
-JOIN latest_forms AS lf on lf.key = f.key
-WHERE a.person_oid IN (:person_oids);
+SELECT a.haku,
+       a.hakukohde,
+       f.organization_oid
+FROM applications AS a, forms AS f
+WHERE a.person_oid IN (:person_oids) AND
+      a.id = (SELECT max(id) FROM applications WHERE key = a.key) AND
+      f.id = (SELECT max(id) FROM forms WHERE key = (SELECT key FROM forms WHERE id = a.form_id));
 
 -- name: yesql-get-latest-application-by-key-with-hakukohde-reviews
 SELECT
