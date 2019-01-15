@@ -925,7 +925,7 @@
       attachment-idx
       (get-in db [:application :attachments-id])
       {:handler          [:application/handle-attachment-upload field-descriptor attachment-idx question-group-idx]
-       :error-handler    [:application/handle-attachment-upload-error field-descriptor attachment-idx name file (inc retries) question-group-idx]
+       :error-handler    [:application/handle-attachment-upload-error field-descriptor attachment-idx file (inc retries) question-group-idx]
        :progress-handler [:application-file-upload/handle-attachment-progress-resumable field-descriptor attachment-idx question-group-idx]
        :started-handler  [:application/handle-attachment-upload-started field-descriptor attachment-idx question-group-idx]})))
 
@@ -1066,30 +1066,35 @@
 
 (reg-event-fx
   :application/handle-attachment-upload-error
-  (fn [{:keys [db]} [_ field-descriptor attachment-idx filename file retries question-group-idx response-status]]
-    (let [id              (keyword (:id field-descriptor))
-          current-error   (case response-status
-                            ; misc error in resumable file transfer, retry:
-                            409 :file-upload-retransmit
-                            ; rate limited:
-                            429 :file-upload-failed
-                            ; any liiteri error:
-                            500 :file-type-forbidden
-                            ; generic error, e.g. transfer interrupted:
-                            :file-upload-error)]
+  (fn [{:keys [db]} [_ field-descriptor attachment-idx file retries question-group-idx response-status]]
+    (let [id            (keyword (:id field-descriptor))
+          current-error (case response-status
+                          ; misc error in resumable file transfer, retry:
+                          409 :file-upload-retransmit
+                          ; rate limited:
+                          429 :file-upload-failed
+                          ; any liiteri error:
+                          500 :file-type-forbidden
+                          ; generic error, e.g. transfer interrupted:
+                          :file-upload-error)]
       (if (and (contains? #{:file-upload-failed :retransmit} current-error) (< retries 3))
         {:db               db
          :delayed-dispatch {:dispatch-vec [:application/add-single-attachment-resumable field-descriptor attachment-idx file retries question-group-idx]
                             :timeout      (+ 2000 (rand-int 2000))}}
         {:db (-> db
-                 (update-in [:attachments-uploading id] dissoc (:filename filename))
+                 (update-in [:attachments-uploading id] dissoc (-> @(subscribe [:application/answer
+                                                                                id
+                                                                                question-group-idx
+                                                                                attachment-idx])
+                                                                   :value
+                                                                   :filename))
                  (update-in (if question-group-idx
                               [:application :answers id :values question-group-idx attachment-idx]
                               [:application :answers id :values attachment-idx])
-                   merge
-                   {:valid  false
-                    :status :error
-                    :errors [[current-error]]})
+                            merge
+                            {:valid  false
+                             :status :error
+                             :errors [[current-error]]})
                  (assoc-in [:application :answers id :valid] false))}))))
 
 (reg-event-fx
