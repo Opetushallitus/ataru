@@ -943,12 +943,22 @@
                                                existing-attachments))
                                        files)
           new-attachments      (map (fn [file]
-                                      (if (< max-attachment-size-bytes (.-size file))
+                                      (cond
+                                        (< max-attachment-size-bytes (.-size file))
                                         {:value  {:filename (.-name file)
                                                   :size     (.-size file)}
                                          :valid  false
                                          :status :error
                                          :errors [[:file-size-info (autil/size-bytes->str max-attachment-size-bytes)]]}
+
+                                        (zero? (.-size file))
+                                        {:value  {:filename (.-name file)
+                                                  :size     (.-size file)}
+                                         :valid  false
+                                         :status :error
+                                         :errors [[:file-size-info-min]]}
+
+                                        :else
                                         {:value         {:filename     (.-name file)
                                                          :content-type (.-type file)
                                                          :size         (.-size file)}
@@ -967,7 +977,7 @@
                        (assoc-in path (vec (concat existing-attachments
                                                    new-attachments))))
        :dispatch-n (keep-indexed (fn [idx file]
-                                   (when (<= (.-size file) max-attachment-size-bytes)
+                                   (when (< 0 (.-size file) (inc max-attachment-size-bytes))
                                      [:application/add-single-attachment-resumable
                                       field-descriptor
                                       (+ (count existing-attachments) idx)
