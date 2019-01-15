@@ -294,13 +294,14 @@
 (defn- ensisijaisesti
   []
   (let [ensisijaisesti? @(subscribe [:application/ensisijaisesti?])]
-    [:label.application-handling__ensisijaisesti
-     [:input.application-handling__ensisijaisesti-checkbox
+    [:label.application-handling__filter-checkbox-label
+     {:class (when ensisijaisesti? "application-handling__filter-checkbox-label--checked")}
+     [:input.application-handling__filter-checkbox
       {:type     "checkbox"
        :checked  ensisijaisesti?
        :on-click #(dispatch [:application/navigate-to-ensisijaisesti
                              (not ensisijaisesti?)])}]
-     (get-virkailija-translation :ensisijaisesti)]))
+     [:span (get-virkailija-translation :ensisijaisesti)]]))
 
 (defn haku-applications-heading
   [_]
@@ -704,6 +705,7 @@
         all-filters-selected? (subscribe [:application/all-pohjakoulutus-filters-selected?])]
     (fn []
       [:div.application-handling__filter-group
+       [:h3.application-handling__filter-group-heading (get-virkailija-translation :base-education)]
        [:label.application-handling__filter-checkbox-label.application-handling__filter-checkbox-label--all
         {:key   (str "application-filter-pohjakoulutus-any")
          :class (when @all-filters-selected? "application-handling__filter-checkbox-label--checked")}
@@ -799,40 +801,40 @@
             {:on-click #(reset! filters-visible false)}
             [:i.zmdi.zmdi-close]]]
           [:div.application-handling__filters-popup-content-container
-           {:class (when @has-base-education-answers "application-handling__filters-popup-content-container--two-cols")}
-           [:div.application-handling__popup-column-left
+           [:div.application-handling__popup-column
             (when @show-ensisijaisesti?
-              [:div.application-handling__ensisijaisesti-group
+              [:div.application-handling__filter-group
                [:h3.application-handling__filter-group-heading (get-virkailija-translation :ensisijaisuus)]
                [ensisijaisesti]
                (when @show-rajaa-hakukohteella?
                  [select-rajaava-hakukohde rajaava-hakukohde-opened?])])
-            [:h3.application-handling__filter-group-heading (get-virkailija-translation :ssn)]
             [:div.application-handling__filter-group
+             [:h3.application-handling__filter-group-heading (get-virkailija-translation :ssn)]
              [application-filter-checkbox filters (:without-ssn virkailija-texts) @lang :only-ssn :without-ssn]
              [application-filter-checkbox filters (:with-ssn virkailija-texts) @lang :only-ssn :with-ssn]]
-            [:h3.application-handling__filter-group-heading (get-virkailija-translation :identifying)]
             [:div.application-handling__filter-group
+             [:h3.application-handling__filter-group-heading (get-virkailija-translation :identifying)]
              [application-filter-checkbox filters (:unidentified virkailija-texts) @lang :only-identified :unidentified]
              [application-filter-checkbox filters (:identified virkailija-texts) @lang :only-identified :identified]]
-            [:h3.application-handling__filter-group-heading (get-virkailija-translation :active-status)]
             [:div.application-handling__filter-group
+             [:h3.application-handling__filter-group-heading (get-virkailija-translation :active-status)]
              [application-filter-checkbox filters (:active-status-active virkailija-texts) @lang :active-status :active]
-             [application-filter-checkbox filters (:active-status-passive virkailija-texts) @lang :active-status :passive]]
-            [:h3.application-handling__filter-group-heading (get-virkailija-translation :handling-notes)]
-            (when (some? @selected-hakukohde-oid)
-              [:div.application-handling__filter-hakukohde-name
-               @(subscribe [:application/hakukohde-name @selected-hakukohde-oid])])
-            (->> review-states/hakukohde-review-types
-                 (filter (fn [[kw _ _]]
-                           (and
-                            (contains? filters-to-include kw)
-                            (-> @review-settings (get kw) (false?) (not)))))
-                 (map (partial review-type-filter filters @lang))
-                 (doall))]
+             [application-filter-checkbox filters (:active-status-passive virkailija-texts) @lang :active-status :passive]]]
+           [:div.application-handling__popup-column
+            [:div.application-handling__filter-group
+             [:h3.application-handling__filter-group-heading (get-virkailija-translation :handling-notes)]
+             (when (some? @selected-hakukohde-oid)
+               [:div.application-handling__filter-hakukohde-name
+                @(subscribe [:application/hakukohde-name @selected-hakukohde-oid])])
+             (->> review-states/hakukohde-review-types
+                  (filter (fn [[kw _ _]]
+                            (and
+                             (contains? filters-to-include kw)
+                             (-> @review-settings (get kw) (false?) (not)))))
+                  (map (partial review-type-filter filters @lang))
+                  (doall))]]
            (when @has-base-education-answers
-             [:div.application-handling__popup-column-right
-              [:h3.application-handling__filter-group-heading (get-virkailija-translation :base-education)]
+             [:div.application-handling__popup-column.application-handling__popup-column--large
               [application-base-education-filters filters @lang]])]])])))
 
 (defn- application-list-header [applications]
