@@ -279,6 +279,19 @@
   [m]
   (into {} (map (fn [[k v]] [(name k) v]) m)))
 
+(defn- reset-list
+  [db]
+  (-> db
+      (assoc-in [:application :applications] nil)
+      (assoc-in [:application :application-list-page] 0)
+      (assoc-in [:application :total-count] nil)
+      (assoc-in [:application :filtered-count] nil)))
+
+(reg-event-db
+  :application/reset-list
+  (fn [db _]
+    (reset-list db)))
+
 (reg-event-fx
   :application/handle-fetch-applications-response
   (fn [{:keys [db]} [_ {:keys [applications aggregate-data]}]]
@@ -307,18 +320,6 @@
       query-param
       (clojure.string/split #",")
       (cljs-util/get-unselected-review-states states)))
-
-(defn- get-previous-fetch-request-data
-  [db]
-  (let [previous-fetch (-> db :application :previous-fetch)]
-    (merge
-      {:states-and-filters
-       {:attachment-states-to-include (:attachment-states previous-fetch)
-        :processing-states-to-include (:processing-states previous-fetch)
-        :selection-states-to-include  (:selection-states previous-fetch)
-        :selected-hakukohteet         @(subscribe [:application/selected-hakukohde-oid-set])
-        :filters                      (:filters previous-fetch)}}
-      (:params previous-fetch))))
 
 (defn fetch-applications-fx
   [db params]
@@ -370,9 +371,7 @@
                                                                      (extract-unselected-review-states-from-query
                                                                        :selection-state-filter
                                                                        review-states/application-hakukohde-selection-states)))
-                                             reset-list? (->
-                                                           (assoc-in [:application :application-list-page] 0)
-                                                           (assoc-in [:application :applications] [])))]
+                                             reset-list? (reset-list))]
     {:db         new-db
      :dispatch-n [(when reset-list? [:application/refresh-haut-and-hakukohteet])]
      :http       {:method              :post
@@ -400,9 +399,7 @@
 (reg-event-fx
   :application/reload-applications
   (fn [{:keys [db]} _]
-    {:db       (-> db
-                   (assoc-in [:application :application-list-page] 0)
-                   (assoc-in [:application :applications] []))
+    {:db       (reset-list db)
      :dispatch [:application/update-applications-immediate]}))
 
 (reg-event-fx
@@ -894,7 +891,9 @@
             :params              {:application-filter @(subscribe [:application/previous-application-fetch-params])
                                   :from-state         from-state
                                   :to-state           to-state
-                                  :hakukohde-oid      (-> db :application :selected-hakukohde)}
+                                  :hakukohde-oid      (or
+                                                        (-> db :application :selected-ryhman-ensisijainen-hakukohde)
+                                                        (-> db :application :selected-hakukohde))}
             :path                "/lomake-editori/api/applications/mass-update"
             :handler-or-dispatch :application/handle-mass-update-application-reviews}}))
 

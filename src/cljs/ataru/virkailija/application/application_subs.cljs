@@ -255,14 +255,14 @@
  :application/show-mass-update-link?
  (fn [db]
    (and (not-empty @(re-frame/subscribe [:application/loaded-applications]))
-        (contains? #{:selected-form-key :selected-haku :selected-hakukohde}
+        (contains? #{:selected-form-key :selected-haku :selected-hakukohde :selected-ryhman-ensisijainen-hakukohde}
                    @(re-frame/subscribe [:application/application-list-selected-by])))))
 
 (re-frame/reg-sub
  :application/show-excel-link?
  (fn [db]
    (and (not-empty @(re-frame/subscribe [:application/loaded-applications]))
-        (contains? #{:selected-form-key :selected-haku :selected-hakukohde :selected-hakukohderyhma}
+        (contains? #{:selected-form-key :selected-haku :selected-hakukohde :selected-hakukohderyhma :selected-ryhman-ensisijainen-hakukohde}
                    @(re-frame/subscribe [:application/application-list-selected-by])))))
 
 (defn- mass-information-request-button-enabled?
@@ -541,17 +541,6 @@
   :application/resend-modify-application-link-enabled?
   (fn [db _]
     (-> db :application :modify-application-link :state nil?)))
-
-(re-frame/reg-sub
-  :application/massamuutos-enabled?
-  (fn [db _]
-    (let [applications             (-> db :application :applications)
-          yhteishaku?              (get-in db [:haut (-> db :application :selected-haku) :yhteishaku])
-          hakukohde-selected?      (-> db :application :selected-hakukohde)
-          hakukohderyhma-selected? (-> db :application :selected-hakukohderyhma)]
-      (or (not yhteishaku?)
-          hakukohde-selected?
-          hakukohderyhma-selected?))))
 
 (re-frame/reg-sub
   :application/loaded-applications

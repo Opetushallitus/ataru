@@ -146,8 +146,6 @@
         submit-button-state        (r/atom :submit)
         selected-from-review-state (r/atom nil)
         selected-to-review-state   (r/atom nil)
-        massamuokkaus?             (subscribe [:application/massamuutos-enabled?])
-        filtered-applications      (subscribe [:application/loaded-applications])
         haku-header                (subscribe [:application/list-heading-data-for-haku])
         review-state-counts        (subscribe [:state-query [:application :review-state-counts]])
         all-states                 (reduce (fn [acc [state _]]
@@ -155,73 +153,71 @@
                                      {}
                                      review-states/application-hakukohde-processing-states)]
     (fn []
-      (when-not (empty? @filtered-applications)
-        (let [from-states (merge all-states @review-state-counts)]
-          [:span.application-handling__mass-edit-review-states-container
-           (when @massamuokkaus?
-             [:a.application-handling__mass-edit-review-states-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
-              {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state not)}
-              (get-virkailija-translation :mass-edit)])
-           (when @element-visible?
-             [:div.application-handling__mass-edit-review-states-popup.application-handling__popup
-              [:div.application-handling__mass-edit-review-states-title-container
-               [:h4.application-handling__mass-edit-review-states-title
-                (get-virkailija-translation :mass-edit)]
-               [:button.virkailija-close-button
-                {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state false)}
-                [:i.zmdi.zmdi-close]]]
-              (when-let [[haku-oid hakukohde-oid _ _ _] @haku-header]
-                [:p
-                 @(subscribe [:application/haku-name haku-oid])
-                 (when hakukohde-oid
-                   (str ", " @(subscribe [:application/hakukohde-name hakukohde-oid])))])
-              [:h4.application-handling__mass-edit-review-states-heading (get-virkailija-translation :from-state)]
+      (let [from-states (merge all-states @review-state-counts)]
+        [:span.application-handling__mass-edit-review-states-container
+         [:a.application-handling__mass-edit-review-states-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
+          {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state not)}
+          (get-virkailija-translation :mass-edit)]
+         (when @element-visible?
+           [:div.application-handling__mass-edit-review-states-popup.application-handling__popup
+            [:div.application-handling__mass-edit-review-states-title-container
+             [:h4.application-handling__mass-edit-review-states-title
+              (get-virkailija-translation :mass-edit)]
+             [:button.virkailija-close-button
+              {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state false)}
+              [:i.zmdi.zmdi-close]]]
+            (when-let [[haku-oid hakukohde-oid _ _ _] @haku-header]
+              [:p
+               @(subscribe [:application/haku-name haku-oid])
+               (when hakukohde-oid
+                 (str ", " @(subscribe [:application/hakukohde-name hakukohde-oid])))])
+            [:h4.application-handling__mass-edit-review-states-heading (get-virkailija-translation :from-state)]
 
-              (if @from-list-open?
-                (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
-                       {:on-click #(swap! from-list-open? not)}]
-                  (opened-mass-review-state-list selected-from-review-state from-states @review-state-counts true))
-                (mass-review-state-selected-row
-                  (fn []
-                    (swap! from-list-open? not)
-                    (reset! submit-button-state :submit))
-                  (selected-or-default-mass-review-state-label selected-from-review-state from-states @review-state-counts)))
+            (if @from-list-open?
+              (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
+                     {:on-click #(swap! from-list-open? not)}]
+                    (opened-mass-review-state-list selected-from-review-state from-states @review-state-counts true))
+              (mass-review-state-selected-row
+                (fn []
+                  (swap! from-list-open? not)
+                  (reset! submit-button-state :submit))
+                (selected-or-default-mass-review-state-label selected-from-review-state from-states @review-state-counts)))
 
-              [:h4.application-handling__mass-edit-review-states-heading (get-virkailija-translation :to-state)]
+            [:h4.application-handling__mass-edit-review-states-heading (get-virkailija-translation :to-state)]
 
-              (if @to-list-open?
-                (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
-                       {:on-click #(when (-> from-states (keys) (count) (pos?)) (swap! to-list-open? not))}]
-                  (opened-mass-review-state-list selected-to-review-state all-states @review-state-counts false))
-                (mass-review-state-selected-row
-                  (fn []
-                    (swap! to-list-open? not)
-                    (reset! submit-button-state :submit))
-                  (selected-or-default-mass-review-state-label selected-to-review-state all-states @review-state-counts)))
+            (if @to-list-open?
+              (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
+                     {:on-click #(when (-> from-states (keys) (count) (pos?)) (swap! to-list-open? not))}]
+                    (opened-mass-review-state-list selected-to-review-state all-states @review-state-counts false))
+              (mass-review-state-selected-row
+                (fn []
+                  (swap! to-list-open? not)
+                  (reset! submit-button-state :submit))
+                (selected-or-default-mass-review-state-label selected-to-review-state all-states @review-state-counts)))
 
-              (case @submit-button-state
-                :submit
-                (let [button-disabled? (= (selected-or-default-mass-review-state selected-from-review-state from-states)
-                                          (selected-or-default-mass-review-state selected-to-review-state all-states))]
-                  [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button
-                   {:on-click #(when-not button-disabled? (reset! submit-button-state :confirm))
-                    :disabled button-disabled?}
-                   (get-virkailija-translation :change)])
+            (case @submit-button-state
+              :submit
+              (let [button-disabled? (= (selected-or-default-mass-review-state selected-from-review-state from-states)
+                                        (selected-or-default-mass-review-state selected-to-review-state all-states))]
+                [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button
+                 {:on-click #(when-not button-disabled? (reset! submit-button-state :confirm))
+                  :disabled button-disabled?}
+                 (get-virkailija-translation :change)])
 
-                :confirm
-                [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button--confirm
-                 {:on-click (fn []
-                              (let [from-state-name              (selected-or-default-mass-review-state selected-from-review-state from-states)
-                                    to-state-name                (selected-or-default-mass-review-state selected-to-review-state all-states)]
-                                (dispatch [:application/mass-update-application-reviews
-                                           from-state-name
-                                           to-state-name])
-                                (reset! selected-from-review-state nil)
-                                (reset! selected-to-review-state nil)
-                                (toggle-mass-update-popup-visibility element-visible? submit-button-state false)
-                                (reset! from-list-open? false)
-                                (reset! to-list-open? false)))}
-                 (get-virkailija-translation :confirm-change)])])])))))
+              :confirm
+              [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button--confirm
+               {:on-click (fn []
+                            (let [from-state-name (selected-or-default-mass-review-state selected-from-review-state from-states)
+                                  to-state-name   (selected-or-default-mass-review-state selected-to-review-state all-states)]
+                              (dispatch [:application/mass-update-application-reviews
+                                         from-state-name
+                                         to-state-name])
+                              (reset! selected-from-review-state nil)
+                              (reset! selected-to-review-state nil)
+                              (toggle-mass-update-popup-visibility element-visible? submit-button-state false)
+                              (reset! from-list-open? false)
+                              (reset! to-list-open? false)))}
+               (get-virkailija-translation :confirm-change)])])]))))
 
 (declare application-information-request-contains-modification-link)
 
@@ -340,32 +336,32 @@
               :hakukohde-selected?      #(= selected-hakukohde-oid %)
               :hakukohderyhma-selected? #(= selected-hakukohderyhma-oid %)}]
             [h-and-h/search-listing
-             {:id                         haku-oid
-              :haut                       [{:oid         haku-oid
-                                            :name        (get virkailija-texts :hakukohteet)
-                                            :hakukohteet hakukohteet}]
-              :hakukohderyhmat            hakukohderyhmat
-              :hakukohde-selected?        #(= selected-hakukohde-oid %)
-              :hakukohderyhma-selected?   #(= selected-hakukohderyhma-oid %)
-              :on-hakukohde-select        #(do (close-list)
-                                               (dispatch
-                                                [:application/navigate
-                                                 (str "/lomake-editori/applications/hakukohde/" %)]))
+             {:id                       haku-oid
+              :haut                     [{:oid         haku-oid
+                                          :name        (get virkailija-texts :hakukohteet)
+                                          :hakukohteet hakukohteet}]
+              :hakukohderyhmat          hakukohderyhmat
+              :hakukohde-selected?      #(= selected-hakukohde-oid %)
+              :hakukohderyhma-selected? #(= selected-hakukohderyhma-oid %)
+              :on-hakukohde-select      #(do (close-list)
+                                             (dispatch [:application/reset-list])
+                                             (dispatch [:application/navigate
+                                                (str "/lomake-editori/applications/hakukohde/" %)]))
               :on-hakukohde-unselect      #(do (close-list)
-                                               (dispatch
-                                                [:application/navigate
-                                                 (str "/lomake-editori/applications/haku/" haku-oid)]))
+                                               (dispatch [:application/reset-list])
+                                               (dispatch [:application/navigate
+                                                          (str "/lomake-editori/applications/haku/" haku-oid)]))
               :on-hakukohderyhma-select   #(do (close-list)
-                                               (dispatch
-                                                [:application/navigate
-                                                 (str "/lomake-editori/applications/haku/"
-                                                      haku-oid
-                                                      "/hakukohderyhma/"
-                                                      %)]))
+                                               (dispatch [:application/reset-list])
+                                               (dispatch [:application/navigate
+                                                          (str "/lomake-editori/applications/haku/"
+                                                               haku-oid
+                                                               "/hakukohderyhma/"
+                                                               %)]))
               :on-hakukohderyhma-unselect #(do (close-list)
-                                               (dispatch
-                                                [:application/navigate
-                                                 (str "/lomake-editori/applications/haku/" haku-oid)]))}]
+                                               (dispatch [:application/reset-list])
+                                               (dispatch [:application/navigate
+                                                          (str "/lomake-editori/applications/haku/" haku-oid)]))}]
             close-list])]))))
 
 (defn selected-applications-heading
