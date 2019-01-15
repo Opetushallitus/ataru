@@ -8,25 +8,16 @@
             [clj-time.coerce :as coerce]
             [clj-time.core :as time]
             [clojure.java.jdbc :as jdbc]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [yesql.core :refer [defqueries]]))
+
+(defqueries "sql/automatic-eligibility-queries.sql")
 
 (defn- get-application
   [application-id]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-    (let [application (-> (jdbc/query connection
-                                      ["SELECT la.key AS key,
-                                               la.person_oid AS person_oid,
-                                               la.haku AS haku_oid,
-                                               la.hakukohde AS hakukohde_oids
-                                        FROM latest_applications AS la
-                                        JOIN applications AS a ON a.key = la.key
-                                        WHERE a.id = ?"
-                                       application-id])
-                          first
-                          (clojure.set/rename-keys
-                           {:person_oid     :person-oid
-                            :haku_oid       :haku-oid
-                            :hakukohde_oids :hakukohde-oids}))]
+    (let [application (first (yesql-get-application {:id application-id}
+                                                    {:connection connection}))]
       (when (nil? application)
         (throw (new RuntimeException (str "Application " application-id
                                           " not found"))))
@@ -82,37 +73,18 @@
   [suoritus-service application]
   (suoritus-service/ylioppilas-tai-ammatillinen? suoritus-service (:person-oid application)))
 
-(defn- query-eligibility-automatically-set?
-  [connection application hakukohde]
-  (->> (jdbc/query connection ["SELECT event_type = 'eligibility-state-automatically-changed' AS result
-                                FROM application_events
-                                WHERE id = (SELECT max(id)
-                                            FROM application_events
-                                            WHERE application_key = ?
-                                              AND hakukohde = ?
-                                              AND review_key = 'eligibility-state')"
-                               (:key application)
-                               (:oid hakukohde)])
-       first
-       :result))
-
 (defn- insert-application-event
   [connection application hakukohde new-state]
-  (jdbc/execute! connection ["INSERT INTO application_events
-                              (new_review_state,
-                               event_type,
-                               application_key,
-                               hakukohde,
-                               review_key)
-                              VALUES
-                              (?,
-                               'eligibility-state-automatically-changed',
-                               ?,
-                               ?,
-                               'eligibility-state')"
-                             new-state
-                             (:key application)
-                             (:oid hakukohde)]))
+  (when (not= 1 (yesql-insert-eligibility-state-automatically-changed-event!
+                 {:state           new-state
+                  :application_key (:key application)
+                  :hakukohde       (:oid hakukohde)}
+                 {:connection connection}))
+    (throw (new RuntimeException
+                (str "Could not insert eligibility-state-automatically-changed event"
+                     " with state " new-state
+                     " and application key " (:key application)
+                     " and hakukohde " (:oid hakukohde))))))
 
 (defn- audit-log
   [application hakukohde new-state old-state]
@@ -127,23 +99,41 @@
                   :id        "automatic-eligibility-check"
                   :operation audit-log/operation-modify}))
 
-(defn- update-application-hakukohde-review
+(defn- set-eligible
+  [connection application hakukohde]
+  (case (yesql-from-unreviewed-to-eligible!
+         {:application_key (:key application)
+          :hakukohde       (:oid hakukohde)}
+         {:connection connection})
+    0 false
+    1 true
+    (throw (new RuntimeException
+                (str "Updated more than one application_hakukohde_review row"
+                     " from unreviewed to eligible"
+                     " with application key " (:key application)
+                     " and hakukohde " (:oid hakukohde))))))
+
+(defn- set-unreviewed
+  [connection application hakukohde]
+  (case (yesql-from-eligible-to-unreviewed!
+         {:application_key (:key application)
+          :hakukohde       (:oid hakukohde)}
+         {:connection connection})
+    0 false
+    1 true
+    (throw (new RuntimeException
+                (str "Updated more than one application_hakukohde_review row"
+                     " from eligible to unreviewed"
+                     " with application key " (:key application)
+                     " and hakukohde " (:oid hakukohde))))))
+
+(defn update-application-hakukohde-review
   [connection {:keys [application hakukohde from to]}]
-  (when (->> (jdbc/execute! connection
-                            ["INSERT INTO application_hakukohde_reviews
-                              (application_key, requirement, state, hakukohde)
-                              VALUES (?, 'eligibility-state', ?, ?)
-                              ON CONFLICT (application_key, hakukohde, requirement)
-                              DO UPDATE
-                              SET state = EXCLUDED.state,
-                                  modified_time = DEFAULT
-                              WHERE application_hakukohde_reviews.state = ?"
-                             (:key application)
-                             to
-                             (:oid hakukohde)
-                             from])
-             first
-             (= 1))
+  (when (case to
+          "eligible"
+          (set-eligible connection application hakukohde)
+          "unreviewed"
+          (set-unreviewed connection application hakukohde))
     (insert-application-event connection application hakukohde to)
     (audit-log application hakukohde from to)))
 
@@ -153,22 +143,20 @@
    ohjausparametrit
    now
    hakukohteet
-   ylioppilas-tai-ammatillinen?
-   eligibility-automatically-set?]
+   ylioppilas-tai-ammatillinen?]
   (when (automatic-eligibility-if-ylioppilas-in-use? haku ohjausparametrit now)
     (->> hakukohteet
          (filter :ylioppilastutkintoAntaaHakukelpoisuuden)
          (keep (fn [hakukohde]
-                 (cond ylioppilas-tai-ammatillinen?
-                       {:from        "unreviewed"
-                        :to          "eligible"
-                        :application application
-                        :hakukohde   hakukohde}
-                       (eligibility-automatically-set? hakukohde)
-                       {:from        "eligible"
-                        :to          "unreviewed"
-                        :application application
-                        :hakukohde   hakukohde}))))))
+                 (if ylioppilas-tai-ammatillinen?
+                   {:from        "unreviewed"
+                    :to          "eligible"
+                    :application application
+                    :hakukohde   hakukohde}
+                   {:from        "eligible"
+                    :to          "unreviewed"
+                    :application application
+                    :hakukohde   hakukohde}))))))
 
 (defn start-automatic-eligibility-if-ylioppilas-job
   [job-runner application-id]
@@ -184,39 +172,28 @@
   (let [application                  (get-application application-id)
         haku                         (get-haku tarjonta-service application)
         ohjausparametrit             (get-ohjausparametrit ohjausparametrit-service
-                                       application)
-        now                          (time/now)
+                                                           application)
         hakukohteet                  (get-hakukohteet tarjonta-service application)
-        ylioppilas-tai-ammatillinen? (get-ylioppilas-tai-ammatillinen? suoritus-service application)]
+        ylioppilas-tai-ammatillinen? (get-ylioppilas-tai-ammatillinen? suoritus-service application)
+        now                          (time/now)]
     (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}
                                {:isolation :serializable}]
       (doseq [update (automatic-eligibility-if-ylioppilas
-                       application
-                       haku
-                       ohjausparametrit
-                       now
-                       hakukohteet
-                       ylioppilas-tai-ammatillinen?
-                       (partial query-eligibility-automatically-set?
-                         connection
-                         application))]
+                      application
+                      haku
+                      ohjausparametrit
+                      now
+                      hakukohteet
+                      ylioppilas-tai-ammatillinen?)]
         (update-application-hakukohde-review connection update))))
   {:transition {:id :final}})
 
 (defn- get-application-ids
   [suoritukset]
-  (when-not (empty? suoritukset)
+  (when-let [person-oids (seq (distinct (keep :person-oid suoritukset)))]
     (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-      (->> (jdbc/query connection
-                       ["SELECT id
-                         FROM latest_applications
-                         WHERE person_oid = ANY(?)"
-                        (->> suoritukset
-                             (map :person-oid)
-                             to-array
-                             (.createArrayOf (:connection connection)
-                                             "text"))])
-           (map :id)))))
+      (map :id (yesql-get-application-ids {:person_oids person-oids}
+                                          {:connection connection})))))
 
 (defn start-automatic-eligibility-if-ylioppilas-job-job-step
   [{:keys [last-run-long]} job-runner]

@@ -29,10 +29,7 @@
      :hakukohteet      (apply gen/tuple (map #(gen/hash-map :oid (gen/return %)
                                                             :ylioppilastutkintoAntaaHakukelpoisuuden gen/boolean)
                                              hakukohde-oids))
-     :ylioppilas? ylioppilas?-gen
-     :eligibility-automatically-set (apply gen/hash-map
-                                           (mapcat #(vector % gen/boolean)
-                                                   hakukohde-oids)))))
+     :ylioppilas? ylioppilas?-gen)))
 
 (def no-haku-input-gen
   (input-gen (gen/return nil)
@@ -83,8 +80,7 @@
    (:ohjausparametrit inputs)
    (coerce/from-long (:raw-now inputs))
    (:hakukohteet inputs)
-   (:ylioppilas? inputs)
-   (:eligibility-automatically-set inputs)))
+   (:ylioppilas? inputs)))
 
 (defn- check [times prop]
   (let [result (tc/quick-check times prop)]
@@ -107,13 +103,6 @@
   (it "returns no updates when now is pass PH_AHP"
     (check 100 (prop/for-all [inputs ph-ahp-passed-input-gen]
                  (empty? (call-ae inputs)))))
-
-  (it "returns only updates where eligibility automatically set for hakukohde when not ylioppilas"
-    (check 100 (prop/for-all [inputs not-ylioppilas-input-gen]
-                 (every? (fn [{:keys [hakukohde]}]
-                           (get-in inputs [:eligibility-automatically-set
-                                           (get-in inputs [:hakukohteet (:oid hakukohde)])]))
-                         (call-ae inputs)))))
 
   (it "returns updates from unreviewed to eligible when ylioppilas"
     (check 100 (prop/for-all [inputs ylioppilas-input-gen]
