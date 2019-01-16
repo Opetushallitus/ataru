@@ -851,13 +851,13 @@
                :on-click (fn [_]
                            (reset! filters-visible false)
                            (dispatch [:application/apply-filters]))}
-              "Ota käyttöön"]
+              (get-virkailija-translation :filters-apply-button)]
              [:a.editor-form__control-button.editor-form__control-button--variable-width
               {:class    (if filters-changed?
                            "editor-form__control-button--enabled"
                            "editor-form__control-button--disabled")
                :on-click #(dispatch [:application/undo-filters])}
-              "Peruuta"]])])])))
+              (get-virkailija-translation :filters-cancel-button)]])])])))
 
 (defn- application-list-header [applications]
   (let [review-settings (subscribe [:state-query [:application :review-settings :config]])]

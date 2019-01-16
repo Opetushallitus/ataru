@@ -902,6 +902,12 @@ You will receive a confirmation of your application to your email."}
    :filter-applications                         {:fi "Rajaa hakemuksia"
                                                  :sv "Avgränsa ansökningar"
                                                  :en "EN: Rajaa hakemuksia"}
+   :filters-apply-button                        {:fi "Ota käyttöön"
+                                                 :sv "Använda"
+                                                 :en "Apply"}
+   :filters-cancel-button                       {:fi "Peruuta"
+                                                 :sv "Annullera"
+                                                 :en "Cancel"}
    :finnish                                     {:fi "Suomi"
                                                  :sv "Finska"
                                                  :en "EN: Finnish"}
