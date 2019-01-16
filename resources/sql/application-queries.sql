@@ -210,7 +210,17 @@ SELECT
                                      'state', state,
                                      'hakukohde', hakukohde))
    FROM application_hakukohde_reviews ahr
-   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+  (SELECT coalesce(array_agg(ae.hakukohde), '{}')
+   FROM application_events ae
+   WHERE ae.id = (SELECT max(id)
+                  FROM application_events
+                  WHERE application_key = ae.application_key AND
+                        hakukohde = ae.hakukohde AND
+                        review_key = ae.review_key) AND
+         ae.application_key = a.key AND
+         ae.event_type = 'eligibility-state-automatically-changed' AND
+         ae.review_key = 'eligibility-state') AS "eligibility-set-automatically"
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id

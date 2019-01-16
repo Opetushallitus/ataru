@@ -14,7 +14,7 @@
             [ataru.util :as util]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
-            [ataru.translations.texts :refer [excel-texts]]
+            [ataru.translations.texts :refer [excel-texts virkailija-texts]]
             [clj-time.core :as t]
             [clj-time.format :as f]
             [clojure.string :as string :refer [trim]]
@@ -164,6 +164,9 @@
     :field     [:application :application-hakukohde-reviews]
     :lang?     true
     :format-fn (partial hakukohde-review-formatter "eligibility-state")}
+   {:label     (:eligibility-set-automatically virkailija-texts)
+    :field     [:application :eligibility-set-automatically]
+    :format-fn #(clojure.string/join "\n" %)}
    {:label     (:maksuvelvollisuus excel-texts)
     :field     [:application :application-hakukohde-reviews]
     :lang?     true
@@ -479,6 +482,13 @@
                                 all-reviews)]
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
+(defn- filter-eligibility-set-automatically
+  [selected-hakukohde-oids application]
+  (if (empty? selected-hakukohde-oids)
+    application
+    (update application :eligibility-set-automatically
+            (partial filter (set selected-hakukohde-oids)))))
+
 (defn hakukohde-to-hakukohderyhma-oids [all-hakukohteet selected-hakukohde]
   (some->> (first (filter #(= selected-hakukohde (:oid %)) @all-hakukohteet))
            :hakukohderyhmat))
@@ -534,6 +544,7 @@
          (map update-hakukohteet-for-legacy-applications)
          (map (partial add-hakukohde-names get-tarjonta-info get-hakukohde))
          (map (partial add-all-hakukohde-reviews get-hakukohde selected-hakukohde-oids))
+         (map (partial filter-eligibility-set-automatically selected-hakukohde-oids))
          (reduce (fn [result {:keys [form] :as application}]
                    (let [form-key (:key (get-form-by-id form))
                          form     (get-latest-form-by-key form-key)]
