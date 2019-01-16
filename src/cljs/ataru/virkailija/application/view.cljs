@@ -764,6 +764,7 @@
 (defn- application-filters
   []
   (let [filters                    (subscribe [:state-query [:application :filters]])
+        filters-checkboxes         (subscribe [:state-query [:application :filters-checkboxes]])
         filtered-application-count (subscribe [:application/filtered-applications-count])
         total-application-count    (subscribe [:application/total-application-count])
         enabled-filter-count       (subscribe [:application/enabled-filter-count])
@@ -806,16 +807,16 @@
                  [select-rajaava-hakukohde rajaava-hakukohde-opened?])])
             [:div.application-handling__filter-group
              [:h3.application-handling__filter-group-heading (get-virkailija-translation :ssn)]
-             [application-filter-checkbox filters (:without-ssn virkailija-texts) @lang :only-ssn :without-ssn]
-             [application-filter-checkbox filters (:with-ssn virkailija-texts) @lang :only-ssn :with-ssn]]
+             [application-filter-checkbox filters-checkboxes (:without-ssn virkailija-texts) @lang :only-ssn :without-ssn]
+             [application-filter-checkbox filters-checkboxes (:with-ssn virkailija-texts) @lang :only-ssn :with-ssn]]
             [:div.application-handling__filter-group
              [:h3.application-handling__filter-group-heading (get-virkailija-translation :identifying)]
-             [application-filter-checkbox filters (:unidentified virkailija-texts) @lang :only-identified :unidentified]
-             [application-filter-checkbox filters (:identified virkailija-texts) @lang :only-identified :identified]]
+             [application-filter-checkbox filters-checkboxes (:unidentified virkailija-texts) @lang :only-identified :unidentified]
+             [application-filter-checkbox filters-checkboxes (:identified virkailija-texts) @lang :only-identified :identified]]
             [:div.application-handling__filter-group
              [:h3.application-handling__filter-group-heading (get-virkailija-translation :active-status)]
-             [application-filter-checkbox filters (:active-status-active virkailija-texts) @lang :active-status :active]
-             [application-filter-checkbox filters (:active-status-passive virkailija-texts) @lang :active-status :passive]]]
+             [application-filter-checkbox filters-checkboxes (:active-status-active virkailija-texts) @lang :active-status :active]
+             [application-filter-checkbox filters-checkboxes (:active-status-passive virkailija-texts) @lang :active-status :passive]]]
            [:div.application-handling__popup-column
             [:div.application-handling__filter-group
              [:h3.application-handling__filter-group-heading (get-virkailija-translation :handling-notes)]
@@ -827,18 +828,30 @@
                             (and
                              (contains? filters-to-include kw)
                              (-> @review-settings (get kw) (false?) (not)))))
-                  (map (partial review-type-filter filters @lang))
+                  (map (partial review-type-filter filters-checkboxes @lang))
                   (doall))
              [:div.application-handling__filter-group
               [:div.application-handling__filter-group-title
                (util/non-blank-val (:eligibility-set-automatically virkailija-texts)
                                    [@lang :fi :sv :en])]
               [:div.application-handling__filter-group-checkboxes
-               [application-filter-checkbox filters (:yes general-texts) @lang :eligibility-set-automatically :yes]
-               [application-filter-checkbox filters (:no general-texts) @lang :eligibility-set-automatically :no]]]]]
+               [application-filter-checkbox filters-checkboxes (:yes general-texts) @lang :eligibility-set-automatically :yes]
+               [application-filter-checkbox filters-checkboxes (:no general-texts) @lang :eligibility-set-automatically :no]]]]]
            (when @has-base-education-answers
              [:div.application-handling__popup-column.application-handling__popup-column--large
-              [application-base-education-filters filters @lang]])]])])))
+              [application-base-education-filters filters-checkboxes @lang]])]
+          (let [filters-unchanged? (= @filters @filters-checkboxes)]
+            [:div.application-handling__filters-popup-apply-button-container
+             [:button
+              {:disabled filters-unchanged?
+               :on-click (fn [_]
+                           (reset! filters-visible false)
+                           (dispatch [:application/apply-filters]))}
+              "Ota käyttöön"]
+             [:button
+              {:disabled filters-unchanged?
+               :on-click #(dispatch [:application/undo-filters])}
+              "Peruuta muutokset"]])])])))
 
 (defn- application-list-header [applications]
   (let [review-settings (subscribe [:state-query [:application :review-settings :config]])]
