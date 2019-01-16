@@ -780,7 +780,9 @@
     (fn []
       [:span.application-handling__filters
        [:a
-        {:on-click #(swap! filters-visible not)}
+        {:on-click #(do
+                      (dispatch [:application/undo-filters])
+                      (swap! filters-visible not))}
         (when (and @filtered-application-count @total-application-count)
           (gstring/format "%s (%d / %d)"
                           (get-virkailija-translation :filter-applications)
