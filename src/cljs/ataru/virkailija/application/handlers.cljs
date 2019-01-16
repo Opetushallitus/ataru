@@ -274,11 +274,10 @@
 (reg-event-fx
   :application/remove-filters
   (fn [{:keys [db]} _]
-    (let [initial-filters     (get-in initial-db/default-db [:application :filters])
-          all-enabled-filters (clojure.walk/postwalk #(if (boolean? %) true %) initial-filters)]
-      {:db       (-> db
-                     (assoc-in [:application :filters] all-enabled-filters))
-       :dispatch [:application/update-application-filters]})))
+    {:db       (-> db
+                   (assoc-in [:application :filters] initial-db/default-filters)
+                   (assoc-in [:application :filters-checkboxes] initial-db/default-filters))
+     :dispatch [:application/reload-applications]}))
 
 (reg-event-fx
   :application/update-sort
