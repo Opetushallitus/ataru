@@ -152,6 +152,9 @@
    :file-size-info                              {:fi "Tiedoston maksimikoko on %s"
                                                  :en "Maximum file size is %s"
                                                  :sv "Den maximala filstorleken är %s"}
+   :file-size-info-min                          {:fi "Tiedoston koko on 0"
+                                                 :en "The file size is 0"
+                                                 :sv "Filstorleken är 0"}
    :uploading                                   {:fi "Ladataan"
                                                  :sv "Laddar upp"
                                                  :en "Uploading"}

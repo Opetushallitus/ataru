@@ -102,9 +102,12 @@
             prev-uploaded (get-in db (conj path :uploaded-size) 0)
             uploaded-size (+ (.-loaded evt) (* file-part-number max-part-size))
             last-progress (get-in db (conj path :last-progress))
-            speed         (* 1000
-                             (/ (- uploaded-size prev-uploaded)
-                                (c/in-millis (c/interval last-progress now))))]
+            speed         (if (and last-progress uploaded-size prev-uploaded)
+                            (* 1000
+                               (/ (- uploaded-size prev-uploaded)
+                                  (if last-progress
+                                    (c/in-millis (c/interval last-progress now)))))
+                            0)]
         (-> db
             (assoc-in (conj path :uploaded-size) uploaded-size)
             (assoc-in (conj path :last-progress) now)
