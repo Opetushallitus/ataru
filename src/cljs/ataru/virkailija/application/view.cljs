@@ -842,18 +842,22 @@
            (when @has-base-education-answers
              [:div.application-handling__popup-column.application-handling__popup-column--large
               [application-base-education-filters filters-checkboxes @lang]])]
-          (let [filters-unchanged? (= @filters @filters-checkboxes)]
+          (let [filters-changed? (not= @filters @filters-checkboxes)]
             [:div.application-handling__filters-popup-apply-button-container
-             [:button
-              {:disabled filters-unchanged?
+             [:a.editor-form__control-button.editor-form__control-button--variable-width
+              {:class    (if filters-changed?
+                           "editor-form__control-button--enabled"
+                           "editor-form__control-button--disabled")
                :on-click (fn [_]
                            (reset! filters-visible false)
                            (dispatch [:application/apply-filters]))}
               "Ota käyttöön"]
-             [:button
-              {:disabled filters-unchanged?
+             [:a.editor-form__control-button.editor-form__control-button--variable-width
+              {:class    (if filters-changed?
+                           "editor-form__control-button--enabled"
+                           "editor-form__control-button--disabled")
                :on-click #(dispatch [:application/undo-filters])}
-              "Peruuta muutokset"]])])])))
+              "Peruuta"]])])])))
 
 (defn- application-list-header [applications]
   (let [review-settings (subscribe [:state-query [:application :review-settings :config]])]
