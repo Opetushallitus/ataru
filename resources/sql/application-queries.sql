@@ -78,16 +78,26 @@ SELECT
   ar.score                            AS score,
   a.form_id                           AS form,
   lf.organization_oid AS "organization-oid",
-  (SELECT json_agg(json_build_object('requirement', requirement,
-                                     'state', state,
-                                     'hakukohde', hakukohde))
+  (SELECT jsonb_agg(jsonb_build_object('requirement', requirement,
+                                       'state', state,
+                                       'hakukohde', hakukohde))
    FROM application_hakukohde_reviews ahr
    WHERE ahr.application_key = a.key) AS "application-hakukohde-reviews",
-  (SELECT json_agg(json_build_object('attachment-key', attachment_key,
-                                     'state', state,
-                                     'hakukohde', hakukohde))
+  (SELECT jsonb_agg(jsonb_build_object('attachment-key', attachment_key,
+                                       'state', state,
+                                       'hakukohde', hakukohde))
    FROM application_hakukohde_attachment_reviews aar
    WHERE aar.application_key = a.key) AS "application-attachment-reviews",
+  (SELECT coalesce(array_agg(ae.hakukohde), '{}')
+   FROM application_events ae
+   WHERE ae.id = (SELECT max(id)
+                  FROM application_events
+                  WHERE application_key = ae.application_key AND
+                        hakukohde = ae.hakukohde AND
+                        review_key = ae.review_key) AND
+         ae.application_key = a.key AND
+         ae.event_type = 'eligibility-state-automatically-changed' AND
+         ae.review_key = 'eligibility-state') AS "eligibility-set-automatically",
   (SELECT count(*)
    FROM application_events AS ae
    WHERE ae.application_key = a.key AND

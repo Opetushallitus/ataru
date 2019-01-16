@@ -87,6 +87,18 @@
                                (set))]
     (not-empty (clojure.set/intersection selected-states application-states))))
 
+(defn- filter-by-eligibility-set-automatically
+  [application selected-hakukohteet-set yes? no?]
+  (or (and yes? no?)
+      (let [hakukohteet       (cond-> (set (:hakukohde application))
+                                      (some? selected-hakukohteet-set)
+                                      (clojure.set/intersection selected-hakukohteet-set))
+            set-automatically (clojure.set/intersection
+                               hakukohteet
+                               (set (:eligibility-set-automatically application)))]
+        (or (and yes? (not-empty set-automatically))
+            (and no? (not= hakukohteet set-automatically))))))
+
 (defn person-info-needed-to-filter?
   [filters]
   (not
@@ -130,5 +142,9 @@
           (filter-by-hakukohde-review application selected-hakukohteet-set "degree-requirement" (parse-enabled-filters filters :degree-requirement))
           (filter-by-hakukohde-review application selected-hakukohteet-set "eligibility-state" (parse-enabled-filters filters :eligibility-state))
           (filter-by-hakukohde-review application selected-hakukohteet-set "payment-obligation" (parse-enabled-filters filters :payment-obligation))
-          (filter-by-attachment-review application selected-hakukohteet-set attachment-states-to-include-set)))
+          (filter-by-attachment-review application selected-hakukohteet-set attachment-states-to-include-set)
+          (filter-by-eligibility-set-automatically application
+                                                   selected-hakukohteet-set
+                                                   (get-in filters [:eligibility-set-automatically :yes])
+                                                   (get-in filters [:eligibility-set-automatically :no]))))
       applications-with-requirements)))
