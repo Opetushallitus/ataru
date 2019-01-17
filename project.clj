@@ -151,6 +151,7 @@
                         :source-paths ["src/cljs" "src/cljc"]
                         :figwheel     {:on-jsload "ataru.hakija.core/mount-root"}
                         :compiler     {:main                 "ataru.hakija.core"
+                                       :preloads             [devtools.preload]
                                        :output-to            "resources/public/js/compiled/hakija-app.js"
                                        :output-dir           "resources/public/js/compiled/hakija-out"
                                        :asset-path           "/hakemus/js/compiled/hakija-out"
