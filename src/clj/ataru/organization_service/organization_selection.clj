@@ -5,7 +5,9 @@
 
 (defn- all-organizations
   [organization-service]
-  (organization-service/get-all-organizations organization-service [{:oid ""}]))
+  (organization-service/get-all-organizations
+   organization-service
+   (organization-service/get-hakukohde-groups organization-service)))
 
 (defn query-organization
   [organization-service session query]
