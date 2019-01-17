@@ -1125,7 +1125,8 @@
                 :handler [:application/handle-attachment-delete field-descriptor question-group-idx key]}}
         {:db       (-> db
                        (assoc-in [:application :answers id :valid] false)
-                       (update-in (butlast path) autil/remove-nth attachment-idx))
+                       (update-in (butlast path) autil/remove-nth attachment-idx)
+                       (set-multi-value-changed id :values))
          :dispatch [:application/set-attachment-valid
                     id
                     (required? field-descriptor)
