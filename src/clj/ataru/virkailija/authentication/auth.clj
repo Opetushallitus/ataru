@@ -66,8 +66,7 @@
               organizations-with-rights (->> user-right-organizations
                                              (map-kv (fn [right organizations]
                                                        [right (organization-service/get-all-organizations organization-service organizations)]))
-                                             (user-right-organizations->organization-rights)
-                                             (util/group-by-first :oid))]
+                                             (user-right-organizations->organization-rights))]
           (info "user" username "logged in")
           (db/exec :db yesql-upsert-virkailija<! {:oid        (:oidHenkilo henkilo)
                                                   :first_name (:kutsumanimi henkilo)
