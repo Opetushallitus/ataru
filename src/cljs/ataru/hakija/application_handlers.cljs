@@ -1049,13 +1049,8 @@
 (reg-event-db
   :application/handle-attachment-upload-started
   (fn [db [_ field-descriptor attachment-idx question-group-idx request]]
-    (let [id       (keyword (:id field-descriptor))
-          filename (:filename (:value @(subscribe [:application/answer
-                                                   id
-                                                   question-group-idx
-                                                   attachment-idx])))]
+    (let [id (keyword (:id field-descriptor))]
       (-> db
-          (assoc-in [:attachments-uploading id filename] :downloading)
           (assoc-in (cond-> [:application :answers id :values]
                             (some? question-group-idx)
                             (conj question-group-idx)
