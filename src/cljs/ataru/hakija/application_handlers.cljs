@@ -916,7 +916,7 @@
   (get (js->clj js/config) "attachment-file-max-size-bytes" (* 10 1024 1024)))
 
 (reg-event-fx
-  :application/add-single-attachment-resumable
+  :application/start-attachment-upload
   (fn [{:keys [db]} [_ field-descriptor attachment-idx file retries question-group-idx]]
     (resumable-upload/upload-file
       "/hakemus/api/files/resumable"
@@ -928,6 +928,17 @@
        :error-handler    [:application/handle-attachment-upload-error field-descriptor attachment-idx file (inc retries) question-group-idx]
        :progress-handler [:application-file-upload/handle-attachment-progress-resumable field-descriptor attachment-idx question-group-idx]
        :started-handler  [:application/handle-attachment-upload-started field-descriptor attachment-idx question-group-idx]})))
+
+(reg-event-fx
+  :application/add-single-attachment-resumable
+  (fn [{:keys [db]} [_ field-descriptor attachment-idx file retries question-group-idx]]
+    (let [id       (keyword (:id field-descriptor))
+          filename (:filename (:value @(subscribe [:application/answer
+                                                   id
+                                                   question-group-idx
+                                                   attachment-idx])))]
+      {:db       (assoc-in db [:attachments-uploading id filename] :downloading)
+       :dispatch [:application/start-attachment-upload field-descriptor attachment-idx file retries question-group-idx]})))
 
 (reg-event-fx
   :application/add-attachments
