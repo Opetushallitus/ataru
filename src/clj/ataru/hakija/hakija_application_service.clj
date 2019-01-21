@@ -324,8 +324,8 @@
    organization-service
    ohjausparametrit-service
    form-by-haku-oid-and-id-cache
-   application]
-  (log/info "Application edited:" application)
+   input-application]
+  (log/info "Application edited:" input-application)
   (let [{:keys [passed? id application]
          :as   result}
         (validate-and-store koodisto-cache
@@ -333,7 +333,7 @@
                             organization-service
                             ohjausparametrit-service
                             form-by-haku-oid-and-id-cache
-                            application
+                            input-application
                             true)
         virkailija-secret (:virkailija-secret application)]
     (if passed?
@@ -344,9 +344,9 @@
           application)
         (start-hakija-edit-jobs koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id))
       (do
-        (audit-log/log {:new       application
+        (audit-log/log {:new       input-application
                         :operation audit-log/operation-failed
-                        :id        (util/extract-email application)})
+                        :id        (util/extract-email input-application)})
         (log/warn "Application edit failed verification" result)))
     result))
 
