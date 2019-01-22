@@ -304,8 +304,7 @@
              {:style {:height @height}}
              content-component]
             :folded
-            [:div.editor-form__component-content-wrapper.editor-form__component-content-wrapper--folded
-             content-component])))})))
+            [:div.editor-form__component-content-wrapper.editor-form__component-content-wrapper--folded])))})))
 
 (defn markdown-help []
   [:div.editor-form__markdown-help
