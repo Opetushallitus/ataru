@@ -634,9 +634,20 @@
         db ; Nesting is not allowed/supported
         (-> db
           (remove-component-from-list source-path)
-          (add-component-to-list component recalculated-target-path))))))
+          (add-component-to-list component recalculated-target-path)
+          (update :editor dissoc :copy-component-path))))))
 
 (reg-event-db :editor/move-component move-component)
+
+(reg-event-db
+  :editor/copy-component
+  (fn copy-component [db [_ path]]
+    (assoc-in db [:editor :copy-component-path] path)))
+
+(reg-event-db
+  :editor/clear-copy-component
+  (fn clear-copy-component [db _]
+    (update db :editor dissoc :copy-component-path)))
 
 (def ^:private lang-order
   [:fi :sv :en])

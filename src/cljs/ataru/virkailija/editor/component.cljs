@@ -150,11 +150,6 @@
             ^{:key oid}
             [belongs-to path oid name on-click])]]))))
 
-(defn- on-drag-start
-  [path]
-  (fn [event]
-    (-> event .-dataTransfer (.setData dnd/ie-compatible-drag-data-attribute-name (util/cljs->str path)))))
-
 (defn- prevent-default
   [event]
   (.preventDefault event))
@@ -200,19 +195,16 @@
              (-> metadata :modified-by :date temporal/str->googdate temporal/time->date))])
 
 (defn- text-header
-  [id label path metadata & {:keys [draggable?
+  [id label path metadata & {:keys [movable?
                                     foldable?
                                     removable?
                                     sub-header]
-                             :or   {draggable? true
+                             :or   {movable? true
                                     foldable?  true
                                     removable? true}}]
-  (let [folded? @(subscribe [:editor/folded? id])]
+  (let [folded?             @(subscribe [:editor/folded? id])
+        copy-component-path @(subscribe [:editor/copy-component-path])]
     [:div.editor-form__header-wrapper
-     {:class         (when draggable? "editor-form__header-wrapper--draggable")
-      :draggable     draggable?
-      :on-drag-start (on-drag-start path)
-      :on-drag-over  prevent-default}
      [:header.editor-form__component-header
       (when foldable?
         (if folded?
@@ -235,6 +227,19 @@
               (clojure.string/join " - ")))]]
      (when metadata
        (header-metadata metadata))
+     (when movable?
+       (cond (and (= copy-component-path path))
+             [:button.editor-form__copy-component-button.editor-form__copy-component-button--pressed
+              {:on-click (fn [_] (dispatch [:editor/clear-copy-component]))}
+              [:i.zmdi.zmdi-scissors]]
+             (some? copy-component-path)
+             [:button.editor-form__copy-component-button.editor-form__copy-component-button--disabled
+              {:disabled true}
+              [:i.zmdi.zmdi-scissors]]
+             :else
+             [:button.editor-form__copy-component-button
+              {:on-click (fn [_] (dispatch [:editor/copy-component path]))}
+              [:i.zmdi.zmdi-scissors]]))
      (when removable?
        [remove-component-button path])]))
 
@@ -1005,7 +1010,7 @@
        {:class @animation-effect}
        [text-header (:id content) (get-virkailija-translation :text-field) path (:metadata content)
         :foldable? false
-        :draggable? false]
+        :movable? false]
        [:div.editor-form__component-content-wrapper
         [:div.editor-form__component-row-wrapper
          [:div.editor-form__text-field-wrapper
