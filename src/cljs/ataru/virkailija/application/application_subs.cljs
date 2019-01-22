@@ -252,11 +252,13 @@
   selected-hakukohderyhma-hakukohteet)
 
 (re-frame/reg-sub
- :application/show-mass-update-link?
- (fn [db]
-   (and (not-empty @(re-frame/subscribe [:application/loaded-applications]))
-        (contains? #{:selected-form-key :selected-haku :selected-hakukohde :selected-ryhman-ensisijainen-hakukohde}
-                   @(re-frame/subscribe [:application/application-list-selected-by])))))
+  :application/show-mass-update-link?
+  (fn [db]
+    (let [yhteishaku?      (get-in db [:haut (-> db :application :selected-haku) :yhteishaku])
+          list-selected-by (application-list-selected-by db)]
+      (and (not-empty (-> db :application :applications))
+           (not (and yhteishaku? (= list-selected-by :selected-haku)))
+           (contains? #{:selected-form-key :selected-haku :selected-hakukohde :selected-ryhman-ensisijainen-hakukohde} list-selected-by)))))
 
 (re-frame/reg-sub
  :application/show-excel-link?
