@@ -165,6 +165,10 @@
   [v n]
   (vec (concat (subvec v 0 n) (subvec v (inc n)))))
 
+(defn add-to-nth
+  [v n x]
+  (vec (concat (subvec v 0 n) [x] (subvec v n))))
+
 (defn in?
   [vec item]
   (some #(= item %) vec))

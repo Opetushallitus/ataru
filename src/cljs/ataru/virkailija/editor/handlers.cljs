@@ -12,7 +12,6 @@
             [ataru.virkailija.dev.lomake :as dev]
             [ataru.virkailija.editor.components.followup-question :as followup]
             [ataru.virkailija.editor.editor-macros :refer-macros [with-form-key]]
-            [ataru.virkailija.editor.handlers-macros :refer-macros [with-path-and-index]]
             [ataru.virkailija.routes :refer [set-history!]]
             [ataru.virkailija.virkailija-ajax :refer [http post put dispatch-flasher-error-msg]]
             [ataru.util :as util :refer [assoc?]]
@@ -578,64 +577,45 @@
                  new-form-organization-oid))))
 
 (defn- remove-component-from-list
-  [db source-path]
-  (with-path-and-index [db source-path component-list-path remove-idx]
-    (update-in db component-list-path
-      (fn [components]
-        (vec
-          (concat
-            (subvec components 0 remove-idx)
-            (subvec components (inc remove-idx))))))))
+  [db form-key path]
+  (update-in db (concat [:editor :forms form-key :content] (butlast path))
+             #(util/remove-nth % (last path))))
 
 (defn- add-component-to-list
-  [db component target-path]
-  (with-path-and-index [db target-path component-list-path add-idx]
-    (update-in db component-list-path
-      (fn [components]
-        (vec
-          (concat
-            (subvec components 0 add-idx)
-            [component]
-            (subvec components add-idx)))))))
+  [db form-key component path]
+  (update-in db (concat [:editor :forms form-key :content] (butlast path))
+             #(util/add-to-nth (if (nil? %) [] %) (last path) component)))
+
+(defn- common-path [source-path target-path]
+  (loop [common   []
+         [s & ss] source-path
+         [t & tt] target-path]
+    (if (and s t (= s t))
+      (recur (conj common s) ss tt)
+      [common (cons s ss) (cons t tt)])))
 
 (defn- recalculate-target-path-prevent-oob
   [source-path target-path]
-  (match [source-path target-path]
-    ; moving-top-level components
-    [[n :guard integer?] [nn :guard integer?]]
-    (or (when (> nn n)
-          [(dec nn)])
-      [(max 0 nn)])
-
-    [[a :children xa] [b :children xb]]
-    (or
-      (when (and (> xb xa) (= a b))
-       [b :children (dec xb)])  ; moving within same component-group, index out of bounds prevention
-      [b :children (max 0 xb)]) ; moving between component-groups
-
-    ; moving component from root-level into a component-group
-    [[a] [b :children xb]]
-    (if (-> b (< a))
-      [b :children xb]        ; topwards
-      [(dec b) :children xb]) ; bottomwards
-
-    :else target-path))
+  (let [[common [s & ss] [t & tt]] (common-path source-path target-path)]
+    (if (and (empty? ss) (< s t))
+      ;; moving forward and maybe inward inside a common parent component
+      (vec (concat common [(dec t)] tt))
+      target-path)))
 
 (defn move-component
   [db [_ source-path target-path]]
   (with-form-key [db form-key]
-    (let [component                (get-in db (concat [:editor :forms form-key :content] source-path))
-          recalculated-target-path (recalculate-target-path-prevent-oob source-path target-path)
+    (let [component                         (get-in db (concat [:editor :forms form-key :content] source-path))
+          recalculated-target-path          (recalculate-target-path-prevent-oob source-path target-path)
           result-is-nested-component-group? (and
-                                              (contains?
-                                                (set recalculated-target-path) :children)
-                                              (= "wrapperElement" (:fieldClass component)))]
+                                             (contains? (set recalculated-target-path) :children)
+                                             (= "wrapperElement" (:fieldClass component)))]
       (if result-is-nested-component-group?
         db ; Nesting is not allowed/supported
         (-> db
-          (remove-component-from-list source-path)
-          (add-component-to-list component recalculated-target-path)
-          (update :editor dissoc :copy-component-path))))))
+            (remove-component-from-list form-key source-path)
+            (add-component-to-list form-key component recalculated-target-path)
+            (update :editor dissoc :copy-component-path))))))
 
 (reg-event-db :editor/move-component move-component)
 
