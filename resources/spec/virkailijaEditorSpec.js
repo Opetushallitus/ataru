@@ -531,6 +531,9 @@
                 }),
                 wait.forMilliseconds(1000),
                 clickElement(function() {
+                    return component().find('.editor-form__component-fold-button')
+                }),
+                clickElement(function() {
                     return component().find('.belongs-to-hakukohteet__modal-toggle')
                 }),
                 clickElement(function() {
