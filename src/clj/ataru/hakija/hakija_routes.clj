@@ -264,6 +264,7 @@
               :send-next (response/ok {})
               :retransmit (response/conflict {})
               :complete (response/created "" {:stored-file stored-file})
+              :bad-request (response/bad-request {})
               :liiteri-error (response/internal-server-error {})))
           (finally
             (io/delete-file (:tempfile file-part) true))))

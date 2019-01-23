@@ -1067,8 +1067,8 @@
                           409 :file-upload-retransmit
                           ; rate limited:
                           429 :file-upload-failed
-                          ; any liiteri error:
-                          500 :file-type-forbidden
+                          ; forbidden file type:
+                          400 :file-type-forbidden
                           ; generic error, e.g. transfer interrupted:
                           :file-upload-error)]
       (if (and (contains? #{:file-upload-failed :retransmit} current-error) (< retries 3))

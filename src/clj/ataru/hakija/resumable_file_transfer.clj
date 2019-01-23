@@ -86,8 +86,8 @@
 (defn upload-file-to-liiteri
   [file file-name]
   (log/info "Uploading to liiteri:" file-name (.length file) "bytes")
-  (let [url        (resolve-url :liiteri.files)
-        start-time (System/currentTimeMillis)
+  (let [url                         (resolve-url :liiteri.files)
+        start-time                  (System/currentTimeMillis)
         {:keys [status body error]} (http-client/post url {:throw-exceptions false
                                                            :socket-timeout   (* 1000 300)
                                                            :cookie-policy    :standard
@@ -95,11 +95,18 @@
                                                                                :content   (FileInputStream. file)
                                                                                :name      (Normalizer/normalize file-name Normalizer$Form/NFD)}]})]
     (.delete file)
-    (if (= status 200)
-      (do
-        (log/info "Uploaded file" file-name "to liiteri in" (- (System/currentTimeMillis) start-time) "ms:" body)
-        (dissoc (json/parse-string body true) :version :deleted))
-      (log/error "Error uploading file to liiteri:" file-name status error body))))
+    (cond (= status 200)
+          (do
+            (log/info "Uploaded file" file-name "to liiteri in" (- (System/currentTimeMillis) start-time) "ms:" body)
+            [:complete (dissoc (json/parse-string body true) :version :deleted)])
+          (= status 400)
+          (do
+            (log/info "Error uploading file to liiteri:" file-name status error body)
+            [:bad-request nil])
+          :else
+          (do
+            (log/error "Error uploading file to liiteri:" file-name status error body)
+            [:liiteri-error nil]))))
 
 (defn store-file-part!
   [file-store file-id file-size part-number file-part]
@@ -111,16 +118,14 @@
     (if (= num-parts 1)
       (if-let [liiteri-file (upload-file-to-liiteri file file-name)]
         [:complete liiteri-file]
-        [:liiteri-error])
+        [:liiteri-error nil])
       (do
         (assert-valid-part-number num-parts part-number)
         (store-part file-store file file-part-name)
         (if last-part?
           (if (all-parts-exist? file-store file-id file-name file-size)
-            (if-let [liiteri-file (upload-file-to-liiteri
-                                    (combine-file-parts file-store file-id file-name file-size)
-                                    file-name)]
-              [:complete liiteri-file]
-              [:liiteri-error])
-            [:retransmit])
-          [:send-next])))))
+            (upload-file-to-liiteri
+             (combine-file-parts file-store file-id file-name file-size)
+             file-name)
+            [:retransmit nil])
+          [:send-next nil])))))
