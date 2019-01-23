@@ -1186,7 +1186,7 @@
           text      (:text feedback)
           post-data {:form-key   (-> db :form :key)
                      :form-id    (-> db :form :id)
-                     :form-name  (-> db :form :name lang-kw)
+                     :form-name  (autil/non-blank-val (-> db :form :name) [lang-kw :fi :sv :en])
                      :user-agent (.-userAgent js/navigator)
                      :rating     (:stars feedback)
                      :feedback   (when text
