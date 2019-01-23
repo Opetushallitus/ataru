@@ -88,11 +88,12 @@
   (log/info "Uploading to liiteri:" file-name (.length file) "bytes")
   (let [url        (resolve-url :liiteri.files)
         start-time (System/currentTimeMillis)
-        {:keys [status body error]} (http-client/post url {:socket-timeout (* 1000 300)
-                                                           :cookie-policy  :standard
-                                                           :multipart      [{:part-name "file"
-                                                                             :content   (FileInputStream. file)
-                                                                             :name      (Normalizer/normalize file-name Normalizer$Form/NFD)}]})]
+        {:keys [status body error]} (http-client/post url {:throw-exceptions false
+                                                           :socket-timeout   (* 1000 300)
+                                                           :cookie-policy    :standard
+                                                           :multipart        [{:part-name "file"
+                                                                               :content   (FileInputStream. file)
+                                                                               :name      (Normalizer/normalize file-name Normalizer$Form/NFD)}]})]
     (.delete file)
     (if (= status 200)
       (do
