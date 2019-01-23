@@ -105,7 +105,7 @@ WHERE (:form::text IS NULL OR (lf.key = :form AND a.haku IS NULL))
   AND (:application_oid::text IS NULL OR a.key = :application_oid)
   AND (:application_oids::text[] IS NULL OR a.key = ANY (:application_oids))
   AND (:person_oid::text IS NULL OR a.person_oid = :person_oid)
-  AND (:name::text IS NULL OR to_tsvector('simple', a.preferred_name || ' ' || a.last_name) @@ to_tsquery(:name))
+  AND (:name::text IS NULL OR to_tsvector('unaccent_simple', a.preferred_name || ' ' || a.last_name) @@ to_tsquery('unaccent_simple', :name))
   AND (:email::text IS NULL OR lower(a.email) = lower(:email))
   AND (:dob::text IS NULL OR a.dob = to_date(:dob, 'DD.MM.YYYY'))
   AND (:ssn::text IS NULL OR a.ssn = :ssn)
@@ -686,7 +686,7 @@ WHERE
   AND haku IS NOT NULL
   AND state <> 'inactivated'
   AND (:application_oids::text[] IS NULL OR a.key = ANY (:application_oids))
-  AND (:name::text IS NULL OR to_tsvector('simple', a.preferred_name || ' ' || a.last_name) @@ to_tsquery(:name))
+  AND (:name::text IS NULL OR to_tsvector('unaccent_simple', a.preferred_name || ' ' || a.last_name) @@ to_tsquery('unaccent_simple', :name))
   AND (:haku::text IS NULL OR a.haku = :haku)
   AND (:hakukohde::text IS NULL OR :hakukohde = ANY (a.hakukohde))
 ORDER BY a.created_time DESC;
