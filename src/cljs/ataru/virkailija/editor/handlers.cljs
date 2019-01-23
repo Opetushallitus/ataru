@@ -45,9 +45,14 @@
 (defn unfold [db id]
   (assoc-in db [:editor :ui id :folded?] false))
 
+(defn- collect-ids [acc {:keys [id children options]}]
+  (let [acc (reduce collect-ids acc (mapcat :followups options))
+        acc (reduce collect-ids acc children)]
+    (conj acc id)))
+
 (defn fold-all [db]
   (->> (get-in db (vec (current-form-content-path db)))
-       (map :id)
+       (reduce collect-ids [])
        (reduce fold db)))
 
 (defn- set-non-koodisto-option-values
