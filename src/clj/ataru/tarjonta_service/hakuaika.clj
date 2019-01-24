@@ -27,10 +27,19 @@
 (defn- jatkuva-haku? [haku]
   (clojure.string/starts-with? (:hakutapaUri haku) "hakutapa_03#"))
 
+(defn ended?
+  [now end]
+  (and (some? end)
+       (not (t/before? now (c/from-long end)))))
+
+(defn started?
+  [now start]
+  (and (some? start)
+       (t/after? now (c/from-long start))))
+
 (defn hakuaika-on [now start end]
-  (and (t/after? now (c/from-long start))
-       (or (nil? end)
-           (t/before? now (c/from-long end)))))
+  (and (started? now start)
+       (not (ended? now end))))
 
 (defn- hakukohteen-hakuaika [haku hakukohde]
   (some #(when (= (:hakuaikaId hakukohde)
@@ -64,15 +73,10 @@
                       (< %1 %2)))
             hakuajat)))
 
-(defn- not-yet-started
-  [now hakuaika]
-  (and (not (:on hakuaika))
-       (some? (:start hakuaika))
-       (t/after? (c/from-long (:start hakuaika)) now)))
-
 (defn select-hakuaika [now hakuajat]
   (or (last-by-ending (filter :on hakuajat))
-      (first-by-start (filter (partial not-yet-started now) hakuajat))
+      (last-by-ending (filter #(ended? now (:end %)) hakuajat))
+      (first-by-start (filter #(not (started? now (:start %))) hakuajat))
       (last-by-ending hakuajat)))
 
 (defn index-hakuajat
