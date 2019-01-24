@@ -88,4 +88,17 @@
                           (coerce/from-long 1000)
                           (:field-descriptor input)
                           (hakuaika/index-hakuajat (:hakukohteet input))))
-                    true)))))
+                    true))))
+
+  (it "should pick last ended hakuaika if one is present and none is open"
+    (check 100 (prop/for-all [input (input-gen 1000)]
+                 (let [hakuajat   (relevant-hakuajat input)
+                       paattyneet (filter hakuaika/ended? hakuajat)]
+                   (if (and (every? #(not (:on %)) hakuajat)
+                            (not-empty paattyneet))
+                     (= (hakuaika/select-hakuaika-for-field
+                         (coerce/from-long 1000)
+                         (:field-descriptor input)
+                         (hakuaika/index-hakuajat (:hakukohteet input)))
+                        (max-key :end paattyneet))
+                     true))))))
