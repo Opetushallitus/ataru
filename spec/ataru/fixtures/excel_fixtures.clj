@@ -71,18 +71,18 @@
                                                            {:requirement "degree-requirement" :state "fulfilled" :hakukohde "form"}
                                                            {:requirement "eligibility-state" :state "uneligible" :hakukohde "form"}]
                            :answers                       [{:key   "first-name"
-                                                            :label "Etunimi"
+                                                            :label {:fi "Etunimi"}
                                                             :value "Lomake-etunimi"}
                                                            {:key       "form_field_0_0"
-                                                            :label     "Kysymys 1"
+                                                            :label     {:fi "Kysymys 1"}
                                                             :value     "Vastaus 1"
                                                             :fieldType "textfield"}
                                                            {:key       "form_field_0_1"
-                                                            :label     "Kysymys 2"
+                                                            :label     {:fi "Kysymys 2"}
                                                             :value     "Vastaus 2"
                                                             :fieldType "textfield"}
                                                            {:key       "random_0"
-                                                            :label     "Kysymys 3"
+                                                            :label     {:fi "Kysymys 3"}
                                                             :value     "Vastaus 3"
                                                             :fieldType "textfield"}]})
 
@@ -101,18 +101,18 @@
                                 :application-hakukohde-reviews [{:requirement "selection-state" :state "selected" :hakukohde "hakukohde.oid"}
                                                                 {:requirement "processing-state" :state "processing" :hakukohde "hakukohde.oid"}]
                                 :answers                       [{:key   "first-name"
-                                                                 :label "Etunimi"
+                                                                 :label {:fi "Etunimi"}
                                                                  :value "Lomake-etunimi"}
                                                                 {:key       "form_field_1_0"
-                                                                 :label     "Kysymys 4"
+                                                                 :label     {:fi "Kysymys 4"}
                                                                  :value     "Vastaus 4"
                                                                  :fieldType "textfield"}
                                                                 {:key       "random_0"
-                                                                 :label     "Kysymys 5"
+                                                                 :label     {:fi "Kysymys 5"}
                                                                  :value     "Vastaus 5"
                                                                  :fieldType "textfield"}
                                                                 {:key       "should_not_be_shown"
-                                                                 :label     "You should not see this"
+                                                                 :label     {:fi "You should not see this"}
                                                                  :value     "Really, no"
                                                                  :fieldType "textField"}]})
 
@@ -131,18 +131,18 @@
                                        :application-hakukohde-reviews [{:requirement "selection-state" :state "selected" :hakukohde "hakukohde.oid"}
                                                                        {:requirement "processing-state" :state "processing" :hakukohde "hakukohde.oid"}]
                                        :answers                       [{:key   "first-name"
-                                                                        :label "Etunimi"
+                                                                        :label {:fi "Etunimi"}
                                                                         :value "Lomake-etunimi"}
                                                                        {:key       "form_field_1_0"
-                                                                        :label     "Kysymys 4"
+                                                                        :label     {:fi "Kysymys 4"}
                                                                         :value     "Vastaus 4"
                                                                         :fieldType "textfield"}
                                                                        {:key       "random_0"
-                                                                        :label     "Kysymys 5"
+                                                                        :label     {:fi "Kysymys 5"}
                                                                         :value     "Vastaus 5"
                                                                         :fieldType "textfield"}
                                                                        {:key       "should_not_be_shown"
-                                                                        :label     "You should not see this"
+                                                                        :label     {:fi "You should not see this"}
                                                                         :value     "Really, no"
                                                                         :fieldType "textField"}
                                                                        {:key       "valintatuloksen-julkaisulupa"

@@ -3,7 +3,6 @@
            [java.io ByteArrayOutputStream]
            [org.apache.poi.xssf.usermodel XSSFWorkbook XSSFSheet XSSFCell XSSFCellStyle])
   (:require [ataru.forms.form-store :as form-store]
-            [ataru.util.language-label :as label]
             [ataru.applications.application-store :as application-store]
             [ataru.component-data.base-education-module :as bem]
             [ataru.component-data.component :as component]
@@ -256,7 +255,7 @@
                    (filter (fn [{:keys [value]}]
                              (= value koodi-uri)))
                    first)]
-    (get-in koodi [:label lang])))
+    (util/non-blank-val (:label koodi) [lang :fi :sv :en])))
 
 (defn- raw-values->human-readable-value [field-descriptor {:keys [lang]} get-koodisto-options value]
   (let [lang (-> lang clojure.string/lower-case keyword)
@@ -276,7 +275,8 @@
           (not (empty? options))
           (some (fn [option]
                   (when (= value (:value option))
-                    (get-in option [:label lang] value)))
+                    (or (util/non-blank-val (:label option) [lang :fi :sv :en])
+                        value)))
                 options)
           :else
           value)))
@@ -347,14 +347,14 @@
   (str (match form-field
          {:params      {:adjacent true}
           :children-of parent-id}
-         (str (label/get-language-label-in-preferred-order
-               (get-in form-fields-by-id [parent-id :label]))
+         (str (util/non-blank-val (get-in form-fields-by-id [parent-id :label])
+                                  [:fi :sv :en])
               " - ")
          {:fieldType "attachment"}
          "Liitepyyntö: "
          :else
          "")
-       (label/get-language-label-in-preferred-order (:label form-field))))
+       (util/non-blank-val (:label form-field) [:fi :sv :en])))
 
 (defn- belongs-to-other-hakukohde?
   [selected-oids form-field]
@@ -380,7 +380,7 @@
        (remove #(or (contains? form-fields-by-id (:key %))
                     (and skip-answers?
                          (not (answer-to-always-include? (:key %))))))
-       (map #(vector (:key %) (label/get-language-label-in-preferred-order (:label %))))))
+       (map #(vector (:key %) (util/non-blank-val (:label %) [:fi :sv :en])))))
 
 (defn- extract-headers
   [applications form selected-oids skip-answers?]
@@ -430,13 +430,13 @@
             (and (not hakukohteet) (not hakukohde)))
       application
       (update application :answers conj
-        {:key "hakukohteet" :fieldType "hakukohteet" :value (:hakukohde application) :label "Hakukohteet"}))))
+        {:key "hakukohteet" :fieldType "hakukohteet" :value (:hakukohde application) :label {:fi "Hakukohteet"}}))))
 
 (defn- get-hakukohde-name [get-hakukohde lang-s haku-oid hakukohde-oid]
   (let [lang (keyword lang-s)]
     (when-let [hakukohde (get-hakukohde haku-oid hakukohde-oid)]
-      (str (get-in hakukohde [:name lang]) " - "
-           (get-in hakukohde [:tarjoaja-name lang])))))
+      (str (util/non-blank-val (:name hakukohde) [lang :fi :sv :en]) " - "
+           (util/non-blank-val (:tarjoaja-name hakukohde) [lang :fi :sv :en])))))
 
 (defn- add-hakukohde-name [get-haku get-hakukohde lang hakukohde-answer haku-oid]
   (update hakukohde-answer :value
