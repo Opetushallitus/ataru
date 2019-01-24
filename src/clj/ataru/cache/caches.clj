@@ -105,8 +105,8 @@
     (component/using
      (redis/map->Cache
       {:name               "form-by-haku-oid-and-id"
-       :ttl-after-read     [3 TimeUnit/DAYS]
-       :ttl-after-write    [3 TimeUnit/DAYS]
+       :ttl-after-read     [1 TimeUnit/HOURS]
+       :ttl-after-write    [1 TimeUnit/HOURS]
        :update-period      [1 TimeUnit/MINUTES]
        :update-after-read? true})
      {:redis  :redis
