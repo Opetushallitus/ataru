@@ -3,6 +3,7 @@
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.application-store :as store]
             [ataru.background-job.job :as job]
+            [ataru.files.file-store :as file-store]
             [ataru.fixtures.application :as application-fixtures]
             [ataru.fixtures.db.unit-test-db :as db]
             [ataru.email.application-email-confirmation :as application-email]
@@ -16,6 +17,7 @@
             [ataru.hakija.hakija-routes :as routes]
             [ataru.hakija.hakija-application-service :as application-service]
             [ataru.config.core :refer [config]]
+            [clj-time.core :as t]
             [cheshire.core :as json]
             [ataru.db.db :as ataru-db]
             [ring.mock.request :as mock]
@@ -397,7 +399,17 @@
     (around [spec]
       (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
                     hakuaika/get-hakuaika-info                            hakuaika-ongoing
-                    koodisto/all-koodisto-values                          (constantly nil)]
+                    koodisto/all-koodisto-values                          (constantly nil)
+                    file-store/get-metadata                               (fn [keys]
+                                                                            (map #(hash-map
+                                                                                   :key %
+                                                                                   :content-type "plain/text"
+                                                                                   :filename "tiedosto.txt"
+                                                                                   :size 1
+                                                                                   :virus-scan-status "done"
+                                                                                   :final true
+                                                                                   :uploaded (t/now))
+                                                                                 keys))]
         (spec)))
 
     (before-all
