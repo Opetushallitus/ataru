@@ -636,13 +636,13 @@
                                  :order  :descending})]
     (when-let [query (or (cond (some? form-key)
                                (->form-query form-key)
-                               (some? hakukohde-oid)
-                               (->hakukohde-query hakukohde-oid ensisijaisesti)
                                (and (some? haku-oid) (some? hakukohderyhma-oid))
-                               (->hakukohderyhma-query haku-oid hakukohderyhma-oid ensisijaisesti rajaus-hakukohteella))
+                               (->hakukohderyhma-query haku-oid hakukohderyhma-oid ensisijaisesti rajaus-hakukohteella)
+                               (some? hakukohde-oid)
+                               (->hakukohde-query hakukohde-oid ensisijaisesti))
                          (->and-query
                            (when haku-oid
-                                 (->haku-query haku-oid))
+                             (->haku-query haku-oid))
                            (cond (some? ssn)
                                  (->ssn-query ssn)
                                  (and (some? dob) (dob/dob? dob))
