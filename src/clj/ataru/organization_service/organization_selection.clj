@@ -9,14 +9,24 @@
     organization-service
     (into [{:oid ""}] (organization-service/get-hakukohde-groups organization-service))))
 
+(defn- filter-org-by-type
+  [include-organizations? include-hakukohde-groups? organization]
+  (cond
+    (and include-organizations? include-hakukohde-groups?)
+    true
+    (and (not include-organizations?) (not include-hakukohde-groups?))
+    false
+    :else
+    (= (boolean (:hakukohderyhma? organization)) include-hakukohde-groups?)))
+
 (defn query-organization
-  [organization-service session query]
+  [organization-service session query include-organizations? include-hakukohde-groups?]
   (let [superuser?    (-> session :identity :superuser (boolean))
-        organizations (sort-by
-                        #(some (fn [lang] (-> % :name lang)) [:fi :sv :en])
-                        (if superuser?
-                          (all-organizations organization-service)
-                          (-> session :identity :organizations (vals))))]
+        organizations (->> (if superuser?
+                             (all-organizations organization-service)
+                             (-> session :identity :organizations (vals)))
+                           (filter (partial filter-org-by-type include-organizations? include-hakukohde-groups?))
+                           (sort-by #(some (fn [lang] (-> % :name lang)) [:fi :sv :en])))]
     (take 11
           (if (or (string/blank? query)
                   (< (count query) 2))

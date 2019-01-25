@@ -4,11 +4,13 @@
 
 (def default-db
   {:editor               {:forms               nil
-                          :autosave            nil                  ; autosave stop function, see autosave.cljs
+                          :autosave            nil          ; autosave stop function, see autosave.cljs
                           :selected-form-key   nil
                           :used-by-haut        {:fetching? false
                                                 :error?    false}
-                          :email-template-lang "fi"}
+                          :email-template-lang "fi"
+                          :organizations       {:org-select-organizations    true
+                                                :org-select-hakukohde-groups true}}
    ; Initial active panel on page load.
    :active-panel         :editor
    :application          {:applications               []

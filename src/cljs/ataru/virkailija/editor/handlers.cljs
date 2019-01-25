@@ -907,10 +907,21 @@
                           :dispatch [:editor/do-organization-query]}}))
 
 (reg-event-fx
+  :editor/toggle-organization-select-filter
+  (fn [{db :db} [_ id]]
+    {:db                 (update-in db [:editor :organizations id] not)
+     :dispatch-debounced {:timeout  500
+                          :id       [:organization-query]
+                          :dispatch [:editor/do-organization-query]}}))
+
+(reg-event-fx
   :editor/do-organization-query
   (fn [{db :db} [_]]
-    {:http {:method :get
-            :path (str "/lomake-editori/api/organization/user-organizations?query=" (-> db :editor :organizations :query))
+    {:http {:method              :get
+            :path                (str "/lomake-editori/api/organization/user-organizations?query="
+                                      (-> db :editor :organizations :query)
+                                      "&organizations=" (if (-> db :editor :organizations :org-select-organizations) "true" "false")
+                                      "&hakukohde-groups=" (if (-> db :editor :organizations :org-select-hakukohde-groups) "true" "false"))
             :handler-or-dispatch :editor/update-organization-query-results}}))
 
 (reg-event-fx

@@ -557,8 +557,10 @@
          (header "Cache-Control" "public, max-age=300")))
 
       (api/GET "/user-organizations" {session :session}
-        :query-params [{query :- s/Str nil}]
-        (ok (organization-selection/query-organization organization-service session query)))
+        :query-params [{query :- s/Str nil}
+                       {organizations :- s/Str nil}
+                       {hakukohde-groups :- s/Str nil}]
+        (ok (organization-selection/query-organization organization-service session query (= organizations "true") (= hakukohde-groups "true"))))
 
       (api/POST "/user-organization/:oid" {session :session}
         :path-params [oid :- s/Str]

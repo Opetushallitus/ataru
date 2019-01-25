@@ -77,10 +77,21 @@
             :on-change #(dispatch [:editor/update-selected-organization-rights right (.. % -target -checked)])}]
           label]))]))
 
+(defn- organization-results-filter-checkbox
+  [id label]
+  [[:input
+    {:type      "checkbox"
+     :id        (name id)
+     :checked   @(subscribe [:state-query [:editor :organizations id]])
+     :on-change #(dispatch [:editor/toggle-organization-select-filter id])}]
+   [:label
+    {:for (name id)}
+    label]])
+
 (defn profile []
-  (let [user-info           (subscribe [:state-query [:editor :user-info]])
-        org-select-visible? (reagent/atom false)
-        lang                (subscribe [:editor/virkailija-lang])]
+  (let [user-info                   (subscribe [:state-query [:editor :user-info]])
+        org-select-visible?         (reagent/atom false)
+        lang                        (subscribe [:editor/virkailija-lang])]
     (fn []
       (when @user-info
         (let [organizations             (:organizations @user-info)
@@ -124,6 +135,9 @@
                   :placeholder (get-virkailija-translation :search-sub-organizations)
                   :value       @(subscribe [:state-query [:editor :organizations :query]])
                   :on-change   #(dispatch [:editor/update-organization-select-query (.-value (.-target %))])}]
+                (into [:div]
+                      (apply concat [(organization-results-filter-checkbox :org-select-organizations "Organisaatiot")
+                                     (organization-results-filter-checkbox :org-select-hakukohde-groups "Hakukohderyhmät")]))
                 (into
                  [:ul.profile__organization-select-results.zmdi-hc-ul
                   (map
