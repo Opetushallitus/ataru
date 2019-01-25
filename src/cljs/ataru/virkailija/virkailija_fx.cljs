@@ -15,12 +15,14 @@
                skip-parse-times?
                handler-args
                override-args
-               cache-ttl]}]
+               cache-ttl
+               id]}]
     (case method
       :post
       (http/post path
                  params
                  handler-or-dispatch
+                 :id id
                  :override-args override-args
                  :skip-parse-times? skip-parse-times?
                  :handler-args handler-args
@@ -29,6 +31,7 @@
       (http/http method
                  path
                  handler-or-dispatch
+                 :id id
                  :override-args override-args
                  :skip-parse-times? skip-parse-times?
                  :handler-args handler-args
@@ -51,3 +54,5 @@
   :fetch-hakukohde-groups
   (fn fetch-hakukohde-groups [[c]]
     (organization/fetch-hakukohderyhmat c)))
+
+(re-frame/reg-fx :http-abort http/abort)

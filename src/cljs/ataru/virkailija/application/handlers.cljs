@@ -1149,3 +1149,25 @@
       (when (< loaded-count total-count)
         {:db       (update-in db [:application :application-list-page] inc)
          :dispatch [:application/update-applications-immediate]}))))
+
+(reg-event-db
+  :store-request-handle
+  (fn [db [_ request-id request-handle]]
+    (if (and request-id request-handle)
+      (assoc-in db [:request-handles request-id] request-handle)
+      db)))
+
+(reg-event-db
+  :remove-request-handle
+  (fn [db [_ request-id]]
+    (if request-id
+      (update db :request-handles dissoc request-id)
+      db)))
+
+(reg-event-fx
+  :abort-ongoing-request-if-exist
+  (fn [{:keys [db]} [_ request-id]]
+    (when request-id
+      (when-let [request-handle (get-in db [:request-handles request-id])]
+        {:http-abort request-handle
+         :db         (update db :request-handles dissoc request-id)}))))
