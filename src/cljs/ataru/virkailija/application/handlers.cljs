@@ -374,7 +374,8 @@
                                              reset-list? (reset-list))]
     {:db         new-db
      :dispatch-n [(when reset-list? [:application/refresh-haut-and-hakukohteet])]
-     :http       {:method              :post
+     :http       {:id                  :applications-list
+                  :method              :post
                   :path                "/lomake-editori/api/applications/list"
                   :params              (merge {:page               page
                                                :page-size          page-size
