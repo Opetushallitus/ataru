@@ -78,13 +78,23 @@
   [content]
   (.sanitize html-policy (md/md-to-html-string content)))
 
-(defn- hakukohde-names [tarjonta-service lang application]
+(defn- hakukohde-names [tarjonta-info lang application]
   (when-let [haku-oid (:haku application)]
-    (let [priority? (:usePriority (tarjonta-service/get-haku tarjonta-service haku-oid))]
-      (->> (:hakukohde application)
-           (map #(tarjonta-service/get-hakukohde-name tarjonta-service %))
-           (map-indexed #(cond->> (some %2 [lang :fi :sv :en])
-                                  priority? (str (inc %1) ". ")))))))
+    (let [tarjonta-hakukohteet (util/group-by-first :oid (:hakukohteet tarjonta-info))
+          hakukohteet          (keep #(get tarjonta-hakukohteet %) (:hakukohde application))]
+      (when-let [missing-oids (seq (clojure.set/difference
+                                    (set (:hakukohde application))
+                                    (set (map :oid hakukohteet))))]
+        (throw (new RuntimeException
+                    (str "Hakukohteet " (clojure.string/join ", " missing-oids)
+                         " not found"))))
+      (map-indexed (fn [i {:keys [name tarjonta-name]}]
+                     (str (when (:prioritize-hakukohteet tarjonta-info)
+                            (str (inc i) ". "))
+                          (util/non-blank-val name [lang :fi :sv :en])
+                          " - "
+                          (util/non-blank-val tarjonta-name [lang :fi :sv :en])))
+                   hakukohteet))))
 
 (defn- add-blank-templates [templates]
   (as-> templates x
@@ -134,17 +144,17 @@
 (defn- create-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id]
   (let [now                             (t/now)
         application                     (application-store/get-application application-id)
-        hakukohteet                     (get-in (tarjonta-parser/parse-tarjonta-info-by-haku
-                                                 koodisto-cache
-                                                 tarjonta-service
-                                                 organization-service
-                                                 ohjausparametrit-service
-                                                 (:haku application)
-                                                 (:hakukohde application))
-                                                [:tarjonta :hakukohteet])
+        tarjonta-info                   (:tarjonta
+                                         (tarjonta-parser/parse-tarjonta-info-by-haku
+                                          koodisto-cache
+                                          tarjonta-service
+                                          organization-service
+                                          ohjausparametrit-service
+                                          (:haku application)
+                                          (:hakukohde application)))
         answers-by-key                  (-> application :answers util/answers-by-key)
         form                            (-> (forms/fetch-by-id (:form application))
-                                            (hakukohde/populate-attachment-deadlines now hakukohteet))
+                                            (hakukohde/populate-attachment-deadlines now (:hakukohteet tarjonta-info)))
         lang                            (keyword (:lang application))
         attachment-keys-without-answers (->> (application-store/get-application-attachment-reviews (:key application))
                                              (map :attachment-key)
@@ -170,9 +180,7 @@
         application-url                 (modify-link (:secret application))
         body                            (selmer/render-file
                                           (template-name lang)
-                                          {:hakukohteet                (hakukohde-names tarjonta-service
-                                                                         lang
-                                                                         application)
+                                          {:hakukohteet                (hakukohde-names tarjonta-info lang application)
                                            :application-url            application-url
                                            :application-oid            (:key application)
                                            :content                    content
