@@ -2,7 +2,7 @@
   (:require [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]
             [ataru.cljs-util :as cljs-util :refer [get-virkailija-translation]]
-            [ataru.translations.texts :refer [virkailija-texts state-translations]]
+            [ataru.translations.texts :refer [virkailija-texts state-translations general-texts]]
             [ataru.util :as util]
             [ataru.virkailija.application.application-search-control :refer [application-search-control]]
             [ataru.virkailija.application.application-subs]
@@ -668,8 +668,8 @@
       {:type      "checkbox"
        :checked   checked?
        :on-change #(dispatch [:application/toggle-filter kw state])}]
-     [:span (if lang
-              (get label lang)
+     [:span (if (some? lang)
+              (util/non-blank-val label [lang :fi :sv :en])
               label)]]))
 
 (defn- review-type-filter
@@ -828,7 +828,14 @@
                              (contains? filters-to-include kw)
                              (-> @review-settings (get kw) (false?) (not)))))
                   (map (partial review-type-filter filters @lang))
-                  (doall))]]
+                  (doall))
+             [:div.application-handling__filter-group
+              [:div.application-handling__filter-group-title
+               (util/non-blank-val (:eligibility-set-automatically virkailija-texts)
+                                   [@lang :fi :sv :en])]
+              [:div.application-handling__filter-group-checkboxes
+               [application-filter-checkbox filters (:yes general-texts) @lang :eligibility-set-automatically :yes]
+               [application-filter-checkbox filters (:no general-texts) @lang :eligibility-set-automatically :no]]]]]
            (when @has-base-education-answers
              [:div.application-handling__popup-column.application-handling__popup-column--large
               [application-base-education-filters filters @lang]])]])])))

@@ -365,7 +365,8 @@
                                                       :hakukohde   s/Str}] ; "form" or oid
    (s/optional-key :application-attachment-reviews) [{:attachment-key s/Str
                                                       :state          (apply s/enum review-states/attachment-review-type-names)
-                                                      :hakukohde      s/Str}]})
+                                                      :hakukohde      s/Str}]
+   :eligibility-set-automatically                   [s/Str]})
 
 (s/defschema Application
   {(s/optional-key :key)                s/Str
