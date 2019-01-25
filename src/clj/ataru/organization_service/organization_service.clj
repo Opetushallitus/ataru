@@ -30,11 +30,12 @@
                   cache-key)))
 
 (defn get-orgs-from-cache-or-client [all-orgs-cache direct-oids]
-  (let [cache-key (join "-" direct-oids)]
+  (let [oids-key  (join "-" direct-oids)
+        cache-key (if (clojure.string/blank? oids-key) "all-orgs" oids-key)]
     (get-from-cache-or-real-source
-     all-orgs-cache
-     cache-key
-     #(mapcat org-client/get-organizations direct-oids))))
+      all-orgs-cache
+      cache-key
+      #(mapcat org-client/get-organizations direct-oids))))
 
 (defn get-groups-from-cache-or-client [group-cache]
   (get-from-cache-or-real-source
