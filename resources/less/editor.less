@@ -77,6 +77,85 @@
   padding: 0 20px;
 }
 
+.editor-form__copy-component-button {
+  border: 0;
+  border-radius: 3px;
+  color: @white;
+  display: flex;
+  height: 25px;
+  margin: 8px 8px 8px 0px;
+  align-items: center;
+  justify-content: center;
+  background-color: @pale-blue;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: 'Open Sans', sans-serif;
+
+  &:focus {
+    outline: none;
+  }
+
+  &::-moz-focus-inner {
+    border: 0px;
+  }
+
+  &:hover {
+    background-color: @editor-control-button-hover-blue;
+  }
+}
+
+.editor-form__copy-component-button--pressed {
+  background-color: @editor-control-button-confirm-red;
+  &:hover {
+    background-color: @editor-control-button-confirm-red;
+  }
+}
+
+.editor-form__copy-component-button--disabled {
+  background-color: @section-gray-border;
+  cursor: default;
+  &:hover {
+    background-color: @section-gray-border;
+  }
+}
+
+.editor-form__move-component-button {
+  border: solid 1px @pale-blue;
+  border-radius: 3px;
+  color: @white;
+  display: flex;
+  height: 25px;
+  align-items: center;
+  justify-content: center;
+  background-color: @pale-blue;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: 'Open Sans', sans-serif;
+
+  &:focus {
+    outline: none;
+  }
+
+  &::-moz-focus-inner {
+    border: 0px;
+  }
+
+  &:hover {
+    border: solid 1px @editor-control-button-hover-blue;
+    background-color: @editor-control-button-hover-blue;
+  }
+}
+
+.editor-form__move-component-button--pressed {
+  background-color: @element-header-background;
+  color: @pale-blue;
+  border: solid 1px @pale-blue;
+  &:hover {
+    border: solid 1px @pale-blue;
+    background-color: @element-header-background;
+  }
+}
+
 .editor-form__remove-component-button {
   border: 0;
   border-radius: 3px;
@@ -90,6 +169,14 @@
   cursor: pointer;
   font-size: 14px;
   font-family: 'Open Sans', sans-serif;
+
+  &:focus {
+    outline: none;
+  }
+
+  &::-moz-focus-inner {
+    border: 0px;
+  }
 
   &:hover {
     background-color: @editor-control-button-hover-blue;
@@ -856,11 +943,6 @@
   background: @element-header-background;
 }
 
-.editor-form__header-wrapper--draggable {
-  background: @element-header-background url("/lomake-editori/images/drag_handle.png") no-repeat center;
-  cursor: move;
-}
-
 .editor-form__component-header {
   margin: 0;
   padding: 10px 11px 8px 11px;
@@ -927,12 +1009,6 @@
   margin-left: 8px;
   padding: 0 3.24px;
   cursor: pointer;
-}
-
-.editor-form__draggable-indicator {
-  margin-right: 110px;
-  margin-top: auto;
-  margin-bottom: auto;
 }
 
 .editor-form__component-header-link {
@@ -1017,21 +1093,16 @@
   padding-top: 17px;
 }
 
-.editor-form__drag_n_drop_spacer--dashbox-hidden {
-  visibility: hidden;
+.editor-form__drag_n_drop_spacer--dashbox {
+  margin-top: -8px;
+  margin-bottom: 8px;
+  height: 51px;
+  border: 1px dashed #cccccc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.editor-form__drag_n_drop_spacer--dashbox-visible {
-  height: 51px;
-  margin-left: 0;
-  margin-right: 0;
-  margin-top: -17px;
-}
-.editor-form__drag_n_drop_spacer--dashbox-visible .editor-form__drag_n_drop_spacer--dashbox {
-  margin-top: 8px;
-  height: 41px;
-  border: 1px dashed #cccccc;
-}
 .editor-form__koodisto-popover {
   position: absolute;
   left: 407px;

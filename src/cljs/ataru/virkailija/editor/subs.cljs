@@ -311,3 +311,8 @@
   :editor/autosave-enabled?
   (fn [db _]
     (some? (-> db :editor :autosave))))
+
+(re-frame/reg-sub
+  :editor/copy-component-path
+  (fn copy-component-path [db _]
+    (get-in db [:editor :copy-component-path])))
