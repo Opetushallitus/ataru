@@ -43,6 +43,16 @@
   [maybe-oid]
   (re-matches #"^1\.2\.246\.562\.11\.\d+$" maybe-oid))
 
+(defn- application-oid-suffix?
+  [maybe-oid-suffix]
+  (re-matches #"^\d{2,20}$" maybe-oid-suffix))
+
+(defn- complete-application-oid
+  [oid-suffix]
+  (clojure.string/join "" (concat "1.2.246.562.11."
+                                  (repeat (- 20 (count oid-suffix)) "0")
+                                  oid-suffix)))
+
 (reg-event-fx
   :application/search-by-term
   (fn [{:keys [db]} [_ search-term]]
@@ -63,6 +73,9 @@
 
                                   (email/email? search-term)
                                   [search-term :email]
+
+                                  (application-oid-suffix? search-term)
+                                  [(complete-application-oid search-term-ucase) :application-oid]
 
                                   (< 2 (count search-term))
                                   [search-term :name])]
