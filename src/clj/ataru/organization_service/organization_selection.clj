@@ -6,8 +6,8 @@
 (defn- all-organizations
   [organization-service]
   (organization-service/get-all-organizations
-   organization-service
-   (organization-service/get-hakukohde-groups organization-service)))
+    organization-service
+    (into [{:oid ""}] (organization-service/get-hakukohde-groups organization-service))))
 
 (defn query-organization
   [organization-service session query]
