@@ -1,5 +1,6 @@
 (ns ataru.haku.haku-service
   (:require
+   [ataru.applications.application-access-control :as aac]
    [ataru.util :as util]
    [ataru.organization-service.organization-service :as organization-service]
    [ataru.organization-service.session-organizations :as session-orgs]
@@ -42,32 +43,6 @@
         :processed              processed
         :unprocessed            unprocessed}))))
 
-(defn- authorized-by-tarjoajat?
-  [authorized-organization-oids tarjoajat haku]
-  {:pre [(set? authorized-organization-oids)
-         (some? (:haku haku))
-         (some? (:hakukohde haku))]}
-  (not-empty
-   (clojure.set/intersection
-    authorized-organization-oids
-    (->> haku
-         :hakukohde
-         (get tarjoajat)))))
-
-(defn- authorized-by-form?
-  [authorized-organization-oids haku]
-  {:pre [(set? authorized-organization-oids)
-         (some? (:organization-oid haku))]}
-  (contains? authorized-organization-oids
-             (:organization-oid haku)))
-
-(defn- hakujen-tarjoajat [tarjonta-service haut]
-  (util/map-kv (->> (map :hakukohde haut)
-                    distinct
-                    (tarjonta/get-hakukohteet tarjonta-service)
-                    (util/group-by-first :oid))
-               (comp set :tarjoajaOids)))
-
 (defn- remove-organization-oid [haku]
   (dissoc haku :organization-oid))
 
@@ -78,14 +53,13 @@
    organization-service
    [:view-applications :edit-applications]
    (constantly {})
-   #(let [haut (application-store/get-haut)]
-      (->> haut
-           (filter (some-fn (partial authorized-by-form? %)
-                            (partial authorized-by-tarjoajat? % (hakujen-tarjoajat
-                                                                 tarjonta-service
-                                                                 haut))))
-           (map remove-organization-oid)
-           handle-hakukohteet))
+   #(->> (application-store/get-haut)
+         (map (fn [h] (update h :hakukohde vector)))
+         (aac/filter-authorized tarjonta-service
+                                (some-fn (partial aac/authorized-by-form? %)
+                                         (partial aac/authorized-by-tarjoajat? %)))
+         (map (fn [h] (update h :hakukohde first)))
+         handle-hakukohteet)
    #(->> (application-store/get-haut)
          (map remove-organization-oid)
          handle-hakukohteet)))
@@ -98,7 +72,7 @@
    [:view-applications :edit-applications]
    (constantly {})
    #(->> (application-store/get-direct-form-haut)
-         (filter (partial authorized-by-form? %))
+         (filter (partial aac/authorized-by-form? %))
          (map remove-organization-oid)
          (util/group-by-first :key))
    #(->> (application-store/get-direct-form-haut)
