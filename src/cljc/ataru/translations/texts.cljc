@@ -164,9 +164,9 @@
    :deadline-in                                 {:fi "Palautettava viimeistään"
                                                  :sv "Sista leveransdatum"
                                                  :en "Deadline in"}
-   :file-type-forbidden                         {:fi "Tiedostoa ei ladattu, yritä uudelleen"
-                                                 :en "File failed to upload, try again"
-                                                 :sv "Filen kunde inte laddas, försök igen"}
+   :file-type-forbidden                         {:fi "Tiedostomuoto ei ole sallittu"
+                                                 :en "File type is invalid"
+                                                 :sv "Filformatet är inte tillåtet"}
    :file-upload-failed                          {:fi "Tiedostoa ei ladattu, yritä uudelleen"
                                                  :en "File failed to upload, try again"
                                                  :sv "Filen kunde inte laddas, försök igen"}
