@@ -20,14 +20,15 @@
     (= (-> organization :hakukohderyhma? boolean) include-hakukohde-groups?)))
 
 (defn query-organization
-  [organization-service session query include-organizations? include-hakukohde-groups?]
-  (let [superuser?    (-> session :identity :superuser (boolean))
+  [organization-service session query include-organizations? include-hakukohde-groups? page-num]
+  (let [page-size 20
+        superuser?    (-> session :identity :superuser (boolean))
         organizations (->> (if superuser?
                              (all-organizations organization-service)
                              (-> session :identity :organizations (vals)))
                            (filter (partial filter-org-by-type include-organizations? include-hakukohde-groups?))
                            (sort-by #(some (fn [lang] (-> % :name lang)) [:fi :sv :en])))]
-    (take 11
+    (take (inc (* page-size (inc page-num)))
           (if (or (string/blank? query)
                   (< (count query) 2))
             organizations

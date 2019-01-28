@@ -10,7 +10,8 @@
                                                 :error?    false}
                           :email-template-lang "fi"
                           :organizations       {:org-select-organizations    true
-                                                :org-select-hakukohde-groups true}}
+                                                :org-select-hakukohde-groups true
+                                                :results-page                0}}
    ; Initial active panel on page load.
    :active-panel         :editor
    :application          {:applications               []

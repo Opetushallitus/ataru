@@ -558,9 +558,16 @@
 
       (api/GET "/user-organizations" {session :session}
         :query-params [{query :- s/Str nil}
-                       {organizations :- s/Str nil}
-                       {hakukohde-groups :- s/Str nil}]
-        (ok (organization-selection/query-organization organization-service session query (= organizations "true") (= hakukohde-groups "true"))))
+                       organizations :- s/Str
+                       hakukohde-groups :- s/Str
+                       results-page :- s/Int]
+        (ok (organization-selection/query-organization
+              organization-service
+              session
+              query
+              (= organizations "true")
+              (= hakukohde-groups "true")
+              results-page)))
 
       (api/POST "/user-organization/:oid" {session :session}
         :path-params [oid :- s/Str]

@@ -1070,9 +1070,9 @@ You will receive a confirmation of your application to your email."}
    :message-preview                             {:fi "Viestin esikatselu"
                                                  :sv "Förhandsgranska meddelandet"
                                                  :en "EN: Viestin esikatselu"}
-   :more-results-refine-search                  {:fi "Lisää tuloksia, tarkenna hakua"
-                                                 :sv "Lägg till resultat, specificera ansökan"
-                                                 :en "EN: Lisää tuloksia, tarkenna hakua"}
+   :more-results-refine-search                  {:fi "Lataa lisää tuloksia"
+                                                 :sv "Ladda mera"
+                                                 :en "Load more results"}
    :multiple-answers                            {:fi "Vastaaja voi lisätä useita vastauksia"
                                                  :sv "Du kan ge flera svar"
                                                  :en "EN: Vastaaja voi lisätä useita vastauksia"}
