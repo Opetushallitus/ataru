@@ -79,12 +79,12 @@
 
 (defn- organization-results-filter-checkbox
   [id label]
-  [[:input
+  [[:input.profile__organization-select-filters-checkbox
     {:type      "checkbox"
      :id        (name id)
      :checked   @(subscribe [:state-query [:editor :organizations id]])
      :on-change #(dispatch [:editor/toggle-organization-select-filter id])}]
-   [:label
+   [:label.profile__organization-select-filters-checkbox-label
     {:for (name id)}
     label]])
 
@@ -135,7 +135,7 @@
                   :placeholder (get-virkailija-translation :search-sub-organizations)
                   :value       @(subscribe [:state-query [:editor :organizations :query]])
                   :on-change   #(dispatch [:editor/update-organization-select-query (.-value (.-target %))])}]
-                (into [:div]
+                (into [:div.profile__organization-select-filters]
                       (apply concat [(organization-results-filter-checkbox :org-select-organizations "Organisaatiot")
                                      (organization-results-filter-checkbox :org-select-hakukohde-groups "Hakukohderyhmät")]))
                 (into
