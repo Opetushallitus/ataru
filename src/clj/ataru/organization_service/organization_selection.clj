@@ -17,7 +17,7 @@
     (and (not include-organizations?) (not include-hakukohde-groups?))
     false
     :else
-    (= (boolean (:hakukohderyhma? organization)) include-hakukohde-groups?)))
+    (= (-> organization :hakukohderyhma? boolean) include-hakukohde-groups?)))
 
 (defn query-organization
   [organization-service session query include-organizations? include-hakukohde-groups?]
