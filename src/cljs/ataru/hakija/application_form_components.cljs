@@ -524,14 +524,14 @@
         (for [child (util/flatten-form-fields children)]
           [render-field child :div-kwd :div.application__row-field.application__form-field])))
 
-(defn- dropdown-followups [field-descriptor value]
+(defn- dropdown-followups [field-descriptor value group-idx]
   (when-let [followups (seq (util/resolve-followups
                              (:options field-descriptor)
                              value))]
     [:div.application__form-dropdown-followups.animated.fadeIn
      (for [followup followups]
        ^{:key (:id followup)}
-       [render-field followup])]))
+       [render-field followup :idx group-idx])]))
 
 (defn- non-blank-option-label [option langs]
   (util/non-blank-val (:label option) langs))
@@ -583,16 +583,15 @@
                       (and (some? (:koodisto-source field-descriptor))
                            (not (:koodisto-ordered-by-user field-descriptor)))
                       (sort-by #(non-blank-option-label % @languages))))))]]
-     (when-not idx
-       (dropdown-followups field-descriptor (:value answer)))]))
+     (dropdown-followups field-descriptor (:value answer) idx)]))
 
-(defn- multi-choice-followups [followups]
+(defn- multi-choice-followups [followups group-idx]
   [:div.application__form-multi-choice-followups-outer-container
    [:div.application__form-multi-choice-followups-indicator]
    [:div.application__form-multi-choice-followups-container.animated.fadeIn
     (map (fn [followup]
            ^{:key (:id followup)}
-           [render-field followup])
+           [render-field followup :idx group-idx])
          followups)]])
 
 (defn- multiple-choice-option [field-descriptor option parent-id question-group-idx]
@@ -621,9 +620,8 @@
           label]
          (when (and @checked?
                     (not-empty (:followups option))
-                    (some (partial visible? ui) (:followups option))
-                    (not question-group-idx))
-           [multi-choice-followups (:followups option)])]))))
+                    (some (partial visible? ui) (:followups option)))
+           [multi-choice-followups (:followups option) question-group-idx])]))))
 
 (defn multiple-choice
   [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
@@ -679,7 +677,7 @@
                   (not-empty (:followups option))
                   (some (partial visible? (subscribe [:state-query [:application :ui]])) (:followups option)))
          (if use-multi-choice-style?
-           (multi-choice-followups (:followups option))
+           (multi-choice-followups (:followups option) question-group-idx)
            [:div.application__form-single-choice-followups-indicator]))])))
 
 (defn- use-multi-choice-style? [single-choice-field langs]
@@ -689,7 +687,7 @@
                 (< 50 (count label))))
         (:options single-choice-field))))
 
-(defn single-choice-button [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
+(defn single-choice-button [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
   (let [button-id               (answer-key field-descriptor)
         validators              (:validators field-descriptor)
         languages               (subscribe [:application/default-languages])
@@ -717,14 +715,13 @@
                            ^{:key (str "single-choice-" (when idx (str idx "-")) (:id field-descriptor) "-" option-idx)}
                            [single-choice-option option button-id field-descriptor idx languages use-multi-choice-style?])
                          (:options field-descriptor)))]
-         (when (and (not idx)
-                    (not use-multi-choice-style?)
+         (when (and (not use-multi-choice-style?)
                     (seq followups)
                     (some (partial visible? (subscribe [:state-query [:application :ui]])) followups))
            [:div.application__form-multi-choice-followups-container.animated.fadeIn
             (for [followup followups]
               ^{:key (:id followup)}
-              [render-field followup])])]))))
+              [render-field followup :idx idx])])]))))
 
 (defonce max-attachment-size-bytes
   (get (js->clj js/config) "attachment-file-max-size-bytes" (* 10 1024 1024)))

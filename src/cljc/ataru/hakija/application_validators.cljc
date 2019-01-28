@@ -18,7 +18,7 @@
 
 (defn ^:private required?
   [{:keys [value]}]
-  (if (or (seq? value) (vector? value))
+  (if (or (seq? value) (vector? value) (set? value))
     (not (empty? value))
     (not (clojure.string/blank? value))))
 

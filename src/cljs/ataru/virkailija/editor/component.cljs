@@ -645,16 +645,14 @@
          {:key (str "options-" option-index)}
          (if editable?
            (input-fields-with-lang
-            (fn [lang]
-              [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
-            languages)
+             (fn [lang]
+               [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
+             languages)
            [koodisto-fields-with-lang languages option-path])]
-        (when (not question-group-element?)
-          [followup-question option-index followups option-path show-followups parent-key option-value question-group-element?])
+        [followup-question option-index followups option-path show-followups parent-key option-value question-group-element?]
         (when editable?
           [remove-dropdown-option-button path option-index @form-locked? parent-key option-value question-group-element?])]
-       (when (not question-group-element?)
-         [followup-question-overlay option-index followups option-path show-followups])])))
+       [followup-question-overlay option-index followups option-path show-followups question-group-element?]])))
 
 (defn- dropdown-multi-options [path options-koodisto]
   (let [dropdown-id                (util/new-uuid)

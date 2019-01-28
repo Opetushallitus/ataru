@@ -46,10 +46,24 @@
     :attachment
     :adjacent-fieldset})
 
+(def followup-on-question-group-toolbar-element-names
+  #{:text-field
+    :text-area
+    :dropdown
+    :single-choice-button
+    :multiple-choice
+    :info-element
+    :adjacent-fieldset})
+
 (def ^:private followup-toolbar-elements
   (filter
     (fn [[el-name _]] (contains? followup-toolbar-element-names el-name))
     toolbar-elements))
+
+(def ^:private followup-on-question-group-toolbar-elements
+  (filter
+   (fn [[el-name _]] (contains? followup-on-question-group-toolbar-element-names el-name))
+   toolbar-elements))
 
 (def ^:private question-group-toolbar-elements
   (filter
@@ -100,8 +114,10 @@
    (fn [generate-fn]
      (dispatch [:generate-component generate-fn path]))])
 
-(defn followup-toolbar [option-path generator]
-  [custom-add-component followup-toolbar-elements option-path generator])
+(defn followup-toolbar [question-group-element? option-path generator]
+  [custom-add-component (if question-group-element?
+                          followup-on-question-group-toolbar-elements
+                          followup-toolbar-elements ) option-path generator])
 
 (defn question-group-toolbar [option-path generator]
   [custom-add-component question-group-toolbar-elements option-path generator])

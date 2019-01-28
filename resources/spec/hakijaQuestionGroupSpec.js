@@ -75,14 +75,15 @@
       describe('answering to a single-choice button inside a question group', function() {
         before(
           clickNthFieldRadio(15, 'Painikkeet, yksi valittavissa: A'),
-          clickNthFieldRadio(23, 'Painikkeet, yksi valittavissa: B'),
+          clickNthFieldRadio(23, 'Painikkeet, yksi valittavissa: C'),
+          setNthFieldInputValue(24, 'Lisäkysymyksen vastaus'),
           wait.until(function () {
             return invalidFieldsStatus().text() == 'Tarkista 8 tietoa'
           })
         )
         it('shows the single-choice question as answered', function() {
           expect(formFields().eq(15).find('.application__form-single-choice-button:checked + label').text()).to.equal('Painikkeet, yksi valittavissa: A')
-          expect(formFields().eq(23).find('.application__form-single-choice-button:checked + label').text()).to.equal('Painikkeet, yksi valittavissa: B')
+          expect(formFields().eq(23).find('.application__form-single-choice-button:checked + label').text()).to.equal('Painikkeet, yksi valittavissa: C')
         })
       })
 
@@ -90,7 +91,7 @@
         before(
           clickNthFieldRadio(16, 'Lista, monta valittavissa: A'),
           clickNthFieldRadio(16, 'Lista, monta valittavissa: B'),
-          clickNthFieldRadio(24, 'Lista, monta valittavissa: B'),
+          clickNthFieldRadio(25, 'Lista, monta valittavissa: B'),
           wait.until(function () {
             return invalidFieldsStatus().text() == 'Tarkista 7 tietoa'
           })
@@ -98,21 +99,21 @@
         it('shows the multi-choice question as answered', function() {
           expect(formFields().eq(16).find('.application__form-checkbox:checked:eq(0) + label').text()).to.equal('Lista, monta valittavissa: A')
           expect(formFields().eq(16).find('.application__form-checkbox:checked:eq(1) + label').text()).to.equal('Lista, monta valittavissa: B'),
-          expect(formFields().eq(24).find('.application__form-checkbox:checked + label').text()).to.equal('Lista, monta valittavissa: B')
+          expect(formFields().eq(25).find('.application__form-checkbox:checked + label').text()).to.equal('Lista, monta valittavissa: B')
         })
       })
 
       describe('answering to a single-answer text field inside a question group', function() {
         before(
           setNthFieldInputValue(17, 'Tekstikenttä, yksi vastaus: A'),
-          setNthFieldInputValue(25, 'Tekstikenttä, yksi vastaus: B'),
+          setNthFieldInputValue(26, 'Tekstikenttä, yksi vastaus: B'),
           wait.until(function () {
             return invalidFieldsStatus().text() == 'Tarkista 6 tietoa'
           })
         )
         it('shows the single-answer text field as answered', function() {
           expect(formFields().eq(17).find('.application__form-text-input').val()).to.equal('Tekstikenttä, yksi vastaus: A')
-          expect(formFields().eq(25).find('.application__form-text-input').val()).to.equal('Tekstikenttä, yksi vastaus: B')
+          expect(formFields().eq(26).find('.application__form-text-input').val()).to.equal('Tekstikenttä, yksi vastaus: B')
         })
       })
 
@@ -120,8 +121,8 @@
         before(
           setNthFieldSubInputValue(18, 0, 'Tekstikenttä, monta vastausta: A'),
           setNthFieldSubInputValue(18, 1, 'Tekstikenttä, monta vastausta: B'),
-          setNthFieldSubInputValue(26, 0, 'Tekstikenttä, monta vastausta: C'),
-          setNthFieldSubInputValue(26, 1, 'Tekstikenttä, monta vastausta: D'),
+          setNthFieldSubInputValue(27, 0, 'Tekstikenttä, monta vastausta: C'),
+          setNthFieldSubInputValue(27, 1, 'Tekstikenttä, monta vastausta: D'),
           wait.until(function () {
             return invalidFieldsStatus().text() == 'Tarkista 5 tietoa'
           })
@@ -129,22 +130,22 @@
         it('shows the multi-value text field inside a question group as answered', function() {
           expect(formFields().eq(18).find('.application__form-text-input:eq(0)').val()).to.equal('Tekstikenttä, monta vastausta: A')
           expect(formFields().eq(18).find('.application__form-text-input:eq(1)').val()).to.equal('Tekstikenttä, monta vastausta: B')
-          expect(formFields().eq(26).find('.application__form-text-input:eq(0)').val()).to.equal('Tekstikenttä, monta vastausta: C')
-          expect(formFields().eq(26).find('.application__form-text-input:eq(1)').val()).to.equal('Tekstikenttä, monta vastausta: D')
+          expect(formFields().eq(27).find('.application__form-text-input:eq(0)').val()).to.equal('Tekstikenttä, monta vastausta: C')
+          expect(formFields().eq(27).find('.application__form-text-input:eq(1)').val()).to.equal('Tekstikenttä, monta vastausta: D')
         })
       })
 
       describe('answering to a text area inside a question group', function() {
         before(
           setNthFieldValue(19, 'textarea', 'Tekstialue: AAAAA'),
-          setNthFieldValue(27, 'textarea', 'Tekstialue: BBBBB'),
+          setNthFieldValue(28, 'textarea', 'Tekstialue: BBBBB'),
           wait.until(function () {
             return invalidFieldsStatus().text() == 'Tarkista 4 tietoa'
           })
         )
         it('shows the text area inside a question group as answered', function() {
           expect(formFields().eq(19).find('.application__form-text-input').val()).to.equal('Tekstialue: AAAAA')
-          expect(formFields().eq(27).find('.application__form-text-input').val()).to.equal('Tekstialue: BBBBB')
+          expect(formFields().eq(28).find('.application__form-text-input').val()).to.equal('Tekstialue: BBBBB')
         })
       })
 
@@ -152,8 +153,8 @@
         before(
           setNthFieldSubInputValue(20, 0, 'Vierekkäiset tekstikentät, yksi vastaus: vastaus A'),
           setNthFieldSubInputValue(20, 1, 'Vierekkäiset tekstikentät, yksi vastaus: vastaus B'),
-          setNthFieldSubInputValue(28, 0, 'Vierekkäiset tekstikentät, yksi vastaus: vastaus C'),
-          setNthFieldSubInputValue(28, 1, 'Vierekkäiset tekstikentät, yksi vastaus: vastaus D'),
+          setNthFieldSubInputValue(29, 0, 'Vierekkäiset tekstikentät, yksi vastaus: vastaus C'),
+          setNthFieldSubInputValue(29, 1, 'Vierekkäiset tekstikentät, yksi vastaus: vastaus D'),
           wait.until(function () {
             return invalidFieldsStatus().text() == 'Tarkista 2 tietoa'
           })
@@ -161,8 +162,8 @@
         it('shows the single-answer adjacent text field inside a question group as answered', function() {
           expect(formFields().eq(20).find('.application__form-text-input:eq(0)').val()).to.equal('Vierekkäiset tekstikentät, yksi vastaus: vastaus A')
           expect(formFields().eq(20).find('.application__form-text-input:eq(1)').val()).to.equal('Vierekkäiset tekstikentät, yksi vastaus: vastaus B')
-          expect(formFields().eq(28).find('.application__form-text-input:eq(0)').val()).to.equal('Vierekkäiset tekstikentät, yksi vastaus: vastaus C')
-          expect(formFields().eq(28).find('.application__form-text-input:eq(1)').val()).to.equal('Vierekkäiset tekstikentät, yksi vastaus: vastaus D')
+          expect(formFields().eq(29).find('.application__form-text-input:eq(0)').val()).to.equal('Vierekkäiset tekstikentät, yksi vastaus: vastaus C')
+          expect(formFields().eq(29).find('.application__form-text-input:eq(1)').val()).to.equal('Vierekkäiset tekstikentät, yksi vastaus: vastaus D')
         })
       })
 
@@ -173,11 +174,11 @@
           clickElement(function() { return formFields().eq(21).find('a.application__form-add-new-row:contains("Lisää rivi")') }),
           setNthFieldSubInputValue(21, 2, 'Vierekkäiset tekstikentät, monta vastausta: vastaus A2'),
           setNthFieldSubInputValue(21, 3, 'Vierekkäiset tekstikentät, monta vastausta: vastaus B2'),
-          setNthFieldSubInputValue(29, 0, 'Vierekkäiset tekstikentät, monta vastausta: vastaus C1'),
-          setNthFieldSubInputValue(29, 1, 'Vierekkäiset tekstikentät, monta vastausta: vastaus D1'),
-          clickElement(function() { return formFields().eq(29).find('a.application__form-add-new-row:contains("Lisää rivi")') }),
-          setNthFieldSubInputValue(29, 2, 'Vierekkäiset tekstikentät, monta vastausta: vastaus C2'),
-          setNthFieldSubInputValue(29, 3, 'Vierekkäiset tekstikentät, monta vastausta: vastaus D2'),
+          setNthFieldSubInputValue(30, 0, 'Vierekkäiset tekstikentät, monta vastausta: vastaus C1'),
+          setNthFieldSubInputValue(30, 1, 'Vierekkäiset tekstikentät, monta vastausta: vastaus D1'),
+          clickElement(function() { return formFields().eq(30).find('a.application__form-add-new-row:contains("Lisää rivi")') }),
+          setNthFieldSubInputValue(30, 2, 'Vierekkäiset tekstikentät, monta vastausta: vastaus C2'),
+          setNthFieldSubInputValue(30, 3, 'Vierekkäiset tekstikentät, monta vastausta: vastaus D2'),
           wait.until(function () {
             return !submitButton().prop('disabled')
           })
@@ -187,10 +188,10 @@
           expect(formFields().eq(21).find('.application__form-text-input:eq(1)').val()).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus B1')
           expect(formFields().eq(21).find('.application__form-text-input:eq(2)').val()).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus A2')
           expect(formFields().eq(21).find('.application__form-text-input:eq(3)').val()).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus B2')
-          expect(formFields().eq(29).find('.application__form-text-input:eq(0)').val()).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus C1')
-          expect(formFields().eq(29).find('.application__form-text-input:eq(1)').val()).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus D1')
-          expect(formFields().eq(29).find('.application__form-text-input:eq(2)').val()).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus C2')
-          expect(formFields().eq(29).find('.application__form-text-input:eq(3)').val()).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus D2')
+          expect(formFields().eq(30).find('.application__form-text-input:eq(0)').val()).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus C1')
+          expect(formFields().eq(30).find('.application__form-text-input:eq(1)').val()).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus D1')
+          expect(formFields().eq(30).find('.application__form-text-input:eq(2)').val()).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus C2')
+          expect(formFields().eq(30).find('.application__form-text-input:eq(3)').val()).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus D2')
           expect(invalidFieldsStatus().text()).to.equal('')
           expect(submitButton().prop('disabled')).to.equal(false)
         })
@@ -244,12 +245,12 @@
           expect(adjacentReadonlyAnswer(5)).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus B2')
 
           expect(readonlyAnswer(22)).to.equal('Pudotusvalikko: B')
-          expect(readonlyAnswer(23)).to.equal('Painikkeet, yksi valittavissa: B')
-          expect(readonlyAnswer(24)).to.equal('Lista, monta valittavissa: B')
-          expect(readonlyAnswer(25)).to.equal('Tekstikenttä, yksi vastaus: B')
-          expect(readonlyAnswer(26)).to.equal('Tekstikenttä, monta vastausta: C')
-          expect(readonlyAnswer(27)).to.equal('Tekstikenttä, monta vastausta: D')
-          expect(readonlyAnswer(28)).to.equal('Tekstialue: BBBBB')
+          expect(readonlyAnswer(23)).to.equal('Painikkeet, yksi valittavissa: C')
+          expect(readonlyAnswer(25)).to.equal('Lista, monta valittavissa: B')
+          expect(readonlyAnswer(26)).to.equal('Tekstikenttä, yksi vastaus: B')
+          expect(readonlyAnswer(27)).to.equal('Tekstikenttä, monta vastausta: C')
+          expect(readonlyAnswer(28)).to.equal('Tekstikenttä, monta vastausta: D')
+          expect(readonlyAnswer(29)).to.equal('Tekstialue: BBBBB')
           expect(adjacentReadonlyAnswer(6)).to.equal('Vierekkäiset tekstikentät, yksi vastaus: vastaus C')
           expect(adjacentReadonlyAnswer(7)).to.equal('Vierekkäiset tekstikentät, yksi vastaus: vastaus D')
           expect(adjacentReadonlyAnswer(8)).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus C1')

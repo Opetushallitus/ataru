@@ -170,7 +170,7 @@
        :b05a6057-2c65-40a8-9312-c837429f44bb {:passed? true}}
       (validator/build-results koodisto-cache has-never-applied answers-by-key
         [] []
-        (:content f) [] false)))
+        (:content f) [] false nil)))
 
   (it "passes validation on multipleChoice answer being empty"
     (should
@@ -181,7 +181,7 @@
               assoc
               :value "")
             [] []
-            (:content f) [] false)
+            (:content f) [] false nil)
           :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
           :passed?)))
 
@@ -200,7 +200,7 @@
                     {:id "gender"}
                     (dissoc form :validators)
                     :else form))
-                (:content f))  [] false)
+                (:content f))  [] false nil)
             :gender
             :passed?)))
 
@@ -219,7 +219,7 @@
                   {:id "c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0"}
                   (assoc form :validators ["required"])
                   :else form))
-              (:content f)) [] false)
+              (:content f)) [] false nil)
           :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
           :passed?)))
 
@@ -238,7 +238,7 @@
                     {:id "gender"}
                     (assoc form :validators ["required"])
                     :else form))
-                (:content f)) [] false)
+                (:content f)) [] false nil)
           :gender
           :passed?)))
 
@@ -251,7 +251,7 @@
               assoc
               :value [])
             [] []
-            (:content f) [] false)
+            (:content f) [] false nil)
           :047da62c-9afe-4e28-bfe8-5b50b21b4277
           :passed?)))
 
@@ -270,7 +270,7 @@
                     {:id "047da62c-9afe-4e28-bfe8-5b50b21b4277"}
                     (assoc form :validators ["required"])
                     :else form))
-                (:content f)) [] false)
+                (:content f)) [] false nil)
           :047da62c-9afe-4e28-bfe8-5b50b21b4277
           :passed?)))
 
@@ -285,7 +285,7 @@
                     {:id "fbe3522d-6f1d-4e05-85e3-4e716146c686"}
                     (assoc form :validators ["required"])
                     :else form))
-                (:content f)) [] false)
+                (:content f)) [] false nil)
             :fbe3522d-6f1d-4e05-85e3-4e716146c686
             :passed?)))
 
@@ -304,7 +304,7 @@
                     {:id "fbe3522d-6f1d-4e05-85e3-4e716146c686"}
                     (assoc form :validators ["required"])
                     :else form))
-                (:content f)) [] false)
+                (:content f)) [] false nil)
           :fbe3522d-6f1d-4e05-85e3-4e716146c686
           :passed?)))
 
@@ -326,7 +326,7 @@
                          {:id "a3199cdf-fba3-4be1-8ab1-760f75f16d54"}
                          (assoc form-field :child-validator "birthdate-and-gender-component")
                          :else form-field))
-                (:content f)) [] false)
+                (:content f)) [] false nil)
             :a3199cdf-fba3-4be1-8ab1-760f75f16d54
             :passed?)))
 

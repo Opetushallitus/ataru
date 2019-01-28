@@ -99,7 +99,10 @@
         invalid-fields (for [[key answers] all-answers
                              :when         (and key
                                                 (not (:valid answers))
-                                                (get-in ui [key :visible?] true)
+                                                (let [visibility (get-in ui [key :visible?] true)]
+                                                  (if (sequential? visibility)
+                                                    (every? true? visibility)
+                                                    visibility))
                                                 (not-extra-answer? key question-ids))]
                          {:key       key
                           :label     (:label answers)

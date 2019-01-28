@@ -23,7 +23,7 @@
                                   :modified-by metadata})]
       (update-in db (util/flatten-path db option-path :followups) (fnil conj []) component))))
 
-(defn followup-question-overlay [option-index followups option-path show-followups]
+(defn followup-question-overlay [option-index followups option-path show-followups question-group-element?]
   (when (get @show-followups option-index)
     [:div.editor-form__followup-question-overlay-parent
      [:div.editor-form__followup-question-overlay-outer
@@ -32,7 +32,7 @@
       [:div.editor-form__followup-question-overlay
        followups
        [dnd/drag-n-drop-spacer (conj option-path :followups (count followups))]
-       [toolbar/followup-toolbar option-path
+       [toolbar/followup-toolbar question-group-element? option-path
         (fn [generate-fn]
           (dispatch [:editor/generate-followup-component generate-fn option-path]))]]]]))
 

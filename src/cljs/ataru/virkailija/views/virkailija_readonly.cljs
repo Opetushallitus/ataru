@@ -68,7 +68,6 @@
       (str (from-multi-lang (:label field-descriptor) lang)
            (required-hint field-descriptor))]
      [:div.application__form-field-value
-
       (cond (and (sequential? values) (< 1 (count values)))
             [:ul.application__form-field-list
              (map-indexed
@@ -223,7 +222,7 @@
              [:div.application-handling__nested-container
               (for [followup (:followups option)]
                 ^{:key (:id followup)}
-                [field followup application lang])])]))
+                [field followup application lang question-group-idx])])]))
        (doall
         (for [value values-wo-option]
           ^{:key (str "unknown-option-" value)}

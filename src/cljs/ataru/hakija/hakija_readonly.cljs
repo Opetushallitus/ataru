@@ -29,16 +29,20 @@
     (clojure.string/split s #"\s*,\s*")
     s))
 
-(defn- visible? [ui field-descriptor]
-  (and (get-in @ui [(keyword (:id field-descriptor)) :visible?] true)
-       (or (empty? (:children field-descriptor))
-           (some #(and (visible? ui %)
-                       (not= "infoElement" (:fieldClass %)))
-                 (:children field-descriptor)))))
+(defn- visible? [ui field-descriptor group-idx]
+  (let [visibility (get-in @ui [(keyword (:id field-descriptor)) :visible?] true)]
+    (and (if (sequential? visibility)
+           (get visibility group-idx)
+           visibility)
+         (or (empty? (:children field-descriptor))
+             (some #(and (visible? ui % group-idx)
+                         (not= "infoElement" (:fieldClass %)))
+               (:children field-descriptor))))))
 
 (defn text [field-descriptor application lang group-idx]
-  (let [id (keyword (:id field-descriptor))
-        answer (get-in application [:answers id])]
+  (let [id           (keyword (:id field-descriptor))
+        answer       (get-in application [:answers id])
+        visibilities (get-in application [:ui id :visible?])]
     [:div.application__form-field
      [:label.application__form-field-label
       (str (from-multi-lang (:label field-descriptor) lang)
@@ -57,7 +61,10 @@
                   (fn [i value]
                     ^{:key (str (:id field-descriptor) i)}
                     [:li (render-paragraphs value)])
-                  values)]
+                  (if (sequential? visibilities)
+                    (when (get visibilities group-idx)
+                      (get values group-idx))
+                    values))]
                 (sequential? values)
                 (render-paragraphs (first values))
                 :else
@@ -189,11 +196,11 @@
           [:div
            [:p.application__text-field-paragraph
             (from-multi-lang (:label option) lang)]
-           (when (some #(visible? ui %) (:followups option))
+           (when (some #(visible? ui % question-group-idx) (:followups option))
              [:div.application-handling__nested-container
               (for [followup (:followups option)]
                 ^{:key (:id followup)}
-                [field followup application lang])])])))]])
+                [field followup application lang question-group-idx])])])))]])
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
@@ -254,5 +261,5 @@
           ui   (subscribe [:state-query [:application :ui]])]
       (into [:div.application__readonly-container.animated.fadeIn]
         (for [content (:content form)
-              :when (visible? ui content)]
+              :when (visible? ui content nil)]
           [field content application lang])))))
