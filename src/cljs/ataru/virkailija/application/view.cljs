@@ -529,7 +529,7 @@
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
         expanded?    (subscribe [:state-query [:application :application-list-expanded?]])
-        on-update    #(when (not-empty applications)
+        on-update    #(when (and @expanded? (not-empty applications))
                         (dispatch [:application/scroll-list-to-selected-or-previously-closed-application]))]
     (r/create-class
       {:component-did-update on-update
