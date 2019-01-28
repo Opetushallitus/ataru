@@ -116,9 +116,7 @@
         file           (:tempfile file-part)
         file-part-name (build-file-name file-id file-name num-parts part-number)]
     (if (= num-parts 1)
-      (if-let [liiteri-file (upload-file-to-liiteri file file-name)]
-        [:complete liiteri-file]
-        [:liiteri-error nil])
+      (upload-file-to-liiteri file file-name)
       (do
         (assert-valid-part-number num-parts part-number)
         (store-part file-store file file-part-name)
