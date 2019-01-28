@@ -634,11 +634,17 @@
        (map first)))
 
 (defn- kk-base-educations-new-module [answers]
-  (let [m {"pohjakoulutus_kk"    "kk"
-           "pohjakoulutus_avoin" "avoin"
-           "pohjakoulutus_ulk"   "ulk"
-           "pohjakoulutus_muu"   "muu"}]
-    (keep m (-> answers :higher-completed-base-education :value))))
+  (let [m {"pohjakoulutus_yo"              ["yo"]
+           "pohjakoulutus_yo_ammatillinen" ["yo" "am"]
+           "pohjakoulutus_am"              ["am"]
+           "pohjakoulutus_amt"             ["amt"]
+           "pohjakoulutus_kk"              ["kk"]
+           "pohjakoulutus_avoin"           ["avoin"]
+           "pohjakoulutus_ulk"             ["ulk"]
+           "pohjakoulutus_muu"             ["muu"]}]
+    (->> (-> answers :higher-completed-base-education :value)
+         (mapcat m)
+         distinct)))
 
 (defn- kk-base-educations [answers]
   (distinct (concat (kk-base-educations-old-module answers)
