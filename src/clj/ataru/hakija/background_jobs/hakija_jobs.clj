@@ -3,7 +3,8 @@
             [ataru.applications.automatic-payment-obligation :as automatic-payment-obligation]
             [ataru.background-job.email-job :as email-job]
             [ataru.person-service.person-integration :as person-integration]
-            [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]))
+            [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
+            [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]))
 
 (def job-definitions
   {(:type email-job/job-definition)                    email-job/job-definition
@@ -16,4 +17,6 @@
    "automatic-eligibility-if-ylioppilas-job"           {:steps {:initial automatic-eligibility/automatic-eligibility-if-ylioppilas-job-step}
                                                         :type  "automatic-eligibility-if-ylioppilas-job"}
    "start-automatic-eligibility-if-ylioppilas-job-job" {:steps {:initial automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job-job-step}
-                                                        :type  "start-automatic-eligibility-if-ylioppilas-job-job"}})
+                                                        :type  "start-automatic-eligibility-if-ylioppilas-job-job"}
+   "tutkintojen-tunnustaminen-submit-job"              {:steps {:initial tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-submit-job-step}
+                                                        :type  "tutkintojen-tunnustaminen-submit-job"}})

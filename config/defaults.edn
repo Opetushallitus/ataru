@@ -9,6 +9,16 @@
                    :henkilo-modified-queue {:enabled?      false
                                             :drain-failed? false
                                             :queue-url     ""}}
+ :tutkintojen-tunnustaminen {:enabled?                    false
+                             :form-key                    ""
+                             :country-question-id         ""
+                             :attachment-total-size-limit 20
+                             :sftp                        {:host          ""
+                                                           :port          22
+                                                           :known-host    ""
+                                                           :host-key-type ""
+                                                           :user          ""
+                                                           :password      ""}}
  :yksiloimattomat {:allow false}
  :cache           {:type :redis}
  :redis           {:uri "redis://localhost:6379"}
