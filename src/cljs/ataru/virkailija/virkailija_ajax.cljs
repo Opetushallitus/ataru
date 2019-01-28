@@ -37,7 +37,6 @@
     response))
 
 (defn http [method path handler-or-dispatch & {:keys [override-args handler-args skip-parse-times? cache-ttl skip-flasher? id]}]
-  (dispatch [:abort-ongoing-request-if-exist id])
   (let [f             (case method
                         :get GET
                         :post POST
@@ -98,7 +97,7 @@
                                        (when-let [csrf-token (util/csrf-token)]
                                          {:headers {"CSRF" csrf-token}}))
                                      override-args))]
-        (dispatch [:store-request-handle id request-handle])))))
+        (dispatch [:store-request-handle-and-abort-ongoing id request-handle])))))
 
 (defn post [path params handler-or-dispatch & {:keys [override-args handler-args skip-parse-times? cache-ttl skip-flasher? id]}]
   (http
