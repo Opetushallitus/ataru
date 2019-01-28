@@ -713,54 +713,70 @@ ORDER BY a.created_time DESC;
 
 --name: yesql-applications-for-hakurekisteri
 SELECT
-  key,
-  haku,
-  hakukohde,
-  person_oid,
-  lang,
-  email,
-  content,
-  (SELECT json_object_agg(hakukohde, state)
-   FROM application_hakukohde_reviews AS ahr
-   WHERE ahr.application_key = key
-     AND ahr.requirement = 'payment-obligation') AS "payment-obligations",
-  (SELECT json_object_agg(hakukohde, state)
-   FROM application_hakukohde_reviews AS ahr
-   WHERE ahr.application_key = key
-     AND ahr.requirement = 'eligibility-state') AS eligibilities
-FROM latest_applications
-JOIN application_reviews ON application_key = key
-WHERE person_oid IS NOT NULL
-  AND haku IS NOT NULL
-  AND (:haku_oid::text IS NULL OR haku = :haku_oid)
+  a.key,
+  a.haku,
+  a.hakukohde,
+  a.person_oid,
+  a.lang,
+  a.email,
+  a.content,
+  payment_obligations.states AS "payment-obligations",
+  eligibilities.states AS eligibilities
+FROM latest_applications AS a
+JOIN application_reviews
+  ON application_key = a.key
+LEFT JOIN (SELECT application_key, max(modified_time) AS modified_time, jsonb_object_agg(hakukohde, state) AS states
+           FROM application_hakukohde_reviews AS payment_obligations
+           WHERE payment_obligations.requirement = 'payment-obligation'
+           GROUP BY application_key) AS payment_obligations
+  ON payment_obligations.application_key = a.key
+LEFT JOIN (SELECT application_key, max(modified_time) AS modified_time, jsonb_object_agg(hakukohde, state) AS states
+           FROM application_hakukohde_reviews AS payment_obligations
+           WHERE payment_obligations.requirement = 'eligibility-state'
+           GROUP BY application_key) AS eligibilities
+  ON eligibilities.application_key = a.key
+WHERE a.person_oid IS NOT NULL
+  AND a.haku IS NOT NULL
+  AND (:haku_oid::text IS NULL OR a.haku = :haku_oid)
   -- Parameter list contains empty string to avoid empty lists
-  AND (array_length(ARRAY[:hakukohde_oids], 1) < 2 OR ARRAY[:hakukohde_oids] && hakukohde)
-  AND (array_length(ARRAY[:person_oids], 1) < 2 OR person_oid IN (:person_oids))
-  AND (:modified_after::text IS NULL OR created_time > :modified_after::TIMESTAMPTZ)
+  AND (array_length(ARRAY[:hakukohde_oids], 1) < 2 OR ARRAY[:hakukohde_oids] && a.hakukohde)
+  AND (array_length(ARRAY[:person_oids], 1) < 2 OR a.person_oid IN (:person_oids))
+  AND (:modified_after::text IS NULL OR (a.created_time > :modified_after::TIMESTAMPTZ
+                                         OR application_reviews.modified_time > :modified_after::TIMESTAMPTZ
+                                         OR payment_obligations.modified_time > :modified_after::TIMESTAMPTZ
+                                         OR eligibilities.modified_time > :modified_after::TIMESTAMPTZ))
   AND state <> 'inactivated'
-ORDER BY created_time DESC;
+ORDER BY a.created_time DESC;
 
 --name: yesql-get-applications-by-created-time
 SELECT
-  key,
-  haku,
-  hakukohde,
-  person_oid,
-  content,
+  a.key,
+  a.haku,
+  a.hakukohde,
+  a.person_oid,
+  a.content,
   application_reviews.state,
-  (SELECT json_object_agg(hakukohde, state)
-   FROM application_hakukohde_reviews AS ahr
-   WHERE ahr.application_key = key
-     AND ahr.requirement = 'payment-obligation') AS "payment-obligations",
-  (SELECT json_object_agg(hakukohde, state)
-   FROM application_hakukohde_reviews AS ahr
-   WHERE ahr.application_key = key
-     AND ahr.requirement = 'eligibility-state') AS eligibilities
-FROM latest_applications
-  LEFT JOIN application_reviews ON latest_applications.key = application_reviews.application_key
-WHERE created_time > :date :: DATE
-      AND person_oid IS NOT NULL
-ORDER BY created_time DESC
+  payment_obligations.states AS "payment-obligations",
+  eligibilities.states AS eligibilities
+FROM latest_applications AS a
+LEFT JOIN application_reviews
+  ON application_reviews.application_key = a.key
+LEFT JOIN (SELECT application_key, max(modified_time) AS modified_time, jsonb_object_agg(hakukohde, state) AS states
+           FROM application_hakukohde_reviews AS payment_obligations
+           WHERE payment_obligations.requirement = 'payment-obligation'
+           GROUP BY application_key) AS payment_obligations
+  ON payment_obligations.application_key = a.key
+LEFT JOIN (SELECT application_key, max(modified_time) AS modified_time, jsonb_object_agg(hakukohde, state) AS states
+           FROM application_hakukohde_reviews AS payment_obligations
+           WHERE payment_obligations.requirement = 'eligibility-state'
+           GROUP BY application_key) AS eligibilities
+  ON eligibilities.application_key = a.key
+WHERE (a.created_time > :date :: DATE
+       OR application_reviews.modified_time > :date :: DATE
+       OR payment_obligations.modified_time > :date :: DATE
+       OR eligibilities.modified_time > :date :: DATE)
+      AND a.person_oid IS NOT NULL
+ORDER BY a.created_time DESC
 LIMIT :limit
 OFFSET :offset;
 
