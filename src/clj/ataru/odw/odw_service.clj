@@ -19,6 +19,11 @@
     "obligated"     "REQUIRED"
     "not-obligated" "NOT_REQUIRED"))
 
+(defn- get-kk-pohjakoulutus
+  [answers]
+  (map #(hash-map :pohjakoulutuskklomake %)
+       (get-in answers [:higher-completed-base-education :value])))
+
 (defn get-applications-for-odw [person-service tarjonta-service date limit offset]
   (let [applications (application-store/get-applications-newer-than date limit offset)
         persons      (person-service/get-persons person-service (distinct (keep :person_oid applications)))]
@@ -56,7 +61,8 @@
                      :pohjakoulutuksen_maa_toinen_aste (-> answers :secondary-completed-base-education--country :value)
                      :state                            (if (= state "inactivated")
                                                          "PASSIVE"
-                                                         "ACTIVE")}
+                                                         "ACTIVE")
+                     :kk_pohjakoulutus                 (get-kk-pohjakoulutus answers)}
                     (into {}
                           (for [index (range 1 7) ; Hard-coded amount in ODW 1-6
                                 :let  [hakukohde-oid (nth hakukohteet (dec index) nil)
