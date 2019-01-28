@@ -278,8 +278,9 @@
                              (s/optional-key :end) java.time.ZonedDateTime}]})
 
 (s/defschema Hakukohderyhma
-  {:oid s/Str
-   :name LocalizedStringOptional})
+  {:oid             s/Str
+   :name            LocalizedStringOptional
+   :hakukohderyhma? (s/eq true)})
 
 (s/defschema Hakukohde
   {:oid                s/Str
