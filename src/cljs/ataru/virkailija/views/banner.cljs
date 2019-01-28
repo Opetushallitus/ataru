@@ -92,14 +92,16 @@
   (let [user-info           (subscribe [:state-query [:editor :user-info]])
         org-select-visible? (reagent/atom false)
         lang                (subscribe [:editor/virkailija-lang])
-        results-page        (subscribe [:state-query [:editor :organizations :results-page]])]
+        results-page        (subscribe [:state-query [:editor :organizations :results-page]])
+        page-size           20]
     (fn []
       (when @user-info
         (let [organizations             (:organizations @user-info)
               search-results            (subscribe [:state-query [:editor :organizations :matches]])
               selected-organization-sub (subscribe [:state-query [:editor :user-info :selected-organization]])
               selected-organization     (when @selected-organization-sub [@selected-organization-sub])
-              org-str                   (org-label organizations (first selected-organization))]
+              org-str                   (org-label organizations (first selected-organization))
+              num-results-to-show       (* page-size (inc @results-page))]
           [:div.profile
            [:div.profile__organization
             [:a.profile__organization-link
@@ -152,8 +154,8 @@
                             [:i.zmdi.zmdi-hc-li.zmdi-collection-text]
                             [:i.zmdi.zmdi-hc-li.zmdi-accounts])
                           (get-label name)]])
-                      @search-results)])
-                 (when (< 20 (count @search-results))
+                      (take num-results-to-show @search-results))])
+                 (when (<= (count @search-results) (inc num-results-to-show))
                    [:a.profile__organization-more-results
                     {:on-click #(dispatch [:editor/increase-organization-result-page])}
                     (get-virkailija-translation :more-results-refine-search)])]]])]])))))
