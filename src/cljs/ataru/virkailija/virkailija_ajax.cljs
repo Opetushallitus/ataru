@@ -47,7 +47,7 @@
                           (dispatch [:remove-request-handle id])
                           (dispatch-flasher-error-msg method response)
                           (when-let [error-handler (:error-handler override-args)]
-                            (error-handler))))
+                            (error-handler response))))
         update-cache  (fn [response]
                         (when cache-ttl
                           (swap! http-cache assoc {method path} {:ttl      (+ cache-ttl (.getTime (js/Date.)))
