@@ -374,7 +374,8 @@
                                              reset-list? (reset-list))]
     {:db         new-db
      :dispatch-n [(when reset-list? [:application/refresh-haut-and-hakukohteet])]
-     :http       {:method              :post
+     :http       {:id                  :applications-list
+                  :method              :post
                   :path                "/lomake-editori/api/applications/list"
                   :params              (merge {:page               page
                                                :page-size          page-size
@@ -1149,3 +1150,19 @@
       (when (< loaded-count total-count)
         {:db       (update-in db [:application :application-list-page] inc)
          :dispatch [:application/update-applications-immediate]}))))
+
+(reg-event-fx
+  :store-request-handle-and-abort-ongoing
+  (fn [{:keys [db]} [_ request-id request-handle]]
+    (when (and request-id request-handle)
+      (let [ongoing-request-handle (-> db :request-handles request-id)]
+        (cond-> {:db (assoc-in db [:request-handles request-id] request-handle)}
+                (some? ongoing-request-handle)
+                (merge {:http-abort ongoing-request-handle}))))))
+
+(reg-event-db
+  :remove-request-handle
+  (fn [db [_ request-id]]
+    (if request-id
+      (update db :request-handles dissoc request-id)
+      db)))

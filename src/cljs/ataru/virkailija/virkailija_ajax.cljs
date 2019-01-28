@@ -3,7 +3,7 @@
             [cljs.core.match :refer-macros [match]]
             [ataru.cljs-util :as util]
             [ataru.virkailija.temporal :as temporal]
-            [ajax.core :refer [GET POST PUT DELETE]]
+            [ajax.core :refer [GET POST PUT DELETE] :as ajax]
             [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn dispatch-flasher-error-msg
@@ -36,21 +36,25 @@
   (when (and ttl (< (.getTime (js/Date.)) ttl))
     response))
 
-(defn http [method path handler-or-dispatch & {:keys [override-args handler-args skip-parse-times? cache-ttl skip-flasher?]}]
+(defn http [method path handler-or-dispatch & {:keys [override-args handler-args skip-parse-times? cache-ttl skip-flasher? id]}]
   (let [f             (case method
                         :get GET
                         :post POST
                         :put PUT
                         :delete DELETE)
-        error-handler (comp
-                        (or (:error-handler override-args) identity)
-                        (partial dispatch-flasher-error-msg method))
+        error-handler (fn [response]
+                        (when (not= (:failure response) :aborted)
+                          (dispatch [:remove-request-handle id])
+                          (dispatch-flasher-error-msg method response)
+                          (when-let [error-handler (:error-handler override-args)]
+                            (error-handler response))))
         update-cache  (fn [response]
                         (when cache-ttl
                           (swap! http-cache assoc {method path} {:ttl      (+ cache-ttl (.getTime (js/Date.)))
                                                                  :response response}))
                         response)
         on-response   (fn [response]
+                        (dispatch [:remove-request-handle id])
                         (dispatch [:flasher {:loading? false
                                              :message  (if skip-flasher?
                                                          nil
@@ -72,40 +76,51 @@
                         (-> (get @http-cache {method path})
                             response-when-ttl-left))]
       (on-response response)
-      (f path
-        (merge {:response-format :json
-                :format          :json
-                :keywords?       true
-                :error-handler   (fn [request]
-                                   (match request
-                                     {:status   401
-                                      :response {:redirect url}}
-                                     (redirect url)
+      (let [request-handle (f path
+                              (merge {:response-format :json
+                                      :format          :json
+                                      :keywords?       true
+                                      :error-handler   (fn [request]
+                                                         (match request
+                                                                {:status   401
+                                                                 :response {:redirect url}}
+                                                                (redirect url)
 
-                                     :else
-                                     (error-handler request)))
-                :handler         (comp (comp on-response
-                                             update-cache)
-                                       (if skip-parse-times?
-                                         identity
-                                         temporal/parse-times))}
-          (when (util/include-csrf-header? method)
-            (when-let [csrf-token (util/csrf-token)]
-              {:headers {"CSRF" csrf-token}}))
-          override-args)))))
+                                                                :else
+                                                                (error-handler request)))
+                                      :handler         (comp (comp on-response
+                                                                   update-cache)
+                                                             (if skip-parse-times?
+                                                               identity
+                                                               temporal/parse-times))}
+                                     (when (util/include-csrf-header? method)
+                                       (when-let [csrf-token (util/csrf-token)]
+                                         {:headers {"CSRF" csrf-token}}))
+                                     override-args))]
+        (dispatch [:store-request-handle-and-abort-ongoing id request-handle])))))
 
-(defn post [path params handler-or-dispatch & {:keys [override-args handler-args skip-parse-times? cache-ttl skip-flasher?]}]
-  (http :post path handler-or-dispatch
+(defn post [path params handler-or-dispatch & {:keys [override-args handler-args skip-parse-times? cache-ttl skip-flasher? id]}]
+  (http
+    :post
+    path
+    handler-or-dispatch
     :override-args (merge override-args {:params params})
     :handler-args handler-args
     :skip-parse-times? skip-parse-times?
     :skip-flasher? skip-flasher?
-    :cache-ttl cache-ttl))
+    :cache-ttl cache-ttl
+    :id id))
 
-(defn put [path params handler-or-dispatch & {:keys [override-args handler-args skip-parse-times? cache-ttl skip-flasher?]}]
-  (http :put path handler-or-dispatch
+(defn put [path params handler-or-dispatch & {:keys [override-args handler-args skip-parse-times? cache-ttl skip-flasher? id]}]
+  (http
+    :put
+    path
+    handler-or-dispatch
     :override-args (merge override-args {:params params})
     :handler-args handler-args
     :skip-parse-times? skip-parse-times?
     :skip-flasher? skip-flasher?
-    :cache-ttl cache-ttl))
+    :cache-ttl cache-ttl
+    :id id))
+
+(def abort ajax/abort)
