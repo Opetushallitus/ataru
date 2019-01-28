@@ -607,22 +607,32 @@
       (vec (concat common [(dec t)] tt))
       target-path)))
 
-(defn move-component
-  [db [_ source-path target-path]]
+(defn copy-paste-component
+  [db [_ source-path target-path copy?]]
   (with-form-key [db form-key]
     (let [component                         (get-in db (concat [:editor :forms form-key :content] source-path))
-          recalculated-target-path          (recalculate-target-path-prevent-oob source-path target-path)
+          target-path                       (if copy?
+                                              target-path
+                                              (recalculate-target-path-prevent-oob source-path target-path))
           result-is-nested-component-group? (and
-                                             (contains? (set recalculated-target-path) :children)
+                                             (contains? (set target-path) :children)
                                              (= "wrapperElement" (:fieldClass component)))]
       (if result-is-nested-component-group?
         db ; Nesting is not allowed/supported
-        (-> db
-            (remove-component-from-list form-key source-path)
-            (add-component-to-list form-key component recalculated-target-path)
-            (update :editor dissoc :copy-component-path))))))
+        (if copy?
+          (-> db
+              (add-component-to-list form-key (clojure.walk/prewalk
+                                                (fn [x]
+                                                  (if (:id x)
+                                                    (assoc x :id (cu/new-uuid))
+                                                    x)) component) target-path)
+              (update :editor dissoc :copy-component-path))
+          (-> db
+              (remove-component-from-list form-key source-path)
+              (add-component-to-list form-key component target-path)
+              (update :editor dissoc :copy-component-path)))))))
 
-(reg-event-db :editor/move-component move-component)
+(reg-event-db :editor/copy-paste-component copy-paste-component)
 
 (reg-event-db
   :editor/copy-component
