@@ -901,16 +901,32 @@
 (reg-event-fx
   :editor/update-organization-select-query
   (fn [{db :db} [_ query]]
-    {:db (assoc-in db [:editor :organizations :query] query)
-     :dispatch-debounced {:timeout 500
-                          :id [:organization-query]
+    {:db                 (-> db
+                             (assoc-in [:editor :organizations :query] query)
+                             (assoc-in [:editor :organizations :results-page] 0))
+     :dispatch-debounced {:timeout  500
+                          :id       [:organization-query]
+                          :dispatch [:editor/do-organization-query]}}))
+
+(reg-event-fx
+  :editor/toggle-organization-select-filter
+  (fn [{db :db} [_ id]]
+    {:db                 (-> db
+                             (update-in [:editor :organizations id] not)
+                             (assoc-in [:editor :organizations :results-page] 0))
+     :dispatch-debounced {:timeout  500
+                          :id       [:organization-query]
                           :dispatch [:editor/do-organization-query]}}))
 
 (reg-event-fx
   :editor/do-organization-query
   (fn [{db :db} [_]]
-    {:http {:method :get
-            :path (str "/lomake-editori/api/organization/user-organizations?query=" (-> db :editor :organizations :query))
+    {:http {:method              :get
+            :path                (str "/lomake-editori/api/organization/user-organizations?query="
+                                      (-> db :editor :organizations :query)
+                                      "&organizations=" (if (-> db :editor :organizations :org-select-organizations) "true" "false")
+                                      "&hakukohde-groups=" (if (-> db :editor :organizations :org-select-hakukohde-groups) "true" "false")
+                                      "&results-page=" (get-in db [:editor :organizations :results-page] 0))
             :handler-or-dispatch :editor/update-organization-query-results}}))
 
 (reg-event-fx
@@ -928,6 +944,12 @@
                                       (clojure.string/join "&rights=" ["edit-applications" "view-applications" "form-edit"]))
             :handler-or-dispatch :editor/update-selected-organization}
      :db   (assoc-in db [:editor :user-info :selected-organization :rights] [:edit-applications :view-applications :form-edit])}))
+
+(reg-event-fx
+  :editor/increase-organization-result-page
+  (fn [{:keys [db]} _]
+    {:db       (update-in db [:editor :organizations :results-page] inc)
+     :dispatch [:editor/do-organization-query]}))
 
 (reg-event-fx
   :editor/update-selected-organization

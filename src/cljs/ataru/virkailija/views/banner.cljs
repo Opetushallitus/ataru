@@ -77,17 +77,31 @@
             :on-change #(dispatch [:editor/update-selected-organization-rights right (.. % -target -checked)])}]
           label]))]))
 
+(defn- organization-results-filter-checkbox
+  [id label]
+  [[:input.profile__organization-select-filters-checkbox
+    {:type      "checkbox"
+     :id        (name id)
+     :checked   @(subscribe [:state-query [:editor :organizations id]])
+     :on-change #(dispatch [:editor/toggle-organization-select-filter id])}]
+   [:label.profile__organization-select-filters-checkbox-label
+    {:for (name id)}
+    label]])
+
 (defn profile []
-  (let [user-info           (subscribe [:state-query [:editor :user-info]])
-        org-select-visible? (reagent/atom false)
-        lang                (subscribe [:editor/virkailija-lang])]
+  (let [user-info                 (subscribe [:state-query [:editor :user-info]])
+        org-select-visible?       (reagent/atom false)
+        lang                      (subscribe [:editor/virkailija-lang])
+        results-page              (subscribe [:state-query [:editor :organizations :results-page]])
+        search-results            (subscribe [:state-query [:editor :organizations :matches]])
+        selected-organization-sub (subscribe [:state-query [:editor :user-info :selected-organization]])
+        page-size                 20]
     (fn []
       (when @user-info
-        (let [organizations             (:organizations @user-info)
-              search-results            (subscribe [:state-query [:editor :organizations :matches]])
-              selected-organization-sub (subscribe [:state-query [:editor :user-info :selected-organization]])
-              selected-organization     (when @selected-organization-sub [@selected-organization-sub])
-              org-str                   (org-label organizations (first selected-organization))]
+        (let [organizations         (:organizations @user-info)
+              selected-organization (when @selected-organization-sub [@selected-organization-sub])
+              org-str               (org-label organizations (first selected-organization))
+              num-results-to-show   (* page-size (inc @results-page))]
           [:div.profile
            [:div.profile__organization
             [:a.profile__organization-link
@@ -105,10 +119,10 @@
                  [:i.zmdi.zmdi-close]]]
                [:div.profile__organization-select-content
                 (into
-                 [:ul.profile__organization-select-user-orgs.zmdi-hc-ul]
-                 (map
-                  (fn [org] [:li [:i.zmdi.zmdi-hc-li.zmdi-accounts] org])
-                  (create-org-labels (or selected-organization organizations) @lang)))
+                  [:ul.profile__organization-select-user-orgs.zmdi-hc-ul]
+                  (map
+                    (fn [org] [:li [:i.zmdi.zmdi-hc-li.zmdi-accounts] org])
+                    (create-org-labels (or selected-organization organizations) @lang)))
                 (when selected-organization
                   [:div
                    (when (:superuser? @user-info)
@@ -124,19 +138,30 @@
                   :placeholder (get-virkailija-translation :search-sub-organizations)
                   :value       @(subscribe [:state-query [:editor :organizations :query]])
                   :on-change   #(dispatch [:editor/update-organization-select-query (.-value (.-target %))])}]
-                (into
-                 [:ul.profile__organization-select-results.zmdi-hc-ul
-                  (map
-                   (fn [{:keys [oid name]}]
-                     [:li.profile__organization-select-result
-                      {:key (str "organization-match-" oid)}
-                      [:a
-                       {:on-click #(dispatch [:editor/select-organization oid])}
-                       [:i.zmdi.zmdi-hc-li.zmdi-accounts]
-                       (get-label name)]])
-                   @search-results)])
-                (when (< 10 (count @search-results))
-                  [:div.profile__organization-more-results (get-virkailija-translation :more-results-refine-search)])]])]])))))
+                (into [:div.profile__organization-select-filters]
+                      (apply concat [(organization-results-filter-checkbox :org-select-organizations "Organisaatiot")
+                                     (organization-results-filter-checkbox :org-select-hakukohde-groups "Hakukohderyhmät")]))
+                [:div.profile__organization-select-results-container
+                 (into
+                   [:ul.profile__organization-select-results.zmdi-hc-ul
+                    (map
+                      (fn [{:keys [oid name hakukohderyhma?]}]
+                        [:li.profile__organization-select-result
+                         {:key (str "organization-match-" oid)}
+                         [:a
+                          {:on-click #(dispatch [:editor/select-organization oid])}
+                          (if hakukohderyhma?
+                            [:i.zmdi.zmdi-hc-li.zmdi-collection-text]
+                            [:i.zmdi.zmdi-hc-li.zmdi-accounts])
+                          (let [label (get-label name)]
+                            (if (clojure.string/blank? label)
+                              "—"
+                              label))]])
+                      (take num-results-to-show @search-results))])
+                 (when (= (inc num-results-to-show) (count @search-results))
+                   [:a.profile__organization-more-results
+                    {:on-click #(dispatch [:editor/increase-organization-result-page])}
+                    (get-virkailija-translation :more-results-refine-search)])]]])]])))))
 
 (defn status []
   (let [flash    (subscribe [:state-query [:flash]])
