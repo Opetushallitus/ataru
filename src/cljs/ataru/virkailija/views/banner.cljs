@@ -158,7 +158,7 @@
                               "—"
                               label))]])
                       (take num-results-to-show @search-results))])
-                 (when (<= (count @search-results) (inc num-results-to-show))
+                 (when (= (inc num-results-to-show) (count @search-results))
                    [:a.profile__organization-more-results
                     {:on-click #(dispatch [:editor/increase-organization-result-page])}
                     (get-virkailija-translation :more-results-refine-search)])]]])]])))))
