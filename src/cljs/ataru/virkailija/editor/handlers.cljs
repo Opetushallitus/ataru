@@ -911,7 +911,9 @@
 (reg-event-fx
   :editor/toggle-organization-select-filter
   (fn [{db :db} [_ id]]
-    {:db                 (update-in db [:editor :organizations id] not)
+    {:db                 (-> db
+                             (update-in [:editor :organizations id] not)
+                             (assoc-in [:editor :organizations :results-page] 0))
      :dispatch-debounced {:timeout  500
                           :id       [:organization-query]
                           :dispatch [:editor/do-organization-query]}}))
