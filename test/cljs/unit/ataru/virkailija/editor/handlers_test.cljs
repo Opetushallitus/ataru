@@ -69,13 +69,18 @@
     {:editor {:selected-form-key form-key
               :forms {form-key {:content content}}}}))
 
+(defn to-copy-component [[form-key path]]
+  {:copy-component-path      path
+   :copy-component-form-key  form-key
+   :copy-component-clonable? true})
+
 (deftest on-drop-moves-form-component-at-root-level
   (let [target-path    [0]
         source-path    [1234 [1]]
         state-before   (as-form [drag-component-1 drag-component-2])
         expected-state (as-form [drag-component-2 drag-component-1])
         copy?          false
-        actual-state   (h/copy-paste-component state-before [:editor/copy-paste-component source-path target-path copy?])
+        actual-state   (h/copy-paste-component state-before [:editor/copy-paste-component (to-copy-component source-path) target-path copy?])
         content-path   [:editor :forms 1234 :content]]
     (is (= (get-in actual-state content-path)
            (get-in expected-state content-path)))))
@@ -86,7 +91,7 @@
         state-before   (as-form [drag-component-1 {:children [drag-component-2]}])
         expected-state (as-form [{:children [drag-component-1 drag-component-2]}])
         copy?          false
-        actual-state   (h/copy-paste-component state-before [:editor/copy-paste-component source-path target-path copy?])
+        actual-state   (h/copy-paste-component state-before [:editor/copy-paste-component (to-copy-component source-path) target-path copy?])
         content-path   [:editor :forms 1234 :content]]
     (is (= (get-in actual-state content-path)
            (get-in expected-state content-path)))))
@@ -97,7 +102,7 @@
         state-before   (as-form [{:children [drag-component-1 drag-component-2]}])
         expected-state (as-form [drag-component-1 {:children [drag-component-2]}])
         copy?          false
-        actual-state   (h/copy-paste-component state-before [:editor/copy-paste-component source-path target-path copy?])
+        actual-state   (h/copy-paste-component state-before [:editor/copy-paste-component (to-copy-component source-path) target-path copy?])
         content-path   [:editor :forms 1234 :content]]
     (is (= (get-in actual-state content-path)
            (get-in expected-state content-path)))))
@@ -108,7 +113,7 @@
         state-before   (as-form [drag-component-1 drag-component-2 {:children []}])
         expected-state (as-form [drag-component-2 drag-component-1 {:children []}])
         copy?          false
-        actual-state   (h/copy-paste-component state-before [:editor/copy-paste-component source-path target-path copy?])
+        actual-state   (h/copy-paste-component state-before [:editor/copy-paste-component (to-copy-component source-path) target-path copy?])
         content-path   [:editor :forms 1234 :content]]
     (is (= (get-in actual-state content-path)
            (get-in expected-state content-path)))))
@@ -119,7 +124,7 @@
         state-before   (as-form [drag-component-1 drag-component-2])
         expected-state (as-form [drag-component-1 drag-component-2])
         copy?          false
-        actual-state   (h/copy-paste-component state-before [:editor/copy-paste-component source-path target-path copy?])
+        actual-state   (h/copy-paste-component state-before [:editor/copy-paste-component (to-copy-component source-path) target-path copy?])
         content-path   [:editor :forms 1234 :content]]
     (is (= (get-in actual-state content-path)
            (get-in expected-state content-path)))))
@@ -130,7 +135,7 @@
         state-before   (as-form [drag-component-1 drag-component-2])
         expected-state (as-form [drag-component-2 drag-component-1])
         copy?          false
-        actual-state   (h/copy-paste-component state-before [:editor/copy-paste-component source-path target-path copy?])
+        actual-state   (h/copy-paste-component state-before [:editor/copy-paste-component (to-copy-component source-path) target-path copy?])
         content-path   [:editor :forms 1234 :content]]
     (is (= (get-in actual-state content-path)
            (get-in expected-state content-path)))))
@@ -141,7 +146,7 @@
         state-before   (as-form [{:children [drag-component-1]}])
         expected-state (as-form [{:children []} drag-component-1])
         copy?          false
-        actual-state   (h/copy-paste-component state-before [:editor/copy-paste-component source-path target-path copy?])
+        actual-state   (h/copy-paste-component state-before [:editor/copy-paste-component (to-copy-component source-path) target-path copy?])
         content-path   [:editor :forms 1234 :content]]
     (is (= (get-in actual-state content-path)
            (get-in expected-state content-path)))))
