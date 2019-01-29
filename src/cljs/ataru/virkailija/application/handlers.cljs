@@ -243,11 +243,22 @@
                 [:application :sort]
                 {:column column-id :order :descending}))))
 
-(reg-event-fx
+(reg-event-db
   :application/toggle-filter
-  (fn [{:keys [db]} [_ filter-id state]]
-    {:db       (update-in db [:application :filters filter-id state] not)
-     :dispatch [:application/update-application-filters]}))
+  (fn [db [_ filter-id state]]
+    (update-in db [:application :filters-checkboxes filter-id state] not)))
+
+(reg-event-fx
+  :application/apply-filters
+  (fn [{:keys [db]} _]
+    {:db       (-> db
+                   (assoc-in [:application :filters] (get-in db [:application :filters-checkboxes])))
+     :dispatch [:application/reload-applications]}))
+
+(reg-event-db
+  :application/undo-filters
+  (fn [db _]
+    (assoc-in db [:application :filters-checkboxes] (get-in db [:application :filters]))))
 
 (reg-event-fx
   :application/toggle-shown-time-column
@@ -263,11 +274,10 @@
 (reg-event-fx
   :application/remove-filters
   (fn [{:keys [db]} _]
-    (let [initial-filters     (get-in initial-db/default-db [:application :filters])
-          all-enabled-filters (clojure.walk/postwalk #(if (boolean? %) true %) initial-filters)]
-      {:db       (-> db
-                     (assoc-in [:application :filters] all-enabled-filters))
-       :dispatch [:application/update-application-filters]})))
+    {:db       (-> db
+                   (assoc-in [:application :filters] initial-db/default-filters)
+                   (assoc-in [:application :filters-checkboxes] initial-db/default-filters))
+     :dispatch [:application/reload-applications]}))
 
 (reg-event-fx
   :application/update-sort
