@@ -27,7 +27,7 @@
                              (all-organizations organization-service)
                              (-> session :identity :organizations (vals)))
                            (filter (partial filter-org-by-type include-organizations? include-hakukohde-groups?))
-                           (sort-by #(some (fn [lang] (ataru.util/not-blank? (-> % :name lang))) [:fi :sv :en])))]
+                           (sort-by #(some (fn [lang] (-> % :name lang not-empty)) [:fi :sv :en])))]
     (take (inc (* page-size (inc page-num)))
           (if (or (string/blank? query)
                   (< (count query) 2))
