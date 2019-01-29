@@ -202,8 +202,11 @@
                              :or   {movable? true
                                     foldable?  true
                                     removable? true}}]
-  (let [folded?             @(subscribe [:editor/folded? id])
-        copy-component-path @(subscribe [:editor/copy-component-path])]
+  (let [folded?                 @(subscribe [:editor/folded? id])
+        selected-form-key       @(subscribe [:editor/selected-form-key])
+        copy-component          @(subscribe [:editor/copy-component])
+        copy-component-path     (:copy-component-path copy-component)
+        copy-component-form-key (:copy-component-form-key copy-component)]
     [:div.editor-form__header-wrapper
      [:header.editor-form__component-header
       (when foldable?
@@ -228,17 +231,17 @@
      (when metadata
        (header-metadata metadata))
      (when movable?
-       (cond (and (= copy-component-path path))
+       (cond (and (= copy-component-path path) (= selected-form-key copy-component-form-key))
              [:button.editor-form__copy-component-button.editor-form__copy-component-button--pressed
               {:on-click (fn [_] (dispatch [:editor/clear-copy-component]))}
               [:i.zmdi.zmdi-scissors]]
              (some? copy-component-path)
              [:button.editor-form__copy-component-button.editor-form__copy-component-button--disabled
-              {:disabled true}
+              {:on-click (fn [_] (dispatch [:editor/clear-copy-component]))}
               [:i.zmdi.zmdi-scissors]]
              :else
              [:button.editor-form__copy-component-button
-              {:on-click (fn [_] (dispatch [:editor/copy-component path]))}
+              {:on-click (fn [_] (dispatch [:editor/copy-component path removable?]))}
               [:i.zmdi.zmdi-scissors]]))
      (when removable?
        [remove-component-button path])]))
@@ -864,7 +867,7 @@
 (defn hakukohteet-module [content path]
   (let [virkailija-lang (subscribe [:editor/virkailija-lang])
         value           (subscribe [:editor/get-component-value path])]
-    (fn [path]
+    (fn [content path]
       [:div.editor-form__component-wrapper
        [text-header (:id content) (get-in @value [:label @virkailija-lang]) path nil
         :foldable? false
@@ -877,7 +880,7 @@
   (let [languages       (subscribe [:editor/languages])
         value           (subscribe [:editor/get-component-value path])
         virkailija-lang (subscribe [:editor/virkailija-lang])]
-    (fn [path]
+    (fn [content path]
       [:div.editor-form__component-wrapper
        [text-header (:id content) (get-in @value [:label @virkailija-lang]) path nil
         :foldable? false

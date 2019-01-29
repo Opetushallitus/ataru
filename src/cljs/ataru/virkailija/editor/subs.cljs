@@ -313,6 +313,6 @@
     (some? (-> db :editor :autosave))))
 
 (re-frame/reg-sub
-  :editor/copy-component-path
+  :editor/copy-component
   (fn copy-component-path [db _]
-    (get-in db [:editor :copy-component-path])))
+    (get-in db [:editor :copy-component])))

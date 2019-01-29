@@ -427,9 +427,11 @@
   (fn [{db :db} [_ form-key]]
     (with-form-key [db previous-form-key]
       (merge
-       {:db (cond-> db
-              (not (nil? previous-form-key)) (update-in [:editor :forms previous-form-key] assoc :content [])
-              true (assoc-in [:editor :selected-form-key] form-key))}
+        {:db (cond-> db
+                     (and (some? previous-form-key) (not= previous-form-key (:copy-component-form-key (get-in db [:editor :copy-component]))))
+                     (update-in [:editor :forms previous-form-key] assoc :content [])
+                     true
+                     (assoc-in [:editor :selected-form-key] form-key))}
        {:dispatch [:editor/refresh-used-by-haut]}
        (when (and (some? previous-form-key)
                   (not= previous-form-key form-key))
@@ -608,41 +610,56 @@
       target-path)))
 
 (defn copy-paste-component
-  [db [_ source-path target-path copy?]]
-  (with-form-key [db form-key]
-    (let [component                         (get-in db (concat [:editor :forms form-key :content] source-path))
-          target-path                       (if copy?
-                                              target-path
-                                              (recalculate-target-path-prevent-oob source-path target-path))
-          result-is-nested-component-group? (and
-                                             (contains? (set target-path) :children)
-                                             (= "wrapperElement" (:fieldClass component)))]
-      (if result-is-nested-component-group?
-        db ; Nesting is not allowed/supported
-        (if copy?
-          (-> db
-              (add-component-to-list form-key (clojure.walk/prewalk
-                                                (fn [x]
-                                                  (if (:id x)
-                                                    (assoc x :id (cu/new-uuid))
-                                                    x)) component) target-path)
-              (update :editor dissoc :copy-component-path))
-          (-> db
-              (remove-component-from-list form-key source-path)
-              (add-component-to-list form-key component target-path)
-              (update :editor dissoc :copy-component-path)))))))
+  [db [_ {:keys [copy-component-form-key copy-component-path]} target-path copy?]]
+  (or
+   (with-form-key [db form-key]
+     (when (or copy? (= form-key copy-component-form-key))
+       (let [component                         (get-in db (concat [:editor :forms copy-component-form-key :content] copy-component-path))
+             bsfg                              (prn (keys component))
+             target-path                       (if copy?
+                                                 target-path
+                                                 (recalculate-target-path-prevent-oob copy-component-path target-path))
+             result-is-nested-component-group? (and
+                                                (contains? (set target-path) :children)
+                                                (= "wrapperElement" (:fieldClass component)))]
+         (when-not result-is-nested-component-group?
+           (if copy?
+             (let [component (clojure.walk/prewalk
+                               (fn [x]
+                                 (if (:id x)
+                                   (assoc x :id (cu/new-uuid))
+                                   x)) component)
+                   db        (-> db
+                                 (add-component-to-list form-key component target-path)
+                                 (update-in [:editor :ui (:id component) :folded?] not)
+                                 (update :editor dissoc :copy-component))]
+               (if (not= form-key copy-component-form-key)
+                 (update-in db [:editor :forms copy-component-form-key] assoc :content [])
+                 db))
+             (-> db
+                 (remove-component-from-list form-key copy-component-path)
+                 (add-component-to-list form-key component target-path)
+                 (update :editor dissoc :copy-component)))))))
+   db))
 
 (reg-event-db :editor/copy-paste-component copy-paste-component)
 
 (reg-event-db
   :editor/copy-component
-  (fn copy-component [db [_ path]]
-    (assoc-in db [:editor :copy-component-path] path)))
+  (fn copy-component [db [_ path clonable?]]
+    (assoc-in db [:editor :copy-component] {:copy-component-form-key (-> db :editor :selected-form-key)
+                                            :copy-component-path path
+                                            :copy-component-clonable? clonable?})))
 
 (reg-event-db
   :editor/clear-copy-component
   (fn clear-copy-component [db _]
-    (update db :editor dissoc :copy-component-path)))
+    (let [copy-component-form-key (get-in db [:editor :copy-component :copy-component-form-key])]
+      (cond-> db
+              (not= copy-component-form-key (get-in db [:editor :selected-form-key]))
+              (update-in [:editor :forms copy-component-form-key] assoc :content [])
+              true
+              (update :editor dissoc :copy-component)))))
 
 (def ^:private lang-order
   [:fi :sv :en])
