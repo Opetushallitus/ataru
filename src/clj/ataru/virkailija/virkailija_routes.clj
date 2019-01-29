@@ -1,5 +1,6 @@
 (ns ataru.virkailija.virkailija-routes
   (:require [ataru.log.access-log :as access-log]
+            [ataru.applications.automatic-eligibility :as automatic-eligibility]
             [ataru.application.review-states :as review-states]
             [ataru.applications.application-access-control :as access-controlled-application]
             [ataru.applications.application-service :as application-service]
@@ -284,6 +285,17 @@
                 "?virkailija-secret=" secret
                 "&lang=" lang))
           (response/internal-server-error))))
+
+    (api/context "/background-jobs" []
+      :tags ["background-jobs-api"]
+      (api/POST "/start-automatic-eligibility-if-ylioppilas-job/:application-id" {session :session}
+        :path-params [application-id :- s/Int]
+        (if (get-in session [:identity :superuser])
+          (do (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
+               job-runner
+               application-id)
+              (response/ok {}))
+          (response/unauthorized {}))))
 
     (api/context "/applications" []
       :tags ["applications-api"]
@@ -1041,7 +1053,7 @@
 
 (api/defroutes status-routes
   (api/context "/status" []
-    :tags ["background-jobs-api"]
+    :tags ["status-api"]
     (api/GET "/background-jobs" []
       :return {s/Str {:success s/Int
                       :fail    s/Int
