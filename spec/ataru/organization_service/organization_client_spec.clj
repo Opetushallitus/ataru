@@ -67,8 +67,12 @@
     (with-redefs [http/request fake-groups]
       (should= [{:name {:fi "Yhteiskäyttöryhmä"}
                  :oid  "1.2.246.562.28.1.2"
-                 :type :group :hakukohderyhma? false}
+                 :type :group
+                 :hakukohderyhma? false
+                 :active? true}
                 {:name {:fi "Toinen ryhmä"}
                  :oid  "1.2.246.562.28.1.3"
-                 :type :group :hakukohderyhma? false}]
+                 :type :group
+                 :hakukohderyhma? false
+                 :active? false}]
                (org-client/get-groups)))))
