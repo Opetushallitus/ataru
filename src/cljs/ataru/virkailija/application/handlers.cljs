@@ -1114,12 +1114,13 @@
     {:db (update-in db [:application :selected-application-and-form :highlighted-fields] conj field-id)
      :dispatch-later [{:ms 3000 :dispatch [:application/remove-field-highlight field-id]}]}))
 
-(reg-event-fx
+(reg-event-db
   :application/toggle-all-pohjakoulutus-filters
-  (fn [{:keys [db]} [_ all-enabled?]]
-    {:db       (update-in db [:application :filters :base-education]
-                          (fn [filter-map] (reduce-kv (fn [acc k _] (assoc acc k (not all-enabled?))) {} filter-map)))
-     :dispatch [:application/update-application-filters]}))
+  (fn [db [_ all-enabled?]]
+    (update-in
+      db
+      [:application :filters-checkboxes :base-education]
+      (fn [filter-map] (reduce-kv (fn [acc k _] (assoc acc k (not all-enabled?))) {} filter-map)))))
 
 (reg-event-fx
   :application/navigate-application-list

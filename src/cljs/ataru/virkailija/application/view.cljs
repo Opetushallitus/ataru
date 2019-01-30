@@ -685,19 +685,19 @@
        states))])
 
 (defn- application-base-education-filters
-  [filters lang]
-  (let [checkboxes [[:pohjakoulutus_yo (get-virkailija-translation :pohjakoulutus_yo)]
-                    [:pohjakoulutus_lk (get-virkailija-translation :pohjakoulutus_lk)]
-                    [:pohjakoulutus_yo_kansainvalinen_suomessa (get-virkailija-translation :pohjakoulutus_yo_kansainvalinen_suomessa)]
-                    [:pohjakoulutus_yo_ammatillinen (get-virkailija-translation :pohjakoulutus_yo_ammatillinen)]
-                    [:pohjakoulutus_am (get-virkailija-translation :pohjakoulutus_am)]
-                    [:pohjakoulutus_amt (get-virkailija-translation :pohjakoulutus_amt)]
-                    [:pohjakoulutus_kk (get-virkailija-translation :pohjakoulutus_kk)]
-                    [:pohjakoulutus_yo_ulkomainen (get-virkailija-translation :pohjakoulutus_yo_ulkomainen)]
-                    [:pohjakoulutus_kk_ulk (get-virkailija-translation :pohjakoulutus_kk_ulk)]
-                    [:pohjakoulutus_ulk (get-virkailija-translation :pohjakoulutus_ulk)]
-                    [:pohjakoulutus_avoin (get-virkailija-translation :pohjakoulutus_avoin)]
-                    [:pohjakoulutus_muu (get-virkailija-translation :pohjakoulutus_muu)]]
+  [filters-checkboxes]
+  (let [checkboxes            [[:pohjakoulutus_yo (get-virkailija-translation :pohjakoulutus_yo)]
+                               [:pohjakoulutus_lk (get-virkailija-translation :pohjakoulutus_lk)]
+                               [:pohjakoulutus_yo_kansainvalinen_suomessa (get-virkailija-translation :pohjakoulutus_yo_kansainvalinen_suomessa)]
+                               [:pohjakoulutus_yo_ammatillinen (get-virkailija-translation :pohjakoulutus_yo_ammatillinen)]
+                               [:pohjakoulutus_am (get-virkailija-translation :pohjakoulutus_am)]
+                               [:pohjakoulutus_amt (get-virkailija-translation :pohjakoulutus_amt)]
+                               [:pohjakoulutus_kk (get-virkailija-translation :pohjakoulutus_kk)]
+                               [:pohjakoulutus_yo_ulkomainen (get-virkailija-translation :pohjakoulutus_yo_ulkomainen)]
+                               [:pohjakoulutus_kk_ulk (get-virkailija-translation :pohjakoulutus_kk_ulk)]
+                               [:pohjakoulutus_ulk (get-virkailija-translation :pohjakoulutus_ulk)]
+                               [:pohjakoulutus_avoin (get-virkailija-translation :pohjakoulutus_avoin)]
+                               [:pohjakoulutus_muu (get-virkailija-translation :pohjakoulutus_muu)]]
         all-filters-selected? (subscribe [:application/all-pohjakoulutus-filters-selected?])]
     (fn []
       [:div.application-handling__filter-group
@@ -711,7 +711,7 @@
           :on-change #(dispatch [:application/toggle-all-pohjakoulutus-filters @all-filters-selected?])}]
         [:span "Kaikki"]]
        (->> checkboxes
-            (map (fn [[id label]] (application-filter-checkbox filters label nil :base-education id)))
+            (map (fn [[id label]] (application-filter-checkbox filters-checkboxes label nil :base-education id)))
             (doall))])))
 
 (defn- select-rajaava-hakukohde [opened?]

@@ -736,7 +736,7 @@
 (re-frame/reg-sub
   :application/all-pohjakoulutus-filters-selected?
   (fn [db _]
-    (->> (-> db :application :filters :base-education)
+    (->> (-> db :application :filters-checkboxes :base-education)
          (vals)
          (every? true?))))
 
