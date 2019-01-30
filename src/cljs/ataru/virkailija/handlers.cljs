@@ -1,6 +1,7 @@
 (ns ataru.virkailija.handlers
     (:require [re-frame.core :refer [reg-event-db reg-event-fx dispatch]]
               [ataru.virkailija.autosave :as autosave]
+              [ataru.virkailija.editor.handlers :refer [clear-copy-component]]
               [ataru.virkailija.db :as db]
               [taoensso.timbre :refer-macros [spy debug]]))
 
@@ -31,10 +32,14 @@
       (dissoc cofx :event))))
 
 (reg-event-db
- :set-active-panel
- (fn [db [_ active-panel]]
-   (autosave/stop-autosave! (-> db :editor :autosave))
-   (assoc db :active-panel active-panel)))
+  :set-active-panel
+  (fn [db [_ active-panel]]
+    (autosave/stop-autosave! (-> db :editor :autosave))
+    (cond-> db
+            (get-in db [:editor :copy-component :copy-component-cut?] false)
+            (clear-copy-component)
+            true
+            (assoc :active-panel active-panel))))
 
 (reg-event-fx
   :flasher

@@ -44,7 +44,7 @@
 (defn unfold [db id]
   (assoc-in db [:editor :ui id :folded?] false))
 
-(defn- collect-ids [acc {:keys [id children options]}]
+(defn collect-ids [acc {:keys [id children options]}]
   (let [acc (reduce collect-ids acc (mapcat :followups options))
         acc (reduce collect-ids acc children)]
     (conj acc id)))
@@ -610,11 +610,11 @@
       target-path)))
 
 (defn copy-paste-component
-  [db [_ {:keys [copy-component-form-key copy-component-path copy-component-paste?]} target-path]]
+  [db [_ {:keys [copy-component-form-key copy-component-path copy-component-cut? copy-component-unique-ids]} target-path]]
   (or
    (with-form-key [db form-key]
-     (when (or (not copy-component-paste?) (= form-key copy-component-form-key))
-       (let [copy?                             (not copy-component-paste?)
+     (when (or (not copy-component-cut?) (= form-key copy-component-form-key))
+       (let [copy?                             (not copy-component-cut?)
              component                         (get-in db (concat [:editor :forms copy-component-form-key :content] copy-component-path))
              target-path                       (if copy?
                                                  target-path
@@ -624,11 +624,13 @@
                                                 (= "wrapperElement" (:fieldClass component)))]
          (when-not result-is-nested-component-group?
            (if copy?
-             (let [component (clojure.walk/prewalk
-                               (fn [x]
-                                 (if (:id x)
-                                   (assoc x :id (cu/new-uuid))
-                                   x)) component)
+             (let [component (if copy-component-unique-ids
+                               component
+                               (clojure.walk/prewalk
+                                 (fn [x]
+                                   (if (:id x)
+                                     (assoc x :id (cu/new-uuid))
+                                     x)) component))
                    db        (-> db
                                  (add-component-to-list form-key component target-path)
                                  (update :editor dissoc :copy-component))]
@@ -645,21 +647,25 @@
 
 (reg-event-db
   :editor/copy-component
-  (fn copy-component [db [_ path paste? clonable?]]
-    (assoc-in db [:editor :copy-component] {:copy-component-form-key  (-> db :editor :selected-form-key)
-                                            :copy-component-path      path
-                                            :copy-component-paste?    paste?
-                                            :copy-component-clonable? clonable?})))
+  (fn copy-component [db [_ path cut? clonable?]]
+    (assoc-in db [:editor :copy-component] {:copy-component-form-key   (-> db :editor :selected-form-key)
+                                            :copy-component-path       path
+                                            :copy-component-cut?       cut?
+                                            :copy-component-unique-ids (not-empty (set (->> (get-in db (current-form-content-path db path))
+                                                                                            (collect-ids [])
+                                                                                            (filter (comp not cu/uuid?)))))
+                                            :copy-component-clonable?  clonable?})))
+
+(defn clear-copy-component [db]
+  (let [copy-component-form-key (get-in db [:editor :copy-component :copy-component-form-key])]
+    (cond-> db
+            (not= copy-component-form-key (get-in db [:editor :selected-form-key]))
+            (update-in [:editor :forms copy-component-form-key] assoc :content [])
+            true
+            (update :editor dissoc :copy-component))))
 
 (reg-event-db
-  :editor/clear-copy-component
-  (fn clear-copy-component [db _]
-    (let [copy-component-form-key (get-in db [:editor :copy-component :copy-component-form-key])]
-      (cond-> db
-              (not= copy-component-form-key (get-in db [:editor :selected-form-key]))
-              (update-in [:editor :forms copy-component-form-key] assoc :content [])
-              true
-              (update :editor dissoc :copy-component)))))
+  :editor/clear-copy-component clear-copy-component)
 
 (def ^:private lang-order
   [:fi :sv :en])

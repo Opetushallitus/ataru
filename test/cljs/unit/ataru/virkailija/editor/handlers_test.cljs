@@ -70,9 +70,11 @@
               :forms {form-key {:content content}}}}))
 
 (defn to-copy-component [[form-key path]]
-  {:copy-component-path      path
-   :copy-component-form-key  form-key
-   :copy-component-clonable? true})
+  {:copy-component-path       path
+   :copy-component-unique-ids nil
+   :copy-component-form-key   form-key
+   :copy-component-cut?       true
+   :copy-component-clonable?  true})
 
 (deftest on-drop-moves-form-component-at-root-level
   (let [target-path    [0]

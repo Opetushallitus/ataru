@@ -2,6 +2,8 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [ataru.util :as util]
             [re-frame.core :as re-frame]
+            [ataru.cljs-util :as cu]
+            [ataru.virkailija.editor.handlers :refer [collect-ids]]
             [taoensso.timbre :refer-macros [spy debug]]
             [markdown.core :as md]))
 
@@ -163,6 +165,29 @@
                    (clojure.string/split name
                                          (re-pattern (str "(?i)(" search-term ")"))))
       [[name false]])))
+(re-frame/reg-sub
+  :editor/unique-ids-in-form
+  (fn [db _]
+    (not-empty
+      (set
+        (filter (fn [id] (not (cu/uuid? id)))
+                (mapcat #(collect-ids [] %) (get-in db [:editor :forms (-> db :editor :selected-form-key) :content])))))))
+
+(re-frame/reg-sub
+  :editor/can-copy-or-paste?
+  (fn [db _]
+    (let [{form-key   :copy-component-form-key
+           cut?       :copy-component-cut?
+           unique-ids :copy-component-unique-ids} (get-in db [:editor :copy-component])
+          selected-form-key @(re-frame/subscribe [:editor/selected-form-key])
+          same-form?        (= selected-form-key form-key)]
+      (if same-form?
+        (or cut?
+            (and (not cut?) (not unique-ids)))
+        (and (not cut?)
+             (or (not unique-ids)
+                 (if-let [ids @(re-frame/subscribe [:editor/unique-ids-in-form])]
+                   (not-empty (clojure.set/intersection unique-ids ids)))))))))
 
 (re-frame/reg-sub
   :editor/belongs-to-hakukohderyhma-name
@@ -215,6 +240,12 @@
     (re-frame/subscribe [:editor/ui]))
   (fn [ui [_ id]]
     (get-in ui [id :folded?] false)))
+
+(re-frame/reg-sub
+  :editor/path-folded?
+  (fn [db [_ & path]]
+    (let [field @(re-frame/subscribe [:editor/top-level-content (first (flatten path))])]
+      (get-in db [:editor :ui (:id field) :folded?] false))))
 
 (re-frame/reg-sub
   :editor/form-locked-info

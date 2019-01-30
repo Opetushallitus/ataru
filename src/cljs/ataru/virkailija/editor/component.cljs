@@ -206,7 +206,7 @@
         selected-form-key       @(subscribe [:editor/selected-form-key])
         copy-component          @(subscribe [:editor/copy-component])
         copy-component-path     (:copy-component-path copy-component)
-        copy-component-paste?   (:copy-component-paste? copy-component)
+        copy-component-cut?     (:copy-component-cut? copy-component)
         copy-component-form-key (:copy-component-form-key copy-component)]
     [:div.editor-form__header-wrapper
      [:header.editor-form__component-header
@@ -232,7 +232,7 @@
      (when metadata
        (header-metadata metadata))
      (when movable?
-       (cond (and (= copy-component-path path) copy-component-paste? (= selected-form-key copy-component-form-key))
+       (cond (and (= copy-component-path path) copy-component-cut? (= selected-form-key copy-component-form-key))
              [:button.editor-form__copy-component-button.editor-form__copy-component-button--pressed
               {:on-click (fn [_] (dispatch [:editor/clear-copy-component]))}
               (get-virkailija-translation :cut-element)]
@@ -245,7 +245,7 @@
               {:on-click (fn [_] (dispatch [:editor/copy-component path true removable?]))}
               (get-virkailija-translation :cut-element)]))
      (when (and removable? movable?)
-       (cond (and (= copy-component-path path) (not copy-component-paste?) (= selected-form-key copy-component-form-key))
+       (cond (and (= copy-component-path path) (not copy-component-cut?) (= selected-form-key copy-component-form-key))
              [:button.editor-form__copy-component-button.editor-form__copy-component-button--pressed
               {:on-click (fn [_] (dispatch [:editor/clear-copy-component]))}
               (get-virkailija-translation :copy-element)]
@@ -293,8 +293,8 @@
       (reset! state :unfolded))))
 
 (defn- component-content
-  [id _]
-  (let [folded?  (subscribe [:editor/folded? id])
+  [path _]
+  (let [folded?  (subscribe [:editor/path-folded? path])
         state    (r/atom (if @folded?
                            :folded :unfolded))
         height   (r/atom nil)
@@ -315,7 +315,7 @@
       (fn [component]
         (component-fold-transition component folded? state height))
       :reagent-render
-      (fn [id content-component]
+      (fn [path content-component]
         (let [folded? @folded?]
           (case @state
             :unfolded
@@ -542,7 +542,7 @@
        [text-header (:id initial-content) header-label path (:metadata initial-content)
         :sub-header @sub-header]
        [component-content
-        (:id initial-content)
+        path;(:id initial-content)
         [:div
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__text-field-wrapper
@@ -788,7 +788,7 @@
            [text-header (:id initial-content) header path (:metadata initial-content)
             :sub-header (:label @value)])
          [component-content
-          (:id initial-content)
+          path ; (:id initial-content)
           [:div
            [:div.editor-form__component-row-wrapper
             [:div.editor-form__multi-question-wrapper
@@ -837,7 +837,6 @@
   (let [id                (:id content)
         languages         @(subscribe [:editor/languages])
         value             @(subscribe [:editor/get-component-value path])
-        folded?           @(subscribe [:editor/folded? id])
         animation-effect  @(fade-out-effect path)
         group-header-text (case (:fieldClass content)
                             "wrapperElement" (get-virkailija-translation :wrapper-element)
@@ -850,7 +849,7 @@
      [text-header id group-header-text path (:metadata content)
       :sub-header (:label value)]
      [component-content
-      id
+      path ;id
       [:div
        [:div.editor-form__text-field-wrapper
         [:header.editor-form__component-item-header header-label-text]
@@ -920,7 +919,7 @@
        [text-header (:id initial-content) (get-virkailija-translation :info-element) path (:metadata initial-content)
         :sub-header @sub-header]
        [component-content
-        (:id initial-content)
+        path ;(:id initial-content)
         [:div
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__text-field-wrapper
@@ -969,7 +968,7 @@
        {:class @animation-effect}
        [text-header (:id initial-content) (get-in initial-content [:label :fi]) path (:metadata initial-content)]
        [component-content
-        (:id initial-content)
+        path ;(:id initial-content)
         [:div
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__text-field-wrapper
@@ -996,7 +995,7 @@
        [text-header (:id content) (get-virkailija-translation :adjacent-fieldset) path (:metadata content)
         :sub-header @sub-header]
        [component-content
-        (:id content)
+        path ;(:id content)
         [:div
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__text-field-wrapper
@@ -1147,7 +1146,7 @@
        [text-header (:id content) (get-virkailija-translation :attachment) path (:metadata content)
         :sub-header (:label @component)]
        [component-content
-        (:id content)
+        path ;(:id content)
         [:div
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__text-field-wrapper
