@@ -19,7 +19,8 @@
 (defn- group->map [group] {:name            (:nimi group)
                            :oid             (:oid group)
                            :type            :group
-                           :hakukohderyhma? (contains? (set (:ryhmatyypit group)) "hakukohde")})
+                           :hakukohderyhma? (contains? (set (:ryhmatyypit group)) "hakukohde")
+                           :active?         (= "AKTIIVINEN" (:status group))})
 
 (defn get-all-organizations-as-seq
   "Flattens hierarchy and includes all suborganizations"

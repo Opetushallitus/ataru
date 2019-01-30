@@ -92,5 +92,5 @@
                             (mapcat #(tarjonta/hakukohde-search tarjonta-service % nil))
                             (util/group-by-first :oid))
      :hakukohderyhmat  (util/group-by-first
-                        :oid
-                        (organization-service/get-hakukohde-groups organization-service))}))
+                         :oid
+                         (filter :active? (organization-service/get-hakukohde-groups organization-service)))}))

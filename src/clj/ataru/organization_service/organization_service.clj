@@ -52,7 +52,7 @@
 
 (defn- hakukohderyhmat-from-groups [groups]
   (let [hakukohde-groups (filter :hakukohderyhma? groups)]
-    (map #(select-keys % [:oid :name :hakukohderyhma?]) hakukohde-groups)))
+    (map #(select-keys % [:oid :name :hakukohderyhma? :active?]) hakukohde-groups)))
 
 ;; The real implementation for Organization service
 (defrecord IntegratedOrganizationService []
