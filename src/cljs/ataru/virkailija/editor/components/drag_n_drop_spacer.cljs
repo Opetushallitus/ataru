@@ -13,22 +13,19 @@
                                  (reset! expanded? true)))
         :on-mouse-out  (fn [_] (reset! expanded? false))}
        (when @expanded?
-         [:div.editor-form__drag_n_drop_spacer--dashbox
-          (if (= @selected-form-key (:copy-component-form-key @copy-component))
-            [:button.editor-form__move-component-button
-             {:data-tooltip (get-virkailija-translation :paste-element)
-              :on-click     (fn [_] (when (and @expanded? (some? @copy-component))
-                                      (reset! expanded? false)
-                                      (re-frame/dispatch [:editor/copy-paste-component @copy-component path false])))}
-             [:i.zmdi.zmdi-assignment-o]]
-            [:button.editor-form__move-component-button.editor-form__move-component-button--disabled
-             [:i.zmdi.zmdi-assignment-o]])
-          (if (:copy-component-clonable? @copy-component)
-            [:button.editor-form__move-component-button
-             {:data-tooltip (get-virkailija-translation :copy-element)
-              :on-click     (fn [_] (when (and @expanded? (some? @copy-component))
-                                      (reset! expanded? false)
-                                      (re-frame/dispatch [:editor/copy-paste-component @copy-component path true])))}
-             [:i.zmdi.zmdi-copy]]
-            [:button.editor-form__move-component-button.editor-form__move-component-button--disabled
-             [:i.zmdi.zmdi-copy]])])])))
+         (let [{copy-component-path     :copy-component-path
+                copy-component-form-key :copy-component-form-key
+                copy-component-paste?   :copy-component-paste?} @copy-component]
+           [:div.editor-form__drag_n_drop_spacer--dashbox
+            (if (= @selected-form-key copy-component-form-key)
+              [:button.editor-form__move-component-button
+               {
+                :on-click     (fn [_] (when (and @expanded?)
+                                        (reset! expanded? false)
+                                        (re-frame/dispatch [:editor/copy-paste-component @copy-component path])))}
+               (if copy-component-paste?
+                 (get-virkailija-translation :paste-element)
+                 (get-virkailija-translation :copy-element))]
+              [:button.editor-form__move-component-button.editor-form__move-component-button--disabled
+               {:data-tooltip (get-virkailija-translation :paste-element)}
+               [:i.zmdi.zmdi-assignment-o]])]))])))

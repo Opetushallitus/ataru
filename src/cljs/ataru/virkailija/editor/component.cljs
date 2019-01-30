@@ -206,6 +206,7 @@
         selected-form-key       @(subscribe [:editor/selected-form-key])
         copy-component          @(subscribe [:editor/copy-component])
         copy-component-path     (:copy-component-path copy-component)
+        copy-component-paste?   (:copy-component-paste? copy-component)
         copy-component-form-key (:copy-component-form-key copy-component)]
     [:div.editor-form__header-wrapper
      [:header.editor-form__component-header
@@ -231,18 +232,31 @@
      (when metadata
        (header-metadata metadata))
      (when movable?
-       (cond (and (= copy-component-path path) (= selected-form-key copy-component-form-key))
+       (cond (and (= copy-component-path path) copy-component-paste? (= selected-form-key copy-component-form-key))
              [:button.editor-form__copy-component-button.editor-form__copy-component-button--pressed
               {:on-click (fn [_] (dispatch [:editor/clear-copy-component]))}
-              [:i.zmdi.zmdi-scissors]]
+              (get-virkailija-translation :cut-element)]
              (some? copy-component-path)
              [:button.editor-form__copy-component-button.editor-form__copy-component-button--disabled
               {:on-click (fn [_] (dispatch [:editor/clear-copy-component]))}
-              [:i.zmdi.zmdi-scissors]]
+              (get-virkailija-translation :cut-element)]
              :else
              [:button.editor-form__copy-component-button
-              {:on-click (fn [_] (dispatch [:editor/copy-component path removable?]))}
-              [:i.zmdi.zmdi-scissors]]))
+              {:on-click (fn [_] (dispatch [:editor/copy-component path true removable?]))}
+              (get-virkailija-translation :cut-element)]))
+     (when (and removable? movable?)
+       (cond (and (= copy-component-path path) (not copy-component-paste?) (= selected-form-key copy-component-form-key))
+             [:button.editor-form__copy-component-button.editor-form__copy-component-button--pressed
+              {:on-click (fn [_] (dispatch [:editor/clear-copy-component]))}
+              (get-virkailija-translation :copy-element)]
+             (some? copy-component-path)
+             [:button.editor-form__copy-component-button.editor-form__copy-component-button--disabled
+              {:on-click (fn [_] (dispatch [:editor/clear-copy-component]))}
+              (get-virkailija-translation :copy-element)]
+             :else
+             [:button.editor-form__copy-component-button
+              {:on-click (fn [_] (dispatch [:editor/copy-component path false removable?]))}
+              (get-virkailija-translation :copy-element)]))
      (when removable?
        [remove-component-button path])]))
 

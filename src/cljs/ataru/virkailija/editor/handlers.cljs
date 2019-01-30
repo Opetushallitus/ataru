@@ -610,12 +610,12 @@
       target-path)))
 
 (defn copy-paste-component
-  [db [_ {:keys [copy-component-form-key copy-component-path]} target-path copy?]]
+  [db [_ {:keys [copy-component-form-key copy-component-path copy-component-paste?]} target-path]]
   (or
    (with-form-key [db form-key]
-     (when (or copy? (= form-key copy-component-form-key))
-       (let [component                         (get-in db (concat [:editor :forms copy-component-form-key :content] copy-component-path))
-             bsfg                              (prn (keys component))
+     (when (or (not copy-component-paste?) (= form-key copy-component-form-key))
+       (let [copy?                             (not copy-component-paste?)
+             component                         (get-in db (concat [:editor :forms copy-component-form-key :content] copy-component-path))
              target-path                       (if copy?
                                                  target-path
                                                  (recalculate-target-path-prevent-oob copy-component-path target-path))
@@ -631,7 +631,6 @@
                                    x)) component)
                    db        (-> db
                                  (add-component-to-list form-key component target-path)
-                                 (update-in [:editor :ui (:id component) :folded?] not)
                                  (update :editor dissoc :copy-component))]
                (if (not= form-key copy-component-form-key)
                  (update-in db [:editor :forms copy-component-form-key] assoc :content [])
@@ -646,9 +645,10 @@
 
 (reg-event-db
   :editor/copy-component
-  (fn copy-component [db [_ path clonable?]]
-    (assoc-in db [:editor :copy-component] {:copy-component-form-key (-> db :editor :selected-form-key)
-                                            :copy-component-path path
+  (fn copy-component [db [_ path paste? clonable?]]
+    (assoc-in db [:editor :copy-component] {:copy-component-form-key  (-> db :editor :selected-form-key)
+                                            :copy-component-path      path
+                                            :copy-component-paste?    paste?
                                             :copy-component-clonable? clonable?})))
 
 (reg-event-db

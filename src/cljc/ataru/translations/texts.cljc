@@ -815,6 +815,9 @@ You will receive a confirmation of your application to your email."}
    :copy-form                                   {:fi "Kopioi lomake"
                                                  :sv "Kopiera blanketten"
                                                  :en "EN: Kopioi lomake"}
+   :cut-element                                 {:fi "Leikkaa"
+                                                 :sv "SV: Cut"
+                                                 :en "Cut"}
    :paste-element                               {:fi "Liitä"
                                                  :sv "SV: Paste"
                                                  :en "Paste"}
