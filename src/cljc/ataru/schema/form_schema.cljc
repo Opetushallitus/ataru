@@ -280,7 +280,8 @@
 (s/defschema Hakukohderyhma
   {:oid             s/Str
    :name            LocalizedStringOptional
-   :hakukohderyhma? (s/eq true)})
+   :hakukohderyhma? (s/eq true)
+   :active?         s/Bool})
 
 (s/defschema Hakukohde
   {:oid                s/Str

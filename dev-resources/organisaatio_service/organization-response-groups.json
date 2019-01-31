@@ -1,11 +1,13 @@
 [
     {
         "oid": "1.2.246.562.28.1.2",
-        "nimi": {"fi": "Yhteiskäyttöryhmä"}
+        "nimi": {"fi": "Yhteiskäyttöryhmä"},
+        "status": "AKTIIVINEN"
     },
     {
         "oid": "1.2.246.562.28.1.3",
-        "nimi": {"fi": "Toinen ryhmä"}
+        "nimi": {"fi": "Toinen ryhmä"},
+        "status": "PASSIIVINEN"
     }
 ]
 
