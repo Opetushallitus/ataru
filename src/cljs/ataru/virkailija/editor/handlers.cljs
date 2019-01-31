@@ -609,6 +609,14 @@
       (vec (concat common [(dec t)] tt))
       target-path)))
 
+(defn clear-copy-component [db]
+  (let [copy-component-form-key (get-in db [:editor :copy-component :copy-component-form-key])]
+    (cond-> db
+            (not= copy-component-form-key (get-in db [:editor :selected-form-key]))
+            (update-in [:editor :forms copy-component-form-key] assoc :content [])
+            true
+            (update :editor dissoc :copy-component))))
+
 (defn copy-paste-component
   [db [_ {:keys [copy-component-form-key copy-component-path copy-component-cut? copy-component-unique-ids]} target-path]]
   (or
@@ -631,14 +639,14 @@
                                    x)) component)
                    db        (-> db
                                  (add-component-to-list form-key component target-path)
-                                 (update :editor dissoc :copy-component))]
+                                 (clear-copy-component))]
                (if (not= form-key copy-component-form-key)
                  (update-in db [:editor :forms copy-component-form-key] assoc :content [])
                  db))
              (-> db
                  (remove-component-from-list form-key copy-component-path)
                  (add-component-to-list form-key component target-path)
-                 (update :editor dissoc :copy-component)))))))
+                 (clear-copy-component)))))))
    db))
 
 (reg-event-db :editor/copy-paste-component copy-paste-component)
@@ -653,14 +661,6 @@
                                                                                  (collect-ids [])
                                                                                  (remove cu/uuid?)))
                                             :copy-component-clonable?  clonable?})))
-
-(defn clear-copy-component [db]
-  (let [copy-component-form-key (get-in db [:editor :copy-component :copy-component-form-key])]
-    (cond-> db
-            (not= copy-component-form-key (get-in db [:editor :selected-form-key]))
-            (update-in [:editor :forms copy-component-form-key] assoc :content [])
-            true
-            (update :editor dissoc :copy-component))))
 
 (reg-event-db
   :editor/clear-copy-component clear-copy-component)

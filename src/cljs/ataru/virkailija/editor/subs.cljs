@@ -175,17 +175,20 @@
 
 (re-frame/reg-sub
   :editor/can-copy-or-paste?
-  (fn [db _]
+  (fn [_ _]
+    [(re-frame/subscribe [:editor/copy-component])
+     (re-frame/subscribe [:editor/selected-form-key])
+     (re-frame/subscribe [:editor/unique-ids-in-form])])
+  (fn [[copy-component selected-form-key unique-ids-in-form]]
     (let [{form-key   :copy-component-form-key
            cut?       :copy-component-cut?
-           unique-ids :copy-component-unique-ids} (get-in db [:editor :copy-component])
-          selected-form-key @(re-frame/subscribe [:editor/selected-form-key])
+           unique-ids :copy-component-unique-ids} copy-component
           same-form?        (= selected-form-key form-key)]
       (if same-form?
         (or cut?
             (and (not cut?) (empty? unique-ids)))
         (and (not cut?)
-             (empty? (clojure.set/intersection unique-ids @(re-frame/subscribe [:editor/unique-ids-in-form]))))))))
+             (empty? (clojure.set/intersection unique-ids unique-ids-in-form)))))))
 
 (re-frame/reg-sub
   :editor/belongs-to-hakukohderyhma-name
