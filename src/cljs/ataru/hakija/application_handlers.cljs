@@ -239,7 +239,10 @@
      (cond-> (reduce #(set-field-visibility %1 %2 group-idx visible? selected-hakukohteet-and-ryhmat false)
                (if (and group-idx followup?)
                  (update-in db [:application :ui id :visible?] (fn [visibilities]
-                                                                 (let [visibilities ((util/vector-of-length (inc group-idx))
+                                                                 (let [visibilities (if (boolean? visibilities)
+                                                                                      [visibilities]
+                                                                                      visibilities)
+                                                                       visibilities ((util/vector-of-length (inc group-idx))
                                                                                      (if (false? visibilities)
                                                                                        nil
                                                                                        visibilities))]
