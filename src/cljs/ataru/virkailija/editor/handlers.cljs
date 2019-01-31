@@ -624,13 +624,11 @@
                                                 (= "wrapperElement" (:fieldClass component)))]
          (when-not result-is-nested-component-group?
            (if copy?
-             (let [component (if copy-component-unique-ids
-                               component
-                               (clojure.walk/prewalk
-                                 (fn [x]
-                                   (if (:id x)
-                                     (assoc x :id (cu/new-uuid))
-                                     x)) component))
+             (let [component (clojure.walk/prewalk
+                               (fn [x]
+                                 (if (and (:id x) (cu/uuid? (:id x)))
+                                   (assoc x :id (cu/new-uuid))
+                                   x)) component)
                    db        (-> db
                                  (add-component-to-list form-key component target-path)
                                  (update :editor dissoc :copy-component))]
@@ -651,9 +649,9 @@
     (assoc-in db [:editor :copy-component] {:copy-component-form-key   (-> db :editor :selected-form-key)
                                             :copy-component-path       path
                                             :copy-component-cut?       cut?
-                                            :copy-component-unique-ids (not-empty (set (->> (get-in db (current-form-content-path db path))
-                                                                                            (collect-ids [])
-                                                                                            (filter (comp not cu/uuid?)))))
+                                            :copy-component-unique-ids (set (->> (get-in db (current-form-content-path db path))
+                                                                                 (collect-ids [])
+                                                                                 (remove cu/uuid?)))
                                             :copy-component-clonable?  clonable?})))
 
 (defn clear-copy-component [db]

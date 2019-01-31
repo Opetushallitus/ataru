@@ -165,13 +165,13 @@
                    (clojure.string/split name
                                          (re-pattern (str "(?i)(" search-term ")"))))
       [[name false]])))
+
 (re-frame/reg-sub
   :editor/unique-ids-in-form
   (fn [db _]
-    (not-empty
-      (set
-        (filter (fn [id] (not (cu/uuid? id)))
-                (mapcat #(collect-ids [] %) (get-in db [:editor :forms (-> db :editor :selected-form-key) :content])))))))
+    (set
+      (remove cu/uuid?
+        (reduce collect-ids [] (get-in db [:editor :forms (-> db :editor :selected-form-key) :content]))))))
 
 (re-frame/reg-sub
   :editor/can-copy-or-paste?
@@ -183,11 +183,9 @@
           same-form?        (= selected-form-key form-key)]
       (if same-form?
         (or cut?
-            (and (not cut?) (not unique-ids)))
+            (and (not cut?) (empty? unique-ids)))
         (and (not cut?)
-             (or (not unique-ids)
-                 (if-let [ids @(re-frame/subscribe [:editor/unique-ids-in-form])]
-                   (not-empty (clojure.set/intersection unique-ids ids)))))))))
+             (empty? (clojure.set/intersection unique-ids @(re-frame/subscribe [:editor/unique-ids-in-form]))))))))
 
 (re-frame/reg-sub
   :editor/belongs-to-hakukohderyhma-name
@@ -243,9 +241,11 @@
 
 (re-frame/reg-sub
   :editor/path-folded?
-  (fn [db [_ & path]]
-    (let [field @(re-frame/subscribe [:editor/top-level-content (first (flatten path))])]
-      (get-in db [:editor :ui (:id field) :folded?] false))))
+  (fn [[_ path] _]
+    [(re-frame/subscribe [:editor/ui])
+     (re-frame/subscribe [:editor/get-component-value path])])
+  (fn [[ui component] _]
+    (get-in ui [(:id component) :folded?] false)))
 
 (re-frame/reg-sub
   :editor/form-locked-info
