@@ -170,7 +170,7 @@
   :editor/unique-ids-in-form
   (fn [db _]
     (set
-      (remove cu/uuid?
+      (remove cu/valid-uuid?
         (reduce collect-ids [] (get-in db [:editor :forms (-> db :editor :selected-form-key) :content]))))))
 
 (re-frame/reg-sub

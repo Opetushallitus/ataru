@@ -634,7 +634,7 @@
            (if copy?
              (let [component (clojure.walk/prewalk
                                (fn [x]
-                                 (if (and (:id x) (cu/uuid? (:id x)))
+                                 (if (and (:id x) (cu/valid-uuid? (:id x)))
                                    (assoc x :id (cu/new-uuid))
                                    x)) component)
                    db        (-> db
@@ -659,7 +659,7 @@
                                             :copy-component-cut?       cut?
                                             :copy-component-unique-ids (set (->> (get-in db (current-form-content-path db path))
                                                                                  (collect-ids [])
-                                                                                 (remove cu/uuid?)))
+                                                                                 (remove cu/valid-uuid?)))
                                             :copy-component-clonable?  clonable?})))
 
 (reg-event-db

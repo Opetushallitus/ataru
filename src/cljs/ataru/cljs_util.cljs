@@ -85,7 +85,7 @@
 (defn new-uuid []
   (uuid/uuid-string (uuid/make-random-uuid)))
 
-(defn uuid? [id]
+(defn valid-uuid? [id]
   (uuid/valid-uuid? id))
 
 (defn get-path []
