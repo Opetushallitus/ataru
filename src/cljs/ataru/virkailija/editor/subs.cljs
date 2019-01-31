@@ -2,6 +2,8 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [ataru.util :as util]
             [re-frame.core :as re-frame]
+            [ataru.cljs-util :as cu]
+            [ataru.virkailija.editor.handlers :refer [collect-ids]]
             [taoensso.timbre :refer-macros [spy debug]]
             [markdown.core :as md]))
 
@@ -165,6 +167,30 @@
       [[name false]])))
 
 (re-frame/reg-sub
+  :editor/unique-ids-in-form
+  (fn [db _]
+    (set
+      (remove cu/uuid?
+        (reduce collect-ids [] (get-in db [:editor :forms (-> db :editor :selected-form-key) :content]))))))
+
+(re-frame/reg-sub
+  :editor/can-copy-or-paste?
+  (fn [_ _]
+    [(re-frame/subscribe [:editor/copy-component])
+     (re-frame/subscribe [:editor/selected-form-key])
+     (re-frame/subscribe [:editor/unique-ids-in-form])])
+  (fn [[copy-component selected-form-key unique-ids-in-form]]
+    (let [{form-key   :copy-component-form-key
+           cut?       :copy-component-cut?
+           unique-ids :copy-component-unique-ids} copy-component
+          same-form?        (= selected-form-key form-key)]
+      (if same-form?
+        (or cut?
+            (and (not cut?) (empty? unique-ids)))
+        (and (not cut?)
+             (empty? (clojure.set/intersection unique-ids unique-ids-in-form)))))))
+
+(re-frame/reg-sub
   :editor/belongs-to-hakukohderyhma-name
   (fn [_ _]
     [(re-frame/subscribe [:editor/used-by-haut-hakukohderyhmat])
@@ -215,6 +241,14 @@
     (re-frame/subscribe [:editor/ui]))
   (fn [ui [_ id]]
     (get-in ui [id :folded?] false)))
+
+(re-frame/reg-sub
+  :editor/path-folded?
+  (fn [[_ path] _]
+    [(re-frame/subscribe [:editor/ui])
+     (re-frame/subscribe [:editor/get-component-value path])])
+  (fn [[ui component] _]
+    (get-in ui [(:id component) :folded?] false)))
 
 (re-frame/reg-sub
   :editor/form-locked-info
@@ -313,6 +347,6 @@
     (some? (-> db :editor :autosave))))
 
 (re-frame/reg-sub
-  :editor/copy-component-path
+  :editor/copy-component
   (fn copy-component-path [db _]
-    (get-in db [:editor :copy-component-path])))
+    (get-in db [:editor :copy-component])))

@@ -125,8 +125,8 @@
   color: @white;
   display: flex;
   height: 25px;
-  align-items: center;
-  justify-content: center;
+  margin-left: 3px;
+  margin-right: 3px;
   background-color: @pale-blue;
   cursor: pointer;
   font-size: 14px;
@@ -143,6 +143,15 @@
   &:hover {
     border: solid 1px @editor-control-button-hover-blue;
     background-color: @editor-control-button-hover-blue;
+  }
+}
+.editor-form__move-component-button--disabled {
+  border: solid 1px @section-gray-border;
+  background-color: @section-gray-border;
+  cursor: default;
+  &:hover {
+    background-color: @section-gray-border;
+    border: solid 1px @section-gray-border;
   }
 }
 
