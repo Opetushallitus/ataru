@@ -111,7 +111,7 @@
   ([state-to-select review-notes]
    (->> (if state-to-select
           (filter #(= state-to-select (:state-name %)) review-notes)
-          (remove #(= "eligibility-state" (:state-name %)) review-notes))
+          (remove #(some? (:state-name %)) review-notes))
         (map (fn [{:keys [created-time notes hakukohde first-name last-name]}]
                (str
                  (time-formatter created-time)
