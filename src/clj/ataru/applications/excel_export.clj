@@ -106,22 +106,26 @@
           reviews)))))
 
 (defn- application-review-notes-formatter
-  [review-notes]
-  (->> review-notes
-       (map (fn [{:keys [created-time notes hakukohde first-name last-name]}]
-              (str
-                (time-formatter created-time)
-                " "
-                (when (and first-name last-name)
-                  (str
-                    first-name
-                    " "
-                    last-name))
-                (when hakukohde
-                  (str " (hakukohde " hakukohde ")"))
-                ": "
-                notes)))
-       (clojure.string/join ",\n")))
+  ([review-notes]
+    (application-review-notes-formatter nil review-notes))
+  ([state-to-select review-notes]
+   (->> (if state-to-select
+          (filter #(= state-to-select (:state-name %)) review-notes)
+          (remove #(some? (:state-name %)) review-notes))
+        (map (fn [{:keys [created-time notes hakukohde first-name last-name]}]
+               (str
+                 (time-formatter created-time)
+                 " "
+                 (when (and first-name last-name)
+                   (str
+                     first-name
+                     " "
+                     last-name))
+                 (when hakukohde
+                   (str " (hakukohde " hakukohde ")"))
+                 ": "
+                 notes)))
+        (clojure.string/join ",\n"))))
 
 (def ^:private form-meta-fields
   [{:label     (:name excel-texts)
@@ -166,6 +170,9 @@
    {:label     (:eligibility-set-automatically virkailija-texts)
     :field     [:application :eligibility-set-automatically]
     :format-fn #(clojure.string/join "\n" %)}
+   {:label     (:ineligibility-reason virkailija-texts)
+    :field     [:application-review-notes]
+    :format-fn (partial application-review-notes-formatter "eligibility-state")}
    {:label     (:maksuvelvollisuus excel-texts)
     :field     [:application :application-hakukohde-reviews]
     :lang?     true

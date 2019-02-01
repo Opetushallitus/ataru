@@ -992,6 +992,9 @@ You will receive a confirmation of your application to your email."}
    :incomplete                                  {:fi "Kesken"
                                                  :sv "Inte färdig"
                                                  :en "EN: Kesken"}
+   :ineligibility-reason                        {:fi "Hylkäyksen syy"
+                                                 :sv "Orsak till avslag"
+                                                 :en "Reason for ineligibility"}
    :info-addon                                  {:fi "Kysymys sisältää ohjetekstin"
                                                  :sv "Frågan innehåller anvisningar"
                                                  :en "EN: Kysymys sisältää ohjetekstin"}
