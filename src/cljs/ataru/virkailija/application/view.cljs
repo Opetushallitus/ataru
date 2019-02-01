@@ -1217,34 +1217,37 @@
           (str " " (get-virkailija-translation :submitted-application))]
 
          {:event-type "hakukohde-review-state-change"}
-         [:span.application-handling__event-caption--inner
-          (str (->> review-states/hakukohde-review-types
-                    (filter #(= (keyword (:review-key event)) (first %)))
-                    (first)
-                    (second)) ": "
-               (application-states/get-review-state-label-by-name
+         [:div.application-handling__multi-line-event-caption
+          [:span.application-handling__event-caption--inner
+           (str (->> review-states/hakukohde-review-types
+                     (filter #(= (keyword (:review-key event)) (first %)))
+                     (first)
+                     (second)) ": "
+                (application-states/get-review-state-label-by-name
                  (->> review-states/hakukohde-review-types
                       (map last)
                       (apply concat)
                       (distinct))
                  (:new-review-state event)
                  lang))
-          " "
-          (virkailija-initials-span event)]
+           " "
+           (virkailija-initials-span event)]
+          (when (not= "form" (:hakukohde event))
+            [:span.application-handling__event-caption--inner.application-handling__event-caption--extra-info
+             @(subscribe [:application/hakukohde-and-tarjoaja-name (:hakukohde event)])])]
 
          {:event-type "eligibility-state-automatically-changed"}
          [:div.application-handling__multi-line-event-caption
           [:span.application-handling__event-caption--inner
            (str (get-virkailija-translation :eligibility)
-                " "
+                ": "
                 (some #(when (= (:new-review-state event) (first %))
                          (get (second %) lang))
-                      review-states/application-hakukohde-eligibility-states))]
+                      review-states/application-hakukohde-eligibility-states))
+           [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
+            {:title (get-virkailija-translation :eligibility-set-automatically)}]]
           [:span.application-handling__event-caption--inner.application-handling__event-caption--extra-info
-           (gstring/format "%s \"%s\" %s"
-                           (get-virkailija-translation :of-hakukohde)
-                           @(subscribe [:application/hakukohde-name (:hakukohde event)])
-                           (.toLowerCase (get-virkailija-translation :eligibility-set-automatically)))]]
+           @(subscribe [:application/hakukohde-and-tarjoaja-name (:hakukohde event)])]]
 
          {:event-type "attachment-review-state-change"}
          [:span.application-handling__event-caption--inner
