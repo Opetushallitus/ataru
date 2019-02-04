@@ -204,6 +204,7 @@
                                     removable? true}}]
   (let [folded?                 @(subscribe [:editor/folded? id])
         selected-form-key       @(subscribe [:editor/selected-form-key])
+        locked?                 @(subscribe [:editor/form-locked?])
         copy-component          @(subscribe [:editor/copy-component])
         copy-component-path     (:copy-component-path copy-component)
         copy-component-cut?     (:copy-component-cut? copy-component)
@@ -231,7 +232,7 @@
               (clojure.string/join " - ")))]]
      (when metadata
        (header-metadata metadata))
-     (when movable?
+     (when (and (not locked?) movable?)
        (cond (and (= copy-component-path path) copy-component-cut? (= selected-form-key copy-component-form-key))
              [:button.editor-form__copy-component-button.editor-form__copy-component-button--pressed
               {:on-click (fn [_] (dispatch [:editor/clear-copy-component]))}
@@ -244,7 +245,7 @@
              [:button.editor-form__copy-component-button
               {:on-click (fn [_] (dispatch [:editor/copy-component path true removable?]))}
               (get-virkailija-translation :cut-element)]))
-     (when (and removable? movable?)
+     (when (and (not locked?) removable? movable?)
        (cond (and (= copy-component-path path) (not copy-component-cut?) (= selected-form-key copy-component-form-key))
              [:button.editor-form__copy-component-button.editor-form__copy-component-button--pressed
               {:on-click (fn [_] (dispatch [:editor/clear-copy-component]))}
