@@ -619,6 +619,7 @@
     :as   opts}]
   (let [multiple-languages? (< 1 (count languages))
         form-locked?        (subscribe [:editor/form-locked?])
+        parent-in-group?    (subscribe [:editor/parent-in-question-group? path parent-key])
         on-click            (fn [up? event]
                               (when-not @form-locked?
                                 (.preventDefault event)
@@ -649,10 +650,12 @@
                [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
              languages)
            [koodisto-fields-with-lang languages option-path])]
-        [followup-question option-index followups option-path show-followups parent-key option-value question-group-element?]
+        (when-not @parent-in-group?
+          [followup-question option-index followups option-path show-followups parent-key option-value question-group-element?])
         (when editable?
           [remove-dropdown-option-button path option-index @form-locked? parent-key option-value question-group-element?])]
-       [followup-question-overlay option-index followups option-path show-followups question-group-element?]])))
+       (when-not @parent-in-group?
+         [followup-question-overlay option-index followups option-path show-followups question-group-element?])])))
 
 (defn- dropdown-multi-options [path options-koodisto]
   (let [dropdown-id                (util/new-uuid)

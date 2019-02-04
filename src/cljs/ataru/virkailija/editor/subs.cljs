@@ -7,6 +7,14 @@
             [taoensso.timbre :refer-macros [spy debug]]
             [markdown.core :as md]))
 
+(defn- get-selected-form-content [db]
+  (let [selected-form-key (-> db :editor :selected-form-key)]
+    (-> db
+        :editor
+        :forms
+        (get selected-form-key)
+        :content)))
+
 (re-frame/reg-sub
   :editor/ui
   (fn ui [db]
@@ -266,6 +274,13 @@
     (some? (:locked form))))
 
 (re-frame/reg-sub
+  :editor/parent-in-question-group?
+  (fn [db [_ path parent]]
+    (if-let [grand-parent (seq (drop-last 6 path))]
+      (let [field (get-in (get-selected-form-content db) grand-parent)]
+        (= (:fieldClass field) "questionGroup")))))
+
+(re-frame/reg-sub
   :editor/this-form-locked?
   (fn [[_ key] _]
     (re-frame/subscribe [:editor/form key]))
@@ -304,14 +319,6 @@
             (let [any-changes? (not= (dissoc template :stored-content) (get template :stored-content))]
               [lang any-changes?]))
           templates)))))
-
-(defn- get-selected-form-content [db]
-  (let [selected-form-key (-> db :editor :selected-form-key)]
-    (-> db
-        :editor
-        :forms
-        (get selected-form-key)
-        :content)))
 
 (re-frame/reg-sub
   :editor/base-education-module-exists?
