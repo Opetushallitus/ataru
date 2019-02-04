@@ -74,7 +74,7 @@
       (get-in [:public-config :applicant :service_url])
       (str "/hakemus?modify=" secret)))
 
-(defn- ->safe-html
+(defn ->safe-html
   [content]
   (.sanitize html-policy (md/md-to-html-string content)))
 
