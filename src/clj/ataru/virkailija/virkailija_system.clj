@@ -19,6 +19,7 @@
             [ataru.person-service.person-client :as person-client]
             [ataru.person-service.person-service :as person-service]
             [ataru.person-service.person-integration :as person-integration]
+            [ataru.suoritus.suoritus-service :as suoritus-service]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service])
   (:import java.time.Duration))
 
@@ -96,7 +97,19 @@
              (server/new-server)
              [:server-setup :handler])
 
-    :job-runner (job/new-job-runner virkailija-jobs/job-definitions)
+    :suoritusrekisteri-cas-client (cas/new-client "/suoritusrekisteri")
+
+    :suoritus-service (component/using
+                       (suoritus-service/new-suoritus-service)
+                       [:suoritusrekisteri-cas-client])
+
+    :job-runner (component/using
+                 (job/new-job-runner virkailija-jobs/job-definitions)
+                 [:ohjausparametrit-service
+                  :henkilo-cache
+                  :person-service
+                  :tarjonta-service
+                  :suoritus-service])
 
     :credentials-provider (aws-auth/map->CredentialsProvider {})
 
