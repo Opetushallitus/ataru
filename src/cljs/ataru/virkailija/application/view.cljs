@@ -1,8 +1,8 @@
 (ns ataru.virkailija.application.view
   (:require [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]
-            [ataru.cljs-util :as cljs-util :refer [get-virkailija-translation]]
-            [ataru.translations.texts :refer [virkailija-texts state-translations general-texts]]
+            [ataru.cljs-util :as cljs-util :refer [get-virkailija-translation get-virkailija-label]]
+            [ataru.translations.texts :refer [state-translations general-texts]]
             [ataru.util :as util]
             [ataru.virkailija.application.application-search-control :refer [application-search-control]]
             [ataru.virkailija.application.application-subs]
@@ -272,7 +272,7 @@
            [:button.virkailija-close-button
             {:on-click #(dispatch [:application/set-mass-information-request-popup-visibility false])}
             [:i.zmdi.zmdi-close]]]
-          [:p (get-virkailija-translation :mass-information-request-email-n-recipients @applications-count)]
+          [:p (gstring/format (get-virkailija-translation :mass-information-request-email-n-recipients) @applications-count)]
           [:div.application-handling__information-request-row
            [:div.application-handling__information-request-info-heading (get-virkailija-translation :mass-information-request-subject)]
            [:div.application-handling__information-request-text-input-container
@@ -305,7 +305,7 @@
              :confirm
              [:button.application-handling__send-information-request-button.application-handling__send-information-request-button--confirm
               {:on-click #(dispatch [:application/submit-mass-information-request])}
-              (get-virkailija-translation :mass-information-request-confirm-n-messages @applications-count)]
+              (gstring/format (get-virkailija-translation :mass-information-request-confirm-n-messages) @applications-count)]
 
              :submitting
              [:div.application-handling__information-request-status
@@ -366,7 +366,7 @@
             [h-and-h/search-input
              {:id                       haku-oid
               :haut                     [{:oid         haku-oid
-                                          :name        (get virkailija-texts :hakukohteet)
+                                          :name        (get-virkailija-label :hakukohteet)
                                           :hakukohteet hakukohteet}]
               :hakukohderyhmat          hakukohderyhmat
               :hakukohde-selected?      #(= selected-hakukohde-oid %)
@@ -374,7 +374,7 @@
             [h-and-h/search-listing
              {:id                       haku-oid
               :haut                     [{:oid         haku-oid
-                                          :name        (get virkailija-texts :hakukohteet)
+                                          :name        (get-virkailija-label :hakukohteet)
                                           :hakukohteet hakukohteet}]
               :hakukohderyhmat          hakukohderyhmat
               :hakukohde-selected?      #(= selected-hakukohde-oid %)
@@ -827,16 +827,16 @@
                  [select-rajaava-hakukohde rajaava-hakukohde-opened?])])
             [:div.application-handling__filter-group
              [:h3.application-handling__filter-group-heading (get-virkailija-translation :ssn)]
-             [application-filter-checkbox filters-checkboxes (:without-ssn virkailija-texts) @lang :only-ssn :without-ssn]
-             [application-filter-checkbox filters-checkboxes (:with-ssn virkailija-texts) @lang :only-ssn :with-ssn]]
+             [application-filter-checkbox filters-checkboxes (get-virkailija-label :without-ssn) @lang :only-ssn :without-ssn]
+             [application-filter-checkbox filters-checkboxes (get-virkailija-label :with-ssn) @lang :only-ssn :with-ssn]]
             [:div.application-handling__filter-group
              [:h3.application-handling__filter-group-heading (get-virkailija-translation :identifying)]
-             [application-filter-checkbox filters-checkboxes (:unidentified virkailija-texts) @lang :only-identified :unidentified]
-             [application-filter-checkbox filters-checkboxes (:identified virkailija-texts) @lang :only-identified :identified]]
+             [application-filter-checkbox filters-checkboxes (get-virkailija-label :unidentified) @lang :only-identified :unidentified]
+             [application-filter-checkbox filters-checkboxes (get-virkailija-label :identified) @lang :only-identified :identified]]
             [:div.application-handling__filter-group
              [:h3.application-handling__filter-group-heading (get-virkailija-translation :active-status)]
-             [application-filter-checkbox filters-checkboxes (:active-status-active virkailija-texts) @lang :active-status :active]
-             [application-filter-checkbox filters-checkboxes (:active-status-passive virkailija-texts) @lang :active-status :passive]]]
+             [application-filter-checkbox filters-checkboxes (get-virkailija-label :active-status-active) @lang :active-status :active]
+             [application-filter-checkbox filters-checkboxes (get-virkailija-label :active-status-passive) @lang :active-status :passive]]]
            [:div.application-handling__popup-column
             [:div.application-handling__filter-group
              [:h3.application-handling__filter-group-heading (get-virkailija-translation :handling-notes)]
@@ -852,7 +852,7 @@
                   (doall))
              [:div.application-handling__filter-group
               [:div.application-handling__filter-group-title
-               (util/non-blank-val (:eligibility-set-automatically virkailija-texts)
+               (util/non-blank-val (get-virkailija-label :eligibility-set-automatically)
                                    [@lang :fi :sv :en])]
               [:div.application-handling__filter-group-checkboxes
                [application-filter-checkbox filters-checkboxes (:yes general-texts) @lang :eligibility-set-automatically :yes]

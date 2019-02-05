@@ -54,6 +54,7 @@
             [manifold.deferred] ;; DO NOT REMOVE! extend-protocol below breaks otherwise!
             [medley.core :refer [map-kv]]
             [org.httpkit.client :as http]
+            [ataru.lokalisointi-service.lokalisointi-service :refer [get-virkailija-texts]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
             [ring.middleware.logger :refer [wrap-with-logger] :as middleware-logger]
@@ -178,6 +179,7 @@
                           job-runner
                           ohjausparametrit-service
                           virkailija-tarjonta-service
+                          localizations-cache
                           statistics-month-cache
                           statistics-week-cache
                           statistics-day-cache
@@ -332,6 +334,9 @@
       (api/GET "/virkailija-settings" {session :session}
         :return ataru-schema/VirkailijaSettings
         (ok (virkailija-edit/get-review-settings session)))
+
+      (api/GET "/virkailija-texts" {session :session}
+        (ok (get-virkailija-texts localizations-cache)))
 
       (api/POST "/review-setting" {session :session}
         :body [review-setting ataru-schema/ReviewSetting]

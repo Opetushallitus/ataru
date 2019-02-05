@@ -7,6 +7,12 @@
             [markdown.core :as md]))
 
 (re-frame/reg-sub
+  :editor/virkailija-texts
+  (fn [db _]
+    (or (-> db :editor :virkailija-texts)
+        {})))
+
+(re-frame/reg-sub
   :editor/ui
   (fn ui [db]
     (get-in db [:editor :ui])))

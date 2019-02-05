@@ -1094,12 +1094,12 @@ You will receive a confirmation of your application to your email."}
    :mass-information-request                    {:fi "Massaviesti"
                                                  :sv "Massmeddelande"
                                                  :en "Mass message"}
-   :mass-information-request-confirm-n-messages (fn [n] {:fi (format "Vahvista %d viestin lähetys" n)
-                                                         :sv (format "Bekräfta att %d meddelanden kommer att skickas" n)
-                                                         :en (format "Confirm %d sending the message"  n)})
-   :mass-information-request-email-n-recipients (fn [n] {:fi (format "Lähetä sähköposti %d hakijalle:" n)
-                                                         :sv (format "Skicka e-post till %d sökande:" n)
-                                                         :en (format "Send email to %d applicants:" n)})
+   :mass-information-request-confirm-n-messages {:fi "Vahvista %d viestin lähetys"
+                                                 :sv "Bekräfta att %d meddelanden kommer att skickas"
+                                                 :en "Confirm sending %d messages"}
+   :mass-information-request-email-n-recipients {:fi "Lähetä sähköposti %d hakijalle:"
+                                                 :sv "Skicka e-post till %d sökande:"
+                                                 :en "Send email to %d applicants:"}
    :mass-information-request-messages-sent      {:fi "Viestit lisätty lähetysjonoon!"
                                                  :sv "Meddelandena har lagts till i utskickskön!"
                                                  :en "Messages have been sent!"}

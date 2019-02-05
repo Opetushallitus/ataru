@@ -1,12 +1,11 @@
 (ns ataru.virkailija.editor.view
   (:require-macros [reagent.ratom :refer [reaction]])
-  (:require [ataru.cljs-util :refer [wrap-scroll-to get-virkailija-translation]]
+  (:require [ataru.cljs-util :refer [wrap-scroll-to get-virkailija-translation get-virkailija-label]]
             [ataru.component-data.component :as component]
             [ataru.virkailija.editor.core :as c]
             [ataru.virkailija.editor.subs]
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :as temporal]
-            [ataru.translations.texts :refer [virkailija-texts]]
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]))
@@ -127,9 +126,9 @@
               [editor-name-wrapper l false true]))]))
 
 (def ^:private lang-versions
-  {:fi (:finnish virkailija-texts)
-   :sv (:swedish virkailija-texts)
-   :en (:english virkailija-texts)})
+  {:fi (get-virkailija-label :finnish)
+   :sv (get-virkailija-label :swedish)
+   :en (get-virkailija-label :english)})
 
 (defn- lang-checkbox [lang-kwd checked? virkailija-lang]
   (let [id (str "lang-checkbox-" (name lang-kwd))]

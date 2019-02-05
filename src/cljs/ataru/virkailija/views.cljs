@@ -33,15 +33,17 @@
 
 (defn main-panel []
   (let [active-panel             (re-frame/subscribe [:active-panel])
-        template-editor-visible? (re-frame/subscribe [:state-query [:editor :ui :template-editor-visible?]])]
+        template-editor-visible? (re-frame/subscribe [:state-query [:editor :ui :template-editor-visible?]])
+        texts                    (re-frame/subscribe [:editor/virkailija-texts])]
     (fn []
-      [:div.main-container
-       [:div.modal-container
-        [:input#editor-form__copy-question-id-container
-         {:value ""}]
-        [snackbar]
-        [application-version-changes]
-        (when @template-editor-visible?
-          [email-template-editor])]
-       [top-banner]
-        [:div (panels @active-panel)]])))
+      (when (not-empty @texts)
+        [:div.main-container
+         [:div.modal-container
+          [:input#editor-form__copy-question-id-container
+           {:value ""}]
+          [snackbar]
+          [application-version-changes]
+          (when @template-editor-visible?
+            [email-template-editor])]
+         [top-banner]
+         [:div (panels @active-panel)]]))))

@@ -240,6 +240,7 @@
             "hakija-dev"          ["with-profile" "hakija-dev" "run" "hakija"]
             "figwheel-virkailija" ["with-profile" "virkailija-dev" "figwheel" "virkailija-dev"]
             "figwheel-hakija"     ["with-profile" "hakija-dev" "figwheel" "hakija-dev"]
+            "export-locales"      ["with-profile" "dev" "run" "-m" "ataru.scripts.export-locales"]
             "anonymize-data"      ["with-profile" "dev" "run" "-m" "ataru.anonymizer.core/anonymize-data"]
             "db-schema"           ["with-profile" "dev" "run" "-m" "ataru.scripts.generate-schema-diagram"]})
 
