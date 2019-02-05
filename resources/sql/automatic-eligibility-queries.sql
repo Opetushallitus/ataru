@@ -44,5 +44,5 @@ VALUES (:state,
 -- name: yesql-get-application-ids
 SELECT a.id
 FROM applications AS a
-WHERE a.id = (SELECT max(id) FROM applications WHERE key = a.key)
+WHERE a.id = (SELECT max(id) FROM applications WHERE key = a.key) AND
       a.person_oid IN (:person_oids);
