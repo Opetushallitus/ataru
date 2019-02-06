@@ -620,18 +620,18 @@
    :header-label (get-virkailija-translation :text-area)
    :size-label (get-virkailija-translation :text-area-size)])
 
-(defn- remove-dropdown-option-button [path option-index form-locked? parent-key option-value question-group-element?]
+(defn- remove-dropdown-option-button [path option-index disabled? parent-key option-value question-group-element?]
   [:div.editor-form__multi-options-remove--cross
    [copy-link (str parent-key "_" (when question-group-element? "groupN_") option-value) :answer? true]
    [:i.zmdi.zmdi-delete.zmdi-hc-lg
     {:on-click (fn [evt]
-                 (when-not form-locked?
+                 (when-not disabled?
                    (.preventDefault evt)
                    (dispatch [:editor/remove-dropdown-option path :options option-index])))
-     :class    (when form-locked? "editor-form__multi-options-remove--cross--disabled")}]])
+     :class    (when disabled? "editor-form__multi-options-remove--cross--disabled")}]])
 
 (defn- dropdown-option
-  [option-index option-path followups path languages show-followups parent-key option-value question-group-element? &
+  [option-index option-count option-path followups path languages show-followups parent-key option-value question-group-element? &
    {:keys [header? editable?]
     :or   {header? false editable? true}
     :as   opts}]
@@ -644,7 +644,7 @@
                                 (dispatch [(if up?
                                              :editor/move-option-up
                                              :editor/move-option-down) path option-index])))]
-    (fn [option-index option-path followups path languages show-followups parent-key option-value question-group-element? &
+    (fn [option-index option-count option-path followups path languages show-followups parent-key option-value question-group-element? &
          {:keys [header? editable?]
           :or   {header? false editable? true}
           :as   opts}]
@@ -670,7 +670,7 @@
         (when (not question-group-element?)
           [followup-question option-index followups option-path show-followups parent-key option-value question-group-element?])
         (when editable?
-          [remove-dropdown-option-button path option-index @form-locked? parent-key option-value question-group-element?])]
+          [remove-dropdown-option-button path option-index (or @form-locked? (< option-count 3)) parent-key option-value question-group-element?])]
        (when (not question-group-element?)
          [followup-question-overlay option-index followups option-path show-followups])])))
 
@@ -743,24 +743,26 @@
                               show-followups
                               parent-key]
   (fn [languages options followups path question-group-element? editable?]
-    (when (or (nil? @show-followups)
-              (not (= (count @show-followups) (count options))))
-      (reset! show-followups (vec (replicate (count options) false))))
-    [:div.editor-form__multi-options-container
-     (doall (map-indexed (fn [idx option]
-                           ^{:key (str "options-" idx)}
-                           [dropdown-option
-                            idx
-                            (conj path :options idx)
-                            (nth followups idx)
-                            path
-                            languages
-                            show-followups
-                            parent-key
-                            (:value option)
-                            question-group-element?
-                            :editable? editable?])
-                         options))]))
+    (let [option-count (count options)]
+      (when (or (nil? @show-followups)
+                (not (= (count @show-followups) option-count)))
+        (reset! show-followups (vec (replicate option-count false))))
+      [:div.editor-form__multi-options-container
+       (doall (map-indexed (fn [idx option]
+                             ^{:key (str "options-" idx)}
+                             [dropdown-option
+                              idx
+                              option-count
+                              (conj path :options idx)
+                              (nth followups idx)
+                              path
+                              languages
+                              show-followups
+                              parent-key
+                              (:value option)
+                              question-group-element?
+                              :editable? editable?])
+                           options))])))
 
 (defn koodisto-answer-options [id followups path selected-koodisto question-group-element? parent-key]
   (let [opened? (r/atom false)]

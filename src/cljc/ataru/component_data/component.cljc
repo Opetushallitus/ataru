@@ -32,9 +32,11 @@
    :metadata   metadata
    :params     {}})
 
-(defn dropdown-option []
-  {:value "0"
-   :label {:fi "" :sv ""}})
+(defn dropdown-option
+  ([] (dropdown-option "0"))
+  ([value]
+   {:value value
+    :label {:fi "" :sv ""}}))
 
 (defn dropdown [metadata]
   {:fieldClass "formField"
@@ -43,7 +45,8 @@
    :label      {:fi "", :sv ""}
    :params     {}
    :metadata   metadata
-   :options    [(dropdown-option)]})
+   :options    [(dropdown-option "0")
+                (dropdown-option "1")]})
 
 (defn multiple-choice [metadata]
   {:fieldClass "formField"
