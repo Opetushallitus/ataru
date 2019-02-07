@@ -1,13 +1,10 @@
 #!/bin/bash
 set -e
 
-OLD_CWD=$(pwd)
-
-echo $OLD_CWD
-
-export JAVA_HOME=/data00/oph/java/jdk1.8.0_60
-export PATH=/data00/oph/java/jdk1.8.0_60/bin:$PATH
 export APP=virkailija
+
+echo "java version:"
+java -version
 
 echo "Lein version:"
 ./bin/lein version
