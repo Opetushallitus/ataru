@@ -244,11 +244,6 @@
         (client-error/log-client-error error-details)
         (ok {})))
 
-    (api/GET "/update-persons" []
-      (doseq [application-id (map :id (application-store/get-application-keys))]
-        (person-integration/upsert-and-log-person person-service application-id))
-      (ok (str "Updated persons for applications")))
-
     (api/POST "/email-template/:form-key/previews" []
       :path-params [form-key :- s/Str]
       :body [body {:contents [ataru-schema/EmailTemplate]}]
