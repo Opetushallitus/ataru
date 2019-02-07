@@ -16,7 +16,9 @@
             ByteArrayOutputStream
             OutputStreamWriter]
            java.util.Base64
-           com.jcraft.jsch.JSch))
+           [com.jcraft.jsch
+            JSch
+            Logger]))
 
 (defqueries "sql/tutkintojen-tunnustaminen-queries.sql")
 
@@ -126,10 +128,22 @@
                 (BufferedWriter.))]
     (try (f out) (finally (.close out)))))
 
+(def jsch-logger
+  (reify Logger
+    (isEnabled [_ level] (< Logger/INFO level))
+    (log [_ level message]
+      (case level
+        0 (log/debug message)
+        1 (log/info message)
+        2 (log/warn message)
+        3 (log/error message)
+        4 (log/fatal message)))))
+
 (defn- transfer
   [{:keys [known-host] :as config} filename message]
   (let [jsch (doto (new JSch)
                (.setKnownHosts (new ByteArrayInputStream (.getBytes known-host))))]
+    (JSch/setLogger jsch-logger)
     (with-session jsch config
       (fn [session]
         (with-channel session

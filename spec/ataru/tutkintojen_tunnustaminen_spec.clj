@@ -49,6 +49,7 @@
   (let [config (get-in config [:tutkintojen-tunnustaminen :sftp])
         jsch   (doto (new JSch)
                  (.setKnownHosts (new ByteArrayInputStream (.getBytes (:known-host config)))))]
+    (JSch/setLogger jsch-logger)
     (with-session jsch config
       (fn [session]
         (with-channel session
