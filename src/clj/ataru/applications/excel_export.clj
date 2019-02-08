@@ -279,9 +279,12 @@
                  (interpose ",\n")
                  (apply str)))
           (= (:fieldType field-descriptor) "attachment")
-          (let [[{:keys [filename size]}] (file-store/get-metadata [value])]
-            (when (and filename size)
-              (str filename " (" (util/size-bytes->str size) ")")))
+          (try
+            (let [[{:keys [filename size]} (file-store/get-metadata [value])]]
+              (str filename " (" (util/size-bytes->str size) ")"))
+            (catch Exception e
+              (util/non-blank-val (:internal-server-error virkailija-texts)
+                                  [lang :fi :sv :en])))
           (not (empty? options))
           (some (fn [option]
                   (when (= value (:value option))
