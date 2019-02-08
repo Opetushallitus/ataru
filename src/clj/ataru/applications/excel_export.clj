@@ -280,7 +280,7 @@
                  (apply str)))
           (= (:fieldType field-descriptor) "attachment")
           (try
-            (let [[{:keys [filename size]} (file-store/get-metadata [value])]]
+            (let [[{:keys [filename size]}] (file-store/get-metadata [value])]
               (str filename " (" (util/size-bytes->str size) ")"))
             (catch Exception e
               (util/non-blank-val (:internal-server-error virkailija-texts)
