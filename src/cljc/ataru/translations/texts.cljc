@@ -700,58 +700,58 @@ You will receive a confirmation of your application to your email."}
                                                  :en "Active"}
    :add                                         {:fi "Lisää"
                                                  :sv "Lägg till"
-                                                 :en "EN: Add more"}
+                                                 :en "Add more"}
    :adjacent-fieldset                           {:fi "Vierekkäiset tekstikentät"
                                                  :sv "Parallella textfält"
-                                                 :en "EN: Vierekkäiset tekstikentät"}
+                                                 :en "Parallel text areas"}
    :all                                         {:fi "Kaikki"
                                                  :sv "Alla"
-                                                 :en "EN: Kaikki"}
+                                                 :en "All"}
    :all-hakukohteet                             {:fi "Kaikki hakukohteet"
                                                  :sv "Alla ansökningsmål"
-                                                 :en "EN: Kaikki hakukohteet"}
+                                                 :en "All application options"}
    :alphabetically                              {:fi "Aakkosjärjestyksessä"
                                                  :sv "I alfabetisk ordning"
-                                                 :en "EN: Aakkosjärjestyksessä"}
+                                                 :en "In alphabetical order"}
    :answers                                     {:fi "vastausta:"
                                                  :sv "svar:"
-                                                 :en "EN: vastausta:"}
+                                                 :en "answers:"}
    :applicant                                   {:fi "Hakija"
                                                  :sv "Sökande"
-                                                 :en "EN: Hakija"}
+                                                 :en "Applicant"}
    :applicant-will-receive-following-email      {:fi "Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä"
                                                  :sv "Sökande får nedanstående meddelande i sin e-post efter att hen har skickat sin ansökan"
                                                  :en "EN: Hakija saa allaolevan viestin sähköpostilla hakemuksen lähettämisen jälkeen lähettäjältä"}
    :application                                 {:fi "hakemus"
                                                  :sv "ansökan"
-                                                 :en "EN: hakemus"}
+                                                 :en "Application"}
    :application-oid-here                        {:fi "Tähän tulee hakemusnumero, hakutoiveet, puuttuvat liitepyynnöt ja muokkauslinkki"
                                                  :sv "Här visas ansökningsnummer, ansökningsönskemål, begäran om bilagor som saknas och bearbetningslänken"
                                                  :en "EN: Tähän tulee hakemusnumero, hakutoiveet, puuttuvat liitepyynnöt ja muokkauslinkki"}
    :application-options                         {:fi "hakukohdetta"
                                                  :sv "ansökningsmål"
-                                                 :en "EN: hakukohdetta"}
+                                                 :en "application option"}
    :application-received                        {:fi "Hakemus vastaanotettu"
                                                  :sv "Ansökan har mottagits"
-                                                 :en "EN: Hakemus vastaanotettu"}
+                                                 :en "Application submitted"}
    :application-state                           {:fi "Hakemuksen tila"
                                                  :sv "Ansökans status"
-                                                 :en "EN: Hakemuksen tila"}
+                                                 :en "Status of application"}
    :applications                                {:fi "hakemusta"
                                                  :sv "ansökningar"
-                                                 :en "EN: hakemusta"}
+                                                 :en "application"}
    :view-applications                           {:fi "Näytä oppijan hakemukset"
                                                  :sv "SV: Näytä oppijan hakemukset"
-                                                 :en "EN: Näytä oppijan hakemukset"}
+                                                 :en "Show applications"}
    :applications-panel                          {:fi "Hakemukset"
                                                  :sv "Ansökningar"
-                                                 :en "EN: Hakemukset"}
+                                                 :en "Applications"}
    :asiointikieli                               {:fi "Asiointikieli"
                                                  :sv "Kontaktspråk"
-                                                 :en "EN: Asiointikieli"}
+                                                 :en "Contact language"}
    :attachment                                  {:fi "Liitepyyntö"
                                                  :sv "Begäran om bilagor"
-                                                 :en "EN: Liitepyyntö"}
+                                                 :en "Attachment"}
    :attachment-info-text                        {:fi "Liitepyyntö sisältää ohjetekstin"
                                                  :sv "Begäran om bilagor innehåller anvisningar"
                                                  :en "EN: Liitepyyntö sisältää ohjetekstin"}
@@ -760,61 +760,61 @@ You will receive a confirmation of your application to your email."}
                                                  :en "EN: Postitettava liitepyyntö"}
    :attachment-name                             {:fi "Liitteen nimi"
                                                  :sv "Bilagans namn"
-                                                 :en "EN: Liitteen nimi"}
+                                                 :en "Title of an attachment"}
    :attachment-deadline                         {:fi "Valinnainen toimituspäivämäärä (pp.kk.vvvv hh:mm)"
                                                  :sv "SV: Valinnainen toimituspäivämäärä (pp.kk.vvvv hh:mm)"
                                                  :en "EN: Valinnainen toimituspäivämäärä (pp.kk.vvvv hh:mm)"}
    :attachments                                 {:fi "Liitepyynnöt"
                                                  :sv "Begäran om bilagor"
-                                                 :en "EN: Liitepyynnöt"}
+                                                 :en "Attachments"}
    :base-education                              {:fi "Pohjakoulutus"
                                                  :sv "Grundutbildning"
-                                                 :en "EN: Pohjakoulutus"}
+                                                 :en "Education background"}
    :base-education-module                       {:fi "Pohjakoulutusmoduuli"
                                                  :sv "Grundutbildningsmodul"
                                                  :en "EN: Pohjakoulutusmoduuli"}
    :change                                      {:fi "Muuta"
-                                                 :sv "Annat"
-                                                 :en "EN: Muuta"}
+                                                 :sv "Byt"
+                                                 :en "Change"}
    :change-organization                         {:fi "Vaihda organisaatio"
                                                  :sv "Byt organisation"
-                                                 :en "EN: Vaihda organisaatio"}
+                                                 :en "Change the organization"}
    :changed                                     {:fi "muutti"
                                                  :sv "ändrades av"
-                                                 :en "EN: muutti"}
+                                                 :en "changed"}
    :changes                                     {:fi "muutosta"
                                                  :sv "ändringar"
-                                                 :en "EN: muutosta"}
+                                                 :en "changes"}
    :checking                                    {:fi "Tarkastetaan"
                                                  :sv "Kontrolleras"
-                                                 :en "EN: Tarkastetaan"}
+                                                 :en "Inspecting"}
    :choose-user-rights                          {:fi "Valitse käyttäjän oikeudet"
                                                  :sv "Välj användarrättigheter"
-                                                 :en "EN: Valitse käyttäjän oikeudet"}
+                                                 :en "Choose the users access"}
    :close                                       {:fi "sulje"
                                                  :sv "stäng"
-                                                 :en "EN: sulje"}
+                                                 :en "close"}
    :collapse-info-text                          {:fi "Pienennä pitkä ohjeteksti"
                                                  :sv "Minimera anvisningarna"
                                                  :en "EN: Pienennä pitkä ohjeteksti"}
    :compare                                     {:fi "Vertaile"
                                                  :sv "Jämför"
-                                                 :en "EN: Vertaile"}
+                                                 :en "Compare"}
    :confirm-change                              {:fi "Vahvista muutos"
                                                  :sv "Bekräfta ändringen"
-                                                 :en "EN: Vahvista muutos"}
+                                                 :en "Confirm the change"}
    :confirm-delete                              {:fi "Vahvista poisto"
                                                  :sv "Bekräfta raderingen"
-                                                 :en "EN: Vahvista poisto"}
+                                                 :en "Confirm the deletion"}
    :confirmation-sent                           {:fi "Vahvistussähköposti lähetetty hakijalle"
                                                  :sv "E-post med bekräftelse har skickats till sökande"
-                                                 :en "EN: Vahvistussähköposti lähetetty hakijalle"}
+                                                 :en "Confirmation email has been sent"}
    :contains-fields                             {:fi "Sisältää kentät:"
                                                  :sv "Innehåller fälten:"
-                                                 :en "EN: Sisältää kentät:"}
+                                                 :en "Includes the areas:"}
    :copy-form                                   {:fi "Kopioi lomake"
                                                  :sv "Kopiera blanketten"
-                                                 :en "EN: Kopioi lomake"}
+                                                 :en "Copy the form"}
    :cut-element                                 {:fi "Leikkaa"
                                                  :sv "SV: Cut"
                                                  :en "Cut"}
@@ -832,22 +832,22 @@ You will receive a confirmation of your application to your email."}
                                                  :en "EN: Kopioi kysymyksen tunniste leikepöydälle"}
    :created-by                                  {:fi "Luonut"
                                                  :sv "Grundad av"
-                                                 :en "EN: Luonut"}
+                                                 :en "Created by"}
    :custom-choice-label                         {:fi "Omat vastausvaihtoehdot"
                                                  :sv "Egna svarsalternativ"
-                                                 :en "EN: Omat vastausvaihtoehdot"}
+                                                 :en "Own answer options"}
    :decimals                                    {:fi "desimaalia"
                                                  :sv "decimaler"
-                                                 :en "EN: decimals"}
+                                                 :en "decimals"}
    :delete-form                                 {:fi "Poista lomake"
                                                  :sv "Ta bort blanketten"
-                                                 :en "EN: Poista lomake"}
+                                                 :en "Delete the form"}
    :did                                         {:fi "teki"
                                                  :sv "har gjort"
-                                                 :en "EN: teki"}
+                                                 :en "has made"}
    :diff-from-changes                           {:fi "Vertailu muutoksesta"
                                                  :sv "Jämför ändringen"
-                                                 :en "EN: Vertailu muutoksesta"}
+                                                 :en "Compare the change"}
    :diff-added                                  {:fi "Lisätty"
                                                  :sv "SV: Lisätty"
                                                  :en "Added"}
@@ -856,19 +856,19 @@ You will receive a confirmation of your application to your email."}
                                                  :en "Removed"}
    :dropdown                                    {:fi "Pudotusvalikko"
                                                  :sv "Rullgardinsmeny"
-                                                 :en "EN: Pudotusvalikko"}
+                                                 :en "Dropdown"}
    :edit-application                            {:fi "Muokkaa hakemusta"
                                                  :sv "Bearbeta ansökan"
-                                                 :en "EN: Muokkaa hakemusta"}
+                                                 :en "Edit the application"}
    :edit-applications-rights-panel              {:fi "Hakemusten arviointi"
                                                  :sv "Utvärdering av ansökningar"
-                                                 :en "EN: Hakemusten arviointi"}
+                                                 :en "Evaluation of applications"}
    :edit-email-templates                        {:fi "Muokkaa sähköpostipohjia"
                                                  :sv "Bearbeta e-postmallar"
-                                                 :en "EN: Muokkaa sähköpostipohjia"}
+                                                 :en "Edit the email templates"}
    :edit-link-sent-automatically                {:fi "Muokkauslinkki lähtee viestin mukana automaattisesti"
                                                  :sv "Bearbetningslänken skickas automatiskt med meddelandet"
-                                                 :en "EN: Muokkauslinkki lähtee viestin mukana automaattisesti"}
+                                                 :en "The edit link will be sent automatically"}
    :editable-content-beginning                  {:fi "Muokattava osuus (viestin alku)"
                                                  :sv "Del som ska bearbetas (början av meddelandet)"
                                                  :en "EN: Muokattava osuus (viestin alku)"}
@@ -880,37 +880,37 @@ You will receive a confirmation of your application to your email."}
                                                  :en "EN: Muokattava osuus (otsikko)"}
    :eligibility                                 {:fi "Hakukelpoisuus:"
                                                  :sv "Ansökningsbehörighet:"
-                                                 :en "EN: Hakukelpoisuus:"}
+                                                 :en "Criteria for eligibility"}
    :eligibility-explanation                     {:fi "Kelpoisuusmerkinnän selite"
                                                  :sv "Förklaring till behörighetsanteckningen"
-                                                 :en "EN: Kelpoisuusmerkinnän selite"}
+                                                 :en "Explanation of eligibility"}
    :eligibility-set-automatically               {:fi "Hakukelpoisuus asetettu automaattisesti"
                                                  :sv "Ansökningsbehörigheten har ställts automatiskt"
-                                                 :en "EN: Hakukelpoisuus asetettu automaattisesti"}
+                                                 :en "Eligibility set automatically"}
    :email-content                               {:fi "Sähköpostiviestin sisältö"
                                                  :sv "E-postmeddelandets innehåll"
-                                                 :en "EN: Sähköpostiviestin sisältö"}
+                                                 :en "Content of the email"}
    :empty-option                                {:fi "Ei vastausta"
                                                  :sv "Inget svar"
-                                                 :en "EN: Ei vastausta"}
+                                                 :en "No answer"}
    :english                                     {:fi "Englanti"
                                                  :sv "Engelska"
-                                                 :en "EN: English"}
+                                                 :en "English"}
    :ensisijaisesti                              {:fi "Hakenut ensisijaisesti"
                                                  :sv "Sökt i förstahand"
-                                                 :en "EN: Hakenut ensisijaisesti"}
+                                                 :en "First priority applicants"}
    :ensisijaisuus                               {:fi "Ensisijaisuus"
                                                  :sv "I förstahand"
-                                                 :en "EN: Ensisijaisuus"}
+                                                 :en "First priority"}
    :error                                       {:fi "Virhe"
                                                  :sv "Fel"
-                                                 :en "EN: Virhe"}
+                                                 :en "Error"}
    :events                                      {:fi "Tapahtumat"
                                                  :sv "Händelser"
-                                                 :en "EN: Tapahtumat"}
+                                                 :en "Events"}
    :filter-applications                         {:fi "Rajaa hakemuksia"
                                                  :sv "Avgränsa ansökningar"
-                                                 :en "EN: Rajaa hakemuksia"}
+                                                 :en "Filter the applications"}
    :filters-apply-button                        {:fi "Ota käyttöön"
                                                  :sv "Använda"
                                                  :en "Apply"}
@@ -919,7 +919,7 @@ You will receive a confirmation of your application to your email."}
                                                  :en "Cancel"}
    :finnish                                     {:fi "Suomi"
                                                  :sv "Finska"
-                                                 :en "EN: Finnish"}
+                                                 :en  "Finnish"}
    :followups                                   {:fi "Lisäkysymykset"
                                                  :sv "Tilläggsfrågor"
                                                  :en "Lisäkysymykset"}
