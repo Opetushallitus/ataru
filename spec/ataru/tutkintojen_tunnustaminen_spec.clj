@@ -155,6 +155,7 @@
 (def ^:dynamic *wrong-form-id*)
 (def ^:dynamic *application-id*)
 (def ^:dynamic *edited-application-id*)
+(def ^:dynamic *event-id*)
 (def ^:dynamic *application-key*)
 (def ^:dynamic *application-created*)
 
@@ -209,7 +210,16 @@
                                                        :dob            (dob/str->dob "24.09.1989")
                                                        :email          "test@example.com"}
                                                       {:connection connection}))
-          _                (Thread/sleep 1000) ;; avoid equal created_time in edited
+          _                (Thread/sleep 1000) ;; avoid equal created_time
+          event-id         (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                             (:id (yesql-add-application-event<! {:application_key  (:key application)
+                                                                  :event_type       "review-state-change"
+                                                                  :new_review_state "inactivated"
+                                                                  :review_key       nil
+                                                                  :hakukohde        nil
+                                                                  :virkailija_oid   nil}
+                                                                 {:connection connection})))
+          _                (Thread/sleep 1000) ;; avoid equal created_time
           edited           (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                              (yesql-add-application-version<! (assoc application :content
                                                                      {:answers [{:key       (get-in config [:tutkintojen-tunnustaminen :country-question-id])
@@ -228,6 +238,7 @@
       (binding [*form-id*               form-id
                 *wrong-form-id*         wrong-form-id
                 *application-id*        (:id application)
+                *event-id*              event-id
                 *edited-application-id* (:id edited)
                 *application-key*       (:key application)
                 *application-created*   (f/unparse (f/formatter :date-time-no-ms (t/time-zone-for-id "Europe/Helsinki"))
@@ -240,8 +251,13 @@
             (try
               (delete-file (str *application-key* "_" *application-id* ".xml"))
               (delete-file (str *application-key* "_" *edited-application-id* ".xml"))
+              (delete-file (str *application-key* "_" *application-id* "_" *event-id* ".xml"))
               (catch Exception e))
             (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+              (jdbc/execute! connection
+                             ["DELETE FROM application_events
+                               WHERE id = ?"
+                              event-id])
               (jdbc/execute! connection
                              ["DELETE FROM applications
                                WHERE id IN (?, ?)"
@@ -339,4 +355,23 @@
     (should= {:transition {:id :final}}
              (tutkintojen-tunnustaminen-submit-job-step
               {:application-id *application-id*}
-              {:person-service person-service}))))
+              {:person-service person-service})))
+
+  (it "should send inactivated message to ASHA SFTP server"
+    (let [r       (tutkintojen-tunnustaminen-review-state-changed-job-step
+                   {:event-id *event-id*}
+                   {:person-service person-service})
+          message (xml/parse-str (get-file (str *application-key* "_" *application-id* "_" *event-id* ".xml")))]
+      (should= {:transition {:id :final}} r)
+      (should= :message (:tag message))
+      (let [case (create-folder-by-type "ams_case" message)]
+        (should= *application-key* (property-value "ams_opintopolkuid" case))
+        (should= "Etunimi Toinenetunimi Sukunimi" (property-value "ams_originator" case))
+        (should= "024" (property-value "ams_applicantcountry" case))
+        (should= *application-created* (property-value "ams_registrationdate" case))
+        (should= "Hakemus" (property-value "ams_title" case)))
+      (let [action (create-folder-by-type "ams_action" message)]
+        (should= "Hakemuksen peruutus" (property-value "ams_title" action))
+        (should= "TODO" (property-value "ams_processtaskid" action)))
+      (let [attachments (by-tag :createDocument (:content message))]
+        (should-be empty? attachments)))))
