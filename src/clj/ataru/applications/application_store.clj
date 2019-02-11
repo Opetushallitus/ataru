@@ -651,7 +651,9 @@
                     (kk-base-educations-new-module answers))))
 
 (defn- korkeakoulututkinto-vuosi [answers]
-  (cond (= "Yes" (get-in answers [:finnish-vocational-before-1995 :value] "No"))
+  (cond (or (= "Yes" (get-in answers [:finnish-vocational-before-1995 :value] "No"))
+            ;; kevään 2019 kk yhteishaun lomakkeella vastauksien tunnisteina "0" ja "1"
+            (= "0" (get-in answers [:finnish-vocational-before-1995 :value] "1")))
         (Integer/valueOf (get-in answers [:finnish-vocational-before-1995--year-of-completion :value]))
         ;; syksyn 2018 kk yhteishaun lomakkeella kysymyksellä on satunnainen tunniste
         (= "0" (get-in answers [:2bfb9ea5-3896-4d82-9966-a03d418012fb :value]))
