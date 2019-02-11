@@ -182,37 +182,6 @@
                                "tutkintojen-tunnustaminen-submit-job"
                                {:application-id application-id})))))
 
-(defn tutkintojen-tunnustaminen-submit-job-step
-  [{:keys [application-id]} {:keys [person-service]}]
-  (let [form-key            (get-in config [:tutkintojen-tunnustaminen :form-key])
-        country-question-id (get-in config [:tutkintojen-tunnustaminen :country-question-id])
-        size-limit          (get-in config [:tutkintojen-tunnustaminen :attachment-total-size-limit])]
-    (when (clojure.string/blank? form-key)
-      (throw (new RuntimeException
-                  "Tutkintojen tunnustaminen form key not set")))
-    (when (clojure.string/blank? country-question-id)
-      (throw (new RuntimeException
-                  "Tutkintojen tunnustaminen country question id not set")))
-    (when (not (integer? size-limit))
-      (throw (new RuntimeException
-                  "Tutkintojen tunnustaminen attachment size limit not set")))
-    (let [application (get-application country-question-id application-id)]
-      (when (and (some? (:person-oid application))
-                 (= form-key (:form-key application)))
-        (let [person      (get-person person-service application)
-              attachments (get-attachments size-limit application)
-              message     (->application-submitted application person attachments)]
-          (log/info "Sending application submitted message to ASHA for application"
-                    application-id)
-          (transfer (get-in config [:tutkintojen-tunnustaminen :sftp])
-                    (str (:key application) "_" application-id ".xml")
-                    message)
-          (log/info "Sent application submitted message to ASHA for application"
-                    application-id)))
-      (if (nil? (:person-oid application))
-        {:transition {:id :retry}}
-        {:transition {:id :final}}))))
-
 (defn start-tutkintojen-tunnustaminen-edit-job
   [job-runner application-id]
   (when (get-in config [:tutkintojen-tunnustaminen :enabled?])
@@ -223,33 +192,62 @@
                                "tutkintojen-tunnustaminen-edit-job"
                                {:application-id application-id})))))
 
-(defn tutkintojen-tunnustaminen-edit-job-step
-  [{:keys [application-id]} {:keys [person-service]}]
-  (let [form-key            (get-in config [:tutkintojen-tunnustaminen :form-key])
-        country-question-id (get-in config [:tutkintojen-tunnustaminen :country-question-id])
-        size-limit          (get-in config [:tutkintojen-tunnustaminen :attachment-total-size-limit])]
-    (when (clojure.string/blank? form-key)
+(defn- get-configuration
+  []
+  (let [cfg (:tutkintojen-tunnustaminen config)]
+    (when (clojure.string/blank? (:form-key cfg))
       (throw (new RuntimeException
                   "Tutkintojen tunnustaminen form key not set")))
-    (when (clojure.string/blank? country-question-id)
+    (when (clojure.string/blank? (:country-question-id cfg))
       (throw (new RuntimeException
                   "Tutkintojen tunnustaminen country question id not set")))
-    (when (not (integer? size-limit))
+    (when (not (integer? (:attachment-total-size-limit cfg)))
       (throw (new RuntimeException
                   "Tutkintojen tunnustaminen attachment size limit not set")))
-    (let [application (get-application country-question-id application-id)]
-      (when (and (some? (:person-oid application))
-                 (= form-key (:form-key application)))
-        (let [person      (get-person person-service application)
-              attachments (get-attachments size-limit application)
-              message     (->application-edited application person attachments)]
-          (log/info "Sending application edited message to ASHA for application"
-                    application-id)
-          (transfer (get-in config [:tutkintojen-tunnustaminen :sftp])
-                    (str (:key application) "_" application-id ".xml")
-                    message)
-          (log/info "Sent application edited message to ASHA for application"
-                    application-id)))
-      (if (nil? (:person-oid application))
-        {:transition {:id :retry}}
-        {:transition {:id :final}}))))
+    cfg))
+
+(defn tutkintojen-tunnustaminen-submit-job-step
+  [{:keys [application-id]} {:keys [person-service]}]
+  (let [{:keys [form-key
+                country-question-id
+                attachment-total-size-limit
+                sftp]} (get-configuration)
+        application    (get-application country-question-id application-id)]
+    (when (and (some? (:person-oid application))
+               (= form-key (:form-key application)))
+      (let [person      (get-person person-service application)
+            attachments (get-attachments attachment-total-size-limit application)
+            message     (->application-submitted application person attachments)]
+        (log/info "Sending application submitted message to ASHA for application"
+                  application-id)
+        (transfer sftp
+                  (str (:key application) "_" application-id ".xml")
+                  message)
+        (log/info "Sent application submitted message to ASHA for application"
+                  application-id)))
+    (if (nil? (:person-oid application))
+      {:transition {:id :retry}}
+      {:transition {:id :final}})))
+
+(defn tutkintojen-tunnustaminen-edit-job-step
+  [{:keys [application-id]} {:keys [person-service]}]
+  (let [{:keys [form-key
+                country-question-id
+                attachment-total-size-limit
+                sftp]} (get-configuration)
+        application    (get-application country-question-id application-id)]
+    (when (and (some? (:person-oid application))
+               (= form-key (:form-key application)))
+      (let [person      (get-person person-service application)
+            attachments (get-attachments attachment-total-size-limit application)
+            message     (->application-edited application person attachments)]
+        (log/info "Sending application edited message to ASHA for application"
+                  application-id)
+        (transfer (get-in config [:tutkintojen-tunnustaminen :sftp])
+                  (str (:key application) "_" application-id ".xml")
+                  message)
+        (log/info "Sent application edited message to ASHA for application"
+                  application-id)))
+    (if (nil? (:person-oid application))
+      {:transition {:id :retry}}
+      {:transition {:id :final}})))
