@@ -86,7 +86,15 @@
    :gender         (-> person :sukupuoli)
    :nationality    (->> (-> person :kansalaisuus)
                         (mapv #(vector (get % :kansalaisuusKoodi "999"))))
-   :language       (-> person :aidinkieli :kieliKoodi clojure.string/upper-case)})
+   :language       (try
+                     (-> person :aidinkieli :kieliKoodi clojure.string/upper-case)
+                     (catch Exception e
+                       (throw (new RuntimeException
+                                   (str "Could not parse aidinkieli "
+                                        (:aidinkieli person)
+                                        "of person "
+                                        (:oidHenkilo person))
+                                   e))))})
 
 (defn parse-person [application person-from-onr]
   (let [yksiloity       (or (-> person-from-onr :yksiloity)
