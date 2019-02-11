@@ -213,27 +213,29 @@
                 attachment-total-size-limit
                 sftp]} (get-configuration)
         application    (get-application country-question-id application-id)]
-    (when (and (some? (:person-oid application))
+    (cond (and (some? (:person-oid application))
                (= form-key (:form-key application)))
-      (let [person      (get-person person-service application)
-            attachments (get-attachments attachment-total-size-limit application)
-            message     (if edit?
-                          (->application-edited application person attachments)
-                          (->application-submitted application person attachments))]
-        (log/info "Sending application"
-                  (if edit? "edited" "submitted")
-                  "message to ASHA for application"
-                  application-id)
-        (transfer sftp
-                  (str (:key application) "_" application-id ".xml")
-                  message)
-        (log/info "Sent application"
-                  (if edit? "edited" "submitted")
-                  "message to ASHA for application"
-                  application-id)))
-    (if (nil? (:person-oid application))
-      {:transition {:id :retry}}
-      {:transition {:id :final}})))
+          (let [person      (get-person person-service application)
+                attachments (get-attachments attachment-total-size-limit application)
+                message     (if edit?
+                              (->application-edited application person attachments)
+                              (->application-submitted application person attachments))]
+            (log/info "Sending application"
+                      (if edit? "edited" "submitted")
+                      "message to ASHA for application"
+                      application-id)
+            (transfer sftp
+                      (str (:key application) "_" application-id ".xml")
+                      message)
+            (log/info "Sent application"
+                      (if edit? "edited" "submitted")
+                      "message to ASHA for application"
+                      application-id)
+            {:transition {:id :final}})
+          (= form-key (:form-key application))
+          {:transition {:id :retry}}
+          :else
+          {:transition {:id :final}})))
 
 (defn tutkintojen-tunnustaminen-submit-job-step
   [{:keys [application-id]} {:keys [person-service]}]
