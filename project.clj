@@ -82,7 +82,8 @@
                  [com.amazonaws/aws-java-sdk-s3 "1.11.477"]
                  [com.amazonaws/aws-java-sdk-sns "1.11.477"]
                  [com.amazonaws/aws-java-sdk-sqs "1.11.477"]
-                 [clj-http "3.9.1"]]
+                 [clj-http "3.9.1"]
+                 [org.eclipse.jetty.websocket/websocket-server "9.2.24.v20180105"]]
 
   :min-lein-version "2.5.3"
 

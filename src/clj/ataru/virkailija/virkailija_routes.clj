@@ -33,6 +33,7 @@
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.util.client-error :as client-error]
+            [ataru.virkailija.virkailija-socket-routes :refer [application-review-socket-handler]]
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
             [ataru.virkailija.authentication.auth-utils :as auth-utils]
@@ -185,6 +186,12 @@
                    :as dependencies}]
   (api/context "/api" []
     :tags ["form-api"]
+
+    (api/undocumented
+      (api/routes
+        (api/GET "/application-in-review-socket/:oid" []
+         :path-params [oid :- s/Str]
+          (application-review-socket-handler oid))))
 
     (api/GET "/user-info" {session :session}
       (ok {:organizations         (organization-list session)
@@ -1090,6 +1097,11 @@
                               resource-routes
                               (api/context "/lomake-editori" []
                                 test-routes
+                                (api/undocumented
+                                  (api/routes
+                                    (api/GET "/application-in-review-socket/:oid" []
+                                      :path-params [oid :- s/Str]
+                                      (application-review-socket-handler oid))))
                                 dashboard-routes
                                 status-routes
                                 (api/middleware [user-feedback/wrap-user-feedback
