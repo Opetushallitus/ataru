@@ -922,76 +922,76 @@ You will receive a confirmation of your application to your email."}
                                                  :en  "Finnish"}
    :followups                                   {:fi "Lisäkysymykset"
                                                  :sv "Tilläggsfrågor"
-                                                 :en "Lisäkysymykset"}
+                                                 :en "Extra questions"}
    :for-hakukohde                               {:fi "hakukohteelle"
                                                  :sv "för ansökningsmålet"
-                                                 :en "EN: hakukohteelle"}
+                                                 :en "for application option"}
    :form                                        {:fi "Lomake"
                                                  :sv "Blankett"
-                                                 :en "EN: Lomake"}
+                                                 :en "Form"}
    :form-edit-rights-panel                      {:fi "Lomakkeiden muokkaus"
                                                  :sv "Bearbetning av blanketter"
-                                                 :en "EN: Lomakkeiden muokkaus"}
+                                                 :en "Form editing"}
    :form-locked                                 {:fi "Lomakkeen muokkaus on estetty"
                                                  :sv "Du kan inte bearbeta blanketten"
-                                                 :en "EN: Lomakkeen muokkaus on estetty"}
+                                                 :en "You can't edit the form anymore"}
    :form-name                                   {:fi "Lomakkeen nimi"
                                                  :sv "Blankettens namn"
-                                                 :en "EN: Lomakkeen nimi"}
+                                                 :en "Name of the application form"}
    :form-section                                {:fi "Lomakeosio"
                                                  :sv "Blankettdel"
-                                                 :en "EN: Lomakeosio"}
+                                                 :en "Section"}
    :form-outdated                               {:fi "Lomakkeesta on uudempi versio!"
                                                  :sv "Det finns en ny version av sökandens blankett!"
-                                                 :en "EN: Hakijan täyttämästä lomakkeesta on uudempi versio!"}
+                                                 :en "There is a new version of the application"}
    :show-newest-version                         {:fi "Näytä lomake uusimmalla versiolla"
                                                  :sv "SV: Näytä lomake uusimmalla versiolla"
-                                                 :en "EN: Näytä lomake uusimmalla versiolla"}
+                                                 :en "Show the latest version of the form"}
    :forms                                       {:fi "Lomakkeet"
                                                  :sv "Blanketter"
-                                                 :en "EN: Lomakkeet"}
+                                                 :en "Applications"}
    :forms-panel                                 {:fi "Lomakkeet"
                                                  :sv "Blanketter"
-                                                 :en "EN: Lomakkeet"}
+                                                 :en "Applications"}
    :from-applicant                              {:fi "Hakijalta"
                                                  :sv "Av sökande"
-                                                 :en "EN: Hakijalta"}
+                                                 :en "From applicant"}
    :from-state                                  {:fi "Tilasta"
                                                  :sv "Ur status"
-                                                 :en "EN: Tilasta"}
+                                                 :en "From status to"}
    :group                                       {:fi "ryhmä"
                                                  :sv "grupp"
-                                                 :en "EN: ryhmä"}
+                                                 :en "Group"}
    :group-header                                {:fi "Kysymysryhmän otsikko"
                                                  :sv "Rubrik för frågegrupp"
-                                                 :en "EN: Kysymysryhmän otsikko"}
+                                                 :en "Header of the question group"}
    :hakukohde-info                              {:fi "Tässä hakija voi valita hakukohteet. Hakukohteiden määrä ja priorisointi määritetään haun asetuksissa."
                                                  :sv "Sökande kan här välja ansökningsmål. Antalet ansökningsmål och prioriteringen definieras i inställningarna för ansökan."
                                                  :en "EN: Tässä hakija voi valita hakukohteet. Hakukohteiden määrä ja priorisointi määritetään haun asetuksissa."}
    :hakukohteet                                 {:fi "Hakukohteet"
                                                  :sv "Ansökningsmål"
-                                                 :en "EN: Hakukohteet"}
+                                                 :en "Application options"}
    :hakukohderyhmat                             {:fi "Hakukohderyhmät"
                                                  :sv "SV: Hakukohderyhmät"
-                                                 :en "EN: Hakukohderyhmät"}
+                                                 :en "Application option groups"}
    :search-hakukohde-placeholder                {:fi "Etsi hakukohteita ja hakukohderyhmiä"
                                                  :sv "SV: Etsi hakukohteita ja hakukohderyhmiä"
-                                                 :en "EN: Etsi hakukohteita ja hakukohderyhmiä"}
+                                                 :en "Search for application options and application option groups"}
    :handling-notes                              {:fi "Käsittelymerkinnät"
                                                  :sv "Anteckningar om behandling"
-                                                 :en "EN: Käsittelymerkinnät"}
+                                                 :en "Notes"}
    :hide-options                                {:fi "Sulje vastausvaihtoehdot"
                                                  :sv "Stäng svarsalternativen"
-                                                 :en "EN: Sulje vastausvaihtoehdot"}
+                                                 :en "Hide the options"}
    :identified                                  {:fi "Yksilöidyt"
                                                  :sv "Individualiserade"
-                                                 :en "EN: Yksilöidyt"}
+                                                 :en "Identified"}
    :identifying                                 {:fi "Yksilöinti"
                                                  :sv "Individualisering"
-                                                 :en "EN: Yksilöinti"}
+                                                 :en "Identifying"}
    :incomplete                                  {:fi "Kesken"
                                                  :sv "Inte färdig"
-                                                 :en "EN: Kesken"}
+                                                 :en "Incomplete"}
    :ineligibility-reason                        {:fi "Hylkäyksen syy"
                                                  :sv "Orsak till avslag"
                                                  :en "Reason for ineligibility"}
@@ -1000,43 +1000,43 @@ You will receive a confirmation of your application to your email."}
                                                  :en "EN: Kysymys sisältää ohjetekstin"}
    :info-element                                {:fi "Infoteksti"
                                                  :sv "Infotext"
-                                                 :en "EN: Infoteksti"}
+                                                 :en "Info element"}
    :information-request-sent                    {:fi "Täydennyspyyntö lähetetty"
                                                  :sv "Begäran om komplettering har skickats"
-                                                 :en "EN: Täydennyspyyntö lähetetty"}
+                                                 :en "Information request email has been sent"}
    :mass-information-request-sent               {:fi "Viesti lähetetty"
                                                  :sv "Meddelandet har skickats"
-                                                 :en "EN: Viesti lähetetty"}
+                                                 :en "Message has been sent"}
    :integer                                     {:fi "kokonaisluku"
                                                  :sv "heltal"
-                                                 :en "EN: integer"}
+                                                 :en "integer"}
    :kk-base-education-module                    {:fi "Pohjakoulutusmoduuli (kk-yhteishaku)"
                                                  :sv "Grundutbildningsmodul (Gea till högskolor)"
                                                  :en "EN: Pohjakoulutusmoduuli (kk-yhteishaku)"}
    :koodisto                                    {:fi "Koodisto"
                                                  :sv "Kodregister"
-                                                 :en "EN: Koodisto"}
+                                                 :en "Codes"}
    :koulutusmarkkinointilupa                    {:fi "Koulutusmarkkinointilupa"
                                                  :sv "Tillstånd för utbildningsmarknadsföring"
                                                  :en "EN: Koulutusmarkkinointilupa"}
    :last-modified                               {:fi "Viimeksi muokattu"
                                                  :sv "Senast bearbetad"
-                                                 :en "EN: Viimeksi muokattu"}
+                                                 :en "Modified last"}
    :last-modified-by                            {:fi "viimeksi muokannut"
                                                  :sv "Senast bearbetad av"
-                                                 :en "EN: viimeksi muokannut"}
+                                                 :en "Last modified by"}
    :link-to-form                                {:fi "Linkki lomakkeeseen"
                                                  :sv "Länk till blanketten"
-                                                 :en "EN: Linkki lomakkeeseen"}
+                                                 :en "Link to the form"}
    :load-excel                                  {:fi "Lataa Excel"
                                                  :sv "Ladda ner Excel"
-                                                 :en "EN: Lataa Excel"}
+                                                 :en "Load excel"}
    :lock-form                                   {:fi "Lukitse lomake"
                                                  :sv "Lås blanketten"
-                                                 :en "EN: Lukitse lomake"}
+                                                 :en "Lock the form"}
    :logout                                      {:fi "Kirjaudu ulos"
                                                  :sv "Logga ut"
-                                                 :en "EN: Kirjaudu ulos"}
+                                                 :en "Log out"}
    :lupa-sahkoiseen-asiointiin                  {:fi "Sähköisen asioinnin lupa"
                                                  :sv "Tillstånd för elektronisk kontakt"
                                                  :en "EN: Sähköisen asioinnin lupa"}
@@ -1045,49 +1045,49 @@ You will receive a confirmation of your application to your email."}
                                                  :en "Permissions"}
    :mass-edit                                   {:fi "Massamuutos"
                                                  :sv "Massändring"
-                                                 :en "EN: Massamuutos"}
+                                                 :en "Mass editing"}
    :mass-information-request                    {:fi "Massaviesti"
                                                  :sv "Massmeddelande"
-                                                 :en "EN-massaviesti"}
+                                                 :en "Mass message"}
    :mass-information-request-confirm-n-messages (fn [n] {:fi (format "Vahvista %d viestin lähetys" n)
                                                          :sv (format "Bekräfta att %d meddelanden kommer att skickas" n)
-                                                         :en (format "EN-Vahvista %d viestin lähetys" n)})
+                                                         :en (format "Confirm %d sending the message"  n)})
    :mass-information-request-email-n-recipients (fn [n] {:fi (format "Lähetä sähköposti %d hakijalle:" n)
                                                          :sv (format "Skicka e-post till %d sökande:" n)
-                                                         :en (format "EN-Lähetä sähköposti %d hakijalle:" n)})
+                                                         :en (format "Send email to %d applicants:" n)})
    :mass-information-request-messages-sent      {:fi "Viestit lisätty lähetysjonoon!"
                                                  :sv "Meddelandena har lagts till i utskickskön!"
-                                                 :en "SV-Viestit lisätty lähetysjonoon!"}
+                                                 :en "Messages have been sent!"}
    :mass-information-request-send               {:fi "Lähetä"
                                                  :sv "Skicka:"
-                                                 :en "EN-Lähetä:"}
+                                                 :en "Send:"}
    :mass-information-request-sending-messages   {:fi "Käsitellään viestejä..."
                                                  :sv "Meddelanden behandlas..."
-                                                 :en "EN-Käsitellään viestejä..."}
+                                                 :en "Sending the messages"}
    :mass-information-request-subject            {:fi "Aihe:"
                                                  :sv "Ämne:"
-                                                 :en "EN-Aihe:"}
+                                                 :en "Subject:"}
    :max-characters                              {:fi "Max. merkkimäärä"
                                                  :sv "Max. teckenantal"
-                                                 :en "EN: Max. merkkimäärä"}
+                                                 :en "Max. characters"}
    :md-help-bold                                {:fi "**lihavoitava sisältö**"
                                                  :sv "**innehåll med fetstil**"
-                                                 :en "EN: **bold content**"}
+                                                 :en "**bold content**"}
    :md-help-cursive                             {:fi "*kursivoitava sisältö*"
                                                  :sv "*med kursiv stil*"
-                                                 :en "EN: *cursive content*"}
+                                                 :en "*cursive content*"}
    :md-help-link                                {:fi "[linkin teksti](http://linkin osoite)"
                                                  :sv "[länkens text](http://länkens adress)"
-                                                 :en "EN: [link text](http://link address)"}
+                                                 :en "[link text](http://link address)"}
    :md-help-more                                {:fi "Lisää muotoiluohjeita"
                                                  :sv "Lägg till anvisningar för utformning"
-                                                 :en "EN: Lisää muotoiluohjeita"}
+                                                 :en "More instructions"}
    :md-help-title                               {:fi "# otsikko (# ylin - ###### alin)"
                                                  :sv "# otsikko (# högsta - ###### lägst)"
-                                                 :en "EN: # title (# highest - ###### lowest)"}
+                                                 :en "# title (# highest - ###### lowest)"}
    :message-preview                             {:fi "Viestin esikatselu"
                                                  :sv "Förhandsgranska meddelandet"
-                                                 :en "EN: Viestin esikatselu"}
+                                                 :en "Preview the message"}
    :more-results-refine-search                  {:fi "Lataa lisää tuloksia"
                                                  :sv "Ladda mera"
                                                  :en "Load more results"}
@@ -1096,37 +1096,37 @@ You will receive a confirmation of your application to your email."}
                                                  :en "EN: Vastaaja voi lisätä useita vastauksia"}
    :multiple-choice                             {:fi "Lista, monta valittavissa"
                                                  :sv "Flervalslista"
-                                                 :en "EN: Lista, monta valittavissa"}
+                                                 :en "Multiple choice"}
    :multiple-organizations                      {:fi "Useita organisaatioita"
                                                  :sv "Flera organisationer"
-                                                 :en "EN: Useita organisaatioita"}
+                                                 :en "Multiple organizations"}
    :new-form                                    {:fi "Uusi lomake"
                                                  :sv "Ny blankett"
-                                                 :en "EN: Uusi lomake"}
+                                                 :en "New form"}
    :no-organization                             {:fi "Ei organisaatiota"
                                                  :sv "Ingen organisation"
-                                                 :en "EN: Ei organisaatiota"}
+                                                 :en "No organization"}
    :notes                                       {:fi "Muistiinpanot"
                                                  :sv "Anteckningar"
-                                                 :en "EN: Muistiinpanot"}
+                                                 :en "Notes"}
    :of-form                                     {:fi "Lomakkeen"
                                                  :sv "Blankettens"
-                                                 :en "EN: Lomakkeen"}
+                                                 :en "Form's"}
    :of-hakukohde                                {:fi "Hakukohteen"
                                                  :sv "Ansökningsmålets"
-                                                 :en "EN: Hakukohteen"}
+                                                 :en "Application options"}
    :only-numeric                                {:fi "Kenttään voi täyttää vain numeroita"
                                                  :sv "Endast siffror i fältet"
-                                                 :en "EN: Kenttään voi täyttää vain numeroita"}
+                                                 :en "Only numbers"}
    :open                                        {:fi "avaa"
                                                  :sv "öppna"
-                                                 :en "EN: avaa"}
+                                                 :en "Open"}
    :options                                     {:fi "Vastausvaihtoehdot"
                                                  :sv "Svarsalternativ"
-                                                 :en "EN: Vastausvaihtoehdot"}
+                                                 :en "Options"}
    :passive                                     {:fi "Passiivinen"
                                                  :sv "Passiv"
-                                                 :en "EN: Passiivinen"}
+                                                 :en "Passive"}
    :person-completed-education                  {:fi "Henkilön suoritukset"
                                                  :sv "Personens prestationer"
                                                  :en "EN: Henkilön suoritukset"}
