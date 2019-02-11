@@ -15,6 +15,7 @@
     [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
+    [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
     [ataru.util :as util]
     [ataru.applications.filtering :as application-filtering]
     [clojure.data :refer [diff]]
@@ -424,7 +425,7 @@
       session)))
 
 (defn save-application-review
-  [organization-service tarjonta-service session review]
+  [job-runner organization-service tarjonta-service session review]
   (let [application-key (:application-key review)]
     (when (aac/applications-access-authorized?
            organization-service
@@ -432,7 +433,10 @@
            session
            [application-key]
            [:edit-applications])
-      (application-store/save-application-review review session)
+      (let [event-id (application-store/save-application-review review session)]
+        (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-review-state-changed-job
+         job-runner
+         event-id))
       (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session)
       (save-attachment-hakukohde-reviews application-key (:attachment-reviews review) session)
       {:events (application-store/get-application-events application-key)})))

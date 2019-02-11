@@ -716,7 +716,7 @@ WHERE la.key IS NULL\n"
                      :virkailija_oid   (-> session :identity :oid)
                      :hakukohde        nil
                      :review_key       nil}]
-          (yesql-add-application-event<! event connection))))))
+          (:id (yesql-add-application-event<! event connection)))))))
 
 (defn save-application-hakukohde-review
   [application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state session]

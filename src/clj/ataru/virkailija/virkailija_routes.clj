@@ -464,6 +464,7 @@
         :body [review ataru-schema/Review]
         :return {:events [ataru-schema/Event]}
         (if-let [result (application-service/save-application-review
+                         job-runner
                          organization-service
                          tarjonta-service
                          session

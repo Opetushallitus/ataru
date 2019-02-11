@@ -79,6 +79,12 @@
    (->action "Hakemuksen muokkaus" "TODO")
    (->documents application attachments)))
 
+(defn- ->application-inactivated
+  [application person]
+  (xml/element :message {}
+               (->case application person)
+               (->action "Hakemuksen peruutus" "TODO")))
+
 (defn- get-application
   [country-question-id application-id]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
@@ -91,6 +97,22 @@
       (when (or (not (string? (:country application)))
                 (clojure.string/blank? (:country application)))
         (throw (new RuntimeException (str "Application " application-id
+                                          " has invalid country: " (:country application)
+                                          " as value for question " country-question-id))))
+      application)))
+
+(defn- get-application-by-event-id
+  [country-question-id event-id]
+  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+    (let [application (first (yesql-get-application-by-event-id {:country_question_id country-question-id
+                                                                 :id                  event-id}
+                                                                {:connection connection}))]
+      (when (nil? application)
+        (throw (new RuntimeException (str "Application by event id " event-id
+                                          " not found"))))
+      (when (or (not (string? (:country application)))
+                (clojure.string/blank? (:country application)))
+        (throw (new RuntimeException (str "Application " (:id application)
                                           " has invalid country: " (:country application)
                                           " as value for question " country-question-id))))
       application)))
@@ -192,6 +214,16 @@
                                "tutkintojen-tunnustaminen-edit-job"
                                {:application-id application-id})))))
 
+(defn start-tutkintojen-tunnustaminen-review-state-changed-job
+  [job-runner event-id]
+  (when (get-in config [:tutkintojen-tunnustaminen :enabled?])
+    (log/info "Started tutkintojen tunnustaminen review state changed job with job id"
+              (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+                (job/start-job job-runner
+                               connection
+                               "tutkintojen-tunnustaminen-review-state-changed-job"
+                               {:event-id event-id})))))
+
 (defn- get-configuration
   []
   (let [cfg (:tutkintojen-tunnustaminen config)]
@@ -244,3 +276,28 @@
 (defn tutkintojen-tunnustaminen-edit-job-step
   [{:keys [application-id]} {:keys [person-service]}]
   (application-job-step person-service application-id true))
+
+(defn tutkintojen-tunnustaminen-review-state-changed-job-step
+  [{:keys [event-id]} {:keys [person-service]}]
+  (let [{:keys [form-key
+                country-question-id
+                sftp]} (get-configuration)
+        application    (get-application-by-event-id country-question-id event-id)]
+    (cond (and (some? (:person-oid application))
+               (= form-key (:form-key application))
+               (= "inactivated" (:state application)))
+          (let [person  (get-person person-service application)
+                message (->application-inactivated application person)]
+            (log/info "Sending application inactivated message to ASHA for application"
+                      (:id application))
+            (transfer sftp
+                      (str (:key application) "_" (:id application) "_" event-id ".xml")
+                      message)
+            (log/info "Sent application inactivated message to ASHA for application"
+                      (:id application))
+            {:transition {:id :final}})
+          (and (= form-key (:form-key application))
+               (= "inactivated" (:state application)))
+          {:transition {:id :retry}}
+          :else
+          {:transition {:id :final}})))
