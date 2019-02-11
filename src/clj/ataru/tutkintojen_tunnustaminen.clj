@@ -27,24 +27,28 @@
   (xml/element :propertyString {:propertyDefinitionId id}
                (xml/element :value {} value)))
 
-(defn- ->application-submitted
-  [application person attachments]
+(defn- ->case
+  [application person]
   (let [application-key (:key application)
         name            (str (:etunimet person) " " (:sukunimi person))
         country         (:country application)
         created-time    (f/unparse (f/formatter :date-time-no-ms (t/time-zone-for-id "Europe/Helsinki"))
-                                   (:created-time application))
-        lang            (:lang application)]
+                                   (:created-time application))]
+    (xml/element :createFolder {}
+                 (xml/element :properties {}
+                              (->property-string "ams_opintopolkuid" application-key)
+                              (->property-string "ams_originator" name)
+                              (->property-string "ams_applicantcountry" country)
+                              (->property-string "ams_registrationdate" created-time)
+                              (->property-string "ams_title" "Hakemus"))
+                 (xml/element :folderType {} "ams_case"))))
+
+(defn- ->application-submitted
+  [application person attachments]
+  (let [lang (:lang application)]
     (apply
      xml/element :message {}
-     (xml/element :createFolder {}
-                  (xml/element :properties {}
-                               (->property-string "ams_opintopolkuid" application-key)
-                               (->property-string "ams_originator" name)
-                               (->property-string "ams_applicantcountry" country)
-                               (->property-string "ams_registrationdate" created-time)
-                               (->property-string "ams_title" "Hakemus"))
-                  (xml/element :folderType {} "ams_case"))
+     (->case application person)
      (xml/element :createFolder {}
                   (xml/element :properties {}
                                (->property-string "ams_title" "Hakemuksen saapuminen")
@@ -61,22 +65,10 @@
 
 (defn- ->application-edited
   [application person attachments]
-  (let [application-key (:key application)
-        name            (str (:etunimet person) " " (:sukunimi person))
-        country         (:country application)
-        created-time    (f/unparse (f/formatter :date-time-no-ms (t/time-zone-for-id "Europe/Helsinki"))
-                                   (:created-time application))
-        lang            (:lang application)]
+  (let [lang (:lang application)]
     (apply
      xml/element :message {}
-     (xml/element :createFolder {}
-                  (xml/element :properties {}
-                               (->property-string "ams_opintopolkuid" application-key)
-                               (->property-string "ams_originator" name)
-                               (->property-string "ams_applicantcountry" country)
-                               (->property-string "ams_registrationdate" created-time)
-                               (->property-string "ams_title" "Hakemus"))
-                  (xml/element :folderType {} "ams_case"))
+     (->case application person)
      (xml/element :createFolder {}
                   (xml/element :properties {}
                                (->property-string "ams_title" "Hakemuksen muokkaus")
