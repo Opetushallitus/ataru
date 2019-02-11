@@ -697,7 +697,7 @@ You will receive a confirmation of your application to your email."}
 (def virkailija-texts
   {:active                                      {:fi "Aktiivinen"
                                                  :sv "Aktiv"
-                                                 :en "EN: Aktiivinen"}
+                                                 :en "Active"}
    :add                                         {:fi "Lisää"
                                                  :sv "Lägg till"
                                                  :en "EN: Add more"}
