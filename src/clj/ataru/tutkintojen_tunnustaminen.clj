@@ -43,45 +43,41 @@
                               (->property-string "ams_title" "Hakemus"))
                  (xml/element :folderType {} "ams_case"))))
 
+(defn- ->documents
+  [application attachments]
+  (let [lang (:lang application)]
+    (map (fn [{:keys [filename data]}]
+           (xml/element :createDocument {}
+                        (xml/element :properties {}
+                                     (->property-string "ams_language" lang))
+                        (xml/element :contentStream {}
+                                     (xml/element :filename {} filename)
+                                     (xml/element :stream {} data))))
+         attachments)))
+
 (defn- ->application-submitted
   [application person attachments]
-  (let [lang (:lang application)]
-    (apply
-     xml/element :message {}
-     (->case application person)
-     (xml/element :createFolder {}
-                  (xml/element :properties {}
-                               (->property-string "ams_title" "Hakemuksen saapuminen")
-                               (->property-string "ams_processtaskid" "TODO"))
-                  (xml/element :folderType {} "ams_action"))
-     (map (fn [{:keys [filename data]}]
-            (xml/element :createDocument {}
-                         (xml/element :properties {}
-                                      (->property-string "ams_language" lang))
-                         (xml/element :contentStream {}
-                                      (xml/element :filename {} filename)
-                                      (xml/element :stream {} data))))
-          attachments))))
+  (apply
+   xml/element :message {}
+   (->case application person)
+   (xml/element :createFolder {}
+                (xml/element :properties {}
+                             (->property-string "ams_title" "Hakemuksen saapuminen")
+                             (->property-string "ams_processtaskid" "TODO"))
+                (xml/element :folderType {} "ams_action"))
+   (->documents application attachments)))
 
 (defn- ->application-edited
   [application person attachments]
-  (let [lang (:lang application)]
-    (apply
-     xml/element :message {}
-     (->case application person)
-     (xml/element :createFolder {}
-                  (xml/element :properties {}
-                               (->property-string "ams_title" "Hakemuksen muokkaus")
-                               (->property-string "ams_processtaskid" "TODO"))
-                  (xml/element :folderType {} "ams_action"))
-     (map (fn [{:keys [filename data]}]
-            (xml/element :createDocument {}
-                         (xml/element :properties {}
-                                      (->property-string "ams_language" lang))
-                         (xml/element :contentStream {}
-                                      (xml/element :filename {} filename)
-                                      (xml/element :stream {} data))))
-          attachments))))
+  (apply
+   xml/element :message {}
+   (->case application person)
+   (xml/element :createFolder {}
+                (xml/element :properties {}
+                             (->property-string "ams_title" "Hakemuksen muokkaus")
+                             (->property-string "ams_processtaskid" "TODO"))
+                (xml/element :folderType {} "ams_action"))
+   (->documents application attachments)))
 
 (defn- get-application
   [country-question-id application-id]
