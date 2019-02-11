@@ -152,6 +152,7 @@
     (throw (new RuntimeException (str "no file " key " found")))))
 
 (def ^:dynamic *form-id*)
+(def ^:dynamic *wrong-form-id*)
 (def ^:dynamic *application-id*)
 (def ^:dynamic *edited-application-id*)
 (def ^:dynamic *application-key*)
@@ -172,6 +173,17 @@
                                                      :locked           nil
                                                      :locked_by        nil}
                                                     {:connection connection})))
+          wrong-form-id (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                          (:id(yesql-add-form<! {:name             {:fi "Lomake"}
+                                                 :content          {:content []}
+                                                 :created_by       "testi"
+                                                 :key              (str (get-in config [:tutkintojen-tunnustaminen :form-key]) "-asd")
+                                                 :languages        {:languages ["fi"]}
+                                                 :organization_oid "1.2.246.562.10.00000000001"
+                                                 :deleted          false
+                                                 :locked           nil
+                                                 :locked_by        nil}
+                                                {:connection connection})))
           application (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                              (yesql-add-application<! {:form_id        form-id
                                                        :content        {:answers [{:key       (get-in config [:tutkintojen-tunnustaminen :country-question-id])
@@ -214,6 +226,7 @@
                                                                                  :fieldType "attachment"}]})
                                                               {:connection connection}))]
       (binding [*form-id*               form-id
+                *wrong-form-id*         wrong-form-id
                 *application-id*        (:id application)
                 *edited-application-id* (:id edited)
                 *application-key*       (:key application)
@@ -232,11 +245,13 @@
               (jdbc/execute! connection
                              ["DELETE FROM applications
                                WHERE id IN (?, ?)"
-                              (:id application) (:id edited)])
+                              (:id application)
+                              (:id edited)])
               (jdbc/execute! connection
                              ["DELETE FROM forms
-                               WHERE id = ?"
-                              form-id])))))))
+                               WHERE id IN (?, ?)"
+                              form-id
+                              wrong-form-id])))))))
 
   (it "should send submit message to ASHA SFTP server"
     (let [r       (tutkintojen-tunnustaminen-submit-job-step
@@ -298,4 +313,30 @@
                               first)
                 lang     (property-value "ams_language" attachment)]
             (should-contain filename (set (map (comp :filename second) attachment-metadata)))
-            (should= "fi" lang)))))))
+            (should= "fi" lang))))))
+
+  (it "should retry if no person oid in hakemus"
+    (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+      (jdbc/execute! connection
+                     ["UPDATE applications
+                       SET person_oid = NULL
+                       WHERE id = ?"
+                      *application-id*]))
+    (should= {:transition {:id :retry}}
+             (tutkintojen-tunnustaminen-submit-job-step
+              {:application-id *application-id*}
+              {:person-service person-service})))
+
+  (it "should not retry if no person oid in hakemus but wrong form"
+    (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+      (jdbc/execute! connection
+                     ["UPDATE applications
+                       SET person_oid = NULL,
+                           form_id = ?
+                       WHERE id = ?"
+                      *wrong-form-id*
+                      *application-id*]))
+    (should= {:transition {:id :final}}
+             (tutkintojen-tunnustaminen-submit-job-step
+              {:application-id *application-id*}
+              {:person-service person-service}))))
