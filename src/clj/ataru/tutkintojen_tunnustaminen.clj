@@ -206,8 +206,8 @@
                   "Tutkintojen tunnustaminen attachment size limit not set")))
     cfg))
 
-(defn tutkintojen-tunnustaminen-submit-job-step
-  [{:keys [application-id]} {:keys [person-service]}]
+(defn- application-job-step
+  [person-service application-id edit?]
   (let [{:keys [form-key
                 country-question-id
                 attachment-total-size-limit
@@ -217,37 +217,28 @@
                (= form-key (:form-key application)))
       (let [person      (get-person person-service application)
             attachments (get-attachments attachment-total-size-limit application)
-            message     (->application-submitted application person attachments)]
-        (log/info "Sending application submitted message to ASHA for application"
+            message     (if edit?
+                          (->application-edited application person attachments)
+                          (->application-submitted application person attachments))]
+        (log/info "Sending application"
+                  (if edit? "edited" "submitted")
+                  "message to ASHA for application"
                   application-id)
         (transfer sftp
                   (str (:key application) "_" application-id ".xml")
                   message)
-        (log/info "Sent application submitted message to ASHA for application"
+        (log/info "Sent application"
+                  (if edit? "edited" "submitted")
+                  "message to ASHA for application"
                   application-id)))
     (if (nil? (:person-oid application))
       {:transition {:id :retry}}
       {:transition {:id :final}})))
 
+(defn tutkintojen-tunnustaminen-submit-job-step
+  [{:keys [application-id]} {:keys [person-service]}]
+  (application-job-step person-service application-id false))
+
 (defn tutkintojen-tunnustaminen-edit-job-step
   [{:keys [application-id]} {:keys [person-service]}]
-  (let [{:keys [form-key
-                country-question-id
-                attachment-total-size-limit
-                sftp]} (get-configuration)
-        application    (get-application country-question-id application-id)]
-    (when (and (some? (:person-oid application))
-               (= form-key (:form-key application)))
-      (let [person      (get-person person-service application)
-            attachments (get-attachments attachment-total-size-limit application)
-            message     (->application-edited application person attachments)]
-        (log/info "Sending application edited message to ASHA for application"
-                  application-id)
-        (transfer (get-in config [:tutkintojen-tunnustaminen :sftp])
-                  (str (:key application) "_" application-id ".xml")
-                  message)
-        (log/info "Sent application edited message to ASHA for application"
-                  application-id)))
-    (if (nil? (:person-oid application))
-      {:transition {:id :retry}}
-      {:transition {:id :final}})))
+  (application-job-step person-service application-id true))
