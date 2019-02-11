@@ -128,7 +128,11 @@
    "liite-3-2-2-id" {:size     10
                      :filename "liite-3-2-2"
                      :key      "liite-3-2-2-id"
-                     :data     "liite-3-2-2-data"}})
+                     :data     "liite-3-2-2-data"}
+   "liite-3-1-2-id" {:size     10
+                     :filename "liite-3-1-2"
+                     :key      "liite-3-1-2-id"
+                     :data     "liite-3-1-2-data"}})
 
 (defn get-metadata
   [keys]
@@ -149,7 +153,9 @@
 
 (def ^:dynamic *form-id*)
 (def ^:dynamic *application-id*)
+(def ^:dynamic *edited-application-id*)
 (def ^:dynamic *application-key*)
+(def ^:dynamic *application-created*)
 
 (describe "Send Hakemuksen saapuminen message to ASHA SFTP server"
   (tags :unit)
@@ -166,7 +172,7 @@
                                                      :locked           nil
                                                      :locked_by        nil}
                                                     {:connection connection})))
-          {:keys [id key]} (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+          application (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                              (yesql-add-application<! {:form_id        form-id
                                                        :content        {:answers [{:key       (get-in config [:tutkintojen-tunnustaminen :country-question-id])
                                                                                    :value     "024"
@@ -190,21 +196,43 @@
                                                        :ssn            nil
                                                        :dob            (dob/str->dob "24.09.1989")
                                                        :email          "test@example.com"}
-                                                      {:connection connection}))]
-      (binding [*form-id*         form-id
-                *application-id*  id
-                *application-key* key]
+                                                      {:connection connection}))
+          _                (Thread/sleep 1000) ;; avoid equal created_time in edited
+          edited           (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                             (yesql-add-application-version<! (assoc application :content
+                                                                     {:answers [{:key       (get-in config [:tutkintojen-tunnustaminen :country-question-id])
+                                                                                 :value     "025"
+                                                                                 :fieldType "dropdown"}
+                                                                                {:key       "liite-1"
+                                                                                 :value     ["liite-1-id"]
+                                                                                 :fieldType "attachment"}
+                                                                                {:key       "liite-2"
+                                                                                 :value     ["liite-2-1-id" "liite-2-2-id"]
+                                                                                 :fieldType "attachment"}
+                                                                                {:key       "liite-3"
+                                                                                 :value     [["liite-3-1-2-id"]]
+                                                                                 :fieldType "attachment"}]})
+                                                              {:connection connection}))]
+      (binding [*form-id*               form-id
+                *application-id*        (:id application)
+                *edited-application-id* (:id edited)
+                *application-key*       (:key application)
+                *application-created*   (f/unparse (f/formatter :date-time-no-ms (t/time-zone-for-id "Europe/Helsinki"))
+                                                   (:created_time application))]
         (try
           (with-redefs [file-store/get-metadata get-metadata
                         file-store/get-file     get-attachment]
             (it))
           (finally
-            (delete-file (str *application-key* "_" *application-id* ".xml"))
+            (try
+              (delete-file (str *application-key* "_" *application-id* ".xml"))
+              (delete-file (str *application-key* "_" *edited-application-id* ".xml"))
+              (catch Exception e))
             (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
               (jdbc/execute! connection
                              ["DELETE FROM applications
-                               WHERE id = ?"
-                              id])
+                               WHERE id IN (?, ?)"
+                              (:id application) (:id edited)])
               (jdbc/execute! connection
                              ["DELETE FROM forms
                                WHERE id = ?"
@@ -221,12 +249,44 @@
         (should= *application-key* (property-value "ams_opintopolkuid" case))
         (should= "Etunimi Toinenetunimi Sukunimi" (property-value "ams_originator" case))
         (should= "024" (property-value "ams_applicantcountry" case))
+        (should= *application-created* (property-value "ams_registrationdate" case))
         (should= "Hakemus" (property-value "ams_title" case)))
       (let [action (create-folder-by-type "ams_action" message)]
         (should= "Hakemuksen saapuminen" (property-value "ams_title" action))
         (should= "TODO" (property-value "ams_processtaskid" action)))
       (let [attachments (by-tag :createDocument (:content message))]
-        (should= (count attachment-metadata) (count attachments))
+        (should= 6 (count attachments))
+        (doseq [attachment attachments]
+          (let [filename (->> (:content attachment)
+                              (by-tag :contentStream)
+                              first
+                              :content
+                              (by-tag :filename)
+                              first
+                              :content
+                              first)
+                lang     (property-value "ams_language" attachment)]
+            (should-contain filename (set (map (comp :filename second) attachment-metadata)))
+            (should= "fi" lang))))))
+
+  (it "should send edit message to ASHA SFTP server"
+    (let [r       (tutkintojen-tunnustaminen-edit-job-step
+                   {:application-id *edited-application-id*}
+                   {:person-service person-service})
+          message (xml/parse-str (get-file (str *application-key* "_" *edited-application-id* ".xml")))]
+      (should= {:transition {:id :final}} r)
+      (should= :message (:tag message))
+      (let [case (create-folder-by-type "ams_case" message)]
+        (should= *application-key* (property-value "ams_opintopolkuid" case))
+        (should= "Etunimi Toinenetunimi Sukunimi" (property-value "ams_originator" case))
+        (should= "025" (property-value "ams_applicantcountry" case))
+        (should= *application-created* (property-value "ams_registrationdate" case))
+        (should= "Hakemus" (property-value "ams_title" case)))
+      (let [action (create-folder-by-type "ams_action" message)]
+        (should= "Hakemuksen muokkaus" (property-value "ams_title" action))
+        (should= "TODO" (property-value "ams_processtaskid" action)))
+      (let [attachments (by-tag :createDocument (:content message))]
+        (should= 4 (count attachments))
         (doseq [attachment attachments]
           (let [filename (->> (:content attachment)
                               (by-tag :contentStream)
