@@ -19,4 +19,6 @@
    "start-automatic-eligibility-if-ylioppilas-job-job" {:steps {:initial automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job-job-step}
                                                         :type  "start-automatic-eligibility-if-ylioppilas-job-job"}
    "tutkintojen-tunnustaminen-submit-job"              {:steps {:initial tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-submit-job-step}
-                                                        :type  "tutkintojen-tunnustaminen-submit-job"}})
+                                                        :type  "tutkintojen-tunnustaminen-submit-job"}
+   "tutkintojen-tunnustaminen-edit-job"                {:steps {:initial tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-edit-job-step}
+                                                        :type  "tutkintojen-tunnustaminen-edit-job"}})

@@ -59,6 +59,38 @@
                                       (xml/element :stream {} data))))
           attachments))))
 
+(defn- ->application-edited
+  [application person attachments]
+  (let [application-key (:key application)
+        name            (str (:etunimet person) " " (:sukunimi person))
+        country         (:country application)
+        created-time    (f/unparse (f/formatter :date-time-no-ms (t/time-zone-for-id "Europe/Helsinki"))
+                                   (:created-time application))
+        lang            (:lang application)]
+    (apply
+     xml/element :message {}
+     (xml/element :createFolder {}
+                  (xml/element :properties {}
+                               (->property-string "ams_opintopolkuid" application-key)
+                               (->property-string "ams_originator" name)
+                               (->property-string "ams_applicantcountry" country)
+                               (->property-string "ams_registrationdate" created-time)
+                               (->property-string "ams_title" "Hakemus"))
+                  (xml/element :folderType {} "ams_case"))
+     (xml/element :createFolder {}
+                  (xml/element :properties {}
+                               (->property-string "ams_title" "Hakemuksen muokkaus")
+                               (->property-string "ams_processtaskid" "TODO"))
+                  (xml/element :folderType {} "ams_action"))
+     (map (fn [{:keys [filename data]}]
+            (xml/element :createDocument {}
+                         (xml/element :properties {}
+                                      (->property-string "ams_language" lang))
+                         (xml/element :contentStream {}
+                                      (xml/element :filename {} filename)
+                                      (xml/element :stream {} data))))
+          attachments))))
+
 (defn- get-application
   [country-question-id application-id]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
@@ -188,6 +220,47 @@
                     (str (:key application) "_" application-id ".xml")
                     message)
           (log/info "Sent application submitted message to ASHA for application"
+                    application-id)))
+      (if (nil? (:person-oid application))
+        {:transition {:id :retry}}
+        {:transition {:id :final}}))))
+
+(defn start-tutkintojen-tunnustaminen-edit-job
+  [job-runner application-id]
+  (when (get-in config [:tutkintojen-tunnustaminen :enabled?])
+    (log/info "Started tutkintojen tunnustaminen edit job with job id"
+              (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+                (job/start-job job-runner
+                               connection
+                               "tutkintojen-tunnustaminen-edit-job"
+                               {:application-id application-id})))))
+
+(defn tutkintojen-tunnustaminen-edit-job-step
+  [{:keys [application-id]} {:keys [person-service]}]
+  (let [form-key            (get-in config [:tutkintojen-tunnustaminen :form-key])
+        country-question-id (get-in config [:tutkintojen-tunnustaminen :country-question-id])
+        size-limit          (get-in config [:tutkintojen-tunnustaminen :attachment-total-size-limit])]
+    (when (clojure.string/blank? form-key)
+      (throw (new RuntimeException
+                  "Tutkintojen tunnustaminen form key not set")))
+    (when (clojure.string/blank? country-question-id)
+      (throw (new RuntimeException
+                  "Tutkintojen tunnustaminen country question id not set")))
+    (when (not (integer? size-limit))
+      (throw (new RuntimeException
+                  "Tutkintojen tunnustaminen attachment size limit not set")))
+    (let [application (get-application country-question-id application-id)]
+      (when (and (some? (:person-oid application))
+                 (= form-key (:form-key application)))
+        (let [person      (get-person person-service application)
+              attachments (get-attachments size-limit application)
+              message     (->application-edited application person attachments)]
+          (log/info "Sending application edited message to ASHA for application"
+                    application-id)
+          (transfer (get-in config [:tutkintojen-tunnustaminen :sftp])
+                    (str (:key application) "_" application-id ".xml")
+                    message)
+          (log/info "Sent application edited message to ASHA for application"
                     application-id)))
       (if (nil? (:person-oid application))
         {:transition {:id :retry}}
