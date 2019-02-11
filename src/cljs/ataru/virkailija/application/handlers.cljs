@@ -800,6 +800,11 @@
             (not= :enabled (-> db :application :mass-information-request :form-status))
             (assoc-in [:application :mass-information-request :form-status] :enabled))))
 
+(reg-event-db
+  :application/set-excel-request-included-ids
+  (fn [db [_ included-ids]]
+    (assoc-in db [:application :excel-request :included-ids] included-ids)))
+
 (reg-event-fx
   :application/submit-mass-information-request
   (fn [{:keys [db]} _]

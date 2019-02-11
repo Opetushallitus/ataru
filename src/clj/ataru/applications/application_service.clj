@@ -434,7 +434,7 @@
     (map populate-applications-with-person-data applications persons)))
 
 (defn get-excel-report-of-applications-by-key
-  [application-keys selected-hakukohde selected-hakukohderyhma user-wants-to-skip-answers? session organization-service tarjonta-service koodisto-cache ohjausparametrit-service person-service]
+  [application-keys selected-hakukohde selected-hakukohderyhma user-wants-to-skip-answers? included-ids session organization-service tarjonta-service koodisto-cache ohjausparametrit-service person-service]
   (when (aac/applications-access-authorized? organization-service tarjonta-service session application-keys [:view-applications :edit-applications])
     (let [applications                     (application-store/get-applications-by-keys application-keys)
           application-reviews              (->> applications
@@ -465,6 +465,7 @@
                                                         selected-hakukohde
                                                         selected-hakukohderyhma
                                                         skip-answers?
+                                                        included-ids
                                                         lang
                                                         tarjonta-service
                                                         koodisto-cache

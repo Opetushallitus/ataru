@@ -378,10 +378,12 @@
               (empty? (clojure.set/intersection selected-oids belongs-to))))))
 
 (defn- headers-from-form
-  [form-fields form-fields-by-id skip-answers? selected-oids]
+  [form-fields form-fields-by-id skip-answers? included-ids selected-oids]
   (->> form-fields
        (remove #(or (:exclude-from-answers %)
-                    (and skip-answers?
+                    (and (if (not-empty included-ids)
+                           (not (included-ids (:id %)))
+                           skip-answers?)
                          (not (answer-to-always-include? (:id %))))
                     (belongs-to-other-hakukohde? selected-oids %)))
        (map #(vector (:id %) (pick-header form-fields-by-id %)))))
@@ -396,7 +398,7 @@
        (map #(vector (:key %) (util/non-blank-val (:label %) [:fi :sv :en])))))
 
 (defn- extract-headers
-  [applications form selected-oids skip-answers?]
+  [applications form selected-oids skip-answers? included-ids]
   (let [form-fields       (util/flatten-form-fields (:content form))
         form-fields-by-id (util/group-by-first :id form-fields)]
     (map-indexed (fn [idx [id header]]
@@ -406,6 +408,7 @@
                  (concat (headers-from-form form-fields
                                             form-fields-by-id
                                             skip-answers?
+                                            included-ids
                                             selected-oids)
                          (headers-from-applications form-fields-by-id
                                                     skip-answers?
@@ -515,6 +518,7 @@
    selected-hakukohde
    selected-hakukohderyhma
    skip-answers?
+   included-ids
    lang
    tarjonta-service
    koodisto-cache
@@ -568,7 +572,7 @@
          (map second)
          (map-indexed (fn [sheet-idx {:keys [^String sheet-name form applications]}]
                         (let [applications-sheet (.createSheet workbook sheet-name)
-                              headers            (extract-headers applications form selected-oids skip-answers?)
+                              headers            (extract-headers applications form selected-oids skip-answers? included-ids)
                               meta-writer        (make-writer styles form-meta-sheet (inc sheet-idx))
                               header-writer      (make-writer styles applications-sheet 0)
                               form-fields-by-key (reduce #(assoc %1 (:id %2) %2)
