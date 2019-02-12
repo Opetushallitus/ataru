@@ -1401,52 +1401,52 @@ You will receive a confirmation of your application to your email."}
                             :en "Active"}
    :passive                {:fi "Passiivinen"
                             :sv "Passiv"
-                            :en "Passive"}
+                            :en "Inactive"}
    :unprocessed            {:fi "Käsittelemättä"
                             :sv "Obehandlad"
-                            :en "EN: Käsittelemättä"}
+                            :en "Unprocessed"}
    :processing             {:fi "Käsittelyssä"
                             :sv "Under behandling"
-                            :en "EN: Käsittelyssä"}
+                            :en "Under process"}
    :invited-to-interview   {:fi "Kutsuttu haast."
                             :sv "Kallade till intervju"
-                            :en "EN: Kutsuttu haast."}
+                            :en "Invited to interview"}
    :invited-to-exam        {:fi "Kutsuttu valintak."
                             :sv "Kallade till urvalsprov"
-                            :en "EN: Kutsuttu valintak."}
+                            :en "Invited to entrance examination"}
    :evaluating             {:fi "Arvioinnissa"
                             :sv "Under bedömning"
-                            :en "EN: Arvioinnissa"}
+                            :en "Under evaluation"}
    :processed              {:fi "Käsitelty"
                             :sv "Behandlad"
-                            :en "EN: Käsitelty"}
+                            :en "Processed"}
    :information-request    {:fi "Täydennyspyyntö"
                             :sv "Begäran om komplettering"
-                            :en "EN: Täydennyspyyntö"}
+                            :en "Information request"}
    :incomplete             {:fi "Kesken"
                             :sv "Inte färdig"
-                            :en "EN: Kesken"}
+                            :en "Incomplete"}
    :selection              {:fi "Valintaesitys"
                             :sv "Antagningsförslag"
-                            :en "EN: Valintaesitys"}
+                            :en "Selected (pending)"}
    :reserve                {:fi "Varalla"
                             :sv "På reserv"
-                            :en "EN: Varalla"}
+                            :en "On reserve place"}
    :selected               {:fi "Hyväksytty"
                             :sv "Godkänd"
-                            :en "EN: Hyväksytty"}
+                            :en "Selected"}
    :rejected               {:fi "Hylätty"
                             :sv "Underkänd"
-                            :en "EN: Hylätty"}
+                            :en "Rejected"}
    :unreviewed             {:fi "Tarkastamatta"
                             :sv "Inte granskad"
-                            :en "EN: Tarkastamatta"}
+                            :en "Unreviewed"}
    :fulfilled              {:fi "Täyttyy"
                             :sv "Fylls"
-                            :en "EN: Täyttyy"}
+                            :en "Fills"}
    :unfulfilled            {:fi "Ei täyty"
                             :sv "Fylls inte"
-                            :en "EN: Ei täyty"}
+                            :en "Not fills"}
    :eligible               {:fi "Hakukelpoinen"
                             :sv "Ansökningsbehörig"
                             :en "EN: Hakukelpoinen"}
