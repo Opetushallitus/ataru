@@ -1446,52 +1446,52 @@ You will receive a confirmation of your application to your email."}
                             :en "Fills"}
    :unfulfilled            {:fi "Ei täyty"
                             :sv "Fylls inte"
-                            :en "Not fills"}
+                            :en "Not filling"}
    :eligible               {:fi "Hakukelpoinen"
                             :sv "Ansökningsbehörig"
-                            :en "EN: Hakukelpoinen"}
+                            :en "Eligible"}
    :uneligible             {:fi "Ei hakukelpoinen"
                             :sv "Inte ansökningsbehörig"
-                            :en "EN: Ei hakukelpoinen"}
+                            :en "Not eligible"}
    :conditionally-eligible {:fi "Ehdollisesti hakukelpoinen"
                             :sv "SV: Ehdollisesti hakukelpoinen"
-                            :en "EN: Ehdollisesti hakukelpoinen"}
+                            :en "Conditionally eligible"}
    :obligated              {:fi "Velvollinen"
                             :sv "Förpliktad"
-                            :en "EN: Velvollinen"}
+                            :en "Obligated"}
    :not-obligated          {:fi "Ei velvollinen"
                             :sv "Inte förpliktad"
-                            :en "EN: Ei velvollinen"}
+                            :en "Not obligated"}
    :processing-state       {:fi "Käsittelyvaihe"
                             :sv "Behandlingsskede"
-                            :en "EN: Käsittelyvaihe"}
+                            :en "State of processing"}
    :language-requirement   {:fi "Kielitaitovaatimus"
                             :sv "Språkkunskapskrav"
-                            :en "EN: Kielitaitovaatimus"}
+                            :en "Language requirment"}
    :degree-requirement     {:fi "Tutkinnon kelpoisuus"
                             :sv "Examens behörighet"
-                            :en "EN: Tutkinnon kelpoisuus"}
+                            :en "Degree requirement"}
    :eligibility-state      {:fi "Hakukelpoisuus"
                             :sv "Ansökningsbehörighet"
-                            :en "EN: Hakukelpoisuus"}
+                            :en "Eligibility"}
    :payment-obligation     {:fi "Maksuvelvollisuus"
                             :sv "Betalningsskyldighet"
-                            :en "EN: Maksuvelvollisuus"}
+                            :en "Obligated to pay"}
    :selection-state        {:fi "Valinta"
                             :sv "Antagning"
-                            :en "EN: Valinta"}
+                            :en "Selection"}
    :not-checked            {:fi "Tarkastamatta"
                             :sv "Inte granskad"
-                            :en "EN: Tarkastamatta"}
+                            :en "Not checked"}
    :checked                {:fi "Tarkistettu"
                             :sv "Granskad"
-                            :en "EN: Tarkistettu"}
+                            :en "Checked"}
    :incomplete-answer      {:fi "Puutteellinen"
                             :sv "Bristfällig"
-                            :en "EN: Puutteellinen"}
+                            :en "Incomplete"}
    :attachmentless         {:fi "Liitteettömät"
                             :sv "Utan bilagor"
-                            :en "EN: Liitteettömät"}})
+                            :en "No attachments"}})
 
 (def excel-texts
   {:name                     {:fi "Nimi"
