@@ -1237,19 +1237,19 @@ You will receive a confirmation of your application to your email."}
                                                  :en "Selection"}
    :send-confirmation-email-to-applicant        {:fi "Lähetä vahvistussähköposti hakijalle"
                                                  :sv "Skicka e-post med bekräftelse till sökanden"
-                                                 :en "EN: Lähetä vahvistussähköposti hakijalle"}
-   :send-edit-link-to-applicant                 {:fi "Muokkauslinkki lähetetty hakijalle sähköpostilla"
+                                                 :en "Send confirmation email again"}
+   :send-edit-link-to-applicant                 {:fi "Vahvistussähköposti lähetetty uudelleen hakijalle"
                                                  :sv "Bearbetningslänken har skickats till sökande per e-post"
-                                                 :en "EN: Muokkauslinkki lähetetty hakijalle sähköpostilla"}
+                                                 :en "Confirmation email has been sent"}
    :send-information-request                    {:fi "Lähetä täydennyspyyntö"
                                                  :sv "Skicka begäran om komplettering"
-                                                 :en "EN: Lähetä täydennyspyyntö"}
+                                                 :en "Send information request"}
    :send-information-request-to-applicant       {:fi "Lähetä täydennyspyyntö hakijalle"
                                                  :sv "Skicka begäran om komplettering till sökanden"
-                                                 :en "EN: Lähetä täydennyspyyntö hakijalle"}
+                                                 :en "Send information request message"}
    :sending-information-request                 {:fi "Täydennyspyyntöä lähetetään"
                                                  :sv "Begäran om komplettering skickas"
-                                                 :en "EN: Täydennyspyyntöä lähetetään"}
+                                                 :en "Message has been sent"}
    :set-haku-to-form                            {:fi "Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."
                                                  :sv "Ställ först blanketten för användning i ansökan för att kunna bilda innehåll för ansökningsmålet."
                                                  :en "EN: Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."}
