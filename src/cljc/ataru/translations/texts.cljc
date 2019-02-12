@@ -1273,64 +1273,64 @@ You will receive a confirmation of your application to your email."}
                                                  :en "Personal identity code"}
    :with-ssn                                    {:fi "Henkilötunnuksellinen"
                                                  :sv "Med personbeteckning"
-                                                 :en "EN: Henkilötunnuksellinen"}
+                                                 :en "With personal identity code"}
    :without-ssn                                 {:fi "Henkilötunnukseton"
                                                  :sv "Utan personbeteckning"
-                                                 :en "EN: Henkilötunnukseton"}
+                                                 :en "Without personal identity code"}
    :student                                     {:fi "Oppija"
-                                                 :sv "Elev eller studerande"
-                                                 :en "EN: Oppija"}
+                                                 :sv "Studerande"
+                                                 :en "Applicant"}
    :submitted-application                       {:fi "syötti hakemuksen"
                                                  :sv "matade in ansökan"
-                                                 :en "EN: syötti hakemuksen"}
+                                                 :en "submitted"}
    :submitted-at                                {:fi "Hakemus jätetty"
                                                  :sv "Ansökan inlämnad"
-                                                 :en "EN: Hakemus jätetty"}
+                                                 :en "Application submitted"}
    :swedish                                     {:fi "Ruotsi"
                                                  :sv "Svenska"
-                                                 :en "EN: Finska"}
+                                                 :en "Swedish"}
    :test-application                            {:fi "Testihakemus / Virkailijatäyttö"
                                                  :sv "Testansökan / Administratören fyller i"
-                                                 :en "EN: Testihakemus / Virkailijatäyttö"}
+                                                 :en "Test application"}
    :text                                        {:fi "Teksti"
                                                  :sv "Text"
-                                                 :en "EN: Teksti"}
+                                                 :en "Text"}
    :text-area                                   {:fi "Tekstialue"
                                                  :sv "Textområde"
-                                                 :en "EN: Tekstialue"}
+                                                 :en "Text area"}
    :text-area-size                              {:fi "Tekstialueen koko"
                                                  :sv "Textområdets storlek"
                                                  :en "EN: Tekstialueen koko"}
    :text-field                                  {:fi "Tekstikenttä"
                                                  :sv "Textfält"
-                                                 :en "EN: Tekstikenttä"}
+                                                 :en "Text field"}
    :text-field-size                             {:fi "Tekstikentän koko"
                                                  :sv "Textfältets storlek"
                                                  :en "EN: Tekstikentän koko"}
    :title                                       {:fi "Otsikko"
                                                  :sv "Rubrik"
-                                                 :en "EN: Otsikko"}
+                                                 :en "Title"}
    :to-state                                    {:fi "Muutetaan tilaan"
                                                  :sv "Status ändras till"
-                                                 :en "EN: Muutetaan tilaan"}
+                                                 :en "Change status to"}
    :unidentified                                {:fi "Yksilöimättömät"
                                                  :sv "Inte individualiserade"
-                                                 :en "EN: Yksilöimättömät"}
+                                                 :en "Unidentified"}
    :unknown                                     {:fi "Tuntematon"
                                                  :sv "Okänd"
-                                                 :en "EN: Tuntematon"}
+                                                 :en "Unknown"}
    :unknown-virkailija                          {:fi "Tuntematon virkailija"
                                                  :sv "SV: Tuntematon virkailija"
-                                                 :en "EN: Tuntematon virkailija"}
+                                                 :en "Unknown official"}
    :unknown-option                              {:fi "Tuntematon vastausvaihtoehto"
                                                  :sv "Okänt svarsalternativ"
-                                                 :en "EN: Tuntematon vastausvaihtoehto"}
+                                                 :en "Unknown option"}
    :unprocessed                                 {:fi "Käsittelemättä"
                                                  :sv "Obehandlade"
-                                                 :en "EN: Käsittelemättä"}
+                                                 :en "Unprocessed"}
    :unprocessed-haut                            {:fi "Käsittelemättä olevat haut"
                                                  :sv "Obehandlade ansökningar"
-                                                 :en "EN: Käsittelemättä olevat haut"}
+                                                 :en "Unprocessed admissions"}
    :used-by-haku                                {:fi "Tämä lomake on haun käytössä"
                                                  :sv "Denna blankett används i ansökan"
                                                  :en "EN: Tämä lomake on haun käytössä"}
@@ -1345,7 +1345,7 @@ You will receive a confirmation of your application to your email."}
                                                  :en "EN: Hakemusten katselu"}
    :virus-found                                 {:fi "Virus löytyi"
                                                  :sv "Ett virus hittades"
-                                                 :en "EN: Virus löytyi"}
+                                                 :en  "Virus found"}
    :visibility-on-form                          {:fi "Näkyvyys lomakkeella:"
                                                  :sv "Visas på blanketten:"
                                                  :en "EN: Näkyvyys lomakkeella:"}
@@ -1357,19 +1357,19 @@ You will receive a confirmation of your application to your email."}
                                                  :en "EN: vain valituille hakukohteille"}
    :wrapper-element                             {:fi "Lomakeosio"
                                                  :sv "Blankettdel"
-                                                 :en "EN: Lomakeosio"}
+                                                 :en "Form element"}
    :wrapper-header                              {:fi "Osion nimi"
                                                  :sv "Delens namn"
-                                                 :en "EN: Osion nimi"}
+                                                 :en "Element's header"}
    :active-status                               {:fi "Aktiivisuus"
                                                  :sv "Aktivitet"
-                                                 :en "EN: Aktiivisuus"}
+                                                 :en "Active"}
    :active-status-active                        {:fi "Aktiiviset"
                                                  :sv "Aktiva"
-                                                 :en "EN: Aktiiviset"}
+                                                 :en "Actives"}
    :active-status-passive                       {:fi "Passivoidut"
                                                  :sv "Passiverade"
-                                                 :en "EN: Passivoidut"}
+                                                 :en "Passives"}
    :application-count-unprocessed               {:fi "Käsittelemättä"
                                                  :sv "SV: Käsittelemättä"
                                                  :en "Unprocessed"}
@@ -1390,7 +1390,7 @@ You will receive a confirmation of your application to your email."}
                                                  :en "Auto-save: enabled"}
    :multiple-values                             {:fi "Monta arvoa"
                                                  :sv "SV: Monta arvoa"
-                                                 :en "EN: Monta arvoa"}
+                                                 :en "Multiple values"}
    :autosave-disabled                           {:fi "Automaattitalletus: pois päältä"
                                                  :sv "SV: Automaattitalletus: pois päältä"
                                                  :en "Auto-save: disabled"}})
@@ -1398,10 +1398,10 @@ You will receive a confirmation of your application to your email."}
 (def state-translations
   {:active                 {:fi "Aktiivinen"
                             :sv "Aktiv"
-                            :en "EN: Aktiivinen"}
+                            :en "Active"}
    :passive                {:fi "Passiivinen"
                             :sv "Passiv"
-                            :en "EN: Passiivinen"}
+                            :en "Passive"}
    :unprocessed            {:fi "Käsittelemättä"
                             :sv "Obehandlad"
                             :en "EN: Käsittelemättä"}
