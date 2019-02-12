@@ -1129,16 +1129,16 @@ You will receive a confirmation of your application to your email."}
                                                  :en "Passive"}
    :person-completed-education                  {:fi "Henkilön suoritukset"
                                                  :sv "Personens prestationer"
-                                                 :en "EN: Henkilön suoritukset"}
+                                                 :en "Applicant's exams in Finland"}
    :metadata-not-found                          {:fi "Hakijan liitteitä ei löytynyt"
                                                  :sv "SV: Hakijan liitteitä ei löytynyt"
-                                                 :en "EN: Hakijan liitteitä ei löytynyt"}
+                                                 :en "Applicant's attachements can't be found"}
    :person-not-individualized                   {:fi "Hakijaa ei ole yksilöity."
                                                  :sv "Sökande har inte individualiserats."
-                                                 :en "EN: Hakijaa ei ole yksilöity."}
+                                                 :en "Applicant isn't identified."}
    :individualize-in-henkilopalvelu             {:fi "Tee yksilöinti henkilöpalvelussa."
                                                  :sv "Tee yksilöinti henkilöpalvelussa."
-                                                 :en "Tee yksilöinti henkilöpalvelussa."}
+                                                 :en "Identify the applicant."}
    :pohjakoulutus_am                            {:fi "Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"
                                                  :sv "I Finland avlagd yrkesinriktad grundexamen, examen på skolnivå, institutnivå eller inom yrkesutbildning på högre nivå"
                                                  :en "EN: Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"}
@@ -1180,61 +1180,61 @@ You will receive a confirmation of your application to your email."}
                                                  :en "EN: Pohjakoulutusristiriita"}
    :points                                      {:fi "Pisteet"
                                                  :sv "Poäng"
-                                                 :en "EN: Pisteet"}
+                                                 :en "Points"}
    :processed-haut                              {:fi "Käsitellyt haut"
                                                  :sv "Behandlade ansökningar"
-                                                 :en "EN: Käsitellyt haut"}
+                                                 :en "Processed admissions"}
    :processing-state                            {:fi "Käsittelyvaihe"
                                                  :sv "Behandlingsskede"
-                                                 :en "EN: Käsittelyvaihe"}
+                                                 :en "State of processing"}
    :question                                    {:fi "Kysymys"
                                                  :sv "Fråga"
-                                                 :en "EN: Kysymys"}
+                                                 :en "Question"}
    :question-group                              {:fi "Kysymysryhmä"
                                                  :sv "Frågegrupp"
-                                                 :en "EN: Kysymysryhmä"}
+                                                 :en "Question group"}
    :receiver                                    {:fi "Vastaanottaja:"
                                                  :sv "Mottagare:"
-                                                 :en "EN: Vastaanottaja:"}
+                                                 :en "Receiver:"}
    :rejection-reason                            {:fi "Hylkäyksen syy"
                                                  :sv "Orsak till avslag"
-                                                 :en "EN: Hylkäyksen syy"}
+                                                 :en "Reason for rejection"}
    :remove                                      {:fi "Poista"
                                                  :sv "Radera"
-                                                 :en "EN: Poista"}
+                                                 :en "Delete"}
    :remove-filters                              {:fi "Poista rajaimet"
                                                  :sv "Ta bort avgränsningar"
-                                                 :en "EN: Poista rajaimet"}
+                                                 :en "Remove the filters"}
    :remove-lock                                 {:fi "Poista lukitus"
                                                  :sv "Öppna låset"
-                                                 :en "EN: Poista lukitus"}
+                                                 :en "Unlock the form"}
    :required                                    {:fi "Pakollinen tieto"
                                                  :sv "Obligatorisk uppgift"
-                                                 :en "EN: Pakollinen tieto"}
+                                                 :en "Mandatory information"}
    :reset-organization                          {:fi "Palauta oletusorganisaatio"
                                                  :sv "Återställ utgångsorganisation"
-                                                 :en "EN: Palauta oletusorganisaatio"}
+                                                 :en "Reset the organization"}
    :save                                        {:fi "Tallenna"
                                                  :sv "Spara"
-                                                 :en "EN: Tallenna"}
+                                                 :en "Save"}
    :save-changes                                {:fi "Tallenna muutokset"
                                                  :sv "Spara ändringar"
-                                                 :en "EN: Tallenna muutokset"}
+                                                 :en "Save the changes"}
    :search-by-applicant-info                    {:fi "Etsi hakijan henkilötiedoilla"
                                                  :sv "Sök med sökandes personuppgifter"
-                                                 :en "EN: Etsi hakijan henkilötiedoilla"}
+                                                 :en "Search by applicant's personal information"}
    :search-sub-organizations                    {:fi "Etsi aliorganisaatioita"
                                                  :sv "Sök underorganisationer"
                                                  :en "EN: Etsi aliorganisaatioita"}
-   :search-terms-list                           {:fi "Nimi, henkilötunnus, syntymäaika tai sähköpostiosoite"
+   :search-terms-list                           {:fi "Nimi, henkilötunnus, syntymäaika, sähköpostiosoite tai oidit"
                                                  :sv "Namn, personbeteckning, födelsetid eller e-postadress"
-                                                 :en "EN: Nimi, henkilötunnus, syntymäaika tai sähköpostiosoite"}
+                                                 :en "Name, Finnish personal identity number, date of birth, email or OIDs"}
    :questions                                   {:fi "kysymykset"
-                                                 :sv "SV: kysymykset"
-                                                 :en "EN: kysymykset"}
+                                                 :sv "Frågar"
+                                                 :en "questions"}
    :selection                                   {:fi "Valinta"
                                                  :sv "Antagning"
-                                                 :en "EN: Valinta"}
+                                                 :en "Selection"}
    :send-confirmation-email-to-applicant        {:fi "Lähetä vahvistussähköposti hakijalle"
                                                  :sv "Skicka e-post med bekräftelse till sökanden"
                                                  :en "EN: Lähetä vahvistussähköposti hakijalle"}
