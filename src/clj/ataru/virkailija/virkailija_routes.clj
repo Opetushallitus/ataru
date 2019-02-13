@@ -182,7 +182,9 @@
                           statistics-week-cache
                           statistics-day-cache
                           koodisto-cache
-                          person-service]
+                          person-service
+                          virkailija-socket-executor
+                          redis]
                    :as dependencies}]
   (api/context "/api" []
     :tags ["form-api"]
@@ -191,7 +193,7 @@
       (api/routes
         (api/GET "/application-in-review-socket/:oid" []
          :path-params [oid :- s/Str]
-          (application-review-socket-handler oid))))
+          (application-review-socket-handler oid virkailija-socket-executor redis ))))
 
     (api/GET "/user-info" {session :session}
       (ok {:organizations         (organization-list session)
@@ -1097,11 +1099,6 @@
                               resource-routes
                               (api/context "/lomake-editori" []
                                 test-routes
-                                (api/undocumented
-                                  (api/routes
-                                    (api/GET "/application-in-review-socket/:oid" []
-                                      :path-params [oid :- s/Str]
-                                      (application-review-socket-handler oid))))
                                 dashboard-routes
                                 status-routes
                                 (api/middleware [user-feedback/wrap-user-feedback

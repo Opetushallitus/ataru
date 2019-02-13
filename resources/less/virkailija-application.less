@@ -514,7 +514,7 @@ and (max-width: 1000px) {
 
 .application-handling__detail-container {
   position: relative;
-  padding: 20px 85px 15px 85px;
+  padding: 0 85px 15px 85px;
   background-color: @white;
 }
 
@@ -720,6 +720,7 @@ and (max-width: 1000px) {
 }
 
 .application__handling-heading {
+  margin-top: 20px;
   margin-bottom: 8px;
   display: flex;
   flex-flow: row nowrap;
@@ -2475,4 +2476,13 @@ th.application__readonly-adjacent--header {
     background-color: @application-notification-display-border-color;
   }
 }
-
+.application__message-display--warning {
+  .application__message-display--notification;
+  border-color: @application-warning-display-border-color;
+  .application__message-display--details {
+    background-color: @application-warning-display-background-color;
+  }
+  .application__message-display--exclamation {
+    background-color: @application-warning-display-border-color;
+  }
+}

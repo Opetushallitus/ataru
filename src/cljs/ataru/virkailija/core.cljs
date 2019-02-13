@@ -32,6 +32,7 @@
                                                 fn
                                                 ms)))]
     (.addEventListener js/window "scroll" (banner/create-banner-position-handler))
+    (.addEventListener js/window "scroll" (app-handling-view/create-reviewers-notification-handler))
     (.addEventListener js/window "scroll" (app-handling-view/create-review-position-handler))
     (.addEventListener js/window "scroll" #(debounce 500 :paging (app-handling-view/create-application-paging-scroll-handler)))))
 

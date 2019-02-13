@@ -56,6 +56,26 @@ body {
   width: 25px;
 }
 
+.application-handling__reviewers-notification {
+  padding-top: 0;
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 400px;
+  .application__message-display--warning {
+    margin-top: 0;
+  }
+  margin: 0 auto;
+  left: 0;
+  right: 0;
+}
+.application-handling__reviewers-notification-floating {
+  position: fixed;
+  top: 43px;
+  z-index: 1000;
+}
+
 .close-details-button:hover {
   background-color: #08526A;
 }

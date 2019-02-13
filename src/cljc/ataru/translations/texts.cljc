@@ -1070,6 +1070,9 @@ You will receive a confirmation of your application to your email."}
    :mass-information-request-send               {:fi "Lähetä"
                                                  :sv "Skicka:"
                                                  :en "Send:"}
+   :reviewers-notification                      {:fi "Hakemusta käsitellään monen käyttäjän toimesta!"
+                                                 :sv "Hakemusta käsitellään monen käyttäjän toimesta!"
+                                                 :en "Hakemusta käsitellään monen käyttäjän toimesta!"}
    :mass-information-request-sending-messages   {:fi "Käsitellään viestejä..."
                                                  :sv "Meddelanden behandlas..."
                                                  :en "Sending the messages"}

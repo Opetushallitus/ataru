@@ -74,13 +74,48 @@
                "/hakukohderyhma/" (second selected-hakukohderyhma)
                query-params))))
 
+(defn reinitialize-review-socket [application-key handler ws]
+  (some-> ws .close)
+  (let [interval (atom nil)
+        closed? (atom false)
+        url (str (if (= (aget js/location "protocol") "https")
+                   "wss://"
+                   "ws://")
+                 (aget js/location "host")
+                 "/lomake-editori/api/application-in-review-socket/"
+                 application-key)
+        ws  (js/WebSocket. url)]
+    (aset ws "onopen" (fn [event]
+                        (reset! interval (js/setInterval (fn []
+                                                           (if @closed?
+                                                             (.clearInterval js/window @interval)
+                                                             (.send ws "!"))) 1000))))
+    (aset ws "onclose" #(reset! closed? true))
+    (aset ws "onmessage" (fn [event] (handler
+                                       (js->clj
+                                         (.parse js/JSON (aget event "data"))
+                                         :keywordize-keys true))))
+    ws))
+
+(reg-event-fx
+  :application/set-reviewers
+  (fn [{:keys [db]} [_ reviewers]]
+    {:db (assoc-in db [:application :reviewers] reviewers)}))
+
 (reg-event-fx
   :application/select-application
   (fn [{:keys [db]} [_ application-key selected-hakukohde-oid with-newest-form?]]
-    (let [different-application? (not= application-key (get-in db [:application :selected-key]))]
+    (let [different-application?     (not= application-key (get-in db [:application :selected-key]))
+          socket-message-handler     (fn [new-reviewers]
+                                       (let [reviewers @(subscribe [:state-query [:application :reviewers]])]
+                                         (when (not= new-reviewers reviewers)
+                                           (dispatch [:application/set-reviewers new-reviewers]))))
+          existing-review-connection (get-in db [:application :review-connection])]
       (cond
        different-application? (let [db (-> db
                                            (assoc-in [:application :selected-key] application-key)
+                                           (assoc-in [:application :reviewers] nil)
+                                           (update-in [:application :review-connection] (partial reinitialize-review-socket application-key socket-message-handler))
                                            (assoc-in [:application :selected-application-and-form] nil)
                                            (assoc-in [:application :review-comment] nil)
                                            (assoc-in [:application :application-list-expanded?] false)
@@ -106,6 +141,10 @@
   (cljs-util/update-url-with-query-params {:application-key nil})
   (-> db
       (assoc-in [:application :metadata-not-found] nil)
+      (assoc-in [:application :reviewers] nil)
+      (update-in [:application :review-connection] (fn [ws]
+                                                     (some-> ws .close)
+                                                     nil))
       (assoc-in [:application :previously-closed-application] (-> db :application :selected-application-and-form :application :key))
       (assoc-in [:application :selected-review-hakukohde-oids] nil)
       (assoc-in [:application :selected-key] nil)

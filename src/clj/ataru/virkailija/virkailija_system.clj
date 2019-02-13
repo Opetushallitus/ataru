@@ -6,6 +6,7 @@
             [ataru.cas.client :as cas]
             [ataru.http.server :as server]
             [ataru.hakija.hakija-form-service :as hakija-form-service]
+            [ataru.virkailija.virkailija-socket-routes :refer [new-virkailija-socket-executor]]
             [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
@@ -31,6 +32,8 @@
   ([http-port repl-port]
    (apply
     component/system-map
+
+    :virkailija-socket-executor (new-virkailija-socket-executor)
 
     :organization-service (organization-service/new-organization-service)
 
@@ -87,7 +90,8 @@
                             :job-runner
                             :ohjausparametrit-service
                             :person-service
-                            :kayttooikeus-service]
+                            :kayttooikeus-service
+                            :virkailija-socket-executor]
                            (map first caches))))
 
     :server-setup {:port      http-port

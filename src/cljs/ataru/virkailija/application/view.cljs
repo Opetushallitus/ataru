@@ -1811,6 +1811,27 @@
   []
   [:div.application-handling__floating-application-review-placeholder])
 
+(defn show-reviewers [names]
+  [:div.application__message-display.application__message-display--warning
+   [:div.application__message-display--exclamation [:i.zmdi.zmdi-alert-triangle]]
+   [:div.application__message-display--details
+    [:div.application__message-display--details-notification
+     (gstring/format (get-virkailija-translation :reviewers-notification) (count names))]]])
+
+(defn application-reviewers []
+  (let [reviewers-positioning (subscribe [:state-query [:application :reviewers-notification-positioning]])
+        reviewers             (subscribe [:state-query [:application :reviewers]])]
+    (fn []
+      (when (not= 0 (count @reviewers))
+        [:div
+         {:data-tooltip  (clojure.string/join ", " @reviewers)}
+         [:div#application-handling__reviewers-notification-position-canary.application-handling__reviewers-notification
+          (show-reviewers @reviewers)]
+         (when (= :fixed @reviewers-positioning)
+           [:div.application-handling__reviewers-notification.application-handling__reviewers-notification-floating
+            (show-reviewers @reviewers)])
+         ]))))
+
 (defn application-review-area []
   (let [selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
         expanded?                     (subscribe [:state-query [:application :application-list-expanded?]])
@@ -1868,6 +1889,7 @@
              [application-list-loading-indicator]])]
          (when (not @search-control-all-page)
            [:div.application-handling__review-area-container
+            [application-reviewers]
             [application-review-area]])]))))
 
 (defn create-review-position-handler []
@@ -1881,6 +1903,19 @@
             (reset! review-canary-visible false))
           (when-not @review-canary-visible
             (dispatch [:state-update #(assoc-in % [:application :review-positioning] :in-flow)])
+            (reset! review-canary-visible true)))))))
+
+(defn create-reviewers-notification-handler []
+  (let [review-canary-visible        (atom true)
+        positioning-change-threshold 1]
+    (fn [_]
+      (when-let [canary-element (.getElementById js/document "application-handling__reviewers-notification-position-canary")]
+        (if (<= (-> canary-element .getBoundingClientRect .-top) positioning-change-threshold)
+          (when @review-canary-visible
+            (dispatch [:state-update #(assoc-in % [:application :reviewers-notification-positioning] :fixed)])
+            (reset! review-canary-visible false))
+          (when-not @review-canary-visible
+            (dispatch [:state-update #(assoc-in % [:application :reviewers-notification-positioning] :in-flow)])
             (reset! review-canary-visible true)))))))
 
 (defn application-version-history-header [changes-amount]

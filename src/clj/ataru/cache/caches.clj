@@ -120,11 +120,4 @@
        :update-period      [1 TimeUnit/MINUTES]
        :update-after-read? true})
      {:redis  :redis
-      :loader :form-by-haku-oid-str-cache-loader})]
-   [:application-review-cache
-    (component/using
-      (redis/map->Cache
-        {:name            "application-review-cache"
-         :loader          (cache/->FunctionCacheLoader identity)
-         :ttl-after-write [1 TimeUnit/MINUTES]})
-      [:redis])]])
+      :loader :form-by-haku-oid-str-cache-loader})]])
