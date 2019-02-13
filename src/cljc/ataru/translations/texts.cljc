@@ -1126,7 +1126,7 @@ You will receive a confirmation of your application to your email."}
                                                  :en "Options"}
    :passive                                     {:fi "Passiivinen"
                                                  :sv "Passiv"
-                                                 :en "Passive"}
+                                                 :en "Inactive"}
    :person-completed-education                  {:fi "Henkilön suoritukset"
                                                  :sv "Personens prestationer"
                                                  :en "Applicant's exams in Finland"}
