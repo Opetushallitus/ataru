@@ -676,7 +676,8 @@
   [filters lang [kw group-label states]]
   [:div.application-handling__filter-group
    {:key (str "application-filter-group-" kw)}
-   [:div.application-handling__filter-group-title group-label]
+   [:div.application-handling__filter-group-title
+    (util/non-blank-val group-label [lang :fi :sv :en])]
    (into
      [:div.application-handling__filter-group-checkboxes]
      (map
@@ -1119,7 +1120,7 @@
              [review-settings-checkbox kw])
            [:div.application-handling__review-header
             {:class (str "application-handling__review-header--" (name kw))}
-            [:span label]
+            [:span (util/non-blank-val label [@lang :fi :sv :en])]
             (when (and (= :eligibility-state kw)
                        @eligibility-automatically-checked?)
               [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
@@ -1222,7 +1223,8 @@
            (str (->> review-states/hakukohde-review-types
                      (filter #(= (keyword (:review-key event)) (first %)))
                      (first)
-                     (second)) ": "
+                     (second)
+                     ((fn [label] (util/non-blank-val label [lang :fi :sv :en])))) ": "
                 (application-states/get-review-state-label-by-name
                  (->> review-states/hakukohde-review-types
                       (map last)
