@@ -478,7 +478,7 @@
                       {CSRF :- s/Str nil}]
         :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
         (let [application-filter (json/parse-string application-filter keyword)
-              included-ids       (set (remove clojure.string/blank? (clojure.string/split included-ids #"\s+")))
+              included-ids       (not-empty (set (remove clojure.string/blank? (clojure.string/split included-ids #"\s+"))))
               application-keys   (->> (application-service/query-applications-paged
                                         organization-service
                                         person-service

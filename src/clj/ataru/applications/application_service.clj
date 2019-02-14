@@ -460,7 +460,7 @@
                                              (<= 4500 (count applications)))
           skip-answers?                    (or user-wants-to-skip-answers?
                                                skip-answers-to-preserve-memory?)
-          included-ids                     (or (not-empty included-ids)
+          included-ids                     (or included-ids
                                                (constantly true))
           lang                             (keyword (or (-> session :identity :lang) :fi))]
       (ByteArrayInputStream. (excel/export-applications applications-with-persons
