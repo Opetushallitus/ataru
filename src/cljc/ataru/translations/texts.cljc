@@ -1148,6 +1148,9 @@ You will receive a confirmation of your application to your email."}
    :individualize-in-henkilopalvelu             {:fi "Tee yksilöinti henkilöpalvelussa."
                                                  :sv "Tee yksilöinti henkilöpalvelussa."
                                                  :en "Identify the applicant."}
+   :creating-henkilo-failed                     {:fi "Henkilön luonti ei ole valmistunut! Tarkista hakemuksen nimitiedot (esim. kutsumanimi on yksi etunimistä)."
+                                                 :sv "SV: Henkilön luonti ei ole valmistunut! Tarkista hakemuksen nimitiedot (esim. kutsumanimi on yksi etunimistä)"
+                                                 :en "EN: Henkilön luonti ei ole valmistunut! Tarkista hakemuksen nimitiedot (esim. kutsumanimi on yksi etunimistä)"}
    :pohjakoulutus_am                            {:fi "Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"
                                                  :sv "I Finland avlagd yrkesinriktad grundexamen, examen på skolnivå, institutnivå eller inom yrkesutbildning på högre nivå"
                                                  :en "EN: Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"}
