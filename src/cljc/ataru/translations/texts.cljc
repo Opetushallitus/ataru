@@ -1046,6 +1046,15 @@ You will receive a confirmation of your application to your email."}
    :mass-edit                                   {:fi "Massamuutos"
                                                  :sv "Massändring"
                                                  :en "Mass editing"}
+   :excel-request                               {:fi "Excel"
+                                                 :sv "Excel"
+                                                 :en "Excel"}
+   :excel-included-ids                          {:fi "Exceliin sisältyvät tunnisteet:"
+                                                 :sv "Exceliin sisältyvät tunnisteet:"
+                                                 :en "Exceliin sisältyvät tunnisteet:"}
+   :excel-include-all-placeholder               {:fi "Kaikki tunnisteet"
+                                                 :sv "Kaikki tunnisteet"
+                                                 :en "Kaikki tunnisteet"}
    :mass-information-request                    {:fi "Massaviesti"
                                                  :sv "Massmeddelande"
                                                  :en "Mass message"}

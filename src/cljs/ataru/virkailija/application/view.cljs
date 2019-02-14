@@ -46,36 +46,63 @@
     [:i.zmdi.zmdi-square-o.zmdi-hc-stack-1x]])
 
 (defn excel-download-link
-  [selected-hakukohde selected-hakukohderyhma filename]
-  [:div
-   [:form#excel-download-link
-    {:action "/lomake-editori/api/applications/excel"
-     :method "POST"}
-    [:input {:type  "hidden"
-             :name  "application-filter"
-             :value (.stringify js/JSON (clj->js @(subscribe [:application/previous-application-fetch-params])))}]
-    [:input {:type  "hidden"
-             :name  "filename"
-             :value filename}]
-    [:input {:type  "hidden"
-             :name  "skip-answers"
-             :value "false"}]
-    (when-let [csrf-token (cljs-util/csrf-token)]
-      [:input {:type  "hidden"
-               :name  "CSRF"
-               :value csrf-token}])
-    (when selected-hakukohde
-      [:input {:type  "hidden"
-               :name  "selected-hakukohde"
-               :value selected-hakukohde}])
-    (when selected-hakukohderyhma
-      [:input {:type  "hidden"
-               :name  "selected-hakukohderyhma"
-               :value selected-hakukohderyhma}])]
-   [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
-    {:on-click (fn [e]
-                 (.submit (.getElementById js/document "excel-download-link")))}
-    (get-virkailija-translation :load-excel)]])
+  [_ _ _]
+  (let [element-visible? (r/atom false)
+        included-ids     (subscribe [:state-query [:application :excel-request :included-ids]])]
+    (fn [selected-hakukohde selected-hakukohderyhma filename]
+      [:span.application-handling__excel-request-container
+       [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
+        {:on-click #(swap! element-visible? not)}
+        (get-virkailija-translation :load-excel)]
+       (when @element-visible?
+         [:div.application-handling__popup__excel.application-handling__excel-request-popup
+          [:div.application-handling__mass-edit-review-states-title-container
+           [:h4.application-handling__mass-edit-review-states-title
+            (get-virkailija-translation :excel-request)]
+           [:button.virkailija-close-button
+            {:on-click #(reset! element-visible? false)}
+            [:i.zmdi.zmdi-close]]]
+          [:div.application-handling__excel-request-row
+           [:div.application-handling__excel-request-heading (get-virkailija-translation :excel-included-ids)]]
+          [:div.application-handling__excel-request-row
+           [:textarea.application-handling__information-request-message-area.application-handling__information-request-message-area--large
+            {:value       @included-ids
+             :placeholder (get-virkailija-translation :excel-include-all-placeholder)
+             :on-change   #(dispatch [:application/set-excel-request-included-ids (-> % .-target .-value)])}]]
+          [:div.application-handling__excel-request-row
+           [:form#excel-download-link
+            {:action "/lomake-editori/api/applications/excel"
+             :method "POST"}
+            [:input {:type  "hidden"
+                     :name  "application-filter"
+                     :value (.stringify js/JSON (clj->js @(subscribe [:application/previous-application-fetch-params])))}]
+            [:input {:type  "hidden"
+                     :name  "filename"
+                     :value filename}]
+            [:input {:type  "hidden"
+                     :name  "skip-answers"
+                     :value "false"}]
+            [:input {:type  "hidden"
+                     :name  "included-ids"
+                     :value @included-ids}]
+            (when-let [csrf-token (cljs-util/csrf-token)]
+              [:input {:type  "hidden"
+                       :name  "CSRF"
+                       :value csrf-token}])
+            (when selected-hakukohde
+              [:input {:type  "hidden"
+                       :name  "selected-hakukohde"
+                       :value selected-hakukohde}])
+            (when selected-hakukohderyhma
+              [:input {:type  "hidden"
+                       :name  "selected-hakukohderyhma"
+                       :value selected-hakukohderyhma}])]
+           [:button.application-handling__excel-request-button.application-handling__send-information-request-button--enabled
+            {:on-click (fn [e]
+                         (.submit (.getElementById js/document "excel-download-link")))}
+            (get-virkailija-translation :load-excel)]]
+          ])
+       ])))
 
 (defn- selected-or-default-mass-review-state
   [selected all]

@@ -78,6 +78,11 @@
   position: relative;
 }
 
+.application-handling__excel-request-container {
+  position: relative;
+}
+
+
 .application-handling__mass-edit-review-states-container {
   position: relative;
 }
@@ -104,10 +109,32 @@
   font-size: 13px;
   line-height: 21px;
 }
+.application-handling__popup__excel {
+  .arrow(top, white, 8px, 90%);
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.30));
+  box-sizing: border-box;
+  display: block;
+  border-radius: 3px;
+  position: absolute;
+  z-index: 10;
+  top: 50px;
+  left: -56px;
+  text-align: start;
+  background-color: white;
+  min-width: 300px;
+  padding: 15px;
+  font-size: 13px;
+  line-height: 21px;
+}
 
 .application-handling__mass-information-request-popup {
   min-width: 500px;
   left: -180px;
+}
+
+.application-handling__excel-request-popup {
+  min-width: 340px;
+  left: -218px;
 }
 
 .application-handling__mass-edit-review-states-title-container {
@@ -1001,6 +1028,10 @@ and (max-width: 1000px) {
   position: relative;
 }
 
+.application-handling__excel-request-row {
+  position: relative;
+}
+
 .application-handling__information-request-row--checkmark-container {
   height: 100px;
 }
@@ -1056,6 +1087,23 @@ and (max-width: 1000px) {
 }
 
 .application-handling__send-information-request-button {
+  color: @white;
+  border-radius: 3px;
+  box-shadow :none;
+  padding: 5px;
+  height: 41px;
+  width: 100%;
+  margin-right: 0;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 14px;
+  border: none;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  justify-content: center;
+}
+
+.application-handling__excel-request-button {
   color: @white;
   border-radius: 3px;
   box-shadow :none;
@@ -1138,6 +1186,13 @@ and (max-width: 1000px) {
   display: flex;
   align-items: center;
   flex-direction: row-reverse;
+  margin-right: 10px;
+}
+
+.application-handling__excel-request-heading {
+  flex-basis: 95px;
+  display: flex;
+  align-items: left;
   margin-right: 10px;
 }
 
