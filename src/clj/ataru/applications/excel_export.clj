@@ -381,9 +381,8 @@
   [form-fields form-fields-by-id skip-answers? included-ids selected-oids]
   (->> form-fields
        (remove #(or (:exclude-from-answers %)
-                    (and (if (not-empty included-ids)
-                           (not (included-ids (:id %)))
-                           skip-answers?)
+                    (and (or skip-answers?
+                             (not (included-ids (:id %))))
                          (not (answer-to-always-include? (:id %))))
                     (belongs-to-other-hakukohde? selected-oids %)))
        (map #(vector (:id %) (pick-header form-fields-by-id %)))))

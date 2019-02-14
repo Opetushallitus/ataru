@@ -450,14 +450,18 @@
                                                 (filter some?)
                                                 (person-service/get-persons person-service))
           applications-with-persons        (map (fn [application]
-                                                  (assoc application
-                                                    :person (->> (:person-oid application)
-                                                                 (get onr-persons)
-                                                                 (parse-person application))))
+                                                    (assoc application
+                                                           :person (->> (:person-oid application)
+                                                                        (get onr-persons)
+                                                                        (parse-person application))))
                                                 applications)
-          skip-answers-to-preserve-memory? (<= 4500 (count applications))
+          skip-answers-to-preserve-memory? (if included-ids
+                                             (<= 200000 (count applications))
+                                             (<= 4500 (count applications)))
           skip-answers?                    (or user-wants-to-skip-answers?
                                                skip-answers-to-preserve-memory?)
+          included-ids                     (or (not-empty included-ids)
+                                               (constantly true))
           lang                             (keyword (or (-> session :identity :lang) :fi))]
       (ByteArrayInputStream. (excel/export-applications applications-with-persons
                                                         application-reviews
