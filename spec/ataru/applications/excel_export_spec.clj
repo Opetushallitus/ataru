@@ -50,7 +50,7 @@
                                         nil
                                         nil
                                         ~skip-answers?
-                                        nil
+                                        (constantly true)
                                         :fi
                                         (tarjonta-service/new-tarjonta-service)
                                         koodisto-cache
