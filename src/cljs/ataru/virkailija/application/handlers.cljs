@@ -78,9 +78,9 @@
   (some-> ws .close)
   (let [interval (atom nil)
         closed? (atom false)
-        url (str (if (= (aget js/location "protocol") "https")
-                   "wss://"
-                   "ws://")
+        url (str (if (= (aget js/location "protocol") "http:")
+                   "ws://"
+                   "wss://")
                  (aget js/location "host")
                  "/lomake-editori/api/application-in-review-socket/"
                  application-key)
