@@ -63,11 +63,11 @@
 
 (re-frame/reg-sub
   :application/answer
-  (fn [_ _]
+  (fn [[_ id _ _] _]
     [(re-frame/subscribe [:application/answers])
      (re-frame/subscribe [:application/person])
-     (re-frame/subscribe [:application/editing?])])
-  (fn [[answers person editing?] [_ id question-group-idx repeatable-idx]]
+     (re-frame/subscribe [:application/cannot-edit? id])])
+  (fn [[answers person cannot-edit?] [_ id question-group-idx repeatable-idx]]
     (let [id (keyword id)]
       (cond-> (cond (some? question-group-idx)
                     (get-in answers [id :values question-group-idx (or repeatable-idx 0)])
@@ -75,7 +75,7 @@
                     (get-in answers [id :values repeatable-idx])
                     :else
                     (get answers id))
-              (and editing?
+              (and cannot-edit?
                    (not= :have-finnish-ssn id)
                    (contains? person-info-fields/editing-forbidden-person-info-field-ids id))
               (assoc :value (value-from-person person id question-group-idx repeatable-idx)
