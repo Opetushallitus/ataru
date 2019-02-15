@@ -13,6 +13,7 @@
                                                                        replace-with-option-label
                                                                        predefined-value-answer?
                                                                        scroll-to-anchor
+                                                                       copy-link
                                                                        question-group-answer?
                                                                        answers->read-only-format]]
             [ataru.cljs-util :refer [get-virkailija-translation]]
@@ -64,11 +65,13 @@
     [:div.application__form-field
      {:class (when @highlight-field? "highlighted")
       :id    id}
-     [:label.application__form-field-label
-      (str (from-multi-lang (:label field-descriptor) lang)
-           (required-hint field-descriptor))]
-     [:div.application__form-field-value
 
+     [:label.application__form-field-label
+      [:span
+      (str (from-multi-lang (:label field-descriptor) lang)
+           (required-hint field-descriptor))
+        [copy-link id]]]
+     [:div.application__form-field-value
       (cond (and (sequential? values) (< 1 (count values)))
             [:ul.application__form-field-list
              (map-indexed
@@ -107,14 +110,17 @@
                 (filter identity attachments))])
 
 (defn attachment [field-descriptor application lang group-idx]
-  (let [answer-key (keyword (answer-key field-descriptor))
+  (let [id         (:id field-descriptor)
+        answer-key (keyword (answer-key field-descriptor))
         values     (cond-> (get-in application [:answers answer-key :values])
                            (some? group-idx)
                            (nth group-idx))]
     [:div.application__form-field
      [:label.application__form-field-label
-      (str (from-multi-lang (:label field-descriptor) lang)
-           (required-hint field-descriptor))]
+      [:span
+       (str (from-multi-lang (:label field-descriptor) lang)
+            (required-hint field-descriptor))
+       [copy-link id]]]
      [attachment-list values]]))
 
 (declare field)
@@ -199,7 +205,9 @@
   [:div.application__form-field
    [:div.application__form-field-label--selectable
     [:div.application__form-field-label
-     (from-multi-lang (:label content) lang)]
+     [:span
+      (from-multi-lang (:label content) lang)
+      [copy-link (:id content)]]]
     (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
                                        (some? question-group-idx)
                                        (nth question-group-idx))
@@ -327,8 +335,9 @@
      {:class (when @highlight-field? "highlighted")
       :id    id}
      [:label.application__form-field-label
-      (str (from-multi-lang (:label field) lang)
-           (required-hint field))]
+      [:span (str (from-multi-lang (:label field) lang)
+           (required-hint field))
+       [copy-link id]]]
      [:div.application__form-field-value
       [:p.application__text-field-paragraph
        (clojure.string/join ", " values)]]]))
