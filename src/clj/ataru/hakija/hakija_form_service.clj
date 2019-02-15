@@ -21,7 +21,6 @@
             [ataru.schema.form-schema :as form-schema]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.hakija.form-role :as form-role]
-            [ataru.component-data.component :as component]
             [medley.core :refer [find-first]]
             [ataru.util :as util :refer [assoc?]]))
 

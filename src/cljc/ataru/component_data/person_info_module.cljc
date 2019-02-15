@@ -1,5 +1,6 @@
   (ns ataru.component-data.person-info-module
     (:require [ataru.component-data.component :as component]
+              [ataru.util :as util]
               [ataru.translations.texts :refer [person-info-module-texts general-texts]]
               [clojure.walk]))
 
@@ -222,3 +223,11 @@
                               (city-component metadata)
                               (native-language-section metadata)]
             :module          :person-info})))
+
+
+(def person-info-questions
+  (->> (person-info-module)
+       :children
+       util/flatten-form-fields
+       (map (comp name :id))
+       set))

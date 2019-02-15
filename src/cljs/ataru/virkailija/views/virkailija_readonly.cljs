@@ -18,6 +18,7 @@
                                                                        answers->read-only-format]]
             [ataru.cljs-util :refer [get-virkailija-translation]]
             [ataru.feature-config :as fc]
+            [ataru.component-data.component-util :refer [answer-to-always-include?]]
             [ataru.util :as util]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
@@ -26,6 +27,8 @@
             [re-frame.core :refer [subscribe]]
             [taoensso.timbre :refer-macros [spy debug]]
             [reagent.core :as r]))
+
+(def exclude-always-included #(not (answer-to-always-include? %)))
 
 (defn- from-multi-lang [text lang]
   (util/non-blank-val text [lang :fi :sv :en]))
@@ -70,7 +73,7 @@
       [:span
       (str (from-multi-lang (:label field-descriptor) lang)
            (required-hint field-descriptor))
-        [copy-link id]]]
+        [copy-link id :include? exclude-always-included]]]
      [:div.application__form-field-value
       (cond (and (sequential? values) (< 1 (count values)))
             [:ul.application__form-field-list
@@ -120,7 +123,7 @@
       [:span
        (str (from-multi-lang (:label field-descriptor) lang)
             (required-hint field-descriptor))
-       [copy-link id]]]
+       [copy-link id :include? exclude-always-included]]]
      [attachment-list values]]))
 
 (declare field)
@@ -207,7 +210,7 @@
     [:div.application__form-field-label
      [:span
       (from-multi-lang (:label content) lang)
-      [copy-link (:id content)]]]
+      [copy-link (:id content) :include? exclude-always-included]]]
     (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
                                        (some? question-group-idx)
                                        (nth question-group-idx))
@@ -335,9 +338,8 @@
      {:class (when @highlight-field? "highlighted")
       :id    id}
      [:label.application__form-field-label
-      [:span (str (from-multi-lang (:label field) lang)
-           (required-hint field))
-       [copy-link id]]]
+      (str (from-multi-lang (:label field) lang)
+           (required-hint field))]
      [:div.application__form-field-value
       [:p.application__text-field-paragraph
        (clojure.string/join ", " values)]]]))

@@ -8,6 +8,7 @@
                                                     attachment
                                                     dropdown
                                                     question-group]]
+            [ataru.util :as util]
             [ataru.translations.texts :refer [higher-base-education-module-texts general-texts]]))
 
 (defn module [metadata]
@@ -497,3 +498,9 @@
                                           {:label (:no general-texts) :value "No"}]
                              :validators ["required"]})]}))
 
+(def higher-education-base-education-questions
+  (->> (module {})
+       :children
+       util/flatten-form-fields
+       (map (comp name :id))
+       set))

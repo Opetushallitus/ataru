@@ -200,12 +200,14 @@
     (.select copy-container)
     (.execCommand js/document "copy")))
 
-(defn copy-link [id & {:keys [answer?]}]
+(defn copy-link [id & {:keys [answer? include?]}]
   (let [id (cond-> id
                    keyword?
                    (name))]
-    [:a.editor-form__copy-question-id
-     {:data-tooltip  (s/format (get-virkailija-translation (if answer? :copy-answer-id :copy-question-id))
-                       id)
-      :on-mouse-down #(copy id)}
-     "id"]))
+    (when-not (and include?
+                   (not (include? id)))
+      [:a.editor-form__copy-question-id
+       {:data-tooltip  (s/format (get-virkailija-translation (if answer? :copy-answer-id :copy-question-id))
+                         id)
+        :on-mouse-down #(copy id)}
+       "id"])))
