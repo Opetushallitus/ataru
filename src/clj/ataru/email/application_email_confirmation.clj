@@ -88,12 +88,12 @@
         (throw (new RuntimeException
                     (str "Hakukohteet " (clojure.string/join ", " missing-oids)
                          " not found"))))
-      (map-indexed (fn [i {:keys [name tarjonta-name]}]
+      (map-indexed (fn [i {:keys [name tarjoaja-name]}]
                      (str (when (:prioritize-hakukohteet tarjonta-info)
                             (str (inc i) ". "))
                           (util/non-blank-val name [lang :fi :sv :en])
                           " - "
-                          (util/non-blank-val tarjonta-name [lang :fi :sv :en])))
+                          (util/non-blank-val tarjoaja-name [lang :fi :sv :en])))
                    hakukohteet))))
 
 (defn- add-blank-templates [templates]
