@@ -1701,10 +1701,13 @@
         latest-form                   (subscribe [:state-query [:application :latest-form]])
         metadata-not-found            (subscribe [:state-query [:application :metadata-not-found]])]
     (fn []
-      (let [application   (:application @selected-application-and-form)
-            not-yksiloity (and (-> application :person) (not (-> application :person :yksiloity)))
-            person-oid    (-> application :person :oid)]
-        (when (or @latest-form not-yksiloity)
+      (let [application (:application @selected-application-and-form)
+            person-oid? (some? (-> application :person :oid))
+            yksiloity?  (-> application :person :yksiloity)]
+        (when (or @latest-form
+                  (not person-oid?)
+                  (not yksiloity?)
+                  @metadata-not-found)
           [:div.application__message-display.application__message-display--notification
            [:div.application__message-display--exclamation [:i.zmdi.zmdi-alert-triangle]]
            [:div.application__message-display--details
@@ -1714,19 +1717,19 @@
                              :on-click  (fn [evt]
                                           (.preventDefault evt)
                                           (select-application (:key application) @selected-review-hakukohde true))}])
-            (when (and person-oid not-yksiloity)
-              [:div.individualization
-               [notification {:text      :person-not-individualized
-                              :link-text :individualize-in-henkilopalvelu
-                              :href      (str "/henkilo-ui/oppija/"
-                                              person-oid
-                                              "/duplikaatit?permissionCheckService=ATARU")}]])
-            (when-not person-oid
-              [:div.individualization
-               [notification {:text      :creating-henkilo-failed}]])
+            (cond (not person-oid?)
+                  [:div.individualization
+                   [notification {:text :creating-henkilo-failed}]]
+                  (not yksiloity?)
+                  [:div.individualization
+                   [notification {:text      :person-not-individualized
+                                  :link-text :individualize-in-henkilopalvelu
+                                  :href      (str "/henkilo-ui/oppija/"
+                                                  person-oid
+                                                  "/duplikaatit?permissionCheckService=ATARU")}]])
             (when @metadata-not-found
               [:div.individualization
-               [notification {:text      :metadata-not-found}]])]])))))
+               [notification {:text :metadata-not-found}]])]])))))
 
 (defn application-heading [application loading?]
   (let [answers            (:answers application)
