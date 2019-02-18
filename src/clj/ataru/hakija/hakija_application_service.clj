@@ -362,7 +362,7 @@
                            (if (and (vector? value)
                                     (not (empty? value))
                                     (every? vector? value))
-                             (map file-store/get-metadata value)
+                             (mapv file-store/get-metadata value)
                              (file-store/get-metadata value))))))
 
 (defn attachments-metadata->answers [application]
