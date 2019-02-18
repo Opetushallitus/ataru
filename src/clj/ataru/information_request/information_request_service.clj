@@ -4,6 +4,7 @@
             [ataru.log.audit-log :as audit-log]
             [ataru.translations.translation-util :as translations]
             [ataru.util :as u]
+            [ataru.email.application-email-confirmation :refer [->safe-html]]
             [ataru.information-request.information-request-job :as information-request-job]
             [ataru.information-request.information-request-store :as information-request-store]
             [ataru.applications.application-store :as app-store]
@@ -29,7 +30,7 @@
         service-url     (get-in config [:public-config :applicant :service_url])
         application-url (str service-url "/hakemus?modify=" (:secret application))
         body            (selmer/render-file "templates/information-request-template.html"
-                                            (merge {:message         (:message information-request)
+                                            (merge {:message         (->safe-html (:message information-request))
                                                     :application-url application-url}
                                                    translations))]
     (-> (select-keys information-request [:subject :application-key :id])
