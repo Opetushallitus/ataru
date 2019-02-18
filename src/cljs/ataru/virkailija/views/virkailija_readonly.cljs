@@ -13,10 +13,12 @@
                                                                        replace-with-option-label
                                                                        predefined-value-answer?
                                                                        scroll-to-anchor
+                                                                       copy-link
                                                                        question-group-answer?
                                                                        answers->read-only-format]]
             [ataru.cljs-util :refer [get-virkailija-translation]]
             [ataru.feature-config :as fc]
+            [ataru.component-data.component-util :refer [answer-to-always-include?]]
             [ataru.util :as util]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
@@ -25,6 +27,8 @@
             [re-frame.core :refer [subscribe]]
             [taoensso.timbre :refer-macros [spy debug]]
             [reagent.core :as r]))
+
+(def exclude-always-included #(not (answer-to-always-include? %)))
 
 (defn- from-multi-lang [text lang]
   (util/non-blank-val text [lang :fi :sv :en]))
@@ -64,11 +68,13 @@
     [:div.application__form-field
      {:class (when @highlight-field? "highlighted")
       :id    id}
-     [:label.application__form-field-label
-      (str (from-multi-lang (:label field-descriptor) lang)
-           (required-hint field-descriptor))]
-     [:div.application__form-field-value
 
+     [:label.application__form-field-label
+      [:span
+      (str (from-multi-lang (:label field-descriptor) lang)
+           (required-hint field-descriptor))
+        [copy-link id :include? exclude-always-included]]]
+     [:div.application__form-field-value
       (cond (and (sequential? values) (< 1 (count values)))
             [:ul.application__form-field-list
              (map-indexed
@@ -107,14 +113,17 @@
                 (filter identity attachments))])
 
 (defn attachment [field-descriptor application lang group-idx]
-  (let [answer-key (keyword (answer-key field-descriptor))
+  (let [id         (:id field-descriptor)
+        answer-key (keyword (answer-key field-descriptor))
         values     (cond-> (get-in application [:answers answer-key :values])
                            (some? group-idx)
                            (nth group-idx))]
     [:div.application__form-field
      [:label.application__form-field-label
-      (str (from-multi-lang (:label field-descriptor) lang)
-           (required-hint field-descriptor))]
+      [:span
+       (str (from-multi-lang (:label field-descriptor) lang)
+            (required-hint field-descriptor))
+       [copy-link id :include? exclude-always-included]]]
      [attachment-list values]]))
 
 (declare field)
@@ -199,7 +208,9 @@
   [:div.application__form-field
    [:div.application__form-field-label--selectable
     [:div.application__form-field-label
-     (from-multi-lang (:label content) lang)]
+     [:span
+      (from-multi-lang (:label content) lang)
+      [copy-link (:id content) :include? exclude-always-included]]]
     (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
                                        (some? question-group-idx)
                                        (nth question-group-idx))

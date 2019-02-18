@@ -190,3 +190,9 @@
                     (valintatuloksen-julkaisulupa metadata)
                     (asiointikieli metadata)]))
 
+(def lupatiedot-questions
+  (->> (lupatiedot {})
+       :children
+       util/flatten-form-fields
+       (map (comp name :id))
+       set))

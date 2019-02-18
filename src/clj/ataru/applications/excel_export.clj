@@ -4,10 +4,7 @@
            [org.apache.poi.xssf.usermodel XSSFWorkbook XSSFSheet XSSFCell XSSFCellStyle])
   (:require [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
-            [ataru.component-data.base-education-module :as bem]
-            [ataru.component-data.component :as component]
-            [ataru.component-data.higher-education-base-education-module :as hebem]
-            [ataru.component-data.person-info-module :as pim]
+            [ataru.component-data.component-util :refer [answer-to-always-include?]]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.files.file-store :as file-store]
             [ataru.util :as util]
@@ -23,41 +20,6 @@
             [ataru.application.review-states :as review-states]
             [ataru.application.application-states :as application-states]))
 
-(def higher-education-base-education-questions
-  (->> (hebem/module {})
-       :children
-       util/flatten-form-fields
-       (map (comp name :id))
-       set))
-
-(def base-education-questions
-  (->> (bem/module {})
-       :children
-       util/flatten-form-fields
-       (map (comp name :id))
-       set))
-
-(def person-info-questions
-  (->> (pim/person-info-module)
-       :children
-       util/flatten-form-fields
-       (map (comp name :id))
-       set))
-
-(def lupatiedot-questions
-  (->> (component/lupatiedot {})
-       :children
-       util/flatten-form-fields
-       (map (comp name :id))
-       set))
-
-(def answer-to-always-include?
-  (clojure.set/union
-   #{"hakukohteet"}
-   higher-education-base-education-questions
-   base-education-questions
-   person-info-questions
-   lupatiedot-questions))
 
 (def max-value-length 5000)
 

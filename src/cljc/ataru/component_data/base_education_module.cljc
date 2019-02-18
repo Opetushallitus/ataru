@@ -175,3 +175,10 @@
                                                         :koodisto-source {:uri "maatjavaltiot2", :title "Maat ja valtiot", :version 1}}]}
                                           {:label (:have-not general-texts), :value "Nej"}],
                              :validators ["required"]})]}))
+
+(def base-education-questions
+  (->> (module {})
+       :children
+       u/flatten-form-fields
+       (map (comp name :id))
+       set))
