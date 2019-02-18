@@ -44,12 +44,12 @@
    ["not-obligated" (:not-obligated state-translations)]])
 
 (def hakukohde-review-types
-  [[:processing-state "Käsittelyvaihe" application-hakukohde-processing-states]
-   [:language-requirement "Kielitaitovaatimus" application-hakukohde-review-states]
-   [:degree-requirement "Tutkinnon kelpoisuus" application-hakukohde-review-states]
-   [:eligibility-state "Hakukelpoisuus" application-hakukohde-eligibility-states]
-   [:payment-obligation "Maksuvelvollisuus" application-payment-obligation-states]
-   [:selection-state "Valinta" application-hakukohde-selection-states]])
+  [[:processing-state (:processing-state state-translations) application-hakukohde-processing-states]
+   [:language-requirement (:language-requirement state-translations) application-hakukohde-review-states]
+   [:degree-requirement (:degree-requirement state-translations) application-hakukohde-review-states]
+   [:eligibility-state (:eligibility-state state-translations) application-hakukohde-eligibility-states]
+   [:payment-obligation (:payment-obligation state-translations) application-payment-obligation-states]
+   [:selection-state (:selection-state state-translations) application-hakukohde-selection-states]])
 
 (def hakukohde-review-types-map
   (util/group-by-first first hakukohde-review-types))
