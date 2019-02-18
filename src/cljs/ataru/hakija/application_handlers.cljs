@@ -1075,21 +1075,24 @@
         {:db               db
          :delayed-dispatch {:dispatch-vec [:application/add-single-attachment-resumable field-descriptor attachment-idx file retries question-group-idx]
                             :timeout      (+ 2000 (rand-int 2000))}}
-        {:db (-> db
-                 (update-in [:attachments-uploading id] dissoc (-> @(subscribe [:application/answer
-                                                                                id
-                                                                                question-group-idx
-                                                                                attachment-idx])
-                                                                   :value
-                                                                   :filename))
-                 (update-in (if question-group-idx
-                              [:application :answers id :values question-group-idx attachment-idx]
-                              [:application :answers id :values attachment-idx])
-                            merge
-                            {:valid  false
-                             :status :error
-                             :errors [[current-error]]})
-                 (assoc-in [:application :answers id :valid] false))}))))
+        {:db       (-> db
+                       (update-in [:attachments-uploading id] dissoc (-> @(subscribe [:application/answer
+                                                                                      id
+                                                                                      question-group-idx
+                                                                                      attachment-idx])
+                                                                         :value
+                                                                         :filename))
+                       (update-in (if question-group-idx
+                                    [:application :answers id :values question-group-idx attachment-idx]
+                                    [:application :answers id :values attachment-idx])
+                                  merge
+                                  {:valid  false
+                                   :status :error
+                                   :errors [[current-error]]}))
+         :dispatch [:application/set-attachment-valid
+                    id
+                    (required? field-descriptor)
+                    false]}))))
 
 (reg-event-fx
   :application/handle-attachment-delete
