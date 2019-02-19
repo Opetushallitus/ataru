@@ -1704,10 +1704,10 @@
         metadata-not-found            (subscribe [:state-query [:application :metadata-not-found]])]
     (fn []
       (let [application (:application @selected-application-and-form)
-            person-oid? (some? (-> application :person :oid))
+            person-oid  (-> application :person :oid)
             yksiloity?  (-> application :person :yksiloity)]
         (when (or @latest-form
-                  (not person-oid?)
+                  (nil? person-oid)
                   (not yksiloity?)
                   @metadata-not-found)
           [:div.application__message-display.application__message-display--notification
@@ -1719,7 +1719,7 @@
                              :on-click  (fn [evt]
                                           (.preventDefault evt)
                                           (select-application (:key application) @selected-review-hakukohde true))}])
-            (cond (not person-oid?)
+            (cond (nil? person-oid)
                   [:div.individualization
                    [notification {:text :creating-henkilo-failed}]]
                   (not yksiloity?)
