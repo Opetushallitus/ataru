@@ -23,16 +23,18 @@
       (json/parse-string (:body resp) true))))
 
 (defn get-metadata [file-keys]
-  (let [resp (http-util/do-post (resolve-url :liiteri.metadata)
-                                {:headers {"Content-Type" "application/json"}
-                                 :body    (json/generate-string {:keys file-keys})})]
-    (if (= (:status resp) 200)
-      (json/parse-string (:body resp) true)
-      (throw (new RuntimeException
-                  (str "Could not get metadata for keys "
-                       (clojure.string/join ", " file-keys)
-                       ". Got status " (:status resp)
-                       ", body " (:body resp)))))))
+  (if (seq file-keys)
+    (let [resp (http-util/do-post (resolve-url :liiteri.metadata)
+                                  {:headers {"Content-Type" "application/json"}
+                                   :body    (json/generate-string {:keys file-keys})})]
+      (if (= (:status resp) 200)
+        (json/parse-string (:body resp) true)
+        (throw (new RuntimeException
+                    (str "Could not get metadata for keys "
+                         (clojure.string/join ", " file-keys)
+                         ". Got status " (:status resp)
+                         ", body " (:body resp))))))
+    []))
 
 (defn get-file [key]
   (let [url  (resolve-url :liiteri.file key)

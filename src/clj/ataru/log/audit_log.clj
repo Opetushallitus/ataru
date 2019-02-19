@@ -111,4 +111,4 @@
   (try
     (do-log params)
     (catch Throwable t
-      (log/error t "Failed to create an audit log entry"))))
+      (throw (new RuntimeException "Failed to create an audit log entry" t)))))
