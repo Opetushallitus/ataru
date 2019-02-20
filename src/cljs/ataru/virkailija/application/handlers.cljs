@@ -264,7 +264,7 @@
   :application/toggle-shown-time-column
   (fn [{:keys [db]} _]
     (let [new-value (if (= :created-time (-> db :application :selected-time-column))
-                      :original-created-time
+                      :submitted
                       :created-time)]
       {:db       (-> db
                      (assoc-in [:application :selected-time-column] new-value)

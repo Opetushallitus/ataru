@@ -355,7 +355,7 @@
                                                      :last-name      s/Str
                                                      :yksiloity      s/Bool
                                                      :ssn            s/Bool}
-   :original-created-time                           org.joda.time.DateTime
+   :submitted                                       org.joda.time.DateTime
    :base-education                                  [s/Str]
    (s/optional-key :form)                           s/Int
    (s/optional-key :created-time)                   org.joda.time.DateTime

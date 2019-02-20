@@ -16,9 +16,9 @@
    :created-time
    {:ascending (partial date-sort < :created-time)
     :descending (partial date-sort > :created-time)}
-   :original-created-time
-   {:ascending (partial date-sort < :original-created-time)
-    :descending (partial date-sort > :original-created-time)}})
+   :submitted
+   {:ascending (partial date-sort < :submitted)
+    :descending (partial date-sort > :submitted)}})
 
 (defn sort-by-column [applications column-id order]
   (sort (get-in application-sort-column-fns [column-id order]) applications))

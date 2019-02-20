@@ -659,7 +659,7 @@
       [:span
        {:class (if (= :created-time @selected-time-column)
                  "application-handling__list-row--created-time"
-                 "application-handling__list-row--original-created-time")}
+                 "application-handling__list-row--submitted")}
        [:span.application-handling__basic-list-basic-column-header
         [:span.application-handling__created-time-column-header
          {:on-click #(dispatch [:application/toggle-shown-time-column])}
