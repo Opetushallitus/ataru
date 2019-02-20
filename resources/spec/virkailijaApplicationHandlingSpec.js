@@ -345,7 +345,7 @@
         );
 
         it('shows virkailija edit link', function() {
-          expect(editLink().attr('href')).to.equal('/lomake-editori/api/applications/application-key2/modify');
+          expect(editLink().attr('href')).to.equal('/lomake-editori/api/applications/1.2.246.562.11.00000000000000000002/modify');
         })
       });
     });
@@ -621,7 +621,7 @@
     }
 
     function navigateToApplicationHandlingWithUrlParams() {
-      loadInFrame('http://localhost:8350/lomake-editori/applications/foobar1?application-key=application-key1&processing-state-filter=processing,invited-to-interview')
+      loadInFrame('http://localhost:8350/lomake-editori/applications/foobar1?application-key=1.2.246.562.11.00000000000000000001&processing-state-filter=processing,invited-to-interview')
     }
 
     function navigateToApplicationHandlingForForm() {
