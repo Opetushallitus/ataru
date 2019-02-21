@@ -2,12 +2,16 @@
   (:require
    [ataru.applications.application-access-control :as aac]
    [ataru.util :as util]
+   [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit]
    [ataru.organization-service.organization-service :as organization-service]
    [ataru.organization-service.session-organizations :as session-orgs]
    [ataru.applications.application-store :as application-store]
    [ataru.forms.form-store :as form-store]
    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
-   [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]))
+   [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
+   [clj-time.core :as t]
+   [clj-time.coerce :as c]
+   [taoensso.timbre :as log]))
 
 (defn- raw-haku-row->hakukohde
   [{:keys [hakukohde application-count processed processing]}]
@@ -46,14 +50,30 @@
 (defn- remove-organization-oid [haku]
   (dissoc haku :organization-oid))
 
+(defn- hakukierros-paattynyt?
+  [ohjausparametrit-service now haku-oid]
+  (if-let [hkp (some-> (ohjausparametrit/get-parametri ohjausparametrit-service haku-oid)
+                       (get-in [:PH_HKP :date])
+                       c/from-long)]
+    (t/after? now hkp)
+    (do (log/error "Hakukierros päättyy (PH_HKP) not set for haku" haku-oid)
+        false)))
+
+(defn- remove-if-hakukierros-paattynyt
+  [ohjausparametrit-service rows]
+  (let [now  (t/now)
+        hkp? (memoize (fn [haku-oid] (hakukierros-paattynyt? ohjausparametrit-service now haku-oid)))]
+    (remove #(hkp? (:haku %)) rows)))
+
 (defn- get-tarjonta-haut
-  [organization-service tarjonta-service session]
+  [ohjausparametrit-service organization-service tarjonta-service session]
   (session-orgs/run-org-authorized
    session
    organization-service
    [:view-applications :edit-applications]
    (constantly {})
    #(->> (application-store/get-haut)
+         (remove-if-hakukierros-paattynyt ohjausparametrit-service)
          (map (fn [h] (update h :hakukohde vector)))
          (aac/filter-authorized tarjonta-service
                                 (some-fn (partial aac/authorized-by-form? %)
@@ -61,6 +81,7 @@
          (map (fn [h] (update h :hakukohde first)))
          handle-hakukohteet)
    #(->> (application-store/get-haut)
+         (remove-if-hakukierros-paattynyt ohjausparametrit-service)
          (map remove-organization-oid)
          handle-hakukohteet)))
 
@@ -80,8 +101,8 @@
          (util/group-by-first :key))))
 
 (defn get-haut
-  [organization-service tarjonta-service session]
-  (let [tarjonta-haut (get-tarjonta-haut organization-service tarjonta-service session)]
+  [ohjausparametrit-service organization-service tarjonta-service session]
+  (let [tarjonta-haut (get-tarjonta-haut ohjausparametrit-service organization-service tarjonta-service session)]
     {:tarjonta-haut    tarjonta-haut
      :direct-form-haut (get-direct-form-haut organization-service session)
      :haut             (->> (keys tarjonta-haut)

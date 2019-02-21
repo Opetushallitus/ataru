@@ -547,7 +547,10 @@
     (api/GET "/haut" {session :session}
       :summary "List haku and hakukohde information found for applications stored in system"
       :return ataru-schema/Haut
-      (ok (haku-service/get-haut organization-service tarjonta-service session)))
+      (ok (haku-service/get-haut ohjausparametrit-service
+                                 organization-service
+                                 tarjonta-service
+                                 session)))
 
     (api/context "/koodisto" []
       :tags ["koodisto-api"]
