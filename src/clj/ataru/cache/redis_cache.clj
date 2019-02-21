@@ -260,9 +260,6 @@
         (error e "Error while get-many from Redis")
         (cache/load-many loader keys))))
 
-  (put-to [_ key value]
-    (redis-set redis name key value ttl-after-write))
-
   (remove-from [_ key]
     (wcar (:connection-opts redis)
           (car/del (->cache-key name key))))

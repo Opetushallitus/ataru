@@ -56,7 +56,6 @@
         koodisto-cache                       (reify cache-service/Cache
                                                (get-from [this key])
                                                (get-many-from [this keys])
-                                               (put-to [this key value])
                                                (remove-from [this key])
                                                (clear-all [this]))
         form-by-haku-oid-and-id-cache-loader (hakija-form-service/map->FormByHakuOidAndIdCacheLoader
@@ -68,7 +67,6 @@
                                                (get-from [this key]
                                                  (.load form-by-haku-oid-and-id-cache-loader key))
                                                (get-many-from [this keys])
-                                               (put-to [this key value])
                                                (remove-from [this key])
                                                (clear-all [this]))
         form-by-haku-oid-str-cache-loader    (hakija-form-service/map->FormByHakuOidStrCacheLoader
@@ -85,7 +83,6 @@
                                              (get-from [this key]
                                                (.load form-by-haku-oid-str-cache-loader key))
                                              (get-many-from [this keys])
-                                             (put-to [this key value])
                                              (remove-from [this key])
                                              (clear-all [this])))
         (assoc :koodisto-cache koodisto-cache)
