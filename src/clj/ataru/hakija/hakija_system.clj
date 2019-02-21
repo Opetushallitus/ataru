@@ -30,7 +30,9 @@
    (apply
     component/system-map
 
-    :organization-service (organization-service/new-organization-service)
+    :organization-service (component/using
+                           (organization-service/new-organization-service)
+                           [:all-organization-groups-cache])
 
     :tarjonta-service (component/using
                        (tarjonta-service/new-tarjonta-service)

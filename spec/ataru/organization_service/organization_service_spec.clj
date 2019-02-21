@@ -1,10 +1,14 @@
 (ns ataru.organization-service.organization-service-spec
-  (:require [ataru.config.core :refer [config]]
+  (:require [ataru.cache.cache-service :as cache]
+            [ataru.cache.in-memory-cache :as in-memory]
+            [ataru.config.core :refer [config]]
+            [ataru.organization-service.organization-client :as organization-client]
             [ataru.organization-service.organization-client-spec :refer [expected-flat-organizations]]
             [ataru.organization-service.organization-service :as org-service]
             [clojure.java.io :as io]
             [org.httpkit.client :as http]
-            [speclj.core :refer [describe it should= tags around]]))
+            [speclj.core :refer [describe it should= tags around]])
+  (:import java.util.concurrent.TimeUnit))
 
 (def test-user1-organization-oid "1.2.246.562.6.214933")
 
@@ -14,7 +18,13 @@
 
 (def fake-config {:organization-service {:base-address "dummy"} :cas {}})
 
-(defn create-org-service-instance [] (.start (org-service/->IntegratedOrganizationService)))
+(defn create-org-service-instance [] (.start (org-service/->IntegratedOrganizationService
+                                              (.start
+                                               (in-memory/map->InMemoryCache
+                                                {:loader        (cache/->FunctionCacheLoader
+                                                                 (fn [_] (organization-client/get-groups)))
+                                                 :expires-after [3 TimeUnit/DAYS]
+                                                 :refresh-after [5 TimeUnit/MINUTES]})))))
 
 (describe "OrganizationService"
           (tags :unit :organization)

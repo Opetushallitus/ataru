@@ -74,7 +74,9 @@
   []
   (let [response (http-util/do-get (resolve-url :organisaatio-service.groups))]
     (if (= 200 (:status response))
-      (->> response read-body (map group->map))
+      (->> response
+           read-body
+           (reduce #(assoc %1 (:oid %2) (group->map %2)) {}))
       (throw (Exception. (str "Got status code " (:status response) " While reading groups"))))))
 
 (defn get-organization-by-oid-or-number

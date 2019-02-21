@@ -5,6 +5,7 @@
             [ataru.cache.redis-cache :as redis]
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
+            [ataru.organization-service.organization-client :as organization-client]
             [ataru.ohjausparametrit.ohjausparametrit-client :as ohjausparametrit-client]
             [ataru.statistics.statistics-service :as s]
             [ataru.koodisto.koodisto-db-cache :as koodisto-cache]
@@ -19,6 +20,12 @@
                  (case key
                    :haut             (application-store/get-haut)
                    :direct-form-haut (application-store/get-direct-form-haut))))
+      :expires-after [3 TimeUnit/DAYS]
+      :refresh-after [5 TimeUnit/MINUTES]})]
+   [:all-organization-groups-cache
+    (in-memory/map->InMemoryCache
+     {:loader (cache/->FunctionCacheLoader
+               (fn [_] (organization-client/get-groups)))
       :expires-after [3 TimeUnit/DAYS]
       :refresh-after [5 TimeUnit/MINUTES]})]
    [:hakukohde-cache
