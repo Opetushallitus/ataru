@@ -181,7 +181,8 @@
                           statistics-week-cache
                           statistics-day-cache
                           koodisto-cache
-                          person-service]
+                          person-service
+                          get-haut-cache]
                    :as dependencies}]
   (api/context "/api" []
     :tags ["form-api"]
@@ -550,6 +551,7 @@
       (ok (haku-service/get-haut ohjausparametrit-service
                                  organization-service
                                  tarjonta-service
+                                 get-haut-cache
                                  session)))
 
     (api/context "/koodisto" []

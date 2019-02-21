@@ -1,6 +1,7 @@
 (ns ataru.haku.haku-service
   (:require
    [ataru.applications.application-access-control :as aac]
+   [ataru.cache.cache-service :as cache]
    [ataru.util :as util]
    [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit]
    [ataru.organization-service.organization-service :as organization-service]
@@ -66,13 +67,17 @@
     (remove #(hkp? (:haku %)) rows)))
 
 (defn- get-tarjonta-haut
-  [ohjausparametrit-service organization-service tarjonta-service session]
+  [ohjausparametrit-service
+   organization-service
+   tarjonta-service
+   get-haut-cache
+   session]
   (session-orgs/run-org-authorized
    session
    organization-service
    [:view-applications :edit-applications]
    (constantly {})
-   #(->> (application-store/get-haut)
+   #(->> (cache/get-from get-haut-cache :haut)
          (remove-if-hakukierros-paattynyt ohjausparametrit-service)
          (map (fn [h] (update h :hakukohde vector)))
          (aac/filter-authorized tarjonta-service
@@ -80,31 +85,39 @@
                                          (partial aac/authorized-by-tarjoajat? %)))
          (map (fn [h] (update h :hakukohde first)))
          handle-hakukohteet)
-   #(->> (application-store/get-haut)
+   #(->> (cache/get-from get-haut-cache :haut)
          (remove-if-hakukierros-paattynyt ohjausparametrit-service)
          (map remove-organization-oid)
          handle-hakukohteet)))
 
 (defn- get-direct-form-haut
-  [organization-service session]
+  [organization-service get-haut-cache session]
   (session-orgs/run-org-authorized
    session
    organization-service
    [:view-applications :edit-applications]
    (constantly {})
-   #(->> (application-store/get-direct-form-haut)
+   #(->> (cache/get-from get-haut-cache :direct-form-haut)
          (filter (partial aac/authorized-by-form? %))
          (map remove-organization-oid)
          (util/group-by-first :key))
-   #(->> (application-store/get-direct-form-haut)
+   #(->> (cache/get-from get-haut-cache :direct-form-haut)
          (map remove-organization-oid)
          (util/group-by-first :key))))
 
 (defn get-haut
-  [ohjausparametrit-service organization-service tarjonta-service session]
-  (let [tarjonta-haut (get-tarjonta-haut ohjausparametrit-service organization-service tarjonta-service session)]
+  [ohjausparametrit-service
+   organization-service
+   tarjonta-service
+   get-haut-cache
+   session]
+  (let [tarjonta-haut (get-tarjonta-haut ohjausparametrit-service
+                                         organization-service
+                                         tarjonta-service
+                                         get-haut-cache
+                                         session)]
     {:tarjonta-haut    tarjonta-haut
-     :direct-form-haut (get-direct-form-haut organization-service session)
+     :direct-form-haut (get-direct-form-haut organization-service get-haut-cache session)
      :haut             (->> (keys tarjonta-haut)
                             (keep #(tarjonta/get-haku tarjonta-service %))
                             (map tarjonta-service/parse-haku)
