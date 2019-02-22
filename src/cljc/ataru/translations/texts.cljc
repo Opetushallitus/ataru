@@ -704,7 +704,13 @@ You will receive a confirmation of your application to your email."}
                                  :en "If you wish to edit your application, you can use the link above and make the changes within the application period. Do not share the link with others. If you are using a public or shared computer, remember to log out of the email application.\n\nIf you have Finnish online banking credentials, an electronic\nID-card or mobile certificate, you can also log in\nat [Studyinfo.fi](https://www.studyinfo.fi) and make the\nchanges in the My Studyinfo -service within the application period. In addition to making changes to your application, if you have access to the My Studyinfo -service you can also view the admission results and confirm the study place.\n\nThis is an automatically generated email, please do not reply.\n\nBest regards, <br/>\nStudyinfo\n"}}})
 
 (def virkailija-texts
-  {:active                                      {:fi "Aktiivinen"
+  {:show-hakukierros-paattynyt                  {:fi "Näytä haut joissa hakukierros päättynyt"
+                                                 :sv "Näytä haut joissa hakukierros päättynyt"
+                                                 :en "Näytä haut joissa hakukierros päättynyt"}
+   :hide-hakukierros-paattynyt                  {:fi "Piilota haut joissa hakukierros päättynyt"
+                                                 :sv "Piilota haut joissa hakukierros päättynyt"
+                                                 :en "Piilota haut joissa hakukierros päättynyt"}
+   :active                                      {:fi "Aktiivinen"
                                                  :sv "Aktiv"
                                                  :en "Active"}
    :add                                         {:fi "Lisää"

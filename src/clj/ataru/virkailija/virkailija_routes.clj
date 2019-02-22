@@ -546,13 +546,15 @@
                      {})}))
 
     (api/GET "/haut" {session :session}
+      :query-params [{show-hakukierros-paattynyt :- s/Bool false}]
       :summary "List haku and hakukohde information found for applications stored in system"
       :return ataru-schema/Haut
       (ok (haku-service/get-haut ohjausparametrit-service
                                  organization-service
                                  tarjonta-service
                                  get-haut-cache
-                                 session)))
+                                 session
+                                 show-hakukierros-paattynyt)))
 
     (api/context "/koodisto" []
       :tags ["koodisto-api"]

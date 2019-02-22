@@ -179,6 +179,15 @@
   [:div.application__search-control-loading-indicator
    [:i.zmdi.zmdi-spinner]])
 
+(defn- show-hakukierros-paattynyt
+  []
+  [:div.application__search-control-haku.application__search-control-show-hakukierros-paattynyt
+   [:button.application__search-control-show-hakukierros-paattynyt-button
+    {:on-click #(dispatch [:application/toggle-show-hakukierros-paattynyt])}
+    (if @(subscribe [:application/show-hakukierros-paattynyt?])
+      (get-virkailija-translation :hide-hakukierros-paattynyt)
+      (get-virkailija-translation :show-hakukierros-paattynyt))]])
+
 (defn all-haut-list [haut-subscribe-type]
   (let [haut (subscribe [haut-subscribe-type])]
     (if @haut
@@ -188,7 +197,8 @@
         (:tarjonta-haut @haut))
        (map
         (fn [form-haku] ^{:key (:key form-haku)} [direct-form-haku form-haku])
-        (:direct-form-haut @haut))]
+        (:direct-form-haut @haut))
+       [show-hakukierros-paattynyt]]
       [loading-indicator])))
 
 (defn incomplete-haut []

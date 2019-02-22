@@ -57,28 +57,31 @@
                        (get-in [:PH_HKP :date])
                        c/from-long)]
     (t/after? now hkp)
-    (do (log/error "Hakukierros päättyy (PH_HKP) not set for haku" haku-oid)
-        false)))
+    false))
 
 (defn- remove-if-hakukierros-paattynyt
-  [ohjausparametrit-service rows]
-  (let [now  (t/now)
-        hkp? (memoize (fn [haku-oid] (hakukierros-paattynyt? ohjausparametrit-service now haku-oid)))]
-    (remove #(hkp? (:haku %)) rows)))
+  [ohjausparametrit-service show-hakukierros-paattynyt? rows]
+  (if show-hakukierros-paattynyt?
+    rows
+    (let [now  (t/now)
+          hkp? (memoize (fn [haku-oid] (hakukierros-paattynyt? ohjausparametrit-service now haku-oid)))]
+      (remove #(hkp? (:haku %)) rows))))
 
 (defn- get-tarjonta-haut
   [ohjausparametrit-service
    organization-service
    tarjonta-service
    get-haut-cache
-   session]
+   session
+   show-hakukierros-paattynyt?]
   (session-orgs/run-org-authorized
    session
    organization-service
    [:view-applications :edit-applications]
    (constantly {})
    #(->> (cache/get-from get-haut-cache :haut)
-         (remove-if-hakukierros-paattynyt ohjausparametrit-service)
+         (remove-if-hakukierros-paattynyt ohjausparametrit-service
+                                          show-hakukierros-paattynyt?)
          (map (fn [h] (update h :hakukohde vector)))
          (aac/filter-authorized tarjonta-service
                                 (some-fn (partial aac/authorized-by-form? %)
@@ -86,7 +89,8 @@
          (map (fn [h] (update h :hakukohde first)))
          handle-hakukohteet)
    #(->> (cache/get-from get-haut-cache :haut)
-         (remove-if-hakukierros-paattynyt ohjausparametrit-service)
+         (remove-if-hakukierros-paattynyt ohjausparametrit-service
+                                          show-hakukierros-paattynyt?)
          (map remove-organization-oid)
          handle-hakukohteet)))
 
@@ -110,12 +114,14 @@
    organization-service
    tarjonta-service
    get-haut-cache
-   session]
+   session
+   show-hakukierros-paattynyt?]
   (let [tarjonta-haut (get-tarjonta-haut ohjausparametrit-service
                                          organization-service
                                          tarjonta-service
                                          get-haut-cache
-                                         session)]
+                                         session
+                                         show-hakukierros-paattynyt?)]
     {:tarjonta-haut    tarjonta-haut
      :direct-form-haut (get-direct-form-haut organization-service get-haut-cache session)
      :haut             (->> (keys tarjonta-haut)

@@ -37,31 +37,32 @@
                                                       :pohjakoulutus_yo_kansainvalinen_suomessa true}})
 
 (def default-db
-  {:editor               {:forms               nil
-                          :autosave            nil          ; autosave stop function, see autosave.cljs
-                          :selected-form-key   nil
-                          :used-by-haut        {:fetching? false
-                                                :error?    false}
-                          :email-template-lang "fi"
-                          :organizations       {:org-select-organizations    true
-                                                :org-select-hakukohde-groups true
-                                                :results-page                0}}
-   ; Initial active panel on page load.
-   :active-panel         :editor
-   :application          {:applications               []
-                          :review                     {}
-                          :attachment-state-filter    (set (mapv first review-states/attachment-hakukohde-review-types-with-no-requirements))
-                          :processing-state-filter    (set (mapv first review-states/application-hakukohde-processing-states))
-                          :selection-state-filter     (set (mapv first review-states/application-hakukohde-selection-states))
-                          :sort                       {:column :created-time :order :descending}
-                          :selected-time-column       :created-time
-                          :application-list-expanded? true
-                          :mass-information-request   {:form-status :disabled}
-                          :application-list-page      0
-                          :filters                    default-filters
-                          :filters-checkboxes         default-filters}
-   :haut                 {}
-   :hakukohteet          {}
-   :fetching-haut        0
-   :fetching-hakukohteet 0
-   :banner               {:type :in-flow}})
+  {:editor                     {:forms               nil
+                                :autosave            nil ; autosave stop function, see autosave.cljs
+                                :selected-form-key   nil
+                                :used-by-haut        {:fetching? false
+                                                      :error?    false}
+                                :email-template-lang "fi"
+                                :organizations       {:org-select-organizations    true
+                                                      :org-select-hakukohde-groups true
+                                                      :results-page                0}}
+                                        ; Initial active panel on page load.
+   :active-panel               :editor
+   :application                {:applications               []
+                                :review                     {}
+                                :attachment-state-filter    (set (mapv first review-states/attachment-hakukohde-review-types-with-no-requirements))
+                                :processing-state-filter    (set (mapv first review-states/application-hakukohde-processing-states))
+                                :selection-state-filter     (set (mapv first review-states/application-hakukohde-selection-states))
+                                :sort                       {:column :created-time :order :descending}
+                                :selected-time-column       :created-time
+                                :application-list-expanded? true
+                                :mass-information-request   {:form-status :disabled}
+                                :application-list-page      0
+                                :filters                    default-filters
+                                :filters-checkboxes         default-filters}
+   :haut                       {}
+   :hakukohteet                {}
+   :fetching-haut              0
+   :fetching-hakukohteet       0
+   :banner                     {:type :in-flow}
+   :show-hakukierros-paattynyt false})
