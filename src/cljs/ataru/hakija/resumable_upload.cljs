@@ -10,31 +10,40 @@
   (get (js->clj js/config) "attachment-file-part-max-size-bytes" (* 1024 1024 5)))
 
 (defn- hex-md5-hash
-  [array-buffer]
-  (let [md5 (goog.crypt.Md5.)]
-    (.update md5 (js/Uint8Array. array-buffer))
-    (crypt/byteArrayToHex (.digest md5))))
+  ([file cb]
+   (hex-md5-hash file cb (new goog.crypt.Md5) 0))
+  ([file cb md5 i]
+   (let [start (* i max-part-size)
+         end   (min (* (inc i) max-part-size) (.-size file))
+         fr    (new js/FileReader)]
+     (.addEventListener fr
+                        "loadend"
+                        (fn []
+                          (.update md5 (new js/Uint8Array (.-result fr)))
+                          (if (< end (.-size file))
+                            (hex-md5-hash file cb md5 (inc i))
+                            (cb (crypt/byteArrayToHex (.digest md5))))))
+     (.readAsArrayBuffer fr (.slice file start end)))))
 
 (defn upload-file
   [url file field-id attachment-idx application-attachments-id handlers]
   {:pre [(every? (complement clojure.string/blank?) [url field-id application-attachments-id])
          (every? some? [file attachment-idx handlers])]}
-  (let [fr (js/FileReader.)]
-    (.addEventListener
-      fr
-      "loadend"
-      (fn []
-        (let [file-buffer (.-result fr)
-              id          (str
-                            application-attachments-id "-"
-                            field-id "-"
-                            attachment-idx "-"
-                            (hex-md5-hash file-buffer))
-              dispatch-kw (if (<= (.-size file) max-part-size)
-                            :application-file-upload/upload-file-part
-                            :application-file-upload/check-file-part-status-and-upload)]
-          (dispatch [dispatch-kw url handlers id file 0]))))
-    (.readAsArrayBuffer fr file)))
+  (hex-md5-hash
+   file
+   (fn [md5-hash]
+     (dispatch [(if (<= (.-size file) max-part-size)
+                  :application-file-upload/upload-file-part
+                  :application-file-upload/check-file-part-status-and-upload)
+                url
+                handlers
+                (str
+                 application-attachments-id "-"
+                 field-id "-"
+                 attachment-idx "-"
+                 md5-hash)
+                file
+                0]))))
 
 (reg-event-fx
   :application-file-upload/check-file-part-status-and-upload
