@@ -51,7 +51,7 @@
   value)
 
 (defn- redis-get
-  [redis name key ttl-after-read-ms update-after-read?]
+  [redis loader name key ttl-after-read-ms update-after-read?]
   (let [cache-key (->cache-key name key)
         result    (wcar (:connection-opts redis) :as-pipeline
                         (car/get cache-key)
@@ -59,7 +59,11 @@
                           (car/pexpire cache-key ttl-after-read-ms))
                         (when update-after-read?
                           (car/sadd (->to-update-key name) key)))]
-    (first result)))
+    (when-let [value (first result)]
+      (if-let [e (cache/check-schema loader value)]
+        (do (warn e "Schema check for" key "failed")
+            nil)
+        value))))
 
 (defn- redis-scan
   [redis name cursor]
@@ -74,7 +78,7 @@
   m)
 
 (defn- redis-mget
-  [redis name keys ttl-after-read-ms update-after-read?]
+  [redis loader name keys ttl-after-read-ms update-after-read?]
   (reduce (fn [acc keys]
             (let [cache-keys (map #(->cache-key name %) keys)
                   result     (wcar (:connection-opts redis) :as-pipeline
@@ -86,7 +90,10 @@
                                      (apply car/sadd (->to-update-key name) keys)))]
               (reduce (fn [acc [key value]]
                         (if (some? value)
-                          (update acc :hits assoc key value)
+                          (if-let [e (cache/check-schema loader value)]
+                            (do (warn e "Schema check for" key "failed")
+                                (update acc :misses conj key))
+                            (update acc :hits assoc key value))
                           (update acc :misses conj key)))
                       acc
                       (map vector keys (first result)))))
@@ -227,14 +234,14 @@
 
   (get-from [this key]
     (try
-      (let [from-cache (redis-get redis name key ttl-after-read-ms update-after-read?)]
+      (let [from-cache (redis-get redis loader name key ttl-after-read-ms update-after-read?)]
         (if (some? from-cache)
           from-cache
           (redis-with-lock
            locks name (str "single:" key)
            (.toMillis TimeUnit/MINUTES 2)
            (fn []
-             (let [from-cache (redis-get redis name key ttl-after-read-ms update-after-read?)]
+             (let [from-cache (redis-get redis loader name key ttl-after-read-ms update-after-read?)]
                (if (some? from-cache)
                  from-cache
                  (redis-set redis name key (cache/load loader key) ttl-after-write)))))))
@@ -244,7 +251,7 @@
 
   (get-many-from [this keys]
     (try
-      (let [{:keys [hits misses]} (redis-mget redis name keys ttl-after-read-ms update-after-read?)]
+      (let [{:keys [hits misses]} (redis-mget redis loader name keys ttl-after-read-ms update-after-read?)]
         (if (empty? misses)
           hits
           (merge hits
@@ -252,7 +259,7 @@
                   locks name "many"
                   (.toMillis TimeUnit/MINUTES 2)
                   (fn []
-                    (let [{:keys [hits misses]} (redis-mget redis name keys ttl-after-read-ms update-after-read?)]
+                    (let [{:keys [hits misses]} (redis-mget redis loader name keys ttl-after-read-ms update-after-read?)]
                       (if (empty? misses)
                         hits
                         (merge hits (redis-mset redis name (cache/load-many loader misses) ttl-after-write)))))))))
