@@ -247,31 +247,31 @@
                                   :kieli_sv "sv Testihakukohde"}})})
 
 (def koulutus
-  {:1.2.246.562.17.74335799461 {:oid             "1.2.246.562.17.74335799461"
-                                :koulutuskoodi   {:nimi "Koulutuskoodi"}
-                                :tutkintonimike  {:nimi "Tutkintonimike"}
-                                :koulutusohjelma {:nimi "Koulutusohjelma"}
-                                :tarkenne        "Tarkenne"}
-   :1.2.246.562.17.74335799462 {:oid             "1.2.246.562.17.74335799462"
-                                :koulutuskoodi   {:nimi "Koulutuskoodi A"}
-                                :tutkintonimike  {:nimi "Tutkintonimike A"}
-                                :koulutusohjelma {:nimi "Koulutusohjelma A"}
-                                :tarkenne        "Tarkenne A"}
-   :1.2.246.562.17.74335799463 {:oid             "1.2.246.562.17.74335799463"
-                                :koulutuskoodi   {:nimi "Koulutuskoodi B"}
-                                :tutkintonimike  {:nimi "Tutkintonimike B"}
-                                :koulutusohjelma {:nimi "Koulutusohjelma B"}
-                                :tarkenne        "Tarkenne B"}
-   :1.2.246.562.17.74335799464 {:oid             "1.2.246.562.17.74335799464"
-                                :koulutuskoodi   {:nimi "Koulutuskoodi C"}
-                                :tutkintonimike  {:nimi "Tutkintonimike C"}
-                                :koulutusohjelma {:nimi "Koulutusohjelma C"}
-                                :tarkenne        "Tarkenne C"}
-   :1.2.246.562.17.74335799465 {:oid             "1.2.246.562.17.74335799465"
-                                :koulutuskoodi   {:nimi "Koulutuskoodi D"}
-                                :tutkintonimike  {:nimi "Tutkintonimike D"}
-                                :koulutusohjelma {:nimi "Koulutusohjelma D"}
-                                :tarkenne        "Tarkenne D"}})
+  {:1.2.246.562.17.74335799461 {:oid                  "1.2.246.562.17.74335799461"
+                                :koulutuskoodi-name   {:fi "Koulutuskoodi"}
+                                :koulutusohjelma-name {:fi "Koulutusohjelma"}
+                                :tutkintonimike-names [{:fi "Tutkintonimike"}]
+                                :tarkenne             "Tarkenne"}
+   :1.2.246.562.17.74335799462 {:oid                  "1.2.246.562.17.74335799462"
+                                :koulutuskoodi-name   {:fi "Koulutuskoodi A"}
+                                :koulutusohjelma-name {:fi "Koulutusohjelma A"}
+                                :tutkintonimike-names [{:fi "Tutkintonimike A"}]
+                                :tarkenne             "Tarkenne A"}
+   :1.2.246.562.17.74335799463 {:oid                  "1.2.246.562.17.74335799463"
+                                :koulutuskoodi-name   {:fi "Koulutuskoodi B"}
+                                :koulutusohjelma-name {:fi "Koulutusohjelma B"}
+                                :tutkintonimike-names [{:fi "Tutkintonimike B"}]
+                                :tarkenne             "Tarkenne B"}
+   :1.2.246.562.17.74335799464 {:oid                  "1.2.246.562.17.74335799464"
+                                :koulutuskoodi-name   {:fi "Koulutuskoodi C"}
+                                :koulutusohjelma-name {:fi "Koulutusohjelma C"}
+                                :tutkintonimike-names [{:fi "Tutkintonimike C"}]
+                                :tarkenne             "Tarkenne C"}
+   :1.2.246.562.17.74335799465 {:oid                  "1.2.246.562.17.74335799465"
+                                :koulutuskoodi-name   {:fi "Koulutuskoodi D"}
+                                :koulutusohjelma-name {:fi "Koulutusohjelma D"}
+                                :tutkintonimike-names [{:fi "Tutkintonimike D"}]
+                                :tarkenne             "Tarkenne D"}})
 
 (defn- parse-multi-lang-text
   [text]

@@ -68,7 +68,8 @@
     (component/using
      (redis/map->Cache
       {:name            "koulutus"
-       :loader          (cache/->FunctionCacheLoader tarjonta-client/get-koulutus)
+       :loader          (cache/->FunctionCacheLoader tarjonta-client/get-koulutus
+                                                     tarjonta-client/koulutus-checker)
        :ttl-after-read  [3 TimeUnit/DAYS]
        :ttl-after-write [3 TimeUnit/DAYS]
        :update-period   [15 TimeUnit/MINUTES]})
