@@ -191,9 +191,10 @@
             (from-multi-lang (:label option) lang)]
            (when (some #(visible? ui %) (:followups option))
              [:div.application-handling__nested-container
-              (for [followup (:followups option)]
-                ^{:key (:id followup)}
-                [field followup application lang])])])))]])
+              (doall
+                (for [followup (filter #(visible? ui %) (:followups option))]
+                  ^{:key (:id followup)}
+                  [field followup application lang]))])])))]])
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
