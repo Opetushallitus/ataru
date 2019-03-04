@@ -749,32 +749,47 @@ SELECT
   a.lang,
   a.email,
   a.content,
-  payment_obligations.states AS "payment-obligations",
-  eligibilities.states AS eligibilities
-FROM latest_applications AS a
-JOIN application_reviews
-  ON application_key = a.key
-LEFT JOIN (SELECT application_key, max(modified_time) AS modified_time, jsonb_object_agg(hakukohde, state) AS states
-           FROM application_hakukohde_reviews AS payment_obligations
-           WHERE payment_obligations.requirement = 'payment-obligation'
-           GROUP BY application_key) AS payment_obligations
-  ON payment_obligations.application_key = a.key
-LEFT JOIN (SELECT application_key, max(modified_time) AS modified_time, jsonb_object_agg(hakukohde, state) AS states
-           FROM application_hakukohde_reviews AS payment_obligations
-           WHERE payment_obligations.requirement = 'eligibility-state'
-           GROUP BY application_key) AS eligibilities
-  ON eligibilities.application_key = a.key
-WHERE a.person_oid IS NOT NULL
-  AND a.haku IS NOT NULL
-  AND (:haku_oid::text IS NULL OR a.haku = :haku_oid)
-  -- Parameter list contains empty string to avoid empty lists
-  AND (array_length(ARRAY[:hakukohde_oids], 1) < 2 OR ARRAY[:hakukohde_oids] && a.hakukohde)
-  AND (array_length(ARRAY[:person_oids], 1) < 2 OR a.person_oid IN (:person_oids))
-  AND (:modified_after::text IS NULL OR (a.created_time > :modified_after::TIMESTAMPTZ
-                                         OR application_reviews.modified_time > :modified_after::TIMESTAMPTZ
-                                         OR payment_obligations.modified_time > :modified_after::TIMESTAMPTZ
-                                         OR eligibilities.modified_time > :modified_after::TIMESTAMPTZ))
-  AND state <> 'inactivated'
+  coalesce(payment_obligations.states, '{}') AS "payment-obligations",
+  coalesce(eligibilities.states, '{}') AS eligibilities
+FROM applications AS a
+JOIN application_reviews AS ar
+  ON ar.application_key = a.key
+LEFT JOIN ((SELECT key
+            FROM applications
+            WHERE created_time > :modified_after)
+           UNION
+           (SELECT application_key AS key
+            FROM application_reviews
+            WHERE modified_time > :modified_after)
+           UNION
+           (SELECT application_key AS key
+            FROM application_hakukohde_reviews
+            WHERE modified_time > :modified_after)) AS modified
+  ON modified.key = a.key
+LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
+                   FROM application_hakukohde_reviews AS payment_obligations
+                   WHERE payment_obligations.requirement = 'payment-obligation' AND
+                         application_key = a.key
+                   GROUP BY application_key) AS payment_obligations
+  ON true
+LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
+                   FROM application_hakukohde_reviews AS payment_obligations
+                   WHERE payment_obligations.requirement = 'eligibility-state' AND
+                         application_key = a.key
+                   GROUP BY application_key) AS eligibilities
+  ON true
+WHERE a.person_oid IS NOT NULL AND
+      a.haku IS NOT NULL AND
+      (NOT :has_haku_oid OR a.haku = :haku_oid) AND
+      -- Parameter list contains empty string to avoid empty lists
+      (NOT :has_hakukohde_oids OR a.hakukohde && :hakukohde_oids) AND
+      (NOT :has_person_oids OR a.person_oid = ANY(:person_oids)) AND
+      ar.state <> 'inactivated' AND
+      (NOT :has_modified_after OR modified.key IS NOT NULL) AND
+      NOT EXISTS (SELECT 1
+                  FROM applications AS a2
+                  WHERE a2.key = a.key AND
+                        a2.id > a.id)
 ORDER BY a.created_time DESC;
 
 --name: yesql-get-applications-by-created-time
@@ -787,24 +802,38 @@ SELECT
   application_reviews.state,
   payment_obligations.states AS "payment-obligations",
   eligibilities.states AS eligibilities
-FROM latest_applications AS a
-LEFT JOIN application_reviews
+FROM applications AS a
+JOIN ((SELECT key
+       FROM applications
+       WHERE created_time > :date::DATE)
+      UNION
+      (SELECT application_key AS key
+       FROM application_reviews
+       WHERE modified_time > :date::DATE)
+      UNION
+      (SELECT application_key AS key
+       FROM application_hakukohde_reviews
+       WHERE modified_time > :date::DATE)) AS modified
+  ON modified.key = a.key
+JOIN application_reviews
   ON application_reviews.application_key = a.key
-LEFT JOIN (SELECT application_key, max(modified_time) AS modified_time, jsonb_object_agg(hakukohde, state) AS states
-           FROM application_hakukohde_reviews AS payment_obligations
-           WHERE payment_obligations.requirement = 'payment-obligation'
-           GROUP BY application_key) AS payment_obligations
-  ON payment_obligations.application_key = a.key
-LEFT JOIN (SELECT application_key, max(modified_time) AS modified_time, jsonb_object_agg(hakukohde, state) AS states
-           FROM application_hakukohde_reviews AS payment_obligations
-           WHERE payment_obligations.requirement = 'eligibility-state'
-           GROUP BY application_key) AS eligibilities
-  ON eligibilities.application_key = a.key
-WHERE (a.created_time > :date :: DATE
-       OR application_reviews.modified_time > :date :: DATE
-       OR payment_obligations.modified_time > :date :: DATE
-       OR eligibilities.modified_time > :date :: DATE)
-      AND a.person_oid IS NOT NULL
+LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
+                   FROM application_hakukohde_reviews AS payment_obligations
+                   WHERE payment_obligations.requirement = 'payment-obligation' AND
+                         application_key = a.key
+                   GROUP BY application_key) AS payment_obligations
+  ON true
+LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
+                   FROM application_hakukohde_reviews AS payment_obligations
+                   WHERE payment_obligations.requirement = 'eligibility-state' AND
+                         application_key = a.key
+                   GROUP BY application_key) AS eligibilities
+  ON true
+WHERE a.person_oid IS NOT NULL AND
+      NOT EXISTS (SELECT 1
+                  FROM applications AS a2
+                  WHERE a2.key = a.key AND
+                        a2.id > a.id)
 ORDER BY a.created_time DESC
 LIMIT :limit
 OFFSET :offset;

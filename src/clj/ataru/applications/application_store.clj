@@ -19,7 +19,11 @@
             [clojure.java.jdbc :as jdbc]
             [schema.core :as s]
             [taoensso.timbre :refer [info]]
-            [yesql.core :refer [defqueries]]))
+            [yesql.core :refer [defqueries]])
+  (:import [java.time
+            LocalDateTime
+            ZoneId]
+           java.time.format.DateTimeFormatter))
 
 (defqueries "sql/application-queries.sql")
 
@@ -684,14 +688,24 @@
 
 (defn get-hakurekisteri-applications
   [haku-oid hakukohde-oids person-oids modified-after]
-  (->> (exec-db :db yesql-applications-for-hakurekisteri
-                {:haku_oid       haku-oid
-                 :hakukohde_oids (cons "" hakukohde-oids)
-                 :person_oids    (cons "" person-oids)
-                 :modified_after (some->> modified-after
-                                          (f/parse (f/formatter "yyyyMMddHHmm"
-                                                                (time/time-zone-for-id "Europe/Helsinki")))
-                                          str)})
+  (->> (jdbc/with-db-connection [conn {:datasource (db/get-datasource :db)}]
+         (yesql-applications-for-hakurekisteri
+          {:has_haku_oid       (some? haku-oid)
+           :haku_oid           haku-oid
+           :has_hakukohde_oids (not (empty? hakukohde-oids))
+           :has_person_oids    (not (empty? person-oids))
+           :hakukohde_oids     (->> hakukohde-oids
+                                    (to-array)
+                                    (.createArrayOf (:connection conn) "varchar"))
+           :person_oids        (->> person-oids
+                                    to-array
+                                    (.createArrayOf (:connection conn) "text"))
+           :has_modified_after (some? modified-after)
+           :modified_after     (some-> modified-after
+                                       (LocalDateTime/parse (DateTimeFormatter/ofPattern "yyyyMMddHHmm"))
+                                       (.atZone (ZoneId/of "Europe/Helsinki"))
+                                       .toOffsetDateTime)}
+          {:connection conn}))
        (map unwrap-hakurekisteri-application)))
 
 (defn- requirement-names-mapped-to-states
