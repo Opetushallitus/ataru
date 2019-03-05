@@ -145,18 +145,18 @@
                                          (if (or (nil? @hakuaika-end) (< 0 new-time))
                                            (reset! seconds-left new-time)
                                            (.clearInterval js/window @interval))))
-                                     1000))
+                       1000))
     (fn []
       (when (and (> (* 24 3600) @seconds-left) (<= 1 @seconds-left))
         (let [hours          (Math/floor (/ @seconds-left 3600))
               minutes        (Math/floor (/ (rem @seconds-left 3600) 60))
               seconds        (Math/floor (rem (rem @seconds-left 3600) 60))
               time-left-text (cond
-                               (pos? hours) (hours-minutes-text hours minutes)
-                               (pos? minutes) (minutes-seconds-text minutes seconds)
-                               :else (seconds-text seconds))]
+                              (pos? hours) (hours-minutes-text hours minutes)
+                              (pos? minutes) (minutes-seconds-text minutes seconds)
+                              :else (seconds-text seconds))]
           [:div.application__hakuaika-left
-           (str (get-translation :application-period-left) " " time-left-text)])))))
+           (str (get-translation :application-period-left-until) " " @(subscribe [:application/haku-end-time]))])))))
 
 (defn status-controls [submit-status]
   (let [valid-status (subscribe [:application/valid-status])

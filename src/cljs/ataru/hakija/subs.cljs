@@ -90,6 +90,14 @@
     (-> field :params :deadline-label selected-language)))
 
 (re-frame/reg-sub
+  :application/haku-end-time
+  (fn [db _]
+    [(re-frame/subscribe [:state-query [:form :tarjonta :hakuaika :label :end-time]])
+     (re-frame/subscribe [:application/selected-language])])
+  (fn [[label selected-language] [_ field]]
+    (-> label selected-language)))
+
+(re-frame/reg-sub
   :application/haku-aika
   (fn [db _]
     (-> db :form :tarjonta :hakuaika)))

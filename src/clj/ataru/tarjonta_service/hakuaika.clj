@@ -20,6 +20,16 @@
     :sv (f/unparse swedish-format datetime)
     :else (f/unparse english-format datetime)))
 
+(def finnish-time-format (new-formatter "'klo' HH:mm"))
+(def swedish-time-format (new-formatter "'kl' HH:mm z"))
+(def english-time-format (new-formatter "'at' hh:mm a z"))
+
+(defn date-timez->localized-time [datetime lang]
+  (match (keyword lang)
+         :fi (f/unparse finnish-time-format datetime)
+         :sv (f/unparse swedish-time-format datetime)
+         :else (f/unparse english-time-format datetime)))
+
 (defn str->date-time
   [str]
   (f/parse time-formatter str))
@@ -52,8 +62,16 @@
        (map (fn [lang] [lang (date-timez->localized-date-time date-time lang)]))
        (into {})))
 
+(defn date-time->localized-time [date-time]
+  (->> [:fi :sv :en]
+       (map (fn [lang] [lang (date-timez->localized-time date-time lang)]))
+       (into {})))
+
 (defn millis->localized-date-time [millis]
   (date-time->localized-date-time (c/from-long millis)))
+
+(defn millis->localized-time [millis]
+  (date-time->localized-time (c/from-long millis)))
 
 (defn- last-by-ending
   [hakuajat]
@@ -109,9 +127,10 @@
                                              default-modify-grace-period))))))
 
 (defn hakuaika-with-label
-  ([{:keys [start end] :as hakuaika} ]
-  (assoc hakuaika :label {:start                 (millis->localized-date-time start)
-                          :end                   (millis->localized-date-time end)})))
+  ([{:keys [start end] :as hakuaika}]
+   (assoc hakuaika :label {:start    (millis->localized-date-time start)
+                           :end      (millis->localized-date-time end)
+                           :end-time (millis->localized-time end)})))
 
 (defn get-hakuaika-info [now haku ohjausparametrit hakukohde]
   (let [[start end] (if (:kaytetaanHakukohdekohtaistaHakuaikaa hakukohde)
