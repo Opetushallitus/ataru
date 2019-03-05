@@ -310,7 +310,11 @@ SELECT
   a.person_oid,
   las.secret
 FROM applications a
-  JOIN latest_application_secrets las ON a.key = las.application_key
+JOIN LATERAL (SELECT secret
+              FROM application_secrets
+              WHERE application_key = a.key
+              ORDER BY id DESC
+              LIMIT 1) AS las ON true
 WHERE a.id = :application_id;
 
 -- name: yesql-has-ssn-applied
