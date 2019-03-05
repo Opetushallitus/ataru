@@ -11,7 +11,8 @@ INSERT INTO applications (
   person_oid,
   ssn,
   dob,
-  email
+  email,
+  submitted
 ) VALUES (
   :form_id,
   :content,
@@ -23,7 +24,8 @@ INSERT INTO applications (
   :person_oid,
   upper(:ssn),
   :dob,
-  :email
+  :email,
+  now()
 );
 
 -- name: yesql-add-application-version<!
@@ -40,7 +42,8 @@ INSERT INTO applications (
   person_oid,
   ssn,
   dob,
-  email
+  email,
+  submitted
 ) VALUES (
   :form_id,
   :key,
@@ -53,7 +56,12 @@ INSERT INTO applications (
   :person_oid,
   upper(:ssn),
   :dob,
-  :email
+  :email,
+  (SELECT created_time
+   FROM applications
+   WHERE key = :key
+   ORDER BY id ASC
+   LIMIT 1)
 );
 
 -- name: yesql-add-application-secret!
@@ -106,7 +114,7 @@ SELECT
                     FROM application_events
                     WHERE application_key = ae.application_key AND
                           new_review_state = 'information-request') IS NOT DISTINCT FROM true) AS "new-application-modifications",
-  (SELECT min(created_time) FROM applications WHERE a.key = key) AS "original-created-time"
+  a.submitted AS submitted
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id

@@ -161,7 +161,6 @@
 
 (def application1 {:form       1
                    :lang       "fi"
-                   :key        "application-key1"
                    :person-oid "1.1.1"
                    :answers    [{:key       "c2e4536c-1cdb-4450-b019-1b38856296ae"
                                  :value     "47"
@@ -196,7 +195,6 @@
 
 (def application2 {:form       1
                    :lang       "fi"
-                   :key        "application-key2"
                    :person-oid "2.2.2"
                    :answers    [{:key       "c2e4536c-1cdb-4450-b019-1b38856296ae"
                                  :value     "39"
@@ -231,7 +229,6 @@
 
 (def application3 {:form       1
                    :lang       "fi"
-                   :key        "application-key3"
                    :person-oid "1.2.3.4.5.6"
                    :answers    [{:key       "c2e4536c-1cdb-4450-b019-1b38856296ae"
                                  :value     "47"
@@ -284,10 +281,9 @@
                                (:key belongs-to-hakukohteet-test-form))
   (form-store/create-new-form! hakija-hakukohteen-hakuaika-test-form
                                (:key hakija-hakukohteen-hakuaika-test-form))
-  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (application-store/add-application application1 [] nil)
-    (application-store/add-application application2 [] nil)
-    (application-store/add-application application3 [] nil)))
+  (application-store/add-application application1 [] form1)
+  (application-store/add-application application2 [] form1)
+  (application-store/add-application application3 [] form1))
 
 (defn reset-test-db [insert-initial-fixtures?]
   (db/clear-db! :db (-> config :db :schema))
