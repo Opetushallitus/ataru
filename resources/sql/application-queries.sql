@@ -64,7 +64,7 @@ INSERT INTO applications (
    LIMIT 1)
 );
 
--- name: yesql-add-application-secret!
+-- name: yesql-add-application-secret<!
 INSERT INTO application_secrets (application_key, secret) VALUES (:application_key, :secret);
 
 -- name: yesql-get-application-list-for-virkailija
@@ -142,12 +142,21 @@ SELECT
   a.email     AS email,
   a.hakukohde AS hakukohteet
 FROM applications AS a
-  JOIN application_reviews ar ON a.key = ar.application_key
-  JOIN latest_application_secrets las ON a.key = las.application_key
-WHERE a.person_oid = :person_oid
-      AND a.haku IS NOT NULL
-      AND ar.state <> 'inactivated'
-      AND a.id = (SELECT id FROM latest_applications WHERE key = a.key)
+JOIN application_reviews AS ar
+  ON ar.application_key = a.key
+LEFT JOIN LATERAL (SELECT secret, age(now(), created_time)
+                   FROM application_secrets
+                   WHERE application_key = a.key
+                   ORDER BY id DESC
+                   LIMIT 1) AS las
+  ON las.age < '29 days'
+WHERE a.person_oid = :person_oid AND
+      a.haku IS NOT NULL AND
+      ar.state <> 'inactivated' AND
+      NOT EXISTS (SELECT 1
+                  FROM applications AS a2
+                  WHERE a2.key = a.key AND
+                        a2.id > a.id)
 ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-events
@@ -891,8 +900,3 @@ SELECT content, form_id
 FROM applications
 WHERE key = :application_key
 ORDER BY id ASC;
-
--- name: yesql-get-expiring-secrets-for-applications
-SELECT *
-FROM latest_application_secrets
-WHERE application_key IN (:application_keys) AND created_time < now() - INTERVAL '29 days';

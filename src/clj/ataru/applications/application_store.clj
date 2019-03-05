@@ -202,7 +202,7 @@
                                       (yesql-add-application<! application-to-store connection))]
     (create-attachment-hakukohde-reviews-for-application new-application applied-hakukohteet old-answers form update? {:connection conn})
     (when create-new-secret?
-      (yesql-add-application-secret!
+      (yesql-add-application-secret<!
         {:application_key (:key new-application)
          :secret          (generate-new-application-secret connection)}
         connection))
@@ -357,22 +357,18 @@
 (defn get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
   [person-oid]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [connection       {:connection conn}
-          application-keys (map :key (yesql-get-application-list-by-person-oid-for-omatsivut
-                                       {:person_oid person-oid} connection))
-          old-secrets      (if (not-empty application-keys)
-                             (yesql-get-expiring-secrets-for-applications
-                               {:application_keys application-keys} connection)
-                             [])]
-      (doseq [old-secret old-secrets]
-        (info "Refreshing secret for application" (:application_key old-secret))
-        (yesql-add-application-secret!
-          {:application_key (:application_key old-secret)
-           :secret          (generate-new-application-secret connection)}
-          connection))
-      (->kebab-case-kw
-        (yesql-get-application-list-by-person-oid-for-omatsivut
-          {:person_oid person-oid} connection)))))
+    (->> (yesql-get-application-list-by-person-oid-for-omatsivut
+          {:person_oid person-oid} {:connection conn})
+         ->kebab-case-kw
+         (mapv #(if (nil? (:secret %))
+                  (do (info "Refreshing secret for application" (:key %))
+                      (assoc % :secret
+                             (:secret (yesql-add-application-secret<!
+                                       {:application_key (:key %)
+                                        :secret          (generate-new-application-secret
+                                                          {:connection conn})}
+                                       {:connection conn}))))
+                  %)))))
 
 (defn- unwrap-onr-application
   [{:keys [key haku form email content]}]
@@ -481,7 +477,7 @@
                               (first)
                               (unwrap-application))
           new-secret      (generate-new-application-secret connection)]
-      (yesql-add-application-secret! {:application_key application-key :secret new-secret} connection)
+      (yesql-add-application-secret<! {:application_key application-key :secret new-secret} connection)
       (:id application))))
 
 (defn add-new-secret-to-application-by-old-secret
@@ -497,7 +493,7 @@
                               (first)
                               (unwrap-application))
           new-secret      (generate-new-application-secret connection)]
-      (yesql-add-application-secret! {:application_key application-key :secret new-secret} connection)
+      (yesql-add-application-secret<! {:application_key application-key :secret new-secret} connection)
       (:id application))))
 
 (defn get-application-events [application-key]
