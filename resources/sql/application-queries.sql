@@ -426,11 +426,19 @@ SELECT
   a.haku,
   a.hakukohde,
   f.key     AS form_key
-FROM latest_applications AS a
-  JOIN forms AS f ON a.form_id = f.id
-  JOIN latest_application_secrets las ON a.key = las.application_key
-WHERE las.secret = :secret
-      AND las.created_time > now() - INTERVAL '30 days';
+FROM applications AS a
+JOIN forms AS f ON a.form_id = f.id
+JOIN application_secrets AS las ON las.application_key = a.key
+WHERE las.secret = :secret AND
+      las.created_time > now() - INTERVAL '30 days' AND
+      NOT EXISTS (SELECT 1
+                  FROM applications AS a2
+                  WHERE a2.key = a.key AND
+                        a2.id > a.id) AND
+      NOT EXISTS (SELECT 1
+                  FROM application_secrets AS las2
+                  WHERE las2.application_key = las.application_key AND
+                        las2.id > las.id);
 
 -- name: yesql-get-latest-application-by-virkailija-secret
 SELECT
