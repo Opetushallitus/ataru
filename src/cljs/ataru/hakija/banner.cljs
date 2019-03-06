@@ -137,15 +137,8 @@
   (/ (- hakuaika-end (.getTime (js/Date.)) time-diff) 1000))
 
 (defn- round [value step]
-  (comment
-    var inv = 1.0 / step                                    ;
-    return Math.round (value * inv) / inv                   ;
-
-    )
   (let [inv (/ 1.0 step)]
-    (/ (Math/ceil (* value inv)) inv)
-
-    ))
+    (/ (Math/ceil (* value inv)) inv)))
 
 (defn- hakuaika-left []
   (let [hakuaika-end (subscribe [:state-query [:form :hakuaika-end]])
