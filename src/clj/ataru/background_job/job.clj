@@ -12,6 +12,8 @@
     (if (and
          (= 1 (get-in status ["start-automatic-eligibility-if-ylioppilas-job-job"
                               :total]))
+         (zero? (get-in status ["start-automatic-eligibility-if-ylioppilas-job-job"
+                                :fail]))
          (every? (fn [[job status]]
                    (if (= job "automatic-eligibility-if-ylioppilas-job")
                      (> 10 (:error status))
