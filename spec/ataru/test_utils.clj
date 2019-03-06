@@ -111,6 +111,7 @@
       {:test-form-key                (:key test-form)
        :ssn-form-key                 (:key (get-latest-form "SSN_testilomake"))
        :test-question-group-form-key (:key (get-latest-form "Kysymysryhmä: testilomake"))
+       :test-selection-limit-form-key (:key (get-latest-form "Selection Limit"))
        :test-form-application-secret (:secret application)
        :virkailija-create-secret     (create-fake-virkailija-create-secret)}
 

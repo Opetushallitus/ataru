@@ -293,6 +293,9 @@ You will receive a confirmation of your application to your email."}
    :hide-application-options                    {:fi "Piilota hakukohteet"
                                                  :en "Hide application options"
                                                  :sv "Dölj ansökningsmål"}
+   :limit-reached                               {:fi "ei valittavissa"
+                                                 :en "unselectable"
+                                                 :sv "ei valittavissa"}
    :read-less                                   {:fi "Sulje ohje"
                                                  :sv "Dölj anvisning"
                                                  :en "Hide instructions"}
@@ -1262,6 +1265,12 @@ You will receive a confirmation of your application to your email."}
    :remove-lock                                 {:fi "Poista lukitus"
                                                  :sv "Öppna låset"
                                                  :en "Unlock the form"}
+   :selection-limit                             {:fi "Rajoitettu valinta"
+                                                 :sv "SV: Rajoitettu valinta"
+                                                 :en "Limited selection"}
+   :selection-limit-input                       {:fi "Raja-arvo"
+                                                 :sv "SV: Raja-arvo"
+                                                 :en "Limit"}
    :required                                    {:fi "Pakollinen tieto"
                                                  :sv "Obligatorisk uppgift"
                                                  :en "Mandatory information"}

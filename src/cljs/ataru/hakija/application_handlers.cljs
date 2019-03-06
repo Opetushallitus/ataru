@@ -5,6 +5,7 @@
             [ataru.util :as autil]
             [ataru.hakija.rules :as rules]
             [ataru.hakija.resumable-upload :as resumable-upload]
+            [ataru.hakija.try-selection :refer [try-selection]]
             [cljs.core.match :refer-macros [match]]
             [ataru.hakija.application :refer [create-initial-answers
                                               create-application-to-submit
@@ -481,14 +482,67 @@
         (original-values->answers)
         (set-field-visibilities))))
 
+(defn- selection-limits [{:keys [flat-form-content]}]
+  (let [limited? (fn [{:keys [validators]}]
+                   (some #(= "selection-limit" %) validators))]
+    (->> flat-form-content
+         (filter limited?)
+         (map :id)
+         (set)
+         (not-empty))))
+
+(defn set-limit-reached [db {:keys [selection-id limit-reached]}]
+  (let [new-limits (group-by :question-id limit-reached)]
+    (reduce (fn [db question-id]
+              (if-let [answers (new-limits (name question-id))]
+                (assoc-in db [:application :answers question-id :limit-reached] (set (map :answer-id answers)))
+                (assoc-in db [:application :answers question-id :limit-reached] nil)))
+      (if selection-id
+        (assoc-in db [:application :selection-id] selection-id)
+        db)
+      (map keyword (:selection-limited db)))))
+
+(defn reset-other-selections [db question-id answer-id]
+  (reduce (fn [db key]
+            (if (= key question-id)
+              db
+              (assoc-in db [:application :answers key :value] nil)))
+      db (map keyword (:selection-limited db))))
+
+(defn reset-this-selection [db question-id]
+  (assoc-in db [:application :answers (keyword question-id) :value] nil))
+
+(reg-event-fx
+  :application/handle-update-selection-limits
+  (fn [{:keys [db]} [_ selection valid? question-id answer-id]]
+    {:db (cond (false? valid?)
+               (-> db
+                   (reset-this-selection question-id)
+                   (set-limit-reached selection))
+
+               (not (and valid? question-id answer-id))
+               (set-limit-reached db selection)
+
+               (and question-id answer-id)
+               (-> db
+                   (set-limit-reached selection)
+                   (reset-other-selections question-id answer-id)))}))
+
 (reg-event-fx
   :application/post-handle-form-dispatches
-  (fn [_ _]
-    {:dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
-                  [:application/hakukohde-query-change (atom "")]
-                  [:application/set-page-title]
-                  [:application/update-answers-validity]
-                  [:application/validate-hakukohteet]]}))
+  (fn [{:keys [db]} _]
+    (let [selection-limited (selection-limits db)]
+      (util/remove-empty-query-params
+        {:db         (assoc db :selection-limited selection-limited)
+         :http       (when selection-limited
+                       {:method  :put
+                        :url     (str "/hakemus/api/selection-limit?form-key=" (-> db :form :key))
+                        :handler [:application/handle-update-selection-limits]})
+         :dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
+                      [:application/hakukohde-query-change (atom "")]
+                      [:application/set-page-title]
+                      [:application/update-answers-validity]
+                      [:application/validate-hakukohteet]]}))))
 
 (defn- handle-get-application [{:keys [db]}
                                [_
@@ -857,10 +911,17 @@
                             :answers-by-key               (get-in db [:application :answers])
                             :field-descriptor             field-descriptor
                             :editing?                     (get-in db [:application :editing?])
+                            :try-selection                (partial try-selection
+                                                            (get-in db [:form :key])
+                                                            (get-in db [:application :selection-id])
+                                                            (get-in field-descriptor [:params :selection-group-id]))
                             :group-idx                    question-group-idx
                             :field-idx                    0
                             :virkailija?                  (contains? (:application db) :virkailija-secret)
-                            :on-validated                 (fn [[valid? errors]]
+                            :on-validated                 (fn [[valid? errors selection-limit]]
+                                                            (when selection-limit
+                                                              (dispatch [:application/handle-update-selection-limits
+                                                                         (first selection-limit) valid? id new-value]))
                                                             (dispatch [:application/set-repeatable-application-field-valid
                                                                        field-descriptor
                                                                        question-group-idx

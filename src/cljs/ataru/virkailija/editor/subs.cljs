@@ -286,6 +286,28 @@
     (some? (:locked form))))
 
 (re-frame/reg-sub
+  :editor/dropdown-with-selection-limit?
+  (fn [[_ & path] _]
+    (re-frame/subscribe [:editor/top-level-content (first (flatten path))]))
+  (fn get-component-value [component [_ & path]]
+    (and
+     (= (:fieldType (get-in component (rest (flatten path)))) "singleChoice")
+     (not
+       (loop [part (butlast (rest (flatten path)))]
+         (if-let [parent (get-in component part)]
+           (if (= (:fieldClass parent) "questionGroup")
+             true
+             (when part
+               (recur (butlast part))))))))))
+
+(re-frame/reg-sub
+  :editor/selection-limit?
+  (fn [[_ & path] _]
+    (re-frame/subscribe [:editor/top-level-content (first (flatten path))]))
+  (fn get-component-value [component [_ & path]]
+    (contains? (set (:validators (get-in component (rest (flatten path))))) "selection-limit")))
+
+(re-frame/reg-sub
   :editor/this-form-locked?
   (fn [[_ key] _]
     (re-frame/subscribe [:editor/form key]))

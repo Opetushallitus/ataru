@@ -9,6 +9,7 @@
             [ataru.log.audit-log :as audit-log]
             [ataru.schema.form-schema :as schema]
             [ataru.util :refer [answers-by-key] :as util]
+            [ataru.selection-limit.selection-limit-service :as selection-limit]
             [ataru.util.language-label :as label]
             [ataru.util.random :as crypto]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
@@ -279,36 +280,41 @@
        :virkailija_oid))
 
 (defn add-application [new-application applied-hakukohteet form]
-  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (info (str "Inserting new application"))
-    (let [virkailija-oid                       (when-let [secret (:virkailija-secret new-application)]
-                                                 (get-virkailija-oid-for-create-secret conn secret))
-          {:keys [id key] :as new-application} (add-new-application-version new-application
-                                                                            true
-                                                                            applied-hakukohteet
-                                                                            nil
-                                                                            form
-                                                                            false
-                                                                            conn)
-          connection                           {:connection conn}]
-      (audit-log/log {:new       new-application
-                      :operation audit-log/operation-new
-                      :id        (if (some? virkailija-oid)
-                                   virkailija-oid
-                                   (util/extract-email new-application))})
-      (yesql-add-application-event<! {:application_key  key
-                                      :event_type       (if (some? virkailija-oid)
-                                                          "received-from-virkailija"
-                                                          "received-from-applicant")
-                                      :new_review_state nil
-                                      :virkailija_oid   virkailija-oid
-                                      :hakukohde        nil
-                                      :review_key       nil}
-                                     connection)
-      (yesql-add-application-review! {:application_key key
-                                      :state           application-review-states/initial-application-review-state}
-                                     connection)
-      id)))
+    (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+      (info (str "Inserting new application"))
+      (let [selection-id   (:selection-id new-application)
+            virkailija-oid (when-let [secret (:virkailija-secret new-application)]
+                             (get-virkailija-oid-for-create-secret conn secret))
+
+            {:keys [id key] :as new-application} (add-new-application-version new-application
+                                                   true
+                                                   applied-hakukohteet
+                                                   nil
+                                                   form
+                                                   false
+                                                   conn)
+            connection     {:connection conn}]
+        (audit-log/log {:new       new-application
+                        :operation audit-log/operation-new
+                        :id        (if (some? virkailija-oid)
+                                     virkailija-oid
+                                     (util/extract-email new-application))})
+        (yesql-add-application-event<! {:application_key  key
+                                        :event_type       (if (some? virkailija-oid)
+                                                            "received-from-virkailija"
+                                                            "received-from-applicant")
+                                        :new_review_state nil
+                                        :virkailija_oid   virkailija-oid
+                                        :hakukohde        nil
+                                        :review_key       nil}
+          connection)
+        (yesql-add-application-review! {:application_key key
+                                        :state           application-review-states/initial-application-review-state}
+          connection)
+
+        (selection-limit/permanent-select-on-store-application key new-application selection-id form connection)
+
+        id)))
 
 (defn- form->form-id [{:keys [form] :as application}]
   (assoc (dissoc application :form) :form-id form))
@@ -325,7 +331,7 @@
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
 
-(defn update-application [{:keys [lang secret virkailija-secret] :as new-application} applied-hakukohteet form]
+(defn update-application [{:keys [lang secret virkailija-secret selection-id] :as new-application} applied-hakukohteet form]
   {:pre [(or (not-blank? secret)
              (not-blank? virkailija-secret))]}
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
@@ -364,6 +370,9 @@
                                       :hakukohde        nil
                                       :review_key       nil}
                                     {:connection conn})
+
+      (selection-limit/permanent-select-on-store-application key new-application selection-id form conn)
+
       (audit-log/log {:new       (application->loggable-form new-application)
                       :old       (application->loggable-form old-application)
                       :operation audit-log/operation-modify

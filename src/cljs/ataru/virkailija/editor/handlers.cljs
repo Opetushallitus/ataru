@@ -88,6 +88,12 @@
     (let [label-path (current-form-content-path db [path])]
       (assoc-in db label-path value))))
 
+(reg-event-db
+  :editor/set-dropdown-option-selection-limit
+  (fn [db [_ value & path]]
+    (let [label-path (current-form-content-path db [path])]
+      (assoc-in db label-path value))))
+
 (defn- swap-vector [v i1 i2]
   (assoc v i2 (v i1) i1 (v i2)))
 
@@ -145,6 +151,17 @@
         (update-modified-by path))))
 
 (reg-event-db :editor/add-validator add-validator)
+
+(reg-event-db
+  :editor/set-selection-group-id
+  (fn [db [_ selection-group-id & path]]
+    (let [content-path (current-form-content-path db [path :params])]
+      (-> db
+          (update-in content-path (fn [params]
+                                    (if selection-group-id
+                                      (assoc params :selection-group-id selection-group-id)
+                                      (dissoc params :selection-group-id))))
+          (update-modified-by path)))))
 
 (defn remove-validator
   [db [_ validator & path]]
@@ -708,14 +725,19 @@
                                                 (= "wrapperElement" (:fieldClass component)))]
          (when-not result-is-nested-component-group?
            (if copy?
-             (let [component (clojure.walk/prewalk
-                               (fn [x]
-                                 (if (and (:id x) (cu/valid-uuid? (:id x)))
-                                   (assoc x :id (cu/new-uuid))
-                                   x)) component)
-                   db        (-> db
-                                 (add-component-to-list form-key component target-path)
-                                 (clear-copy-component))]
+             (let [reset-uuid               (fn [x] (if (and (:id x) (cu/valid-uuid? (:id x)))
+                                                      (assoc x :id (cu/new-uuid))
+                                                      x))
+                   reset-selection-group-id (fn [x] (if (get-in x [:params :selection-group-id])
+                                                      (assoc-in x [:params :selection-group-id] form-key)
+                                                      x))
+                   component                (clojure.walk/prewalk
+                                              #(-> %
+                                                   (reset-uuid)
+                                                   (reset-selection-group-id)) component)
+                   db                       (-> db
+                                                (add-component-to-list form-key component target-path)
+                                                (clear-copy-component))]
                (if (not= form-key copy-component-form-key)
                  (update-in db [:editor :forms copy-component-form-key] assoc :content [])
                  db))

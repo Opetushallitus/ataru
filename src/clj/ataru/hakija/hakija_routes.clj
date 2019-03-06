@@ -14,6 +14,7 @@
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
             [com.stuartsierra.component :as component]
+            [ataru.selection-limit.selection-limit-service :as selection-limit]
             [compojure.api.exception :as ex]
             [compojure.api.sweet :as api]
             [compojure.api.upload :as upload]
@@ -295,7 +296,31 @@
             (some? email)
             (response/ok (application-store/has-email-applied hakuOid email))
             :else
-            (response/bad-request {:error "Either ssn or email is required"})))))
+            (response/bad-request {:error "Either ssn or email is required"})))
+    (api/PUT "/selection-limit" []
+      :summary "Selection limits"
+      :query-params [{form-key :- s/Str nil}
+                     {selection-id :- s/Str nil}
+                     {selection-group-id :- s/Str nil}
+                     {question-id :- s/Str nil}
+                     {answer-id :- s/Str nil}]
+      :return ataru-schema/FormSelectionLimit
+      (try
+        (response/ok
+          (cond (and form-key selection-id question-id answer-id selection-group-id)
+                (selection-limit/swab-selection form-key selection-id question-id answer-id selection-group-id)
+
+                (and form-key question-id answer-id selection-group-id)
+                (selection-limit/new-selection form-key question-id answer-id selection-group-id)
+
+                (and form-key selection-id question-id selection-group-id)
+                (selection-limit/remove-initial-selection form-key selection-id question-id selection-group-id)
+
+                form-key
+                (selection-limit/query-available-selections form-key)))
+        (catch clojure.lang.ExceptionInfo e
+               (response/conflict
+                 (selection-limit/query-available-selections form-key)))))))
 
 (defn- render-application [lang]
   (let [config (json/generate-string (or (:public-config config) {}))]

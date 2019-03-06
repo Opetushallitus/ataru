@@ -154,7 +154,10 @@
              :lang      lang
              :haku      (-> form :tarjonta :haku-oid)
              :hakukohde (map :value (get-in application [:answers :hakukohteet :values] []))
+
              :answers   (create-answers-to-submit (:answers application) form (:ui application))}
+
+            (some? (get application :selection-id)) (assoc :selection-id (get application :selection-id))
 
             (some? secret) (assoc :secret secret)
 

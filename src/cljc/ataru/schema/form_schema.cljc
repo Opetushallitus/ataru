@@ -72,6 +72,7 @@
                      (s/optional-key :min-value)                        s/Str
                      (s/optional-key :max-value)                        s/Str
                      (s/optional-key :decimals)                         (s/maybe s/Int)
+                     (s/optional-key :selection-group-id)               s/Str
                      (s/optional-key :max-hakukohteet)                  (s/maybe s/Int)
                      (s/optional-key :question-group-id)                s/Int
                      (s/optional-key :max-length)                       s/Str
@@ -124,11 +125,12 @@
                                                                           :version                         s/Int
                                                                           (s/optional-key :default-option) s/Any
                                                                           (s/optional-key :title)          s/Str}
-                        (s/optional-key :options)                        [{:value                          s/Str
-                                                                           (s/optional-key :label)         LocalizedStringOptional
-                                                                           (s/optional-key :description)   LocalizedStringOptional
-                                                                           (s/optional-key :default-value) (s/maybe s/Bool)
-                                                                           (s/optional-key :followups)     [(s/if (comp some? :children) (s/recursive #'WrapperElement) (s/recursive #'BasicElement))]}]
+                        (s/optional-key :options)                        [{:value                            s/Str
+                                                                           (s/optional-key :label)           LocalizedStringOptional
+                                                                           (s/optional-key :description)     LocalizedStringOptional
+                                                                           (s/optional-key :selection-limit) (s/maybe s/Int)
+                                                                           (s/optional-key :default-value)   (s/maybe s/Bool)
+                                                                           (s/optional-key :followups)       [(s/if (comp some? :children) (s/recursive #'WrapperElement) (s/recursive #'BasicElement))]}]
                         (s/optional-key :belongs-to-hakukohteet)         [s/Str]
                         (s/optional-key :belongs-to-hakukohderyhma)      [s/Str]})
 
@@ -196,6 +198,14 @@
   {:haku-oid           s/Str
    :hakukohderyhma-oid s/Str
    :prioriteetit       [[s/Str]]})
+
+(s/defschema SelectionLimit
+  {:question-id s/Str
+   :answer-id s/Str})
+
+(s/defschema FormSelectionLimit
+  {(s/optional-key :selection-id) s/Str
+   :limit-reached                [SelectionLimit]})
 
 (s/defschema FormWithContent
   (merge Form
@@ -391,6 +401,7 @@
    (s/optional-key :created-time)       org.joda.time.DateTime
    (s/optional-key :secret)             s/Str
    (s/optional-key :virkailija-secret)  s/Str
+   (s/optional-key :selection-id)       s/Str
    (s/optional-key :form-key)           s/Str
    (s/optional-key :tarjonta)           FormTarjontaMetadata
    (s/optional-key :person-oid)         (s/maybe s/Str)})

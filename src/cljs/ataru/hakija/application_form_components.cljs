@@ -658,38 +658,47 @@
                               (not (:koodisto-ordered-by-user field-descriptor)))
                          (sort-by #(non-blank-option-label % @languages)))))]])))
 
-(defn- single-choice-option [option parent-id field-descriptor question-group-idx languages use-multi-choice-style?]
-  (let [cannot-edit? (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])
-        label        (util/non-blank-val (:label option) @languages)
-        option-value (:value option)
-        option-id    (util/component-id)
-        checked?     (subscribe [:application/single-choice-option-checked? parent-id option-value question-group-idx])
-        on-change    (fn [event]
-                       (let [value (.. event -target -value)]
-                         (dispatch [:application/select-single-choice-button value field-descriptor question-group-idx])))]
+(defn- single-choice-option [option parent-id field-descriptor question-group-idx languages use-multi-choice-style? verifying?]
+  (let [cannot-edit?   (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])
+        label          (util/non-blank-val (:label option) @languages)
+        option-value   (:value option)
+        option-id      (util/component-id)
+        limit-reached? (subscribe [:application/limit-reached? parent-id option-value])
+        checked?       (subscribe [:application/single-choice-option-checked? parent-id option-value question-group-idx])
+        on-change      (fn [event]
+                         (let [value (.. event -target -value)]
+                           (dispatch [:application/select-single-choice-button value field-descriptor question-group-idx])))]
     (fn [option parent-id field-descriptor question-group-idx lang use-multi-choice-style?]
-      [:div.application__form-single-choice-button-inner-container {:key option-id}
-       [:input
-        (merge {:id        option-id
-                :type      "checkbox"
-                :checked   @checked?
-                :value     option-value
-                :on-change on-change
-                :role      "radio"
-                :class     (if use-multi-choice-style?
-                             "application__form-checkbox"
-                             "application__form-single-choice-button")}
-               (when @cannot-edit? {:disabled true}))]
-       [:label
-        (merge {:for option-id}
-               (when @cannot-edit? {:class "disabled"}))
-        label]
-       (when (and @checked?
-                  (not-empty (:followups option))
-                  (some (partial visible? (subscribe [:state-query [:application :ui]])) (:followups option)))
-         (if use-multi-choice-style?
-           (multi-choice-followups (:followups option))
-           [:div.application__form-single-choice-followups-indicator]))])))
+      (let [disabled? (or @verifying? @cannot-edit?
+                          (and (not @checked?)
+                               @limit-reached?))]
+        [:div.application__form-single-choice-button-inner-container {:key option-id}
+         [:input
+          (merge {:id        option-id
+                  :type      "checkbox"
+                  :checked   (and (not @verifying?) @checked?)
+                  :value     option-value
+                  :on-change on-change
+                  :role      "radio"
+                  :class     (if use-multi-choice-style?
+                               "application__form-checkbox"
+                               "application__form-single-choice-button")}
+            (when disabled? {:disabled true}))]
+         [:label
+          (merge {:for option-id}
+            (when disabled? {:class "disabled"}))
+          (when (and @verifying? @checked?)
+            [:span.application__form-single-choice-button--verifying
+             [:i.zmdi.zmdi-spinner.spin]])
+          label
+          (when (and (not @verifying?) (not @checked?) @limit-reached?)
+            (str " (" (get-translation :limit-reached) ")"))]
+         (when (and @checked?
+                    (not-empty (:followups option))
+                    (some (partial visible? (subscribe [:state-query [:application :ui]])) (:followups option)))
+           (if use-multi-choice-style?
+             (multi-choice-followups (:followups option))
+             [:div.application__form-single-choice-followups-indicator]))]))))
 
 (defn- use-multi-choice-style? [single-choice-field langs]
   (or (< 3 (count (:options single-choice-field)))
@@ -702,6 +711,7 @@
   (let [button-id               (answer-key field-descriptor)
         validators              (:validators field-descriptor)
         languages               (subscribe [:application/default-languages])
+        verifying?              (subscribe [:application/fetching-selection-limits? button-id])
         use-multi-choice-style? (use-multi-choice-style? field-descriptor @languages)]
     (fn [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
       (let [answer    @(subscribe [:application/answer button-id idx nil])
@@ -724,7 +734,7 @@
           (doall
             (map-indexed (fn [option-idx option]
                            ^{:key (str "single-choice-" (when idx (str idx "-")) (:id field-descriptor) "-" option-idx)}
-                           [single-choice-option option button-id field-descriptor idx languages use-multi-choice-style?])
+                           [single-choice-option option button-id field-descriptor idx languages use-multi-choice-style? verifying?])
                          (:options field-descriptor)))]
          (when (and (not idx)
                     (not use-multi-choice-style?)

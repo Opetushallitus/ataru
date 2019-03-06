@@ -409,6 +409,19 @@
             [:fi :sv :en])))
 
 (re-frame/reg-sub
+  :application/fetching-selection-limits?
+  (fn [db [_ id]]
+    (if-let [limited (get db :selection-limited)]
+      (and (limited (name id))
+           (some #(get-in db [:application :validators-processing (keyword %)]) limited)))))
+
+(re-frame/reg-sub
+  :application/limit-reached?
+  (fn [db [_ question-id answer-id]]
+    (if-let [limits (get-in db [:application :answers question-id :limit-reached])]
+      (limits answer-id))))
+
+(re-frame/reg-sub
   :application/hakukohde-label
   (fn [db [_ hakukohde-oid]]
     (util/non-blank-val

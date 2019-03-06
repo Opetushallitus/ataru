@@ -90,6 +90,12 @@
             :else
             [true [(texts/email-check-correct-notification value)]]))))
 
+(defn- selection-limit?
+  [{:keys [try-selection value field-descriptor]}]
+  (let [id (:id field-descriptor)]
+    (asyncm/go
+      (async/<! (try-selection id value)))))
+
 (def ^:private postal-code-pattern #"^\d{5}$")
 
 (defn ^:private postal-code?
@@ -278,7 +284,8 @@
                       :hakukohteet     hakukohteet?
                       :numeric         numeric?})
 
-(def async-validators {:ssn ssn?
+(def async-validators {:selection-limit selection-limit?
+                       :ssn ssn?
                        :email email?})
 
 (defn validate
