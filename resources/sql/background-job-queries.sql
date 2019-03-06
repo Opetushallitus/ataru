@@ -33,3 +33,35 @@ FOR UPDATE SKIP LOCKED;
 UPDATE job_iterations
 SET executed = TRUE, execution_time = now()
 WHERE id = :id;
+
+-- name: yesql-status
+WITH queue AS (
+  SELECT j.job_type, ji.transition, count(*) AS n
+  FROM job_iterations AS ji
+  JOIN jobs AS j ON j.id = ji.job_id
+  WHERE NOT ji.executed AND
+        NOT ji.final AND
+        ji.next_activation < now()
+  GROUP BY j.job_type, ji.transition)
+SELECT jt.job_type,
+       jt.n AS total,
+       coalesce(fail.n, 0) AS fail,
+       coalesce(error.n, 0) AS error,
+       coalesce(waiting.n, 0) AS waiting
+FROM (SELECT job_type, count(*) AS n
+      FROM jobs
+      GROUP BY job_type) AS jt
+LEFT JOIN (SELECT j.job_type, count(*) AS n
+           FROM job_iterations AS ji
+           JOIN jobs AS j ON j.id = ji.job_id
+           WHERE transition = 'fail'
+           GROUP BY j.job_type) AS fail
+  ON fail.job_type = jt.job_type
+LEFT JOIN (SELECT job_type, n
+           FROM queue
+           WHERE transition = 'error-retry') AS error
+  ON error.job_type = jt.job_type
+LEFT JOIN (SELECT job_type, n
+           FROM queue
+           WHERE transition = 'start') AS waiting
+  ON error.job_type = jt.job_type;

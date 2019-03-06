@@ -1053,10 +1053,10 @@
   (api/context "/status" []
     :tags ["status-api"]
     (api/GET "/background-jobs" []
-      :return {s/Str {:success s/Int
+      :return {s/Str {:total   s/Int
                       :fail    s/Int
                       :error   s/Int
-                      :running s/Int}}
+                      :waiting s/Int}}
       (let [status (job/status)]
         (cond-> (dissoc status :ok)
                 (:ok status)       response/ok
