@@ -95,7 +95,8 @@
     [(re-frame/subscribe [:state-query [:form :tarjonta :hakuaika :label :end-time]])
      (re-frame/subscribe [:application/selected-language])])
   (fn [[label selected-language] [_ field]]
-    (-> label selected-language)))
+    (when label
+      (get label selected-language))))
 
 (re-frame/reg-sub
   :application/haku-aika
