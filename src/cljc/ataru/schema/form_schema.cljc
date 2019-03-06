@@ -236,7 +236,8 @@
 
 (s/defschema Hakuaika
   {:label                               {:start                 LocalizedDateTime
-                                         :end                   LocalizedDateTime}
+                                         :end                   LocalizedDateTime
+                                         :end-time              LocalizedDateTime}
    :start                               s/Int
    :end                                 (s/maybe s/Int)
    :on                                  s/Bool

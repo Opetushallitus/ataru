@@ -3,6 +3,7 @@
             [re-frame.core :refer [subscribe dispatch]]
             [reagent.ratom :refer [reaction]]
             [reagent.core :as r]
+            [goog.string :as s]
             [cljs.core.match :refer-macros [match]]
             [ataru.util :as util]
             [ataru.cljs-util :refer [get-translation]]))
@@ -135,6 +136,10 @@
 (defn- new-time-left [hakuaika-end time-diff]
   (/ (- hakuaika-end (.getTime (js/Date.)) time-diff) 1000))
 
+(defn- round [value step]
+  (let [inv (/ 1.0 step)]
+    (/ (Math/ceil (* value inv)) inv)))
+
 (defn- hakuaika-left []
   (let [hakuaika-end (subscribe [:state-query [:form :hakuaika-end]])
         time-diff    (subscribe [:state-query [:form :time-delta-from-server]])
@@ -145,18 +150,16 @@
                                          (if (or (nil? @hakuaika-end) (< 0 new-time))
                                            (reset! seconds-left new-time)
                                            (.clearInterval js/window @interval))))
-                                     1000))
+                       1000))
     (fn []
       (when (and (> (* 24 3600) @seconds-left) (<= 1 @seconds-left))
-        (let [hours          (Math/floor (/ @seconds-left 3600))
-              minutes        (Math/floor (/ (rem @seconds-left 3600) 60))
-              seconds        (Math/floor (rem (rem @seconds-left 3600) 60))
-              time-left-text (cond
-                               (pos? hours) (hours-minutes-text hours minutes)
-                               (pos? minutes) (minutes-seconds-text minutes seconds)
-                               :else (seconds-text seconds))]
+        (let [hours   (Math/floor (/ @seconds-left 3600))
+              minutes (Math/floor (/ (rem @seconds-left 3600) 60))]
           [:div.application__hakuaika-left
-           (str (get-translation :application-period-left) " " time-left-text)])))))
+           (str
+            (when (and (= hours 0) (< 0 minutes))
+              (str (s/format (get-translation :application-period-minutes-left) (round minutes 15)) " "))
+            (get-translation :application-period-left-until) " " @(subscribe [:application/haku-end-time]))])))))
 
 (defn status-controls [submit-status]
   (let [valid-status (subscribe [:application/valid-status])
