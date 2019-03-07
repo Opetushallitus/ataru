@@ -491,16 +491,18 @@
          (set)
          (not-empty))))
 
-(defn set-limit-reached [db {:keys [selection-id limit-reached]}]
-  (let [new-limits (group-by :question-id limit-reached)]
-    (reduce (fn [db question-id]
-              (if-let [answers (new-limits (name question-id))]
-                (assoc-in db [:application :answers question-id :limit-reached] (set (map :answer-id answers)))
-                (assoc-in db [:application :answers question-id :limit-reached] nil)))
-      (if selection-id
-        (assoc-in db [:application :selection-id] selection-id)
-        db)
-      (map keyword (:selection-limited db)))))
+(defn set-limit-reached [db {:keys [selection-id limit-reached] :as selection}]
+  (if (nil? selection)
+    db
+    (let [new-limits (group-by :question-id limit-reached)]
+      (reduce (fn [db question-id]
+                (if-let [answers (new-limits (name question-id))]
+                  (assoc-in db [:application :answers question-id :limit-reached] (set (map :answer-id answers)))
+                  (assoc-in db [:application :answers question-id :limit-reached] nil)))
+        (if selection-id
+          (assoc-in db [:application :selection-id] selection-id)
+          db)
+        (map keyword (:selection-limited db))))))
 
 (defn reset-other-selections [db question-id answer-id]
   (reduce (fn [db key]

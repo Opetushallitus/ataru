@@ -16,7 +16,7 @@
       {:handler         #(send %)
        :error-handler   (fn [response]
                           (let [selection (:response response)]
-                            (send response)))
+                            (send selection)))
        :format          :json
        :response-format :json
        :keywords?       true})

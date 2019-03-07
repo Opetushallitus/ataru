@@ -91,10 +91,13 @@
             [true [(texts/email-check-correct-notification value)]]))))
 
 (defn- selection-limit?
-  [{:keys [try-selection value field-descriptor]}]
-  (let [id (:id field-descriptor)]
+  [{:keys [try-selection answers-by-key value field-descriptor]}]
+  (let [id (:id field-descriptor)
+        {original-value :original-value} ((keyword id) answers-by-key)]
     (asyncm/go
-      (async/<! (try-selection id value)))))
+      (if (= original-value value)
+        [true [] []]
+        (async/<! (try-selection id value))))))
 
 (def ^:private postal-code-pattern #"^\d{5}$")
 

@@ -418,8 +418,10 @@
 (re-frame/reg-sub
   :application/limit-reached?
   (fn [db [_ question-id answer-id]]
-    (if-let [limits (get-in db [:application :answers question-id :limit-reached])]
-      (limits answer-id))))
+    (let [original-value (get-in db [:application :answers question-id :original-value])]
+      (if-let [limits (get-in db [:application :answers question-id :limit-reached])]
+        (and (limits answer-id)
+             (not= original-value answer-id))))))
 
 (re-frame/reg-sub
   :application/hakukohde-label
