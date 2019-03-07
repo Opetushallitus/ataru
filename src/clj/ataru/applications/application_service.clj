@@ -17,7 +17,6 @@
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
     [ataru.util :as util]
     [ataru.applications.filtering :as application-filtering]
-    [ataru.applications.application-sorting :as application-sorting]
     [clojure.data :refer [diff]]
     [ataru.virkailija.editor.form-utils :refer [visible?]]
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
@@ -343,10 +342,6 @@
     (map-vals-to-zero review-states/attachment-hakukohde-review-types-with-no-requirements)
     applications))
 
-(defn- sort-applications
-  [{:keys [column order]} applications]
-  (application-sorting/sort-by-column applications (keyword column) (keyword order)))
-
 (defn- populate-applications-with-person-data
   [applications persons]
   (map (fn [application]
@@ -398,22 +393,17 @@
                                  organization-service
                                  tarjonta-service
                                  session
-                                 query)
+                                 query
+                                 sort)
         aggregate-data         {:total-count             (count applications)
                                 :attachment-state-counts (attachment-state-counts applications selected-hakukohde-set)
                                 :review-state-counts     (review-state-counts applications selected-hakukohde-set)}
-        person-info-needed?    (or
-                                 (application-sorting/person-info-needed-to-sort? (:column sort))
-                                 (application-filtering/person-info-needed-to-filter? (:filters states-and-filters)))]
+        person-info-needed?    (application-filtering/person-info-needed-to-filter? (:filters states-and-filters))]
     (if person-info-needed?
-      (let [filtered-sorted-applications (->> applications
-                                              (filter-applications-with-person-data person-service states-and-filters)
-                                              (sort-applications sort))]
+      (let [filtered-sorted-applications (filter-applications-with-person-data person-service states-and-filters applications)]
         {:aggregate-data (merge aggregate-data {:filtered-count (count filtered-sorted-applications)})
          :applications   (get-applications-page filtered-sorted-applications page-size page)})
-      (let [filtered-sorted-applications (->> applications
-                                              (filter-applications-without-person-data states-and-filters)
-                                              (sort-applications sort))
+      (let [filtered-sorted-applications (filter-applications-without-person-data states-and-filters applications)
             paged-applications           (get-applications-page filtered-sorted-applications page-size page)
             persons                      (person-service/get-persons
                                            person-service
@@ -427,7 +417,9 @@
                       organization-service
                       tarjonta-service
                       session
-                      query)
+                      query
+                      {:column "created-time"
+                       :order  "descending"})
         persons      (person-service/get-persons
                       person-service
                       (distinct (keep :person-oid applications)))]

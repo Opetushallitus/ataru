@@ -115,11 +115,13 @@ SELECT
                     WHERE application_key = ae.application_key AND
                           new_review_state = 'information-request') IS NOT DISTINCT FROM true) AS "new-application-modifications",
   a.submitted AS submitted
-FROM latest_applications AS a
-  JOIN application_reviews AS ar ON a.key = ar.application_key
-  JOIN forms AS f ON a.form_id = f.id
-  JOIN latest_forms AS lf ON lf.key = f.key
-WHERE (:form::text IS NULL OR (lf.key = :form AND a.haku IS NULL))
+FROM applications AS a
+LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id
+JOIN application_reviews AS ar ON a.key = ar.application_key
+JOIN forms AS f ON a.form_id = f.id
+JOIN latest_forms AS lf ON lf.key = f.key
+WHERE la.key IS NULL
+  AND (:form::text IS NULL OR (lf.key = :form AND a.haku IS NULL))
   AND (:application_oid::text IS NULL OR a.key = :application_oid)
   AND (:application_oids::text[] IS NULL OR a.key = ANY (:application_oids))
   AND (:person_oid::text IS NULL OR a.person_oid = :person_oid)
@@ -130,7 +132,15 @@ WHERE (:form::text IS NULL OR (lf.key = :form AND a.haku IS NULL))
   AND (:haku::text IS NULL OR a.haku = :haku)
   AND (:hakukohde::text IS NULL OR :hakukohde = ANY (a.hakukohde))
   AND (:ensisijainen_hakukohde::text IS NULL OR a.hakukohde[1] = :ensisijainen_hakukohde)
-ORDER BY a.created_time DESC;
+ORDER BY
+CASE WHEN :order_by = 'submitted' AND :order = 'asc' THEN a.submitted END,
+CASE WHEN :order_by = 'created-time' AND :order = 'asc' THEN a.created_time END,
+CASE WHEN :order_by = 'applicant-name' AND :order = 'asc' THEN a.last_name END COLLATE "fi_FI",
+CASE WHEN :order_by = 'applicant-name' AND :order = 'asc' THEN a.preferred_name END COLLATE "fi_FI",
+CASE WHEN :order_by = 'submitted' AND :order = 'desc' THEN a.submitted END DESC,
+CASE WHEN :order_by = 'created-time' AND :order = 'desc' THEN a.created_time END DESC,
+CASE WHEN :order_by = 'applicant-name' AND :order = 'desc' THEN a.last_name END COLLATE "fi_FI" DESC,
+CASE WHEN :order_by = 'applicant-name' AND :order = 'desc' THEN a.preferred_name END COLLATE "fi_FI" DESC;
 
 -- name: yesql-get-application-list-by-person-oid-for-omatsivut
 SELECT

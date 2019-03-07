@@ -333,7 +333,7 @@
        (clojure.string/join " & ")))
 
 (defn- query->db-query
-  [connection query]
+  [connection query sort]
   (-> (merge {:form                   nil
               :application_oid        nil
               :application_oids       nil
@@ -345,17 +345,21 @@
               :haku                   nil
               :hakukohde              nil
               :ensisijainen_hakukohde nil}
-             (transform-keys ->snake_case query))
+             (transform-keys ->snake_case query)
+             {:order_by (:column sort)
+              :order    (case (:order sort)
+                          "ascending"  "asc"
+                          "descending" "desc")})
       (update :application_oids
               #(some->> (seq %)
                         to-array
                         (.createArrayOf (:connection connection) "text")))))
 
 (defn get-application-heading-list
-  [query]
+  [query sort]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
                            (yesql-get-application-list-for-virkailija
-                             (query->db-query connection query)
+                             (query->db-query connection query sort)
                              {:connection connection})))
 
 (defn get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
@@ -780,7 +784,8 @@
   [query]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
     (->> {:connection connection}
-         (yesql-valinta-ui-applications (query->db-query connection query))
+         (yesql-valinta-ui-applications (query->db-query connection query {:column "applicant-name"
+                                                                           :order  "ascending"}))
          (map #(assoc (->kebab-case-kw %)
                       :hakutoiveet
                       (unwrap-external-application-hakutoiveet %)))

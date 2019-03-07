@@ -143,7 +143,9 @@
                      :ssn                    nil
                      :haku                   nil
                      :hakukohde              (:hakukohde @form)
-                     :ensisijainen_hakukohde nil}))
+                     :ensisijainen_hakukohde nil
+                     :order_by               "created-time"
+                     :order                  "desc"}))
            (count (ataru-db/exec
                    :db
                    yesql-get-application-list-for-virkailija
@@ -157,7 +159,9 @@
                     :ssn                    nil
                     :haku                   nil
                     :hakukohde              nil
-                    :ensisijainen_hakukohde nil})))]
+                    :ensisijainen_hakukohde nil
+                    :order_by               "created-time"
+                    :order                  "desc"})))]
     (< 0 app-count)))
 
 (defmacro add-failing-post-spec
