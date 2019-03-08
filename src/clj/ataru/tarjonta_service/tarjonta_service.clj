@@ -75,7 +75,8 @@
    :tarjoaja-name (parse-multi-lang-text (:tarjoajaNimet hakukohde))
    :tarjoaja-oids (:tarjoajaOids hakukohde)
    :ryhmaliitokset (some->> (:ryhmaliitokset hakukohde)
-                     (map #(:ryhmaOid %)))})
+                     (map :ryhmaOid)
+                     (distinct))})
 
 (defn- parse-search-result
   [search-result]

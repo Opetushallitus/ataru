@@ -69,6 +69,7 @@
                                       (into {}))
      :hakukohderyhmat            (->> (:ryhmaliitokset hakukohde)
                                       (map :ryhmaOid)
+                                      (distinct)
                                       (filter #(contains? hakukohderyhmat %)))
      :kohdejoukko-korkeakoulu?   (clojure.string/starts-with?
                                   (:kohdejoukkoUri haku)
