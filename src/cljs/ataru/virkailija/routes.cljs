@@ -85,26 +85,23 @@
     [hakukohde-oid query-params]
     (common-actions-for-applications-route)
     (dispatch [:application/close-search-control])
+    (dispatch [:application/set-filters-from-query])
     (dispatch [:application/select-hakukohde hakukohde-oid])
-    (dispatch [:application/set-ensisijaisesti
-               (= "true" (:ensisijaisesti query-params))])
     (dispatch [:application/fetch-applications-by-hakukohde hakukohde-oid]))
 
   (defroute "/lomake-editori/applications/haku/:haku-oid/hakukohderyhma/:hakukohderyhma-oid"
     [haku-oid hakukohderyhma-oid query-params]
     (common-actions-for-applications-route)
     (dispatch [:application/close-search-control])
+    (dispatch [:application/set-filters-from-query])
     (dispatch [:application/select-hakukohderyhma [haku-oid hakukohderyhma-oid]])
-    (let [ensisijaisesti? (= "true" (:ensisijaisesti query-params))]
-      (dispatch [:application/set-ensisijaisesti ensisijaisesti?])
-      (dispatch [:application/select-ryhman-ensisijainen-hakukohde
-                 (if ensisijaisesti? (:rajaus-hakukohteella query-params) nil)]))
     (dispatch [:application/fetch-applications-by-hakukohderyhma [haku-oid hakukohderyhma-oid]]))
 
   (defroute "/lomake-editori/applications/haku/:haku-oid"
     [haku-oid]
     (common-actions-for-applications-route)
     (dispatch [:application/close-search-control])
+    (dispatch [:application/set-filters-from-query])
     (dispatch [:application/select-haku haku-oid])
     (dispatch [:application/fetch-applications-by-haku haku-oid]))
 
@@ -112,6 +109,7 @@
     [key]
     (common-actions-for-applications-route)
     (dispatch [:application/close-search-control])
+    (dispatch [:application/set-filters-from-query])
     (dispatch [:application/select-form key])
     (dispatch [:application/fetch-applications key]))
 
