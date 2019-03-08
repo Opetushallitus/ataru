@@ -250,12 +250,12 @@
 
 (defn- mass-information-request-link
   []
-  (let [element-visible? (r/atom false)
-        subject          (subscribe [:state-query [:application :mass-information-request :subject]])
-        message          (subscribe [:state-query [:application :mass-information-request :message]])
-        form-status      (subscribe [:application/mass-information-request-form-status])
-        filtered-count   (subscribe [:application/filtered-applications-count])
-        button-enabled?  (subscribe [:application/mass-information-request-button-enabled?])]
+  (let [element-visible?   (r/atom false)
+        subject            (subscribe [:state-query [:application :mass-information-request :subject]])
+        message            (subscribe [:state-query [:application :mass-information-request :message]])
+        form-status        (subscribe [:application/mass-information-request-form-status])
+        applications-count (subscribe [:application/loaded-applications-count])
+        button-enabled?    (subscribe [:application/mass-information-request-button-enabled?])]
     (fn []
       [:span.application-handling__mass-information-request-container
        [:a.application-handling__mass-information-request-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
@@ -269,7 +269,7 @@
            [:button.virkailija-close-button
             {:on-click #(reset! element-visible? false)}
             [:i.zmdi.zmdi-close]]]
-          [:p (get-virkailija-translation :mass-information-request-email-n-recipients @filtered-count)]
+          [:p (get-virkailija-translation :mass-information-request-email-n-recipients @applications-count)]
           [:div.application-handling__information-request-row
            [:div.application-handling__information-request-info-heading (get-virkailija-translation :mass-information-request-subject)]
            [:div.application-handling__information-request-text-input-container
@@ -296,7 +296,7 @@
              :confirm
              [:button.application-handling__send-information-request-button.application-handling__send-information-request-button--confirm
               {:on-click #(dispatch [:application/submit-mass-information-request])}
-              (get-virkailija-translation :mass-information-request-confirm-n-messages @filtered-count)]
+              (get-virkailija-translation :mass-information-request-confirm-n-messages @applications-count)]
 
              :submitting
              [:div.application-handling__information-request-status
@@ -371,22 +371,18 @@
               :hakukohde-selected?      #(= selected-hakukohde-oid %)
               :hakukohderyhma-selected? #(= selected-hakukohderyhma-oid %)
               :on-hakukohde-select      #(do (close-list)
-                                             (dispatch [:application/reset-list])
                                              (dispatch [:application/navigate
                                                 (str "/lomake-editori/applications/hakukohde/" %)]))
               :on-hakukohde-unselect      #(do (close-list)
-                                               (dispatch [:application/reset-list])
                                                (dispatch [:application/navigate
                                                           (str "/lomake-editori/applications/haku/" haku-oid)]))
               :on-hakukohderyhma-select   #(do (close-list)
-                                               (dispatch [:application/reset-list])
                                                (dispatch [:application/navigate
                                                           (str "/lomake-editori/applications/haku/"
                                                                haku-oid
                                                                "/hakukohderyhma/"
                                                                %)]))
               :on-hakukohderyhma-unselect #(do (close-list)
-                                               (dispatch [:application/reset-list])
                                                (dispatch [:application/navigate
                                                           (str "/lomake-editori/applications/haku/" haku-oid)]))}]
             close-list])]))))
@@ -589,7 +585,8 @@
         filter-opened        (r/atom false)
         toggle-filter-opened #(swap! filter-opened not)
         get-state-count      (fn [counts state-id] (or (get counts state-id) 0))
-        lang                 (subscribe [:editor/virkailija-lang])]
+        lang                 (subscribe [:editor/virkailija-lang])
+        has-more?            (subscribe [:application/has-more-applications?])]
     (fn []
       (let [all-filters-selected? (= (count @filter-sub)
                                      (count states))]
@@ -634,46 +631,43 @@
                                   :on-change #(toggle-state-filter! @filter-sub states filter-kw review-state-id filter-selected?)}]
                          [:span (str (get review-state-label @lang)
                                      (when state-counts-sub
-                                       (str " (" (get-state-count @state-counts-sub review-state-id) ")")))]]]))
+                                       (str " ("
+                                            (get-state-count @state-counts-sub review-state-id)
+                                            (when @has-more? "+")
+                                            ")")))]]]))
                    states)))]))))
-
-(defn sortable-column-click [column-id evt]
-  (dispatch [:application/update-sort column-id]))
 
 (defn application-list-basic-column-header [column-id heading]
   (let [application-sort (subscribe [:state-query [:application :sort]])]
     (fn [column-id heading]
       [:span.application-handling__basic-list-basic-column-header
-       {:on-click (partial sortable-column-click column-id)}
-        heading
-        (if (= column-id (:column @application-sort))
-          (if (= :descending (:order @application-sort))
-            [:i.zmdi.zmdi-chevron-down.application-handling__sort-arrow]
-            [:i.zmdi.zmdi-chevron-up.application-handling__sort-arrow])
-          [:i.zmdi.zmdi-chevron-down.application-handling__sort-arrow.application-handling__sort-arrow--disabled])])))
+       {:on-click #(dispatch [:application/update-sort column-id])}
+       heading
+       (when (= column-id (:order-by @application-sort))
+         (if (= "desc" (:order @application-sort))
+           [:i.zmdi.zmdi-chevron-down.application-handling__sort-arrow]
+           [:i.zmdi.zmdi-chevron-up.application-handling__sort-arrow]))])))
 
 (defn created-time-column-header []
-  (let [application-sort (subscribe [:state-query [:application :sort]])
+  (let [application-sort     (subscribe [:state-query [:application :sort]])
         selected-time-column (subscribe [:state-query [:application :selected-time-column]])]
     (fn []
       [:span
-       {:class (if (= :created-time @selected-time-column)
+       {:class (if (= "created-time" @selected-time-column)
                  "application-handling__list-row--created-time"
                  "application-handling__list-row--submitted")}
        [:span.application-handling__basic-list-basic-column-header
         [:span.application-handling__created-time-column-header
          {:on-click #(dispatch [:application/toggle-shown-time-column])}
-         (if (= :created-time @selected-time-column)
+         (if (= "created-time" @selected-time-column)
            (get-virkailija-translation :last-modified)
            (get-virkailija-translation :submitted-at))]
-        "|"
+        " |"
         [:i.zmdi
          {:on-click #(dispatch [:application/update-sort @selected-time-column])
-          :class    (if (= @selected-time-column (:column @application-sort))
-                      (if (= :descending (:order @application-sort))
-                        "zmdi-chevron-down application-handling__sort-arrow"
-                        "zmdi-chevron-up application-handling__sort-arrow")
-                      "zmdi-chevron-down application-handling__sort-arrow application-handling__sort-arrow--disabled")}]]])))
+          :class    (if (= "desc" (:order @application-sort))
+                      "zmdi-chevron-down application-handling__sort-arrow"
+                      "zmdi-chevron-up application-handling__sort-arrow")}]]])))
 
 (defn- application-filter-checkbox
   [filters label lang kw state]
@@ -774,8 +768,8 @@
   []
   (let [filters                    (subscribe [:state-query [:application :filters]])
         filters-checkboxes         (subscribe [:state-query [:application :filters-checkboxes]])
-        filtered-application-count (subscribe [:application/filtered-applications-count])
-        total-application-count    (subscribe [:application/total-application-count])
+        applications-count         (subscribe [:application/loaded-applications-count])
+        has-more?                  (subscribe [:application/has-more-applications?])
         enabled-filter-count       (subscribe [:application/enabled-filter-count])
         review-settings            (subscribe [:state-query [:application :review-settings :config]])
         selected-hakukohde-oid     (subscribe [:state-query [:application :selected-hakukohde]])
@@ -793,12 +787,11 @@
         {:on-click #(do
                       (dispatch [:application/undo-filters])
                       (swap! filters-visible not))}
-        (when (and @filtered-application-count @total-application-count)
-          (gstring/format "%s (%d / %d)"
-                          (get-virkailija-translation :filter-applications)
-                          @filtered-application-count
-                          @total-application-count))]
-       (when (and @filtered-application-count @total-application-count (pos? @enabled-filter-count))
+        (gstring/format "%s (%d%s)"
+                        (get-virkailija-translation :filter-applications)
+                        @applications-count
+                        (if @has-more? "+" ""))]
+       (when (pos? @enabled-filter-count)
          [:span
           [:span.application-handling__filters-count-separator "|"]
           [:a
@@ -873,7 +866,7 @@
     [:div.application-handling__list-header.application-handling__list-row
      [:span.application-handling__list-row--applicant
       [application-list-basic-column-header
-       :applicant-name
+       "applicant-name"
        (get-virkailija-translation :applicant)]
       [application-filters]]
      [created-time-column-header]
@@ -895,7 +888,8 @@
         [hakukohde-state-filter-controls
          :selection-state-filter
          (get-virkailija-translation :selection)
-         review-states/application-hakukohde-selection-states]])]))
+         review-states/application-hakukohde-selection-states
+         (subscribe [:state-query [:application :selection-state-counts]])]])]))
 
 (defn application-contents [{:keys [form application]}]
   [readonly-contents/readonly-fields form application])
@@ -1825,32 +1819,30 @@
 
 (defn application []
   (let [search-control-all-page (subscribe [:application/search-control-all-page-view?])
-        total-count             (subscribe [:application/total-application-count])
         loaded-count            (subscribe [:application/loaded-applications-count])
-        filtered-count          (subscribe [:application/filtered-applications-count])
         applications            (subscribe [:application/loaded-applications])
+        has-more?               (subscribe [:application/has-more-applications?])
         fetching                (subscribe [:state-query [:application :fetching-applications]])
         expanded                (subscribe [:state-query [:application :application-list-expanded?]])]
     (fn []
-      (let [has-more? (< @loaded-count @filtered-count)]
-        [:div
-         [:div.application-handling__overview
-          [application-search-control]
-          (when (not @search-control-all-page)
-            [:div.application-handling__bottom-wrapper.select_application_list
-             [haku-heading]
-             [application-list-header @total-count]
-             (when (not-empty @applications)
-               [application-list-contents @applications])
-             (when (and has-more? @expanded @fetching)
-               [:div#application-handling__end-of-list-element
-                [:i.application-handling__end-of-list-element-spinner.zmdi.zmdi-spinner.spin]])
-             (when (and @fetching (empty? @applications))
-               [:div.application-handling__list-loading-indicator
-                [:i.zmdi.zmdi-spinner]])])]
-         (when (not @search-control-all-page)
-           [:div.application-handling__review-area-container
-            [application-review-area]])]))))
+      [:div
+       [:div.application-handling__overview
+        [application-search-control]
+        (when (not @search-control-all-page)
+          [:div.application-handling__bottom-wrapper.select_application_list
+           [haku-heading]
+           [application-list-header @loaded-count]
+           (when (not-empty @applications)
+             [application-list-contents @applications])
+           (when (and @has-more? @expanded)
+             [:div#application-handling__end-of-list-element
+              [:i.application-handling__end-of-list-element-spinner.zmdi.zmdi-spinner.spin]])
+           (when (and @fetching (empty? @applications))
+             [:div.application-handling__list-loading-indicator
+              [:i.zmdi.zmdi-spinner]])])]
+       (when (not @search-control-all-page)
+         [:div.application-handling__review-area-container
+          [application-review-area]])])))
 
 (defn create-review-position-handler []
   (let [review-canary-visible        (atom true)

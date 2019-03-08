@@ -551,9 +551,9 @@
     (-> db :application :applications)))
 
 (re-frame/reg-sub
-  :application/filtered-applications-count
+  :application/has-more-applications?
   (fn [db _]
-    (-> db :application :filtered-count)))
+    (contains? (get-in db [:application :sort]) :offset)))
 
 (re-frame/reg-sub
   :application/review-state-setting-enabled?
@@ -715,11 +715,6 @@
              filters)))
       0
       (get-in db [:application :filters]))))
-
-(re-frame.core/reg-sub
-  :application/total-application-count
-  (fn [db _]
-    (-> db :application :total-count)))
 
 (re-frame.core/reg-sub
   :application/eligibility-automatically-checked?

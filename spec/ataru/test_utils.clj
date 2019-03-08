@@ -79,8 +79,10 @@
     (insert-test-form form-name)))
 
 (defn get-latest-application-id-for-form [form-name]
-  (->> {:form (:key (get-latest-form form-name))}
-       application-store/get-application-heading-list
+  (->> (application-store/get-application-heading-list
+        {:form (:key (get-latest-form form-name))}
+        {:order-by "created-time"
+         :order    "desc"})
        first
        :id))
 

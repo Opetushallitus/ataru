@@ -639,12 +639,23 @@
                             :content-ending s/Str
                             :subject        (s/constrained s/Str (comp not clojure.string/blank?))})
 
-(s/defschema ApplicationQueryResponse
-  {:aggregate-data {:total-count             s/Int
-                    :filtered-count          s/Int
-                    :attachment-state-counts {s/Str s/Int}
-                    :review-state-counts     {s/Str s/Int}}
-   :applications   [ApplicationInfo]})
+(s/defschema Sort
+  (s/conditional #(= "applicant-name" (:order-by %))
+                 {:order-by                (s/eq "applicant-name")
+                  :order                   (s/enum "asc" "desc")
+                  (s/optional-key :offset) {:key            s/Str
+                                            :last-name      s/Str
+                                            :preferred-name s/Str}}
+                 #(= "created-time" (:order-by %))
+                 {:order-by                (s/eq "created-time")
+                  :order                   (s/enum "asc" "desc")
+                  (s/optional-key :offset) {:key          s/Str
+                                            :created-time org.joda.time.DateTime}}
+                 #(= "submitted" (:order-by %))
+                 {:order-by                (s/eq "submitted")
+                  :order                   (s/enum "asc" "desc")
+                  (s/optional-key :offset) {:key       s/Str
+                                            :submitted org.joda.time.DateTime}}))
 
 (s/defschema ApplicationQuery
   {(s/optional-key :form-key)             s/Str
@@ -659,12 +670,13 @@
    (s/optional-key :name)                 s/Str
    (s/optional-key :person-oid)           s/Str
    (s/optional-key :application-oid)      s/Str
-   (s/optional-key :page)                 s/Int
-   (s/optional-key :page-size)            s/Int
-   (s/optional-key :sort)                 {:column s/Str
-                                           :order  s/Str}
+   :sort                                  Sort
    (s/optional-key :states-and-filters)   {:filters                      {s/Keyword {s/Keyword s/Bool}}
                                            :attachment-states-to-include [s/Str]
                                            :processing-states-to-include [s/Str]
                                            :selection-states-to-include  [s/Str]
                                            :selected-hakukohteet         (s/maybe [s/Str])}})
+
+(s/defschema ApplicationQueryResponse
+  {:sort         Sort
+   :applications [ApplicationInfo]})

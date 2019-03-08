@@ -13,6 +13,7 @@
                params
                handler-or-dispatch
                skip-parse-times?
+               skip-flasher?
                handler-args
                override-args
                cache-ttl
@@ -25,6 +26,7 @@
                  :id id
                  :override-args override-args
                  :skip-parse-times? skip-parse-times?
+                 :skip-flasher? skip-flasher?
                  :handler-args handler-args
                  :cache-ttl cache-ttl)
 
@@ -34,6 +36,7 @@
                  :id id
                  :override-args override-args
                  :skip-parse-times? skip-parse-times?
+                 :skip-flasher? skip-flasher?
                  :handler-args handler-args
                  :cache-ttl cache-ttl))))
 

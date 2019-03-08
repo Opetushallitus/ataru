@@ -49,15 +49,20 @@
                                         ; Initial active panel on page load.
    :active-panel               :editor
    :application                {:applications               []
+                                :review-state-counts        (into {} (map #(vector (first %) 0) review-states/application-hakukohde-processing-states))
+                                :selection-state-counts     (into {} (map #(vector (first %) 0) review-states/application-hakukohde-selection-states))
+                                :attachment-state-counts    (into {} (map #(vector (first %) 0) review-states/attachment-hakukohde-review-types-with-no-requirements))
                                 :review                     {}
                                 :attachment-state-filter    (set (mapv first review-states/attachment-hakukohde-review-types-with-no-requirements))
                                 :processing-state-filter    (set (mapv first review-states/application-hakukohde-processing-states))
                                 :selection-state-filter     (set (mapv first review-states/application-hakukohde-selection-states))
-                                :sort                       {:column :created-time :order :descending}
-                                :selected-time-column       :created-time
+                                :fetching-applications      false
+                                :fetch-all-pages?           false
+                                :sort                       {:order-by "created-time"
+                                                             :order    "desc"}
+                                :selected-time-column       "created-time"
                                 :application-list-expanded? true
                                 :mass-information-request   {:form-status :disabled}
-                                :application-list-page      0
                                 :filters                    default-filters
                                 :filters-checkboxes         default-filters
                                 :ensisijaisesti?            false

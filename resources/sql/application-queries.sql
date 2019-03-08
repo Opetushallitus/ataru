@@ -132,15 +132,34 @@ WHERE la.key IS NULL
   AND (:haku::text IS NULL OR a.haku = :haku)
   AND (:hakukohde::text IS NULL OR :hakukohde = ANY (a.hakukohde))
   AND (:ensisijainen_hakukohde::text IS NULL OR a.hakukohde[1] = :ensisijainen_hakukohde)
+  AND CASE
+        WHEN :offset_key::text IS NULL
+          THEN true
+        WHEN :order_by = 'submitted' AND :order = 'asc'
+          THEN (date_trunc('second', a.submitted AT TIME ZONE 'Europe/Helsinki'), a.key) > (date_trunc('second', :offset_submitted::timestamptz AT TIME ZONE 'Europe/Helsinki'), :offset_key)
+        WHEN :order_by = 'created-time' AND :order = 'asc'
+          THEN (date_trunc('second', a.created_time AT TIME ZONE 'Europe/Helsinki'), a.key) > (date_trunc('second', :offset_created_time::timestamptz AT TIME ZONE 'Europe/Helsinki'), :offset_key)
+        WHEN :order_by = 'applicant-name' AND :order = 'asc'
+          THEN (a.last_name, a.preferred_name, a.key) > (:offset_last_name COLLATE "fi_FI", :offset_preferred_name COLLATE "fi_FI", :offset_key)
+        WHEN :order_by = 'submitted' AND :order = 'desc'
+          THEN (date_trunc('second', a.submitted AT TIME ZONE 'Europe/Helsinki'), a.key) < (date_trunc('second', :offset_submitted::timestamptz AT TIME ZONE 'Europe/Helsinki'), :offset_key)
+        WHEN :order_by = 'created-time' AND :order = 'desc'
+          THEN (date_trunc('second', a.created_time AT TIME ZONE 'Europe/Helsinki'), a.key) < (date_trunc('second', :offset_created_time::timestamptz AT TIME ZONE 'Europe/Helsinki'), :offset_key)
+        WHEN :order_by = 'applicant-name' AND :order = 'desc'
+          THEN (a.last_name, a.preferred_name, a.key) < (:offset_last_name COLLATE "fi_FI", :offset_preferred_name COLLATE "fi_FI", :offset_key)
+      END
 ORDER BY
-CASE WHEN :order_by = 'submitted' AND :order = 'asc' THEN a.submitted END,
-CASE WHEN :order_by = 'created-time' AND :order = 'asc' THEN a.created_time END,
+CASE WHEN :order_by = 'submitted' AND :order = 'asc' THEN date_trunc('second', a.submitted AT TIME ZONE 'Europe/Helsinki') END,
+CASE WHEN :order_by = 'created-time' AND :order = 'asc' THEN date_trunc('second', a.created_time AT TIME ZONE 'Europe/Helsinki') END,
 CASE WHEN :order_by = 'applicant-name' AND :order = 'asc' THEN a.last_name END COLLATE "fi_FI",
 CASE WHEN :order_by = 'applicant-name' AND :order = 'asc' THEN a.preferred_name END COLLATE "fi_FI",
-CASE WHEN :order_by = 'submitted' AND :order = 'desc' THEN a.submitted END DESC,
-CASE WHEN :order_by = 'created-time' AND :order = 'desc' THEN a.created_time END DESC,
+CASE WHEN :order_by = 'submitted' AND :order = 'desc' THEN date_trunc('second', a.submitted AT TIME ZONE 'Europe/Helsinki') END DESC,
+CASE WHEN :order_by = 'created-time' AND :order = 'desc' THEN date_trunc('second', a.created_time AT TIME ZONE 'Europe/Helsinki') END DESC,
 CASE WHEN :order_by = 'applicant-name' AND :order = 'desc' THEN a.last_name END COLLATE "fi_FI" DESC,
-CASE WHEN :order_by = 'applicant-name' AND :order = 'desc' THEN a.preferred_name END COLLATE "fi_FI" DESC;
+CASE WHEN :order_by = 'applicant-name' AND :order = 'desc' THEN a.preferred_name END COLLATE "fi_FI" DESC,
+CASE WHEN :order = 'asc' THEN a.key END,
+CASE WHEN :order = 'desc' THEN a.key END DESC
+LIMIT 100;
 
 -- name: yesql-get-application-list-by-person-oid-for-omatsivut
 SELECT

@@ -333,34 +333,39 @@
        (clojure.string/join " & ")))
 
 (defn- query->db-query
-  [connection query sort]
-  (-> (merge {:form                   nil
-              :application_oid        nil
-              :application_oids       nil
-              :person_oid             nil
-              :name                   nil
-              :email                  nil
-              :dob                    nil
-              :ssn                    nil
-              :haku                   nil
-              :hakukohde              nil
-              :ensisijainen_hakukohde nil}
-             (transform-keys ->snake_case query)
-             {:order_by (:column sort)
-              :order    (case (:order sort)
-                          "ascending"  "asc"
-                          "descending" "desc")})
-      (update :application_oids
-              #(some->> (seq %)
-                        to-array
-                        (.createArrayOf (:connection connection) "text")))))
+  ([connection query]
+   (-> (merge {:form                   nil
+               :application_oid        nil
+               :application_oids       nil
+               :person_oid             nil
+               :name                   nil
+               :email                  nil
+               :dob                    nil
+               :ssn                    nil
+               :haku                   nil
+               :hakukohde              nil
+               :ensisijainen_hakukohde nil}
+              (transform-keys ->snake_case query))
+       (update :application_oids
+               #(some->> (seq %)
+                         to-array
+                         (.createArrayOf (:connection connection) "text")))))
+  ([connection query sort]
+   (merge (query->db-query connection query)
+          {:offset_key            (:key (:offset sort))
+           :offset_submitted      (:submitted (:offset sort))
+           :offset_created_time   (:created-time (:offset sort))
+           :offset_last_name      (:last-name (:offset sort))
+           :offset_preferred_name (:preferred-name (:offset sort))
+           :order_by              (:order-by sort)
+           :order                 (:order sort)})))
 
 (defn get-application-heading-list
   [query sort]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-                           (yesql-get-application-list-for-virkailija
-                             (query->db-query connection query sort)
-                             {:connection connection})))
+    (yesql-get-application-list-for-virkailija
+     (query->db-query connection query sort)
+     {:connection connection})))
 
 (defn get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
   [person-oid]
@@ -784,8 +789,7 @@
   [query]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
     (->> {:connection connection}
-         (yesql-valinta-ui-applications (query->db-query connection query {:column "applicant-name"
-                                                                           :order  "ascending"}))
+         (yesql-valinta-ui-applications (query->db-query connection query))
          (map #(assoc (->kebab-case-kw %)
                       :hakutoiveet
                       (unwrap-external-application-hakutoiveet %)))

@@ -226,24 +226,6 @@
                                                               updated-applications
                                                               @(subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])))))))
 
-(defn- update-sort
-  [db column-id swap-order?]
-  (let [current-sort (get-in db [:application :sort])
-        new-order    (if swap-order?
-                       (if (= :ascending (:order current-sort))
-                         :descending
-                         :ascending)
-                       (:order current-sort))]
-    (if (= column-id (:column current-sort))
-      (update-in db
-                 [:application :sort]
-                 assoc
-                 :order
-                 new-order)
-      (assoc-in db
-                [:application :sort]
-                {:column column-id :order :descending}))))
-
 (reg-event-db
   :application/toggle-filter
   (fn [db [_ filter-id state]]
@@ -289,16 +271,12 @@
   :application/undo-filters
   (fn [db _] (undo-filters db)))
 
-(reg-event-fx
+(reg-event-db
   :application/toggle-shown-time-column
-  (fn [{:keys [db]} _]
-    (let [new-value (if (= :created-time (-> db :application :selected-time-column))
-                      :submitted
-                      :created-time)]
-      {:db       (-> db
-                     (assoc-in [:application :selected-time-column] new-value)
-                     (update-sort new-value true))
-       :dispatch [:application/reload-applications]})))
+  (fn [db _]
+    (update-in db [:application :selected-time-column] #(if (= "created-time" %)
+                                                          "submitted"
+                                                          "created-time"))))
 
 (reg-event-fx
   :application/remove-filters
@@ -315,7 +293,10 @@
 (reg-event-fx
   :application/update-sort
   (fn [{:keys [db]} [_ column-id]]
-    {:db       (update-sort db column-id true)
+    {:db       (update-in db [:application :sort]
+                          #(if (= column-id (:order-by %))
+                             (update % :order {"desc" "asc" "asc" "desc"})
+                             (assoc % :order-by column-id)))
      :dispatch [:application/reload-applications]}))
 
 (defn- keys->str
@@ -326,32 +307,67 @@
   [db]
   (-> db
       (assoc-in [:application :applications] [])
-      (assoc-in [:application :application-list-page] 0)
-      (assoc-in [:application :total-count] 0)
-      (assoc-in [:application :filtered-count] 0)))
+      (assoc-in [:application :review-state-counts] (get-in initial-db/default-db [:application :review-state-counts]))
+      (assoc-in [:application :selection-state-counts] (get-in initial-db/default-db [:application :selection-state-counts]))
+      (assoc-in [:application :attachment-state-counts] (get-in initial-db/default-db [:application :attachment-state-counts]))
+      (assoc-in [:application :fetch-all-pages?] false)
+      (update-in [:application :sort] dissoc :offset)))
 
-(reg-event-db
-  :application/reset-list
-  (fn [db _]
-    (reset-list db)))
+(defn- add-review-state-counts
+  [counts applications selected-hakukohde-oids review-type]
+  (reduce (fn [counts application]
+            (->> (:application-hakukohde-reviews application)
+                 (filter #(and (or (empty? selected-hakukohde-oids)
+                                   (contains? selected-hakukohde-oids (:hakukohde %)))
+                               (= review-type (:requirement %))))
+                 (map :state)
+                 distinct
+                 (reduce #(update %1 %2 inc) counts)))
+          counts
+          applications))
+
+(defn- add-attachment-state-counts
+  [counts applications selected-hakukohde-oids]
+  (reduce (fn [counts application]
+            (if-let [states (->> (:application-attachment-reviews application)
+                                 (filter #(or (empty? selected-hakukohde-oids)
+                                              (contains? selected-hakukohde-oids (:hakukohde %))))
+                                 (map :state)
+                                 distinct
+                                 seq)]
+              (reduce #(update %1 %2 inc) counts states)
+              (update counts "no-requirements" inc)))
+          counts
+          applications))
 
 (reg-event-fx
   :application/handle-fetch-applications-response
-  (fn [{:keys [db]} [_ {:keys [applications aggregate-data]}]]
-    (let [db              (-> (update-in db [:application :applications] into applications)
-                              (assoc-in [:application :fetching-applications] false)
-                              (assoc-in [:application :total-count] (:total-count aggregate-data))
-                              (assoc-in [:application :filtered-count] (:filtered-count aggregate-data))
-                              (assoc-in [:application :review-state-counts] (keys->str (:review-state-counts aggregate-data)))
-                              (assoc-in [:application :attachment-state-counts] (keys->str (:attachment-state-counts aggregate-data))))
-          application-key (cond
-                            (= 1 (count applications))         (-> applications first :key)
-                            (-> db :application :selected-key) (-> db :application :selected-key)
-                            :else                              (:application-key (cljs-util/extract-query-params)))]
+  (fn [{:keys [db]} [_ {:keys [applications sort]}]]
+    (let [selected-hakukohde-oids @(subscribe [:application/selected-hakukohde-oid-set])
+          fetch-more?             (and (contains? sort :offset)
+                                       (get-in db [:application :fetch-all-pages?]))
+          db                      (-> (update-in db [:application :applications]
+                                                 (fn [loaded]
+                                                   (let [new-keys (set (map :key applications))]
+                                                     (into (filterv #(not (contains? new-keys (:key %))) loaded)
+                                                           applications))))
+                                      (update-in [:application :review-state-counts] add-review-state-counts applications selected-hakukohde-oids "processing-state")
+                                      (update-in [:application :selection-state-counts] add-review-state-counts applications selected-hakukohde-oids "selection-state")
+                                      (update-in [:application :attachment-state-counts] add-attachment-state-counts applications selected-hakukohde-oids)
+                                      (assoc-in [:application :sort] sort)
+                                      (assoc-in [:application :fetching-applications] fetch-more?))
+          all-applications        (get-in db [:application :applications])
+          application-key         (cond
+                                    (= 1 (count all-applications))     (-> all-applications first :key)
+                                    (-> db :application :selected-key) (-> db :application :selected-key)
+                                    :else                              (:application-key (cljs-util/extract-query-params)))]
       {:db       db
-       :dispatch (if application-key
-                   [:application/select-application application-key nil]
-                   [:application/close-application])})))
+       :dispatch (cond fetch-more?
+                       [:application/load-next-page]
+                       application-key
+                       [:application/select-application application-key nil]
+                       :else
+                       [:application/close-application])})))
 
 (defn- extract-unselected-review-states-from-query
   [query-params query-param states]
@@ -395,9 +411,7 @@
    :http {:id                  :applications-list
           :method              :post
           :path                "/lomake-editori/api/applications/list"
-          :params              (merge {:page               (get-in db [:application :application-list-page])
-                                       :page-size          1000
-                                       :sort               (get-in db [:application :sort])
+          :params              (merge {:sort               (get-in db [:application :sort])
                                        :states-and-filters {:attachment-states-to-include (get-in db [:application :attachment-state-filter])
                                                             :processing-states-to-include (get-in db [:application :processing-state-filter])
                                                             :selection-states-to-include  (get-in db [:application :selection-state-filter])
@@ -431,11 +445,8 @@
 (reg-event-fx
   :application/load-next-page
   (fn [{:keys [db]} _]
-    (let [total-count  (-> db :application :filtered-count)
-          loaded-count (-> db :application :applications (count))]
-      (when (< loaded-count total-count)
-        (fetch-applications-fx
-         (update-in db [:application :application-list-page] inc))))))
+    (when (contains? (get-in db [:application :sort]) :offset)
+      (fetch-applications-fx db))))
 
 (reg-event-db
  :application/review-updated
@@ -661,7 +672,7 @@
                    (assoc-in [:application :selected-hakukohde] hakukohde-oid))
      :dispatch [:application/reload-applications]}))
 
-(reg-event-db
+(reg-event-fx
   :application/select-hakukohderyhma
   (fn [{db :db} [_ [haku-oid hakukohderyhma-oid]]]
     {:db       (-> db
@@ -669,7 +680,7 @@
                    (assoc-in [:application :selected-hakukohderyhma] [haku-oid hakukohderyhma-oid]))
      :dispatch [:application/reload-applications]}))
 
-(reg-event-db
+(reg-event-fx
   :application/select-haku
   (fn [{db :db} [_ haku-oid]]
     {:db       (-> db
