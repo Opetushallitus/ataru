@@ -581,7 +581,7 @@
                                         new-filter
                                         states))})
     (dispatch [:state-update #(assoc-in % [:application filter-kw] new-filter)])
-    (dispatch [:application/update-application-filters])))
+    (dispatch [:application/reload-applications])))
 
 (defn hakukohde-state-filter-controls
   [filter-kw title states state-counts-sub]
@@ -620,7 +620,7 @@
                                                                               (if all-filters-selected?
                                                                                 []
                                                                                 (map first states)))])
-                                          (dispatch [:application/update-application-filters]))}]
+                                          (dispatch [:application/reload-applications]))}]
                     [:span (get-virkailija-translation :all)]]]]
                  (mapv
                    (fn [[review-state-id review-state-label]]
@@ -674,14 +674,6 @@
                         "zmdi-chevron-down application-handling__sort-arrow"
                         "zmdi-chevron-up application-handling__sort-arrow")
                       "zmdi-chevron-down application-handling__sort-arrow application-handling__sort-arrow--disabled")}]]])))
-
-
-(defn application-list-loading-indicator []
-  (let [fetching (subscribe [:state-query [:application :fetching-applications]])
-        fetching-next-page (subscribe [:state-query [:application :fetching-next-page]])]
-    (when (and @fetching (not @fetching-next-page))
-      [:div.application-handling__list-loading-indicator
-         [:i.zmdi.zmdi-spinner]])))
 
 (defn- application-filter-checkbox
   [filters label lang kw state]
@@ -1849,7 +1841,6 @@
         filtered-count          (subscribe [:application/filtered-applications-count])
         applications            (subscribe [:application/loaded-applications])
         fetching                (subscribe [:state-query [:application :fetching-applications]])
-        fetching-next-page      (subscribe [:state-query [:application :fetching-next-page]])
         expanded                (subscribe [:state-query [:application :application-list-expanded?]])]
     (fn []
       (let [has-more? (< @loaded-count @filtered-count)]
@@ -1860,12 +1851,14 @@
             [:div.application-handling__bottom-wrapper.select_application_list
              [haku-heading]
              [application-list-header @total-count]
-             (when-not (and @fetching (not @fetching-next-page))
+             (when (not-empty @applications)
                [application-list-contents @applications])
-             (when (and has-more? @expanded (or (not @fetching) @fetching-next-page))
+             (when (and has-more? @expanded @fetching)
                [:div#application-handling__end-of-list-element
                 [:i.application-handling__end-of-list-element-spinner.zmdi.zmdi-spinner.spin]])
-             [application-list-loading-indicator]])]
+             (when (and @fetching (empty? @applications))
+               [:div.application-handling__list-loading-indicator
+                [:i.zmdi.zmdi-spinner]])])]
          (when (not @search-control-all-page)
            [:div.application-handling__review-area-container
             [application-review-area]])]))))

@@ -19,7 +19,8 @@
             [re-frame.core :as re-frame]
             [clojure.core.match :refer [match]]
             [ataru.application.review-states :as review-states]
-            [ataru.application.application-states :as application-states]))
+            [ataru.application.application-states :as application-states]
+            [ataru.virkailija.application.application-search-control-handlers :as asch]))
 
 (defn- state-filter->query-param
   [db filter all-states]
@@ -269,7 +270,7 @@
       {:db       (-> db
                      (assoc-in [:application :selected-time-column] new-value)
                      (update-sort new-value true))
-       :dispatch [:application/update-application-filters]})))
+       :dispatch [:application/reload-applications]})))
 
 (reg-event-fx
   :application/remove-filters
@@ -283,7 +284,7 @@
   :application/update-sort
   (fn [{:keys [db]} [_ column-id]]
     {:db       (update-sort db column-id true)
-     :dispatch [:application/update-application-filters]}))
+     :dispatch [:application/reload-applications]}))
 
 (defn- keys->str
   [m]
@@ -292,10 +293,10 @@
 (defn- reset-list
   [db]
   (-> db
-      (assoc-in [:application :applications] nil)
+      (assoc-in [:application :applications] [])
       (assoc-in [:application :application-list-page] 0)
-      (assoc-in [:application :total-count] nil)
-      (assoc-in [:application :filtered-count] nil)))
+      (assoc-in [:application :total-count] 0)
+      (assoc-in [:application :filtered-count] 0)))
 
 (reg-event-db
   :application/reset-list
@@ -305,20 +306,16 @@
 (reg-event-fx
   :application/handle-fetch-applications-response
   (fn [{:keys [db]} [_ {:keys [applications aggregate-data]}]]
-    (let [db              (-> (if (not-empty (-> db :application :applications))
-                                (update-in db [:application :applications] into applications)
-                                (assoc-in db [:application :applications] applications))
+    (let [db              (-> (update-in db [:application :applications] into applications)
                               (assoc-in [:application :fetching-applications] false)
-                              (assoc-in [:application :fetching-next-page] false)
                               (assoc-in [:application :total-count] (:total-count aggregate-data))
                               (assoc-in [:application :filtered-count] (:filtered-count aggregate-data))
                               (assoc-in [:application :review-state-counts] (keys->str (:review-state-counts aggregate-data)))
-                              (assoc-in [:application :attachment-state-counts] (keys->str (:attachment-state-counts aggregate-data)))
-                              (assoc-in [:application :information-request] nil))
+                              (assoc-in [:application :attachment-state-counts] (keys->str (:attachment-state-counts aggregate-data))))
           application-key (cond
-                            (= 1 (count applications)) (-> applications first :key)
+                            (= 1 (count applications))         (-> applications first :key)
                             (-> db :application :selected-key) (-> db :application :selected-key)
-                            :else (:application-key (cljs-util/extract-query-params)))]
+                            :else                              (:application-key (cljs-util/extract-query-params)))]
       {:db       db
        :dispatch (if application-key
                    [:application/select-application application-key nil]
@@ -354,128 +351,58 @@
                      review-states/application-hakukohde-selection-states))
           (assoc-in [:application :ensisijaisesti?]
                     ensisijaisesti?)
-          (assoc-in [:application :selected-ryhman-ensisijainen-hakukohde]
+          (assoc-in [:application :rajaus-hakukohteella]
                     (when ensisijaisesti? (:rajaus-hakukohteella query-params)))
           (assoc-in [:application :search-control :search-term :value]
                     (or (:term query-params) ""))))))
 
 (defn fetch-applications-fx
-  [db params]
-  (let [{previous-attachment-states :attachment-states
-         previous-processing-states :processing-states
-         previous-selection-states  :selection-states
-         previous-filters           :filters
-         previous-params            :params
-         previous-sort              :sort} (-> db :application :previous-fetch)
-        selected-hakukohteet-set           @(subscribe [:application/selected-hakukohde-oid-set])
-        first-load?                        (nil? previous-params)
-        reset-filters?                     (not= (dissoc previous-params :ensisijaisesti :rajaus-hakukohteella)
-                                                 (dissoc params :ensisijaisesti :rajaus-hakukohteella))
-        filters                            (-> (if reset-filters? initial-db/default-db db) :application :filters)
-        attachment-states-to-include       (-> (if reset-filters? initial-db/default-db db) :application :attachment-state-filter)
-        processing-states-to-include       (-> (if reset-filters? initial-db/default-db db) :application :processing-state-filter)
-        selection-states-to-include        (-> (if reset-filters? initial-db/default-db db) :application :selection-state-filter)
-        sort                               (-> db :application :sort)
-        reset-list?                        (or (and (not first-load?)
-                                                    (not= previous-params params))
-                                               (not= sort previous-sort)
-                                               (not= [previous-attachment-states previous-processing-states previous-selection-states previous-filters]
-                                                     [attachment-states-to-include processing-states-to-include selection-states-to-include filters]))
-        page                               (if reset-list? 0 (-> db :application :application-list-page))
-        page-size                          1000
-        new-db                             (cond-> (-> db
-                                                       (assoc-in [:application :fetching-applications] true)
-                                                       (assoc-in [:application :fetching-next-page] (not reset-list?))
-                                                       (assoc-in [:application :previous-fetch :sort] sort)
-                                                       (assoc-in [:application :previous-fetch :params] params)
-                                                       (assoc-in [:application :previous-fetch :filters] filters)
-                                                       (assoc-in [:application :previous-fetch :attachment-states] attachment-states-to-include)
-                                                       (assoc-in [:application :previous-fetch :processing-states] processing-states-to-include)
-                                                       (assoc-in [:application :previous-fetch :selection-states] selection-states-to-include)
-                                                       (assoc-in [:application :attachment-state-filter] attachment-states-to-include)
-                                                       (assoc-in [:application :processing-state-filter] processing-states-to-include)
-                                                       (assoc-in [:application :selection-state-filter] selection-states-to-include)
-                                                       (assoc-in [:application :filters] filters))
-                                                   reset-list? (reset-list))]
-    {:db         new-db
-     :dispatch-n [(when reset-list? [:application/refresh-haut-and-hakukohteet])]
-     :http       {:id                  :applications-list
-                  :method              :post
-                  :path                "/lomake-editori/api/applications/list"
-                  :params              (merge {:page               page
-                                               :page-size          page-size
-                                               :sort               sort
-                                               :states-and-filters {:attachment-states-to-include (-> new-db :application :attachment-state-filter)
-                                                                    :processing-states-to-include (-> new-db :application :processing-state-filter)
-                                                                    :selection-states-to-include  (-> new-db :application :selection-state-filter)
-                                                                    :selected-hakukohteet         selected-hakukohteet-set
-                                                                    :filters                      filters}}
-                                              params)
-                  :skip-parse-times?   true
-                  :skip-flasher?       true
-                  :handler-or-dispatch :application/handle-fetch-applications-response}}))
-
-(reg-event-fx
-  :application/update-applications-immediate
-  (fn [{:keys [db]} _]
-    (fetch-applications-fx
-      db
-      (-> db :application :previous-fetch :params))))
+  [db]
+  {:db   (assoc-in db [:application :fetching-applications] true)
+   :http {:id                  :applications-list
+          :method              :post
+          :path                "/lomake-editori/api/applications/list"
+          :params              (merge {:page               (get-in db [:application :application-list-page])
+                                       :page-size          1000
+                                       :sort               (get-in db [:application :sort])
+                                       :states-and-filters {:attachment-states-to-include (get-in db [:application :attachment-state-filter])
+                                                            :processing-states-to-include (get-in db [:application :processing-state-filter])
+                                                            :selection-states-to-include  (get-in db [:application :selection-state-filter])
+                                                            :selected-hakukohteet         @(subscribe [:application/selected-hakukohde-oid-set])
+                                                            :filters                      (get-in db [:application :filters])}}
+                                      (asch/parse-search-term (get-in db [:application :search-control :search-term :value]))
+                                      (when-let [form-key (get-in db [:application :selected-form-key])]
+                                        {:form-key form-key})
+                                      (when-let [haku-oid (get-in db [:application :selected-haku])]
+                                        {:haku-oid haku-oid})
+                                      (when-let [hakukohde-oid (get-in db [:application :selected-hakukohde])]
+                                        {:hakukohde-oid hakukohde-oid})
+                                      (when-let [[haku-oid hakukohderyhma-oid] (get-in db [:application :selected-hakukohderyhma])]
+                                        (cond-> {:haku-oid           haku-oid
+                                                 :hakukohderyhma-oid hakukohderyhma-oid}
+                                                (some? (get-in db [:application :rajaus-hakukohteella]))
+                                                (assoc :rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))))
+                                      (when (get-in db [:application :ensisijaisesti?])
+                                        {:ensisijaisesti true}))
+          :skip-parse-times?   true
+          :skip-flasher?       true
+          :handler-or-dispatch :application/handle-fetch-applications-response}})
 
 (reg-event-fx
   :application/reload-applications
   (fn [{:keys [db]} _]
-    {:db       (reset-list db)
-     :dispatch [:application/update-applications-immediate]}))
+    (assoc (fetch-applications-fx
+            (reset-list db))
+           :dispatch [:application/refresh-haut-and-hakukohteet])))
 
 (reg-event-fx
-  :application/update-application-filters
-  (fn [_ _]
-    {:dispatch-debounced {:id       :update-applications-list
-                          :dispatch [:application/update-applications-immediate]
-                          :timeout  1000}}))
-
-(reg-event-fx
-  :application/fetch-applications
-  (fn [{:keys [db]} [_ form-key]]
-    (fetch-applications-fx
-      db
-      {:form-key form-key})))
-
-(reg-event-fx
-  :application/fetch-applications-by-hakukohde
-  (fn [{:keys [db]} [_ hakukohde-oid]]
-    (fetch-applications-fx
-     db
-     {:hakukohde-oid hakukohde-oid
-      :ensisijaisesti (get-in db [:application :ensisijaisesti?] false)})))
-
-(reg-event-fx
-  :application/fetch-applications-by-hakukohderyhma
-  (fn [{:keys [db]} [_ [haku-oid hakukohderyhma-oid]]]
-    (fetch-applications-fx
-      db
-      (merge
-        {:haku-oid           haku-oid
-         :hakukohderyhma-oid hakukohderyhma-oid
-         :ensisijaisesti     (get-in db [:application :ensisijaisesti?] false)}
-        (when-let [ryhman-ensisijainen-hakukohde (get-in db [:application :selected-ryhman-ensisijainen-hakukohde] nil)]
-          {:rajaus-hakukohteella ryhman-ensisijainen-hakukohde})))))
-
-(reg-event-fx
-  :application/fetch-applications-by-haku
-  (fn [{:keys [db]} [_ haku-oid]]
-    (fetch-applications-fx
-      db
-      {:haku-oid haku-oid})))
-
-(reg-event-fx
-  :application/fetch-applications-by-term
-  (fn [{:keys [db]} [_ term type]]
-    (fetch-applications-fx
-      db
-      (util/remove-nil-values {type      term
-                               :haku-oid @(subscribe [:application/selected-haku-oid])}))))
+  :application/load-next-page
+  (fn [{:keys [db]} _]
+    (let [total-count  (-> db :application :filtered-count)
+          loaded-count (-> db :application :applications (count))]
+      (when (< loaded-count total-count)
+        (fetch-applications-fx
+         (update-in db [:application :application-list-page] inc))))))
 
 (reg-event-db
  :application/review-updated
@@ -681,44 +608,42 @@
           :selected-ryhman-ensisijainen-hakukohde))
 
 (reg-event-fx
-  :application/clear-applications-haku-and-form-selections
-  (fn [{db :db} _]
+  :application/search-all-applications
+  (fn [{db :db} [_ search-term]]
     {:db       (clear-selection db)
-     :dispatch [:application/search-by-term ""]}))
+     :dispatch [:application/search-by-term search-term]}))
 
-(reg-event-db
+(reg-event-fx
   :application/select-form
-  (fn [db [_ form-key]]
-    (-> db
-        clear-selection
-        (assoc-in [:application :selected-form-key] form-key))))
+  (fn [{db :db} [_ form-key]]
+    {:db       (-> db
+                   clear-selection
+                   (assoc-in [:application :selected-form-key] form-key))
+     :dispatch [:application/reload-applications]}))
 
-(reg-event-db
-  :application/select-ryhman-ensisijainen-hakukohde
-  (fn [db [_ hakukohde-oid]]
-    (-> db
-        (assoc-in [:application :selected-ryhman-ensisijainen-hakukohde] hakukohde-oid))))
-
-(reg-event-db
+(reg-event-fx
   :application/select-hakukohde
-  (fn [db [_ hakukohde-oid]]
-    (-> db
-        clear-selection
-        (assoc-in [:application :selected-hakukohde] hakukohde-oid))))
+  (fn [{db :db} [_ hakukohde-oid]]
+    {:db       (-> db
+                   clear-selection
+                   (assoc-in [:application :selected-hakukohde] hakukohde-oid))
+     :dispatch [:application/reload-applications]}))
 
 (reg-event-db
   :application/select-hakukohderyhma
-  (fn [db [_ [haku-oid hakukohderyhma-oid]]]
-    (-> db
-        clear-selection
-        (assoc-in [:application :selected-hakukohderyhma] [haku-oid hakukohderyhma-oid]))))
+  (fn [{db :db} [_ [haku-oid hakukohderyhma-oid]]]
+    {:db       (-> db
+                   clear-selection
+                   (assoc-in [:application :selected-hakukohderyhma] [haku-oid hakukohderyhma-oid]))
+     :dispatch [:application/reload-applications]}))
 
 (reg-event-db
   :application/select-haku
-  (fn [db [_ haku-oid]]
-    (-> db
-        clear-selection
-        (assoc-in [:application :selected-haku] haku-oid))))
+  (fn [{db :db} [_ haku-oid]]
+    {:db       (-> db
+                   clear-selection
+                   (assoc-in [:application :selected-haku] haku-oid))
+     :dispatch [:application/reload-applications]}))
 
 (defn- set-ensisijaisesti
   [db ensisijaisesti?]
@@ -1173,15 +1098,6 @@
                                  (-> db :application :selected-key))]
       {:db                            (update db :application dissoc :previously-closed-application)
        :scroll-to-application-in-list application-key})))
-
-(reg-event-fx
-  :application/load-next-page
-  (fn [{:keys [db]} _]
-    (let [total-count  (-> db :application :filtered-count)
-          loaded-count (-> db :application :applications (count))]
-      (when (< loaded-count total-count)
-        {:db       (update-in db [:application :application-list-page] inc)
-         :dispatch [:application/update-applications-immediate]}))))
 
 (reg-event-fx
   :store-request-handle-and-abort-ongoing

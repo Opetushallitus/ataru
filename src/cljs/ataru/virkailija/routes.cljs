@@ -31,7 +31,6 @@
 
 (defn common-actions-for-applications-route []
   (dispatch [:application/refresh-haut-and-hakukohteet])
-  (dispatch [:application/clear-applications-haku-and-form-selections])
   (dispatch [:set-active-panel :application])
   (dispatch [:application/get-virkailija-settings]))
 
@@ -79,38 +78,34 @@
     [query-params]
     (dispatch [:set-active-panel :application])
     (dispatch [:application/show-search-term])
-    (dispatch [:application/search-by-term (or (:term query-params) "")]))
+    (dispatch [:application/search-all-applications (or (:term query-params) "")]))
 
   (defroute "/lomake-editori/applications/hakukohde/:hakukohde-oid"
     [hakukohde-oid query-params]
     (common-actions-for-applications-route)
     (dispatch [:application/close-search-control])
     (dispatch [:application/set-filters-from-query])
-    (dispatch [:application/select-hakukohde hakukohde-oid])
-    (dispatch [:application/fetch-applications-by-hakukohde hakukohde-oid]))
+    (dispatch [:application/select-hakukohde hakukohde-oid]))
 
   (defroute "/lomake-editori/applications/haku/:haku-oid/hakukohderyhma/:hakukohderyhma-oid"
     [haku-oid hakukohderyhma-oid query-params]
     (common-actions-for-applications-route)
     (dispatch [:application/close-search-control])
     (dispatch [:application/set-filters-from-query])
-    (dispatch [:application/select-hakukohderyhma [haku-oid hakukohderyhma-oid]])
-    (dispatch [:application/fetch-applications-by-hakukohderyhma [haku-oid hakukohderyhma-oid]]))
+    (dispatch [:application/select-hakukohderyhma [haku-oid hakukohderyhma-oid]]))
 
   (defroute "/lomake-editori/applications/haku/:haku-oid"
     [haku-oid]
     (common-actions-for-applications-route)
     (dispatch [:application/close-search-control])
     (dispatch [:application/set-filters-from-query])
-    (dispatch [:application/select-haku haku-oid])
-    (dispatch [:application/fetch-applications-by-haku haku-oid]))
+    (dispatch [:application/select-haku haku-oid]))
 
   (defroute "/lomake-editori/applications/:key"
     [key]
     (common-actions-for-applications-route)
     (dispatch [:application/close-search-control])
     (dispatch [:application/set-filters-from-query])
-    (dispatch [:application/select-form key])
-    (dispatch [:application/fetch-applications key]))
+    (dispatch [:application/select-form key]))
 
   (accountant/dispatch-current!))
