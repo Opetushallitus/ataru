@@ -276,14 +276,14 @@
       (should= {:transition {:id :final}} r)
       (should= :message (:tag message))
       (let [case (create-folder-by-type "ams_case" message)]
-        (should= *application-key* (property-value "ams_opintopolkuid" case))
+        (should= *application-key* (property-value "ams_studypathid" case))
         (should= "Etunimi Toinenetunimi Sukunimi" (property-value "ams_originator" case))
         (should= "024" (property-value "ams_applicantcountry" case))
         (should= *application-submitted* (property-value "ams_registrationdate" case))
         (should= "Hakemus" (property-value "ams_title" case)))
       (let [action (create-folder-by-type "ams_action" message)]
         (should= "Hakemuksen saapuminen" (property-value "ams_title" action))
-        (should= "TODO" (property-value "ams_processtaskid" action)))
+        (should= "01.01" (property-value "ams_processtaskid" action)))
       (let [attachments (by-tag :createDocument (:content message))]
         (should= 7 (count attachments))
         (doseq [attachment attachments]
@@ -307,14 +307,14 @@
       (should= {:transition {:id :final}} r)
       (should= :message (:tag message))
       (let [case (create-folder-by-type "ams_case" message)]
-        (should= *application-key* (property-value "ams_opintopolkuid" case))
+        (should= *application-key* (property-value "ams_studypathid" case))
         (should= "Etunimi Toinenetunimi Sukunimi" (property-value "ams_originator" case))
         (should= "025" (property-value "ams_applicantcountry" case))
         (should= *application-submitted* (property-value "ams_registrationdate" case))
         (should= "Hakemus" (property-value "ams_title" case)))
       (let [action (create-folder-by-type "ams_action" message)]
-        (should= "Hakemuksen muokkaus" (property-value "ams_title" action))
-        (should= "TODO" (property-value "ams_processtaskid" action)))
+        (should= "Täydennyspyyntö" (property-value "ams_title" action))
+        (should= "01.02" (property-value "ams_processtaskid" action)))
       (let [attachments (by-tag :createDocument (:content message))]
         (should= 5 (count attachments))
         (doseq [attachment attachments]
@@ -364,13 +364,13 @@
       (should= {:transition {:id :final}} r)
       (should= :message (:tag message))
       (let [case (create-folder-by-type "ams_case" message)]
-        (should= *application-key* (property-value "ams_opintopolkuid" case))
+        (should= *application-key* (property-value "ams_studypathid" case))
         (should= "Etunimi Toinenetunimi Sukunimi" (property-value "ams_originator" case))
         (should= "024" (property-value "ams_applicantcountry" case))
         (should= *application-submitted* (property-value "ams_registrationdate" case))
         (should= "Hakemus" (property-value "ams_title" case)))
       (let [action (create-folder-by-type "ams_action" message)]
         (should= "Hakemuksen peruutus" (property-value "ams_title" action))
-        (should= "TODO" (property-value "ams_processtaskid" action)))
+        (should= "03.01" (property-value "ams_processtaskid" action)))
       (let [attachments (by-tag :createDocument (:content message))]
         (should-be empty? attachments)))))

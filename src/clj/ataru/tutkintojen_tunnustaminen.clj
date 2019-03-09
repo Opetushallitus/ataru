@@ -36,7 +36,7 @@
                                    (:submitted application))]
     (xml/element :createFolder {}
                  (xml/element :properties {}
-                              (->property-string "ams_opintopolkuid" application-key)
+                              (->property-string "ams_studypathid" application-key)
                               (->property-string "ams_originator" name)
                               (->property-string "ams_applicantcountry" country)
                               (->property-string "ams_registrationdate" submitted)
@@ -71,7 +71,7 @@
   (apply
    xml/element :message {}
    (->case application person)
-   (->action "Hakemuksen saapuminen" "TODO")
+   (->action "Hakemuksen saapuminen" "01.01")
    (->documents application attachments)))
 
 (defn- ->application-edited
@@ -79,14 +79,14 @@
   (apply
    xml/element :message {}
    (->case application person)
-   (->action "Hakemuksen muokkaus" "TODO")
+   (->action "Täydennyspyyntö" "01.02")
    (->documents application attachments)))
 
 (defn- ->application-inactivated
   [application person]
   (xml/element :message {}
                (->case application person)
-               (->action "Hakemuksen peruutus" "TODO")))
+               (->action "Hakemuksen peruutus" "03.01")))
 
 (defn- get-application
   [country-question-id application-id]
