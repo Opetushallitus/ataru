@@ -249,11 +249,9 @@
                         file-store/get-file     get-attachment]
             (it))
           (finally
-            (try
-              (delete-file (str *application-key* "_" *application-id* ".xml"))
-              (delete-file (str *application-key* "_" *edited-application-id* ".xml"))
-              (delete-file (str *application-key* "_" *application-id* "_" *event-id* ".xml"))
-              (catch Exception e))
+            (try (delete-file (str *application-key* "_" *application-id* ".xml")) (catch Exception e))
+            (try (delete-file (str *application-key* "_" *edited-application-id* ".xml")) (catch Exception e))
+            (try (delete-file (str *application-key* "_" *application-id* "_" *event-id* ".xml")) (catch Exception e))
             (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
               (jdbc/execute! connection
                              ["DELETE FROM application_events
