@@ -87,35 +87,31 @@
 
 (defn- get-application
   [country-question-id application-id]
-  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-    (let [application (first (yesql-get-application {:country_question_id country-question-id
+  (let [application (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+                      (first (yesql-get-application {:country_question_id country-question-id
                                                      :id                  application-id}
-                                                    {:connection connection}))]
-      (when (nil? application)
-        (throw (new RuntimeException (str "Application " application-id
-                                          " not found"))))
-      (when (or (not (string? (:country application)))
-                (clojure.string/blank? (:country application)))
-        (throw (new RuntimeException (str "Application " application-id
-                                          " has invalid country: " (:country application)
-                                          " as value for question " country-question-id))))
-      application)))
+                                                    {:connection connection})))]
+    (when (nil? application)
+      (throw (new RuntimeException (str "Application " application-id
+                                        " not found"))))
+    (when (or (not (string? (:country application)))
+              (clojure.string/blank? (:country application)))
+      (throw (new RuntimeException (str "Application " application-id
+                                        " has invalid country: " (:country application)
+                                        " as value for question " country-question-id))))
+    application))
 
 (defn- get-application-by-event-id
   [country-question-id event-id]
-  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-    (let [application (first (yesql-get-application-by-event-id {:country_question_id country-question-id
-                                                                 :id                  event-id}
-                                                                {:connection connection}))]
-      (when (nil? application)
-        (throw (new RuntimeException (str "Application by event id " event-id
-                                          " not found"))))
-      (when (or (not (string? (:country application)))
-                (clojure.string/blank? (:country application)))
-        (throw (new RuntimeException (str "Application " (:id application)
-                                          " has invalid country: " (:country application)
-                                          " as value for question " country-question-id))))
-      application)))
+  (let [id-and-state (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+                       (first (yesql-get-application-id-and-state-by-event-id {:id event-id}
+                                                                              {:connection connection})))]
+    (when (nil? id-and-state)
+      (throw (new RuntimeException (str "Application id by event id " event-id
+                                        " not found"))))
+    {:review-key  (:review-key id-and-state)
+     :state       (:state id-and-state)
+     :application (get-application country-question-id (:id id-and-state))}))
 
 (defn- get-person
   [person-service application]
@@ -281,11 +277,13 @@
   [{:keys [event-id]} {:keys [person-service]}]
   (let [{:keys [form-key
                 country-question-id
-                sftp]} (get-configuration)
-        application    (get-application-by-event-id country-question-id event-id)]
+                sftp]}        (get-configuration)
+        application-and-state (get-application-by-event-id country-question-id event-id)
+        application           (:application application-and-state)]
     (cond (and (some? (:person-oid application))
                (= form-key (:form-key application))
-               (= "inactivated" (:state application)))
+               (nil? (:review-key application-and-state))
+               (= "inactivated" (:state application-and-state)))
           (let [person  (get-person person-service application)
                 message (->application-inactivated application person)]
             (log/info "Sending application inactivated message to ASHA for application"
@@ -297,7 +295,8 @@
                       (:id application))
             {:transition {:id :final}})
           (and (= form-key (:form-key application))
-               (= "inactivated" (:state application)))
+               (nil? (:review-key application-and-state))
+               (= "inactivated" (:state application-and-state)))
           {:transition {:id :retry}}
           :else
           {:transition {:id :final}})))
