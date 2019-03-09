@@ -157,23 +157,23 @@
 (def ^:dynamic *edited-application-id*)
 (def ^:dynamic *event-id*)
 (def ^:dynamic *application-key*)
-(def ^:dynamic *application-created*)
+(def ^:dynamic *application-submitted*)
 
 (describe "Send Hakemuksen saapuminen message to ASHA SFTP server"
   (tags :unit)
 
   (around [it]
-    (let [form-id          (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-                             (:id (yesql-add-form<! {:name             {:fi "Lomake"}
-                                                     :content          {:content []}
-                                                     :created_by       "testi"
-                                                     :key              (get-in config [:tutkintojen-tunnustaminen :form-key])
-                                                     :languages        {:languages ["fi"]}
-                                                     :organization_oid "1.2.246.562.10.00000000001"
-                                                     :deleted          false
-                                                     :locked           nil
-                                                     :locked_by        nil}
-                                                    {:connection connection})))
+    (let [form-id       (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                          (:id (yesql-add-form<! {:name             {:fi "Lomake"}
+                                                  :content          {:content []}
+                                                  :created_by       "testi"
+                                                  :key              (get-in config [:tutkintojen-tunnustaminen :form-key])
+                                                  :languages        {:languages ["fi"]}
+                                                  :organization_oid "1.2.246.562.10.00000000001"
+                                                  :deleted          false
+                                                  :locked           nil
+                                                  :locked_by        nil}
+                                                 {:connection connection})))
           wrong-form-id (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                           (:id(yesql-add-form<! {:name             {:fi "Lomake"}
                                                  :content          {:content []}
@@ -185,64 +185,64 @@
                                                  :locked           nil
                                                  :locked_by        nil}
                                                 {:connection connection})))
-          application (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-                             (yesql-add-application<! {:form_id        form-id
-                                                       :content        {:answers [{:key       (get-in config [:tutkintojen-tunnustaminen :country-question-id])
-                                                                                   :value     "024"
-                                                                                   :fieldType "dropdown"}
-                                                                                  {:key       "liite-1"
-                                                                                   :value     ["liite-1-id"]
-                                                                                   :fieldType "attachment"}
-                                                                                  {:key       "liite-2"
-                                                                                   :value     ["liite-2-1-id" "liite-2-2-id"]
-                                                                                   :fieldType "attachment"}
-                                                                                  {:key       "liite-3"
-                                                                                   :value     [["liite-3-1-1-id"]
-                                                                                               ["liite-3-2-1-id" "liite-3-2-2-id"]]
-                                                                                   :fieldType "attachment"}]}
-                                                       :lang           "fi"
-                                                       :preferred_name "Testi"
-                                                       :last_name      "Testi"
-                                                       :hakukohde      []
-                                                       :haku           nil
-                                                       :person_oid     "1.2.246.562.24.00000000001"
-                                                       :ssn            nil
-                                                       :dob            (dob/str->dob "24.09.1989")
-                                                       :email          "test@example.com"}
-                                                      {:connection connection}))
-          _                (Thread/sleep 1000) ;; avoid equal created_time
-          event-id         (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-                             (:id (yesql-add-application-event<! {:application_key  (:key application)
-                                                                  :event_type       "review-state-change"
-                                                                  :new_review_state "inactivated"
-                                                                  :review_key       nil
-                                                                  :hakukohde        nil
-                                                                  :virkailija_oid   nil}
-                                                                 {:connection connection})))
-          _                (Thread/sleep 1000) ;; avoid equal created_time
-          edited           (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-                             (yesql-add-application-version<! (assoc application :content
-                                                                     {:answers [{:key       (get-in config [:tutkintojen-tunnustaminen :country-question-id])
-                                                                                 :value     "025"
-                                                                                 :fieldType "dropdown"}
-                                                                                {:key       "liite-1"
-                                                                                 :value     ["liite-1-id"]
-                                                                                 :fieldType "attachment"}
-                                                                                {:key       "liite-2"
-                                                                                 :value     ["liite-2-1-id" "liite-2-2-id"]
-                                                                                 :fieldType "attachment"}
-                                                                                {:key       "liite-3"
-                                                                                 :value     [["liite-3-1-2-id"]]
-                                                                                 :fieldType "attachment"}]})
-                                                              {:connection connection}))]
+          application   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                          (yesql-add-application<! {:form_id        form-id
+                                                    :content        {:answers [{:key       (get-in config [:tutkintojen-tunnustaminen :country-question-id])
+                                                                                :value     "024"
+                                                                                :fieldType "dropdown"}
+                                                                               {:key       "liite-1"
+                                                                                :value     ["liite-1-id"]
+                                                                                :fieldType "attachment"}
+                                                                               {:key       "liite-2"
+                                                                                :value     ["liite-2-1-id" "liite-2-2-id"]
+                                                                                :fieldType "attachment"}
+                                                                               {:key       "liite-3"
+                                                                                :value     [["liite-3-1-1-id"]
+                                                                                            ["liite-3-2-1-id" "liite-3-2-2-id"]]
+                                                                                :fieldType "attachment"}]}
+                                                    :lang           "fi"
+                                                    :preferred_name "Testi"
+                                                    :last_name      "Testi"
+                                                    :hakukohde      []
+                                                    :haku           nil
+                                                    :person_oid     "1.2.246.562.24.00000000001"
+                                                    :ssn            nil
+                                                    :dob            (dob/str->dob "24.09.1989")
+                                                    :email          "test@example.com"}
+                                                   {:connection connection}))
+          _             (Thread/sleep 1000) ;; avoid equal created_time
+          event-id      (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                          (:id (yesql-add-application-event<! {:application_key  (:key application)
+                                                               :event_type       "review-state-change"
+                                                               :new_review_state "inactivated"
+                                                               :review_key       nil
+                                                               :hakukohde        nil
+                                                               :virkailija_oid   nil}
+                                                              {:connection connection})))
+          _             (Thread/sleep 1000) ;; avoid equal created_time
+          edited        (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                          (yesql-add-application-version<! (assoc application :content
+                                                                  {:answers [{:key       (get-in config [:tutkintojen-tunnustaminen :country-question-id])
+                                                                              :value     "025"
+                                                                              :fieldType "dropdown"}
+                                                                             {:key       "liite-1"
+                                                                              :value     ["liite-1-id"]
+                                                                              :fieldType "attachment"}
+                                                                             {:key       "liite-2"
+                                                                              :value     ["liite-2-1-id" "liite-2-2-id"]
+                                                                              :fieldType "attachment"}
+                                                                             {:key       "liite-3"
+                                                                              :value     [["liite-3-1-2-id"]]
+                                                                              :fieldType "attachment"}]})
+                                                           {:connection connection}))]
       (binding [*form-id*               form-id
                 *wrong-form-id*         wrong-form-id
                 *application-id*        (:id application)
                 *event-id*              event-id
                 *edited-application-id* (:id edited)
                 *application-key*       (:key application)
-                *application-created*   (f/unparse (f/formatter :date-time-no-ms (t/time-zone-for-id "Europe/Helsinki"))
-                                                   (:created_time application))]
+                *application-submitted* (f/unparse (f/formatter :date-time-no-ms (t/time-zone-for-id "Europe/Helsinki"))
+                                                   (:submitted application))]
         (try
           (with-redefs [file-store/get-metadata get-metadata
                         file-store/get-file     get-attachment]
@@ -280,7 +280,7 @@
         (should= *application-key* (property-value "ams_opintopolkuid" case))
         (should= "Etunimi Toinenetunimi Sukunimi" (property-value "ams_originator" case))
         (should= "024" (property-value "ams_applicantcountry" case))
-        (should= *application-created* (property-value "ams_registrationdate" case))
+        (should= *application-submitted* (property-value "ams_registrationdate" case))
         (should= "Hakemus" (property-value "ams_title" case)))
       (let [action (create-folder-by-type "ams_action" message)]
         (should= "Hakemuksen saapuminen" (property-value "ams_title" action))
@@ -311,7 +311,7 @@
         (should= *application-key* (property-value "ams_opintopolkuid" case))
         (should= "Etunimi Toinenetunimi Sukunimi" (property-value "ams_originator" case))
         (should= "025" (property-value "ams_applicantcountry" case))
-        (should= *application-created* (property-value "ams_registrationdate" case))
+        (should= *application-submitted* (property-value "ams_registrationdate" case))
         (should= "Hakemus" (property-value "ams_title" case)))
       (let [action (create-folder-by-type "ams_action" message)]
         (should= "Hakemuksen muokkaus" (property-value "ams_title" action))
@@ -368,7 +368,7 @@
         (should= *application-key* (property-value "ams_opintopolkuid" case))
         (should= "Etunimi Toinenetunimi Sukunimi" (property-value "ams_originator" case))
         (should= "024" (property-value "ams_applicantcountry" case))
-        (should= *application-created* (property-value "ams_registrationdate" case))
+        (should= *application-submitted* (property-value "ams_registrationdate" case))
         (should= "Hakemus" (property-value "ams_title" case)))
       (let [action (create-folder-by-type "ams_action" message)]
         (should= "Hakemuksen peruutus" (property-value "ams_title" action))

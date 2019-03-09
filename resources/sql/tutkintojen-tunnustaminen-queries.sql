@@ -3,9 +3,7 @@ SELECT a.id,
        a.key,
        f.key AS "form-key",
        a.person_oid AS "person-oid",
-       (SELECT min(created_time)
-        FROM applications
-        WHERE key = a.key) AS "created-time",
+       a.submitted,
        a.lang AS "lang",
        (SELECT value->'value'
         FROM jsonb_array_elements(a.content->'answers')
@@ -27,9 +25,7 @@ SELECT a.id,
        a.key,
        f.key AS "form-key",
        a.person_oid AS "person-oid",
-       (SELECT min(created_time)
-        FROM applications
-        WHERE key = a.key) AS "created-time",
+       a.submitted,
        a.lang AS "lang",
        (SELECT value->'value'
         FROM jsonb_array_elements(a.content->'answers')
