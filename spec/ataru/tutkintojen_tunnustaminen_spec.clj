@@ -105,7 +105,8 @@
       (throw (new RuntimeException "")))))
 
 (def attachment-metadata
-  {"liite-1-id"     {:size     10
+  {"hakemus"        {:filename "hakemus.json"}
+   "liite-1-id"     {:size     10
                      :filename "liite-1"
                      :key      "liite-1-id"
                      :data     "liite-1-data"}
@@ -159,7 +160,7 @@
 (def ^:dynamic *application-key*)
 (def ^:dynamic *application-submitted*)
 
-(describe "Send Hakemuksen saapuminen message to ASHA SFTP server"
+(describe "Tutkintojen tunnustaminen integration"
   (tags :unit)
 
   (around [it]
@@ -286,7 +287,7 @@
         (should= "Hakemuksen saapuminen" (property-value "ams_title" action))
         (should= "TODO" (property-value "ams_processtaskid" action)))
       (let [attachments (by-tag :createDocument (:content message))]
-        (should= 6 (count attachments))
+        (should= 7 (count attachments))
         (doseq [attachment attachments]
           (let [filename (->> (:content attachment)
                               (by-tag :contentStream)
@@ -317,7 +318,7 @@
         (should= "Hakemuksen muokkaus" (property-value "ams_title" action))
         (should= "TODO" (property-value "ams_processtaskid" action)))
       (let [attachments (by-tag :createDocument (:content message))]
-        (should= 4 (count attachments))
+        (should= 5 (count attachments))
         (doseq [attachment attachments]
           (let [filename (->> (:content attachment)
                               (by-tag :contentStream)

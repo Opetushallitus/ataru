@@ -53,15 +53,18 @@
 
 (defn- ->documents
   [application attachments]
-  (let [lang (:lang application)]
+  (let [lang    (:lang application)
+        encoder (Base64/getEncoder)]
     (map (fn [{:keys [filename data]}]
            (xml/element :createDocument {}
                         (xml/element :properties {}
                                      (->property-string "ams_language" lang))
                         (xml/element :contentStream {}
                                      (xml/element :filename {} filename)
-                                     (xml/element :stream {} data))))
-         attachments)))
+                                     (xml/element :stream {} (new String (.encode encoder data) "UTF-8")))))
+         (cons {:filename "hakemus.json"
+                :data     (.getBytes (:content application) "UTF-8")}
+               attachments))))
 
 (defn- ->application-submitted
   [application person attachments]
@@ -117,16 +120,13 @@
   [person-service application]
   (person-service/get-person person-service (:person-oid application)))
 
-(defn- attachment-as-base64
+(defn- attachment-as-bytes
   [key]
   (if-let [response (file-store/get-file key)]
-    (.toString
-     (with-open [in  (:body response)
-                 out (new ByteArrayOutputStream)
-                 enc (.wrap (Base64/getEncoder) out)]
-       (clojure.java.io/copy in enc)
-       out)
-     "UTF-8")
+    (with-open [in (:body response)
+                out (new ByteArrayOutputStream)]
+      (clojure.java.io/copy in out)
+      (.toByteArray out))
     (throw (new RuntimeException (str "Attachment " key " not found")))))
 
 (defn- get-attachments
@@ -141,7 +141,7 @@
           [])
       (map (fn [{:keys [key filename]}]
              {:filename filename
-              :data     (attachment-as-base64 key)})
+              :data     (attachment-as-bytes key)})
            attachment-metadata))))
 
 (defn- with-session
