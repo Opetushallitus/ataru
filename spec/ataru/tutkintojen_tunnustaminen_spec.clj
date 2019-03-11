@@ -224,7 +224,7 @@
           edited        (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                           (yesql-add-application-version<! (assoc application :content
                                                                   {:answers [{:key       (get-in config [:tutkintojen-tunnustaminen :country-question-id])
-                                                                              :value     "025"
+                                                                              :value     "028"
                                                                               :fieldType "dropdown"}
                                                                              {:key       "liite-1"
                                                                               :value     ["liite-1-id"]
@@ -309,7 +309,7 @@
       (let [case (create-folder-by-type "ams_case" message)]
         (should= *application-key* (property-value "ams_studypathid" case))
         (should= "Etunimi Toinenetunimi Sukunimi" (property-value "ams_originator" case))
-        (should= "025" (property-value "ams_applicantcountry" case))
+        (should= "028" (property-value "ams_applicantcountry" case))
         (should= *application-submitted* (property-value "ams_registrationdate" case))
         (should= "Hakemus" (property-value "ams_title" case)))
       (let [action (create-folder-by-type "ams_action" message)]
