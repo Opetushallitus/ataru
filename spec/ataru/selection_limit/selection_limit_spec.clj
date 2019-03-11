@@ -87,14 +87,18 @@
             id   (:id form)]
         (with-redefs [forms/fetch-by-key (constantly form)]
           (let [application-key (str (UUID/randomUUID))
-                {selection-id :selection-id
+                {selection-id  :selection-id
                  limit-reached :limit-reached} (selection-limit/new-selection id question-id "0" id)
+                {limit-reached-outsider :limit-reached} (selection-limit/query-available-selections id)
                 {limit-after-swab :limit-reached} (selection-limit/swab-selection id selection-id question-id "0" id)
-                application  {:answers [{:key question-id
-                                         :id question-id
-                                         :value "0"}]}]
-            (should= [{:question-id question-id :answer-id "0"}] limit-reached)
-            (should= [{:question-id question-id :answer-id "0"}] limit-after-swab)
+                {limit-reached-outsider-after-swab :limit-reached} (selection-limit/query-available-selections id)
+                application     {:answers [{:key   question-id
+                                            :id    question-id
+                                            :value "0"}]}]
+            (should= [] limit-reached)
+            (should= [{:question-id question-id :answer-id "0"}] limit-reached-outsider)
+            (should= [{:question-id question-id :answer-id "0"}] limit-reached-outsider-after-swab)
+            (should= [] limit-after-swab)
             (should-not-throw
               (selection-limit/permanent-select-on-store-application application-key application selection-id form))
             (should-not-throw
@@ -106,8 +110,10 @@
       (let [form (form-with-fields 1)
             id   (:id form)]
         (with-redefs [forms/fetch-by-key (constantly form)]
-          (let [available (selection-limit/new-selection id question-id "0" id)]
-            (should= [{:question-id question-id :answer-id "0"}] (:limit-reached available))
+          (let [{limit-reached :limit-reached}  (selection-limit/new-selection id question-id "0" id)
+                {limit-reached-outsider :limit-reached} (selection-limit/query-available-selections id)]
+            (should= [] limit-reached)
+            (should= [{:question-id question-id :answer-id "0"}] limit-reached-outsider)
             (should-throw clojure.lang.ExceptionInfo
               (selection-limit/new-selection id question-id "0" id))))))
   (it "unlimited selection when limit set to nil"

@@ -5,8 +5,9 @@ SELECT q.question_id AS "question-id",
        count(*) AS n FROM
 ((SELECT question_id, answer_id
  FROM initial_selections
- WHERE selection_group_id IN (:selection_group_ids) AND
-       valid @> now())
+ WHERE selection_group_id IN (:selection_group_ids)
+   AND valid @> now()
+   AND selection_id IS DISTINCT FROM :selection_id)
 UNION ALL
 (SELECT question_id, answer_id
  FROM selections

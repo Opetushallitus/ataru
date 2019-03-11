@@ -31,7 +31,7 @@
          selection-group-ids (->> fields
                                   (map #(get-in % [:params :selection-group-id]))
                                   (distinct))
-         result              (exec-db :db yesql-get-selections-query {:selection_group_ids selection-group-ids})
+         result              (exec-db :db yesql-get-selections-query {:selection_group_ids selection-group-ids :selection_id selection-id})
          selections          (group-by (fn [r] [(:question-id r) (:answer-id r)]) result)
          limits              (into {} (mapcat #(map (fn [o] [[(:id %) (:value o)] [% (:selection-limit o)]]) (:options %)) fields))]
      (merge
