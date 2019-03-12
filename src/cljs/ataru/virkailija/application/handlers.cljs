@@ -345,7 +345,7 @@
   (fn [{:keys [db]} [_ {:keys [applications sort]}]]
     (let [selected-hakukohde-oids @(subscribe [:application/selected-hakukohde-oid-set])
           fetch-more?             (and (contains? sort :offset)
-                                       (get-in db [:application :fetch-all-pages?]))
+                                       (= :all-pages (get-in db [:application :fetching-applications])))
           db                      (-> (update-in db [:application :applications]
                                                  (fn [loaded]
                                                    (let [new-keys (set (map :key applications))]
@@ -355,7 +355,7 @@
                                       (update-in [:application :selection-state-counts] add-review-state-counts applications selected-hakukohde-oids "selection-state")
                                       (update-in [:application :attachment-state-counts] add-attachment-state-counts applications selected-hakukohde-oids)
                                       (assoc-in [:application :sort] sort)
-                                      (assoc-in [:application :fetching-applications] fetch-more?))
+                                      (update-in [:application :fetching-applications] #(when fetch-more? %)))
           all-applications        (get-in db [:application :applications])
           application-key         (cond
                                     (= 1 (count all-applications))     (-> all-applications first :key)
@@ -407,7 +407,7 @@
 
 (defn fetch-applications-fx
   [db]
-  {:db   (assoc-in db [:application :fetching-applications] true)
+  {:db   db
    :http {:id                  :applications-list
           :method              :post
           :path                "/lomake-editori/api/applications/list"
@@ -438,9 +438,11 @@
 (reg-event-fx
   :application/reload-applications
   (fn [{:keys [db]} _]
-    (assoc (fetch-applications-fx
-            (reset-list db))
-           :dispatch [:application/refresh-haut-and-hakukohteet])))
+    (-> db
+        reset-list
+        (assoc-in [:application :fetching-applications] :single-page)
+        fetch-applications-fx
+        (assoc :dispatch [:application/refresh-haut-and-hakukohteet]))))
 
 (reg-event-fx
   :application/load-next-page
@@ -780,11 +782,11 @@
   (fn [{:keys [db]} _]
     (let [message-and-subject (-> db :application :mass-information-request
                                   (select-keys [:message :subject]))
-          application-query   @(subscribe [:application/previous-application-fetch-params])]
+          application-keys    (map :key (get-in db [:application :applications]))]
       {:dispatch [:application/set-mass-information-request-form-state :submitting]
        :http     {:method              :post
                   :path                "/lomake-editori/api/applications/mass-information-request"
-                  :params              {:application-query   application-query
+                  :params              {:application-keys    application-keys
                                         :message-and-subject message-and-subject}
                   :handler-or-dispatch :application/handle-submit-mass-information-request-response}})))
 
@@ -842,6 +844,17 @@
     (assoc-in db [:application :information-request :visible?] visible?)))
 
 (reg-event-fx
+  :application/set-mass-information-request-popup-visibility
+  (fn [{db :db} [_ visible?]]
+    (cond-> {:db (-> db
+                     (assoc-in [:application :mass-information-request :visible?] visible?)
+                     (update-in [:application :fetching-applications] #(cond visible?         :all-pages
+                                                                             (= :all-pages %) :single-page
+                                                                             :else            %)))}
+            (and visible? (nil? (get-in db [:application :fetching-applications])))
+            (assoc :dispatch [:application/load-next-page]))))
+
+(reg-event-fx
   :application/handle-submit-information-request-response
   (fn [{:keys [db]} [_ response]]
     {:db             (-> db
@@ -872,8 +885,7 @@
 (reg-event-fx
   :application/mass-update-application-reviews
   (fn [{:keys [db]} [_ from-state to-state]]
-    {:db   (assoc-in db [:application :fetching-applications] true)
-     :http {:method              :post
+    {:http {:method              :post
             :params              {:application-filter @(subscribe [:application/previous-application-fetch-params])
                                   :from-state         from-state
                                   :to-state           to-state

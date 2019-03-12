@@ -56,8 +56,7 @@
                                 :attachment-state-filter    (set (mapv first review-states/attachment-hakukohde-review-types-with-no-requirements))
                                 :processing-state-filter    (set (mapv first review-states/application-hakukohde-processing-states))
                                 :selection-state-filter     (set (mapv first review-states/application-hakukohde-selection-states))
-                                :fetching-applications      false
-                                :fetch-all-pages?           false
+                                :fetching-applications      nil
                                 :sort                       {:order-by "created-time"
                                                              :order    "desc"}
                                 :selected-time-column       "created-time"

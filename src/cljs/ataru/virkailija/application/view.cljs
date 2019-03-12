@@ -250,7 +250,7 @@
 
 (defn- mass-information-request-link
   []
-  (let [element-visible?   (r/atom false)
+  (let [visible?           (subscribe [:application/mass-information-request-popup-visible?])
         subject            (subscribe [:state-query [:application :mass-information-request :subject]])
         message            (subscribe [:state-query [:application :mass-information-request :message]])
         form-status        (subscribe [:application/mass-information-request-form-status])
@@ -259,15 +259,15 @@
     (fn []
       [:span.application-handling__mass-information-request-container
        [:a.application-handling__mass-information-request-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
-        {:on-click #(swap! element-visible? not)}
+        {:on-click #(dispatch [:application/set-mass-information-request-popup-visibility true])}
         (get-virkailija-translation :mass-information-request)]
-       (when @element-visible?
+       (when @visible?
          [:div.application-handling__popup.application-handling__mass-information-request-popup
           [:div.application-handling__mass-edit-review-states-title-container
            [:h4.application-handling__mass-edit-review-states-title
             (get-virkailija-translation :mass-information-request)]
            [:button.virkailija-close-button
-            {:on-click #(reset! element-visible? false)}
+            {:on-click #(dispatch [:application/set-mass-information-request-popup-visibility false])}
             [:i.zmdi.zmdi-close]]]
           [:p (get-virkailija-translation :mass-information-request-email-n-recipients @applications-count)]
           [:div.application-handling__information-request-row
@@ -292,6 +292,12 @@
                            "application-handling__send-information-request-button--disabled")
                :on-click #(dispatch [:application/confirm-mass-information-request])}
               (get-virkailija-translation :mass-information-request-send)]
+
+             :loading-applications
+             [:button.application-handling__send-information-request-button.application-handling__send-information-request-button--disabled
+              {:disabled true}
+              [:span (str (get-virkailija-translation :mass-information-request-send) " ")
+               [:i.zmdi.zmdi-spinner.spin]]]
 
              :confirm
              [:button.application-handling__send-information-request-button.application-handling__send-information-request-button--confirm
@@ -1837,7 +1843,7 @@
            (when (and @has-more? @expanded)
              [:div#application-handling__end-of-list-element
               [:i.application-handling__end-of-list-element-spinner.zmdi.zmdi-spinner.spin]])
-           (when (and @fetching (empty? @applications))
+           (when (and (some? @fetching) (empty? @applications))
              [:div.application-handling__list-loading-indicator
               [:i.zmdi.zmdi-spinner]])])]
        (when (not @search-control-all-page)

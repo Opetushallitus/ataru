@@ -455,18 +455,11 @@
       (api/POST "/mass-information-request" {session :session}
         :body [body {:message-and-subject {:message s/Str
                                            :subject s/Str}
-                     :application-query   ataru-schema/ApplicationQuery}]
+                     :application-keys    [s/Str]}]
         :summary "Send information requests to multiple applicants"
         :return [ataru-schema/InformationRequest]
-        (let [application-keys     (->> (application-service/query-applications-paged
-                                          organization-service
-                                          person-service
-                                          tarjonta-service
-                                          session
-                                          (:application-query body))
-                                        :applications
-                                        (map :key))
-              information-requests (map #(assoc (:message-and-subject body) :application-key %) application-keys)]
+        (let [information-requests (map #(assoc (:message-and-subject body) :application-key %)
+                                        (:application-keys body))]
           (ok (information-request/mass-store information-requests session job-runner))))
 
       (api/POST "/excel" {session :session}

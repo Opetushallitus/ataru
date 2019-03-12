@@ -281,9 +281,17 @@
 (re-frame/reg-sub
   :application/mass-information-request-form-status
   (fn [db]
-    (if (not (mass-information-request-button-enabled? db))
-      :disabled
-      (get-in db [:application :mass-information-request :form-status]))))
+    (cond (some? (get-in db [:application :fetching-applications]))
+          :loading-applications
+          (not (mass-information-request-button-enabled? db))
+          :disabled
+          :else
+          (get-in db [:application :mass-information-request :form-status]))))
+
+(re-frame/reg-sub
+  :application/mass-information-request-popup-visible?
+  (fn [db]
+    (get-in db [:application :mass-information-request :visible?])))
 
 (defn- haku-completely-processed?
   [haku]
