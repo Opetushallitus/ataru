@@ -79,9 +79,7 @@ SELECT
   a.haku,
   a.hakukohde,
   a.ssn,
-  (SELECT cast(value as JSON)
-   FROM jsonb_to_recordset(a.content->'answers') x(key text, value text)
-   WHERE key = 'higher-completed-base-education') AS "base-education",
+  hcbe.value AS "base-education",
   ar.state                            AS state,
   ar.score                            AS score,
   a.form_id                           AS form,
@@ -96,30 +94,29 @@ SELECT
                                        'hakukohde', hakukohde))
    FROM application_hakukohde_attachment_reviews aar
    WHERE aar.application_key = a.key) AS "application-attachment-reviews",
-  (SELECT coalesce(array_agg(ae.hakukohde), '{}')
-   FROM application_events ae
-   WHERE ae.id = (SELECT max(id)
-                  FROM application_events
-                  WHERE application_key = ae.application_key AND
-                        hakukohde = ae.hakukohde AND
-                        review_key = ae.review_key) AND
-         ae.application_key = a.key AND
-         ae.event_type = 'eligibility-state-automatically-changed' AND
-         ae.review_key = 'eligibility-state') AS "eligibility-set-automatically",
-  (SELECT count(*)
-   FROM application_events AS ae
-   WHERE ae.application_key = a.key AND
-         ae.event_type = 'updated-by-applicant' AND
-         ae.time > (SELECT max(time)
-                    FROM application_events
-                    WHERE application_key = ae.application_key AND
-                          new_review_state = 'information-request') IS NOT DISTINCT FROM true) AS "new-application-modifications",
+  ae.eligibility_set_automatically AS "eligibility-set-automatically",
+  ae.new_modifications_count AS "new-application-modifications",
   a.submitted AS submitted
 FROM applications AS a
 LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id
 JOIN application_reviews AS ar ON a.key = ar.application_key
 JOIN forms AS f ON a.form_id = f.id
 JOIN latest_forms AS lf ON lf.key = f.key
+LEFT JOIN LATERAL (SELECT value->'value' AS value
+                   FROM jsonb_array_elements(a.content->'answers')
+                   WHERE value->>'key' = 'higher-completed-base-education'
+                   LIMIT 1) AS hcbe ON true
+JOIN LATERAL (SELECT coalesce(array_agg(ae.hakukohde) FILTER (WHERE ae.review_key = 'eligibility-state' AND
+                                                                    ae.event_type = 'eligibility-state-automatically-changed'), '{}')
+                       AS eligibility_set_automatically,
+                     count(*) FILTER (WHERE ae.review_key = 'processing-state' AND
+                                            ae.new_review_state = 'information-request' AND
+                                            ae.time < a.created_time)
+                       AS new_modifications_count
+              FROM (SELECT DISTINCT ON (hakukohde, review_key) hakukohde, review_key, event_type, new_review_state, time
+                    FROM application_events
+                    WHERE application_key = a.key
+                    ORDER BY hakukohde, review_key, id DESC) AS ae) AS ae ON true
 WHERE la.key IS NULL
   AND (:form::text IS NULL OR (lf.key = :form AND a.haku IS NULL))
   AND (:application_oid::text IS NULL OR a.key = :application_oid)
