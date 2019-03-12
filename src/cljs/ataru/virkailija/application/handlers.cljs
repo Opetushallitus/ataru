@@ -855,6 +855,17 @@
             (assoc :dispatch [:application/load-next-page]))))
 
 (reg-event-fx
+  :application/set-excel-popup-visibility
+  (fn [{db :db} [_ visible?]]
+    (cond-> {:db (-> db
+                     (assoc-in [:application :excel-request :visible?] visible?)
+                     (update-in [:application :fetching-applications] #(cond visible?         :all-pages
+                                                                             (= :all-pages %) :single-page
+                                                                             :else            %)))}
+            (and visible? (nil? (get-in db [:application :fetching-applications])))
+            (assoc :dispatch [:application/load-next-page]))))
+
+(reg-event-fx
   :application/handle-submit-information-request-response
   (fn [{:keys [db]} [_ response]]
     {:db             (-> db

@@ -463,7 +463,7 @@
           (ok (information-request/mass-store information-requests session job-runner))))
 
       (api/POST "/excel" {session :session}
-        :form-params [application-filter :- s/Str
+        :form-params [application-keys :- [s/Str]
                       filename :- s/Str
                       {selected-hakukohde :- s/Str nil}
                       {selected-hakukohderyhma :- s/Str nil}
@@ -471,16 +471,7 @@
                       {skip-answers :- s/Bool false}
                       {CSRF :- s/Str nil}]
         :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
-        (let [application-filter (json/parse-string application-filter keyword)
-              included-ids       (not-empty (set (remove clojure.string/blank? (clojure.string/split included-ids #"\s+"))))
-              application-keys   (->> (application-service/query-applications-paged
-                                        organization-service
-                                        person-service
-                                        tarjonta-service
-                                        session
-                                        application-filter)
-                                      :applications
-                                      (map :key))
+        (let [included-ids       (not-empty (set (remove clojure.string/blank? (clojure.string/split included-ids #"\s+"))))
               xls                (application-service/get-excel-report-of-applications-by-key
                                    application-keys
                                    selected-hakukohde

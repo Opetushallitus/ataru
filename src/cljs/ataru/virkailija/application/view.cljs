@@ -47,26 +47,28 @@
 
 (defn excel-download-link
   [_ _ _]
-  (let [element-visible? (r/atom false)
-        included-ids     (subscribe [:state-query [:application :excel-request :included-ids]])]
+  (let [visible?     (subscribe [:state-query [:application :excel-request :visible?]])
+        included-ids (subscribe [:state-query [:application :excel-request :included-ids]])
+        applications (subscribe [:state-query [:application :applications]])
+        loading?     (subscribe [:state-query [:application :fetching-applications]])]
     (fn [selected-hakukohde selected-hakukohderyhma filename]
       [:span.application-handling__excel-request-container
        [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
-        {:on-click #(swap! element-visible? not)}
+        {:on-click #(dispatch [:application/set-excel-popup-visibility true])}
         (get-virkailija-translation :load-excel)]
-       (when @element-visible?
+       (when @visible?
          [:div.application-handling__popup__excel.application-handling__excel-request-popup
           [:div.application-handling__mass-edit-review-states-title-container
            [:h4.application-handling__mass-edit-review-states-title
             (get-virkailija-translation :excel-request)]
            [:button.virkailija-close-button
-            {:on-click #(reset! element-visible? false)}
+            {:on-click #(dispatch [:application/set-excel-popup-visibility false])}
             [:i.zmdi.zmdi-close]]]
           [:div.application-handling__excel-request-row
            [:div.application-handling__excel-request-heading (get-virkailija-translation :excel-included-ids)]]
           [:div.application-handling__excel-request-row
            [:textarea.application-handling__information-request-message-area.application-handling__information-request-message-area--large
-            {:value       @included-ids
+            {:value       (or @included-ids "")
              :placeholder (get-virkailija-translation :excel-include-all-placeholder)
              :on-change   #(dispatch [:application/set-excel-request-included-ids (-> % .-target .-value)])}]]
           [:div.application-handling__excel-request-row
@@ -74,8 +76,8 @@
             {:action "/lomake-editori/api/applications/excel"
              :method "POST"}
             [:input {:type  "hidden"
-                     :name  "application-filter"
-                     :value (.stringify js/JSON (clj->js @(subscribe [:application/previous-application-fetch-params])))}]
+                     :name  "application-keys"
+                     :value (.stringify js/JSON (clj->js (map :key @applications)))}]
             [:input {:type  "hidden"
                      :name  "filename"
                      :value filename}]
@@ -84,7 +86,7 @@
                      :value "false"}]
             [:input {:type  "hidden"
                      :name  "included-ids"
-                     :value @included-ids}]
+                     :value (or @included-ids "")}]
             (when-let [csrf-token (cljs-util/csrf-token)]
               [:input {:type  "hidden"
                        :name  "CSRF"
@@ -97,12 +99,15 @@
               [:input {:type  "hidden"
                        :name  "selected-hakukohderyhma"
                        :value selected-hakukohderyhma}])]
-           [:button.application-handling__excel-request-button.application-handling__send-information-request-button--enabled
-            {:on-click (fn [e]
+           [:button.application-handling__excel-request-button
+            {:disabled (some? @loading?)
+             :on-click (fn [e]
                          (.submit (.getElementById js/document "excel-download-link")))}
-            (get-virkailija-translation :load-excel)]]
-          ])
-       ])))
+            [:span
+             (str (get-virkailija-translation :load-excel)
+                  (when (some? @loading?) " "))
+             (when (some? @loading?)
+               [:i.zmdi.zmdi-spinner.spin])]]]])])))
 
 (defn- selected-or-default-mass-review-state
   [selected all]
