@@ -162,17 +162,9 @@
   [current-state states review-state-counts disable-empty-rows?]
   (mapv (partial mass-review-state-row current-state states review-state-counts disable-empty-rows?) (map first states)))
 
-(defn- toggle-mass-update-popup-visibility
-  [element-visible submit-button-state fn-or-bool]
-  (if (boolean? fn-or-bool)
-    (reset! element-visible fn-or-bool)
-    (swap! element-visible fn-or-bool))
-  (when (not @element-visible)
-    (reset! submit-button-state :submit)))
-
 (defn- mass-update-applications-link
   []
-  (let [element-visible?           (r/atom false)
+  (let [visible?                   (subscribe [:state-query [:application :mass-update :visible?]])
         from-list-open?            (r/atom false)
         to-list-open?              (r/atom false)
         submit-button-state        (r/atom :submit)
@@ -180,23 +172,24 @@
         selected-to-review-state   (r/atom nil)
         haku-header                (subscribe [:application/list-heading-data-for-haku])
         review-state-counts        (subscribe [:state-query [:application :review-state-counts]])
+        loading?                   (subscribe [:state-query [:application :fetching-applications]])
         all-states                 (reduce (fn [acc [state _]]
                                              (assoc acc state 0))
-                                     {}
-                                     review-states/application-hakukohde-processing-states)]
+                                           {}
+                                           review-states/application-hakukohde-processing-states)]
     (fn []
       (let [from-states (merge all-states @review-state-counts)]
         [:span.application-handling__mass-edit-review-states-container
          [:a.application-handling__mass-edit-review-states-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
-          {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state not)}
+          {:on-click #(dispatch [:application/set-mass-update-popup-visibility true])}
           (get-virkailija-translation :mass-edit)]
-         (when @element-visible?
+         (when @visible?
            [:div.application-handling__mass-edit-review-states-popup.application-handling__popup
             [:div.application-handling__mass-edit-review-states-title-container
              [:h4.application-handling__mass-edit-review-states-title
               (get-virkailija-translation :mass-edit)]
              [:button.virkailija-close-button
-              {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state false)}
+              {:on-click #(dispatch [:application/set-mass-update-popup-visibility false])}
               [:i.zmdi.zmdi-close]]]
             (when-let [[haku-oid hakukohde-oid _ _ _] @haku-header]
               [:p
@@ -210,10 +203,10 @@
                      {:on-click #(swap! from-list-open? not)}]
                     (opened-mass-review-state-list selected-from-review-state from-states @review-state-counts true))
               (mass-review-state-selected-row
-                (fn []
-                  (swap! from-list-open? not)
-                  (reset! submit-button-state :submit))
-                (selected-or-default-mass-review-state-label selected-from-review-state from-states @review-state-counts)))
+               (fn []
+                 (swap! from-list-open? not)
+                 (reset! submit-button-state :submit))
+               (selected-or-default-mass-review-state-label selected-from-review-state from-states @review-state-counts)))
 
             [:h4.application-handling__mass-edit-review-states-heading (get-virkailija-translation :to-state)]
 
@@ -222,19 +215,24 @@
                      {:on-click #(when (-> from-states (keys) (count) (pos?)) (swap! to-list-open? not))}]
                     (opened-mass-review-state-list selected-to-review-state all-states @review-state-counts false))
               (mass-review-state-selected-row
-                (fn []
-                  (swap! to-list-open? not)
-                  (reset! submit-button-state :submit))
-                (selected-or-default-mass-review-state-label selected-to-review-state all-states @review-state-counts)))
+               (fn []
+                 (swap! to-list-open? not)
+                 (reset! submit-button-state :submit))
+               (selected-or-default-mass-review-state-label selected-to-review-state all-states @review-state-counts)))
 
             (case @submit-button-state
               :submit
-              (let [button-disabled? (= (selected-or-default-mass-review-state selected-from-review-state from-states)
-                                        (selected-or-default-mass-review-state selected-to-review-state all-states))]
+              (let [button-disabled? (or (= (selected-or-default-mass-review-state selected-from-review-state from-states)
+                                            (selected-or-default-mass-review-state selected-to-review-state all-states))
+                                         (some? @loading?))]
                 [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button
                  {:on-click #(when-not button-disabled? (reset! submit-button-state :confirm))
                   :disabled button-disabled?}
-                 (get-virkailija-translation :change)])
+                 [:span
+                  (str (get-virkailija-translation :change)
+                       (when (some? @loading?) " "))
+                  (when (some? @loading?)
+                    [:i.zmdi.zmdi-spinner.spin])]])
 
               :confirm
               [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button--confirm
@@ -244,9 +242,9 @@
                               (dispatch [:application/mass-update-application-reviews
                                          from-state-name
                                          to-state-name])
+                              (dispatch [:application/set-mass-update-popup-visibility false])
                               (reset! selected-from-review-state nil)
                               (reset! selected-to-review-state nil)
-                              (toggle-mass-update-popup-visibility element-visible? submit-button-state false)
                               (reset! from-list-open? false)
                               (reset! to-list-open? false)))}
                (get-virkailija-translation :confirm-change)])])]))))

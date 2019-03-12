@@ -297,33 +297,23 @@
       :tags ["applications-api"]
 
       (api/POST "/mass-update" {session :session}
-        :body [body {:application-filter ataru-schema/ApplicationQuery
-                     :hakukohde-oid      (s/maybe s/Str)
-                     :from-state         (apply s/enum (map first review-states/application-hakukohde-processing-states))
-                     :to-state           (apply s/enum (map first review-states/application-hakukohde-processing-states))}]
+        :body [body {:application-keys [s/Str]
+                     :hakukohde-oid    (s/maybe s/Str)
+                     :from-state       (apply s/enum (map first review-states/application-hakukohde-processing-states))
+                     :to-state         (apply s/enum (map first review-states/application-hakukohde-processing-states))}]
         :summary "Update list of application-hakukohde with given state to new state"
-        (let [filter-with-from-state (-> (:application-filter body)
-                                         (assoc-in [:states-and-filters :processing-states-to-include] [(:from-state body)]))
-              application-keys       (->> (application-service/query-applications-paged
-                                            organization-service
-                                            person-service
-                                            tarjonta-service
-                                            session
-                                            filter-with-from-state)
-                                          :applications
-                                          (map :key))]
-          (if (application-service/mass-update-application-states
-                organization-service
-                tarjonta-service
-                session
-                application-keys
-                (:hakukohde-oid body)
-                (:from-state body)
-                (:to-state body))
-            (response/ok {:updated-count (count application-keys)})
-            (response/unauthorized {:error (str "Hakemusten "
-                                                (clojure.string/join ", " (:application-keys body))
-                                                " käsittely ei ole sallittu")}))))
+        (if (application-service/mass-update-application-states
+             organization-service
+             tarjonta-service
+             session
+             (:application-keys body)
+             (:hakukohde-oid body)
+             (:from-state body)
+             (:to-state body))
+          (response/ok {:updated-count (count (:application-keys body))})
+          (response/unauthorized {:error (str "Hakemusten "
+                                              (clojure.string/join ", " (:application-keys body))
+                                              " käsittely ei ole sallittu")})))
 
       (api/POST "/list" {session :session}
         :body [body ataru-schema/ApplicationQuery]

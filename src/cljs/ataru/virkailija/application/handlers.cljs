@@ -855,6 +855,17 @@
             (assoc :dispatch [:application/load-next-page]))))
 
 (reg-event-fx
+  :application/set-mass-update-popup-visibility
+  (fn [{db :db} [_ visible?]]
+    (cond-> {:db (-> db
+                     (assoc-in [:application :mass-update :visible?] visible?)
+                     (update-in [:application :fetching-applications] #(cond visible?         :all-pages
+                                                                             (= :all-pages %) :single-page
+                                                                             :else            %)))}
+            (and visible? (nil? (get-in db [:application :fetching-applications])))
+            (assoc :dispatch [:application/load-next-page]))))
+
+(reg-event-fx
   :application/set-excel-popup-visibility
   (fn [{db :db} [_ visible?]]
     (cond-> {:db (-> db
@@ -897,11 +908,11 @@
   :application/mass-update-application-reviews
   (fn [{:keys [db]} [_ from-state to-state]]
     {:http {:method              :post
-            :params              {:application-filter @(subscribe [:application/previous-application-fetch-params])
-                                  :from-state         from-state
-                                  :to-state           to-state
-                                  :hakukohde-oid      (or (-> db :application :rajaus-hakukohteella)
-                                                          (-> db :application :selected-hakukohde))}
+            :params              {:application-keys (map :key (get-in db [:application :applications]))
+                                  :from-state       from-state
+                                  :to-state         to-state
+                                  :hakukohde-oid    (or (-> db :application :rajaus-hakukohteella)
+                                                        (-> db :application :selected-hakukohde))}
             :path                "/lomake-editori/api/applications/mass-update"
             :handler-or-dispatch :application/handle-mass-update-application-reviews}}))
 
