@@ -164,7 +164,6 @@
       (:selected-form-key db-application)                      :selected-form-key
       (:selected-haku db-application)                          :selected-haku
       (:selected-hakukohde db-application)                     :selected-hakukohde
-      (:selected-ryhman-ensisijainen-hakukohde db-application) :selected-ryhman-ensisijainen-hakukohde
       (:selected-hakukohderyhma db-application)                :selected-hakukohderyhma)))
 
 (re-frame/reg-sub
@@ -182,13 +181,12 @@
 
 (defn- hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
   [db]
-  (let [selected-by (application-list-selected-by db)
-        oid-or-oids (when selected-by (-> db :application selected-by))]
-    (case selected-by
-      :selected-hakukohde #{oid-or-oids}
-      :selected-ryhman-ensisijainen-hakukohde #{oid-or-oids}
-      :selected-hakukohderyhma (set (map :oid (selected-hakukohderyhma-hakukohteet db)))
-      nil)))
+  (case (application-list-selected-by db)
+    :selected-hakukohde      #{(get-in db [:application :selected-hakukohde])}
+    :selected-hakukohderyhma (if-let [h (get-in db [:application :rajaus-hakukohteella])]
+                               #{h}
+                               (set (map :oid (selected-hakukohderyhma-hakukohteet db))))
+    nil))
 
 (re-frame/reg-sub
   :application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
@@ -212,15 +210,14 @@
 (re-frame/reg-sub
   :application/show-ensisijaisesti?
   (fn [db]
-    (let [selected-by @(re-frame/subscribe [:application/application-list-selected-by])]
+    (let [selected-by (application-list-selected-by db)]
       (cond (= :selected-hakukohde selected-by)
             (some->> (get-in db [:application :selected-hakukohde])
                      (get (get-in db [:hakukohteet]))
                      :haku-oid
                      (get (get-in db [:haut]))
                      :prioritize-hakukohteet)
-            (or (= :selected-hakukohderyhma selected-by)
-                (= :selected-ryhman-ensisijainen-hakukohde selected-by))
+            (= :selected-hakukohderyhma selected-by)
             (some->> (get-in db [:application :selected-hakukohderyhma])
                      first
                      (get (get-in db [:haut]))
@@ -231,21 +228,26 @@
 (re-frame/reg-sub
   :application/ensisijaisesti?
   (fn [db]
-    (get-in db [:application :ensisijaisesti?] false)))
+    (get-in db [:application :ensisijaisesti?-checkbox] false)))
 
 (re-frame/reg-sub
   :application/show-rajaa-hakukohteella?
   (fn [db]
-    (if @(re-frame/subscribe [:application/ensisijaisesti?])
-      (let [selected-by @(re-frame/subscribe [:application/application-list-selected-by])]
-        (cond (or (= :selected-hakukohderyhma selected-by)
-                  (= :selected-ryhman-ensisijainen-hakukohde selected-by))
-              (some->> (get-in db [:application :selected-hakukohderyhma])
-                first
-                (get (get-in db [:haut]))
-                :prioritize-hakukohteet)
-              :else
-              false)))))
+    (and (= :selected-hakukohderyhma (application-list-selected-by db))
+         (some->> (get-in db [:application :selected-hakukohderyhma])
+                  first
+                  (get (get-in db [:haut]))
+                  :prioritize-hakukohteet))))
+
+(re-frame/reg-sub
+  :application/filters-changed?
+  (fn [db]
+    (or (not= (get-in db [:application :filters])
+              (get-in db [:application :filters-checkboxes]))
+        (not= (get-in db [:application :ensisijaisesti?])
+              (get-in db [:application :ensisijaisesti?-checkbox]))
+        (not= (get-in db [:application :rajaus-hakukohteella])
+              (get-in db [:application :rajaus-hakukohteella-value])))))
 
 (re-frame/reg-sub
   :application/selected-hakukohderyhma-hakukohteet
@@ -258,14 +260,13 @@
           list-selected-by (application-list-selected-by db)]
       (and (not-empty (-> db :application :applications))
            (not (and yhteishaku? (= list-selected-by :selected-haku)))
-           (contains? #{:selected-form-key :selected-haku :selected-hakukohde :selected-ryhman-ensisijainen-hakukohde} list-selected-by)))))
+           (some? list-selected-by)))))
 
 (re-frame/reg-sub
- :application/show-excel-link?
- (fn [db]
-   (and (not-empty @(re-frame/subscribe [:application/loaded-applications]))
-        (contains? #{:selected-form-key :selected-haku :selected-hakukohde :selected-hakukohderyhma :selected-ryhman-ensisijainen-hakukohde}
-                   @(re-frame/subscribe [:application/application-list-selected-by])))))
+  :application/show-excel-link?
+  (fn [db]
+    (and (not-empty (-> db :application :applications))
+         (some? (application-list-selected-by db)))))
 
 (defn- mass-information-request-button-enabled?
   [db]

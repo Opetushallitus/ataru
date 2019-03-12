@@ -320,10 +320,10 @@
     [:label.application-handling__filter-checkbox-label
      {:class (when ensisijaisesti? "application-handling__filter-checkbox-label--checked")}
      [:input.application-handling__filter-checkbox
-      {:type     "checkbox"
-       :checked  ensisijaisesti?
-       :on-click #(dispatch [:application/navigate-to-ensisijaisesti
-                             (not ensisijaisesti?)])}]
+      {:type      "checkbox"
+       :checked   ensisijaisesti?
+       :on-change #(dispatch [:application/set-ensisijaisesti
+                              (not ensisijaisesti?)])}]
      [:span (get-virkailija-translation :ensisijaisesti)]]))
 
 (defn haku-applications-heading
@@ -735,7 +735,7 @@
             (doall))])))
 
 (defn- select-rajaava-hakukohde [opened?]
-  (let [ryhman-ensisijainen-hakukohde @(subscribe [:state-query [:application :selected-ryhman-ensisijainen-hakukohde]])]
+  (let [ryhman-ensisijainen-hakukohde @(subscribe [:state-query [:application :rajaus-hakukohteella-value]])]
     [:div.application-handling__ensisijaisesti-hakukohteeseen
      [:button.application-handling__ensisijaisesti-hakukohteeseen-popup-button
       {:on-click #(swap! opened? not)}
@@ -746,7 +746,6 @@
      (when @opened?
        (let [close                         #(reset! opened? false)
              [haku-oid hakukohderyhma-oid] @(subscribe [:state-query [:application :selected-hakukohderyhma]])
-             ryhman-ensisijainen-hakukohde @(subscribe [:state-query [:application :selected-ryhman-ensisijainen-hakukohde]])
              ryhman-hakukohteet            @(subscribe [:application/selected-hakukohderyhma-hakukohteet])]
          [h-and-h/popup
           [h-and-h/search-input
@@ -764,19 +763,9 @@
             :hakukohde-selected?        #(= ryhman-ensisijainen-hakukohde %)
             :hakukohderyhma-selected?   (constantly false)
             :on-hakukohde-select        #(do (close)
-                                             (dispatch
-                                              [:application/navigate
-                                               (str "/lomake-editori/applications/haku/"
-                                                    haku-oid
-                                                    "/hakukohderyhma/" hakukohderyhma-oid
-                                                    "?ensisijaisesti=true&rajaus-hakukohteella=" %)]))
+                                             (dispatch [:application/set-rajaus-hakukohteella %]))
             :on-hakukohde-unselect      #(do (close)
-                                             (dispatch
-                                              [:application/navigate
-                                               (str "/lomake-editori/applications/haku/"
-                                                    haku-oid
-                                                    "/hakukohderyhma/" hakukohderyhma-oid
-                                                    "?ensisijaisesti=true")]))
+                                             (dispatch [:application/set-rajaus-hakukohteella nil]))
             :on-hakukohderyhma-select   (fn [])
             :on-hakukohderyhma-unselect (fn [])}]
           close]))]))
@@ -793,6 +782,7 @@
         has-base-education-answers (subscribe [:application/applications-have-base-education-answers])
         show-ensisijaisesti?       (subscribe [:application/show-ensisijaisesti?])
         show-rajaa-hakukohteella?  (subscribe [:application/show-rajaa-hakukohteella?])
+        filters-changed?           (subscribe [:application/filters-changed?])
         filters-visible            (r/atom false)
         rajaava-hakukohde-opened?  (r/atom false)
         filters-to-include         #{:language-requirement :degree-requirement :eligibility-state :payment-obligation}
@@ -862,22 +852,21 @@
            (when @has-base-education-answers
              [:div.application-handling__popup-column.application-handling__popup-column--large
               [application-base-education-filters filters-checkboxes @lang]])]
-          (let [filters-changed? (not= @filters @filters-checkboxes)]
-            [:div.application-handling__filters-popup-apply-button-container
-             [:a.editor-form__control-button.editor-form__control-button--variable-width
-              {:class    (if filters-changed?
-                           "editor-form__control-button--enabled"
-                           "editor-form__control-button--disabled")
-               :on-click (fn [_]
-                           (reset! filters-visible false)
-                           (dispatch [:application/apply-filters]))}
-              (get-virkailija-translation :filters-apply-button)]
-             [:a.editor-form__control-button.editor-form__control-button--variable-width
-              {:class    (if filters-changed?
-                           "editor-form__control-button--enabled"
-                           "editor-form__control-button--disabled")
-               :on-click #(dispatch [:application/undo-filters])}
-              (get-virkailija-translation :filters-cancel-button)]])])])))
+          [:div.application-handling__filters-popup-apply-button-container
+           [:a.editor-form__control-button.editor-form__control-button--variable-width
+            {:class    (if @filters-changed?
+                         "editor-form__control-button--enabled"
+                         "editor-form__control-button--disabled")
+             :on-click (fn [_]
+                         (reset! filters-visible false)
+                         (dispatch [:application/apply-filters]))}
+            (get-virkailija-translation :filters-apply-button)]
+           [:a.editor-form__control-button.editor-form__control-button--variable-width
+            {:class    (if @filters-changed?
+                         "editor-form__control-button--enabled"
+                         "editor-form__control-button--disabled")
+             :on-click #(dispatch [:application/undo-filters])}
+            (get-virkailija-translation :filters-cancel-button)]]])])))
 
 (defn- application-list-header [applications]
   (let [review-settings (subscribe [:state-query [:application :review-settings :config]])]

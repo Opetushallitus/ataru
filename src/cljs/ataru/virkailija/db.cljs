@@ -59,7 +59,11 @@
                                 :mass-information-request   {:form-status :disabled}
                                 :application-list-page      0
                                 :filters                    default-filters
-                                :filters-checkboxes         default-filters}
+                                :filters-checkboxes         default-filters
+                                :ensisijaisesti?            false
+                                :ensisijaisesti?-checkbox   false
+                                :rajaus-hakukohteella       nil
+                                :rajaus-hakukohteella-value nil}
    :haut                       {}
    :hakukohteet                {}
    :fetching-haut              0

@@ -253,13 +253,41 @@
   :application/apply-filters
   (fn [{:keys [db]} _]
     {:db       (-> db
-                   (assoc-in [:application :filters] (get-in db [:application :filters-checkboxes])))
+                   (assoc-in [:application :filters] (get-in db [:application :filters-checkboxes]))
+                   (assoc-in [:application :ensisijaisesti?] (get-in db [:application :ensisijaisesti?-checkbox]))
+                   (assoc-in [:application :rajaus-hakukohteella] (get-in db [:application :rajaus-hakukohteella-value])))
      :dispatch [:application/reload-applications]}))
+
+(defn- set-rajaus-hakukohteella
+  [db hakukohde-oid]
+  (cljs-util/update-url-with-query-params {:rajaus-hakukohteella hakukohde-oid})
+  (assoc-in db [:application :rajaus-hakukohteella-value] hakukohde-oid))
+
+(defn- set-ensisijaisesti
+  [db ensisijaisesti?]
+  (cljs-util/update-url-with-query-params {:ensisijaisesti ensisijaisesti?})
+  (cond-> (assoc-in db [:application :ensisijaisesti?-checkbox] ensisijaisesti?)
+          (not ensisijaisesti?)
+          (set-rajaus-hakukohteella nil)))
+
+(reg-event-db
+  :application/set-ensisijaisesti
+  (fn [db [_ ensisijaisesti?]] (set-ensisijaisesti db ensisijaisesti?)))
+
+(reg-event-db
+  :application/set-rajaus-hakukohteella
+  (fn [db [_ hakukohde-oid]] (set-rajaus-hakukohteella db hakukohde-oid)))
+
+(defn- undo-filters
+  [db]
+  (-> db
+      (assoc-in [:application :filters-checkboxes] (get-in db [:application :filters]))
+      (set-ensisijaisesti (get-in db [:application :ensisijaisesti?]))
+      (set-rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))))
 
 (reg-event-db
   :application/undo-filters
-  (fn [db _]
-    (assoc-in db [:application :filters-checkboxes] (get-in db [:application :filters]))))
+  (fn [db _] (undo-filters db)))
 
 (reg-event-fx
   :application/toggle-shown-time-column
@@ -277,7 +305,11 @@
   (fn [{:keys [db]} _]
     {:db       (-> db
                    (assoc-in [:application :filters] initial-db/default-filters)
-                   (assoc-in [:application :filters-checkboxes] initial-db/default-filters))
+                   (assoc-in [:application :filters-checkboxes] initial-db/default-filters)
+                   (assoc-in [:application :ensisijaisesti?] false)
+                   (assoc-in [:application :ensisijaisesti?-checkbox] false)
+                   (assoc-in [:application :rajaus-hakukohteella] nil)
+                   (assoc-in [:application :rajaus-hakukohteella-value] nil))
      :dispatch [:application/reload-applications]}))
 
 (reg-event-fx
@@ -354,7 +386,8 @@
           (assoc-in [:application :rajaus-hakukohteella]
                     (when ensisijaisesti? (:rajaus-hakukohteella query-params)))
           (assoc-in [:application :search-control :search-term :value]
-                    (or (:term query-params) ""))))))
+                    (or (:term query-params) ""))
+          (undo-filters)))))
 
 (defn fetch-applications-fx
   [db]
@@ -604,8 +637,7 @@
           :selected-form-key
           :selected-haku
           :selected-hakukohde
-          :selected-hakukohderyhma
-          :selected-ryhman-ensisijainen-hakukohde))
+          :selected-hakukohderyhma))
 
 (reg-event-fx
   :application/search-all-applications
@@ -644,20 +676,6 @@
                    clear-selection
                    (assoc-in [:application :selected-haku] haku-oid))
      :dispatch [:application/reload-applications]}))
-
-(defn- set-ensisijaisesti
-  [db ensisijaisesti?]
-  (assoc-in db [:application :ensisijaisesti?] ensisijaisesti?))
-
-(reg-event-db
-  :application/set-ensisijaisesti
-  (fn [db [_ ensisijaisesti?]]
-    (set-ensisijaisesti db ensisijaisesti?)))
-
-(reg-event-fx
-  :application/navigate-to-ensisijaisesti
-  (fn [{:keys [db]} [_ ensisijaisesti?]]
-    {:navigate (applications-link (set-ensisijaisesti db ensisijaisesti?))}))
 
 (defn- keys-to-names [m] (reduce-kv #(assoc %1 (name %2) %3) {} m))
 
@@ -848,9 +866,8 @@
             :params              {:application-filter @(subscribe [:application/previous-application-fetch-params])
                                   :from-state         from-state
                                   :to-state           to-state
-                                  :hakukohde-oid      (or
-                                                        (-> db :application :selected-ryhman-ensisijainen-hakukohde)
-                                                        (-> db :application :selected-hakukohde))}
+                                  :hakukohde-oid      (or (-> db :application :rajaus-hakukohteella)
+                                                          (-> db :application :selected-hakukohde))}
             :path                "/lomake-editori/api/applications/mass-update"
             :handler-or-dispatch :application/handle-mass-update-application-reviews}}))
 

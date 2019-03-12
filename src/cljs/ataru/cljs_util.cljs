@@ -104,7 +104,7 @@
 
 (defn remove-empty-query-params
   [params]
-  (into {} (remove #(-> % second empty?)) params))
+  (into {} (remove #(-> % second nil?)) params))
 
 (defn- update-query-params
   [url params]
