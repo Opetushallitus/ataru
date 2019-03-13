@@ -25,12 +25,6 @@
   (dispatch [:application/hakukohde-add-selection
              (.getAttribute (.-target e) "data-hakukohde-oid")]))
 
-(defn- hakukohde-query-change-event-handler [e]
-  (dispatch [:application/hakukohde-query-change (.-value (.-target e))]))
-
-(defn- hakukohde-query-clear-event-handler [_]
-  (dispatch [:application/hakukohde-query-change ""]))
-
 (defn- hakukohde-search-toggle-event-handler [_]
   (dispatch [:application/hakukohde-search-toggle]))
 
@@ -159,9 +153,9 @@
 
 (defn- hakukohde-selection-search
   []
-  (let [hakukohde-query        (subscribe [:application/hakukohde-query])
-        hakukohde-hits         (subscribe [:application/hakukohde-hits])
-        prioritize-hakukohteet (subscribe [:application/prioritize-hakukohteet?])]
+  (let [hakukohde-hits         (subscribe [:application/hakukohde-hits])
+        prioritize-hakukohteet (subscribe [:application/prioritize-hakukohteet?])
+        search-input           (r/atom "")]
     (fn []
       [:div.application__hakukohde-selection
        [:div.application__hakukohde-selection-search-arrow-up
@@ -173,19 +167,21 @@
           [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
         [:div.application__hakukohde-selection-search-input.application__form-text-input-box
          [:input.application__form-text-input-in-box
-          {:on-change     hakukohde-query-change-event-handler
-           :title         (get-translation :search-application-options)
-           :placeholder   (get-translation :search-application-options)
-           :default-value @hakukohde-query}]
-         (when (not (empty? @hakukohde-query))
+          {:on-change   #(do (reset! search-input (.-value (.-target %)))
+                             (dispatch [:application/hakukohde-query-change search-input]))
+           :title       (get-translation :search-application-options)
+           :placeholder (get-translation :search-application-options)
+           :value       @search-input}]
+         (when (not (empty? @search-input))
            [:div.application__form-clear-text-input-in-box
             [:a
-             {:on-click hakukohde-query-clear-event-handler}
+             {:on-click #(do (reset! search-input "")
+                             (dispatch [:application/hakukohde-query-change search-input]))}
              [:i.zmdi.zmdi-close]]])]
         [:div.application__hakukohde-selection-search-results
          (if (and
                (empty? @hakukohde-hits)
-               (not (clojure.string/blank? @hakukohde-query)))
+               (not (clojure.string/blank? @search-input)))
            [:div.application__hakukohde-selection-search-no-hits (get-translation :no-hakukohde-search-hits)]
            (for [hakukohde-oid @hakukohde-hits]
              ^{:key (str "found-hakukohde-row-" hakukohde-oid)}

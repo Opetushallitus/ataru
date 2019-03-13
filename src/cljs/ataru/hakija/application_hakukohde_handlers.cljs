@@ -30,47 +30,44 @@
 
 (reg-event-db
   :application/hakukohde-query-process
-  (fn hakukohde-query-process [db [_ hakukohde-query]]
-    (if (= hakukohde-query (get-in db [:application :hakukohde-query]))
-      (let [lang              (-> db :form :selected-language)
-            order-by-hakuaika (if (some? (get-in db [:application :virkailija-secret]))
-                                #{}
-                                (->> (get-in db [:form :tarjonta :hakukohteet])
-                                     (remove #(:on (:hakuaika %)))
-                                     (map :oid)
-                                     set))
-            order-by-name     #(util/non-blank-val (:label %) [lang :fi :sv :en])
-            hakukohde-options (->> (hakukohteet-field db)
-                                   :options
-                                   (sort-by (juxt (comp order-by-hakuaika :value)
-                                                  order-by-name)))
-            query-parts       (map string/lower-case (string/split hakukohde-query #"\s+"))
-            results           (if (or (string/blank? hakukohde-query)
-                                      (< (count hakukohde-query) 2))
-                                (map :value hakukohde-options)
-                                (->> hakukohde-options
-                                     (filter
-                                       (fn [option]
-                                         (let [haystack (string/lower-case
-                                                          (str (get-in option [:label lang] (get-in option [:label :fi] ""))
-                                                               (get-in option [:description lang] "")))]
-                                           (every? #(string/includes? haystack %) query-parts))))
-                                     (map :value)))
-            [hakukohde-hits rest-results] (split-at 15 results)]
-        (-> db
-            (assoc-in [:application :remaining-hakukohde-search-results] rest-results)
-            (assoc-in [:application :hakukohde-hits] hakukohde-hits)))
-      db)))
+  (fn hakukohde-query-process [db [_ hakukohde-query-atom]]
+    (let [hakukohde-query               @hakukohde-query-atom
+          lang                          (-> db :form :selected-language)
+          order-by-hakuaika             (if (some? (get-in db [:application :virkailija-secret]))
+                                          #{}
+                                          (->> (get-in db [:form :tarjonta :hakukohteet])
+                                               (remove #(:on (:hakuaika %)))
+                                               (map :oid)
+                                               set))
+          order-by-name                 #(util/non-blank-val (:label %) [lang :fi :sv :en])
+          hakukohde-options             (->> (hakukohteet-field db)
+                                             :options
+                                             (sort-by (juxt (comp order-by-hakuaika :value)
+                                                            order-by-name)))
+          query-parts                   (map string/lower-case (string/split hakukohde-query #"\s+"))
+          results                       (if (or (string/blank? hakukohde-query)
+                                                (< (count hakukohde-query) 2))
+                                          (map :value hakukohde-options)
+                                          (->> hakukohde-options
+                                               (filter
+                                                (fn [option]
+                                                  (let [haystack (string/lower-case
+                                                                  (str (get-in option [:label lang] (get-in option [:label :fi] ""))
+                                                                       (get-in option [:description lang] "")))]
+                                                    (every? #(string/includes? haystack %) query-parts))))
+                                               (map :value)))
+          [hakukohde-hits rest-results] (split-at 15 results)]
+      (-> db
+          (assoc-in [:application :hakukohde-query] hakukohde-query)
+          (assoc-in [:application :remaining-hakukohde-search-results] rest-results)
+          (assoc-in [:application :hakukohde-hits] hakukohde-hits)))))
 
 (reg-event-fx
   :application/hakukohde-query-change
-  (fn [_ [_ hakukohde-query timeout]]
-    {:dispatch-debounced-n [{:timeout  (or timeout 500)
-                             :dispatch [:application/hakukohde-query-set hakukohde-query]
-                             :id       :hakukohde-query-set}
-                            {:timeout  (or timeout 500)
-                             :id       :hakukohde-query
-                             :dispatch [:application/hakukohde-query-process hakukohde-query]}]}))
+  (fn [{db :db} [_ hakukohde-query-atom]]
+    {:dispatch-debounced {:timeout  500
+                          :id       :hakukohde-query
+                          :dispatch [:application/hakukohde-query-process hakukohde-query-atom]}}))
 
 (reg-event-db
   :application/show-more-hakukohdes
@@ -80,11 +77,6 @@
       (-> db
           (assoc-in [:application :remaining-hakukohde-search-results] rest-results)
           (update-in [:application :hakukohde-hits] concat more-hits)))))
-
-(reg-event-db
-  :application/hakukohde-query-set
-  (fn [db [_ query]]
-    (assoc-in db [:application :hakukohde-query] query)))
 
 (reg-event-fx
   :application/set-hakukohde-valid

@@ -74,13 +74,6 @@
   [flat-form-content preselected-hakukohde-oids]
   (initial-valid-status flat-form-content preselected-hakukohde-oids))
 
-(defn not-extra-answer? [answer-key question-ids]
-  "Check that the answer (key) has a corresponding quesiton in the form.
-   This in necessary to allow older forms that might not have all newest questions
-   to be used with latest rules. (e.g. birthplace component)"
-  (or (empty? question-ids)
-      (contains? question-ids answer-key)))
-
 (defn contains-id? [content id]
   (contains? (set (map :id content)) id))
 
@@ -95,12 +88,12 @@
            first))))
 
 (defn answers->valid-status [all-answers ui flat-form-content]
-  (let [question-ids   (set (map #(-> % :id keyword) flat-form-content))
-        invalid-fields (for [[key answers] all-answers
+  (let [invalid-fields (for [[key answers] all-answers
                              :when         (and key
                                                 (not (:valid answers))
                                                 (get-in ui [key :visible?] true)
-                                                (not-extra-answer? key question-ids))]
+                                                (or (empty? flat-form-content)
+                                                    (some #(= key (keyword (:id %))) flat-form-content)))]
                          {:key       key
                           :label     (:label answers)
                           :order-idx (:order-idx answers)})]
