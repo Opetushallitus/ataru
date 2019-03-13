@@ -42,7 +42,9 @@
                     "x"]]
                   (map (fn [field]
                          (let [label (util/non-blank-val (:label field) @languages)]
-                           [:a {:href (str "#scroll-to-" (name (:key field)))} [:div label]]))
+                           [:a {:href (str "#scroll-to-" (name (:key field)))} [:div (if (empty? label)
+                                                                                       (get-translation :missing-input)
+                                                                                       label)]]))
                        (:invalid-fields valid-status)))])]))))
 
 (defn sent-indicator [submit-status]

@@ -233,6 +233,9 @@ You will receive a confirmation of your application to your email."}
    :minutes                                     {:fi "minuuttia"
                                                  :en "minutes"
                                                  :sv "minuter"}
+   :missing-input                               {:fi "Puuttuva tieto"
+                                                 :en "Missing information"
+                                                 :sv "Saknad uppgift"}
    :modifications-saved                         {:fi "Muutokset tallennettu"
                                                  :sv "Ändringarna har sparats"
                                                  :en "The modifications have been saved"}
