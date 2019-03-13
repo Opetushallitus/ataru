@@ -48,10 +48,10 @@
                                                  :sv "Återstående ansökningstid"
                                                  :en "Time left to apply"}
    :application-period-left-until               {:fi "Hakuaika päättyy"
-                                                 :sv "Ansökninstiden slutar"
+                                                 :sv "Ansökninstiden utgår"
                                                  :en "Application period ends"}
    :application-period-minutes-left             {:fi "Hakuaikaa jäljellä alle %s minuuttia."
-                                                 :sv "%s minut kvar i ansökningsperioden."
+                                                 :sv "Av ansökningstiden återstår %s minuter."
                                                  :en "%s minutes left in the application period."}
    :application-priorization-invalid            {:fi "Hakukohteet ovat väärässä ensisijaisuusjärjestyksessä"
                                                  :sv "Fel prioritetsordning för ansökningsmålen"
