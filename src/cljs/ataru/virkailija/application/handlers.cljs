@@ -19,8 +19,7 @@
             [re-frame.core :as re-frame]
             [clojure.core.match :refer [match]]
             [ataru.application.review-states :as review-states]
-            [ataru.application.application-states :as application-states]
-            [ataru.virkailija.application.application-search-control-handlers :as asch]))
+            [ataru.application.application-states :as application-states]))
 
 (defn- state-filter->query-param
   [db filter all-states]
@@ -344,7 +343,7 @@
                                                                 :processing-states-to-include (get-in db [:application :processing-state-filter])
                                                                 :selection-states-to-include  (get-in db [:application :selection-state-filter])
                                                                 :filters                      (get-in db [:application :filters])}}
-                                          (asch/parse-search-term (get-in db [:application :search-control :search-term :value]))
+                                          (get-in db [:application :search-control :search-term :parsed])
                                           (when-let [form-key (get-in db [:application :selected-form-key])]
                                             {:form-key form-key})
                                           (when-let [haku-oid (get-in db [:application :selected-haku])]

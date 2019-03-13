@@ -46,7 +46,7 @@
                                   (repeat (- 20 (count oid-suffix)) "0")
                                   oid-suffix)))
 
-(defn parse-search-term
+(defn- parse-search-term
   [search-term]
   (let [search-term-ucase (-> search-term
                               clojure.string/trim
@@ -76,9 +76,12 @@
   :application/search-by-term
   (fn [{:keys [db]} [_ search-term]]
     (cljs-util/set-query-param "term" search-term)
-    {:db                 (-> db
-                             (assoc-in [:application :search-control :search-term :value] search-term)
-                             (assoc-in [:application :search-control :search-term :show-error] false))
-     :dispatch-debounced {:timeout  500
-                          :id       :application-search
-                          :dispatch [:application/reload-applications]}}))
+    (let [parsed-search-term (parse-search-term search-term)]
+      (cond-> {:db (-> db
+                       (assoc-in [:application :search-control :search-term :value] search-term)
+                       (assoc-in [:application :search-control :search-term :parsed] parsed-search-term)
+                       (assoc-in [:application :search-control :search-term :show-error] false))}
+              (or (some? parsed-search-term) (clojure.string/blank? search-term))
+              (assoc :dispatch-debounced {:timeout  500
+                                          :id       :application-search
+                                          :dispatch [:application/reload-applications]})))))

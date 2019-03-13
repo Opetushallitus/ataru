@@ -37,9 +37,7 @@
        :on-change   (fn [evt] (dispatch [:application/search-by-term (-> evt .-target .-value)]))}]
      (when-not (clojure.string/blank? @search-term)
        [:a.application__search-control-clear-search-term
-        (if-let [link-to-original-search @(subscribe [:application/path-to-search-without-term])]
-          {:href link-to-original-search}
-          {:on-click #(dispatch [:application/search-by-term ""])})
+        {:on-click #(dispatch [:application/search-by-term ""])}
         [:i.zmdi.zmdi-close]])]))
 
 (defn search-term-tab [selected-tab link-url label-text title-text]
