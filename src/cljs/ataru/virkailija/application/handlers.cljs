@@ -113,10 +113,11 @@
       (assoc-in [:application :selected-application-and-form] nil)
       (assoc-in [:application :application-list-expanded?] true)))
 
-(reg-event-db
+(reg-event-fx
   :application/close-application
-  (fn [db _]
-    (close-application db)))
+  (fn [{db :db} _]
+    {:db       (close-application db)
+     :dispatch [:application/stop-autosave]}))
 
 (defn- map-vals-to-zero [m]
   (into {} (for [[k v] m] [k 0])))
