@@ -50,7 +50,7 @@
   (let [visible?     (subscribe [:state-query [:application :excel-request :visible?]])
         included-ids (subscribe [:state-query [:application :excel-request :included-ids]])
         applications (subscribe [:state-query [:application :applications]])
-        loading?     (subscribe [:state-query [:application :fetching-applications]])]
+        loading?     (subscribe [:state-query [:application :fetching-applications?]])]
     (fn [selected-hakukohde selected-hakukohderyhma filename]
       [:span.application-handling__excel-request-container
        [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
@@ -100,13 +100,13 @@
                        :name  "selected-hakukohderyhma"
                        :value selected-hakukohderyhma}])]
            [:button.application-handling__excel-request-button
-            {:disabled (some? @loading?)
+            {:disabled @loading?
              :on-click (fn [e]
                          (.submit (.getElementById js/document "excel-download-link")))}
             [:span
              (str (get-virkailija-translation :load-excel)
-                  (when (some? @loading?) " "))
-             (when (some? @loading?)
+                  (when @loading? " "))
+             (when @loading?
                [:i.zmdi.zmdi-spinner.spin])]]]])])))
 
 (defn- selected-or-default-mass-review-state
@@ -172,7 +172,7 @@
         selected-to-review-state   (r/atom nil)
         haku-header                (subscribe [:application/list-heading-data-for-haku])
         review-state-counts        (subscribe [:state-query [:application :review-state-counts]])
-        loading?                   (subscribe [:state-query [:application :fetching-applications]])
+        loading?                   (subscribe [:state-query [:application :fetching-applications?]])
         all-states                 (reduce (fn [acc [state _]]
                                              (assoc acc state 0))
                                            {}
@@ -224,14 +224,14 @@
               :submit
               (let [button-disabled? (or (= (selected-or-default-mass-review-state selected-from-review-state from-states)
                                             (selected-or-default-mass-review-state selected-to-review-state all-states))
-                                         (some? @loading?))]
+                                         @loading?)]
                 [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button
                  {:on-click #(when-not button-disabled? (reset! submit-button-state :confirm))
                   :disabled button-disabled?}
                  [:span
                   (str (get-virkailija-translation :change)
-                       (when (some? @loading?) " "))
-                  (when (some? @loading?)
+                       (when @loading? " "))
+                  (when @loading?
                     [:i.zmdi.zmdi-spinner.spin])]])
 
               :confirm
@@ -1831,7 +1831,7 @@
         loaded-count            (subscribe [:application/loaded-applications-count])
         applications            (subscribe [:application/loaded-applications])
         has-more?               (subscribe [:application/has-more-applications?])
-        fetching                (subscribe [:state-query [:application :fetching-applications]])
+        loading?                (subscribe [:state-query [:application :fetching-applications?]])
         expanded                (subscribe [:state-query [:application :application-list-expanded?]])]
     (fn []
       [:div
@@ -1843,12 +1843,13 @@
            [application-list-header @loaded-count]
            (when (not-empty @applications)
              [application-list-contents @applications])
-           (when (and @has-more? @expanded)
-             [:div#application-handling__end-of-list-element
-              [:i.application-handling__end-of-list-element-spinner.zmdi.zmdi-spinner.spin]])
-           (when (and (some? @fetching) (empty? @applications))
-             [:div.application-handling__list-loading-indicator
-              [:i.zmdi.zmdi-spinner]])])]
+           (if (empty? @applications)
+             (when @loading?
+               [:div.application-handling__list-loading-indicator
+                [:i.zmdi.zmdi-spinner]])
+             (when (and @has-more? @expanded)
+               [:div#application-handling__end-of-list-element
+                [:i.application-handling__end-of-list-element-spinner.zmdi.zmdi-spinner.spin]]))])]
        (when (not @search-control-all-page)
          [:div.application-handling__review-area-container
           [application-review-area]])])))

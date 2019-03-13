@@ -30,7 +30,6 @@
     (dispatch [:editor/select-form (:key form)])))
 
 (defn common-actions-for-applications-route []
-  (dispatch [:application/refresh-haut-and-hakukohteet])
   (dispatch [:set-active-panel :application])
   (dispatch [:application/get-virkailija-settings]))
 
@@ -62,6 +61,7 @@
 
   (defroute #"^/lomake-editori/applications/incomplete" []
     (common-actions-for-applications-route)
+    (dispatch [:application/refresh-haut-and-hakukohteet nil])
     (dispatch [:application/show-incomplete-haut-list]))
 
   (defroute #"^/lomake-editori/applications/complete/" []
@@ -69,6 +69,7 @@
 
   (defroute #"^/lomake-editori/applications/complete" []
     (common-actions-for-applications-route)
+    (dispatch [:application/refresh-haut-and-hakukohteet nil])
     (dispatch [:application/show-complete-haut-list]))
 
   (defroute "/lomake-editori/applications/search/" []

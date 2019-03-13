@@ -281,7 +281,7 @@
 (re-frame/reg-sub
   :application/mass-information-request-form-status
   (fn [db]
-    (cond (some? (get-in db [:application :fetching-applications]))
+    (cond (get-in db [:application :fetching-applications?])
           :loading-applications
           (not (mass-information-request-button-enabled? db))
           :disabled
