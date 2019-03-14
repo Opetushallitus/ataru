@@ -770,3 +770,8 @@
   (fn [db [_ hakukohde-oid]]
     (contains? (set (get-in db [:application :selected-review-hakukohde-oids]))
                hakukohde-oid)))
+
+(re-frame/reg-sub
+  :application/show-hakukierros-paattynyt?
+  (fn show-hakukierros-paattynyt? [db _]
+    (boolean (:show-hakukierros-paattynyt db))))

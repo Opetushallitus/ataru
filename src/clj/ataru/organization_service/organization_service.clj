@@ -2,14 +2,13 @@
   (:require
    [clojure.string :refer [join]]
    [com.stuartsierra.component :as component]
+   [ataru.cache.cache-service :as cache]
    [ataru.config.core :refer [config]]
-   [clojure.core.cache :as cache]
+   [clojure.core.cache :as ccache]
    [medley.core :refer [map-kv]]
    [ataru.organization-service.organization-client :as org-client]))
 
 (def all-orgs-cache-time-to-live (* 2 60 1000))
-(def org-parents-cache-time-to-live (* 5 60 1000))
-(def group-cache-time-to-live (* 5 60 1000))
 (def group-oid-prefix "1.2.246.562.28")
 
 (defn unknown-group [oid] {:oid oid :name {:fi "Tuntematon ryhmä"} :type :group})
@@ -23,11 +22,11 @@
 
 (defn get-from-cache-or-real-source [cache-instance cache-key get-from-source-fn]
   (let [item (delay (get-from-source-fn))]
-    (cache/lookup (swap! cache-instance
-                         #(if (cache/has? % cache-key)
-                            (cache/hit % cache-key)
-                            (cache/miss % cache-key @item)))
-                  cache-key)))
+    (ccache/lookup (swap! cache-instance
+                          #(if (ccache/has? % cache-key)
+                             (ccache/hit % cache-key)
+                             (ccache/miss % cache-key @item)))
+                   cache-key)))
 
 (defn get-orgs-from-cache-or-client [all-orgs-cache direct-oids]
   (let [oids-key  (join "-" direct-oids)
@@ -37,31 +36,21 @@
       cache-key
       #(mapcat org-client/get-organizations direct-oids))))
 
-(defn get-groups-from-cache-or-client [group-cache]
-  (get-from-cache-or-real-source
-   group-cache
-   :groups
-   (fn [] (reduce #(assoc %1 (:oid %2) %2) {} (org-client/get-groups)))))
-
 (defn group-oid? [oid] (clojure.string/starts-with? oid group-oid-prefix))
-
-(defn get-group [group-cache group-oid]
-  {:pre [(group-oid? group-oid)]}
-  (let [groups (get-groups-from-cache-or-client group-cache)]
-    (get groups group-oid (unknown-group group-oid))))
 
 (defn- hakukohderyhmat-from-groups [groups]
   (let [hakukohde-groups (filter :hakukohderyhma? groups)]
     (map #(select-keys % [:oid :name :hakukohderyhma? :active?]) hakukohde-groups)))
 
 ;; The real implementation for Organization service
-(defrecord IntegratedOrganizationService []
+(defrecord IntegratedOrganizationService [all-organization-groups-cache]
   component/Lifecycle
   OrganizationService
 
   (get-hakukohde-groups [this]
-    (let [groups (vals (get-groups-from-cache-or-client (:group-cache this)))]
-      (hakukohderyhmat-from-groups groups)))
+    (->> (cache/get-from all-organization-groups-cache :dummy-key)
+         vals
+         hakukohderyhmat-from-groups))
 
   (get-all-organizations [this direct-organizations]
     (let [[groups orgs]       ((juxt filter remove) #(group-oid? (:oid %)) direct-organizations)
@@ -75,15 +64,13 @@
   (get-organizations-for-oids [this organization-oids]
     (let [[group-oids normal-org-oids] ((juxt filter remove) group-oid? organization-oids)
           normal-orgs (map org-client/get-organization normal-org-oids)
-          groups      (map (partial get-group (:group-cache this))
-                           group-oids)]
+          all-groups  (cache/get-from all-organization-groups-cache :dummy-key)
+          groups      (map #(get all-groups % (unknown-group %)) group-oids)]
       (concat normal-orgs groups)))
 
   (start [this]
     (-> this
-        (assoc :all-orgs-cache (atom (cache/ttl-cache-factory {} :ttl all-orgs-cache-time-to-live)))
-        (assoc :group-cache (atom (cache/ttl-cache-factory {} :ttl group-cache-time-to-live)))
-        (assoc :org-parents-cache (atom (cache/ttl-cache-factory {} :ttl org-parents-cache-time-to-live)))))
+        (assoc :all-orgs-cache (atom (ccache/ttl-cache-factory {} :ttl all-orgs-cache-time-to-live)))))
 
   (stop [this]
     (assoc this :all-orgs-cache nil)))
@@ -123,4 +110,4 @@
 (defn new-organization-service []
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode
     (->FakeOrganizationService)
-    (->IntegratedOrganizationService)))
+    (->IntegratedOrganizationService nil)))

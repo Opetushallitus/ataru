@@ -742,7 +742,8 @@
                  (update :fetching-haut inc)
                  (update :fetching-hakukohteet inc))
        :http {:method              :get
-              :path                "/lomake-editori/api/haut"
+              :path                (str "/lomake-editori/api/haut?show-hakukierros-paattynyt="
+                                        (boolean (:show-hakukierros-paattynyt db)))
               :handler-or-dispatch :editor/handle-refresh-haut-and-hakukohteet
               :skip-parse-times?   true
               :cache-ttl           (* 1000 60 5)}})))
@@ -1182,3 +1183,9 @@
     (if request-id
       (update db :request-handles dissoc request-id)
       db)))
+
+(reg-event-fx
+  :application/toggle-show-hakukierros-paattynyt
+  (fn toggle-show-hakukierros-paattynyt [{:keys [db]} _]
+    {:db       (update db :show-hakukierros-paattynyt not)
+     :dispatch [:application/refresh-haut-and-hakukohteet]}))

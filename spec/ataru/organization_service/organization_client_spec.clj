@@ -65,14 +65,14 @@
              (org-client/get-organization "1.2.246.562.10.3242342")))
   (it "Returns groups"
     (with-redefs [http/request fake-groups]
-      (should= [{:name {:fi "Yhteiskäyttöryhmä"}
-                 :oid  "1.2.246.562.28.1.2"
-                 :type :group
-                 :hakukohderyhma? false
-                 :active? true}
-                {:name {:fi "Toinen ryhmä"}
-                 :oid  "1.2.246.562.28.1.3"
-                 :type :group
-                 :hakukohderyhma? false
-                 :active? false}]
+      (should= {"1.2.246.562.28.1.2" {:name            {:fi "Yhteiskäyttöryhmä"}
+                                      :oid             "1.2.246.562.28.1.2"
+                                      :type            :group
+                                      :hakukohderyhma? false
+                                      :active?         true}
+                "1.2.246.562.28.1.3" {:name            {:fi "Toinen ryhmä"}
+                                      :oid             "1.2.246.562.28.1.3"
+                                      :type            :group
+                                      :hakukohderyhma? false
+                                      :active?         false}}
                (org-client/get-groups)))))

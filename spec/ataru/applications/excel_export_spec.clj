@@ -15,7 +15,6 @@
 (def koodisto-cache (reify cache-service/Cache
                       (get-from [this key])
                       (get-many-from [this keys])
-                      (put-to [this key value])
                       (remove-from [this key])
                       (clear-all [this])))
 

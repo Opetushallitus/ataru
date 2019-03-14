@@ -82,6 +82,7 @@
                  [com.amazonaws/aws-java-sdk-s3 "1.11.477"]
                  [com.amazonaws/aws-java-sdk-sns "1.11.477"]
                  [com.amazonaws/aws-java-sdk-sqs "1.11.477"]
+                 [com.github.ben-manes.caffeine/caffeine "2.6.2"]
                  [clj-http "3.9.1"]]
 
   :min-lein-version "2.5.3"

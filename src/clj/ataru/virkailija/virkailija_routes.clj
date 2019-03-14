@@ -181,7 +181,8 @@
                           statistics-week-cache
                           statistics-day-cache
                           koodisto-cache
-                          person-service]
+                          person-service
+                          get-haut-cache]
                    :as dependencies}]
   (api/context "/api" []
     :tags ["form-api"]
@@ -545,9 +546,15 @@
                      {})}))
 
     (api/GET "/haut" {session :session}
+      :query-params [{show-hakukierros-paattynyt :- s/Bool false}]
       :summary "List haku and hakukohde information found for applications stored in system"
       :return ataru-schema/Haut
-      (ok (haku-service/get-haut organization-service tarjonta-service session)))
+      (ok (haku-service/get-haut ohjausparametrit-service
+                                 organization-service
+                                 tarjonta-service
+                                 get-haut-cache
+                                 session
+                                 show-hakukierros-paattynyt)))
 
     (api/context "/koodisto" []
       :tags ["koodisto-api"]
