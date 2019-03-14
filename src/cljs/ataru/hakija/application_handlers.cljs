@@ -484,7 +484,7 @@
   :application/post-handle-form-dispatches
   (fn [_ _]
     {:dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
-                  [:application/hakukohde-query-change "" 0]
+                  [:application/hakukohde-query-change (atom "")]
                   [:application/set-page-title]
                   [:application/update-answers-validity]]}))
 

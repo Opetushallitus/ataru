@@ -354,12 +354,23 @@
             nil)))
 
 (re-frame/reg-sub
+  :application/rajaavat-hakukohderyhmat
+  (fn [db _]
+    (get-in db [:form :rajaavat-hakukohderyhmat])))
+
+(re-frame/reg-sub
   :application/rajaavat-hakukohteet
-  (fn [db [_ hakukohde-oid]]
-    (when-let [rajaavat (-> db :form :rajaavat-hakukohderyhmat)]
-      (let [hakukohteet                   (hakukohteet-from-tarjonta db (set (cons hakukohde-oid (selected-hakukohteet db))))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/rajaavat-hakukohderyhmat])
+     (re-frame/subscribe [:application/tarjonta-hakukohteet])
+     (re-frame/subscribe [:application/selected-hakukohteet])])
+  (fn rajaavat-hakukohteet [[rajaavat tarjonta-hakukohteet selected-hakukohteet] [_ hakukohde-oid]]
+    (when-let [rajaavat (seq rajaavat)]
+      (let [hakukohteet                   (set (cons hakukohde-oid selected-hakukohteet))
+            hakukohteet                   (filter #(contains? hakukohteet (:oid %)) tarjonta-hakukohteet)
             hakukohde                     (first (filter #(= (:oid %) hakukohde-oid) hakukohteet))
             hakukohteet                   (filter #(not-empty (clojure.set/intersection (set (:hakukohderyhmat %))
+                                                                                        (set (map :hakukohderyhma-oid rajaavat))
                                                                                         (set (:hakukohderyhmat hakukohde)))) hakukohteet)
             limitting-hakukohderyhma-oids (set (validators/limitting-hakukohderyhmat hakukohteet rajaavat))]
         (->> hakukohteet
