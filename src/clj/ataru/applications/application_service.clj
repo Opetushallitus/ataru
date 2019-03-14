@@ -606,6 +606,26 @@
        :applications    (map (partial add-henkilo henkilot) applications)})
     {:unauthorized nil}))
 
+(defn- add-selected-hakukohteet
+  [tarjonta-service
+   states-and-filters
+   haku-oid
+   hakukohde-oid
+   hakukohderyhma-oid
+   rajaus-hakukohteella]
+  (cond (some? hakukohde-oid)
+        (assoc states-and-filters :selected-hakukohteet #{hakukohde-oid})
+        (some? rajaus-hakukohteella)
+        (assoc states-and-filters :selected-hakukohteet #{rajaus-hakukohteella})
+        (and (some? haku-oid) (some? hakukohderyhma-oid))
+        (->> (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil)
+             (filter #(some #{hakukohderyhma-oid} (:ryhmaliitokset %)))
+             (map :oid)
+             set
+             (assoc states-and-filters :selected-hakukohteet))
+        :else
+        states-and-filters))
+
 (s/defn ^:always-validate query-applications-paged
   [organization-service
    person-service
@@ -657,4 +677,9 @@
        session
        query
        sort
-       states-and-filters))))
+       (add-selected-hakukohteet tarjonta-service
+                                 states-and-filters
+                                 haku-oid
+                                 hakukohde-oid
+                                 hakukohderyhma-oid
+                                 rajaus-hakukohteella)))))

@@ -674,8 +674,7 @@
    (s/optional-key :states-and-filters)   {:filters                      {s/Keyword {s/Keyword s/Bool}}
                                            :attachment-states-to-include [s/Str]
                                            :processing-states-to-include [s/Str]
-                                           :selection-states-to-include  [s/Str]
-                                           :selected-hakukohteet         (s/maybe [s/Str])}})
+                                           :selection-states-to-include  [s/Str]}})
 
 (s/defschema ApplicationQueryResponse
   {:sort         Sort
