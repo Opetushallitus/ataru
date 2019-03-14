@@ -11,7 +11,7 @@
   (f/formatter fmt-str (t/time-zone-for-id "Europe/Helsinki")))
 
 (def finnish-format (new-formatter "d.M.yyyy 'klo' HH:mm"))
-(def swedish-format (new-formatter "d.M.yyyy 'kl' HH:mm z"))
+(def swedish-format (new-formatter "d.M.yyyy 'kl.' HH:mm z"))
 (def english-format (new-formatter "MMM. d, yyyy 'at' hh:mm a z"))
 
 (defn date-timez->localized-date-time [datetime lang]
@@ -21,7 +21,7 @@
     :else (f/unparse english-format datetime)))
 
 (def finnish-time-format (new-formatter "'klo' HH:mm"))
-(def swedish-time-format (new-formatter "'kl' HH:mm z"))
+(def swedish-time-format (new-formatter "'kl.' HH:mm z"))
 (def english-time-format (new-formatter "'at' hh:mm a z"))
 
 (defn date-timez->localized-time [datetime lang]
