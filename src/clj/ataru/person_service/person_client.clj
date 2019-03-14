@@ -113,4 +113,5 @@
   (load [_ key]
     (get-person oppijanumerorekisteri-cas-client key))
   (load-many [_ keys]
-    (get-persons oppijanumerorekisteri-cas-client keys)))
+    (get-persons oppijanumerorekisteri-cas-client keys))
+  (check-schema [_ _] nil))

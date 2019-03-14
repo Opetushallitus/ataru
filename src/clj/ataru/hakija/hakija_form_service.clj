@@ -306,7 +306,8 @@
                                      (Boolean/valueOf aips?)
                                      (map keyword roles))))
   (load-many [this keys]
-    (into {} (keep #(when-let [v (cache/load this %)] [% v]) keys))))
+    (into {} (keep #(when-let [v (cache/load this %)] [% v]) keys)))
+  (check-schema [_ _] nil))
 
 (def form-coercer (sc/coercer! form-schema/FormWithContentAndTarjontaMetadata
                                coerce/json-schema-coercion-matcher))
@@ -324,4 +325,5 @@
                                        (Boolean/valueOf aips?)
                                        (map keyword roles))))))
   (load-many [this keys]
-    (into {} (keep #(when-let [v (cache/load this %)] [% v]) keys))))
+    (into {} (keep #(when-let [v (cache/load this %)] [% v]) keys)))
+  (check-schema [_ _] nil))

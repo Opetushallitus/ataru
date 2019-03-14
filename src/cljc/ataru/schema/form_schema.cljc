@@ -245,20 +245,23 @@
    :attachment-modify-grace-period-days (s/maybe s/Int)
    :hakukierros-end                     (s/maybe s/Int)})
 
+(s/defschema Koulutus
+  {:oid                       s/Str
+   :koulutuskoodi-name        LocalizedString
+   :koulutusohjelma-name      LocalizedString
+   :tutkintonimike-names      [LocalizedString]
+   (s/optional-key :tarkenne) s/Str})
+
 (s/defschema FormTarjontaHakukohde
-  {:oid                          s/Str
-   :name                         LocalizedStringOptional
-   :kohdejoukko-korkeakoulu?     s/Bool
-   :tarjoaja-name                LocalizedStringOptional
-   (s/optional-key :form-key)    (s/maybe s/Str)
-   :hakukohderyhmat              [s/Str]
-   :hakuaika                     Hakuaika
-   (s/optional-key :koulutukset) [{:oid                  s/Str
-                                   :koulutuskoodi-name   LocalizedStringOptional
-                                   :tutkintonimike-names [LocalizedStringOptional]
-                                   :tarkenne             (s/maybe s/Str)
-                                   :koulutusohjelma-name LocalizedStringOptional}]
-   :applicable-base-educations   [s/Str]})
+  {:oid                        s/Str
+   :name                       LocalizedStringOptional
+   :kohdejoukko-korkeakoulu?   s/Bool
+   :tarjoaja-name              LocalizedStringOptional
+   (s/optional-key :form-key)  (s/maybe s/Str)
+   :hakukohderyhmat            [s/Str]
+   :hakuaika                   Hakuaika
+   :koulutukset                [Koulutus]
+   :applicable-base-educations [s/Str]})
 
 (s/defschema FormTarjontaMetadata
   {:hakukohteet                        [FormTarjontaHakukohde]

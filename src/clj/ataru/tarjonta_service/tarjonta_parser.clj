@@ -19,39 +19,6 @@
               :when (contains? names lang)]
           [lang (-> names lang key-fn)]))))
 
-(defn- parse-koulutuskoodi
-  [koulutus]
-  (-> koulutus
-      :koulutuskoodi
-      :meta
-      (clojure.set/rename-keys lang-key-renames)
-      (localized-names :nimi)))
-
-(defn- parse-tutkintonimikes
-  [koulutus]
-  (mapv (fn [[_ name]]
-          (-> name
-              :meta
-              (clojure.set/rename-keys lang-key-renames)
-              (localized-names :nimi)))
-        (-> koulutus :tutkintonimikes :meta)))
-
-(defn- parse-koulutusohjelma
-  [koulutus]
-  (-> koulutus
-      :koulutusohjelma
-      :tekstis
-      (clojure.set/rename-keys lang-key-renames)
-      localized-names))
-
-(defn- parse-koulutus
-  [response]
-  {:oid                  (:oid response)
-   :koulutuskoodi-name   (parse-koulutuskoodi response)
-   :tutkintonimike-names (parse-tutkintonimikes response)
-   :tarkenne             (:tarkenne response)
-   :koulutusohjelma-name (parse-koulutusohjelma response)})
-
 (defn- parse-hakukohde
   [tarjonta-service
    now
@@ -76,9 +43,9 @@
                                   "haunkohdejoukko_12#")
      :tarjoaja-name              (:tarjoajaNimet hakukohde)
      :form-key                   (:ataruLomakeAvain hakukohde)
-     :koulutukset                (->> (map :oid (:koulutukset hakukohde))
-                                      (map #(get tarjonta-koulutukset %))
-                                      (map parse-koulutus))
+     :koulutukset                (mapv #(or (get tarjonta-koulutukset (:oid %))
+                                            (throw (new RuntimeException (str "Koulutus " (:oid %) " not found"))))
+                                       (:koulutukset hakukohde))
      :hakuaika                   (hakuaika/get-hakuaika-info now haku ohjausparametrit hakukohde)
      :applicable-base-educations (mapcat pohjakoulutukset-by-vaatimus (:hakukelpoisuusvaatimusUris hakukohde))}))
 
