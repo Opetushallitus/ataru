@@ -5,7 +5,7 @@
             [ataru.util :as autil]
             [ataru.hakija.rules :as rules]
             [ataru.hakija.resumable-upload :as resumable-upload]
-            [ataru.hakija.try-selection :refer [try-selection remove-selection]]
+            [ataru.hakija.try-selection :refer [try-selection]]
             [cljs.core.match :refer-macros [match]]
             [ataru.hakija.application :refer [create-initial-answers
                                               create-application-to-submit
@@ -910,8 +910,6 @@
                                    (assoc-in value-path new-value)
                                    (set-multi-value-changed id :value)
                                    (set-field-visibility field-descriptor)))]
-      (when (and selection-group-id selection-id (clojure.string/blank? new-value))
-        (remove-selection form-key selection-id selection-group-id id))
       {:db                 (set-validator-processing db id)
        :validate-debounced {:value                        new-value
                             :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])

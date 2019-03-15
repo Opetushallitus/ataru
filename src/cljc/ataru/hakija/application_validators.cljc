@@ -95,9 +95,7 @@
   (let [id (:id field-descriptor)
         {original-value :original-value} ((keyword id) answers-by-key)]
     (asyncm/go
-      (if (= original-value value)
-        [true [] []]
-        (async/<! (try-selection id value))))))
+      (async/<! (try-selection id value)))))
 
 (def ^:private postal-code-pattern #"^\d{5}$")
 
