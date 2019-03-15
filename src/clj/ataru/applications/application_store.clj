@@ -334,22 +334,35 @@
 
 (defn- query->db-query
   ([connection query]
-   (-> (merge {:form                   nil
-               :application_oid        nil
-               :application_oids       nil
-               :person_oid             nil
-               :name                   nil
-               :email                  nil
-               :dob                    nil
-               :ssn                    nil
-               :haku                   nil
-               :hakukohde              nil
-               :ensisijainen_hakukohde nil}
+   (-> (merge {:form                         nil
+               :application_oid              nil
+               :application_oids             nil
+               :person_oid                   nil
+               :name                         nil
+               :email                        nil
+               :dob                          nil
+               :ssn                          nil
+               :haku                         nil
+               :hakukohde                    nil
+               :ensisijainen_hakukohde       nil
+               :ensisijaisesti_hakukohteissa nil}
               (transform-keys ->snake_case query))
+       (update :hakukohde
+               #(some->> (seq %)
+                         to-array
+                         (.createArrayOf (:connection connection) "varchar")))
        (update :application_oids
                #(some->> (seq %)
                          to-array
-                         (.createArrayOf (:connection connection) "text")))))
+                         (.createArrayOf (:connection connection) "text")))
+       (update :ensisijainen_hakukohde
+               #(some->> (seq %)
+                         to-array
+                         (.createArrayOf (:connection connection) "varchar")))
+       (update :ensisijaisesti_hakukohteissa
+               #(some->> (seq %)
+                         to-array
+                         (.createArrayOf (:connection connection) "varchar")))))
   ([connection query sort]
    (merge (query->db-query connection query)
           {:offset_key            (:key (:offset sort))

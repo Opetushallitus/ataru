@@ -127,8 +127,13 @@ WHERE la.key IS NULL
   AND (:dob::text IS NULL OR a.dob = to_date(:dob, 'DD.MM.YYYY'))
   AND (:ssn::text IS NULL OR a.ssn = :ssn)
   AND (:haku::text IS NULL OR a.haku = :haku)
-  AND (:hakukohde::text IS NULL OR :hakukohde = ANY (a.hakukohde))
-  AND (:ensisijainen_hakukohde::text IS NULL OR a.hakukohde[1] = :ensisijainen_hakukohde)
+  AND (:hakukohde::text IS NULL OR a.hakukohde && :hakukohde)
+  AND ((:ensisijainen_hakukohde::varchar[] IS NULL AND :ensisijaisesti_hakukohteissa::varchar[] IS NULL) OR
+       (SELECT t.h
+        FROM unnest(a.hakukohde) WITH ORDINALITY AS t(h, i)
+        WHERE t.h = ANY(coalesce(:ensisijaisesti_hakukohteissa, a.hakukohde))
+        ORDER BY t.i ASC
+        LIMIT 1) = ANY(:ensisijainen_hakukohde))
   AND CASE
         WHEN :offset_key::text IS NULL
           THEN true
@@ -763,7 +768,7 @@ WHERE
   AND (:application_oids::text[] IS NULL OR a.key = ANY (:application_oids))
   AND (:name::text IS NULL OR to_tsvector('unaccent_simple', a.preferred_name || ' ' || a.last_name) @@ to_tsquery('unaccent_simple', :name))
   AND (:haku::text IS NULL OR a.haku = :haku)
-  AND (:hakukohde::text IS NULL OR :hakukohde = ANY (a.hakukohde))
+  AND (:hakukohde::text IS NULL OR a.hakukohde && :hakukohde)
 ORDER BY a.created_time DESC;
 
 --name: yesql-applications-for-hakurekisteri

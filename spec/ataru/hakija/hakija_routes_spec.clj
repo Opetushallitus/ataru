@@ -131,7 +131,7 @@
   []
   (let [app-count
         (+ (count (store/get-application-heading-list
-                   {:hakukohde (:hakukohde @form)}
+                   {:hakukohde [(:hakukohde @form)]}
                    {:order-by "created-time"
                     :order    "desc"}))
            (count (store/get-application-heading-list

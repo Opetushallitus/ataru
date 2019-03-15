@@ -25,6 +25,7 @@
     [ataru.application.review-states :as review-states]
     [ataru.application.application-states :as application-states]
     [ataru.schema.form-schema :as ataru-schema]
+    [ataru.organization-service.session-organizations :as session-orgs]
     [schema.core :as s]
     [ataru.dob :as dob])
   (:import [java.io ByteArrayInputStream]))
@@ -190,46 +191,6 @@
                                :review-notes         @review-notes
                                :information-requests @information-requests}))))
 
-(defn- belongs-to-hakukohderyhma?
-  [hakukohderyhma-oid hakukohde]
-  (->> (:ryhmaliitokset hakukohde)
-       (map :ryhmaOid)
-       (some #(= hakukohderyhma-oid %))))
-
-(defn- applied-to-hakukohderyhma?
-  [hakukohderyhma-oid _ application]
-  (some #(belongs-to-hakukohderyhma? hakukohderyhma-oid %)
-        (:hakukohde application)))
-
-(defn- filter-with-hakukohde [hakukohde-oid hakukohde]
-  (if hakukohde-oid
-    (when (= hakukohde-oid (:oid hakukohde))
-      hakukohde)
-    hakukohde))
-
-(defn- first-hakukohde-in-hakukohderyhma
-  [hakukohderyhma-oid rajaus-hakukohteella application]
-  (->> (:hakukohde application)
-       (filter #(belongs-to-hakukohderyhma? hakukohderyhma-oid %))
-       first
-       (filter-with-hakukohde rajaus-hakukohteella)))
-
-(defn- belongs-to-some-organization?
-  [authorized-organization-oids hakukohde]
-  (not-empty
-   (clojure.set/intersection
-    authorized-organization-oids
-    (set (:tarjoajaOids hakukohde)))))
-
-(defn- applied-ensisijaisesti-hakukohderyhmassa?
-  [rajaus-hakukohteella hakukohderyhma-oid authorized-organization-oids application]
-  (and (some? authorized-organization-oids)
-       (belongs-to-some-organization? authorized-organization-oids
-                                      (first-hakukohde-in-hakukohderyhma
-                                       hakukohderyhma-oid
-                                       rajaus-hakukohteella
-                                       application))))
-
 (defn ->form-query
   [key]
   {:form key
@@ -238,18 +199,40 @@
 (defn ->hakukohde-query
   [hakukohde-oid ensisijaisesti]
   (if ensisijaisesti
-    {:ensisijainen-hakukohde hakukohde-oid
+    {:ensisijainen-hakukohde [hakukohde-oid]
      :predicate              (constantly true)}
-    {:hakukohde hakukohde-oid
+    {:hakukohde [hakukohde-oid]
      :predicate (constantly true)}))
 
 (defn ->hakukohderyhma-query
-  [haku-oid hakukohderyhma-oid ensisijaisesti rajaus-hakukohteella]
-  {:haku      haku-oid
-   :predicate (partial (if ensisijaisesti
-                         (partial applied-ensisijaisesti-hakukohderyhmassa? rajaus-hakukohteella)
-                         applied-to-hakukohderyhma?)
-                       hakukohderyhma-oid)})
+  [tarjonta-service
+   organization-service
+   session
+   haku-oid
+   hakukohderyhma-oid
+   ensisijaisesti
+   rajaus-hakukohteella]
+  (let [authorized-organization-oids (session-orgs/run-org-authorized
+                                      session
+                                      organization-service
+                                      [:view-applications :edit-applications]
+                                      (fn [] (constantly false))
+                                      (fn [oids] #(contains? oids %))
+                                      (fn [] (constantly true)))
+        ryhman-hakukohteet           (filter #(some #{hakukohderyhma-oid} (:ryhmaliitokset %))
+                                             (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil))
+        kayttajan-hakukohteet        (filter #(some authorized-organization-oids (:tarjoaja-oids %))
+                                             ryhman-hakukohteet)]
+    (merge {:haku      haku-oid
+            :predicate (constantly true)}
+           (cond (and ensisijaisesti (some? rajaus-hakukohteella))
+                 {:ensisijainen-hakukohde       [rajaus-hakukohteella]
+                  :ensisijaisesti-hakukohteissa (map :oid ryhman-hakukohteet)}
+                 ensisijaisesti
+                 {:ensisijainen-hakukohde       (map :oid kayttajan-hakukohteet)
+                  :ensisijaisesti-hakukohteissa (map :oid ryhman-hakukohteet)}
+                 :else
+                 {:hakukohde (map :oid ryhman-hakukohteet)}))))
 
 (defn ->haku-query
   [haku-oid]
@@ -651,7 +634,14 @@
                       (cond (some? form-key)
                             (->form-query form-key)
                             (and (some? haku-oid) (some? hakukohderyhma-oid))
-                            (->hakukohderyhma-query haku-oid hakukohderyhma-oid ensisijaisesti rajaus-hakukohteella)
+                            (->hakukohderyhma-query
+                             tarjonta-service
+                             organization-service
+                             session
+                             haku-oid
+                             hakukohderyhma-oid
+                             ensisijaisesti
+                             rajaus-hakukohteella)
                             (some? hakukohde-oid)
                             (->hakukohde-query hakukohde-oid ensisijaisesti)
                             (some? haku-oid)
