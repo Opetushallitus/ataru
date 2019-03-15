@@ -193,16 +193,13 @@
 
 (defn ->form-query
   [key]
-  {:form key
-   :predicate   (constantly true)})
+  {:form key})
 
 (defn ->hakukohde-query
   [hakukohde-oid ensisijaisesti]
   (if ensisijaisesti
-    {:ensisijainen-hakukohde [hakukohde-oid]
-     :predicate              (constantly true)}
-    {:hakukohde [hakukohde-oid]
-     :predicate (constantly true)}))
+    {:ensisijainen-hakukohde [hakukohde-oid]}
+    {:hakukohde [hakukohde-oid]}))
 
 (defn ->hakukohderyhma-query
   [tarjonta-service
@@ -223,8 +220,7 @@
                                              (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil))
         kayttajan-hakukohteet        (filter #(some authorized-organization-oids (:tarjoaja-oids %))
                                              ryhman-hakukohteet)]
-    (merge {:haku      haku-oid
-            :predicate (constantly true)}
+    (merge {:haku haku-oid}
            (cond (and ensisijaisesti (some? rajaus-hakukohteella))
                  {:ensisijainen-hakukohde       [rajaus-hakukohteella]
                   :ensisijaisesti-hakukohteissa (map :oid ryhman-hakukohteet)}
@@ -236,57 +232,41 @@
 
 (defn ->haku-query
   [haku-oid]
-  {:haku      haku-oid
-   :predicate (constantly true)})
+  {:haku haku-oid})
 
 (defn ->ssn-query
   [ssn]
-  {:ssn       ssn
-   :predicate (constantly true)})
+  {:ssn ssn})
 
 (defn ->dob-query
   [dob]
-  {:dob       dob
-   :predicate (constantly true)})
+  {:dob dob})
 
 (defn ->email-query
   [email]
-  {:email     email
-   :predicate (constantly true)})
+  {:email email})
 
 (defn ->name-query
   [name]
-  {:name      (application-store/->name-query-value name)
-   :predicate (constantly true)})
+  {:name (application-store/->name-query-value name)})
 
 (defn ->person-oid-query
   [person-oid]
-  {:person-oid person-oid
-   :predicate  (constantly true)})
+  {:person-oid person-oid})
 
 (defn ->application-oid-query
   [application-oid]
-  {:application-oid application-oid
-   :predicate       (constantly true)})
+  {:application-oid application-oid})
 
 (defn ->application-oids-query
   [application-oids]
-  {:application-oids application-oids
-   :predicate        (constantly true)})
+  {:application-oids application-oids})
 
 (defn ->empty-query
   []
-  {:predicate (constantly true)})
+  {})
 
-(defn ->and-query
-  [& queries]
-  (if-let [queries (seq (remove nil? queries))]
-    (let [query (first queries)]
-      (if-let [other-query (second queries)]
-        (assoc (merge query other-query)
-               :predicate (every-pred (:predicate query) (:predicate other-query)))
-        query))
-    (->empty-query)))
+(defn ->and-query [& queries] (apply merge queries))
 
 (defn- processing-state-counts-for-application
   [{:keys [application-hakukohde-reviews]} included-hakukohde-oid-set]

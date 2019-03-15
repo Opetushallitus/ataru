@@ -74,17 +74,12 @@
    [:view-applications :edit-applications]
    (constantly [])
    #(filter-authorized tarjonta-service
-                       (every-pred (partial (:predicate query) %)
-                                   (some-fn (partial authorized-by-form? %)
-                                            (partial authorized-by-tarjoajat? %)))
-                       (application-store/get-application-heading-list
-                        (dissoc query :predicate)
-                        sort))
+                       (some-fn (partial authorized-by-form? %)
+                                (partial authorized-by-tarjoajat? %))
+                       (application-store/get-application-heading-list query sort))
    #(filter-authorized tarjonta-service
-                       (partial (:predicate query) nil)
-                       (application-store/get-application-heading-list
-                        (dissoc query :predicate)
-                        sort))))
+                       (constantly true)
+                       (application-store/get-application-heading-list query sort))))
 
 (defn- can-edit-application?
   [organization-service session application]
@@ -245,11 +240,8 @@
    [:view-applications :edit-applications]
    (constantly nil)
    #(filter-authorized tarjonta-service
-                       (every-pred (partial (:predicate query) %)
-                                   (partial authorized-by-tarjoajat? %))
-                       (application-store/valinta-ui-applications
-                        (dissoc query :predicate)))
+                       (partial authorized-by-tarjoajat? %)
+                       (application-store/valinta-ui-applications query))
    #(filter-authorized tarjonta-service
-                       (partial (:predicate query) nil)
-                       (application-store/valinta-ui-applications
-                        (dissoc query :predicate)))))
+                       (constantly true)
+                       (application-store/valinta-ui-applications query))))
