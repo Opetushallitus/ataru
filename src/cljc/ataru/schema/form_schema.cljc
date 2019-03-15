@@ -247,9 +247,9 @@
 
 (s/defschema Koulutus
   {:oid                       s/Str
-   :koulutuskoodi-name        LocalizedString
-   :koulutusohjelma-name      LocalizedString
-   :tutkintonimike-names      [LocalizedString]
+   :koulutuskoodi-name        LocalizedStringOptional
+   :koulutusohjelma-name      LocalizedStringOptional
+   :tutkintonimike-names      [LocalizedStringOptional]
    (s/optional-key :tarkenne) s/Str})
 
 (s/defschema FormTarjontaHakukohde
