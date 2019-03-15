@@ -5,7 +5,7 @@
             [ataru.util :as autil]
             [ataru.hakija.rules :as rules]
             [ataru.hakija.resumable-upload :as resumable-upload]
-            [ataru.hakija.try-selection :refer [try-selection]]
+            [ataru.hakija.try-selection :refer [try-selection remove-selection]]
             [cljs.core.match :refer-macros [match]]
             [ataru.hakija.application :refer [create-initial-answers
                                               create-application-to-submit
@@ -885,28 +885,33 @@
 (reg-event-fx
   :application/select-single-choice-button
   (fn [{db :db} [_ value field-descriptor question-group-idx]]
-    (let [id            (keyword (:id field-descriptor))
-          button-path   [:application :answers id]
-          value-path    (cond-> button-path
-                                (some? question-group-idx)
-                                (conj :values question-group-idx 0)
-                                true
-                                (conj :value))
-          current-value (get-in db value-path)
-          new-value     (when (not= value current-value) value)
-          db            (if (some? question-group-idx)
-                          (-> db
-                              (update-in (conj button-path :values) (util/vector-of-length (inc question-group-idx)))
-                              (update-in (conj button-path :values question-group-idx) (fnil identity []))
-                              (assoc-in value-path new-value)
-                              (update-in button-path (fn [answer]
-                                                       (assoc answer :value (mapv (partial mapv :value)
-                                                                              (:values answer)))))
-                              (set-multi-value-changed id :value))
-                          (-> db
-                              (assoc-in value-path new-value)
-                              (set-multi-value-changed id :value)
-                              (set-field-visibility field-descriptor)))]
+    (let [id                 (keyword (:id field-descriptor))
+          button-path        [:application :answers id]
+          value-path         (cond-> button-path
+                                     (some? question-group-idx)
+                                     (conj :values question-group-idx 0)
+                                     true
+                                     (conj :value))
+          current-value      (get-in db value-path)
+          new-value          (when (not= value current-value) value)
+          form-key (get-in db [:form :key])
+          selection-id (get-in db [:application :selection-id])
+          selection-group-id (get-in field-descriptor [:params :selection-group-id])
+          db                 (if (some? question-group-idx)
+                               (-> db
+                                   (update-in (conj button-path :values) (util/vector-of-length (inc question-group-idx)))
+                                   (update-in (conj button-path :values question-group-idx) (fnil identity []))
+                                   (assoc-in value-path new-value)
+                                   (update-in button-path (fn [answer]
+                                                            (assoc answer :value (mapv (partial mapv :value)
+                                                                                   (:values answer)))))
+                                   (set-multi-value-changed id :value))
+                               (-> db
+                                   (assoc-in value-path new-value)
+                                   (set-multi-value-changed id :value)
+                                   (set-field-visibility field-descriptor)))]
+      (when (and selection-group-id selection-id (clojure.string/blank? new-value))
+        (remove-selection form-key selection-id selection-group-id id))
       {:db                 (set-validator-processing db id)
        :validate-debounced {:value                        new-value
                             :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
@@ -914,9 +919,9 @@
                             :field-descriptor             field-descriptor
                             :editing?                     (get-in db [:application :editing?])
                             :try-selection                (partial try-selection
-                                                            (get-in db [:form :key])
-                                                            (get-in db [:application :selection-id])
-                                                            (get-in field-descriptor [:params :selection-group-id]))
+                                                            form-key
+                                                            selection-id
+                                                            selection-group-id)
                             :group-idx                    question-group-idx
                             :field-idx                    0
                             :virkailija?                  (contains? (:application db) :virkailija-secret)
