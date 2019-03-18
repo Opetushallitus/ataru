@@ -9,24 +9,19 @@
 
 (defn authorized-by-form?
   [authorized-organization-oids application]
-  (or (nil? authorized-organization-oids)
-      (contains? authorized-organization-oids
-                 (:organization-oid application))))
+  (boolean (authorized-organization-oids (:organization-oid application))))
 
 (defn authorized-by-tarjoajat?
   [authorized-organization-oids application]
-  (or (nil? authorized-organization-oids)
-      (let [tarjoajat       (->> (:hakukohde application)
-                                 (mapcat :tarjoajaOids)
-                                 set)
-            hakukohderyhmat (->> (:hakukohde application)
-                                 (mapcat :ryhmaliitokset)
-                                 (map :ryhmaOid)
-                                 set)]
-        (not (empty?
-              (clojure.set/intersection
-               authorized-organization-oids
-               (clojure.set/union tarjoajat hakukohderyhmat)))))))
+  (let [tarjoajat       (->> (:hakukohde application)
+                             (mapcat :tarjoajaOids)
+                             set)
+        hakukohderyhmat (->> (:hakukohde application)
+                             (mapcat :ryhmaliitokset)
+                             (map :ryhmaOid)
+                             set)]
+    (boolean (some authorized-organization-oids
+                   (concat tarjoajat hakukohderyhmat)))))
 
 (defn- populate-applications-hakukohteet
   [tarjonta-service applications]
