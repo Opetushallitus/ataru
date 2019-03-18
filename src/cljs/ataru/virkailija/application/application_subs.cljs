@@ -544,9 +544,10 @@
     (-> db :application :modify-application-link :state nil?)))
 
 (re-frame/reg-sub
-  :application/loaded-applications
+  :application/applications-to-render
   (fn [db _]
-    (-> db :application :applications)))
+    (take (get-in db [:application :applications-to-render])
+          (get-in db [:application :applications]))))
 
 (re-frame/reg-sub
   :application/has-more-applications?

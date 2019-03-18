@@ -375,15 +375,12 @@
                                       (update-in [:application :selection-state-counts] add-review-state-counts applications selected-hakukohde-oids "selection-state")
                                       (update-in [:application :attachment-state-counts] add-attachment-state-counts applications selected-hakukohde-oids)
                                       (assoc-in [:application :sort] sort)
-                                      (update-in [:application :fetch-all-applications?] #(and % (contains? sort :offset)))
                                       (assoc-in [:application :fetching-applications?] false))
           application-key         (cond
                                     (= 1 (count all-applications))     (-> all-applications first :key)
                                     (-> db :application :selected-key) (-> db :application :selected-key)
                                     :else                              (:application-key (cljs-util/extract-query-params)))]
-      (if (and (contains? sort :offset)
-               (or (< (count all-applications) 100)
-                   (get-in db [:application :fetch-all-applications?])))
+      (if (contains? sort :offset)
         (fetch-applications-fx {:db db})
         {:db       db
          :dispatch (if application-key
@@ -435,31 +432,23 @@
                  (assoc-in [:application :selection-state-counts] (get-in initial-db/default-db [:application :selection-state-counts]))
                  (assoc-in [:application :attachment-state-counts] (get-in initial-db/default-db [:application :attachment-state-counts]))
                  (update-in [:application :sort] dissoc :offset)
-                 (assoc-in [:application :fetching-applications?] true)
-                 (assoc-in [:application :fetch-all-applications?] false))]
+                 (assoc-in [:application :fetching-applications?] true))]
       (cond-> {:db       db
                :dispatch [:application/refresh-haut-and-hakukohteet
                           fetch-applications-fx]}
               (some? (get-in db [:request-handles :applications-list]))
               (assoc :http-abort (get-in db [:request-handles :applications-list]))))))
 
-(reg-event-fx
-  :application/load-next-page
-  (fn [{:keys [db]} _]
-    (when (and (contains? (get-in db [:application :sort]) :offset)
-               (not (get-in db [:application :fetching-applications?])))
-      (fetch-applications-fx {:db db}))))
-
-(reg-event-fx
-  :application/load-rest-of-pages
-  (fn [{db :db} _]
-    {:db       (assoc-in db [:application :fetch-all-applications?] true)
-     :dispatch [:application/load-next-page]}))
+(reg-event-db
+  :application/stop-loading-applications
+  (fn [db _]
+    (assoc-in db [:application :fetching-applications?] false)))
 
 (reg-event-db
-  :application/stop-loading-rest-of-pages
-  (fn [db _]
-    (assoc-in db [:application :fetch-all-applications?] false)))
+  :application/show-more-applications
+  (fn [db [_ currently-rendered]]
+    (update-in db [:application :applications-to-render] #(min (count (get-in db [:application :applications]))
+                                                               (max % (+ currently-rendered 10))))))
 
 (reg-event-db
  :application/review-updated
@@ -813,21 +802,13 @@
 (reg-event-fx
   :application/reset-submit-mass-information-request-state
   (fn [{:keys [db]} _]
-    (let [current-application (-> db :application :selected-key)
-          application-keys    (->> @(subscribe [:application/loaded-applications])
-                                   (map :key)
-                                   set)]
-      {:dispatch-n [[:application/set-mass-information-request-message ""]
-                    [:application/set-mass-information-request-subject ""]
-                    [:application/set-mass-information-request-form-state :enabled]
-                    (when current-application [:application/fetch-application current-application])]
-       :db         (-> db
-                       (update-in
-                         [:application :applications]
-                         (partial map (fn [application]
-                                        (cond-> application
-                                                (contains? application-keys (:key application))
-                                                (assoc :new-application-modifications 0))))))})))
+    {:dispatch-n [[:application/set-mass-information-request-message ""]
+                  [:application/set-mass-information-request-subject ""]
+                  [:application/set-mass-information-request-form-state :enabled]
+                  (when-let [current-application (-> db :application :selected-key)]
+                    [:application/fetch-application current-application])]
+     :db         (update-in db [:application :applications]
+                            (partial map #(assoc % :new-application-modifications 0)))}))
 
 (reg-event-db
   :application/set-information-request-subject
@@ -856,29 +837,20 @@
   (fn [db [_ visible?]]
     (assoc-in db [:application :information-request :visible?] visible?)))
 
-(reg-event-fx
+(reg-event-db
   :application/set-mass-information-request-popup-visibility
-  (fn [{db :db} [_ visible?]]
-    {:db       (assoc-in db [:application :mass-information-request :visible?] visible?)
-     :dispatch (if visible?
-                 [:application/load-rest-of-pages]
-                 [:application/stop-loading-rest-of-pages])}))
+  (fn [db [_ visible?]]
+    (assoc-in db [:application :mass-information-request :visible?] visible?)))
 
-(reg-event-fx
+(reg-event-db
   :application/set-mass-update-popup-visibility
-  (fn [{db :db} [_ visible?]]
-    {:db       (assoc-in db [:application :mass-update :visible?] visible?)
-     :dispatch (if visible?
-                 [:application/load-rest-of-pages]
-                 [:application/stop-loading-rest-of-pages])}))
+  (fn [db [_ visible?]]
+    (assoc-in db [:application :mass-update :visible?] visible?)))
 
-(reg-event-fx
+(reg-event-db
   :application/set-excel-popup-visibility
-  (fn [{db :db} [_ visible?]]
-    {:db       (assoc-in db [:application :excel-request :visible?] visible?)
-     :dispatch (if visible?
-                 [:application/load-rest-of-pages]
-                 [:application/stop-loading-rest-of-pages])}))
+  (fn [db [_ visible?]]
+    (assoc-in db [:application :excel-request :visible?] visible?)))
 
 (reg-event-fx
   :application/handle-submit-information-request-response
@@ -1152,7 +1124,7 @@
           next-application-key    (-> applications (nth guarded-idx) :key)]
       (when next-application-key
         (if is-last?
-          {:dispatch [:application/load-next-page]}
+          {:dispatch [:application/show-more-applications]}
           {:update-url-query-params {:application-key next-application-key}
            :dispatch                [:application/select-application next-application-key selected-hakukohde false]})))))
 

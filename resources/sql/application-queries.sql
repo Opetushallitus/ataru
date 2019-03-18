@@ -161,7 +161,7 @@ CASE WHEN :order_by = 'applicant-name' AND :order = 'desc' THEN a.last_name END 
 CASE WHEN :order_by = 'applicant-name' AND :order = 'desc' THEN a.preferred_name END COLLATE "fi_FI" DESC,
 CASE WHEN :order = 'asc' THEN a.key END,
 CASE WHEN :order = 'desc' THEN a.key END DESC
-LIMIT 100;
+LIMIT 1000;
 
 -- name: yesql-get-application-list-by-person-oid-for-omatsivut
 SELECT

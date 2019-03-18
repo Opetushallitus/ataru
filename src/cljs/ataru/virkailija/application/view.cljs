@@ -406,13 +406,13 @@
   []
   (let [show-mass-update-link? (subscribe [:application/show-mass-update-link?])
         show-excel-link?       (subscribe [:application/show-excel-link?])
-        applications           (subscribe [:application/loaded-applications])
+        applications-count     (subscribe [:application/loaded-applications-count])
         header                 (subscribe [:application/list-heading])
         haku-header            (subscribe [:application/list-heading-data-for-haku])]
     [:div.application-handling__header
      [selected-applications-heading @haku-header @header]
      [:div.editor-form__form-controls-container
-      (when (-> @applications count pos?)
+      (when (pos? @applications-count)
         [mass-information-request-link])
       (when @show-mass-update-link?
         [mass-update-applications-link])
@@ -796,10 +796,14 @@
         {:on-click #(do
                       (dispatch [:application/undo-filters])
                       (swap! filters-visible not))}
-        (gstring/format "%s (%d%s)"
-                        (get-virkailija-translation :filter-applications)
-                        @applications-count
-                        (if @has-more? "+" ""))]
+        [:span
+         (gstring/format "%s (%d"
+                         (get-virkailija-translation :filter-applications)
+                         @applications-count)]
+        (when @has-more?
+          [:span "+ "
+           [:i.zmdi.zmdi-spinner.spin]])
+        [:span ")"]]
        (when (pos? @enabled-filter-count)
          [:span
           [:span.application-handling__filters-count-separator "|"]
@@ -1824,12 +1828,12 @@
       (let [element-offset  (-> end-of-list-element .getBoundingClientRect .-bottom)
             viewport-offset (.-innerHeight js/window)]
         (when (< element-offset viewport-offset)
-          (dispatch [:application/load-next-page]))))))
+          (.click end-of-list-element))))))
 
 (defn application []
   (let [search-control-all-page (subscribe [:application/search-control-all-page-view?])
         loaded-count            (subscribe [:application/loaded-applications-count])
-        applications            (subscribe [:application/loaded-applications])
+        applications            (subscribe [:application/applications-to-render])
         has-more?               (subscribe [:application/has-more-applications?])
         loading?                (subscribe [:state-query [:application :fetching-applications?]])
         expanded                (subscribe [:state-query [:application :application-list-expanded?]])]
@@ -1847,8 +1851,9 @@
              (when @loading?
                [:div.application-handling__list-loading-indicator
                 [:i.zmdi.zmdi-spinner]])
-             (when (and @has-more? @expanded)
+             (when (and @expanded (or @has-more? (< (count @applications) @loaded-count)))
                [:div#application-handling__end-of-list-element
+                {:on-click #(dispatch [:application/show-more-applications (count @applications)])}
                 [:i.application-handling__end-of-list-element-spinner.zmdi.zmdi-spinner.spin]]))])]
        (when (not @search-control-all-page)
          [:div.application-handling__review-area-container
