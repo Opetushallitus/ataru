@@ -232,7 +232,7 @@
   (fn [db [_ path]]
     (-> db
         (update-in [:editor :forms-meta] assoc path :removed)
-        (update-in [:editor :ui :remove-component-button-state] dissoc path)
+        (update-in [:editor :ui :component-button-state :remove] dissoc path)
         (remove-component path))))
 
 (reg-event-fx
@@ -240,21 +240,21 @@
   (fn [{db :db} [_ path]]
     {:db (-> db
              (assoc-in [:editor :forms-meta path] :fade-out)
-             (assoc-in [:editor :ui :remove-component-button-state path] :disabled))
+             (assoc-in [:editor :ui :component-button-state :remove path] :disabled))
      :dispatch-later [{:ms 310 :dispatch [:editor/remove-component path]}]}))
 
 (reg-event-db
-  :editor/unstart-remove-component
-  (fn [db [_ path]]
+  :editor/unstart-component
+  (fn [db [_ component-type path]]
     (cond-> db
-      (= :confirm (get-in db [:editor :ui :remove-component-button-state path]))
-      (assoc-in [:editor :ui :remove-component-button-state path] :active))))
+      (= :confirm (get-in db [:editor :ui :component-button-state component-type path]))
+      (assoc-in [:editor :ui :component-button-state component-type path] :active))))
 
 (reg-event-fx
-  :editor/start-remove-component
-  (fn [{db :db} [_ path]]
-    {:db (assoc-in db [:editor :ui :remove-component-button-state path] :confirm)
-     :dispatch-later [{:ms 2000 :dispatch [:editor/unstart-remove-component path]}]}))
+  :editor/start-component
+  (fn [{db :db} [_ component-type path]]
+    {:db (assoc-in db [:editor :ui :component-button-state component-type path] :confirm)
+     :dispatch-later [{:ms 2000 :dispatch [:editor/unstart-component component-type path]}]}))
 
 (defn stamp-user-organization [is-user-organization-fn hakukohderyhma]
   (merge hakukohderyhma
