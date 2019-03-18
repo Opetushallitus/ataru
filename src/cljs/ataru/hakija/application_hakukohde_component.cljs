@@ -155,7 +155,7 @@
   []
   (let [hakukohde-hits         (subscribe [:application/hakukohde-hits])
         prioritize-hakukohteet (subscribe [:application/prioritize-hakukohteet?])
-        search-input           (r/atom "")]
+        search-input           (r/atom @(subscribe [:application/hakukohde-query]))]
     (fn []
       [:div.application__hakukohde-selection
        [:div.application__hakukohde-selection-search-arrow-up

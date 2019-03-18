@@ -322,7 +322,7 @@
 
 (re-frame/reg-sub
   :application/hakukohde-query
-  (fn [db _] (get-in db [:application :hakukohde-query])))
+  (fn [db _] (get-in db [:application :hakukohde-query] "")))
 
 (re-frame/reg-sub
   :application/show-more-hakukohdes?
