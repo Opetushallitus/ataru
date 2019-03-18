@@ -203,23 +203,15 @@
 
 (defn ->hakukohderyhma-query
   [tarjonta-service
-   organization-service
-   session
+   authorized-organization-oids
    haku-oid
    hakukohderyhma-oid
    ensisijaisesti
    rajaus-hakukohteella]
-  (let [authorized-organization-oids (session-orgs/run-org-authorized
-                                      session
-                                      organization-service
-                                      [:view-applications :edit-applications]
-                                      (fn [] (constantly false))
-                                      (fn [oids] #(contains? oids %))
-                                      (fn [] (constantly true)))
-        ryhman-hakukohteet           (filter #(some #{hakukohderyhma-oid} (:ryhmaliitokset %))
-                                             (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil))
-        kayttajan-hakukohteet        (filter #(some authorized-organization-oids (:tarjoaja-oids %))
-                                             ryhman-hakukohteet)]
+  (let [ryhman-hakukohteet    (filter #(some #{hakukohderyhma-oid} (:ryhmaliitokset %))
+                                      (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil))
+        kayttajan-hakukohteet (filter #(some authorized-organization-oids (:tarjoaja-oids %))
+                                      ryhman-hakukohteet)]
     (merge {:haku haku-oid}
            (cond (and ensisijaisesti (some? rajaus-hakukohteella))
                  {:ensisijainen-hakukohde       [rajaus-hakukohteella]
@@ -330,37 +322,36 @@
          applications)))
 
 (defn get-application-list-by-query
-  [organization-service
-   person-service
+  [person-service
    tarjonta-service
-   session
+   authorized-organization-oids
    query
    sort
    states-and-filters]
-  (let [applications (aac/get-application-list-by-query organization-service
-                                                        tarjonta-service
-                                                        session
-                                                        query
-                                                        sort)]
+  (let [applications            (application-store/get-application-heading-list query sort)
+        authorized-applications (aac/filter-authorized
+                                 tarjonta-service
+                                 (some-fn (partial aac/authorized-by-form? authorized-organization-oids)
+                                          (partial aac/authorized-by-tarjoajat? authorized-organization-oids))
+                                 applications)]
     {:applications (if (application-filtering/person-info-needed-to-filter? (:filters states-and-filters))
                      (application-filtering/filter-applications
-                      (populate-applications-with-person-data person-service applications)
+                      (populate-applications-with-person-data person-service authorized-applications)
                       states-and-filters)
                      (populate-applications-with-person-data
                       person-service
-                      (application-filtering/filter-applications applications states-and-filters)))
+                      (application-filtering/filter-applications authorized-applications states-and-filters)))
      :sort         (merge {:order-by (:order-by sort)
                            :order    (:order sort)}
-                          (when (= 100 (count applications))
-                            (let [a (last applications)]
-                              {:offset (case (:order-by sort)
-                                         "applicant-name" {:key            (:key a)
-                                                           :last-name      (:last-name a)
-                                                           :preferred-name (:preferred-name a)}
-                                         "submitted"      {:key       (:key a)
-                                                           :submitted (:submitted a)}
-                                         "created-time"   {:key          (:key a)
-                                                           :created-time (:created-time a)})})))}))
+                          (when-let [a (first (drop 99 applications))]
+                            {:offset (case (:order-by sort)
+                                       "applicant-name" {:key            (:key a)
+                                                         :last-name      (:last-name a)
+                                                         :preferred-name (:preferred-name a)}
+                                       "submitted"      {:key       (:key a)
+                                                         :submitted (:submitted a)}
+                                       "created-time"   {:key          (:key a)
+                                                         :created-time (:created-time a)})}))}))
 
 (defn get-excel-report-of-applications-by-key
   [application-keys selected-hakukohde selected-hakukohderyhma user-wants-to-skip-answers? included-ids session organization-service tarjonta-service koodisto-cache ohjausparametrit-service person-service]
@@ -609,15 +600,21 @@
                 application-oid
                 sort
                 states-and-filters]} params
-        ensisijaisesti               (boolean ensisijaisesti)]
+        ensisijaisesti               (boolean ensisijaisesti)
+        authorized-organization-oids (session-orgs/run-org-authorized
+                                      session
+                                      organization-service
+                                      [:view-applications :edit-applications]
+                                      (fn [] (constantly false))
+                                      (fn [oids] #(contains? oids %))
+                                      (fn [] (constantly true)))]
     (when-let [query (->and-query
                       (cond (some? form-key)
                             (->form-query form-key)
                             (and (some? haku-oid) (some? hakukohderyhma-oid))
                             (->hakukohderyhma-query
                              tarjonta-service
-                             organization-service
-                             session
+                             authorized-organization-oids
                              haku-oid
                              hakukohderyhma-oid
                              ensisijaisesti
@@ -641,10 +638,9 @@
                             (some? application-oid)
                             (->application-oid-query application-oid)))]
       (get-application-list-by-query
-       organization-service
        person-service
        tarjonta-service
-       session
+       authorized-organization-oids
        query
        sort
        (add-selected-hakukohteet tarjonta-service

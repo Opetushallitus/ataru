@@ -61,21 +61,6 @@
                           (partial authorized-by-tarjoajat? %))))
    (constantly true)))
 
-(defn get-application-list-by-query
-  [organization-service tarjonta-service session query sort]
-  (session-orgs/run-org-authorized
-   session
-   organization-service
-   [:view-applications :edit-applications]
-   (constantly [])
-   #(filter-authorized tarjonta-service
-                       (some-fn (partial authorized-by-form? %)
-                                (partial authorized-by-tarjoajat? %))
-                       (application-store/get-application-heading-list query sort))
-   #(filter-authorized tarjonta-service
-                       (constantly true)
-                       (application-store/get-application-heading-list query sort))))
-
 (defn- can-edit-application?
   [organization-service session application]
   (assoc application
