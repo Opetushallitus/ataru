@@ -612,7 +612,9 @@
                                      :syntymaaika
                                      :hetu
                                      :sukunimi]))
-        (assoc-in [:person :asiointiKieli] asiointikieli)
+        (assoc-in [:person :asiointiKieli] (select-keys asiointikieli
+                                                        [:kieliKoodi
+                                                         :kieliTyyppi]))
         (dissoc :personOid :lang))))
 
 (defn siirto-applications
