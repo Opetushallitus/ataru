@@ -440,7 +440,16 @@
         :body [information-request ataru-schema/NewInformationRequest]
         :summary "Send an information request to an applicant"
         :return ataru-schema/InformationRequest
-        (ok (information-request/store information-request session job-runner)))
+        (if (access-controlled-application/applications-access-authorized?
+             organization-service
+             tarjonta-service
+             session
+             [(:application-key information-request)]
+             [:edit-applications])
+          (ok (information-request/store information-request session job-runner))
+          (response/unauthorized {:error (str "Hakemuksen "
+                                              (:application-key information-request)
+                                              " käsittely ei ole sallittu")})))
 
       (api/POST "/mass-information-request" {session :session}
         :body [body {:message-and-subject {:message s/Str
@@ -450,7 +459,14 @@
         :return [ataru-schema/InformationRequest]
         (let [information-requests (map #(assoc (:message-and-subject body) :application-key %)
                                         (:application-keys body))]
-          (ok (information-request/mass-store information-requests session job-runner))))
+          (if (access-controlled-application/applications-access-authorized?
+               organization-service
+               tarjonta-service
+               session
+               (map :application-key information-requests)
+               [:edit-applications])
+            (ok (information-request/mass-store information-requests session job-runner))
+            (response/unauthorized {:error "Hakemusten käsittely ei ole sallittu"}))))
 
       (api/POST "/excel" {session :session}
         :form-params [application-keys :- [s/Str]
