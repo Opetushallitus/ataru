@@ -4,6 +4,7 @@
             [re-frame.core :as re-frame]
             [medley.core :refer [find-first]]
             [ataru.application-common.application-field-common :as common]
+            [ataru.virkailija.db :as initial-db]
             [ataru.util :as u]
             [ataru.cljs-util :as util]))
 
@@ -705,15 +706,15 @@
 (re-frame.core/reg-sub
   :application/enabled-filter-count
   (fn [db _]
-    (reduce-kv
-      (fn [acc _ filters]
-        (+ acc
-           (reduce-kv
-             (fn [acc2 _ enabled?] (if (false? enabled?) (inc acc2) acc2))
-             0
-             filters)))
-      0
-      (get-in db [:application :filters]))))
+    (reduce (fn [n [category filters]]
+              (reduce (fn [n [filter state]]
+                        (if (= state (get-in db [:application :filters category filter]))
+                          n
+                          (inc n)))
+                      n
+                      filters))
+            0
+            initial-db/default-filters)))
 
 (re-frame.core/reg-sub
   :application/eligibility-automatically-checked?

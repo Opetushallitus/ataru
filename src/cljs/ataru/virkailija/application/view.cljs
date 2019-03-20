@@ -808,7 +808,9 @@
          [:span
           [:span.application-handling__filters-count-separator "|"]
           [:a
-           {:on-click #(dispatch [:application/remove-filters])} (get-virkailija-translation :remove-filters)]])
+           {:on-click #(dispatch [:application/remove-filters])}
+           (get-virkailija-translation :remove-filters)
+           " (" @enabled-filter-count ")"]])
        (when @filters-visible
          [:div.application-handling__filters-popup
           [:div.application-handling__filters-popup-close-button-container
