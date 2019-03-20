@@ -556,6 +556,11 @@
     (contains? (get-in db [:application :sort]) :offset)))
 
 (re-frame/reg-sub
+  :application/fetching-applications?
+  (fn [db _]
+    (get-in db [:application :fetching-applications?])))
+
+(re-frame/reg-sub
   :application/review-state-setting-enabled?
   (fn [db [_ setting-kwd]]
     (if-some [enabled-in-state? (-> db :application :review-settings :config setting-kwd)]

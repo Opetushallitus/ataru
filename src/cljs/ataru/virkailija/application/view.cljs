@@ -50,7 +50,7 @@
   (let [visible?     (subscribe [:state-query [:application :excel-request :visible?]])
         included-ids (subscribe [:state-query [:application :excel-request :included-ids]])
         applications (subscribe [:state-query [:application :applications]])
-        loading?     (subscribe [:state-query [:application :fetching-applications?]])]
+        loading?     (subscribe [:application/fetching-applications?])]
     (fn [selected-hakukohde selected-hakukohderyhma filename]
       [:span.application-handling__excel-request-container
        [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
@@ -172,7 +172,7 @@
         selected-to-review-state   (r/atom nil)
         haku-header                (subscribe [:application/list-heading-data-for-haku])
         review-state-counts        (subscribe [:state-query [:application :review-state-counts]])
-        loading?                   (subscribe [:state-query [:application :fetching-applications?]])
+        loading?                   (subscribe [:application/fetching-applications?])
         all-states                 (reduce (fn [acc [state _]]
                                              (assoc acc state 0))
                                            {}
@@ -778,7 +778,7 @@
   (let [filters                    (subscribe [:state-query [:application :filters]])
         filters-checkboxes         (subscribe [:state-query [:application :filters-checkboxes]])
         applications-count         (subscribe [:application/loaded-applications-count])
-        has-more?                  (subscribe [:application/has-more-applications?])
+        fetching?                  (subscribe [:application/fetching-applications?])
         enabled-filter-count       (subscribe [:application/enabled-filter-count])
         review-settings            (subscribe [:state-query [:application :review-settings :config]])
         selected-hakukohde-oid     (subscribe [:state-query [:application :selected-hakukohde]])
@@ -800,7 +800,7 @@
          (gstring/format "%s (%d"
                          (get-virkailija-translation :filter-applications)
                          @applications-count)]
-        (when @has-more?
+        (when @fetching?
           [:span "+ "
            [:i.zmdi.zmdi-spinner.spin]])
         [:span ")"]]
@@ -1837,7 +1837,7 @@
         loaded-count            (subscribe [:application/loaded-applications-count])
         applications            (subscribe [:application/applications-to-render])
         has-more?               (subscribe [:application/has-more-applications?])
-        loading?                (subscribe [:state-query [:application :fetching-applications?]])
+        loading?                (subscribe [:application/fetching-applications?])
         expanded                (subscribe [:state-query [:application :application-list-expanded?]])]
     (fn []
       [:div
