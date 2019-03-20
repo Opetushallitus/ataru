@@ -1010,7 +1010,8 @@
     (api/GET "/dashboard" []
       (selmer/render-file "templates/dashboard.html" {}))))
 
-(api/defroutes status-routes
+(defn status-routes
+  [system]
   (api/context "/status" []
     :tags ["status-api"]
     (api/GET "/background-jobs" []
@@ -1021,7 +1022,16 @@
       (let [status (job/status)]
         (cond-> (dissoc status :ok)
                 (:ok status)       response/ok
-                (not (:ok status)) response/internal-server-error)))))
+                (not (:ok status)) response/internal-server-error)))
+    (api/GET "/caches" []
+      :return s/Any
+      (response/ok
+       (reduce (fn [m [_ component]]
+                 (if (satisfies? cache/Stats component)
+                   (assoc m (:name component) (cache/stats component))
+                   m))
+               {}
+               system)))))
 
 (defrecord Handler []
   component/Lifecycle
@@ -1052,7 +1062,7 @@
                               (api/context "/lomake-editori" []
                                 test-routes
                                 dashboard-routes
-                                status-routes
+                                (status-routes this)
                                 (api/middleware [user-feedback/wrap-user-feedback
                                                  wrap-database-backed-session
                                                  auth-middleware/with-authentication]

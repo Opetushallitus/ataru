@@ -2,6 +2,7 @@
   (:require [ataru.applications.application-store :as application-store]
             [ataru.cache.cache-service :as cache]
             [ataru.cache.in-memory-cache :as in-memory]
+            [ataru.cache.two-layer-cache :as two-layer]
             [ataru.cache.redis-cache :as redis]
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
@@ -76,9 +77,11 @@
      [:redis])]
    [:henkilo-cache
     (component/using
-     (redis/map->Cache
-      {:name            "henkilo"
-       :ttl-after-write [1 TimeUnit/HOURS]})
+     (two-layer/map->Cache
+      {:name          "henkilo"
+       :size          200000
+       :expires-after [3 TimeUnit/DAYS]
+       :refresh-after [1 TimeUnit/HOURS]})
      {:redis  :redis
       :loader :henkilo-cache-loader})]
    [:hakukohde-search-cache
