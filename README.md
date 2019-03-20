@@ -39,9 +39,9 @@ docker run -d --name ataru-dev-db -p 5432:5432 -e POSTGRES_DB=ataru-dev -e POSTG
 
 `docker run --name ataru-dev-redis -p 6379:6379 -d redis`
 
-### Create a SFTP server for mocked ASHA integration
+### Create a FTPS server for mocked ASHA integration
 
-`docker build -t ataru-test-sshd -t ataru-dev-sshd ./test-sshd && docker run --rm -d --name ataru-dev-sshd -p 2222:22 ataru-dev-sshd`
+`docker build -t ataru-test-ftpd -t ataru-dev-ftpd ./test-ftpd && docker run -d --name ataru-dev-ftpd -p 2221:21 -p 30000-30009:30000-30009 ataru-dev-ftpd`
 
 ### Run application:
 
@@ -112,20 +112,20 @@ AWS_ACCESS_KEY_ID=abc AWS_SECRET_ACCESS_KEY=xyz CONFIG=config_file.edn ./bin/lei
 
 ### Backend & browser tests
 
-Tests require a special database, a special Redis and a special SSHD. Here is an example of running those
-with Docker:
+Tests require a special database, a special Redis and a special FTPS server.
+Here is an example of running those with Docker:
 
 ```
 docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph ataru-test-db
 docker run --name ataru-test-redis -p 6380:6379 -d redis
-docker run --rm -d --name ataru-test-sshd -p 2222:22 ataru-test-sshd
+docker run -d --name ataru-test-ftpd -p 2221:21 -p 30000-30009:30000-30009 ataru-test-ftpd
 ```
 
-For Travis CI the ataru-test-db and ataru-test-sshd images have to be
+For Travis CI the ataru-test-db and ataru-test-ftpd images have to be
 available as
 `190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-postgres`
 and
-`190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-sshd`.
+`190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-ftpd`.
 To make that happen, first login by executing the output of:
 
 ```
@@ -137,8 +137,8 @@ You should then be able to push images to the repository:
 ```
 docker tag ataru-test-db 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-postgres
 docker push 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-postgres
-docker tag ataru-test-sshd 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-sshd
-docker push 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-sshd
+docker tag ataru-test-ftpd 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-ftpd
+docker push 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-ftpd
 ```
 
 To build and run all the tests in the system:

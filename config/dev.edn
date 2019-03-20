@@ -14,12 +14,13 @@
                              :form-key                    "testi-form-key"
                              :country-question-id         "testi-country-question-id"
                              :attachment-total-size-limit 10485760
-                             :sftp                        {:host          "localhost"
-                                                           :port          2222
-                                                           :known-host    "[localhost]:2222 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDQTlmgAZbYQCqyyVMPJSG7gYl4Qyf50OPo/eyVM0MQ7qIRX2X1yeuuMnlJyEm6izDFcjC2s3kuroSB1AcPKbqX85k2ASweq0A9+qRQ99ax9+Q8BtkDmXH3Cii36WsHbYCgpXnfVCMuJ9NhgDk+461SKME5nC1OovdnM9eA5vUENlhaHGmMBmIIabRiExH93DXpLfkM995EHmnoz46c1h6jgfZuWdFtQr3EaFgn55cY+dmnq1GMXs9Bo1vIjipV5zzsAmm7ZegcOCQ6u157vgZOHx2VnqXSfugYSq9u0avEpRk0EUKy/0g2TFpd1L4qhw9JdBW32uRmt55cELpGmdvb"
-                                                           :host-key-type "ssh-rsa"
-                                                           :user          "root"
-                                                           :password      "root"}}
+                             :ftp                         {:host               "localhost"
+                                                           :port               2221
+                                                           :user               "oph"
+                                                           :password           "oph"
+                                                           :verify-certificate false
+                                                           :path               "/"
+                                                           :timeout-seconds    10}}
  :yksiloimattomat {:allow false}
  :cache           {:type :redis}
  :redis           {:uri "redis://localhost:6380"}

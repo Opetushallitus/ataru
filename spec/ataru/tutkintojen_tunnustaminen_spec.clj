@@ -6,55 +6,30 @@
             [clojure.java.jdbc :as jdbc]
             [speclj.core :refer :all]
             [yesql.core :refer [defqueries]])
-  (:import java.io.ByteArrayInputStream
-           com.jcraft.jsch.JSch))
+  (:import java.io.ByteArrayInputStream))
 
 (defqueries "sql/form-queries.sql")
 (defqueries "sql/application-queries.sql")
 
-(defn- with-session
-  [jsch {:keys [host port user password host-key-type]} f]
-  (let [session (doto (.getSession jsch user host port)
-                  (.setTimeout 600000)
-                  (.setConfig "server_host_key" host-key-type)
-                  (.setPassword password)
-                  (.connect))]
-    (try (f session) (finally (.disconnect session)))))
-
-(defn- with-channel
-  [session f]
-  (let [channel (doto (.openChannel session "sftp")
-                  (.connect))]
-    (try (f channel) (finally (.disconnect channel)))))
-
-(defn- with-file-in
-  [channel filename f]
-  (let [in (.get channel filename)]
-    (try (f in) (finally (.close in)))))
-
 (defn- get-file
   [filename]
-  (let [config (get-in config [:tutkintojen-tunnustaminen :sftp])
-        jsch   (doto (new JSch)
-                 (.setKnownHosts (new ByteArrayInputStream (.getBytes (:known-host config)))))]
-    (with-session jsch config
-      (fn [session]
-        (with-channel session
-          (fn [channel]
-            (with-file-in channel filename
-              (fn [in] (slurp in)))))))))
+  (let [config (get-in config [:tutkintojen-tunnustaminen :ftp])]
+    (let [r (sh "lftp" "-c" (str (format "open --user %s --env-password %s:%d" (:user config) (:host config) (:port config))
+                                 (format "&& set ssl:verify-certificate %b" (:verify-certificate config true))
+                                 "&& set ftp:ssl-protect-data true"
+                                 (format "&& cd %s && cat %s" (:path config) filename))
+                :env {"LFTP_PASSWORD" (:password config)})]
+      (when (zero? (:exit r))
+        (:out r)))))
 
 (defn- delete-file
   [filename]
-  (let [config (get-in config [:tutkintojen-tunnustaminen :sftp])
-        jsch   (doto (new JSch)
-                 (.setKnownHosts (new ByteArrayInputStream (.getBytes (:known-host config)))))]
-    (JSch/setLogger jsch-logger)
-    (with-session jsch config
-      (fn [session]
-        (with-channel session
-          (fn [channel]
-            (.rm channel filename)))))))
+  (let [config (get-in config [:tutkintojen-tunnustaminen :ftp])]
+    (sh "lftp" "-c" (str (format "open --user %s --env-password %s:%d" (:user config) (:host config) (:port config))
+                         (format "&& set ssl:verify-certificate %b" (:verify-certificate config true))
+                         "&& set ftp:ssl-protect-data true"
+                         (format "&& cd %s && rm %s" (:path config) filename))
+        :env {"LFTP_PASSWORD" (:password config)})))
 
 (defn- by-tag
   [tag elements]
@@ -249,9 +224,9 @@
                         file-store/get-file     get-attachment]
             (it))
           (finally
-            (try (delete-file (str *application-key* "_" *application-id* ".xml")) (catch Exception e))
-            (try (delete-file (str *application-key* "_" *edited-application-id* ".xml")) (catch Exception e))
-            (try (delete-file (str *application-key* "_" *application-id* "_" *event-id* ".xml")) (catch Exception e))
+            (delete-file (str *application-key* "_" *application-id* ".xml"))
+            (delete-file (str *application-key* "_" *edited-application-id* ".xml"))
+            (delete-file (str *application-key* "_" *application-id* "_" *event-id* ".xml"))
             (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
               (jdbc/execute! connection
                              ["DELETE FROM application_events

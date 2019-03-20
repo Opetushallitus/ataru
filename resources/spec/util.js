@@ -64,12 +64,24 @@ var clickElement = function(selectFn, infoText) {
   }, null, infoText)
 }
 
+function setNativeValue(element, value) {
+  var valueSetter = Object.getOwnPropertyDescriptor(element, 'value').set;
+  var prototype = Object.getPrototypeOf(element);
+  var prototypeValueSetter = Object.getOwnPropertyDescriptor(prototype, 'value').set;
+
+  if (valueSetter && valueSetter !== prototypeValueSetter) {
+    prototypeValueSetter.call(element, value);
+  } else {
+    valueSetter.call(element, value);
+  }
+}
+
 function setTextFieldValue(selectFn, contents) {
   return wait.until(function() {
     $e = selectFn()
     if (elementExists($e)) {
-      $e.get(0).value = contents
-      triggerEvent($e, 'input')
+      setNativeValue($e.get(0), contents)
+      $e.get(0).dispatchEvent(new Event('change', {bubbles: true}))
       return true
     }
   })

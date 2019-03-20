@@ -8,17 +8,19 @@
             [clj-time.format :as f]
             [clojure.data.xml :as xml]
             [clojure.java.jdbc :as jdbc]
+            [clojure.java.shell :refer [sh]]
             [taoensso.timbre :as log]
             [yesql.core :refer [defqueries]])
   (:import [java.io
-            BufferedWriter
             ByteArrayInputStream
             ByteArrayOutputStream
-            OutputStreamWriter]
-           java.util.Base64
-           [com.jcraft.jsch
-            JSch
-            Logger]))
+            OutputStreamWriter
+            PipedInputStream
+            PipedOutputStream]
+           [java.util.concurrent
+            TimeoutException
+            TimeUnit]
+           java.util.Base64))
 
 (defqueries "sql/tutkintojen-tunnustaminen-queries.sql")
 
@@ -144,51 +146,30 @@
               :data     (attachment-as-bytes key)})
            attachment-metadata))))
 
-(defn- with-session
-  [jsch {:keys [host port user password host-key-type]} f]
-  (let [session (doto (.getSession jsch user host port)
-                  (.setTimeout 600000)
-                  (.setConfig "server_host_key" host-key-type)
-                  (.setPassword password)
-                  (.connect))]
-    (try (f session) (finally (.disconnect session)))))
-
-(defn- with-channel
-  [session f]
-  (let [channel (doto (.openChannel session "sftp")
-                  (.connect))]
-    (try (f channel) (finally (.disconnect channel)))))
-
-(defn- with-file-writer
-  [channel filename f]
-  (let [out (-> (.put channel filename)
-                (OutputStreamWriter. "UTF-8")
-                (BufferedWriter.))]
-    (try (f out) (finally (.close out)))))
-
-(def jsch-logger
-  (reify Logger
-    (isEnabled [_ level] (< Logger/INFO level))
-    (log [_ level message]
-      (case level
-        0 (log/debug message)
-        1 (log/info message)
-        2 (log/warn message)
-        3 (log/error message)
-        4 (log/fatal message)))))
-
 (defn- transfer
-  [{:keys [known-host] :as config} filename message]
-  (let [jsch (doto (new JSch)
-               (.setKnownHosts (new ByteArrayInputStream (.getBytes known-host))))]
-    (JSch/setLogger jsch-logger)
-    (with-session jsch config
-      (fn [session]
-        (with-channel session
-          (fn [channel]
-            (with-file-writer channel (str filename ".part")
-              (fn [writer] (xml/emit message writer)))
-            (.rename channel (str filename ".part") filename)))))))
+  [config filename message]
+  (let [stdin (new PipedInputStream)
+        emit  (future
+                (with-open [w (new OutputStreamWriter (new PipedOutputStream stdin) "UTF-8")]
+                  (xml/emit message w)))
+        lftp  (future
+                (sh "lftp" "-c" (str (format "open --user %s --env-password %s:%d" (:user config) (:host config) (:port config))
+                                     (format "&& set ssl:verify-certificate %b" (:verify-certificate config true))
+                                     "&& set ftp:ssl-protect-data true"
+                                     (format "&& cd %s" (:path config))
+                                     (format "&& put /dev/stdin -o %s.part" filename)
+                                     (format "&& mv %s.part %s" filename filename))
+                    :in stdin
+                    :env {"LFTP_PASSWORD" (:password config)}))
+        r     (try
+                (.get lftp (:timeout-seconds config) TimeUnit/SECONDS)
+                (catch TimeoutException e
+                  (future-cancel emit)
+                  (future-cancel lftp)
+                  {:exit 1 :err (str "Writing timed out after " (:timeout-seconds config) " seconds")}))]
+    (when-not (zero? (:exit r))
+      (throw (new RuntimeException (str "Writing file " filename " failed: "
+                                        (:err r)))))))
 
 (defn start-tutkintojen-tunnustaminen-submit-job
   [job-runner application-id]
@@ -239,8 +220,8 @@
   (let [{:keys [form-key
                 country-question-id
                 attachment-total-size-limit
-                sftp]} (get-configuration)
-        application    (get-application country-question-id application-id)]
+                ftp]} (get-configuration)
+        application   (get-application country-question-id application-id)]
     (cond (and (some? (:person-oid application))
                (= form-key (:form-key application)))
           (let [person      (get-person person-service application)
@@ -252,7 +233,7 @@
                       (if edit? "edited" "submitted")
                       "message to ASHA for application"
                       application-id)
-            (transfer sftp
+            (transfer ftp
                       (str (:key application) "_" application-id ".xml")
                       message)
             (log/info "Sent application"
@@ -277,7 +258,7 @@
   [{:keys [event-id]} {:keys [person-service]}]
   (let [{:keys [form-key
                 country-question-id
-                sftp]}        (get-configuration)
+                ftp]}         (get-configuration)
         application-and-state (get-application-by-event-id country-question-id event-id)
         application           (:application application-and-state)]
     (cond (and (some? (:person-oid application))
@@ -288,7 +269,7 @@
                 message (->application-inactivated application person)]
             (log/info "Sending application inactivated message to ASHA for application"
                       (:id application))
-            (transfer sftp
+            (transfer ftp
                       (str (:key application) "_" (:id application) "_" event-id ".xml")
                       message)
             (log/info "Sent application inactivated message to ASHA for application"

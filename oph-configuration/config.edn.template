@@ -12,12 +12,13 @@
                              :form-key                    "{{ataru_tutkintojen_tunnustaminen_form_key}}"
                              :country-question-id         "{{ataru_tutkintojen_tunnustaminen_country_question_id}}"
                              :attachment-total-size-limit {{ataru_tutkintojen_tunnustaminen_size_limit}}
-                             :sftp                        {:host          "{{ataru_tutkintojen_tunnustaminen_sftp_host}}"
-                                                           :port          {{ataru_tutkintojen_tunnustaminen_sftp_port}}
-                                                           :known-host    "{{ataru_tutkintojen_tunnustaminen_sftp_known_host}}"
-                                                           :host-key-type "{{ataru_tutkintojen_tunnustaminen_sftp_host_key_type}}"
-                                                           :user          "{{ataru_tutkintojen_tunnustaminen_sftp_user}}"
-                                                           :password      "{{ataru_tutkintojen_tunnustaminen_sftp_password}}"}}
+                             :ftp                         {:host               "{{ataru_tutkintojen_tunnustaminen_ftp_host}}"
+                                                           :port               {{ataru_tutkintojen_tunnustaminen_ftp_port}}
+                                                           :user               "{{ataru_tutkintojen_tunnustaminen_ftp_user}}"
+                                                           :password           "{{ataru_tutkintojen_tunnustaminen_ftp_password}}"
+                                                           :verify-certificate true
+                                                           :path               "{{ataru_tutkintojen_tunnustaminen_ftp_path}}"
+                                                           :timeout-seconds    {{ataru_tutkintojen_tunnustaminen_ftp_timeout_seconds | default('300')}}}}
  :yksiloimattomat {:allow {{ataru_allow_yksiloimattomat}}}
  :cache {:type {{ataru_cache_type}}}
  :redis {:uri "{{ataru_redis_uri}}"}

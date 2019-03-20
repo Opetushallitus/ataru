@@ -87,11 +87,7 @@ function selectNthField(n) {
     return clickElement(function() { return formFields().eq(n).find('input').focus() })
 }
 function setNthFieldValue(n, selector, value) {
-  return function() {
-    var $e = formFields().eq(n).find(selector)
-    $e.val(value)
-    triggerEvent($e, 'input') // needs to be input event because who knows why
-  }
+  return setTextFieldValue(function () { return formFields().eq(n).find(selector) }, value);
 }
 
 function setNthFieldSubInputValue(n, sub, value) {

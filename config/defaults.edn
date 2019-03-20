@@ -13,12 +13,13 @@
                              :form-key                    ""
                              :country-question-id         ""
                              :attachment-total-size-limit 20
-                             :sftp                        {:host          ""
-                                                           :port          22
-                                                           :known-host    ""
-                                                           :host-key-type ""
-                                                           :user          ""
-                                                           :password      ""}}
+                             :ftp                         {:host               ""
+                                                           :port               22
+                                                           :user               ""
+                                                           :password           ""
+                                                           :verify-certificate true
+                                                           :path               ""
+                                                           :timeout-seconds    10}}
  :yksiloimattomat {:allow false}
  :cache           {:type :redis}
  :redis           {:uri "redis://localhost:6379"}

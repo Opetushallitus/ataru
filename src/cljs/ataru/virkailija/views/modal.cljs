@@ -1,7 +1,7 @@
 (ns ataru.virkailija.views.modal
   (:require [ataru.cljs-util :as cljs-util]))
 
-(defn- modal
+(defn modal
   [close-handler content]
   [:div.virkailija-modal__backdrop
    [:div.virkailija-modal__container

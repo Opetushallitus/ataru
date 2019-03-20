@@ -3,11 +3,12 @@
                          [com.fasterxml.jackson.core/jackson-databind "2.9.0"]
                          [com.fasterxml.jackson.core/jackson-annotations "2.9.0"]
                          [com.fasterxml.jackson.dataformat/jackson-dataformat-cbor "2.9.0"]
-                         [com.fasterxml.jackson.dataformat/jackson-dataformat-smile "2.9.0"]]
+                         [com.fasterxml.jackson.dataformat/jackson-dataformat-smile "2.9.0"]
+                         [ring-middleware-format "0.7.4"]]
   :dependencies [[org.clojure/clojure "1.9.0"]
 
                  ; clojurescript
-                 [org.clojure/clojurescript "1.9.946"]
+                 [org.clojure/clojurescript "1.10.63"]
                  [reagent "0.8.0-alpha1"]
                  [re-frame "0.10.2"]
                  [secretary "1.2.3"]
@@ -20,10 +21,10 @@
                  [com.cemerick/url "0.1.1"]
 
                  ;clojure/clojurescript
-                 [prismatic/schema "1.1.7"]
+                 [prismatic/schema "1.1.10"]
                  [com.taoensso/timbre "4.10.0"]
-                 [org.clojure/core.match "0.3.0-alpha4"]
-                 [metosin/schema-tools "0.9.1"]
+                 [org.clojure/core.match "0.3.0"]
+                 [metosin/schema-tools "0.11.0"]
                  [medley "1.0.0"]
                  [markdown-clj "1.0.1"]
 
@@ -31,11 +32,11 @@
                  [compojure "1.6.0"]
                  [com.github.fge/json-patch "1.9"]
                  [com.stuartsierra/component "0.3.2"]
-                 [metosin/compojure-api "1.1.11"]
-                 [aleph "0.4.4"]
+                 [metosin/compojure-api "1.1.12"]
+                 [aleph "0.4.6"]
                  [fi.vm.sade/auditlogger "8.3.0-SNAPSHOT"]
                  [fi.vm.sade.java-utils/java-properties "0.1.0-SNAPSHOT"]
-                 [http-kit "2.2.0"]
+                 [http-kit "2.4.0-alpha4"]
                  [ring "1.6.3"]
                  [ring/ring-defaults "0.3.1"]
                  [ring/ring-json "0.4.0"]
