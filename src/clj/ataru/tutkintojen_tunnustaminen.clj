@@ -39,7 +39,7 @@
     (xml/element :createFolder {}
                  (xml/element :properties {}
                               (->property-string "ams_studypathid" application-key)
-                              (->property-string "ams_originator" name)
+                              (->property-string "ams_orignator" name)
                               (->property-string "ams_applicantcountry" country)
                               (->property-string "ams_registrationdate" submitted)
                               (->property-string "ams_title" "Hakemus"))
