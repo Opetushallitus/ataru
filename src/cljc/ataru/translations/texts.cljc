@@ -335,6 +335,9 @@ You will receive a confirmation of your application to your email."}
    :application-period-closed                   {:fi "Hakuaika on päättynyt"
                                                  :sv "Ansökningstiden har utgått"
                                                  :en "Application period has ended"}
+   :inactivated                                 {:fi "Hakemuksesi on passivoitu."
+                                                 :sv "Din ansökning har passiverat."
+                                                 :en "Your application in inactive."}
    :internal-server-error                       {:fi "Tapahtui palvelinvirhe."
                                                  :sv "Internal server error."
                                                  :en "Internal server error."}

@@ -49,7 +49,7 @@
                                                                      koodisto-cache
                                                                      person-client)]
     (cond inactivated?
-          (response/bad-request {:error "Inactivated"})
+          (response/bad-request {:code :inactivated :error "Inactivated"})
 
           (some? application-form-and-person)
           (let [application (:application application-form-and-person)]
