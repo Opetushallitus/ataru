@@ -39,12 +39,14 @@
 
   (defroute "/lomake-editori/editor" []
     (dispatch [:set-active-panel :editor])
+    (dispatch [:application/stop-loading-applications])
     (dispatch [:editor/select-form nil])
     (dispatch [:editor/refresh-forms-for-editor])
     (dispatch [:editor/refresh-forms-in-use]))
 
   (defroute #"^/lomake-editori/editor/(.*)" [key]
     (dispatch [:set-active-panel :editor])
+    (dispatch [:application/stop-loading-applications])
     (dispatch [:editor/refresh-forms-if-empty key])
     (dispatch [:editor/refresh-forms-in-use])
     (dispatch-after-state
@@ -61,6 +63,7 @@
 
   (defroute #"^/lomake-editori/applications/incomplete" []
     (common-actions-for-applications-route)
+    (dispatch [:application/stop-loading-applications])
     (dispatch [:application/refresh-haut-and-hakukohteet nil])
     (dispatch [:application/show-incomplete-haut-list]))
 
@@ -69,6 +72,7 @@
 
   (defroute #"^/lomake-editori/applications/complete" []
     (common-actions-for-applications-route)
+    (dispatch [:application/stop-loading-applications])
     (dispatch [:application/refresh-haut-and-hakukohteet nil])
     (dispatch [:application/show-complete-haut-list]))
 

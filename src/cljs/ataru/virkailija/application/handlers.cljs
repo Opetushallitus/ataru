@@ -370,6 +370,8 @@
                                         new-keys (set (map :key applications))]
                                     (into (filterv #(not (contains? new-keys (:key %))) loaded)
                                           applications))
+          fetch-more?             (and (contains? sort :offset)
+                                       (get-in db [:application :fetching-applications?]))
           db                      (-> db
                                       (assoc-in [:application :applications] all-applications)
                                       (update-in [:application :review-state-counts] add-review-state-counts applications selected-hakukohde-oids "processing-state")
@@ -381,7 +383,7 @@
                                     (= 1 (count all-applications))     (-> all-applications first :key)
                                     (-> db :application :selected-key) (-> db :application :selected-key)
                                     :else                              (:application-key (cljs-util/extract-query-params)))]
-      (if (contains? sort :offset)
+      (if fetch-more?
         (fetch-applications-fx {:db db})
         {:db       db
          :dispatch (if application-key
