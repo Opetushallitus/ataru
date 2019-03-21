@@ -217,14 +217,13 @@
 
 (defn error-display []
   (let [error-code (subscribe [:state-query [:error :code]])]
-    (fn [] (if @error-code
+    (fn [] (if-let [error-code @error-code]
              [:div.application__message-display
-              {:class (if (= :network-offline @error-code)
+              {:class (if (some #(= error-code %) [:inactivated :network-offline])
                         "application__message-display--warning"
                         "application__message-display--error")}
               [:div.application__message-display--exclamation [:i.zmdi.zmdi-alert-triangle]]
-              [:div.application__message-display--details (get-translation @error-code)]]
-             nil))))
+              [:div.application__message-display--details (get-translation error-code)]]))))
 
 (defn form-view []
   [:div
