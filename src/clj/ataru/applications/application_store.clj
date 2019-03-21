@@ -222,10 +222,24 @@
     (unwrap-application application)
     (throw (ex-info "No existing form found when updating as virkailija" {:virkailija-secret virkailija-secret}))))
 
+(defn- get-latest-version-for-virkailija-edit-and-lock-for-rewrite [virkailija-secret lang conn]
+  (if-let [application (first (yesql-get-latest-version-by-virkailija-secret-lock-for-rewrite {:virkailija_secret virkailija-secret} {:connection conn}))]
+    (unwrap-application application)
+    (throw (ex-info "No existing form found when rewriting as virkailija" {:virkailija-secret virkailija-secret}))))
+
 (defn- get-virkailija-oid-for-update-secret
   [conn secret]
   (->> (jdbc/query conn ["SELECT virkailija_oid
                           FROM virkailija_update_secrets
+                          WHERE secret = ?"
+                         secret])
+       first
+       :virkailija_oid))
+
+(defn- get-virkailija-oid-for-rewrite-secret
+  [conn secret]
+  (->> (jdbc/query conn ["SELECT virkailija_oid
+                          FROM virkailija_rewrite_secrets
                           WHERE secret = ?"
                          secret])
        first
@@ -292,8 +306,15 @@
              (not-blank? virkailija-secret))]}
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [updated-by-applicant? (not-blank? secret)
-          old-application       (if updated-by-applicant?
+          rewrite-secret?       (virkailija-edit/virkailija-rewrite-secret-valid? virkailija-secret)
+          old-application       (cond
+                                  rewrite-secret?
+                                  (get-latest-version-for-virkailija-edit-and-lock-for-rewrite virkailija-secret lang conn)
+
+                                  updated-by-applicant?
                                   (get-latest-version-and-lock-for-update secret lang conn)
+
+                                  :else
                                   (get-latest-version-for-virkailija-edit-and-lock-for-update virkailija-secret lang conn))
           {:keys [id key] :as new-application} (add-new-application-version
                                                  (merge-applications new-application old-application)
@@ -303,7 +324,14 @@
                                                  form
                                                  true
                                                  conn)
-          virkailija-oid        (when-not updated-by-applicant?
+          virkailija-oid        (cond
+                                  updated-by-applicant?
+                                  nil
+
+                                  rewrite-secret?
+                                  (get-virkailija-oid-for-rewrite-secret conn virkailija-secret)
+
+                                  :else
                                   (get-virkailija-oid-for-update-secret conn virkailija-secret))]
       (info (str "Updating application with key "
                  (:key old-application)
@@ -452,6 +480,12 @@
 
 (defn get-latest-application-for-virkailija-edit [virkailija-secret]
   (when-let [application (->> (exec-db :db yesql-get-latest-application-by-virkailija-secret {:virkailija_secret virkailija-secret})
+                              (first)
+                              (unwrap-application))]
+    (assoc application :state (-> (:key application) get-application-review :state))))
+
+(defn get-latest-application-for-virkailija-rewrite-edit [virkailija-secret]
+  (when-let [application (->> (exec-db :db yesql-get-latest-application-by-virkailija-rewrite-secret {:virkailija_secret virkailija-secret})
                               (first)
                               (unwrap-application))]
     (assoc application :state (-> (:key application) get-application-review :state))))

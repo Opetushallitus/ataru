@@ -1422,17 +1422,21 @@
                              (when-let [number (score->number new-value)]
                                (dispatch [:application/update-review-field :score number])))))}]])])))
 
-(defn- application-modify-link []
+(defn- application-modify-link [superuser?]
   (let [application-key   (subscribe [:state-query [:application :selected-key]])
         settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
         can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
     [:a.application-handling__link-button.application-handling__button
      {:href   (when (and (not @settings-visible?) @can-edit?)
-                (str "/lomake-editori/api/applications/" @application-key "/modify"))
+                (str "/lomake-editori/api/applications/" @application-key (if superuser?
+                                                                            "/rewrite-modify"
+                                                                            "/modify")))
       :class  (when (or @settings-visible? (not @can-edit?))
                 "application-handling__button--disabled")
       :target "_blank"}
-     (get-virkailija-translation :edit-application)]))
+     (get-virkailija-translation (if superuser?
+                                   :edit-application-with-rewrite
+                                   :edit-application))]))
 
 (defn- application-information-request-recipient []
   (let [email (subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])]
@@ -1623,6 +1627,7 @@
 (defn application-review []
   (let [review-positioning      (subscribe [:state-query [:application :review-positioning]])
         settings-visible        (subscribe [:state-query [:application :review-settings :visible?]])
+        superuser?              (subscribe [:state-query [:editor :user-info :superuser?]])
         show-attachment-review? (r/atom false)]
     (fn []
       (let [selected-review-hakukohde        @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
@@ -1682,7 +1687,9 @@
              [application-information-request])
            [application-review-inputs]
            [application-review-notes]
-           [application-modify-link]
+           [application-modify-link false]
+           (when @superuser?
+             [application-modify-link true])
            [application-resend-modify-link]
            [application-resend-modify-link-confirmation]
            [application-deactivate-toggle]

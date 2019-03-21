@@ -393,6 +393,26 @@
             (response/temporary-redirect modify-url)
             (response/bad-request))))
 
+      (api/GET "/:application-key/rewrite-modify" {session :session}
+        :path-params [application-key :- String]
+        :summary "Get HTTP redirect response for modifying a single application in Hakija side"
+        (let [allowed?                 (and (access-controlled-application/applications-access-authorized? organization-service
+                                              tarjonta-service
+                                              session
+                                              [application-key]
+                                              [:edit-applications])
+                                            (-> session :identity :superuser))
+              virkailija-rewrite-secret (virkailija-edit/create-virkailija-rewrite-secret
+                                         session
+                                         application-key)
+              modify-url               (str (-> config :public-config :applicant :service_url)
+                                         "/hakemus?virkailija-secret="
+                                         virkailija-rewrite-secret)]
+          (if (and allowed?
+                   (some? virkailija-rewrite-secret))
+            (response/temporary-redirect modify-url)
+            (response/bad-request))))
+
       (api/POST "/:application-key/resend-modify-link" {session :session}
         :path-params [application-key :- String]
         :summary "Send the modify application link to the applicant via email"
