@@ -72,16 +72,21 @@
           (< 2 (count search-term))
           {:name search-term})))
 
+(defn set-search
+  [db search-term]
+  (-> db
+      (assoc-in [:application :search-control :search-term :value] search-term)
+      (assoc-in [:application :search-control :search-term :parsed] (parse-search-term search-term))
+      (assoc-in [:application :search-control :search-term :show-error] false)))
+
 (reg-event-fx
   :application/search-by-term
   (fn [{:keys [db]} [_ search-term]]
     (cljs-util/set-query-param "term" search-term)
-    (let [parsed-search-term (parse-search-term search-term)]
-      (cond-> {:db (-> db
-                       (assoc-in [:application :search-control :search-term :value] search-term)
-                       (assoc-in [:application :search-control :search-term :parsed] parsed-search-term)
-                       (assoc-in [:application :search-control :search-term :show-error] false))}
-              (or (some? parsed-search-term) (clojure.string/blank? search-term))
+    (let [db (set-search db search-term)]
+      (cond-> {:db db}
+              (or (some? (get-in db [:application :search-control :search-term :parsed]))
+                  (clojure.string/blank? search-term))
               (assoc :dispatch-debounced {:timeout  500
                                           :id       :application-search
                                           :dispatch [:application/reload-applications]})))))

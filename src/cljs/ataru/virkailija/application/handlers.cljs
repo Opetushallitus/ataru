@@ -16,6 +16,7 @@
             [camel-snake-kebab.extras :as ce]
             [cljs-time.core :as t]
             [ataru.application.application-states :as application-states]
+            [ataru.virkailija.application.application-search-control-handlers :as asch]
             [re-frame.core :as re-frame]
             [clojure.core.match :refer [match]]
             [ataru.application.review-states :as review-states]
@@ -419,8 +420,7 @@
                     ensisijaisesti?)
           (assoc-in [:application :rajaus-hakukohteella]
                     (when ensisijaisesti? (:rajaus-hakukohteella query-params)))
-          (assoc-in [:application :search-control :search-term :value]
-                    (or (:term query-params) ""))
+          (asch/set-search (or (:term query-params) ""))
           (undo-filters)))))
 
 (reg-event-fx
