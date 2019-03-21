@@ -81,7 +81,7 @@
   (apply
    xml/element :message {}
    (->case application person)
-   (->action "Täydennyspyyntö" "01.02")
+   (->action "Täydennys" "01.02")
    (->documents application attachments)))
 
 (defn- ->application-inactivated

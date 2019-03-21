@@ -288,7 +288,7 @@
         (should= *application-submitted* (property-value "ams_registrationdate" case))
         (should= "Hakemus" (property-value "ams_title" case)))
       (let [action (create-folder-by-type "ams_action" message)]
-        (should= "Täydennyspyyntö" (property-value "ams_title" action))
+        (should= "Täydennys" (property-value "ams_title" action))
         (should= "01.02" (property-value "ams_processtaskid" action)))
       (let [attachments (by-tag :createDocument (:content message))]
         (should= 5 (count attachments))
