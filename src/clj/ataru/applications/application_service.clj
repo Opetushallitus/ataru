@@ -196,10 +196,12 @@
   {:form key})
 
 (defn ->hakukohde-query
-  [hakukohde-oid ensisijaisesti]
-  (if ensisijaisesti
-    {:ensisijainen-hakukohde [hakukohde-oid]}
-    {:hakukohde [hakukohde-oid]}))
+  [tarjonta-service hakukohde-oid ensisijaisesti]
+  (let [hakukohde (tarjonta-service/get-hakukohde tarjonta-service hakukohde-oid)]
+    (merge {:haku (:hakuOid hakukohde)}
+           (if ensisijaisesti
+             {:ensisijainen-hakukohde [hakukohde-oid]}
+             {:hakukohde [hakukohde-oid]}))))
 
 (defn ->hakukohderyhma-query
   [tarjonta-service
@@ -212,15 +214,15 @@
                                       (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil))
         kayttajan-hakukohteet (filter #(some authorized-organization-oids (:tarjoaja-oids %))
                                       ryhman-hakukohteet)]
-    (merge {:haku haku-oid}
-           (cond (and ensisijaisesti (some? rajaus-hakukohteella))
-                 {:ensisijainen-hakukohde       [rajaus-hakukohteella]
-                  :ensisijaisesti-hakukohteissa (map :oid ryhman-hakukohteet)}
-                 ensisijaisesti
-                 {:ensisijainen-hakukohde       (map :oid kayttajan-hakukohteet)
-                  :ensisijaisesti-hakukohteissa (map :oid ryhman-hakukohteet)}
-                 :else
-                 {:hakukohde (map :oid ryhman-hakukohteet)}))))
+    (merge {:haku      haku-oid
+            :hakukohde (map :oid ryhman-hakukohteet)}
+           (when ensisijaisesti
+             (if (some? rajaus-hakukohteella)
+               {:hakukohde                    [rajaus-hakukohteella]
+                :ensisijainen-hakukohde       [rajaus-hakukohteella]
+                :ensisijaisesti-hakukohteissa (map :oid ryhman-hakukohteet)}
+               {:ensisijainen-hakukohde       (map :oid kayttajan-hakukohteet)
+                :ensisijaisesti-hakukohteissa (map :oid ryhman-hakukohteet)})))))
 
 (defn ->haku-query
   [haku-oid]
@@ -620,7 +622,7 @@
                              ensisijaisesti
                              rajaus-hakukohteella)
                             (some? hakukohde-oid)
-                            (->hakukohde-query hakukohde-oid ensisijaisesti)
+                            (->hakukohde-query tarjonta-service hakukohde-oid ensisijaisesti)
                             (some? haku-oid)
                             (->haku-query haku-oid)
                             :else

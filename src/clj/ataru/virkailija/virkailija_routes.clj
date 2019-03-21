@@ -853,6 +853,7 @@
                                         hakuOid))
                                  (some? hakukohdeOid)
                                  (conj (application-service/->hakukohde-query
+                                        tarjonta-service
                                         hakukohdeOid
                                         false))
                                  (not-empty hakemusOids)
