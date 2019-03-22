@@ -340,7 +340,7 @@
                                       :query-params [{lang :- s/Str nil}]
                                       (render-application lang))
                                     (api/GET "/" []
-                                      :query-params [lang :- (s/maybe s/Str)]
+                                      :query-params [{lang :- s/Str nil}]
                                       (render-application lang))))
                                (route/not-found "<h1>Page not found</h1>")))
                             (wrap-with-logger
