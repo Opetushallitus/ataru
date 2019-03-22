@@ -86,6 +86,22 @@
                   [:application/set-validator-processed :hakukohteet]]}))
 
 (reg-event-fx
+  :application/validate-hakukohteet
+  (fn [{db :db} _]
+    {:db                 (set-validator-processing db :hakukohteet)
+     :validate-debounced {:value                        (get-in db [:application :answers :hakukohteet :values])
+                          :tarjonta-hakukohteet         (get-in db [:form :tarjonta :hakukohteet])
+                          :rajaavat-hakukohderyhmat     (get-in db [:form :rajaavat-hakukohderyhmat])
+                          :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
+                          :answers-by-key               (get-in db [:application :answers])
+                          :field-descriptor             (hakukohteet-field db)
+                          :editing?                     (get-in db [:application :editing?])
+                          :virkailija?                  (contains? (:application db) :virkailija-secret)
+                          :on-validated                 (fn [[valid? errors]]
+                                                          (dispatch [:application/set-hakukohde-valid
+                                                                     valid?]))}}))
+
+(reg-event-fx
   :application/hakukohde-add-selection
   (fn [{db :db} [_ hakukohde-oid]]
     (let [field-descriptor     (hakukohteet-field db)
@@ -99,22 +115,13 @@
           db                   (-> db
                                    (assoc-in [:application :answers :hakukohteet :values]
                                      new-hakukohde-values)
-                                   (set-validator-processing :hakukohteet)
                                    set-values-changed
                                    set-field-visibilities)]
       {:db                 (cond-> db
                                    (and (some? max-hakukohteet)
                                         (<= max-hakukohteet (count new-hakukohde-values)))
-                                   toggle-hakukohde-search)
-       :validate-debounced {:value                        new-hakukohde-values
-                            :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
-                            :answers-by-key               (get-in db [:application :answers])
-                            :field-descriptor             field-descriptor
-                            :editing?                     (get-in db [:application :editing?])
-                            :virkailija?                  (contains? (:application db) :virkailija-secret)
-                            :on-validated                 (fn [[valid? errors]]
-                                                            (dispatch [:application/set-hakukohde-valid
-                                                                       valid?]))}})))
+                                   (assoc-in [:application :show-hakukohde-search] false))
+       :dispatch [:application/validate-hakukohteet]})))
 
 (defn- remove-hakukohde-from-deleting
   [hakukohteet hakukohde]
@@ -130,18 +137,10 @@
                                    (assoc-in [:application :answers :hakukohteet :values]
                                      new-hakukohde-values)
                                    (update-in [:application :ui :hakukohteet :deleting] remove-hakukohde-from-deleting hakukohde-oid)
-                                   (set-validator-processing :hakukohteet)
                                    set-values-changed
                                    set-field-visibilities)]
       {:db                 db
-       :validate-debounced {:value                        new-hakukohde-values
-                            :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
-                            :answers-by-key               (get-in db [:application :answers])
-                            :field-descriptor             field-descriptor
-                            :editing?                     (get-in db [:application :editing?])
-                            :on-validated                 (fn [[valid? errors]]
-                                                            (dispatch [:application/set-hakukohde-valid
-                                                                       valid?]))}})))
+       :dispatch [:application/validate-hakukohteet]})))
 
 (reg-event-fx
   :application/hakukohde-remove-selection
@@ -165,11 +164,4 @@
                               (assoc-in [:application :answers :hakukohteet :values] new-hakukohteet)
                               set-values-changed)]
       {:db                 db
-       :validate-debounced {:value                        new-hakukohteet
-                            :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
-                            :answers-by-key               (get-in db [:application :answers])
-                            :field-descriptor             (hakukohteet-field db)
-                            :editing?                     (get-in db [:application :editing?])
-                            :on-validated                 (fn [[valid? errors]]
-                                                            (dispatch [:application/set-hakukohde-valid
-                                                                       valid?]))}})))
+       :dispatch [:application/validate-hakukohteet]})))
