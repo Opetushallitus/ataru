@@ -331,16 +331,16 @@
                                   (route/resources "/")
                                   (api/undocumented
                                     (api/GET "/haku/:oid" []
-                                      :query-params [lang :- s/Str]
+                                      :query-params [{lang :- s/Str nil}]
                                       (render-application lang))
                                     (api/GET "/hakukohde/:oid" []
-                                      :query-params [lang :- s/Str]
+                                      :query-params [{lang :- s/Str nil}]
                                       (render-application lang))
                                     (api/GET "/:key" []
-                                      :query-params [lang :- s/Str]
+                                      :query-params [{lang :- s/Str nil}]
                                       (render-application lang))
                                     (api/GET "/" []
-                                      :query-params [lang :- s/Str]
+                                      :query-params [lang :- (s/maybe s/Str)]
                                       (render-application lang))))
                                (route/not-found "<h1>Page not found</h1>")))
                             (wrap-with-logger
