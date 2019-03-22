@@ -89,7 +89,10 @@
 
 (defn child-fields [children application lang ui question-group-id]
   (for [child children
-        :when (get-in ui [(keyword (:id child)) :visible?] true)]
+        :when (visible? ui child)]
+    ^{:key (str (:id child)
+                (when question-group-id
+                  (str "-" question-group-id)))}
     [field child application lang question-group-id]))
 
 (defn wrapper [content application lang children]
@@ -100,14 +103,7 @@
         [:h2 (from-multi-lang (:label content) lang)]
         [scroll-to-anchor content]]
        (into [:div.application__wrapper-contents]
-         (child-fields children application lang @ui nil))])))
-
-(defn- question-group-row [application lang children idx]
-  [:div.application__question-group-row
-   [:div.application__question-group-row-content.application__form-field
-    (for [child children]
-      ^{:key (str (:id child) "-" idx)}
-      [field child application lang idx])]])
+             (child-fields children application lang ui nil))])))
 
 (defn question-group [content application lang children]
   (let [ui (subscribe [:state-query [:application :ui]])]
@@ -116,15 +112,17 @@
         [:div.application__question-group.application__read-only
          [:p.application__read-only-heading-text
           (from-multi-lang (:label content) lang)]
-         [:div
-          (for [idx (range groups-amount)]
-            ^{:key (str "question-group-row-" idx)}
-            [question-group-row application lang children idx])]]))))
+         (into [:div]
+               (for [idx (range groups-amount)]
+                 ^{:key (str (:id content) "-" idx)}
+                 [:div.application__question-group-row
+                  (into [:div.application__question-group-row-content.application__form-field]
+                        (child-fields children application lang ui idx))]))]))))
 
 (defn row-container [application lang children question-group-index]
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [application lang children question-group-index]
-      (into [:div] (child-fields children application lang @ui question-group-index)))))
+      (into [:div] (child-fields children application lang ui question-group-index)))))
 
 (defn- extract-values [children answers]
   (let [l?      (fn [x]
@@ -190,11 +188,8 @@
            [:p.application__text-field-paragraph
             (from-multi-lang (:label option) lang)]
            (when (some #(visible? ui %) (:followups option))
-             [:div.application-handling__nested-container
-              (doall
-                (for [followup (filter #(visible? ui %) (:followups option))]
-                  ^{:key (:id followup)}
-                  [field followup application lang]))])])))]])
+             (into [:div.application-handling__nested-container]
+                   (child-fields (:followups option) application lang ui question-group-idx)))])))]])
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
@@ -254,6 +249,4 @@
                    :fi)
           ui   (subscribe [:state-query [:application :ui]])]
       (into [:div.application__readonly-container.animated.fadeIn]
-        (for [content (:content form)
-              :when (visible? ui content)]
-          [field content application lang])))))
+            (child-fields (:content form) application lang ui nil)))))
