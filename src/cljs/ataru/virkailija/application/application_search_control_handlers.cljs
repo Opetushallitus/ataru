@@ -87,6 +87,6 @@
       (cond-> {:db db}
               (or (some? (get-in db [:application :search-control :search-term :parsed]))
                   (clojure.string/blank? search-term))
-              (assoc :dispatch-debounced {:timeout  500
+              (assoc :dispatch-debounced {:timeout  (if (clojure.string/blank? search-term) 0 500)
                                           :id       :application-search
                                           :dispatch [:application/reload-applications]})))))

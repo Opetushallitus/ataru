@@ -333,34 +333,41 @@
 
 (defn- fetch-applications-fx
   [{db :db :as fx}]
-  (-> fx
-      (update :db assoc-in [:application :fetching-applications?] true)
-      (assoc :http
-             {:id                  :applications-list
-              :method              :post
-              :path                "/lomake-editori/api/applications/list"
-              :params              (merge {:sort               (get-in db [:application :sort])
-                                           :states-and-filters {:attachment-states-to-include (get-in db [:application :attachment-state-filter])
-                                                                :processing-states-to-include (get-in db [:application :processing-state-filter])
-                                                                :selection-states-to-include  (get-in db [:application :selection-state-filter])
-                                                                :filters                      (get-in db [:application :filters])}}
-                                          (get-in db [:application :search-control :search-term :parsed])
-                                          (when-let [form-key (get-in db [:application :selected-form-key])]
-                                            {:form-key form-key})
-                                          (when-let [haku-oid (get-in db [:application :selected-haku])]
-                                            {:haku-oid haku-oid})
-                                          (when-let [hakukohde-oid (get-in db [:application :selected-hakukohde])]
-                                            {:hakukohde-oid hakukohde-oid})
-                                          (when-let [[haku-oid hakukohderyhma-oid] (get-in db [:application :selected-hakukohderyhma])]
-                                            (cond-> {:haku-oid           haku-oid
-                                                     :hakukohderyhma-oid hakukohderyhma-oid}
-                                                    (some? (get-in db [:application :rajaus-hakukohteella]))
-                                                    (assoc :rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))))
-                                          (when (get-in db [:application :ensisijaisesti?])
-                                            {:ensisijaisesti true}))
-              :skip-parse-times?   true
-              :skip-flasher?       true
-              :handler-or-dispatch :application/handle-fetch-applications-response})))
+  (let [search-term    (get-in db [:application :search-control :search-term :parsed])
+        form           (when-let [form-key (get-in db [:application :selected-form-key])]
+                         {:form-key form-key})
+        haku           (when-let [haku-oid (get-in db [:application :selected-haku])]
+                         {:haku-oid haku-oid})
+        hakukohde      (when-let [hakukohde-oid (get-in db [:application :selected-hakukohde])]
+                         {:hakukohde-oid hakukohde-oid})
+        hakukohderyhma (when-let [[haku-oid hakukohderyhma-oid] (get-in db [:application :selected-hakukohderyhma])]
+                         (cond-> {:haku-oid           haku-oid
+                                  :hakukohderyhma-oid hakukohderyhma-oid}
+                                 (some? (get-in db [:application :rajaus-hakukohteella]))
+                                 (assoc :rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))))]
+    (if (some identity [search-term form haku hakukohde hakukohderyhma])
+      (-> fx
+          (assoc-in [:db :application :fetching-applications?] true)
+          (assoc :http
+                 {:id                  :applications-list
+                  :method              :post
+                  :path                "/lomake-editori/api/applications/list"
+                  :params              (merge {:sort               (get-in db [:application :sort])
+                                               :states-and-filters {:attachment-states-to-include (get-in db [:application :attachment-state-filter])
+                                                                    :processing-states-to-include (get-in db [:application :processing-state-filter])
+                                                                    :selection-states-to-include  (get-in db [:application :selection-state-filter])
+                                                                    :filters                      (get-in db [:application :filters])}}
+                                              search-term
+                                              form
+                                              haku
+                                              hakukohde
+                                              hakukohderyhma
+                                              (when (get-in db [:application :ensisijaisesti?])
+                                                {:ensisijaisesti true}))
+                  :skip-parse-times?   true
+                  :skip-flasher?       true
+                  :handler-or-dispatch :application/handle-fetch-applications-response}))
+      (assoc-in fx [:db :application :fetching-applications?] false))))
 
 (reg-event-fx
   :application/handle-fetch-applications-response
