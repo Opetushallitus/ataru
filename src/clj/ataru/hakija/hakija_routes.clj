@@ -300,7 +300,7 @@
 (defn- render-application [lang]
   (let [config (json/generate-string (or (:public-config config) {}))]
     (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint
-                                                 :lang              (or lang "auto")
+                                                 :lang              (or lang "fi")
                                                  :config            config})))
 
 (defrecord Handler []
