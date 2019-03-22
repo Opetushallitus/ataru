@@ -297,9 +297,10 @@
             :else
             (response/bad-request {:error "Either ssn or email is required"})))))
 
-(defn- render-application []
+(defn- render-application [lang]
   (let [config (json/generate-string (or (:public-config config) {}))]
     (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint
+                                                 :lang              (or lang "auto")
                                                  :config            config})))
 
 (defrecord Handler []
@@ -330,13 +331,17 @@
                                   (route/resources "/")
                                   (api/undocumented
                                     (api/GET "/haku/:oid" []
-                                      (render-application))
+                                      :query-params [lang :- s/Str]
+                                      (render-application lang))
                                     (api/GET "/hakukohde/:oid" []
-                                      (render-application))
+                                      :query-params [lang :- s/Str]
+                                      (render-application lang))
                                     (api/GET "/:key" []
-                                      (render-application))
+                                      :query-params [lang :- s/Str]
+                                      (render-application lang))
                                     (api/GET "/" []
-                                      (render-application))))
+                                      :query-params [lang :- s/Str]
+                                      (render-application lang))))
                                (route/not-found "<h1>Page not found</h1>")))
                             (wrap-with-logger
                               :debug identity
