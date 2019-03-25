@@ -164,10 +164,11 @@
         applied-hakukohteet           (filter #(contains? (set (:hakukohde application)) (:oid %))
                                               hakukohteet)
         applied-hakukohderyhmat       (mapcat :hakukohderyhmat applied-hakukohteet)
-        [rewrite? virkailija-secret]  (if is-modify?
-                                        (or [true (valid-virkailija-rewrite-secret application)]
-                                            [false (valid-virkailija-update-secret application)])
-                                        [false (valid-virkailija-create-secret application)])
+        [rewrite? virkailija-secret] (if is-modify?
+                                       (if-let [rewrite-secret (valid-virkailija-rewrite-secret application)]
+                                         [true rewrite-secret]
+                                         [false (valid-virkailija-update-secret application)])
+                                       [false (valid-virkailija-create-secret application)])
         latest-application            (application-store/get-latest-version-of-application-for-edit rewrite? application)
         form-roles                    (cond-> []
                                         (some? virkailija-secret)
