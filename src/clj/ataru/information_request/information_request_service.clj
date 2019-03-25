@@ -50,10 +50,11 @@
 (defn store [information-request session job-runner]
   {:pre [(-> information-request :subject u/not-blank?)
          (-> information-request :message u/not-blank?)
-         (-> information-request :application-key u/not-blank?)]}
+         (-> information-request :application-key u/not-blank?)
+         (-> information-request :message-type u/not-blank?)]}
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [information-request (information-request-store/add-information-request
-                               (merge information-request {:message-type "information-request"})
+                               information-request
                                session
                                conn)]
       (start-email-job job-runner conn information-request)
@@ -66,10 +67,11 @@
   [information-requests session job-runner]
   {:pre [(every? (comp u/not-blank? :subject) information-requests)
          (every? (comp u/not-blank? :message) information-requests)
-         (every? (comp u/not-blank? :application-key) information-requests)]}
+         (every? (comp u/not-blank? :application-key) information-requests)
+         (every? (comp u/not-blank? :message-type) information-requests)]}
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [stored-information-requests (mapv #(information-request-store/add-information-request
-                                              (merge % {:message-type "mass-information-request"})
+                                              %
                                               session
                                               conn)
                                             information-requests)]

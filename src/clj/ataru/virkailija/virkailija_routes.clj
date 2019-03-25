@@ -465,7 +465,10 @@
              session
              [(:application-key information-request)]
              [:edit-applications])
-          (ok (information-request/store information-request session job-runner))
+          (ok (information-request/store (assoc information-request
+                                                :message-type "information-request")
+                                         session
+                                         job-runner))
           (response/unauthorized {:error (str "Hakemuksen "
                                               (:application-key information-request)
                                               " käsittely ei ole sallittu")})))
@@ -476,7 +479,9 @@
                      :application-keys    [s/Str]}]
         :summary "Send information requests to multiple applicants"
         :return [ataru-schema/InformationRequest]
-        (let [information-requests (map #(assoc (:message-and-subject body) :application-key %)
+        (let [information-requests (map #(assoc (:message-and-subject body)
+                                                :application-key %
+                                                :message-type "mass-information-request")
                                         (:application-keys body))]
           (if (access-controlled-application/applications-access-authorized?
                organization-service
