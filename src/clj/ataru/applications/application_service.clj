@@ -204,15 +204,13 @@
              {:hakukohde [hakukohde-oid]}))))
 
 (defn ->hakukohderyhma-query
-  [tarjonta-service
+  [ryhman-hakukohteet
    authorized-organization-oids
    haku-oid
    hakukohderyhma-oid
    ensisijaisesti
    rajaus-hakukohteella]
-  (let [ryhman-hakukohteet    (filter #(some #{hakukohderyhma-oid} (:ryhmaliitokset %))
-                                      (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil))
-        kayttajan-hakukohteet (filter #(some authorized-organization-oids (:tarjoaja-oids %))
+  (let [kayttajan-hakukohteet (filter #(some authorized-organization-oids (:tarjoaja-oids %))
                                       ryhman-hakukohteet)]
     (merge {:haku      haku-oid
             :hakukohde (map :oid ryhman-hakukohteet)}
@@ -563,20 +561,18 @@
     {:unauthorized nil}))
 
 (defn- add-selected-hakukohteet
-  [tarjonta-service
-   states-and-filters
+  [states-and-filters
    haku-oid
    hakukohde-oid
    hakukohderyhma-oid
-   rajaus-hakukohteella]
+   rajaus-hakukohteella
+   ryhman-hakukohteet]
   (cond (some? hakukohde-oid)
         (assoc states-and-filters :selected-hakukohteet #{hakukohde-oid})
         (some? rajaus-hakukohteella)
         (assoc states-and-filters :selected-hakukohteet #{rajaus-hakukohteella})
         (and (some? haku-oid) (some? hakukohderyhma-oid))
-        (->> (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil)
-             (filter #(some #{hakukohderyhma-oid} (:ryhmaliitokset %)))
-             (map :oid)
+        (->> (map :oid ryhman-hakukohteet)
              set
              (assoc states-and-filters :selected-hakukohteet))
         :else
@@ -609,13 +605,17 @@
                                       [:view-applications :edit-applications]
                                       (fn [] (constantly false))
                                       (fn [oids] #(contains? oids %))
-                                      (fn [] (constantly true)))]
+                                      (fn [] (constantly true)))
+        ryhman-hakukohteet           (when (and (some? haku-oid) (some? hakukohderyhma-oid))
+                                       (filter (fn [hakukohde]
+                                                 (some #(= hakukohderyhma-oid %) (:ryhmaliitokset hakukohde)))
+                                               (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil)))]
     (when-let [query (->and-query
                       (cond (some? form-key)
                             (->form-query form-key)
                             (and (some? haku-oid) (some? hakukohderyhma-oid))
                             (->hakukohderyhma-query
-                             tarjonta-service
+                             ryhman-hakukohteet
                              authorized-organization-oids
                              haku-oid
                              hakukohderyhma-oid
@@ -645,9 +645,9 @@
        authorized-organization-oids
        query
        sort
-       (add-selected-hakukohteet tarjonta-service
-                                 states-and-filters
+       (add-selected-hakukohteet states-and-filters
                                  haku-oid
                                  hakukohde-oid
                                  hakukohderyhma-oid
-                                 rajaus-hakukohteella)))))
+                                 rajaus-hakukohteella
+                                 ryhman-hakukohteet)))))
