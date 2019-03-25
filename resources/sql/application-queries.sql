@@ -470,7 +470,6 @@ WHERE vus.secret = :virkailija_secret;
 SELECT
   a.id,
   a.key,
-  a.person_oid,
   a.lang,
   a.form_id AS form,
   a.created_time,

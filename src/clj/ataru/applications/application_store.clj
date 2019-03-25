@@ -491,9 +491,13 @@
     (assoc application :state (-> (:key application) get-application-review :state))))
 
 (defn get-latest-version-of-application-for-edit
-  [{:keys [secret virkailija-secret]}]
-  (if secret
+  [rewrite? {:keys [secret virkailija-secret]}]
+  (cond
+    secret
     (get-latest-application-by-secret secret)
+    rewrite?
+    (get-latest-application-for-virkailija-rewrite-edit virkailija-secret)
+    :else
     (get-latest-application-for-virkailija-edit virkailija-secret)))
 
 (defn get-latest-application-secret

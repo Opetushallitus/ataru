@@ -164,11 +164,11 @@
         applied-hakukohteet           (filter #(contains? (set (:hakukohde application)) (:oid %))
                                               hakukohteet)
         applied-hakukohderyhmat       (mapcat :hakukohderyhmat applied-hakukohteet)
-        virkailija-secret             (if is-modify?
-                                        (or (valid-virkailija-rewrite-secret application)
-                                            (valid-virkailija-update-secret application))
-                                        (valid-virkailija-create-secret application))
-        latest-application            (application-store/get-latest-version-of-application-for-edit application)
+        [rewrite? virkailija-secret]  (if is-modify?
+                                        (or [true (valid-virkailija-rewrite-secret application)]
+                                            [false (valid-virkailija-update-secret application)])
+                                        [false (valid-virkailija-create-secret application)])
+        latest-application            (application-store/get-latest-version-of-application-for-edit rewrite? application)
         form-roles                    (cond-> []
                                         (some? virkailija-secret)
                                         (conj :virkailija)
@@ -393,10 +393,8 @@
 
                               :else
                               [:hakija nil])
-        rewrite-secret?            (and (= actor-role :virkailija)
-                                        (virkailija-edit/virkailija-rewrite-secret-valid? secret))
         application                (cond
-                                     rewrite-secret?
+                                     (and (= actor-role :virkailija) (virkailija-edit/virkailija-rewrite-secret-valid? secret))
                                      (application-store/get-latest-application-for-virkailija-rewrite-edit secret)
 
                                      (and (= actor-role :virkailija) (virkailija-edit/virkailija-update-secret-valid? secret))
@@ -405,7 +403,7 @@
                                      (and (= actor-role :hakija) (some? secret))
                                      (application-store/get-latest-application-by-secret secret))
         form-roles                 (cond-> [actor-role]
-                                     (and (not rewrite-secret?) (some? (:person-oid application)))
+                                     (some? (:person-oid application))
                                      (conj :with-henkilo))
         secret-expired?            (when (nil? application)
                                      (application-store/application-exists-with-secret? secret))
