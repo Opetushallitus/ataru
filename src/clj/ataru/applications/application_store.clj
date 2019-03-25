@@ -169,7 +169,7 @@
                                          fields-by-id)))
           visible-attachments))
 
-(defn- delete-orphan-attachment-reviews
+(defn delete-orphan-attachment-reviews
   [application-key reviews applied-hakukohteet connection]
   (yesql-delete-application-attachment-reviews!
     {:application_key                            application-key
@@ -178,6 +178,13 @@
                                                                [(:attachment_key review) (:hakukohde review)]))
                                                       (json/generate-string))}
     connection))
+
+(defn store-reviews [reviews update? connection]
+  (doseq [review reviews]
+    ((if (:updated? review)
+       yesql-update-attachment-hakukohde-review!
+       yesql-save-attachment-review!)
+     (dissoc review :updated?) connection)))
 
 (defn- create-attachment-hakukohde-reviews-for-application
   [application applied-hakukohteet old-answers form update? connection]
@@ -193,11 +200,7 @@
                              applied-hakukohteet
                              update?
                              fields-by-id)]
-    (doseq [review reviews]
-      ((if (:updated? review)
-         yesql-update-attachment-hakukohde-review!
-         yesql-save-attachment-review!)
-       (dissoc review :updated?) connection))
+    (store-reviews reviews update? connection)
     (when update?
       (delete-orphan-attachment-reviews (:key application)
                                         reviews
