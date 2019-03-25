@@ -38,14 +38,13 @@
                 :recipients [recipient-email]
                 :body       body}))))
 
-(defn- start-email-job [job-runner information-request]
+(defn- start-email-job [job-runner connection information-request]
   (let [initial-state (initial-state information-request)
         job-type      (:type information-request-job/job-definition)
-        job-id        (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-                        (job/start-job job-runner
-                                       connection
-                                       job-type
-                                       initial-state))]
+        job-id        (job/start-job job-runner
+                                     connection
+                                     job-type
+                                     initial-state)]
     (log/info (str "Started information request email job with job id " job-id ", initial state: " initial-state))))
 
 (defn store [information-request session job-runner]
@@ -54,13 +53,13 @@
          (-> information-request :application-key u/not-blank?)]}
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [information-request (information-request-store/add-information-request
-                                (merge information-request {:message-type "information-request"})
-                                session
-                                conn)]
+                               (merge information-request {:message-type "information-request"})
+                               session
+                               conn)]
+      (start-email-job job-runner conn information-request)
       (audit-log/log {:new       information-request
                       :operation audit-log/operation-new
                       :id        (-> session :identity :oid)})
-      (start-email-job job-runner information-request)
       information-request)))
 
 (defn mass-store
@@ -68,16 +67,15 @@
   {:pre [(every? (comp u/not-blank? :subject) information-requests)
          (every? (comp u/not-blank? :message) information-requests)
          (every? (comp u/not-blank? :application-key) information-requests)]}
-  (let [stored-information-requests (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-                                      (mapv
-                                        #(information-request-store/add-information-request
-                                           (merge % {:message-type "mass-information-request"})
-                                           session
-                                           conn)
-                                        information-requests))]
-    (doseq [stored-information-request stored-information-requests]
-      (start-email-job job-runner stored-information-request)
-      (audit-log/log {:new       stored-information-request
-                      :operation audit-log/operation-new
-                      :id        (-> session :identity :oid)}))
-    stored-information-requests))
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+    (let [stored-information-requests (mapv #(information-request-store/add-information-request
+                                              (merge % {:message-type "mass-information-request"})
+                                              session
+                                              conn)
+                                            information-requests)]
+      (doseq [stored-information-request stored-information-requests]
+        (start-email-job job-runner conn stored-information-request)
+        (audit-log/log {:new       stored-information-request
+                        :operation audit-log/operation-new
+                        :id        (-> session :identity :oid)}))
+      stored-information-requests)))
