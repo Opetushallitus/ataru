@@ -133,7 +133,8 @@
   (it "should create attachment reviews for new application without hakukohteet"
     (let [application       (first (filter #(= "attachments" (:key %)) fixtures/applications))
           flat-form-content (util/flatten-form-fields form-fixtures/attachment-test-form)
-          answers-by-key    (-> application :content :answers util/answers-by-key)]
+          answers-by-key    (-> application :content :answers util/answers-by-key)
+          fields-by-id      (util/form-fields-by-id form-fixtures/attachment-test-form)]
       (should== [{:application_key "attachments"
                   :attachment_key  "att__1"
                   :state           "not-checked"
@@ -151,12 +152,14 @@
                  answers-by-key
                  nil
                  []
-                 false))))
+                 false
+                 fields-by-id))))
 
   (it "should create attachment reviews for new application with hakukohteet"
     (let [application       (first (filter #(= "attachments" (:key %)) fixtures/applications))
           flat-form-content (util/flatten-form-fields form-fixtures/attachment-test-form)
-          answers-by-key    (-> application :content :answers util/answers-by-key)]
+          answers-by-key    (-> application :content :answers util/answers-by-key)
+          fields-by-id      (util/form-fields-by-id form-fixtures/attachment-test-form)]
       (should== [{:application_key "attachments"
                   :attachment_key  "att__1"
                   :state           "not-checked"
@@ -184,12 +187,14 @@
                  answers-by-key
                  nil
                  [{:oid "hakukohde1"} {:oid "hakukohde2"}]
-                 false))))
+                 false
+                 fields-by-id))))
 
   (it "should update attachment reviews for application without hakukohteet"
     (let [application       (first (filter #(= "attachments" (:key %)) fixtures/applications))
           flat-form-content (util/flatten-form-fields form-fixtures/attachment-test-form)
-          answers-by-key    (-> application :content :answers util/answers-by-key)]
+          answers-by-key    (-> application :content :answers util/answers-by-key)
+          fields-by-id      (util/form-fields-by-id form-fixtures/attachment-test-form)]
       (should== [{:application_key "attachments"
                   :attachment_key  "att__1"
                   :state           "not-checked"
@@ -208,4 +213,5 @@
                  {:att__1 {:value ["liite-id"]}
                   :att__2 {:value ["32131"]}}
                  []
-                 true)))))
+                 true
+                 fields-by-id)))))
