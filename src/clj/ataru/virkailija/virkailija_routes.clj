@@ -465,10 +465,13 @@
              session
              [(:application-key information-request)]
              [:edit-applications])
-          (ok (information-request/store (assoc information-request
+          (-> (information-request/store (assoc information-request
                                                 :message-type "information-request")
-                                         session
-                                         job-runner))
+                                         (get-in session [:identity :oid])
+                                         job-runner)
+              (assoc :first-name (get-in session [:identity :first-name])
+                     :last-name (get-in session [:identity :last-name]))
+              response/ok)
           (response/unauthorized {:error (str "Hakemuksen "
                                               (:application-key information-request)
                                               " käsittely ei ole sallittu")})))
@@ -489,7 +492,9 @@
                session
                (map :application-key information-requests)
                [:edit-applications])
-            (ok (information-request/mass-store information-requests session job-runner))
+            (ok (information-request/mass-store information-requests
+                                                (get-in session [:identity :oid])
+                                                job-runner))
             (response/unauthorized {:error "Hakemusten käsittely ei ole sallittu"}))))
 
       (api/POST "/excel" {session :session}

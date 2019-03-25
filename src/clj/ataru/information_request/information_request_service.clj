@@ -47,7 +47,7 @@
                                      initial-state)]
     (log/info (str "Started information request email job with job id " job-id ", initial state: " initial-state))))
 
-(defn store [information-request session job-runner]
+(defn store [information-request virkailija-oid job-runner]
   {:pre [(-> information-request :subject u/not-blank?)
          (-> information-request :message u/not-blank?)
          (-> information-request :application-key u/not-blank?)
@@ -55,16 +55,16 @@
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [information-request (information-request-store/add-information-request
                                information-request
-                               session
+                               virkailija-oid
                                conn)]
       (start-email-job job-runner conn information-request)
       (audit-log/log {:new       information-request
                       :operation audit-log/operation-new
-                      :id        (-> session :identity :oid)})
+                      :id        virkailija-oid})
       information-request)))
 
 (defn mass-store
-  [information-requests session job-runner]
+  [information-requests virkailija-oid job-runner]
   {:pre [(every? (comp u/not-blank? :subject) information-requests)
          (every? (comp u/not-blank? :message) information-requests)
          (every? (comp u/not-blank? :application-key) information-requests)
@@ -72,12 +72,12 @@
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [stored-information-requests (mapv #(information-request-store/add-information-request
                                               %
-                                              session
+                                              virkailija-oid
                                               conn)
                                             information-requests)]
       (doseq [stored-information-request stored-information-requests]
         (start-email-job job-runner conn stored-information-request)
         (audit-log/log {:new       stored-information-request
                         :operation audit-log/operation-new
-                        :id        (-> session :identity :oid)}))
+                        :id        virkailija-oid}))
       stored-information-requests)))
