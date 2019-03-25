@@ -552,8 +552,7 @@ SELECT
   a.created_time,
   a.content,
   a.haku,
-  a.hakukohde,
-  a.person_oid
+  a.hakukohde
 FROM applications a
 WHERE a.id = (SELECT max(a.id)
               FROM applications AS a
