@@ -486,7 +486,8 @@
     {:dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
                   [:application/hakukohde-query-change (atom "")]
                   [:application/set-page-title]
-                  [:application/update-answers-validity]]}))
+                  [:application/update-answers-validity]
+                  [:application/validate-hakukohteet]]}))
 
 (defn- handle-get-application [{:keys [db]}
                                [_

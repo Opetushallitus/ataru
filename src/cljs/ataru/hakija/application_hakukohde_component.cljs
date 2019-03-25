@@ -82,7 +82,8 @@
         prioritize-hakukohteet?            @(subscribe [:application/prioritize-hakukohteet?])
         haku-editable?                     @(subscribe [:application/hakukohteet-editable?])
         hakukohde-editable?                @(subscribe [:application/hakukohde-editable? hakukohde-oid])
-        [should-be-lower should-be-higher] @(subscribe [:application/hakukohde-offending-priorization? hakukohde-oid])]
+        [should-be-lower should-be-higher] @(subscribe [:application/hakukohde-offending-priorization? hakukohde-oid])
+        rajaavat-hakukohteet               @(subscribe [:application/rajaavat-hakukohteet hakukohde-oid])]
     [:div.application__selected-hakukohde-row.animated
      {:class (if deleting? "fadeOut" "fadeIn")}
      (when prioritize-hakukohteet?
@@ -96,6 +97,14 @@
         [:div.application__hakukohde-application-period-ended
          [:i.zmdi.zmdi-lock]
          (get-translation :not-editable-application-period-ended)])
+      (when (not-empty rajaavat-hakukohteet)
+        [:div.application__search-hit-hakukohde-row--limit-reached
+         [:h3.application__search-hit-hakukohde-row--limit-reached-heading
+          (get-translation :application-limit-reached-in-hakukohderyhma)]
+         (doall (for [hakukohde rajaavat-hakukohteet]
+                  ^{:key (str "limitting-hakukohde-" (:oid hakukohde))}
+                  [:div.application__search-hit-hakukohde-row--limitting-hakukohde
+                   @(subscribe [:application/hakukohde-label (:oid hakukohde)])]))])
       (if (seq should-be-higher)
         (offending-priorization (first should-be-higher) hakukohde-oid)
         (if (seq should-be-lower)
