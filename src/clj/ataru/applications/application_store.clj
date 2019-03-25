@@ -1,5 +1,6 @@
 (ns ataru.applications.application-store
   (:require [ataru.application.application-states :as application-states]
+            [cheshire.core :as json]
             [ataru.application.review-states :refer [incomplete-states] :as application-review-states]
             [ataru.db.db :as db]
             [ataru.dob :as dob]
@@ -96,7 +97,7 @@
                                                            (:children-of field))]
                                       (let [parent (get fields-by-id (keyword parent-id))]
                                         (recur parent (cons parent parents)))
-                                      parents))
+                                      parents)),
         intersection              (fn [v]
                                       (when (seq v)
                                             (apply clojure.set/intersection (map set v))))
@@ -169,12 +170,14 @@
           visible-attachments))
 
 (defn- delete-orphan-attachment-reviews
-  [application-key visible-attachments applied-hakukohteet connection]
+  [application-key reviews applied-hakukohteet connection]
   (yesql-delete-application-attachment-reviews!
-   {:application_key     application-key
-    :attachment_keys     (cons "" (map :id visible-attachments))
-    :applied_hakukohteet (cons "" applied-hakukohteet)}
-   connection))
+    {:application_key                            application-key
+     :attachment_key_and_applied_hakukohde_array (->> reviews
+                                                      (map (fn [review]
+                                                               [(:attachment_key review) (:hakukohde review)]))
+                                                      (json/generate-string))}
+    connection))
 
 (defn- create-attachment-hakukohde-reviews-for-application
   [application applied-hakukohteet old-answers form update? connection]
@@ -197,7 +200,7 @@
        (dissoc review :updated?) connection))
     (when update?
       (delete-orphan-attachment-reviews (:key application)
-                                        visible-attachments
+                                        reviews
                                         (map :oid applied-hakukohteet)
                                         connection))))
 

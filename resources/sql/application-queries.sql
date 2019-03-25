@@ -676,8 +676,9 @@ WHERE application_key = :application_key AND attachment_key = :attachment_key AN
 -- name: yesql-delete-application-attachment-reviews!
 DELETE FROM application_hakukohde_attachment_reviews
 WHERE application_key = :application_key
-      AND (attachment_key NOT IN (:attachment_keys)
-           OR hakukohde NOT IN (:applied_hakukohteet));
+      AND NOT EXISTS
+      (SELECT 1 FROM jsonb_array_elements(:attachment_key_and_applied_hakukohde_array::jsonb)
+                WHERE attachment_key = (value->>0)::text AND hakukohde = (value->>1)::text);
 
 -- name: yesql-applications-by-haku-and-hakukohde-oids
 SELECT
