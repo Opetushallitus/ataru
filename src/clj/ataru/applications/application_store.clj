@@ -333,30 +333,52 @@
        (clojure.string/join " & ")))
 
 (defn- query->db-query
-  [connection query]
-  (-> (merge {:form                   nil
-              :application_oid        nil
-              :application_oids       nil
-              :person_oid             nil
-              :name                   nil
-              :email                  nil
-              :dob                    nil
-              :ssn                    nil
-              :haku                   nil
-              :hakukohde              nil
-              :ensisijainen_hakukohde nil}
-             (transform-keys ->snake_case query))
-      (update :application_oids
-              #(some->> (seq %)
-                        to-array
-                        (.createArrayOf (:connection connection) "text")))))
+  ([connection query]
+   (-> (merge {:form                         nil
+               :application_oid              nil
+               :application_oids             nil
+               :person_oid                   nil
+               :name                         nil
+               :email                        nil
+               :dob                          nil
+               :ssn                          nil
+               :haku                         nil
+               :hakukohde                    nil
+               :ensisijainen_hakukohde       nil
+               :ensisijaisesti_hakukohteissa nil}
+              (transform-keys ->snake_case query))
+       (update :hakukohde
+               #(some->> (seq %)
+                         to-array
+                         (.createArrayOf (:connection connection) "varchar")))
+       (update :application_oids
+               #(some->> (seq %)
+                         to-array
+                         (.createArrayOf (:connection connection) "text")))
+       (update :ensisijainen_hakukohde
+               #(some->> (seq %)
+                         to-array
+                         (.createArrayOf (:connection connection) "varchar")))
+       (update :ensisijaisesti_hakukohteissa
+               #(some->> (seq %)
+                         to-array
+                         (.createArrayOf (:connection connection) "varchar")))))
+  ([connection query sort]
+   (merge (query->db-query connection query)
+          {:offset_key            (:key (:offset sort))
+           :offset_submitted      (:submitted (:offset sort))
+           :offset_created_time   (:created-time (:offset sort))
+           :offset_last_name      (:last-name (:offset sort))
+           :offset_preferred_name (:preferred-name (:offset sort))
+           :order_by              (:order-by sort)
+           :order                 (:order sort)})))
 
 (defn get-application-heading-list
-  [query]
+  [query sort]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-                           (yesql-get-application-list-for-virkailija
-                             (query->db-query connection query)
-                             {:connection connection})))
+    (yesql-get-application-list-for-virkailija
+     (query->db-query connection query sort)
+     {:connection connection})))
 
 (defn get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
   [person-oid]

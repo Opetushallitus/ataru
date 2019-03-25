@@ -297,33 +297,23 @@
       :tags ["applications-api"]
 
       (api/POST "/mass-update" {session :session}
-        :body [body {:application-filter ataru-schema/ApplicationQuery
-                     :hakukohde-oid      (s/maybe s/Str)
-                     :from-state         (apply s/enum (map first review-states/application-hakukohde-processing-states))
-                     :to-state           (apply s/enum (map first review-states/application-hakukohde-processing-states))}]
+        :body [body {:application-keys [s/Str]
+                     :hakukohde-oid    (s/maybe s/Str)
+                     :from-state       (apply s/enum (map first review-states/application-hakukohde-processing-states))
+                     :to-state         (apply s/enum (map first review-states/application-hakukohde-processing-states))}]
         :summary "Update list of application-hakukohde with given state to new state"
-        (let [filter-with-from-state (-> (:application-filter body)
-                                         (assoc-in [:states-and-filters :processing-states-to-include] [(:from-state body)]))
-              application-keys       (->> (application-service/query-applications-paged
-                                            organization-service
-                                            person-service
-                                            tarjonta-service
-                                            session
-                                            filter-with-from-state)
-                                          :applications
-                                          (map :key))]
-          (if (application-service/mass-update-application-states
-                organization-service
-                tarjonta-service
-                session
-                application-keys
-                (:hakukohde-oid body)
-                (:from-state body)
-                (:to-state body))
-            (response/ok {:updated-count (count application-keys)})
-            (response/unauthorized {:error (str "Hakemusten "
-                                                (clojure.string/join ", " (:application-keys body))
-                                                " käsittely ei ole sallittu")}))))
+        (if (application-service/mass-update-application-states
+             organization-service
+             tarjonta-service
+             session
+             (:application-keys body)
+             (:hakukohde-oid body)
+             (:from-state body)
+             (:to-state body))
+          (response/ok {:updated-count (count (:application-keys body))})
+          (response/unauthorized {:error (str "Hakemusten "
+                                              (clojure.string/join ", " (:application-keys body))
+                                              " käsittely ei ole sallittu")})))
 
       (api/POST "/list" {session :session}
         :body [body ataru-schema/ApplicationQuery]
@@ -450,27 +440,36 @@
         :body [information-request ataru-schema/NewInformationRequest]
         :summary "Send an information request to an applicant"
         :return ataru-schema/InformationRequest
-        (ok (information-request/store information-request session job-runner)))
+        (if (access-controlled-application/applications-access-authorized?
+             organization-service
+             tarjonta-service
+             session
+             [(:application-key information-request)]
+             [:edit-applications])
+          (ok (information-request/store information-request session job-runner))
+          (response/unauthorized {:error (str "Hakemuksen "
+                                              (:application-key information-request)
+                                              " käsittely ei ole sallittu")})))
 
       (api/POST "/mass-information-request" {session :session}
         :body [body {:message-and-subject {:message s/Str
                                            :subject s/Str}
-                     :application-query   ataru-schema/ApplicationQuery}]
+                     :application-keys    [s/Str]}]
         :summary "Send information requests to multiple applicants"
         :return [ataru-schema/InformationRequest]
-        (let [application-keys     (->> (application-service/query-applications-paged
-                                          organization-service
-                                          person-service
-                                          tarjonta-service
-                                          session
-                                          (:application-query body))
-                                        :applications
-                                        (map :key))
-              information-requests (map #(assoc (:message-and-subject body) :application-key %) application-keys)]
-          (ok (information-request/mass-store information-requests session job-runner))))
+        (let [information-requests (map #(assoc (:message-and-subject body) :application-key %)
+                                        (:application-keys body))]
+          (if (access-controlled-application/applications-access-authorized?
+               organization-service
+               tarjonta-service
+               session
+               (map :application-key information-requests)
+               [:edit-applications])
+            (ok (information-request/mass-store information-requests session job-runner))
+            (response/unauthorized {:error "Hakemusten käsittely ei ole sallittu"}))))
 
       (api/POST "/excel" {session :session}
-        :form-params [application-filter :- s/Str
+        :form-params [application-keys :- [s/Str]
                       filename :- s/Str
                       {selected-hakukohde :- s/Str nil}
                       {selected-hakukohderyhma :- s/Str nil}
@@ -478,16 +477,7 @@
                       {skip-answers :- s/Bool false}
                       {CSRF :- s/Str nil}]
         :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
-        (let [application-filter (json/parse-string application-filter keyword)
-              included-ids       (not-empty (set (remove clojure.string/blank? (clojure.string/split included-ids #"\s+"))))
-              application-keys   (->> (application-service/query-applications-paged
-                                        organization-service
-                                        person-service
-                                        tarjonta-service
-                                        session
-                                        application-filter)
-                                      :applications
-                                      (map :key))
+        (let [included-ids       (not-empty (set (remove clojure.string/blank? (clojure.string/split included-ids #"\s+"))))
               xls                (application-service/get-excel-report-of-applications-by-key
                                    application-keys
                                    selected-hakukohde
@@ -863,6 +853,7 @@
                                         hakuOid))
                                  (some? hakukohdeOid)
                                  (conj (application-service/->hakukohde-query
+                                        tarjonta-service
                                         hakukohdeOid
                                         false))
                                  (not-empty hakemusOids)
@@ -980,27 +971,7 @@
                {:error      "Yksilöimättömiä hakijoita"
                 :personOids yksiloimattomat}))
             {:unauthorized _}
-            (response/unauthorized {:error "Unauthorized"}))))
-
-      (api/GET "/list" {session :session}
-        :summary "List application oids and corresponding person oids"
-        :query-params [hakuOid :- s/Str
-                       name :- s/Str]
-        :return [{:oid       s/Str
-                  :personOid s/Str}]
-        (->> (application-service/->and-query
-              (application-service/->haku-query hakuOid)
-              (application-service/->name-query name))
-             (application-service/get-application-list-by-query
-              organization-service
-              person-service
-              tarjonta-service
-              session)
-             (remove #(nil? (get-in % [:person :oid])))
-             (map (fn [{:keys [key person]}]
-                    {:oid       key
-                     :personOid (:oid person)}))
-             response/ok)))))
+            (response/unauthorized {:error "Unauthorized"})))))))
 
 (api/defroutes resource-routes
   (api/undocumented
@@ -1056,7 +1027,8 @@
     (api/GET "/dashboard" []
       (selmer/render-file "templates/dashboard.html" {}))))
 
-(api/defroutes status-routes
+(defn status-routes
+  [system]
   (api/context "/status" []
     :tags ["status-api"]
     (api/GET "/background-jobs" []
@@ -1067,7 +1039,16 @@
       (let [status (job/status)]
         (cond-> (dissoc status :ok)
                 (:ok status)       response/ok
-                (not (:ok status)) response/internal-server-error)))))
+                (not (:ok status)) response/internal-server-error)))
+    (api/GET "/caches" []
+      :return s/Any
+      (response/ok
+       (reduce (fn [m [_ component]]
+                 (if (satisfies? cache/Stats component)
+                   (assoc m (:name component) (cache/stats component))
+                   m))
+               {}
+               system)))))
 
 (defrecord Handler []
   component/Lifecycle
@@ -1098,7 +1079,7 @@
                               (api/context "/lomake-editori" []
                                 test-routes
                                 dashboard-routes
-                                status-routes
+                                (status-routes this)
                                 (api/middleware [user-feedback/wrap-user-feedback
                                                  wrap-database-backed-session
                                                  auth-middleware/with-authentication]

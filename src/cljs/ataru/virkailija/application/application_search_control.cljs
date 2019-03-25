@@ -37,13 +37,12 @@
        :on-change   (fn [evt] (dispatch [:application/search-by-term (-> evt .-target .-value)]))}]
      (when-not (clojure.string/blank? @search-term)
        [:a.application__search-control-clear-search-term
-        (if-let [link-to-original-search @(subscribe [:application/path-to-search-without-term])]
-          {:href link-to-original-search}
-          {:on-click #(dispatch [:application/clear-applications-haku-and-form-selections])})
+        {:on-click #(dispatch [:application/search-by-term ""])}
         [:i.zmdi.zmdi-close]])]))
 
-(defn search-term-tab [tab-id selected-tab link-url label-text title-text]
-  (let [tab-selected (= tab-id selected-tab)]
+(defn search-term-tab [selected-tab link-url label-text title-text]
+  (let [tab-selected (or (nil? selected-tab)
+                         (= :search-term selected-tab))]
     [:div.application__search-control-tab-selector-wrapper.application__search-control-tab-selector-wrapper--search
      (if tab-selected
        [:div.application__search-control-tab-selector.application__search-control-selected-tab-with-input
@@ -71,7 +70,6 @@
       "/lomake-editori/applications/incomplete"
       (str (get-virkailija-translation :unprocessed-haut) (haku-count-str @incomplete-count))]
      [search-term-tab
-      :search-term
       @selected-tab
       "/lomake-editori/applications/search"
       (get-virkailija-translation :search-by-applicant-info)

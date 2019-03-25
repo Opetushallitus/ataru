@@ -79,9 +79,7 @@ SELECT
   a.haku,
   a.hakukohde,
   a.ssn,
-  (SELECT cast(value as JSON)
-   FROM jsonb_to_recordset(a.content->'answers') x(key text, value text)
-   WHERE key = 'higher-completed-base-education') AS "base-education",
+  hcbe.value AS "base-education",
   ar.state                            AS state,
   ar.score                            AS score,
   a.form_id                           AS form,
@@ -96,30 +94,31 @@ SELECT
                                        'hakukohde', hakukohde))
    FROM application_hakukohde_attachment_reviews aar
    WHERE aar.application_key = a.key) AS "application-attachment-reviews",
-  (SELECT coalesce(array_agg(ae.hakukohde), '{}')
-   FROM application_events ae
-   WHERE ae.id = (SELECT max(id)
-                  FROM application_events
-                  WHERE application_key = ae.application_key AND
-                        hakukohde = ae.hakukohde AND
-                        review_key = ae.review_key) AND
-         ae.application_key = a.key AND
-         ae.event_type = 'eligibility-state-automatically-changed' AND
-         ae.review_key = 'eligibility-state') AS "eligibility-set-automatically",
-  (SELECT count(*)
-   FROM application_events AS ae
-   WHERE ae.application_key = a.key AND
-         ae.event_type = 'updated-by-applicant' AND
-         ae.time > (SELECT max(time)
-                    FROM application_events
-                    WHERE application_key = ae.application_key AND
-                          new_review_state = 'information-request') IS NOT DISTINCT FROM true) AS "new-application-modifications",
+  ae.eligibility_set_automatically AS "eligibility-set-automatically",
+  ae.new_modifications_count AS "new-application-modifications",
   a.submitted AS submitted
-FROM latest_applications AS a
-  JOIN application_reviews AS ar ON a.key = ar.application_key
-  JOIN forms AS f ON a.form_id = f.id
-  JOIN latest_forms AS lf ON lf.key = f.key
-WHERE (:form::text IS NULL OR (lf.key = :form AND a.haku IS NULL))
+FROM applications AS a
+LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id
+JOIN application_reviews AS ar ON a.key = ar.application_key
+JOIN forms AS f ON a.form_id = f.id
+JOIN latest_forms AS lf ON lf.key = f.key
+LEFT JOIN LATERAL (SELECT value->'value' AS value
+                   FROM jsonb_array_elements(a.content->'answers')
+                   WHERE value->>'key' = 'higher-completed-base-education'
+                   LIMIT 1) AS hcbe ON true
+JOIN LATERAL (SELECT coalesce(array_agg(ae.hakukohde) FILTER (WHERE ae.review_key = 'eligibility-state' AND
+                                                                    ae.event_type = 'eligibility-state-automatically-changed'), '{}')
+                       AS eligibility_set_automatically,
+                     count(*) FILTER (WHERE ae.review_key = 'processing-state' AND
+                                            ae.new_review_state = 'information-request' AND
+                                            ae.time < a.created_time)
+                       AS new_modifications_count
+              FROM (SELECT DISTINCT ON (hakukohde, review_key) hakukohde, review_key, event_type, new_review_state, time
+                    FROM application_events
+                    WHERE application_key = a.key
+                    ORDER BY hakukohde, review_key, id DESC) AS ae) AS ae ON true
+WHERE la.key IS NULL
+  AND (:form::text IS NULL OR (lf.key = :form AND a.haku IS NULL))
   AND (:application_oid::text IS NULL OR a.key = :application_oid)
   AND (:application_oids::text[] IS NULL OR a.key = ANY (:application_oids))
   AND (:person_oid::text IS NULL OR a.person_oid = :person_oid)
@@ -128,9 +127,41 @@ WHERE (:form::text IS NULL OR (lf.key = :form AND a.haku IS NULL))
   AND (:dob::text IS NULL OR a.dob = to_date(:dob, 'DD.MM.YYYY'))
   AND (:ssn::text IS NULL OR a.ssn = :ssn)
   AND (:haku::text IS NULL OR a.haku = :haku)
-  AND (:hakukohde::text IS NULL OR :hakukohde = ANY (a.hakukohde))
-  AND (:ensisijainen_hakukohde::text IS NULL OR a.hakukohde[1] = :ensisijainen_hakukohde)
-ORDER BY a.created_time DESC;
+  AND (:hakukohde::text IS NULL OR a.hakukohde && :hakukohde)
+  AND ((:ensisijainen_hakukohde::varchar[] IS NULL AND :ensisijaisesti_hakukohteissa::varchar[] IS NULL) OR
+       (SELECT t.h
+        FROM unnest(a.hakukohde) WITH ORDINALITY AS t(h, i)
+        WHERE t.h = ANY(coalesce(:ensisijaisesti_hakukohteissa, a.hakukohde))
+        ORDER BY t.i ASC
+        LIMIT 1) = ANY(:ensisijainen_hakukohde))
+  AND CASE
+        WHEN :offset_key::text IS NULL
+          THEN true
+        WHEN :order_by = 'submitted' AND :order = 'asc'
+          THEN (date_trunc('second', a.submitted AT TIME ZONE 'Europe/Helsinki'), a.key) > (date_trunc('second', :offset_submitted::timestamptz AT TIME ZONE 'Europe/Helsinki'), :offset_key)
+        WHEN :order_by = 'created-time' AND :order = 'asc'
+          THEN (date_trunc('second', a.created_time AT TIME ZONE 'Europe/Helsinki'), a.key) > (date_trunc('second', :offset_created_time::timestamptz AT TIME ZONE 'Europe/Helsinki'), :offset_key)
+        WHEN :order_by = 'applicant-name' AND :order = 'asc'
+          THEN (a.last_name, a.preferred_name, a.key) > (:offset_last_name COLLATE "fi_FI", :offset_preferred_name COLLATE "fi_FI", :offset_key)
+        WHEN :order_by = 'submitted' AND :order = 'desc'
+          THEN (date_trunc('second', a.submitted AT TIME ZONE 'Europe/Helsinki'), a.key) < (date_trunc('second', :offset_submitted::timestamptz AT TIME ZONE 'Europe/Helsinki'), :offset_key)
+        WHEN :order_by = 'created-time' AND :order = 'desc'
+          THEN (date_trunc('second', a.created_time AT TIME ZONE 'Europe/Helsinki'), a.key) < (date_trunc('second', :offset_created_time::timestamptz AT TIME ZONE 'Europe/Helsinki'), :offset_key)
+        WHEN :order_by = 'applicant-name' AND :order = 'desc'
+          THEN (a.last_name, a.preferred_name, a.key) < (:offset_last_name COLLATE "fi_FI", :offset_preferred_name COLLATE "fi_FI", :offset_key)
+      END
+ORDER BY
+CASE WHEN :order_by = 'submitted' AND :order = 'asc' THEN date_trunc('second', a.submitted AT TIME ZONE 'Europe/Helsinki') END,
+CASE WHEN :order_by = 'created-time' AND :order = 'asc' THEN date_trunc('second', a.created_time AT TIME ZONE 'Europe/Helsinki') END,
+CASE WHEN :order_by = 'applicant-name' AND :order = 'asc' THEN a.last_name END COLLATE "fi_FI",
+CASE WHEN :order_by = 'applicant-name' AND :order = 'asc' THEN a.preferred_name END COLLATE "fi_FI",
+CASE WHEN :order_by = 'submitted' AND :order = 'desc' THEN date_trunc('second', a.submitted AT TIME ZONE 'Europe/Helsinki') END DESC,
+CASE WHEN :order_by = 'created-time' AND :order = 'desc' THEN date_trunc('second', a.created_time AT TIME ZONE 'Europe/Helsinki') END DESC,
+CASE WHEN :order_by = 'applicant-name' AND :order = 'desc' THEN a.last_name END COLLATE "fi_FI" DESC,
+CASE WHEN :order_by = 'applicant-name' AND :order = 'desc' THEN a.preferred_name END COLLATE "fi_FI" DESC,
+CASE WHEN :order = 'asc' THEN a.key END,
+CASE WHEN :order = 'desc' THEN a.key END DESC
+LIMIT 1000;
 
 -- name: yesql-get-application-list-by-person-oid-for-omatsivut
 SELECT
@@ -737,7 +768,7 @@ WHERE
   AND (:application_oids::text[] IS NULL OR a.key = ANY (:application_oids))
   AND (:name::text IS NULL OR to_tsvector('unaccent_simple', a.preferred_name || ' ' || a.last_name) @@ to_tsquery('unaccent_simple', :name))
   AND (:haku::text IS NULL OR a.haku = :haku)
-  AND (:hakukohde::text IS NULL OR :hakukohde = ANY (a.hakukohde))
+  AND (:hakukohde::text IS NULL OR a.hakukohde && :hakukohde)
 ORDER BY a.created_time DESC;
 
 --name: yesql-applications-for-hakurekisteri

@@ -22,10 +22,17 @@ lein less auto
 
 ### Create database
 
-Just use the postgres Docker (9.5) image:
+./test-postgres contains a Dockerfile for a Postgres 10 based image with fi_FI
+locale. To build the image:
 
 ```
-docker run -d --name ataru-dev-db -p 5432:5432 -e POSTGRES_DB=ataru-dev -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph postgres:9.5
+docker build -t ataru-test-db -t ataru-dev-db ./test-postgres
+```
+
+Then to run a local development db:
+
+```
+docker run -d --name ataru-dev-db -p 5432:5432 -e POSTGRES_DB=ataru-dev -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph ataru-dev-db
 ```
 
 ### Create Redis for caches
@@ -105,8 +112,21 @@ Tests require a special database and a special Redis. Here is an example of runn
 with Docker:
 
 ```
-docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph postgres:9.5
-`docker run --name ataru-test-redis -p 6380:6379 -d redis`
+docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph ataru-test-db
+docker run --name ataru-test-redis -p 6380:6379 -d redis
+```
+
+For Travis CI the ataru-test-db image has to be available as `190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-postgres`. To make that happen, first login by executing the output of:
+
+```
+aws ecr get-login --region eu-west-1 --profile oph-utility --no-include-email
+```
+
+You should then be able to push images to the repository:
+
+```
+docker tag ataru-test-db 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-postgres
+docker push 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-postgres
 ```
 
 To build and run all the tests in the system:

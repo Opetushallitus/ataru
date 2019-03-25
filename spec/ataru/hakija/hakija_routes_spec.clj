@@ -130,34 +130,14 @@
 (defn- have-any-application-in-db
   []
   (let [app-count
-        (+ (count (ataru-db/exec
-                    :db
-                    yesql-get-application-list-for-virkailija
-                    {:form                   nil
-                     :application_oid        nil
-                     :application_oids       nil
-                     :person_oid             nil
-                     :name                   nil
-                     :email                  nil
-                     :dob                    nil
-                     :ssn                    nil
-                     :haku                   nil
-                     :hakukohde              (:hakukohde @form)
-                     :ensisijainen_hakukohde nil}))
-           (count (ataru-db/exec
-                   :db
-                   yesql-get-application-list-for-virkailija
-                   {:form                   (:key @form)
-                    :application_oid        nil
-                    :application_oids       nil
-                    :person_oid             nil
-                    :name                   nil
-                    :email                  nil
-                    :dob                    nil
-                    :ssn                    nil
-                    :haku                   nil
-                    :hakukohde              nil
-                    :ensisijainen_hakukohde nil})))]
+        (+ (count (store/get-application-heading-list
+                   {:hakukohde [(:hakukohde @form)]}
+                   {:order-by "created-time"
+                    :order    "desc"}))
+           (count (store/get-application-heading-list
+                   {:form (:key @form)}
+                   {:order-by "created-time"
+                    :order    "desc"})))]
     (< 0 app-count)))
 
 (defmacro add-failing-post-spec

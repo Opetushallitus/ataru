@@ -4,6 +4,7 @@
             [re-frame.core :as re-frame]
             [medley.core :refer [find-first]]
             [ataru.application-common.application-field-common :as common]
+            [ataru.virkailija.db :as initial-db]
             [ataru.util :as u]
             [ataru.cljs-util :as util]))
 
@@ -77,16 +78,6 @@
   (fn [db [_ haku-oid]]
     (when haku-oid
       (str "/lomake-editori/applications/haku/" haku-oid))))
-
-(re-frame/reg-sub
-  :application/path-to-search-without-term
-  (fn [db _]
-    (let [selected-hakukohde-oid  (get-in db [:application :selected-hakukohde])
-          selected-hakukohderyhma (second (get-in db [:application :selected-hakukohderyhma]))
-          selected-haku-oid       @(re-frame/subscribe [:application/selected-haku-oid])]
-      (or @(re-frame/subscribe [:application/path-to-hakukohde-search selected-hakukohde-oid])
-          @(re-frame/subscribe [:application/path-to-hakukohderyhma-search selected-haku-oid selected-hakukohderyhma])
-          @(re-frame/subscribe [:application/path-to-haku-search selected-haku-oid])))))
 
 (re-frame/reg-sub
   :application/path-to-hakukohderyhma-search
@@ -164,7 +155,6 @@
       (:selected-form-key db-application)                      :selected-form-key
       (:selected-haku db-application)                          :selected-haku
       (:selected-hakukohde db-application)                     :selected-hakukohde
-      (:selected-ryhman-ensisijainen-hakukohde db-application) :selected-ryhman-ensisijainen-hakukohde
       (:selected-hakukohderyhma db-application)                :selected-hakukohderyhma)))
 
 (re-frame/reg-sub
@@ -182,13 +172,12 @@
 
 (defn- hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
   [db]
-  (let [selected-by (application-list-selected-by db)
-        oid-or-oids (when selected-by (-> db :application selected-by))]
-    (case selected-by
-      :selected-hakukohde #{oid-or-oids}
-      :selected-ryhman-ensisijainen-hakukohde #{oid-or-oids}
-      :selected-hakukohderyhma (set (map :oid (selected-hakukohderyhma-hakukohteet db)))
-      nil)))
+  (case (application-list-selected-by db)
+    :selected-hakukohde      #{(get-in db [:application :selected-hakukohde])}
+    :selected-hakukohderyhma (if-let [h (get-in db [:application :rajaus-hakukohteella])]
+                               #{h}
+                               (set (map :oid (selected-hakukohderyhma-hakukohteet db))))
+    nil))
 
 (re-frame/reg-sub
   :application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
@@ -212,15 +201,14 @@
 (re-frame/reg-sub
   :application/show-ensisijaisesti?
   (fn [db]
-    (let [selected-by @(re-frame/subscribe [:application/application-list-selected-by])]
+    (let [selected-by (application-list-selected-by db)]
       (cond (= :selected-hakukohde selected-by)
             (some->> (get-in db [:application :selected-hakukohde])
                      (get (get-in db [:hakukohteet]))
                      :haku-oid
                      (get (get-in db [:haut]))
                      :prioritize-hakukohteet)
-            (or (= :selected-hakukohderyhma selected-by)
-                (= :selected-ryhman-ensisijainen-hakukohde selected-by))
+            (= :selected-hakukohderyhma selected-by)
             (some->> (get-in db [:application :selected-hakukohderyhma])
                      first
                      (get (get-in db [:haut]))
@@ -231,21 +219,26 @@
 (re-frame/reg-sub
   :application/ensisijaisesti?
   (fn [db]
-    (get-in db [:application :ensisijaisesti?] false)))
+    (get-in db [:application :ensisijaisesti?-checkbox] false)))
 
 (re-frame/reg-sub
   :application/show-rajaa-hakukohteella?
   (fn [db]
-    (if @(re-frame/subscribe [:application/ensisijaisesti?])
-      (let [selected-by @(re-frame/subscribe [:application/application-list-selected-by])]
-        (cond (or (= :selected-hakukohderyhma selected-by)
-                  (= :selected-ryhman-ensisijainen-hakukohde selected-by))
-              (some->> (get-in db [:application :selected-hakukohderyhma])
-                first
-                (get (get-in db [:haut]))
-                :prioritize-hakukohteet)
-              :else
-              false)))))
+    (and (= :selected-hakukohderyhma (application-list-selected-by db))
+         (some->> (get-in db [:application :selected-hakukohderyhma])
+                  first
+                  (get (get-in db [:haut]))
+                  :prioritize-hakukohteet))))
+
+(re-frame/reg-sub
+  :application/filters-changed?
+  (fn [db]
+    (or (not= (get-in db [:application :filters])
+              (get-in db [:application :filters-checkboxes]))
+        (not= (get-in db [:application :ensisijaisesti?])
+              (get-in db [:application :ensisijaisesti?-checkbox]))
+        (not= (get-in db [:application :rajaus-hakukohteella])
+              (get-in db [:application :rajaus-hakukohteella-value])))))
 
 (re-frame/reg-sub
   :application/selected-hakukohderyhma-hakukohteet
@@ -258,14 +251,13 @@
           list-selected-by (application-list-selected-by db)]
       (and (not-empty (-> db :application :applications))
            (not (and yhteishaku? (= list-selected-by :selected-haku)))
-           (contains? #{:selected-form-key :selected-haku :selected-hakukohde :selected-ryhman-ensisijainen-hakukohde} list-selected-by)))))
+           (some? list-selected-by)))))
 
 (re-frame/reg-sub
- :application/show-excel-link?
- (fn [db]
-   (and (not-empty @(re-frame/subscribe [:application/loaded-applications]))
-        (contains? #{:selected-form-key :selected-haku :selected-hakukohde :selected-hakukohderyhma :selected-ryhman-ensisijainen-hakukohde}
-                   @(re-frame/subscribe [:application/application-list-selected-by])))))
+  :application/show-excel-link?
+  (fn [db]
+    (and (not-empty (-> db :application :applications))
+         (some? (application-list-selected-by db)))))
 
 (defn- mass-information-request-button-enabled?
   [db]
@@ -280,9 +272,17 @@
 (re-frame/reg-sub
   :application/mass-information-request-form-status
   (fn [db]
-    (if (not (mass-information-request-button-enabled? db))
-      :disabled
-      (get-in db [:application :mass-information-request :form-status]))))
+    (cond (get-in db [:application :fetching-applications?])
+          :loading-applications
+          (not (mass-information-request-button-enabled? db))
+          :disabled
+          :else
+          (get-in db [:application :mass-information-request :form-status]))))
+
+(re-frame/reg-sub
+  :application/mass-information-request-popup-visible?
+  (fn [db]
+    (get-in db [:application :mass-information-request :visible?])))
 
 (defn- haku-completely-processed?
   [haku]
@@ -545,14 +545,20 @@
     (-> db :application :modify-application-link :state nil?)))
 
 (re-frame/reg-sub
-  :application/loaded-applications
+  :application/applications-to-render
   (fn [db _]
-    (-> db :application :applications)))
+    (take (get-in db [:application :applications-to-render])
+          (get-in db [:application :applications]))))
 
 (re-frame/reg-sub
-  :application/filtered-applications-count
+  :application/has-more-applications?
   (fn [db _]
-    (-> db :application :filtered-count)))
+    (contains? (get-in db [:application :sort]) :offset)))
+
+(re-frame/reg-sub
+  :application/fetching-applications?
+  (fn [db _]
+    (get-in db [:application :fetching-applications?])))
 
 (re-frame/reg-sub
   :application/review-state-setting-enabled?
@@ -705,20 +711,15 @@
 (re-frame.core/reg-sub
   :application/enabled-filter-count
   (fn [db _]
-    (reduce-kv
-      (fn [acc _ filters]
-        (+ acc
-           (reduce-kv
-             (fn [acc2 _ enabled?] (if (false? enabled?) (inc acc2) acc2))
-             0
-             filters)))
-      0
-      (get-in db [:application :filters]))))
-
-(re-frame.core/reg-sub
-  :application/total-application-count
-  (fn [db _]
-    (-> db :application :total-count)))
+    (reduce (fn [n [category filters]]
+              (reduce (fn [n [filter state]]
+                        (if (= state (get-in db [:application :filters category filter]))
+                          n
+                          (inc n)))
+                      n
+                      filters))
+            0
+            initial-db/default-filters)))
 
 (re-frame.core/reg-sub
   :application/eligibility-automatically-checked?

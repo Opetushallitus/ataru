@@ -28,13 +28,6 @@
  (fn [db]
    (assoc-in db show-path nil)))
 
-(defn- set-search-term
-  [db term]
-  (cljs-util/set-query-param "term" term)
-  (-> db
-      (assoc-in [:application :search-control :search-term :value] term)
-      (assoc-in [:application :search-control :search-term :show-error] false)))
-
 (defn- person-oid?
   [maybe-oid]
   (re-matches #"^1\.2\.246\.562\.24\.\d+$" maybe-oid))
@@ -53,37 +46,47 @@
                                   (repeat (- 20 (count oid-suffix)) "0")
                                   oid-suffix)))
 
+(defn- parse-search-term
+  [search-term]
+  (let [search-term-ucase (-> search-term
+                              clojure.string/trim
+                              clojure.string/upper-case)]
+    (cond (application-oid? search-term-ucase)
+          {:application-oid search-term-ucase}
+
+          (person-oid? search-term-ucase)
+          {:person-oid search-term-ucase}
+
+          (ssn/ssn? search-term-ucase)
+          {:ssn search-term-ucase}
+
+          (dob/dob? search-term-ucase)
+          {:dob search-term-ucase}
+
+          (email/email? search-term)
+          {:email search-term}
+
+          (application-oid-suffix? search-term)
+          {:application-oid (complete-application-oid search-term-ucase)}
+
+          (< 2 (count search-term))
+          {:name search-term})))
+
+(defn set-search
+  [db search-term]
+  (-> db
+      (assoc-in [:application :search-control :search-term :value] search-term)
+      (assoc-in [:application :search-control :search-term :parsed] (parse-search-term search-term))
+      (assoc-in [:application :search-control :search-term :show-error] false)))
+
 (reg-event-fx
   :application/search-by-term
   (fn [{:keys [db]} [_ search-term]]
-    (let [search-term-ucase (-> search-term
-                                clojure.string/trim
-                                clojure.string/upper-case)
-          term-type         (cond (application-oid? search-term-ucase)
-                                  [search-term-ucase :application-oid]
-
-                                  (person-oid? search-term-ucase)
-                                  [search-term-ucase :person-oid]
-
-                                  (ssn/ssn? search-term-ucase)
-                                  [search-term-ucase :ssn]
-
-                                  (dob/dob? search-term-ucase)
-                                  [search-term-ucase :dob]
-
-                                  (email/email? search-term)
-                                  [search-term :email]
-
-                                  (application-oid-suffix? search-term)
-                                  [(complete-application-oid search-term-ucase) :application-oid]
-
-                                  (< 2 (count search-term))
-                                  [search-term :name])]
-      (if-let [[term type] term-type]
-        {:db                 (set-search-term db search-term)
-         :dispatch-debounced {:timeout  500
-                              :id       :application-search
-                              :dispatch [:application/fetch-applications-by-term term type]}}
-        {:dispatch [:application/reset-list]
-         :db       (-> db
-                       (set-search-term search-term))}))))
+    (cljs-util/set-query-param "term" search-term)
+    (let [db (set-search db search-term)]
+      (cond-> {:db db}
+              (or (some? (get-in db [:application :search-control :search-term :parsed]))
+                  (clojure.string/blank? search-term))
+              (assoc :dispatch-debounced {:timeout  (if (clojure.string/blank? search-term) 0 500)
+                                          :id       :application-search
+                                          :dispatch [:application/reload-applications]})))))

@@ -9,24 +9,19 @@
 
 (defn authorized-by-form?
   [authorized-organization-oids application]
-  (or (nil? authorized-organization-oids)
-      (contains? authorized-organization-oids
-                 (:organization-oid application))))
+  (boolean (authorized-organization-oids (:organization-oid application))))
 
 (defn authorized-by-tarjoajat?
   [authorized-organization-oids application]
-  (or (nil? authorized-organization-oids)
-      (let [tarjoajat       (->> (:hakukohde application)
-                                 (mapcat :tarjoajaOids)
-                                 set)
-            hakukohderyhmat (->> (:hakukohde application)
-                                 (mapcat :ryhmaliitokset)
-                                 (map :ryhmaOid)
-                                 set)]
-        (not (empty?
-              (clojure.set/intersection
-               authorized-organization-oids
-               (clojure.set/union tarjoajat hakukohderyhmat)))))))
+  (let [tarjoajat       (->> (:hakukohde application)
+                             (mapcat :tarjoajaOids)
+                             set)
+        hakukohderyhmat (->> (:hakukohde application)
+                             (mapcat :ryhmaliitokset)
+                             (map :ryhmaOid)
+                             set)]
+    (boolean (some authorized-organization-oids
+                   (concat tarjoajat hakukohderyhmat)))))
 
 (defn- populate-applications-hakukohteet
   [tarjonta-service applications]
@@ -65,24 +60,6 @@
          (every? (some-fn (partial authorized-by-form? %)
                           (partial authorized-by-tarjoajat? %))))
    (constantly true)))
-
-(defn get-application-list-by-query
-  [organization-service tarjonta-service session query]
-  (session-orgs/run-org-authorized
-   session
-   organization-service
-   [:view-applications :edit-applications]
-   (constantly [])
-   #(filter-authorized tarjonta-service
-                       (every-pred (partial (:predicate query) %)
-                                   (some-fn (partial authorized-by-form? %)
-                                            (partial authorized-by-tarjoajat? %)))
-                       (application-store/get-application-heading-list
-                        (dissoc query :predicate)))
-   #(filter-authorized tarjonta-service
-                       (partial (:predicate query) nil)
-                       (application-store/get-application-heading-list
-                        (dissoc query :predicate)))))
 
 (defn- can-edit-application?
   [organization-service session application]
@@ -243,11 +220,8 @@
    [:view-applications :edit-applications]
    (constantly nil)
    #(filter-authorized tarjonta-service
-                       (every-pred (partial (:predicate query) %)
-                                   (partial authorized-by-tarjoajat? %))
-                       (application-store/valinta-ui-applications
-                        (dissoc query :predicate)))
+                       (partial authorized-by-tarjoajat? %)
+                       (application-store/valinta-ui-applications query))
    #(filter-authorized tarjonta-service
-                       (partial (:predicate query) nil)
-                       (application-store/valinta-ui-applications
-                        (dissoc query :predicate)))))
+                       (constantly true)
+                       (application-store/valinta-ui-applications query))))

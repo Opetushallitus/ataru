@@ -1098,13 +1098,14 @@ and (max-width: 1000px) {
   font-size: 14px;
   border: none;
   display: flex;
-  flex-flow: column nowrap;
+  flex-flow: row nowrap;
   align-items: center;
   justify-content: center;
 }
 
 .application-handling__excel-request-button {
   color: @white;
+  background-color: @link-color;
   border-radius: 3px;
   box-shadow :none;
   padding: 5px;
@@ -1115,9 +1116,17 @@ and (max-width: 1000px) {
   font-size: 14px;
   border: none;
   display: flex;
-  flex-flow: column nowrap;
+  flex-flow: row nowrap;
   align-items: center;
   justify-content: center;
+
+  &:hover {
+    background-color: @editor-control-button-hover-blue;
+  }
+
+  &:disabled {
+    background-color: @section-gray-border;
+  }
 }
 
 .application-handling__button--disabled {

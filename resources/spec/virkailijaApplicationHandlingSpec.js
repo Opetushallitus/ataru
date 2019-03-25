@@ -83,7 +83,11 @@
           clickElement(selectionStateSelected),
           wait.until(function() { return selectionStateOpened().is(':visible') }),
           clickElement(function() { return selectionStateOpened().find('.application-handling__review-state-row:contains("Hyväksytty")')}),
-          wait.until(function() { return selectionStateOpened().length === 0 && selectionStateSelected().text() === "Hyväksytty" })
+          wait.until(function() { return selectionStateOpened().length === 0 && selectionStateSelected().text() === "Hyväksytty" }),
+          clickElement(firstApplication),
+          wait.until(applicationHeadingIs('Vatanen, Ari — 141196-933S')),
+          clickElement(thirdApplication),
+          wait.until(applicationHeadingIs('Tyrni, Johanna Irmeli — 020202A0202'))
         )
         it('selects new state correctly', function() {
           expect(selectionStateSelected().text()).to.equal("Hyväksytty")
@@ -145,30 +149,48 @@
     });
 
     describe('Application sorting', function () {
-      it('Sorting by sortable columns works', function(done) {
-        var firstApplicantNameBeforeAnySorting = null;
-        wait.until(applicantNamesExist)()
-            .then(function() {
-              firstApplicantNameBeforeAnySorting = firstApplicantName()
-            })
-            .then(clickElement(timeColumn))
-            .then(wait.until(function() {
-              // We can't really know the initial time order exactly, the inserts in
-              // fixture are so close
-              return firstApplicantName() !== firstApplicantNameBeforeAnySorting
-            }))
-            .then(clickElement(applicantColumn))
-            .then(wait.until(firstApplicantNameIs("Vatanen, Ari")))
-            .then(function() {
-              expectApplicants(["Vatanen, Ari", "Tyrni, Johanna Irmeli", "Kuikeloinen, Seija Susanna"])
-            })
-            .then(clickElement(applicantColumn))
-            .then(wait.until(firstApplicantNameIs("Kuikeloinen, Seija Susanna")))
-            .then(function() {
-              expectApplicants(["Kuikeloinen, Seija Susanna", "Tyrni, Johanna Irmeli", "Vatanen, Ari"])
-            })
-            .then(done)
-            .fail(done)
+      before(
+        navigateToApplicationHandling,
+        wait.until(directFormHakuListExists),
+        function() {
+          //clickElement doesn't work for a href here:
+          form1OnList()[0].click()
+        },
+        wait.until(function() { return applicationHeader().text() ===  'Selaintestilomake1' }),
+      );
+      describe('Default sort', function () {
+        before(wait.until(applicantNamesExist));
+        it('Descending by modification time', function () {
+          expectApplicants(["Tyrni, Johanna Irmeli", "Vatanen, Ari", "Kuikeloinen, Seija Susanna"]);
+        });
+      });
+      describe('Ascending sort by modification time', function () {
+        before(
+          clickElement(timeColumn),
+          wait.until(firstApplicantNameIs("Kuikeloinen, Seija Susanna"))
+        );
+        it('works', function () {
+          expectApplicants(["Kuikeloinen, Seija Susanna", "Vatanen, Ari", "Tyrni, Johanna Irmeli"]);
+        });
+      });
+      describe('Sort by applicant name', function () {
+        before(
+          clickElement(applicantColumn),
+          clickElement(applicantColumn),
+          wait.until(firstApplicantNameIs("Vatanen, Ari"))
+        );
+        it('works', function () {
+          expectApplicants(["Vatanen, Ari", "Tyrni, Johanna Irmeli", "Kuikeloinen, Seija Susanna"]);
+        });
+      });
+      describe('Ascending sort by applicant name', function () {
+        before(
+          clickElement(applicantColumn),
+          wait.until(firstApplicantNameIs("Kuikeloinen, Seija Susanna"))
+        );
+        it('works', function () {
+          expectApplicants(["Kuikeloinen, Seija Susanna", "Tyrni, Johanna Irmeli", "Vatanen, Ari"])
+        });
       });
 
       function expectApplicants(expected) {

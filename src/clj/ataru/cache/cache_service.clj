@@ -23,3 +23,6 @@
   (get-many-from [this keys])
   (remove-from [this key])
   (clear-all [this]))
+
+(defprotocol Stats
+  (stats [this]))
