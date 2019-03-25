@@ -306,7 +306,11 @@
              (not-blank? virkailija-secret))]}
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [updated-by-applicant? (not-blank? secret)
-          rewrite-secret?       (virkailija-edit/virkailija-rewrite-secret-valid? virkailija-secret)
+          [virkailija-oid rewrite-secret?] (if updated-by-applicant?
+                                             [nil nil]
+                                             (if-let [oid (get-virkailija-oid-for-rewrite-secret conn virkailija-secret)]
+                                               [oid true]
+                                               [(get-virkailija-oid-for-update-secret conn virkailija-secret) false]))
           old-application       (cond
                                   rewrite-secret?
                                   (get-latest-version-for-virkailija-edit-and-lock-for-rewrite virkailija-secret lang conn)
@@ -320,19 +324,10 @@
                                                  (merge-applications new-application old-application)
                                                  updated-by-applicant?
                                                  applied-hakukohteet
-                                                 (->  old-application :answers util/answers-by-key)
+                                                 (-> old-application :answers util/answers-by-key)
                                                  form
                                                  true
-                                                 conn)
-          virkailija-oid        (cond
-                                  updated-by-applicant?
-                                  nil
-
-                                  rewrite-secret?
-                                  (get-virkailija-oid-for-rewrite-secret conn virkailija-secret)
-
-                                  :else
-                                  (get-virkailija-oid-for-update-secret conn virkailija-secret))]
+                                                 conn)]
       (info (str "Updating application with key "
                  (:key old-application)
                  " based on valid application secret, retaining key" (when-not updated-by-applicant? " and secret") " from previous version"))
