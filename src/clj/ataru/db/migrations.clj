@@ -245,7 +245,7 @@
   (doseq [application (migration-app-store/get-all-applications)]
     (create-new-review-state application)))
 
-(defn- dob->dd-mm-yyyy-format []
+(defn- dob->dd-mm-yyyy-format [connection]
   (letfn [(invalid-dob-format? [[day month _]]
             (and (some? day)
                  (some? month)
@@ -288,7 +288,8 @@
           (migration-app-store/update-application-content (:id application) (:content application)))
         (when-let [application-id (latest-application-id applications)]
           (info (str "Starting new person service job for application " application-id " (key: " application-key ")"))
-          (job-store/store-new (:type person-integration/job-definition)
+          (job-store/store-new connection
+                               (:type person-integration/job-definition)
                                {:application-id application-id}))))))
 
 (defn- camel-case-content-keys []
@@ -335,9 +336,10 @@
             (migration-app-store/set-application-state key new-application-state)))))))
 
 (defn- start-attachment-finalizer-job-for-all-applications
-  []
+  [connection]
   (doseq [application-id (migration-app-store/get-ids-of-latest-applications)]
-    (job-store/store-new (:type attachment-finalizer-job/job-definition)
+    (job-store/store-new connection
+                         (:type attachment-finalizer-job/job-definition)
                          {:application-id application-id})))
 
 (defn- update-home-town
@@ -599,7 +601,8 @@
 (migrations/defmigration
   migrate-dob-into-dd-mm-yyyy-format "1.71"
   "Update date of birth from application answers to dd.mm.yyyy format"
-  (dob->dd-mm-yyyy-format))
+  (with-db-transaction [conn {:connection connection}]
+    (dob->dd-mm-yyyy-format conn)))
 
 (migrations/defmigration
   migrate-camel-case-content-keys "1.72"
@@ -629,7 +632,8 @@
 (migrations/defmigration
   migrate-start-attachment-finalizer-jobs "1.82"
   "Start attachment finalizer job for all applications"
-  (start-attachment-finalizer-job-for-all-applications))
+  (with-db-transaction [conn {:connection connection}]
+    (start-attachment-finalizer-job-for-all-applications conn)))
 
 (migrations/defmigration
   migrate-kotikunta-from-text-to-a-code "1.86"

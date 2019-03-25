@@ -4,6 +4,7 @@
             [ataru.background-job.email-job :as email-job]
             [ataru.background-job.job :as job]
             [ataru.config.core :refer [config]]
+            [ataru.db.db :as db]
             [ataru.email.email-store :as email-store]
             [ataru.tarjonta-service.hakuaika :refer [millis->localized-date-time]]
             [ataru.forms.form-store :as forms]
@@ -16,6 +17,7 @@
             [ataru.util :as util]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
             [clj-time.core :as t]
+            [clojure.java.jdbc :as jdbc]
             [clojure.string :as string]
             [markdown.core :as md]
             [medley.core :refer [find-first]]
@@ -224,9 +226,11 @@
                 application-id))
 
 (defn start-email-job [job-runner email]
-  (let [job-id (job/start-job job-runner
-                              (:type email-job/job-definition)
-                              email)]
+  (let [job-id (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                 (job/start-job job-runner
+                                connection
+                                (:type email-job/job-definition)
+                                email))]
     (log/info "Started application confirmation email job (to viestintäpalvelu) with job id" job-id ":")
     (log/info email)))
 

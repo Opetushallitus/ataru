@@ -23,7 +23,7 @@
       (assoc status :ok false))))
 
 (defprotocol JobRunner
-  (start-job [this job-type initial-state]
+  (start-job [this connection job-type initial-state]
     "Start a new background job of type <job-type>.
      initial-state is the initial data map needed to start the job
      (can be anything)"))
@@ -41,9 +41,9 @@
     this)
 
   JobRunner
-  (start-job [_ job-type initial-state]
+  (start-job [_ connection job-type initial-state]
     (if-let [job-definition (get job-definitions job-type)]
-      (job-store/store-new job-type initial-state)
+      (job-store/store-new connection job-type initial-state)
       (throw (new RuntimeException (str "No job definition found for job "
                                         job-type))))))
 
@@ -53,7 +53,7 @@
   (stop [this] this)
 
   JobRunner
-  (start-job [_ _ _]))
+  (start-job [_ _ _ _]))
 
 (defn new-job-runner [job-definitions]
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode

@@ -41,9 +41,11 @@
 (defn- start-email-job [job-runner information-request]
   (let [initial-state (initial-state information-request)
         job-type      (:type information-request-job/job-definition)
-        job-id        (job/start-job job-runner
-                                     job-type
-                                     initial-state)]
+        job-id        (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                        (job/start-job job-runner
+                                       connection
+                                       job-type
+                                       initial-state))]
     (log/info (str "Started information request email job with job id " job-id ", initial state: " initial-state))))
 
 (defn store [information-request session job-runner]

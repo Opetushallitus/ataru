@@ -158,9 +158,11 @@
 
 (defn start-automatic-eligibility-if-ylioppilas-job
   [job-runner application-id]
-  (job/start-job job-runner
-                 "automatic-eligibility-if-ylioppilas-job"
-                 {:application-id application-id}))
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+    (job/start-job job-runner
+                   connection
+                   "automatic-eligibility-if-ylioppilas-job"
+                   {:application-id application-id})))
 
 (defn automatic-eligibility-if-ylioppilas-job-step
   [{:keys [application-id]}
