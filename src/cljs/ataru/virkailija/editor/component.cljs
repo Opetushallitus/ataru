@@ -161,11 +161,23 @@
               :fade-in "animated fadeInUp"
               nil)))
 
+(defn- cut-component-button [removable? path]
+  (case @(subscribe [:editor/component-button-state :cut path])
+    :active
+    [:button.editor-form__copy-component-button
+     {:on-click #(dispatch [:editor/start-component :cut path])}
+     (get-virkailija-translation :cut-element)]
+    :confirm
+    [:button.editor-form__copy-component-button--pressed.editor-form__copy-component-button
+     {:on-click (fn [event]
+                  (dispatch [:editor/copy-component path true removable?]))}
+     (get-virkailija-translation :confirm-cut)]))
+
 (defn- remove-component-button [path]
-  (case @(subscribe [:editor/remove-component-button-state path])
+  (case @(subscribe [:editor/component-button-state :remove path])
     :active
     [:button.editor-form__remove-component-button
-     {:on-click #(dispatch [:editor/start-remove-component path])}
+     {:on-click #(dispatch [:editor/start-component :remove path])}
      (get-virkailija-translation :remove)]
     :confirm
     [:button.editor-form__remove-component-button--confirm.editor-form__remove-component-button
@@ -242,9 +254,7 @@
               {:on-click (fn [_] (dispatch [:editor/clear-copy-component]))}
               (get-virkailija-translation :cut-element)]
              :else
-             [:button.editor-form__copy-component-button
-              {:on-click (fn [_] (dispatch [:editor/copy-component path true removable?]))}
-              (get-virkailija-translation :cut-element)]))
+             [cut-component-button removable? path]))
      (when (and (not locked?) removable? movable?)
        (cond (and (= copy-component-path path) (not copy-component-cut?) (= selected-form-key copy-component-form-key))
              [:button.editor-form__copy-component-button.editor-form__copy-component-button--pressed

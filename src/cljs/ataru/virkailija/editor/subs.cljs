@@ -283,14 +283,14 @@
       (get ui :remove-form-button-state :active))))
 
 (re-frame/reg-sub
-  :editor/remove-component-button-state
+  :editor/component-button-state
   (fn [_ _]
     [(re-frame/subscribe [:editor/ui])
      (re-frame/subscribe [:editor/form-locked?])])
-  (fn remove-component-button-state [[ui form-locked?] [_ path]]
+  (fn component-button-state [[ui form-locked?] [_ component-type path]]
     (if form-locked?
       :disabled
-      (get-in ui [:remove-component-button-state path] :active))))
+      (get-in ui [:component-button-state component-type path] :active))))
 
 (re-frame/reg-sub
   :editor/email-templates-altered

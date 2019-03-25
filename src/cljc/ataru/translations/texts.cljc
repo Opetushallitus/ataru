@@ -824,6 +824,9 @@ You will receive a confirmation of your application to your email."}
    :confirm-delete                              {:fi "Vahvista poisto"
                                                  :sv "Bekräfta raderingen"
                                                  :en "Confirm the deletion"}
+   :confirm-cut                                 {:fi "Vahvista leikkaus"
+                                                 :sv "Bekräfta klippa"
+                                                 :en "Confirm the cut"}
    :confirmation-sent                           {:fi "Vahvistussähköposti lähetetty hakijalle"
                                                  :sv "E-post med bekräftelse har skickats till sökande"
                                                  :en "Confirmation email has been sent"}
