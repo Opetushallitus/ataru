@@ -71,10 +71,14 @@
                                    WHERE secret = ? AND valid @> now()"
                                    secret])))))
 
-(defn invalidate-virkailija-update-secret
+(defn invalidate-virkailija-update-and-rewrite-secret
   [secret]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
     (jdbc/execute! connection ["UPDATE virkailija_update_secrets
+                                SET valid = tstzrange(lower(valid), now(), '[)')
+                                WHERE secret = ?"
+                               secret])
+    (jdbc/execute! connection ["UPDATE virkailija_rewrite_secrets
                                 SET valid = tstzrange(lower(valid), now(), '[)')
                                 WHERE secret = ?"
                                secret])))

@@ -280,7 +280,7 @@
 
 (defn- start-virkailija-edit-jobs
   [job-runner virkailija-secret application-id application]
-  (virkailija-edit/invalidate-virkailija-update-secret virkailija-secret)
+  (virkailija-edit/invalidate-virkailija-update-and-rewrite-secret virkailija-secret)
   (when (nil? (:person-oid application))
     (start-person-creation-job job-runner application-id))
   (start-attachment-finalizer-job job-runner application-id))
