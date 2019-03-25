@@ -30,7 +30,7 @@
                                                                               :last-name  "Hemuli?"}}
                                                                   "test-key")]
       (should= true (virkailija-edit/virkailija-update-secret-valid? secret))
-      (virkailija-edit/invalidate-virkailija-update-secret secret)
+      (virkailija-edit/invalidate-virkailija-update-and-rewrite-secret secret)
       (should= false (virkailija-edit/virkailija-update-secret-valid? secret)))))
 
 
