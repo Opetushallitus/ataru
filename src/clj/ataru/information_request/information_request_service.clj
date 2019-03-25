@@ -8,7 +8,6 @@
             [ataru.information-request.information-request-job :as information-request-job]
             [ataru.information-request.information-request-store :as information-request-store]
             [ataru.applications.application-store :as app-store]
-            [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]
             [clojure.java.jdbc :as jdbc]
             [selmer.parser :as selmer]
             [ataru.background-job.job :as job]
@@ -63,21 +62,25 @@
                       :id        virkailija-oid})
       information-request)))
 
+(defn mass-information-request-job-step
+  [state job-runner]
+  (if (empty? (:information-requests state))
+    {:transition {:id :final}}
+    (let [[ir & irs] (:information-requests state)]
+      (store ir (:virkailija-oid state) job-runner)
+      {:transition    {:id :to-next :step :initial}
+       :updated-state {:information-requests irs
+                       :virkailija-oid       (:virkailija-oid state)}})))
+
 (defn mass-store
   [information-requests virkailija-oid job-runner]
   {:pre [(every? (comp u/not-blank? :subject) information-requests)
          (every? (comp u/not-blank? :message) information-requests)
          (every? (comp u/not-blank? :application-key) information-requests)
          (every? (comp u/not-blank? :message-type) information-requests)]}
-  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [stored-information-requests (mapv #(information-request-store/add-information-request
-                                              %
-                                              virkailija-oid
-                                              conn)
-                                            information-requests)]
-      (doseq [stored-information-request stored-information-requests]
-        (start-email-job job-runner conn stored-information-request)
-        (audit-log/log {:new       stored-information-request
-                        :operation audit-log/operation-new
-                        :id        virkailija-oid}))
-      stored-information-requests)))
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+    (job/start-job job-runner
+                   connection
+                   "mass-information-request-job"
+                   {:information-requests information-requests
+                    :virkailija-oid       virkailija-oid})))

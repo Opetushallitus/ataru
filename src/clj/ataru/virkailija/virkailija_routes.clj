@@ -481,7 +481,7 @@
                                            :subject s/Str}
                      :application-keys    [s/Str]}]
         :summary "Send information requests to multiple applicants"
-        :return [ataru-schema/InformationRequest]
+        :return {}
         (let [information-requests (map #(assoc (:message-and-subject body)
                                                 :application-key %
                                                 :message-type "mass-information-request")
@@ -492,9 +492,10 @@
                session
                (map :application-key information-requests)
                [:edit-applications])
-            (ok (information-request/mass-store information-requests
+            (do (information-request/mass-store information-requests
                                                 (get-in session [:identity :oid])
-                                                job-runner))
+                                                job-runner)
+                (response/accepted {}))
             (response/unauthorized {:error "Hakemusten käsittely ei ole sallittu"}))))
 
       (api/POST "/excel" {session :session}
