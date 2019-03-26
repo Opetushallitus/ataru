@@ -542,15 +542,9 @@
 (defn add-new-secret-to-application
   [application-key]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [connection      {:connection conn}
-          application     (-> (yesql-get-latest-application-by-key
-                               {:application_key application-key}
-                               connection)
-                              (first)
-                              (unwrap-application))
-          new-secret      (generate-new-application-secret connection)]
-      (yesql-add-application-secret<! {:application_key application-key :secret new-secret} connection)
-      (:id application))))
+    (let [connection {:connection conn}
+          new-secret (generate-new-application-secret connection)]
+      (yesql-add-application-secret<! {:application_key application-key :secret new-secret} connection))))
 
 (defn add-new-secret-to-application-by-old-secret
   [old-secret]
