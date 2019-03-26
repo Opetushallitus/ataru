@@ -7,8 +7,9 @@
             [com.stuartsierra.component :as component]))
 
 (def yo-komo "1.2.246.562.5.2013061010184237348007")
-(def erityisammatillinentutkinto-komo "erikoisammattitutkinto komo oid")
-(def ammatillinentutkinto-komo "ammatillinentutkinto komo oid")
+(def erikoisammattitutkinto-komo "erikoisammattitutkinto komo oid")
+(def ammattitutkinto-komo "ammatillinentutkinto komo oid")
+(def ammatillinen-perustutkinto-komo "TODO ammatillinen komo oid")
 
 (defn- ->suoritus-tila
   [data]
@@ -57,7 +58,10 @@
 
 (defn- ylioppilas-ja-ammatilliset-suoritukset [cas-client person-oid modified-since]
   (mapcat (partial suoritukset-for-komo cas-client person-oid modified-since)
-    [yo-komo ammatillinentutkinto-komo erityisammatillinentutkinto-komo]))
+          [yo-komo
+           ammatillinen-perustutkinto-komo
+           ammattitutkinto-komo
+           erikoisammattitutkinto-komo]))
 
 (defprotocol SuoritusService
   (ylioppilas-ja-ammatilliset-suoritukset-modified-since [this modified-since])
