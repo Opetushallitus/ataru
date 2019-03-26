@@ -21,10 +21,8 @@
       (when (nil? application)
         (throw (new RuntimeException (str "Application " application-id
                                           " not found"))))
-      (when (nil? (:person-oid application))
-        (throw (new RuntimeException (str "Application " application-id
-                                          " is not linked to a person"))))
-      application)))
+      (when (some? (:person-oid application))
+        application))))
 
 (defn- get-haku
   [tarjonta-service application]
@@ -169,24 +167,25 @@
    {:keys [ohjausparametrit-service
            tarjonta-service
            suoritus-service]}]
-  (let [application                  (get-application application-id)
-        haku                         (get-haku tarjonta-service application)
-        ohjausparametrit             (get-ohjausparametrit ohjausparametrit-service
-                                                           application)
-        hakukohteet                  (get-hakukohteet tarjonta-service application)
-        ylioppilas-tai-ammatillinen? (get-ylioppilas-tai-ammatillinen? suoritus-service application)
-        now                          (time/now)]
-    (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}
-                               {:isolation :serializable}]
-      (doseq [update (automatic-eligibility-if-ylioppilas
-                      application
-                      haku
-                      ohjausparametrit
-                      now
-                      hakukohteet
-                      ylioppilas-tai-ammatillinen?)]
-        (update-application-hakukohde-review connection update))))
-  {:transition {:id :final}})
+  (if-let [application (get-application application-id)]
+    (let [haku                         (get-haku tarjonta-service application)
+          ohjausparametrit             (get-ohjausparametrit ohjausparametrit-service
+                                                             application)
+          hakukohteet                  (get-hakukohteet tarjonta-service application)
+          ylioppilas-tai-ammatillinen? (get-ylioppilas-tai-ammatillinen? suoritus-service application)
+          now                          (time/now)]
+      (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}
+                                 {:isolation :serializable}]
+        (doseq [update (automatic-eligibility-if-ylioppilas
+                        application
+                        haku
+                        ohjausparametrit
+                        now
+                        hakukohteet
+                        ylioppilas-tai-ammatillinen?)]
+          (update-application-hakukohde-review connection update)))
+      {:transition {:id :final}})
+    {:transition {:id :retry}}))
 
 (defn- get-application-ids
   [suoritukset]
