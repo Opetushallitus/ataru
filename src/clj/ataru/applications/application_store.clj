@@ -99,15 +99,15 @@
                                         (recur parent (cons parent parents)))
                                       parents)),
         intersection              (fn [v]
-                                      (when (seq v)
-                                            (apply clojure.set/intersection (map set v))))
+                                      (some->> (remove empty? v)
+                                               seq
+                                               (map set)
+                                               (apply clojure.set/intersection)))
         belongs-to-hakukohteet    (->> relatives
                                        (map :belongs-to-hakukohteet)
-                                       (filter not-empty)
                                        intersection)
         belongs-to-hakukohderyhma (->> relatives
                                        (map :belongs-to-hakukohderyhma)
-                                       (filter not-empty)
                                        intersection)]
     (cond
       (or (not-empty belongs-to-hakukohteet)
