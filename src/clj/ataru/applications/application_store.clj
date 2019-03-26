@@ -42,12 +42,6 @@
 (defn- find-value-from-answers [key answers]
   (:value (first (filter #(= key (:key %)) answers))))
 
-(defn- auditlog-read
-  [application session]
-  (audit-log/log {:new              (dissoc application :content)
-                  :id               (get-in session [:identity :oid])
-                  :operation        audit-log/operation-read}))
-
 (defn unwrap-application
   [application]
   (when application
@@ -492,13 +486,11 @@
 (defn get-application [application-id]
   (unwrap-application (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
 
-(defn get-latest-application-by-key [application-key session]
-  (let [application (-> (exec-db :db yesql-get-latest-application-by-key
-                          {:application_key application-key})
-                        (first)
-                        (unwrap-application))]
-    (auditlog-read application session)
-    application))
+(defn get-latest-application-by-key [application-key]
+  (-> (exec-db :db yesql-get-latest-application-by-key
+               {:application_key application-key})
+      (first)
+      (unwrap-application)))
 
 (defn get-application-hakukohde-reviews
   [application-key]

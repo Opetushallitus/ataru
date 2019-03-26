@@ -1,5 +1,6 @@
 (ns ataru.applications.application-access-control
   (:require
+   [ataru.log.audit-log :as audit-log]
    [ataru.organization-service.session-organizations :as session-orgs]
    [ataru.forms.form-access-control :as form-access-control]
    [ataru.applications.application-store :as application-store]
@@ -77,24 +78,29 @@
 
 (defn get-latest-application-by-key
   [organization-service tarjonta-service session application-key]
-  (session-orgs/run-org-authorized
-   session
-   organization-service
-   [:view-applications :edit-applications]
-   (constantly nil)
-   #(some->> (application-store/get-latest-application-by-key application-key session)
-             vector
-             (populate-applications-hakukohteet tarjonta-service)
-             (filter (some-fn (partial authorized-by-form? %)
-                              (partial authorized-by-tarjoajat? %)))
-             (map (partial can-edit-application? organization-service session))
-             (map depopulate-application-hakukohteet)
-             (map remove-organization-oid)
-             first)
-   #(remove-organization-oid
-      (can-edit-application? organization-service
-                             session
-                             (application-store/get-latest-application-by-key application-key session)))))
+  (let [application (session-orgs/run-org-authorized
+                     session
+                     organization-service
+                     [:view-applications :edit-applications]
+                     (constantly nil)
+                     #(some->> (application-store/get-latest-application-by-key application-key)
+                               vector
+                               (populate-applications-hakukohteet tarjonta-service)
+                               (filter (some-fn (partial authorized-by-form? %)
+                                                (partial authorized-by-tarjoajat? %)))
+                               (map (partial can-edit-application? organization-service session))
+                               (map depopulate-application-hakukohteet)
+                               (map remove-organization-oid)
+                               first)
+                     #(remove-organization-oid
+                       (can-edit-application? organization-service
+                                              session
+                                              (application-store/get-latest-application-by-key application-key))))]
+    (when (some? application)
+      (audit-log/log {:new       (dissoc application :content)
+                      :id        (get-in session [:identity :oid])
+                      :operation audit-log/operation-read}))
+    application))
 
 (defn- populate-hakukohde
   [external-application]
