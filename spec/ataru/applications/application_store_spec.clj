@@ -238,9 +238,7 @@
             (store/store-reviews reviews false connection)
             (should== 0 (store/delete-orphan-attachment-reviews (:key application)
                           reviews
-                          ["form"]
                           connection))
             (should== 1 (store/delete-orphan-attachment-reviews (:key application)
                           [(first reviews)]
-                          ["form"]
                           connection)))))))

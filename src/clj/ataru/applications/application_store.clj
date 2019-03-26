@@ -170,7 +170,7 @@
           visible-attachments))
 
 (defn delete-orphan-attachment-reviews
-  [application-key reviews applied-hakukohteet connection]
+  [application-key reviews connection]
   (yesql-delete-application-attachment-reviews!
     {:application_key                            application-key
      :attachment_key_and_applied_hakukohde_array (->> reviews
@@ -204,7 +204,6 @@
     (when update?
       (delete-orphan-attachment-reviews (:key application)
                                         reviews
-                                        (map :oid applied-hakukohteet)
                                         connection))))
 
 (defn- add-new-application-version
