@@ -50,10 +50,35 @@
                                  secret])
       secret)))
 
-(defn invalidate-virkailija-update-secret
+(defn create-virkailija-rewrite-secret
+  [session application-key]
+  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+    (let [secret (str (UUID/randomUUID))]
+      (jdbc/execute! connection ["INSERT INTO virkailija_rewrite_secrets
+                                  (virkailija_oid, application_key, secret)
+                                  VALUES (?, ?, ?)"
+                                 (get-in session [:identity :oid])
+                                 application-key
+                                 secret])
+      secret)))
+
+(defn virkailija-rewrite-secret-valid?
+  [secret]
+  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+    (not (empty?
+           (jdbc/query connection ["SELECT 1
+                                   FROM virkailija_rewrite_secrets
+                                   WHERE secret = ? AND valid @> now()"
+                                   secret])))))
+
+(defn invalidate-virkailija-update-and-rewrite-secret
   [secret]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
     (jdbc/execute! connection ["UPDATE virkailija_update_secrets
+                                SET valid = tstzrange(lower(valid), now(), '[)')
+                                WHERE secret = ?"
+                               secret])
+    (jdbc/execute! connection ["UPDATE virkailija_rewrite_secrets
                                 SET valid = tstzrange(lower(valid), now(), '[)')
                                 WHERE secret = ?"
                                secret])))

@@ -497,6 +497,22 @@ JOIN forms f ON a.form_id = f.id
 JOIN virkailija_update_secrets AS vus ON vus.application_key = a.key
 WHERE vus.secret = :virkailija_secret;
 
+-- name: yesql-get-latest-application-by-virkailija-rewrite-secret
+SELECT
+  a.id,
+  a.key,
+  a.lang,
+  a.form_id AS form,
+  a.created_time,
+  a.content,
+  a.haku,
+  a.hakukohde,
+  f.key     AS form_key
+FROM latest_applications AS a
+JOIN forms f ON a.form_id = f.id
+JOIN virkailija_rewrite_secrets AS vus ON vus.application_key = a.key
+WHERE vus.secret = :virkailija_secret;
+
 -- name: yesql-get-latest-version-by-secret-lock-for-update
 WITH application_secret AS (SELECT
                               application_key,
@@ -554,6 +570,24 @@ FROM applications a
 WHERE a.id = (SELECT max(a.id)
               FROM applications AS a
               JOIN virkailija_update_secrets AS vus
+                ON vus.application_key = a.key
+              WHERE vus.secret = :virkailija_secret)
+FOR UPDATE;
+
+-- name: yesql-get-latest-version-by-virkailija-secret-lock-for-rewrite
+SELECT
+  a.id,
+  a.key,
+  a.lang,
+  a.form_id AS form,
+  a.created_time,
+  a.content,
+  a.haku,
+  a.hakukohde
+FROM applications a
+WHERE a.id = (SELECT max(a.id)
+              FROM applications AS a
+              JOIN virkailija_rewrite_secrets AS vus
                 ON vus.application_key = a.key
               WHERE vus.secret = :virkailija_secret)
 FOR UPDATE;

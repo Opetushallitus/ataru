@@ -881,6 +881,9 @@ You will receive a confirmation of your application to your email."}
    :edit-application                            {:fi "Muokkaa hakemusta"
                                                  :sv "Bearbeta ansökan"
                                                  :en "Edit the application"}
+   :edit-application-with-rewrite               {:fi "Muokkaa hakemusta rekisterinpitäjänä"
+                                                 :sv "Muokkaa hakemusta rekisterinpitäjänä"
+                                                 :en "Muokkaa hakemusta rekisterinpitäjänä"}
    :edit-applications-rights-panel              {:fi "Hakemusten arviointi"
                                                  :sv "Utvärdering av ansökningar"
                                                  :en "Evaluation of applications"}

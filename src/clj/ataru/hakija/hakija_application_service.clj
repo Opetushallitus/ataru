@@ -107,6 +107,10 @@
   (when (virkailija-edit/virkailija-update-secret-valid? virkailija-secret)
     virkailija-secret))
 
+(defn- valid-virkailija-rewrite-secret [{:keys [virkailija-secret]}]
+  (when (virkailija-edit/virkailija-rewrite-secret-valid? virkailija-secret)
+        virkailija-secret))
+
 (defn- valid-virkailija-create-secret [{:keys [virkailija-secret]}]
   (when (virkailija-edit/virkailija-create-secret-valid? virkailija-secret)
     virkailija-secret))
@@ -160,10 +164,12 @@
         applied-hakukohteet           (filter #(contains? (set (:hakukohde application)) (:oid %))
                                               hakukohteet)
         applied-hakukohderyhmat       (mapcat :hakukohderyhmat applied-hakukohteet)
-        virkailija-secret             (if is-modify?
-                                        (valid-virkailija-update-secret application)
-                                        (valid-virkailija-create-secret application))
-        latest-application            (application-store/get-latest-version-of-application-for-edit application)
+        [rewrite? virkailija-secret] (if is-modify?
+                                       (if-let [rewrite-secret (valid-virkailija-rewrite-secret application)]
+                                         [true rewrite-secret]
+                                         [false (valid-virkailija-update-secret application)])
+                                       [false (valid-virkailija-create-secret application)])
+        latest-application            (application-store/get-latest-version-of-application-for-edit rewrite? application)
         form-roles                    (cond-> []
                                         (some? virkailija-secret)
                                         (conj :virkailija)
@@ -275,7 +281,7 @@
 
 (defn- start-virkailija-edit-jobs
   [job-runner virkailija-secret application-id application]
-  (virkailija-edit/invalidate-virkailija-update-secret virkailija-secret)
+  (virkailija-edit/invalidate-virkailija-update-and-rewrite-secret virkailija-secret)
   (when (nil? (:person-oid application))
     (start-person-creation-job job-runner application-id))
   (start-attachment-finalizer-job job-runner application-id))
@@ -389,6 +395,9 @@
                               :else
                               [:hakija nil])
         application                (cond
+                                     (and (= actor-role :virkailija) (virkailija-edit/virkailija-rewrite-secret-valid? secret))
+                                     (application-store/get-latest-application-for-virkailija-rewrite-edit secret)
+
                                      (and (= actor-role :virkailija) (virkailija-edit/virkailija-update-secret-valid? secret))
                                      (application-store/get-latest-application-for-virkailija-edit secret)
 
