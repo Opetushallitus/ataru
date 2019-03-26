@@ -433,7 +433,7 @@
   (fn [_ _]
     [(re-frame/subscribe [:application/selected-application])])
   (fn [[selected-application] [_ hakukohde-oid]]
-    (when hakukohde-oid
+    (when (and hakukohde-oid selected-application)
       (let [idx (.indexOf (-> selected-application :hakukohde) hakukohde-oid)]
         (when-not (< 0 idx)
           (inc idx))))))
