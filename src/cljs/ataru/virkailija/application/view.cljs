@@ -527,7 +527,7 @@
 
 (defn application-list-row [application selected?]
   (let [selected-time-column    (subscribe [:state-query [:application :selected-time-column]])
-        day-date-time           (-> (get application @selected-time-column)
+        day-date-time           (-> (get application (keyword @selected-time-column))
                                     (t/str->googdate)
                                     (t/time->str)
                                     (clojure.string/split #"\s"))
