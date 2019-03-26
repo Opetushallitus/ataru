@@ -284,13 +284,19 @@
   (virkailija-edit/invalidate-virkailija-update-and-rewrite-secret virkailija-secret)
   (when (nil? (:person-oid application))
     (start-person-creation-job job-runner application-id))
-  (start-attachment-finalizer-job job-runner application-id))
+  (start-attachment-finalizer-job job-runner application-id)
+  (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
+   job-runner
+   application-id))
 
 (defn- start-hakija-edit-jobs [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
   (application-email/start-email-edit-confirmation-job koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                                                        job-runner
                                                        application-id)
-  (start-attachment-finalizer-job job-runner application-id))
+  (start-attachment-finalizer-job job-runner application-id)
+  (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
+   job-runner
+   application-id))
 
 (defn handle-application-submit
   [koodisto-cache
