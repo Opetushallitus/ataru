@@ -1335,7 +1335,7 @@
        [event-row event])
      @(subscribe [:application/events-and-information-requests])))])
 
-(defn- application-review-note-input []
+(defn- application-review-note-input [add-notes-to-selected-review-hakukohteet]
   (let [input-value     (subscribe [:state-query [:application :review-comment]])
         review-notes    (subscribe [:state-query [:application :review-notes]])
         button-enabled? (reaction (and (-> @input-value clojure.string/blank? not)
@@ -1355,15 +1355,31 @@
                      "application-handling__review-note-submit-button--disabled")
          :disabled (not @button-enabled?)
          :on-click (fn [_]
-                     (dispatch [:application/add-review-note @input-value nil]))}
+                     (if @add-notes-to-selected-review-hakukohteet
+                       (dispatch [:application/add-review-notes @input-value nil])
+                       (dispatch [:application/add-review-note @input-value nil])))}
         (get-virkailija-translation :add)]])))
 
 (defn application-review-notes []
-  (let [notes (subscribe [:application/review-note-indexes-excluding-eligibility])]
+  (let [notes                     (subscribe [:application/review-note-indexes-excluding-eligibility])
+        selected-review-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+        only-selected-hakukohteet (r/atom false)]
     (fn []
       [:div.application-handling__review-row--nocolumn
-       [:div.application-handling__review-header (get-virkailija-translation :notes)]
-       [application-review-note-input]
+       [:div.application-handling__review-header
+        (get-virkailija-translation :notes)
+        (when (< 0 (count @selected-review-hakukohde))
+          [:span.application-handling__review-filters
+           [:input.application-handling__review-checkbox
+            (merge {:id        "application-handling__review-checkbox"
+                    :type      "checkbox"
+                    :value     @only-selected-hakukohteet
+                    :on-change #(swap! only-selected-hakukohteet not)})]
+           [:label
+            {:for "application-handling__review-checkbox"}
+            "vain valituille hakukohteille"]])]
+       [application-review-note-input (reaction (and @only-selected-hakukohteet
+                                                  (< 0 (count @selected-review-hakukohde))))]
        (->> @notes
             (map (fn [idx]
                    ^{:key (str "application-review-note-" idx)}
