@@ -1001,9 +1001,10 @@
           tmp-id                  (cljs-util/new-uuid)
           note                    (merge {:notes           text
                                           :application-key application-key}
+                                    (when hakukohde
+                                      {:hakukohde hakukohde})
                                     (when state-name
-                                      {:hakukohde  hakukohde
-                                       :state-name (name state-name)}))
+                                      {:state-name (name state-name)}))
           db                      (-> db
                                       (update-in [:application :review-notes]
                                         (fn [notes]
