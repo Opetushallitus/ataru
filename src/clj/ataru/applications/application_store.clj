@@ -1,5 +1,6 @@
 (ns ataru.applications.application-store
   (:require [ataru.application.application-states :as application-states]
+            [cheshire.core :as json]
             [ataru.application.review-states :refer [incomplete-states] :as application-review-states]
             [ataru.db.db :as db]
             [ataru.dob :as dob]
@@ -89,9 +90,25 @@
   (not-empty (clojure.set/intersection set1 set2)))
 
 (defn- hakukohde-oids-for-attachment-review
-  [attachment-field hakutoiveet]
-  (let [belongs-to-hakukohteet    (set (:belongs-to-hakukohteet attachment-field))
-        belongs-to-hakukohderyhma (set (:belongs-to-hakukohderyhma attachment-field))]
+  [attachment-field hakutoiveet fields-by-id]
+  (let [relatives                 (loop [field   attachment-field
+                                         parents [attachment-field]]
+                                    (if-let [parent-id (or (:followup-of field)
+                                                           (:children-of field))]
+                                      (let [parent (get fields-by-id (keyword parent-id))]
+                                        (recur parent (cons parent parents)))
+                                      parents)),
+        intersection              (fn [v]
+                                      (some->> (remove empty? v)
+                                               seq
+                                               (map set)
+                                               (apply clojure.set/intersection)))
+        belongs-to-hakukohteet    (->> relatives
+                                       (map :belongs-to-hakukohteet)
+                                       intersection)
+        belongs-to-hakukohderyhma (->> relatives
+                                       (map :belongs-to-hakukohderyhma)
+                                       intersection)]
     (cond
       (or (not-empty belongs-to-hakukohteet)
           (not-empty belongs-to-hakukohderyhma))
@@ -106,7 +123,7 @@
       :else ["form"])))
 
 (defn- create-attachment-reviews
-  [attachment-field answer old-answer update? application-key hakutoiveet]
+  [attachment-field answer old-answer update? application-key hakutoiveet fields-by-id]
   (let [value-changed? (and update?
                             (not= old-answer answer))
         review-base    {:application_key application-key
@@ -116,7 +133,7 @@
                                            "not-checked")
                         :updated?        value-changed?}]
     (map #(assoc review-base :hakukohde %)
-         (hakukohde-oids-for-attachment-review attachment-field hakutoiveet))))
+         (hakukohde-oids-for-attachment-review attachment-field hakutoiveet fields-by-id))))
 
 (defn- followup-option-selected?
   [field answers]
@@ -138,7 +155,7 @@
           fields))
 
 (defn create-application-attachment-reviews
-  [application-key visible-attachments answers-by-key old-answers applied-hakukohteet update?]
+  [application-key visible-attachments answers-by-key old-answers applied-hakukohteet update? fields-by-id]
   (mapcat (fn [attachment]
             (let [attachment-key (-> attachment :id keyword)
                   answer         (-> answers-by-key attachment-key :value)
@@ -148,20 +165,31 @@
                                          old-answer
                                          update?
                                          application-key
-                                         applied-hakukohteet)))
+                                         applied-hakukohteet
+                                         fields-by-id)))
           visible-attachments))
 
-(defn- delete-orphan-attachment-reviews
-  [application-key visible-attachments applied-hakukohteet connection]
+(defn delete-orphan-attachment-reviews
+  [application-key reviews connection]
   (yesql-delete-application-attachment-reviews!
-   {:application_key     application-key
-    :attachment_keys     (cons "" (map :id visible-attachments))
-    :applied_hakukohteet (cons "" applied-hakukohteet)}
-   connection))
+    {:application_key                            application-key
+     :attachment_key_and_applied_hakukohde_array (->> reviews
+                                                      (map (fn [review]
+                                                               [(:attachment_key review) (:hakukohde review)]))
+                                                      (json/generate-string))}
+    connection))
+
+(defn store-reviews [reviews update? connection]
+  (doseq [review reviews]
+    ((if (:updated? review)
+       yesql-update-attachment-hakukohde-review!
+       yesql-save-attachment-review!)
+     (dissoc review :updated?) connection)))
 
 (defn- create-attachment-hakukohde-reviews-for-application
   [application applied-hakukohteet old-answers form update? connection]
   (let [flat-form-content   (-> form :content util/flatten-form-fields)
+        fields-by-id        (util/form-fields-by-id form)
         answers-by-key      (-> application :content :answers util/answers-by-key)
         visible-attachments (filter-visible-attachments answers-by-key flat-form-content)
         reviews             (create-application-attachment-reviews
@@ -170,16 +198,12 @@
                              answers-by-key
                              old-answers
                              applied-hakukohteet
-                             update?)]
-    (doseq [review reviews]
-      ((if (:updated? review)
-         yesql-update-attachment-hakukohde-review!
-         yesql-save-attachment-review!)
-       (dissoc review :updated?) connection))
+                             update?
+                             fields-by-id)]
+    (store-reviews reviews update? connection)
     (when update?
       (delete-orphan-attachment-reviews (:key application)
-                                        visible-attachments
-                                        (map :oid applied-hakukohteet)
+                                        reviews
                                         connection))))
 
 (defn- add-new-application-version
