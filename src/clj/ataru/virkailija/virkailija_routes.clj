@@ -487,7 +487,7 @@
             (response/unauthorized {:error "Hakemusten käsittely ei ole sallittu"}))))
 
       (api/POST "/excel" {session :session}
-        :form-params [application-keys :- [s/Str]
+        :form-params [application-keys :- s/Str
                       filename :- s/Str
                       {selected-hakukohde :- s/Str nil}
                       {selected-hakukohderyhma :- s/Str nil}
@@ -495,19 +495,20 @@
                       {skip-answers :- s/Bool false}
                       {CSRF :- s/Str nil}]
         :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
-        (let [included-ids       (not-empty (set (remove clojure.string/blank? (clojure.string/split included-ids #"\s+"))))
-              xls                (application-service/get-excel-report-of-applications-by-key
-                                   application-keys
-                                   selected-hakukohde
-                                   selected-hakukohderyhma
-                                   skip-answers
-                                   included-ids
-                                   session
-                                   organization-service
-                                   tarjonta-service
-                                   koodisto-cache
-                                   ohjausparametrit-service
-                                   person-service)]
+        (let [application-keys (json/parse-string application-keys)
+              included-ids     (not-empty (set (remove clojure.string/blank? (clojure.string/split included-ids #"\s+"))))
+              xls              (application-service/get-excel-report-of-applications-by-key
+                                application-keys
+                                selected-hakukohde
+                                selected-hakukohderyhma
+                                skip-answers
+                                included-ids
+                                session
+                                organization-service
+                                tarjonta-service
+                                koodisto-cache
+                                ohjausparametrit-service
+                                person-service)]
           (if xls
             {:status  200
              :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
