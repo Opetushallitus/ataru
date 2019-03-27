@@ -824,9 +824,15 @@ You will receive a confirmation of your application to your email."}
    :confirm-delete                              {:fi "Vahvista poisto"
                                                  :sv "Bekräfta raderingen"
                                                  :en "Confirm the deletion"}
+   :cancel-remove                               {:fi "Älä poista"
+                                                 :sv "Radera inte"
+                                                 :en "Don't remove"}
    :confirm-cut                                 {:fi "Vahvista leikkaus"
                                                  :sv "Bekräfta klippa"
                                                  :en "Confirm the cut"}
+   :cancel-cut                                  {:fi "Älä leikkaa"
+                                                 :sv "Klippa inte"
+                                                 :en "Don't cut"}
    :confirmation-sent                           {:fi "Vahvistussähköposti lähetetty hakijalle"
                                                  :sv "E-post med bekräftelse har skickats till sökande"
                                                  :en "Confirmation email has been sent"}
@@ -863,6 +869,9 @@ You will receive a confirmation of your application to your email."}
    :delete-form                                 {:fi "Poista lomake"
                                                  :sv "Ta bort blanketten"
                                                  :en "Delete the form"}
+   :cancel-form-delete                          {:fi "Älä poista"
+                                                 :sv "Radera inte"
+                                                 :en "Don't remove"}
    :did                                         {:fi "teki"
                                                  :sv "har gjort"
                                                  :en "has made"}

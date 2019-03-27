@@ -67,9 +67,13 @@
      {:on-click #(dispatch [:editor/start-remove-form])}
      (get-virkailija-translation :delete-form)]
     :confirm
-    [:button.editor-form__control-button--confirm.editor-form__control-button
-     {:on-click #(dispatch [:editor/confirm-remove-form])}
-     (get-virkailija-translation :confirm-delete)]
+    [:div.editor-form__component-button-group
+     [:button.editor-form__control-button--confirm.editor-form__control-button
+      {:on-click #(dispatch [:editor/confirm-remove-form])}
+      (get-virkailija-translation :confirm-delete)]
+     [:button.editor-form__control-button--enabled.editor-form__control-button
+      {:on-click #(dispatch [:editor/unstart-remove-form])}
+      (get-virkailija-translation :cancel-form-delete)]]
     :disabled
     [:button.editor-form__control-button--disabled.editor-form__control-button
      {:disabled true}
