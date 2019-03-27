@@ -20,9 +20,13 @@
        (map :value)
        (first)))
 
-(defn- initial-state [information-request]
-  (let [secret          (app-store/add-new-secret-to-application (:application-key information-request))
-        application     (app-store/get-latest-application-by-key (:application-key information-request))
+(defn- initial-state [connection information-request]
+  (let [secret          (app-store/add-new-secret-to-application-in-tx
+                         connection
+                         (:application-key information-request))
+        application     (app-store/get-latest-application-by-key-in-tx
+                         connection
+                         (:application-key information-request))
         lang            (-> application :lang keyword)
         recipient-email (extract-answer-value "email" application)
         translations    (translations/get-translations lang)
@@ -38,7 +42,7 @@
                 :body       body}))))
 
 (defn- start-email-job [job-runner connection information-request]
-  (let [initial-state (initial-state information-request)
+  (let [initial-state (initial-state connection information-request)
         job-type      (:type information-request-job/job-definition)
         job-id        (job/start-job job-runner
                                      connection

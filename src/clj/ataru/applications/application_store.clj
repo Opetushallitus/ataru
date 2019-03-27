@@ -75,7 +75,7 @@
 
 (def unique-violation "23505")
 
-(defn- add-new-secret-to-application-in-tx
+(defn add-new-secret-to-application-in-tx
   [connection application-key]
   (loop []
     (let [secret     (crypto/url-part 34)
@@ -492,11 +492,17 @@
 (defn get-application [application-id]
   (unwrap-application (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
 
+(defn get-latest-application-by-key-in-tx
+  [connection application-key]
+  (-> (yesql-get-latest-application-by-key
+       {:application_key application-key}
+       {:connection connection})
+      first
+      unwrap-application))
+
 (defn get-latest-application-by-key [application-key]
-  (-> (exec-db :db yesql-get-latest-application-by-key
-               {:application_key application-key})
-      (first)
-      (unwrap-application)))
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+    (get-latest-application-by-key-in-tx connection application-key)))
 
 (defn get-application-hakukohde-reviews
   [application-key]
