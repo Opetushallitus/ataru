@@ -21,13 +21,13 @@
        (first)))
 
 (defn- initial-state [information-request]
-  (app-store/add-new-secret-to-application (:application-key information-request))
-  (let [application     (app-store/get-latest-application-by-key (:application-key information-request))
+  (let [secret          (app-store/add-new-secret-to-application (:application-key information-request))
+        application     (app-store/get-latest-application-by-key (:application-key information-request))
         lang            (-> application :lang keyword)
         recipient-email (extract-answer-value "email" application)
         translations    (translations/get-translations lang)
         service-url     (get-in config [:public-config :applicant :service_url])
-        application-url (str service-url "/hakemus?modify=" (:secret application))
+        application-url (str service-url "/hakemus?modify=" secret)
         body            (selmer/render-file "templates/information-request-template.html"
                                             (merge {:message         (->safe-html (:message information-request))
                                                     :application-url application-url}
