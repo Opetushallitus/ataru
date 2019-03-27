@@ -17,6 +17,7 @@
             [ataru.hakija.hakija-routes :as routes]
             [ataru.hakija.hakija-application-service :as application-service]
             [ataru.config.core :refer [config]]
+            [ataru.util.random :as crypto]
             [clj-time.core :as t]
             [cheshire.core :as json]
             [ataru.db.db :as ataru-db]
@@ -393,7 +394,7 @@
       (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
 
     (it "should create"
-        (with-redefs [store/generate-new-application-secret (constantly "12345")]
+        (with-redefs [crypto/url-part (constantly "12345")]
           (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
                          (should= 200 (:status resp))
                          (should (have-application-in-db (get-in resp [:body :id]))))))
@@ -430,13 +431,13 @@
       (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
 
     (it "should create"
-      (with-redefs [store/generate-new-application-secret (constantly "0000000010")]
+      (with-redefs [crypto/url-part (constantly "0000000010")]
         (with-response :post resp application-fixtures/person-info-form-application
           (should= 200 (:status resp))
           (should (have-application-in-db (get-in resp [:body :id]))))))
 
     (it "should edit application"
-      (with-redefs [store/generate-new-application-secret (constantly "0000000011")]
+      (with-redefs [crypto/url-part (constantly "0000000011")]
         (with-response :put resp (merge application-edited-email {:secret "0000000010"})
           (should= 200 (:status resp))
           (let [id          (-> resp :body :id)
@@ -444,7 +445,7 @@
             (should= "edited@foo.com" (get-answer application "email"))))))
 
     (it "should not allow editing ssn"
-      (with-redefs [store/generate-new-application-secret (constantly "0000000012")]
+      (with-redefs [crypto/url-part (constantly "0000000012")]
         (with-response :put resp (merge application-edited-ssn {:secret "0000000011"})
           (should= 200 (:status resp))
           (let [id          (-> resp :body :id)
@@ -453,7 +454,7 @@
 
     (it "should create for hakukohde with hakukohde order check"
       (with-redefs [hakuaika/get-hakuaika-info            hakuaika-ongoing
-                    store/generate-new-application-secret (constantly "0000000013")]
+                    crypto/url-part (constantly "0000000013")]
         (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
           (should= 200 (:status resp))
           (should (have-application-in-db (get-in resp [:body :id])))
@@ -489,14 +490,14 @@
 
     (it "should create"
       (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing
-                    store/generate-new-application-secret (constantly "0000000020")]
+                    crypto/url-part (constantly "0000000020")]
         (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
           (should= 200 (:status resp))
           (should (have-application-in-db (get-in resp [:body :id]))))))
 
     (it "should allow application edit after hakuaika within 10 days and only changes to attachments and limited person info"
       (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-grace-period-hakukierros-ongoing
-                    store/generate-new-application-secret (constantly "0000000021")]
+                    crypto/url-part (constantly "0000000021")]
         (with-response :put resp (merge application-for-hakukohde-edited {:secret "0000000020"})
           (should= 200 (:status resp))
           (let [id          (-> resp :body :id)
@@ -508,7 +509,7 @@
 
     (it "should allow application edit after grace period and only changes to limited person info"
       (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing
-                    store/generate-new-application-secret (constantly "0000000022")]
+                    crypto/url-part (constantly "0000000022")]
         (with-response :put resp (merge application-for-hakukohde-email-edited {:secret "0000000021"})
           (should= 200 (:status resp))
           (let [id          (-> resp :body :id)
@@ -520,7 +521,7 @@
 
     (it "should disallow application edit after grace period to attachments"
       (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing
-                    store/generate-new-application-secret (constantly "0000000022")]
+                    crypto/url-part (constantly "0000000022")]
         (with-response :put resp (merge application-fixtures/person-info-form-application-for-hakukohde {:secret "0000000021"})
           (should= 400 (:status resp))))))
 
@@ -532,11 +533,11 @@
                     application-service/remove-orphan-attachments         (fn [_ _])
                     koodisto/all-koodisto-values                          (constantly nil)]
         (with-redefs [hakuaika/get-hakuaika-info            hakuaika-ongoing
-                      store/generate-new-application-secret (constantly "0000000023")]
+                      crypto/url-part (constantly "0000000023")]
           (with-response :post resp application-fixtures/person-info-form-application-with-empty-answers
             (should= 200 (:status resp))))
         (with-redefs [hakuaika/get-hakuaika-info            hakuaika-ended-grace-period-passed-hakukierros-ongoing
-                      store/generate-new-application-secret (constantly "0000000024")]
+                      crypto/url-part (constantly "0000000024")]
           (with-response :put resp (merge application-fixtures/person-info-form-application-with-empty-answers {:secret "0000000023"})
             (should= 200 (:status resp)))))))
 
@@ -562,13 +563,13 @@
                  (:body resp))))
 
     (it "should create"
-      (with-redefs [store/generate-new-application-secret (constantly "0000000030")]
+      (with-redefs [crypto/url-part (constantly "0000000030")]
         (with-response :post resp application-fixtures/person-info-form-application-with-more-answers
           (should= 200 (:status resp))
           (should (have-application-in-db (get-in resp [:body :id]))))))
 
     (it "should update answers"
-      (with-redefs [store/generate-new-application-secret (constantly "0000000031")]
+      (with-redefs [crypto/url-part (constantly "0000000031")]
         (with-response :put resp (merge application-fixtures/person-info-form-application-with-more-modified-answers {:secret "0000000030"})
           (should= 200 (:status resp))
           (let [id          (-> resp :body :id)

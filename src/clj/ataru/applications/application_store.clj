@@ -19,11 +19,12 @@
             [clj-time.format :as f]
             [clojure.java.jdbc :as jdbc]
             [schema.core :as s]
-            [taoensso.timbre :refer [info]]
+            [taoensso.timbre :refer [info warn]]
             [yesql.core :refer [defqueries]])
   (:import [java.time
             LocalDateTime
             ZoneId]
+           org.postgresql.util.PSQLException
            java.time.format.DateTimeFormatter))
 
 (defqueries "sql/application-queries.sql")
@@ -72,12 +73,25 @@
       (first)
       :lang))
 
-(defn generate-new-application-secret
-  [connection]
-  (loop [secret (crypto/url-part 34)]
-    (if-not (application-exists-with-secret-tx? secret connection)
-      secret
-      (recur (crypto/url-part 34)))))
+(def unique-violation "23505")
+
+(defn- add-new-secret-to-application-in-tx
+  [connection application-key]
+  (loop []
+    (let [secret     (crypto/url-part 34)
+          collision? (try
+                       (yesql-add-application-secret<! {:application_key application-key
+                                                        :secret          secret}
+                                                       {:connection connection})
+                       false
+                       (catch PSQLException e
+                         (if (= unique-violation (.getSQLState e))
+                           true
+                           (throw e))))]
+      (if collision?
+        (do (warn "Application secret collision")
+            (recur))
+        secret))))
 
 (defn- intersect?
   [set1 set2]
@@ -219,10 +233,7 @@
                                       (yesql-add-application<! application-to-store connection))]
     (create-attachment-hakukohde-reviews-for-application new-application applied-hakukohteet old-answers form update? {:connection conn})
     (when create-new-secret?
-      (yesql-add-application-secret<!
-        {:application_key (:key new-application)
-         :secret          (generate-new-application-secret connection)}
-        connection))
+      (add-new-secret-to-application-in-tx conn (:key new-application)))
     (unwrap-application new-application)))
 
 (defn- get-latest-version-and-lock-for-update [secret lang conn]
@@ -426,12 +437,7 @@
          ->kebab-case-kw
          (mapv #(if (nil? (:secret %))
                   (do (info "Refreshing secret for application" (:key %))
-                      (assoc % :secret
-                             (:secret (yesql-add-application-secret<!
-                                       {:application_key (:key %)
-                                        :secret          (generate-new-application-secret
-                                                          {:connection conn})}
-                                       {:connection conn}))))
+                      (assoc % :secret (add-new-secret-to-application-in-tx conn (:key %))))
                   %)))))
 
 (defn- unwrap-onr-application
@@ -541,10 +547,8 @@
 
 (defn add-new-secret-to-application
   [application-key]
-  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [connection {:connection conn}
-          new-secret (generate-new-application-secret connection)]
-      (yesql-add-application-secret<! {:application_key application-key :secret new-secret} connection))))
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+    (add-new-secret-to-application-in-tx connection application-key)))
 
 (defn add-new-secret-to-application-by-old-secret
   [old-secret]
@@ -557,9 +561,8 @@
                                {:application_key application-key}
                                connection)
                               (first)
-                              (unwrap-application))
-          new-secret      (generate-new-application-secret connection)]
-      (yesql-add-application-secret<! {:application_key application-key :secret new-secret} connection)
+                              (unwrap-application))]
+      (add-new-secret-to-application-in-tx conn application-key)
       (:id application))))
 
 (defn get-application-events [application-key]
