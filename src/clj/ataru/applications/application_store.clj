@@ -374,7 +374,9 @@
 
 (defn ->name-query-value
   [name]
-  (->> (clojure.string/split name #"\s+")
+  (->> (-> name
+           (clojure.string/replace #"[&\|!<>:*]" "")
+           (clojure.string/split #"\s+"))
        (remove clojure.string/blank?)
        (map #(str % ":*"))
        (clojure.string/join " & ")))
