@@ -776,6 +776,38 @@ WHERE
   AND state <> 'inactivated'
 ORDER BY la.created_time DESC;
 
+-- name: yesql-valinta-tulos-service-applications
+SELECT a.key AS "oid",
+       a.haku AS "haku",
+       a.hakukohde AS "hakukohde",
+       a.person_oid AS "person-oid",
+       coalesce(asiointikieli.value, a.lang) AS "asiointikieli",
+       a.email AS "email"
+FROM applications AS a
+JOIN application_reviews AS ar ON ar.application_key = a.key
+LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id
+LEFT JOIN LATERAL (SELECT CASE value->>'value'
+                            WHEN '1' THEN 'fi'
+                            WHEN '2' THEN 'sv'
+                            WHEN '3' THEN 'en'
+                          END AS value
+                   FROM jsonb_array_elements(a.content->'answers')
+                   WHERE value->>'key' = 'asiointikieli'
+                   LIMIT 1) AS asiointikieli ON true
+WHERE la.id IS NULL AND
+      a.person_oid IS NOT NULL AND
+      a.haku IS NOT NULL AND
+      ar.state <> 'inactivated' AND
+      (:haku_oid::text IS NULL OR a.haku = :haku_oid) AND
+      (:hakukohde_oid::text IS NULL OR :hakukohde_oid = ANY (a.hakukohde)) AND
+      (:hakemus_oids::text[] IS NULL OR a.key = ANY (:hakemus_oids)) AND
+      CASE
+        WHEN :offset::text IS NULL THEN true
+        ELSE a.key > :offset
+      END
+ORDER BY a.key
+LIMIT 1000;
+
 -- name: yesql-valinta-ui-applications
 SELECT
   a.key AS oid,
