@@ -1067,7 +1067,7 @@
          [:span (str @name " ")]
          [:span.application-handling__review-note-details-timestamp (str @created-time)]
          (when-let [hakutoive-nro @(subscribe [:application/hakutoive-nro (:hakukohde @note)])]
-           [:span {:data-tooltip @hakukohde-name}
+           [:span.application-handling__review-note--hakutoive {:data-tooltip @hakukohde-name}
             " (" hakutoive-nro ")"])]
         [:div.application-handling__review-note-remove-link
          {:class    (when @remove-disabled? "application-handling__review-note-remove-link--disabled")
@@ -1340,11 +1340,12 @@
        [event-row event])
      @(subscribe [:application/events-and-information-requests])))])
 
-(defn- application-review-note-input [add-notes-to-selected-review-hakukohteet]
-  (let [input-value     (subscribe [:state-query [:application :review-comment]])
-        review-notes    (subscribe [:state-query [:application :review-notes]])
-        button-enabled? (reaction (and (-> @input-value clojure.string/blank? not)
-                                       (every? (comp not :animated?) @review-notes)))]
+(defn- application-review-note-input []
+  (let [input-value               (subscribe [:state-query [:application :review-comment]])
+        review-notes              (subscribe [:state-query [:application :review-notes]])
+        only-selected-hakukohteet (subscribe [:state-query [:application :only-selected-hakukohteet]])
+        button-enabled?           (reaction (and (-> @input-value clojure.string/blank? not)
+                                                 (every? (comp not :animated?) @review-notes)))]
     (fn []
       [:div.application-handling__review-row.application-handling__review-row--notes-row
        [:textarea.application-handling__review-note-input
@@ -1360,18 +1361,16 @@
                      "application-handling__review-note-submit-button--disabled")
          :disabled (not @button-enabled?)
          :on-click (fn [_]
-                     (if @add-notes-to-selected-review-hakukohteet
+                     (if @only-selected-hakukohteet
                        (dispatch [:application/add-review-notes @input-value nil])
                        (dispatch [:application/add-review-note @input-value nil])))}
         (get-virkailija-translation :add)]])))
 
 (defn application-review-notes []
-  (let [notes                     (subscribe [:application/review-note-indexes-excluding-eligibility])
-        notes-for-selected        (subscribe [:application/review-note-indexes-excluding-eligibility-for-selected-hakukohteet])
-        selected-review-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-        only-selected-hakukohteet (r/atom false)
-        filter-with-hakukohteet   (reaction (and @only-selected-hakukohteet
-                                                 (< 0 (count @selected-review-hakukohde))))]
+  (let [notes                            (subscribe [:application/review-note-indexes-excluding-eligibility])
+        notes-for-selected               (subscribe [:application/review-note-indexes-excluding-eligibility-for-selected-hakukohteet])
+        selected-review-hakukohde        (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+        only-selected-hakukohteet        (subscribe [:state-query [:application :only-selected-hakukohteet]])]
     (fn []
       [:div.application-handling__review-row--nocolumn
        [:div.application-handling__review-header
@@ -1382,12 +1381,12 @@
             {:id        "application-handling__review-checkbox--only-selected-hakukohteet"
              :type      "checkbox"
              :value     @only-selected-hakukohteet
-             :on-change #(swap! only-selected-hakukohteet not)}]
+             :on-change #(dispatch [:application/toggle-only-selected-hakukohteet])}]
            [:label
             {:for "application-handling__review-checkbox--only-selected-hakukohteet"}
             (get-virkailija-translation :only-selected-hakukohteet)]])]
-       [application-review-note-input filter-with-hakukohteet]
-       (->> (if @filter-with-hakukohteet
+       [application-review-note-input]
+       (->> (if @only-selected-hakukohteet
               @notes-for-selected
               @notes)
             (map (fn [idx]

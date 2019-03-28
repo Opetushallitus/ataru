@@ -1046,6 +1046,10 @@
   (fn [db [_ review-comment]]
     (assoc-in db [:application :review-comment] review-comment)))
 
+(reg-event-db :application/toggle-only-selected-hakukohteet
+  (fn [db _]
+    (update-in db [:application :only-selected-hakukohteet] #(boolean (not %)))))
+
 (reg-event-fx :application/remove-review-note
   (fn [{:keys [db]} [_ note-idx]]
     (let [note-id (-> db :application :review-notes (get note-idx) :id)
