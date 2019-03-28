@@ -482,21 +482,20 @@
                      :application-keys    [s/Str]}]
         :summary "Send information requests to multiple applicants"
         :return {}
-        (let [information-requests (map #(assoc (:message-and-subject body)
-                                                :application-key %
-                                                :message-type "mass-information-request")
-                                        (:application-keys body))]
-          (if (access-controlled-application/applications-access-authorized?
-               organization-service
-               tarjonta-service
-               session
-               (map :application-key information-requests)
-               [:edit-applications])
-            (do (information-request/mass-store information-requests
-                                                (get-in session [:identity :oid])
-                                                job-runner)
-                (response/accepted {}))
-            (response/unauthorized {:error "Hakemusten käsittely ei ole sallittu"}))))
+        (if (access-controlled-application/applications-access-authorized?
+             organization-service
+             tarjonta-service
+             session
+             (:application-keys body)
+             [:edit-applications])
+          (do (information-request/mass-store
+               (assoc (:message-and-subject body)
+                      :message-type "mass-information-request")
+               (:application-keys body)
+               (get-in session [:identity :oid])
+               job-runner)
+              (response/accepted {}))
+          (response/unauthorized {:error "Hakemusten käsittely ei ole sallittu"})))
 
       (api/POST "/excel" {session :session}
         :form-params [application-keys :- s/Str

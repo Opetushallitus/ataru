@@ -68,23 +68,24 @@
 
 (defn mass-information-request-job-step
   [state job-runner]
-  (if (empty? (:information-requests state))
+  (if (empty? (:application-keys state))
     {:transition {:id :final}}
-    (let [[ir & irs] (:information-requests state)]
-      (store ir (:virkailija-oid state) job-runner)
-      {:transition    {:id :to-next :step :initial}
-       :updated-state {:information-requests irs
-                       :virkailija-oid       (:virkailija-oid state)}})))
+    (do (store (assoc (:information-request state)
+                      :application-key (first (:application-keys state)))
+               (:virkailija-oid state)
+               job-runner)
+        {:transition    {:id :to-next :step :initial}
+         :updated-state (update state :application-keys rest)})))
 
 (defn mass-store
-  [information-requests virkailija-oid job-runner]
-  {:pre [(every? (comp u/not-blank? :subject) information-requests)
-         (every? (comp u/not-blank? :message) information-requests)
-         (every? (comp u/not-blank? :application-key) information-requests)
-         (every? (comp u/not-blank? :message-type) information-requests)]}
+  [information-request application-keys virkailija-oid job-runner]
+  {:pre [(-> information-request :subject u/not-blank?)
+         (-> information-request :message u/not-blank?)
+         (-> information-request :message-type u/not-blank?)]}
   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
     (job/start-job job-runner
                    connection
                    "mass-information-request-job"
-                   {:information-requests information-requests
-                    :virkailija-oid       virkailija-oid})))
+                   {:information-request information-request
+                    :application-keys    application-keys
+                    :virkailija-oid      virkailija-oid})))
