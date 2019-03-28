@@ -1377,7 +1377,7 @@
        [:div.application-handling__review-header
         (get-virkailija-translation :notes)
         (when (< 0 (count @selected-review-hakukohde))
-          [:span.application-handling__review-filters
+          [:div.application-handling__review-filters
            [:input.application-handling__review-checkbox
             {:id        "application-handling__review-checkbox--only-selected-hakukohteet"
              :type      "checkbox"
