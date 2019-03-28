@@ -1066,7 +1066,7 @@
         [:div
          [:span (str @name " ")]
          [:span.application-handling__review-note-details-timestamp (str @created-time)]
-         (if-let [hakutoive-nro @(subscribe [:application/hakutoive-nro (:hakukohde @note)])]
+         (when-let [hakutoive-nro @(subscribe [:application/hakutoive-nro (:hakukohde @note)])]
            [:span {:data-tooltip @hakukohde-name}
             " (" hakutoive-nro ")"])]
         [:div.application-handling__review-note-remove-link
