@@ -1379,10 +1379,10 @@
         (when (< 0 (count @selected-review-hakukohde))
           [:span.application-handling__review-filters
            [:input.application-handling__review-checkbox
-            (merge {:id        "application-handling__review-checkbox--only-selected-hakukohteet"
-                    :type      "checkbox"
-                    :value     @only-selected-hakukohteet
-                    :on-change #(swap! only-selected-hakukohteet not)})]
+            {:id        "application-handling__review-checkbox--only-selected-hakukohteet"
+             :type      "checkbox"
+             :value     @only-selected-hakukohteet
+             :on-change #(swap! only-selected-hakukohteet not)}]
            [:label
             {:for "application-handling__review-checkbox--only-selected-hakukohteet"}
             "vain valituille hakukohteille"]])]
