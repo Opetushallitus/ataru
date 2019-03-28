@@ -434,8 +434,15 @@
     [(re-frame/subscribe [:application/selected-application])])
   (fn [[selected-application] [_ hakukohde-oid]]
     (when (and hakukohde-oid selected-application)
-      (let [idx (.indexOf (-> selected-application :hakukohde) hakukohde-oid)]
-        (when-not (< 0 idx)
+      (let [hakukohde-oid (if (keyword? hakukohde-oid)
+                            (name hakukohde-oid)
+                            hakukohde-oid)]
+        (if-let [idx (->> (-> selected-application :hakukohde)
+                          (map-indexed (fn [index oid]
+                                         (when (= oid hakukohde-oid)
+                                           index)))
+                          (remove nil?)
+                          (first))]
           (inc idx))))))
 
 (re-frame/reg-sub
