@@ -1385,7 +1385,7 @@
              :on-change #(swap! only-selected-hakukohteet not)}]
            [:label
             {:for "application-handling__review-checkbox--only-selected-hakukohteet"}
-            "vain valituille hakukohteille"]])]
+            (get-virkailija-translation :only-selected-hakukohteet)]])]
        [application-review-note-input filter-with-hakukohteet]
        (->> (if @filter-with-hakukohteet
               @notes-for-selected
