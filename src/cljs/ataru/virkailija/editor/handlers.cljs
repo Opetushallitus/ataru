@@ -253,8 +253,7 @@
 (reg-event-fx
   :editor/start-component
   (fn [{db :db} [_ component-type path]]
-    {:db (assoc-in db [:editor :ui :component-button-state component-type path] :confirm)
-     :dispatch-later [{:ms 2000 :dispatch [:editor/unstart-component component-type path]}]}))
+    {:db (assoc-in db [:editor :ui :component-button-state component-type path] :confirm)}))
 
 (defn stamp-user-organization [is-user-organization-fn hakukohderyhma]
   (merge hakukohderyhma
@@ -552,8 +551,7 @@
 (reg-event-fx
   :editor/start-remove-form
   (fn [{db :db} _]
-    {:db (assoc-in db [:editor :ui :remove-form-button-state] :confirm)
-     :dispatch-later [{:ms 2000 :dispatch [:editor/unstart-remove-form]}]}))
+    {:db (assoc-in db [:editor :ui :remove-form-button-state] :confirm)}))
 
 (reg-event-fx
   :editor/refresh-forms-in-use

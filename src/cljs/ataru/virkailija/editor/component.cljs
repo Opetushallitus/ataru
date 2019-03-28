@@ -168,10 +168,14 @@
      {:on-click #(dispatch [:editor/start-component :cut path])}
      (get-virkailija-translation :cut-element)]
     :confirm
-    [:button.editor-form__copy-component-button--pressed.editor-form__copy-component-button
-     {:on-click (fn [event]
-                  (dispatch [:editor/copy-component path true removable?]))}
-     (get-virkailija-translation :confirm-cut)]))
+    [:div.editor-form__component-button-group
+     [:button.editor-form__copy-component-button--pressed.editor-form__copy-component-button
+      {:on-click (fn [event]
+                   (dispatch [:editor/copy-component path true removable?]))}
+      (get-virkailija-translation :confirm-cut)]
+     [:button.editor-form__copy-component-button
+      {:on-click #(dispatch [:editor/unstart-component :cut path])}
+      (get-virkailija-translation :cancel-cut)]]))
 
 (defn- remove-component-button [path]
   (case @(subscribe [:editor/component-button-state :remove path])
@@ -180,18 +184,22 @@
      {:on-click #(dispatch [:editor/start-component :remove path])}
      (get-virkailija-translation :remove)]
     :confirm
-    [:button.editor-form__remove-component-button--confirm.editor-form__remove-component-button
-     {:on-click (fn [event]
-                  (let [target (-> event
-                                   .-target
-                                   (gdom/getAncestorByClass "editor-form__component-wrapper"))]
-                    (set! (.-height (.-style target)) (str (.-offsetHeight target) "px"))
-                    (dispatch [:editor/confirm-remove-component path])))}
-     (get-virkailija-translation :confirm-delete)]
-    :disabled
-    [:button.editor-form__remove-component-button--disabled.editor-form__remove-component-button
-     {:disabled true}
-     (get-virkailija-translation :confirm-delete)]))
+    [:div.editor-form__component-button-group
+     [:button.editor-form__remove-component-button--confirm.editor-form__remove-component-button
+      {:on-click (fn [event]
+                   (let [target (-> event
+                                    .-target
+                                    (gdom/getAncestorByClass "editor-form__component-wrapper"))]
+                     (set! (.-height (.-style target)) (str (.-offsetHeight target) "px"))
+                     (dispatch [:editor/confirm-remove-component path])))}
+      (get-virkailija-translation :confirm-delete)]
+     [:button.editor-form__remove-component-button
+      {:on-click #(dispatch [:editor/unstart-component :remove path])}
+      (get-virkailija-translation :cancel-remove)]]
+     :disabled
+     [:button.editor-form__remove-component-button--disabled.editor-form__remove-component-button
+      {:disabled true}
+      (get-virkailija-translation :confirm-delete)]))
 
 (defn- header-metadata
   [metadata]
