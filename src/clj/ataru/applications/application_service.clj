@@ -489,6 +489,16 @@
        :linked-oids
        (mapcat #(aac/omatsivut-applications organization-service session %))))
 
+(defn add-asiointikieli [henkilot application]
+  (let [asiointikieli (or (get {"1" "fi"
+                                "2" "sv"
+                                "3" "en"}
+                            ((:keyValues application) "asiointikieli"))
+                          (get-in (get henkilot (:personOid application))
+                            [:asiointiKieli :kieliKoodi])
+                          (:asiointikieli application))]
+    (assoc application :asiointikieli asiointikieli)))
+
 (defn get-applications-for-valintalaskenta
   [organization-service person-service session hakukohde-oid application-keys]
   (if-let [applications (aac/get-applications-for-valintalaskenta
@@ -496,10 +506,11 @@
                          session
                          hakukohde-oid
                          application-keys)]
-    (let [yksiloimattomat (->> applications
+    (let [henkilot        (->> applications
                                (map :personOid)
                                distinct
-                               (person-service/get-persons person-service)
+                               (person-service/get-persons person-service))
+          yksiloimattomat (->> henkilot
                                vals
                                (remove #(or (:yksiloity %)
                                             (:yksiloityVTJ %)))
@@ -507,7 +518,7 @@
                                distinct
                                seq)]
       {:yksiloimattomat yksiloimattomat
-       :applications    applications})
+       :applications    (map (partial add-asiointikieli henkilot) applications)})
     {:unauthorized nil}))
 
 (defn- add-henkilo

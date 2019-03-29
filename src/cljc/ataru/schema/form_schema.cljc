@@ -496,11 +496,12 @@
    :hakukohde_oids [s/Str]})
 
 (s/defschema ValintaApplication
-  {:hakemusOid  s/Str
-   :personOid   s/Str
-   :hakuOid     s/Str
-   :hakutoiveet [s/Str]
-   :keyValues   {s/Str Value}})
+  {:hakemusOid    s/Str
+   :personOid     s/Str
+   :hakuOid       s/Str
+   :asiointikieli (s/enum "fi" "sv" "en")
+   :hakutoiveet   [s/Str]
+   :keyValues     {s/Str Value}})
 
 (s/defschema SiirtoApplication
   {:hakemusOid  s/Str
