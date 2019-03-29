@@ -940,6 +940,7 @@ ORDER BY created_time DESC;
 --name: yesql-valintalaskenta-applications
 SELECT
   key,
+  lang as asiointikieli,
   person_oid,
   haku,
   hakukohde AS hakutoiveet,
