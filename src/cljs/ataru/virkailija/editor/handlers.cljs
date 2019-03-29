@@ -600,15 +600,28 @@
        :locked-by nil})
     db))
 
+
+
+
 (defn- copy-form [db _]
-  (let [form-id (get-in db [:editor :selected-form-key])
-        form    (-> (get-in db [:editor :forms form-id])
-                    (update :name (fn [name]
-                                    (reduce-kv #(assoc %1 %2 (str %3 " - KOPIO"))
-                                               {}
-                                               name))))]
+  (let [form-id                  (get-in db [:editor :selected-form-key])
+        new-form-key             (cu/new-uuid)
+        form                     (-> (get-in db [:editor :forms form-id])
+                                     (update :name (fn [name]
+                                                     (reduce-kv #(assoc %1 %2 (str %3 " - KOPIO"))
+                                                       {}
+                                                       name))))
+        reset-selection-group-id (fn [x] (if (get-in x [:params :selection-group-id])
+                                           (assoc-in x [:params :selection-group-id] new-form-key)
+                                           x))]
     (post-new-form (merge
-                     (select-keys form [:name :content :languages :organization-oid])
+                     (-> (select-keys form [:name :content :languages :organization-oid])
+                         (update :content (fn [content]
+                                            (map (fn [component] (clojure.walk/prewalk
+                                                                   #(-> %
+                                                                        (reset-selection-group-id)) component))
+                                                 content)))
+                         (assoc :key new-form-key))
                      {:locked nil :locked-by nil}))
     db))
 
