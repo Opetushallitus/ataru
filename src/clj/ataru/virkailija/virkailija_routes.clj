@@ -39,6 +39,7 @@
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
             [ataru.organization-service.session-organizations :refer [organization-list] :as session-orgs]
             [ataru.organization-service.organization-selection :as organization-selection]
+            [ataru.organization-service.organization-client :as organization-client]
             [cheshire.core :as json]
             [cheshire.generate :refer [add-encoder]]
             [clojure.core.match :refer [match]]
@@ -841,7 +842,7 @@
                                   modifiedAfter)]
             (response/ok applications)
             (response/unauthorized {:error "Unauthorized"}))))
-      (api/GET "/applications" {session :session}
+      (api/GET "/applications" {session :session} ;; deprecated, use /valinta-tulos-service
         :summary "Get the latest versions of applications in haku or hakukohde or by oids."
         :query-params [{hakuOid :- s/Str nil}
                        {hakukohdeOid :- s/Str nil}
@@ -859,6 +860,36 @@
                                   hakemusOids)]
             (response/ok applications)
             (response/unauthorized {:error "Unauthorized"}))))
+      (api/POST "/valinta-tulos-service" {session :session}
+        :summary "Applications for valinta-tulos-service"
+        :body-params [{hakuOid :- s/Str nil}
+                      {hakukohdeOid :- s/Str nil}
+                      {hakemusOids :- [s/Str] nil}
+                      {offset :- s/Str nil}]
+        :return {:applications            [{:oid           s/Str
+                                            :hakuOid       s/Str
+                                            :hakukohdeOids [s/Str]
+                                            :henkiloOid    s/Str
+                                            :asiointikieli s/Str
+                                            :email         s/Str}]
+                 (s/optional-key :offset) s/Str}
+        (cond (and (nil? hakuOid) (nil? hakukohdeOid) (nil? (seq hakemusOids)))
+              (response/bad-request {:error "No query parameter given"})
+              (session-orgs/run-org-authorized
+               session
+               organization-service
+               [:view-applications :edit-applications]
+               (fn [] true)
+               (fn [oids] (not (contains? oids organization-client/oph-organization)))
+               (fn [] false))
+              (response/unauthorized {:error "Unauthorized"})
+              :else
+              (response/ok
+               (application-store/valinta-tulos-service-applications
+                hakuOid
+                hakukohdeOid
+                hakemusOids
+                offset))))
       (api/GET "/valinta-ui" {session :session}
         :summary "Applications for valinta-ui"
         :query-params [{hakuOid :- s/Str nil}
@@ -895,7 +926,7 @@
                                                     :person-oid :personOid}))))
             (response/unauthorized {:error "Unauthorized"}))
           (response/bad-request {:error "No query parameters given"})))
-      (api/GET "/persons" {session :session}
+      (api/GET "/persons" {session :session} ;; deprecated, use /valinta-tulos-service
         :summary "Get application-oid <-> person-oid mapping for haku or hakukohdes"
         :query-params [hakuOid :- s/Str
                        {hakukohdeOids :- [s/Str] nil}]

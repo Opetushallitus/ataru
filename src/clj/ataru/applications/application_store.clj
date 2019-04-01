@@ -845,7 +845,7 @@
      :maa              (-> answers :country-of-residence :value)
      :hakutoiveet      (unwrap-external-application-hakutoiveet application)}))
 
-(defn get-external-applications
+(defn get-external-applications ;; deprecated, use valinta-tulos-service-applications
   [haku-oid hakukohde-oid hakemus-oids]
   (->> (exec-db :db
                 yesql-applications-by-haku-and-hakukohde-oids
@@ -856,6 +856,27 @@
                                                        (conj hakukohde-oid))
                  :hakemus_oids                 (cons "" hakemus-oids)})
        (map unwrap-external-application)))
+
+(defn valinta-tulos-service-applications
+  [haku-oid hakukohde-oid hakemus-oids offset]
+  (let [as (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+             (map #(hash-map :oid (:oid %)
+                             :hakuOid (:haku %)
+                             :hakukohdeOids (:hakukohde %)
+                             :henkiloOid (:person-oid %)
+                             :asiointikieli (:asiointikieli %)
+                             :email (:email %))
+                  (yesql-valinta-tulos-service-applications
+                   {:haku_oid      haku-oid
+                    :hakukohde_oid hakukohde-oid
+                    :hakemus_oids  (some->> (seq hakemus-oids)
+                                            to-array
+                                            (.createArrayOf (:connection connection) "text"))
+                    :offset        offset}
+                   {:connection connection})))]
+    (merge {:applications as}
+           (when-let [a (first (drop 999 as))]
+             {:offset (:oid a)}))))
 
 (defn valinta-ui-applications
   [query]
