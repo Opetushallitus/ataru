@@ -155,12 +155,11 @@
 
                               {:fieldClass "wrapperElement"
                                :children   children}
-                              (let [belongs-to       (or (not (field-belongs-to-hakukohde-or-hakukohderyhma? field))
-                                                         (belongs-to-existing-hakukohde-or-hakukohderyma? field hakukohteet hakukohderyhmat))]
-                                (if (not belongs-to)
-                                  (concat results
-                                          {id {:passed? (answers-nil? answers-by-key children)}})
-                                  (concat results (build-results koodisto-cache has-applied answers-by-key [] form children hakukohderyhmat virkailija?))))
+                              (let [belongs-to (or (not (field-belongs-to-hakukohde-or-hakukohderyhma? field))
+                                                   (belongs-to-existing-hakukohde-or-hakukohderyma? field hakukohteet hakukohderyhmat))]
+                                (if belongs-to
+                                  (concat results (build-results koodisto-cache has-applied answers-by-key [] form children hakukohderyhmat virkailija?))
+                                  (concat results {id {:passed? (answers-nil? answers-by-key children)}})))
 
                               {:fieldClass "questionGroup"
                                :fieldType  "fieldset"
