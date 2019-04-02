@@ -50,32 +50,44 @@
                                      initial-state)]
     (log/info (str "Started information request email job with job id " job-id ", initial state: " initial-state))))
 
+(defn- store-in-tx
+  [information-request virkailija-oid job-runner connection]
+  {:pre [(-> information-request :subject u/not-blank?)
+         (-> information-request :message u/not-blank?)
+         (-> information-request :application-key u/not-blank?)
+         (-> information-request :message-type u/not-blank?)]}
+  (let [information-request (information-request-store/add-information-request
+                             information-request
+                             virkailija-oid
+                             connection)]
+    (start-email-job job-runner connection information-request)
+    (audit-log/log {:new       information-request
+                    :operation audit-log/operation-new
+                    :id        virkailija-oid})
+    information-request))
+
 (defn store [information-request virkailija-oid job-runner]
   {:pre [(-> information-request :subject u/not-blank?)
          (-> information-request :message u/not-blank?)
          (-> information-request :application-key u/not-blank?)
          (-> information-request :message-type u/not-blank?)]}
-  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [information-request (information-request-store/add-information-request
-                               information-request
-                               virkailija-oid
-                               conn)]
-      (start-email-job job-runner conn information-request)
-      (audit-log/log {:new       information-request
-                      :operation audit-log/operation-new
-                      :id        virkailija-oid})
-      information-request)))
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+    (store-in-tx information-request virkailija-oid job-runner connection)))
 
 (defn mass-information-request-job-step
   [state job-runner]
   (if (empty? (:application-keys state))
     {:transition {:id :final}}
-    (do (store (assoc (:information-request state)
-                      :application-key (first (:application-keys state)))
-               (:virkailija-oid state)
-               job-runner)
-        {:transition    {:id :to-next :step :initial}
-         :updated-state (update state :application-keys rest)})))
+    (let [[now later] (split-at 100 (:application-keys state))]
+      (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+        (doseq [key now]
+          (store-in-tx (assoc (:information-request state)
+                              :application-key key)
+                       (:virkailija-oid state)
+                       job-runner
+                       connection)))
+      {:transition    {:id :to-next :step :initial}
+       :updated-state (assoc state :application-keys later)})))
 
 (defn mass-store
   [information-request application-keys virkailija-oid job-runner]
