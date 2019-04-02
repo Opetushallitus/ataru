@@ -767,7 +767,7 @@
      :paymentObligations          (reduce-kv #(assoc %1 (name %2) %3) {} payment-obligations)
      :eligibilities               (reduce-kv #(assoc %1 (name %2) %3) {} eligibilities)}))
 
-(defn get-hakurekisteri-applications
+(defn get-hakurekisteri-applications ;; deprecated, use suoritusrekisteri-applications
   [haku-oid hakukohde-oids person-oids modified-after]
   (->> (jdbc/with-db-connection [conn {:datasource (db/get-datasource :db)}]
          (yesql-applications-for-hakurekisteri
@@ -788,6 +788,28 @@
                                        .toOffsetDateTime)}
           {:connection conn}))
        (map unwrap-hakurekisteri-application)))
+
+(defn suoritusrekisteri-applications
+  [haku-oid hakukohde-oids person-oids modified-after offset]
+  (let [as (->> (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+                  (yesql-suoritusrekisteri-applications
+                   {:haku_oid       haku-oid
+                    :hakukohde_oids (some->> (seq hakukohde-oids)
+                                             to-array
+                                             (.createArrayOf (:connection connection) "varchar"))
+                    :person_oids    (some->> (seq person-oids)
+                                             to-array
+                                             (.createArrayOf (:connection connection) "text"))
+                    :modified_after (some-> modified-after
+                                            (LocalDateTime/parse (DateTimeFormatter/ofPattern "yyyyMMddHHmm"))
+                                            (.atZone (ZoneId/of "Europe/Helsinki"))
+                                            .toOffsetDateTime)
+                    :offset         offset}
+                   {:connection connection}))
+                (map unwrap-hakurekisteri-application))]
+    (merge {:applications as}
+           (when-let [a (first (drop 999 as))]
+             {:offset (:oid a)}))))
 
 (defn- requirement-names-mapped-to-states
   [requirements]

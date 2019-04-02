@@ -890,6 +890,54 @@ WHERE a.person_oid IS NOT NULL AND
                         a2.id > a.id)
 ORDER BY a.created_time DESC;
 
+--name: yesql-suoritusrekisteri-applications
+SELECT
+  a.key,
+  a.haku,
+  a.hakukohde,
+  a.person_oid,
+  a.lang,
+  a.email,
+  a.content,
+  coalesce(ahr.payment_obligations, '{}') AS "payment-obligations",
+  coalesce(ahr.eligibilities, '{}') AS eligibilities
+FROM applications AS a
+JOIN application_reviews AS ar
+  ON ar.application_key = a.key
+LEFT JOIN applications AS la
+  ON la.key = a.key AND la.id > a.id
+LEFT JOIN ((SELECT key
+            FROM applications
+            WHERE created_time > :modified_after)
+           UNION
+           (SELECT application_key AS key
+            FROM application_reviews
+            WHERE modified_time > :modified_after)
+           UNION
+           (SELECT application_key AS key
+            FROM application_hakukohde_reviews
+            WHERE modified_time > :modified_after)) AS modified
+  ON modified.key = a.key
+LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) FILTER (WHERE requirement = 'payment-obligation') AS payment_obligations,
+                          jsonb_object_agg(hakukohde, state) FILTER (WHERE requirement = 'eligibility-state') AS eligibilities
+                   FROM application_hakukohde_reviews
+                   WHERE application_key = a.key) AS ahr
+  ON true
+WHERE a.person_oid IS NOT NULL AND
+      a.haku IS NOT NULL AND
+      (:haku_oid::text IS NULL OR a.haku = :haku_oid) AND
+      (:hakukohde_oids::varchar[] IS NULL OR a.hakukohde && :hakukohde_oids) AND
+      (:person_oids::text[] IS NULL OR a.person_oid = ANY (:person_oids)) AND
+      ar.state <> 'inactivated' AND
+      (:modified_after::timestamptz IS NULL OR modified.key IS NOT NULL) AND
+      la.id IS NULL AND
+      CASE
+        WHEN :offset::text IS NULL THEN true
+        ELSE a.key > :offset
+      END
+ORDER BY a.key
+LIMIT 1000;
+
 --name: yesql-get-applications-by-created-time
 SELECT
   a.key,
