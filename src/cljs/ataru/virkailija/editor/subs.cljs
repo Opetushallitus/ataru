@@ -1,9 +1,8 @@
 (ns ataru.virkailija.editor.subs
   (:require-macros [reagent.ratom :refer [reaction]])
-  (:require [ataru.util :as util]
+  (:require [ataru.util :as util :refer [collect-ids]]
             [re-frame.core :as re-frame]
             [ataru.cljs-util :as cu]
-            [ataru.virkailija.editor.handlers :refer [collect-ids]]
             [taoensso.timbre :refer-macros [spy debug]]
             [markdown.core :as md]))
 
