@@ -127,12 +127,8 @@
        (every-followup-nil? answers-by-key followups)))
 
 (defn- answers-nil? [answers-by-key children]
-  (let [answer-keys (reduce collect-ids [] children)
-        answers     (mapcat (fn [{:keys [id]}]
-                                (let [id (keyword id)]
-                                  (if-let [answer (id answers-by-key)]
-                                    (wrap-coll (:value answer))))) children)]
-    (every? nil? answers)))
+  (let [answer-keys (reduce collect-ids [] children)]
+    (every? (fn [id] (nil? (get answers-by-key (keyword id)))) answer-keys)))
 
 (defn build-results
   [koodisto-cache has-applied answers-by-key results form [{:keys [id] :as field} & rest-form-fields] hakukohderyhmat virkailija?]
