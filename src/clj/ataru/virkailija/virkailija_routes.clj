@@ -824,7 +824,7 @@
                                 person-oid)]
           (response/ok applications)
           (response/unauthorized {:error "Unauthorized"})))
-      (api/GET "/hakurekisteri/applications" {session :session}
+      (api/GET "/hakurekisteri/applications" {session :session} ;; deprecated, use /suoritusrekisteri
         :summary "Get the latest versions of applications."
         :query-params [{hakuOid :- s/Str nil}
                        {hakukohdeOids :- [s/Str] nil}
@@ -842,6 +842,33 @@
                                   modifiedAfter)]
             (response/ok applications)
             (response/unauthorized {:error "Unauthorized"}))))
+      (api/POST "/suoritusrekisteri" {session :session}
+        :summary "Applications for suoritusrekisteri"
+        :body-params [{hakuOid :- s/Str nil}
+                      {hakukohdeOids :- [s/Str] nil}
+                      {hakijaOids :- [s/Str] nil}
+                      {modifiedAfter :- s/Str nil}
+                      {offset :- s/Str nil}]
+        :return {:applications            [ataru-schema/HakurekisteriApplication]
+                 (s/optional-key :offset) s/Str}
+        (cond (every? nil? [hakuOid (seq hakukohdeOids) (seq hakijaOids) modifiedAfter])
+              (response/bad-request {:error "No query parameter given"})
+              (session-orgs/run-org-authorized
+               session
+               organization-service
+               [:view-applications :edit-applications]
+               (fn [] true)
+               (fn [oids] (not (contains? oids organization-client/oph-organization)))
+               (fn [] false))
+              (response/unauthorized {:error "Unauthorized"})
+              :else
+              (response/ok
+               (application-store/suoritusrekisteri-applications
+                hakuOid
+                hakukohdeOids
+                hakijaOids
+                modifiedAfter
+                offset))))
       (api/GET "/applications" {session :session} ;; deprecated, use /valinta-tulos-service
         :summary "Get the latest versions of applications in haku or hakukohde or by oids."
         :query-params [{hakuOid :- s/Str nil}
