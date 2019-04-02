@@ -48,7 +48,8 @@
                                      connection
                                      job-type
                                      initial-state)]
-    (log/info (str "Started information request email job with job id " job-id ", initial state: " initial-state))))
+    (log/info (str "Started information request email job with job id " job-id
+                   " for application " (:application-key information-request)))))
 
 (defn- store-in-tx
   [information-request virkailija-oid job-runner connection]
