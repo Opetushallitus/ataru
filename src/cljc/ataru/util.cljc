@@ -282,3 +282,8 @@
                         :hilight true})
                  match-end
                  rest-highlights))))))
+
+(defn collect-ids [acc {:keys [id children options]}]
+  (let [acc (reduce collect-ids acc (mapcat :followups options))
+        acc (reduce collect-ids acc children)]
+    (conj acc id)))

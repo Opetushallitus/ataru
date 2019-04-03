@@ -1,7 +1,7 @@
 (ns ataru.hakija.validator
   (:require [ataru.forms.form-store :as form-store]
             [ataru.hakija.application-validators :as validator]
-            [ataru.util :as util]
+            [ataru.util :as util :refer [collect-ids]]
             [clojure.set :refer [difference]]
             [clojure.core.match :refer [match]]
             [clojure.core.async :as async]
@@ -126,6 +126,10 @@
   (and (empty? non-empty-answers)
        (every-followup-nil? answers-by-key followups)))
 
+(defn- answers-nil? [answers-by-key children]
+  (let [answer-keys (reduce collect-ids [] children)]
+    (every? (fn [id] (nil? (get answers-by-key (keyword id)))) answer-keys)))
+
 (defn build-results
   [koodisto-cache has-applied answers-by-key results form [{:keys [id] :as field} & rest-form-fields] hakukohderyhmat virkailija?]
   (let [id          (keyword id)
@@ -151,7 +155,11 @@
 
                               {:fieldClass "wrapperElement"
                                :children   children}
-                              (concat results (build-results koodisto-cache has-applied answers-by-key [] form children hakukohderyhmat virkailija?))
+                              (let [belongs-to (or (not (field-belongs-to-hakukohde-or-hakukohderyhma? field))
+                                                   (belongs-to-existing-hakukohde-or-hakukohderyma? field hakukohteet hakukohderyhmat))]
+                                (if belongs-to
+                                  (concat results (build-results koodisto-cache has-applied answers-by-key [] form children hakukohderyhmat virkailija?))
+                                  (concat results {id {:passed? (answers-nil? answers-by-key children)}})))
 
                               {:fieldClass "questionGroup"
                                :fieldType  "fieldset"

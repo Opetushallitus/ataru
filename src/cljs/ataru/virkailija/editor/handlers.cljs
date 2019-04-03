@@ -14,7 +14,7 @@
             [ataru.virkailija.editor.editor-macros :refer-macros [with-form-key]]
             [ataru.virkailija.routes :refer [set-history!]]
             [ataru.virkailija.virkailija-ajax :refer [http post put dispatch-flasher-error-msg]]
-            [ataru.util :as util :refer [assoc?]]
+            [ataru.util :as util :refer [collect-ids assoc?]]
             [ataru.cljs-util :as cu]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.virkailija.temporal :as temporal]
@@ -43,11 +43,6 @@
 
 (defn unfold [db id]
   (assoc-in db [:editor :ui id :folded?] false))
-
-(defn collect-ids [acc {:keys [id children options]}]
-  (let [acc (reduce collect-ids acc (mapcat :followups options))
-        acc (reduce collect-ids acc children)]
-    (conj acc id)))
 
 (defn fold-all [db]
   (->> (get-in db (vec (current-form-content-path db)))
