@@ -89,7 +89,7 @@
   [set1 set2]
   (not-empty (clojure.set/intersection set1 set2)))
 
-(defn- hakukohde-oids-for-attachment-review
+(defn hakukohde-oids-for-attachment-review
   [attachment-field hakutoiveet fields-by-id]
   (let [relatives                 (loop [field   attachment-field
                                          parents [attachment-field]]
@@ -97,30 +97,23 @@
                                                            (:children-of field))]
                                       (let [parent (get fields-by-id (keyword parent-id))]
                                         (recur parent (cons parent parents)))
-                                      parents)),
-        intersection              (fn [v]
-                                      (some->> (remove empty? v)
-                                               seq
-                                               (map set)
-                                               (apply clojure.set/intersection)))
+                                      parents))
         belongs-to-hakukohteet    (->> relatives
                                        (map :belongs-to-hakukohteet)
-                                       intersection)
+                                       (remove empty?)
+                                       (map set))
         belongs-to-hakukohderyhma (->> relatives
                                        (map :belongs-to-hakukohderyhma)
-                                       intersection)]
-    (cond
-      (or (not-empty belongs-to-hakukohteet)
-          (not-empty belongs-to-hakukohderyhma))
+                                       (remove empty?)
+                                       (map set))]
+    (if (not-empty hakutoiveet)
       (->> hakutoiveet
-           (filter #(or (contains? belongs-to-hakukohteet (:oid %))
-                        (intersect? belongs-to-hakukohderyhma (set (:hakukohderyhmat %)))))
+           (filter #(and (every? (fn [kohteet]
+                                     (contains? kohteet (:oid %))) belongs-to-hakukohteet)
+                         (every? (fn [ryhmat]
+                                     (intersect? ryhmat (set (:hakukohderyhmat %)))) belongs-to-hakukohderyhma)))
            (map :oid))
-
-      (not-empty hakutoiveet)
-      (map :oid hakutoiveet)
-
-      :else ["form"])))
+      ["form"])))
 
 (defn- create-attachment-reviews
   [attachment-field answer old-answer update? application-key hakutoiveet fields-by-id]
