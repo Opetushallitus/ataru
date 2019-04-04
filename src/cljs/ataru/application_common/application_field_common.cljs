@@ -1,5 +1,6 @@
 (ns ataru.application-common.application-field-common
   (:require [markdown.core :refer [md->html]]
+            [markdown.transformers :refer [transformer-vector]]
             [reagent.core :as reagent]
             [clojure.string :as string]
             [goog.string :as s]
@@ -25,6 +26,59 @@
 (defonce builder (new HtmlSanitizer.Builder))
 (defonce html-sanitizer (.build builder))
 
+(defonce person-block-start-keyword
+  [\# \I \F \_ \P \E \R \S \O \N])
+
+(defonce person-block-end-keyword
+  [\# \F \I \_ \P \E \R \S \O \N])
+
+(defn- person-block-start
+  [[trimmed personblock? text state]]
+  (if (and (not personblock?)
+           (= person-block-start-keyword (take (count person-block-start-keyword) trimmed)))
+    (let [trimmed (apply str (drop (count person-block-start-keyword) trimmed))]
+      [trimmed
+       true
+       trimmed
+       (assoc state :personblock true)])
+    [trimmed personblock? text state]))
+
+(defn- person-block-end
+  [[trimmed personblock? text state]]
+  (if (and personblock?
+           (or (:eof state)
+               (= person-block-end-keyword (take-last (count person-block-end-keyword) trimmed))))
+    (let [trimmed (apply str (drop-last (count person-block-end-keyword) trimmed))]
+      [trimmed
+       personblock?
+       trimmed
+       (dissoc state :personblock)])
+    [trimmed personblock? text state]))
+
+(defn- handle-person-block-text
+  [person-oid text]
+  (if person-oid
+    (string/replace text "${person-oid}" person-oid)
+    ""))
+
+(defn- person-block
+  [person-oid]
+  (fn [text {:keys [personblock] :as state}]
+    (let [trimmed (string/trim text)
+          [s personblock? text state] (cond-> [trimmed personblock text state]
+
+                                              personblock
+                                              person-block-end
+
+                                              (not personblock)
+                                              person-block-start
+
+                                              (not personblock)
+                                              person-block-end)]
+      [(if personblock?
+         (handle-person-block-text person-oid text)
+         text) state])))
+
 (defn- add-link-target-prop
   [text state]
   [(string/replace text #"<a href=([^>]+)>" "<a target=\"_blank\" href=$1>") state])
@@ -39,8 +93,8 @@
 
 (defn- markdown-paragraph
   ([md-text]
-   (markdown-paragraph md-text false))
-  ([md-text collapse-enabled?]
+   (markdown-paragraph md-text false nil))
+  ([md-text collapse-enabled? person-oid]
    (let [collapsed        (reagent/atom true)
          scroll-height    (reagent/atom nil)
          listener         (reagent/atom nil)
@@ -68,7 +122,9 @@
        :reagent-render
        (fn []
          (let [sanitized-html (as-> md-text v
-                                (md->html v :custom-transformers [add-link-target-prop])
+                                (md->html v
+                                  :replacement-transformers (cons (person-block person-oid) transformer-vector)
+                                  :custom-transformers [add-link-target-prop])
                                 (.sanitize html-sanitizer v)
                                 (.getTypedStringValue v))
                collapsable?   (and collapse-enabled? (< 140 (or @scroll-height 0)))]
