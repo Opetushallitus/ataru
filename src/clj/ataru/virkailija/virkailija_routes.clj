@@ -498,6 +498,7 @@
         :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
         (let [size-limit 40000
               application-keys (json/parse-string application-keys)]
+          (info "Yritetään" (count application-keys) "hakemuksen excelin luontia")
           (if (< size-limit (count application-keys))
             (response/request-entity-too-large
              {:error (str "Cannot create excel for more than " size-limit " applications")})
