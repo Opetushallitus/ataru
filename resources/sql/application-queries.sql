@@ -388,20 +388,19 @@ SELECT
   a.hakukohde,
   a.haku,
   a.person_oid,
-  lf.organization_oid,
-  CASE
-  WHEN a.ssn IS NOT NULL
-    THEN (SELECT count(*)
-          FROM latest_applications AS aa
-          WHERE aa.ssn = a.ssn)
-  WHEN a.email IS NOT NULL
-    THEN (SELECT count(*)
-          FROM latest_applications AS aa
-          WHERE aa.email = a.email)
-  END AS applications_count
+  (SELECT organization_oid
+   FROM forms
+   WHERE key = (SELECT key FROM forms WHERE id = a.form_id)
+   ORDER BY id DESC
+   LIMIT 1) AS organization_oid,
+  (SELECT count(*)
+   FROM applications AS oa
+   LEFT JOIN applications AS la
+     ON la.key = oa.key AND la.id > oa.id
+   WHERE la.id IS NULL AND
+         ((a.ssn IS NOT NULL AND oa.ssn = a.ssn) OR
+          (a.email IS NOT NULL AND oa.email = a.email))) AS applications_count
 FROM latest_applications AS a
-JOIN forms AS f ON f.id = a.form_id
-JOIN latest_forms AS lf ON lf.key = f.key
 WHERE a.key = :application_key;
 
 -- name: yesql-applications-authorization-data
@@ -435,16 +434,13 @@ SELECT
   a.haku,
   a.person_oid,
   las.secret,
-  CASE
-  WHEN ssn IS NOT NULL
-    THEN (SELECT count(*)
-          FROM latest_applications AS aa
-          WHERE aa.ssn = a.ssn)
-  WHEN email IS NOT NULL
-    THEN (SELECT count(*)
-          FROM latest_applications AS aa
-          WHERE aa.email = a.email)
-  END                                 AS applications_count,
+  (SELECT count(*)
+   FROM applications AS oa
+   LEFT JOIN applications AS la
+     ON la.key = oa.key AND la.id > oa.id
+   WHERE la.id IS NULL AND
+         ((a.ssn IS NOT NULL AND oa.ssn = a.ssn) OR
+          (a.email IS NOT NULL AND oa.email = a.email))) AS applications_count,
   (SELECT json_agg(json_build_object('requirement', requirement,
                                      'state', state,
                                      'hakukohde', hakukohde))
