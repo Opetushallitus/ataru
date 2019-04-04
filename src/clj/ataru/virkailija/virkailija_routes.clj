@@ -496,9 +496,13 @@
                       {skip-answers :- s/Bool false}
                       {CSRF :- s/Str nil}]
         :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
-        (let [application-keys (json/parse-string application-keys)
-              included-ids     (not-empty (set (remove clojure.string/blank? (clojure.string/split included-ids #"\s+"))))
-              xls              (application-service/get-excel-report-of-applications-by-key
+        (let [size-limit 40000
+              application-keys (json/parse-string application-keys)]
+          (if (< size-limit (count application-keys))
+            (response/request-entity-too-large
+             {:error (str "Cannot create excel for more than " size-limit " applications")})
+            (let [included-ids (not-empty (set (remove clojure.string/blank? (clojure.string/split included-ids #"\s+"))))
+                  xls          (application-service/get-excel-report-of-applications-by-key
                                 application-keys
                                 selected-hakukohde
                                 selected-hakukohderyhma
@@ -510,12 +514,12 @@
                                 koodisto-cache
                                 ohjausparametrit-service
                                 person-service)]
-          (if xls
-            {:status  200
-             :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                       "Content-Disposition" (str "attachment; filename=" (excel/create-filename filename))}
-             :body    xls}
-            (response/bad-request))))
+              (if xls
+                {:status  200
+                 :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                           "Content-Disposition" (str "attachment; filename=" (excel/create-filename filename))}
+                 :body    xls}
+                (response/bad-request))))))
 
       (api/GET "/:application-key/changes" {session :session}
         :summary "Get changes made to an application in version x"
