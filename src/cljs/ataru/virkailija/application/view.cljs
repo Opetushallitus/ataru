@@ -1063,7 +1063,12 @@
        (when @animated?
          {:class "animated fadeIn"})
        [:div.application-handling__review-note-details-row
-        [:div [:span (str @name " ")] [:span.application-handling__review-note-details-timestamp (str @created-time)]]
+        [:div
+         [:span (str @name " ")]
+         [:span.application-handling__review-note-details-timestamp (str @created-time)]
+         (when-let [hakutoive-nro @(subscribe [:application/hakutoive-nro (:hakukohde @note)])]
+           [:span.application-handling__review-note--hakutoive {:data-tooltip @hakukohde-name}
+            " (" hakutoive-nro ")"])]
         [:div.application-handling__review-note-remove-link
          {:class    (when @remove-disabled? "application-handling__review-note-remove-link--disabled")
           :on-click #(when-not @remove-disabled?
@@ -1336,10 +1341,11 @@
      @(subscribe [:application/events-and-information-requests])))])
 
 (defn- application-review-note-input []
-  (let [input-value     (subscribe [:state-query [:application :review-comment]])
-        review-notes    (subscribe [:state-query [:application :review-notes]])
-        button-enabled? (reaction (and (-> @input-value clojure.string/blank? not)
-                                       (every? (comp not :animated?) @review-notes)))]
+  (let [input-value               (subscribe [:state-query [:application :review-comment]])
+        review-notes              (subscribe [:state-query [:application :review-notes]])
+        only-selected-hakukohteet (subscribe [:state-query [:application :only-selected-hakukohteet]])
+        button-enabled?           (reaction (and (-> @input-value clojure.string/blank? not)
+                                                 (every? (comp not :animated?) @review-notes)))]
     (fn []
       [:div.application-handling__review-row.application-handling__review-row--notes-row
        [:textarea.application-handling__review-note-input
@@ -1355,16 +1361,34 @@
                      "application-handling__review-note-submit-button--disabled")
          :disabled (not @button-enabled?)
          :on-click (fn [_]
-                     (dispatch [:application/add-review-note @input-value nil]))}
+                     (if @only-selected-hakukohteet
+                       (dispatch [:application/add-review-notes @input-value nil])
+                       (dispatch [:application/add-review-note @input-value nil])))}
         (get-virkailija-translation :add)]])))
 
 (defn application-review-notes []
-  (let [notes (subscribe [:application/review-note-indexes-excluding-eligibility])]
+  (let [notes                            (subscribe [:application/review-note-indexes-excluding-eligibility])
+        notes-for-selected               (subscribe [:application/review-note-indexes-excluding-eligibility-for-selected-hakukohteet])
+        selected-review-hakukohde        (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+        only-selected-hakukohteet        (subscribe [:state-query [:application :only-selected-hakukohteet]])]
     (fn []
       [:div.application-handling__review-row--nocolumn
-       [:div.application-handling__review-header (get-virkailija-translation :notes)]
+       [:div.application-handling__review-header
+        (get-virkailija-translation :notes)
+        (when (< 0 (count @selected-review-hakukohde))
+          [:div.application-handling__review-filters
+           [:input.application-handling__review-checkbox
+            {:id        "application-handling__review-checkbox--only-selected-hakukohteet"
+             :type      "checkbox"
+             :value     @only-selected-hakukohteet
+             :on-change #(dispatch [:application/toggle-only-selected-hakukohteet])}]
+           [:label
+            {:for "application-handling__review-checkbox--only-selected-hakukohteet"}
+            (get-virkailija-translation :only-selected-hakukohteet)]])]
        [application-review-note-input]
-       (->> @notes
+       (->> (if @only-selected-hakukohteet
+              @notes-for-selected
+              @notes)
             (map (fn [idx]
                    ^{:key (str "application-review-note-" idx)}
                    [application-review-note idx])))])))

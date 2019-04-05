@@ -429,6 +429,23 @@
     (hakukohde-name hakukohteet fetching-hakukohteet hakukohde-oid lang)))
 
 (re-frame/reg-sub
+  :application/hakutoive-nro
+  (fn [_ _]
+    [(re-frame/subscribe [:application/selected-application])])
+  (fn [[selected-application] [_ hakukohde-oid]]
+    (when (and hakukohde-oid selected-application)
+      (let [hakukohde-oid (if (keyword? hakukohde-oid)
+                            (name hakukohde-oid)
+                            hakukohde-oid)]
+        (if-let [idx (->> (-> selected-application :hakukohde)
+                          (map-indexed (fn [index oid]
+                                         (when (= oid hakukohde-oid)
+                                           index)))
+                          (remove nil?)
+                          (first))]
+          (inc idx))))))
+
+(re-frame/reg-sub
   :application/hakukohde-and-tarjoaja-name
   (fn [_ _]
     [(re-frame/subscribe [:application/hakukohteet])
@@ -588,6 +605,28 @@
     (->> (-> db :application :review-notes)
          (keep-indexed (fn [index {:keys [state-name hakukohde]}]
                          (when (not= "eligibility-state" state-name)
+                           index))))))
+
+(re-frame/reg-sub
+  :application/review-notes
+  (fn [db]
+    (-> db :application :review-notes)))
+
+(re-frame/reg-sub
+  :application/selected-review-hakukohde-oids
+  (fn [db]
+    (set (-> db :application :selected-review-hakukohde-oids))))
+
+(re-frame/reg-sub
+  :application/review-note-indexes-excluding-eligibility-for-selected-hakukohteet
+  (fn [_ _]
+    [(re-frame/subscribe [:application/review-notes])
+     (re-frame/subscribe [:application/selected-review-hakukohde-oids])])
+  (fn [[notes selected-review-hakukohde-oids] _]
+    (->> notes
+         (keep-indexed (fn [index {:keys [hakukohde]}]
+                         (when (or (not hakukohde)
+                                   (selected-review-hakukohde-oids hakukohde))
                            index))))))
 
 (re-frame/reg-sub

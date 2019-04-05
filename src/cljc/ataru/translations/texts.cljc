@@ -833,6 +833,9 @@ You will receive a confirmation of your application to your email."}
    :cancel-cut                                  {:fi "Älä leikkaa"
                                                  :sv "Klippa inte"
                                                  :en "Don't cut"}
+   :only-selected-hakukohteet                   {:fi "vain valituille hakukohteille"
+                                                 :sv "vain valituille hakukohteille"
+                                                 :en "only selected application options"}
    :confirmation-sent                           {:fi "Vahvistussähköposti lähetetty hakijalle"
                                                  :sv "E-post med bekräftelse har skickats till sökande"
                                                  :en "Confirmation email has been sent"}

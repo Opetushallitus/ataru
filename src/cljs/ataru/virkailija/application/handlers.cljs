@@ -1001,9 +1001,10 @@
           tmp-id                  (cljs-util/new-uuid)
           note                    (merge {:notes           text
                                           :application-key application-key}
+                                    (when hakukohde
+                                      {:hakukohde hakukohde})
                                     (when state-name
-                                      {:hakukohde  hakukohde
-                                       :state-name (name state-name)}))
+                                      {:state-name (name state-name)}))
           db                      (-> db
                                       (update-in [:application :review-notes]
                                         (fn [notes]
@@ -1044,6 +1045,10 @@
 (reg-event-db :application/set-review-comment-value
   (fn [db [_ review-comment]]
     (assoc-in db [:application :review-comment] review-comment)))
+
+(reg-event-db :application/toggle-only-selected-hakukohteet
+  (fn [db _]
+    (update-in db [:application :only-selected-hakukohteet] #(boolean (not %)))))
 
 (reg-event-fx :application/remove-review-note
   (fn [{:keys [db]} [_ note-idx]]
