@@ -109,9 +109,11 @@
     (if (not-empty hakutoiveet)
       (->> hakutoiveet
            (filter #(and (every? (fn [kohteet]
-                                     (contains? kohteet (:oid %))) belongs-to-hakukohteet)
-                         (every? (fn [ryhmat]
-                                     (intersect? ryhmat (set (:hakukohderyhmat %)))) belongs-to-hakukohderyhma)))
+                                  (contains? kohteet (:oid %)))
+                                belongs-to-hakukohteet)
+                        (every? (fn [ryhmat]
+                                  (intersect? ryhmat (set (:hakukohderyhmat %))))
+                                belongs-to-hakukohderyhma)))
            (map :oid))
       ["form"])))
 
