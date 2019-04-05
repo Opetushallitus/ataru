@@ -132,6 +132,32 @@
 (describe "creating application attachment reviews"
   (tags :unit :attachments)
 
+  (it "should handle attachment with both ryhma and hakukohdeliitos"
+      (let [create-field (fn [id parent-id hakukohteet ryhmat]
+                             {:id                        id
+                              :belongs-to-hakukohteet    hakukohteet
+                              :belongs-to-hakukohderyhma ryhmat
+                              :children-of               parent-id})
+            fields-by-id {:a (create-field :a nil
+                               nil
+                               nil)
+                          :b (create-field :b :a
+                               [:ha :hc]
+                               [:rb])
+                          :c (create-field :c :b
+                               [:ha :hb]
+                               [])
+                          :d (create-field :d :c
+                               []
+                               [:rb :ra])}
+            hakutoiveet  [{:oid :hd :hakukohderyhmat [:rb :ra]}
+                          {:oid :hc :hakukohderyhmat [:ra]}
+                          {:oid :hb :hakukohderyhmat [:rb]}
+                          {:oid :ha :hakukohderyhmat [:rb]}]
+            result       (store/hakukohde-oids-for-attachment-review
+                           (:d fields-by-id) hakutoiveet fields-by-id)]
+        (should== [:ha] result)))
+
   (it "should create attachment reviews for new application without hakukohteet"
     (let [application       (first (filter #(= "attachments" (:key %)) fixtures/applications))
           flat-form-content (util/flatten-form-fields form-fixtures/attachment-test-form)
