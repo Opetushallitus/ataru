@@ -26,58 +26,45 @@
 (defonce builder (new HtmlSanitizer.Builder))
 (defonce html-sanitizer (.build builder))
 
-(defonce person-block-start-keyword
-  [\# \I \F \_ \P \E \R \S \O \N])
-
-(defonce person-block-end-keyword
-  [\# \F \I \_ \P \E \R \S \O \N])
-
-(defn- person-block-start
-  [[trimmed personblock? text state]]
-  (if (and (not personblock?)
-           (= person-block-start-keyword (take (count person-block-start-keyword) trimmed)))
-    (let [trimmed (apply str (drop (count person-block-start-keyword) trimmed))]
-      [trimmed
-       true
-       trimmed
-       (assoc state :personblock true)])
-    [trimmed personblock? text state]))
-
-(defn- person-block-end
-  [[trimmed personblock? text state]]
-  (if (and personblock?
-           (or (:eof state)
-               (= person-block-end-keyword (take-last (count person-block-end-keyword) trimmed))))
-    (let [trimmed (apply str (drop-last (count person-block-end-keyword) trimmed))]
-      [trimmed
-       personblock?
-       trimmed
-       (dissoc state :personblock)])
-    [trimmed personblock? text state]))
+(defonce personblock-start-tag "#IF_PERSON")
+(defonce personblock-end-tag "#FI_PERSON")
 
 (defn- handle-person-block-text
   [person-oid text]
-  (if person-oid
+  (if (and person-oid text)
     (string/replace text "${person-oid}" person-oid)
     ""))
 
+(defn- split-first [s tag]
+  (when s
+    (let [i (string/index-of s tag)]
+      (if i
+        (let [[b r] (split-at i s)]
+          [(apply str b) (apply str (drop (count tag) r))])
+        [s nil]))))
+
 (defn- person-block
-  [person-oid]
-  (fn [text {:keys [personblock] :as state}]
-    (let [trimmed (string/trim text)
-          [s personblock? text state] (cond-> [trimmed personblock text state]
-
-                                              personblock
-                                              person-block-end
-
-                                              (not personblock)
-                                              person-block-start
-
-                                              (not personblock)
-                                              person-block-end)]
-      [(if personblock?
-         (handle-person-block-text person-oid text)
-         text) state])))
+  ([person-oid text-before-block text-in-block {:keys [eof] :as state}]
+   (let [[in-block outside-block] (split-first text-in-block personblock-end-tag)]
+     (if (or outside-block (not= (count in-block) (count text-in-block)))
+       [(str text-before-block
+             (handle-person-block-text person-oid in-block)
+             outside-block)
+        (dissoc state :personblock)]
+       [(str text-before-block (handle-person-block-text person-oid text-in-block))
+        (if eof
+          (dissoc state :personblock)
+          state)])))
+  ([person-oid text {:keys [personblock] :as state}]
+   (if personblock
+     (person-block person-oid nil text state)
+     (let [[before after] (split-first text personblock-start-tag)]
+       (if after
+         (person-block person-oid before after
+           (if (or after (not= (count before) (count text)))
+             (assoc state :personblock true)
+             state))
+         [text state])))))
 
 (defn- add-link-target-prop
   [text state]
@@ -123,7 +110,8 @@
        (fn []
          (let [sanitized-html (as-> md-text v
                                 (md->html v
-                                  :replacement-transformers (cons (person-block person-oid) transformer-vector)
+                                  :replacement-transformers (cons (partial person-block person-oid)
+                                                                  transformer-vector)
                                   :custom-transformers [add-link-target-prop])
                                 (.sanitize html-sanitizer v)
                                 (.getTypedStringValue v))
