@@ -227,14 +227,15 @@
    (let [id         (keyword (:id field-descriptor))
          belongs-to (set (concat (:belongs-to-hakukohderyhma field-descriptor)
                                  (:belongs-to-hakukohteet field-descriptor)))
-         visible?   (and visible?
+         visible?   (and (not (get-in field-descriptor [:params :hidden]))
+                         visible?
                          (or (empty? belongs-to)
                              (not-empty (clojure.set/intersection
                                          belongs-to
                                          selected-hakukohteet-and-ryhmat))))]
      (cond-> (reduce #(set-field-visibility %1 %2 visible? selected-hakukohteet-and-ryhmat)
-                     (assoc-in db [:application :ui id :visible?] visible?)
-                     (:children field-descriptor))
+               (assoc-in db [:application :ui id :visible?] visible?)
+               (:children field-descriptor))
              (or (= "dropdown" (:fieldType field-descriptor))
                  (= "singleChoice" (:fieldType field-descriptor)))
              (set-single-choice-followups-visibility field-descriptor selected-hakukohteet-and-ryhmat)

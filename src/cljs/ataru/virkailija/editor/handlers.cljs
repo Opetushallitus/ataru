@@ -183,7 +183,8 @@
 
 (defn generate-component
   [db [_ generate-fn sub-path]]
-  (let [parent-component-path (cond-> (current-form-content-path db)
+  (let [yhteishaku?           (subscribe [:editor/yhteishaku?])
+        parent-component-path (cond-> (current-form-content-path db)
                                       (not (number? sub-path))
                                       (concat (butlast sub-path)))
         user-info             (-> db :editor :user-info)
@@ -192,9 +193,12 @@
                                :date (temporal/datetime-now)}
         metadata              {:created-by  metadata-element
                                :modified-by metadata-element}
-        components            (if (vector? generate-fn)
-                                (map #(apply % [metadata]) generate-fn)
-                                [(generate-fn metadata)])
+        components            (cond->> (if (vector? generate-fn)
+                                         (map #(apply % [metadata]) generate-fn)
+                                         [(generate-fn metadata)])
+
+                                       @yhteishaku?
+                                       (map #(assoc-in % [:params :hidden] @yhteishaku?)))
         first-component-idx   (cond-> sub-path
                                       (not (number? sub-path))
                                       (last))]
@@ -765,6 +769,15 @@
                         :belongs-to-hakukohteet)]
       (-> db
           (update-in content-path (fnil (comp vec #(conj % oid) set) []))
+          (update-modified-by [path])))))
+
+(reg-event-db
+  :editor/toggle-element-visibility-on-form
+  (fn [db [_ path]]
+    (let [content-path (conj (vec (current-form-content-path db path))
+                         :params :hidden)]
+      (-> db
+          (update-in content-path #(boolean (not %)))
           (update-modified-by [path])))))
 
 (reg-event-db

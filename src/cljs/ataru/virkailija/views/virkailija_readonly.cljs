@@ -47,7 +47,8 @@
                                        (set (:hakukohde application)))))
 
 (defn- visible? [field-descriptor application]
-  (and (not= "infoElement" (:fieldClass field-descriptor))
+  (and (not (get-in field-descriptor [:params :hidden]))
+       (not= "infoElement" (:fieldClass field-descriptor))
        (not (:exclude-from-answers field-descriptor))
        (or (and (empty? (:belongs-to-hakukohteet field-descriptor))
                 (empty? (:belongs-to-hakukohderyhma field-descriptor)))

@@ -25,7 +25,8 @@
            (parent-is-visible followup-of fields answers hakutoiveet hakukohteet))))
 
 (defn visible? [field fields answers hakutoiveet hakukohteet]
-  (and (not= "infoElement" (:fieldClass field))
+  (and (not (get-in field [:params :hidden]))
+       (not= "infoElement" (:fieldClass field))
        (not (:exclude-from-answers field))
        (or (and (empty? (:belongs-to-hakukohteet field))
                 (empty? (:belongs-to-hakukohderyhma field)))

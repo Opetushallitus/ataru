@@ -133,76 +133,79 @@
 (defn build-results
   [koodisto-cache has-applied answers-by-key results form [{:keys [id] :as field} & rest-form-fields] hakukohderyhmat virkailija?]
   (let [id          (keyword id)
+        hidden?     (get-in field [:params :hidden])
         answers     (wrap-coll (:value (get answers-by-key id)))
         hakukohteet (-> answers-by-key :hakukohteet :value set)]
     (into {}
-          (if-let [ret (match (merge {:validators []
-                                      :params     []}
-                                     field)
-                              {:exclude-from-answers true}
-                              results
+          (if hidden?
+            results
+            (if-let [ret (match (merge {:validators []
+                                        :params     []}
+                                       field)
+                                {:exclude-from-answers true}
+                                results
 
-                              {:fieldClass "infoElement"}
-                              results
+                                {:fieldClass "infoElement"}
+                                results
 
-                              {:fieldClass      "wrapperElement"
-                               :children        children
-                               :child-validator validation-keyword}
-                              (concat results
-                                      {id {:passed?
-                                           ((validator-keyword->fn validation-keyword) answers-by-key
-                                             (build-results koodisto-cache has-applied answers-by-key [] form children hakukohderyhmat virkailija?))}})
+                                {:fieldClass      "wrapperElement"
+                                 :children        children
+                                 :child-validator validation-keyword}
+                                (concat results
+                                        {id {:passed?
+                                             ((validator-keyword->fn validation-keyword) answers-by-key
+                                              (build-results koodisto-cache has-applied answers-by-key [] form children hakukohderyhmat virkailija?))}})
 
-                              {:fieldClass "wrapperElement"
-                               :children   children}
-                              (let [belongs-to (or (not (field-belongs-to-hakukohde-or-hakukohderyhma? field))
-                                                   (belongs-to-existing-hakukohde-or-hakukohderyma? field hakukohteet hakukohderyhmat))]
-                                (if belongs-to
-                                  (concat results (build-results koodisto-cache has-applied answers-by-key [] form children hakukohderyhmat virkailija?))
-                                  (concat results {id {:passed? (answers-nil? answers-by-key children)}})))
+                                {:fieldClass "wrapperElement"
+                                 :children   children}
+                                (let [belongs-to (or (not (field-belongs-to-hakukohde-or-hakukohderyhma? field))
+                                                     (belongs-to-existing-hakukohde-or-hakukohderyma? field hakukohteet hakukohderyhmat))]
+                                  (if belongs-to
+                                    (concat results (build-results koodisto-cache has-applied answers-by-key [] form children hakukohderyhmat virkailija?))
+                                    (concat results {id {:passed? (answers-nil? answers-by-key children)}})))
 
-                              {:fieldClass "questionGroup"
-                               :fieldType  "fieldset"
-                               :children   children}
-                              (concat results (build-results koodisto-cache has-applied answers-by-key [] form children hakukohderyhmat virkailija?))
+                                {:fieldClass "questionGroup"
+                                 :fieldType  "fieldset"
+                                 :children   children}
+                                (concat results (build-results koodisto-cache has-applied answers-by-key [] form children hakukohderyhmat virkailija?))
 
-                              {:fieldClass "formField"
-                               :fieldType  (:or "dropdown" "multipleChoice")
-                               :validators validators
-                               :options    options}
-                              (let [koodisto-source   (:koodisto-source field)
-                                    allowed-values    (get-allowed-values koodisto-cache koodisto-source options)
-                                    non-empty-answers (get-non-empty-answers field answers)
-                                    followups         (get-followup-questions options non-empty-answers)]
+                                {:fieldClass "formField"
+                                 :fieldType  (:or "dropdown" "multipleChoice")
+                                 :validators validators
+                                 :options    options}
+                                (let [koodisto-source   (:koodisto-source field)
+                                      allowed-values    (get-allowed-values koodisto-cache koodisto-source options)
+                                      non-empty-answers (get-non-empty-answers field answers)
+                                      followups         (get-followup-questions options non-empty-answers)]
+                                  (concat results
+                                          {id {:passed? (if (or (not (field-belongs-to-hakukohde-or-hakukohderyhma? field))
+                                                                (belongs-to-existing-hakukohde-or-hakukohderyma? field hakukohteet hakukohderyhmat))
+                                                          (if (is-question-group-answer? non-empty-answers)
+                                                            (and (every? true? (map #(all-answers-allowed? (set %) allowed-values) non-empty-answers))
+                                                                 (every? true? (map #(passes-all? has-applied form validators (set %) answers-by-key field virkailija?) non-empty-answers)))
+                                                            (and (all-answers-allowed? non-empty-answers allowed-values)
+                                                                 (passes-all? has-applied form validators non-empty-answers answers-by-key field virkailija?)))
+                                                          (all-answers-nil? non-empty-answers answers-by-key followups))}}
+                                          (when followups
+                                                (build-results koodisto-cache
+                                                  has-applied
+                                                  answers-by-key
+                                                  results
+                                                  form
+                                                  followups
+                                                  hakukohderyhmat
+                                                  virkailija?))))
+
+                                {:fieldClass "formField"
+                                 :validators validators}
                                 (concat results
                                         {id {:passed? (if (or (not (field-belongs-to-hakukohde-or-hakukohderyhma? field))
                                                               (belongs-to-existing-hakukohde-or-hakukohderyma? field hakukohteet hakukohderyhmat))
-                                                        (if (is-question-group-answer? non-empty-answers)
-                                                          (and (every? true? (map #(all-answers-allowed? (set %) allowed-values) non-empty-answers))
-                                                               (every? true? (map #(passes-all? has-applied form validators (set %) answers-by-key field virkailija?) non-empty-answers)))
-                                                          (and (all-answers-allowed? non-empty-answers allowed-values)
-                                                               (passes-all? has-applied form validators non-empty-answers answers-by-key field virkailija?)))
-                                                        (all-answers-nil? non-empty-answers answers-by-key followups))}}
-                                        (when followups
-                                          (build-results koodisto-cache
-                                                         has-applied
-                                                         answers-by-key
-                                                         results
-                                                         form
-                                                         followups
-                                                         hakukohderyhmat
-                                                         virkailija?))))
-
-                              {:fieldClass "formField"
-                               :validators validators}
-                              (concat results
-                                      {id {:passed? (if (or (not (field-belongs-to-hakukohde-or-hakukohderyhma? field))
-                                                            (belongs-to-existing-hakukohde-or-hakukohderyma? field hakukohteet hakukohderyhmat))
-                                                      (passes-all? has-applied form validators answers answers-by-key field virkailija?)
-                                                      (every? nil? answers))}})
-                              :else (when (some? field) (warn "Invalid field clause, not validated:" field)))]
-            (build-results koodisto-cache has-applied answers-by-key ret form rest-form-fields hakukohderyhmat virkailija?)
-            results))))
+                                                        (passes-all? has-applied form validators answers answers-by-key field virkailija?)
+                                                        (every? nil? answers))}})
+                                :else (when (some? field) (warn "Invalid field clause, not validated:" field)))]
+              (build-results koodisto-cache has-applied answers-by-key ret form rest-form-fields hakukohderyhmat virkailija?)
+              results)))))
 
 (defn build-failed-results [answers-by-key failed-results]
   (merge-with merge

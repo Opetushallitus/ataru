@@ -371,6 +371,7 @@
               :hakukohderyhmat          hakukohderyhmat
               :hakukohde-selected?      #(= selected-hakukohde-oid %)
               :hakukohderyhma-selected? #(= selected-hakukohderyhma-oid %)}]
+            nil
             [h-and-h/search-listing
              {:id                       haku-oid
               :haut                     [{:oid         haku-oid
@@ -758,6 +759,7 @@
             :hakukohderyhmat          []
             :hakukohde-selected?      #(= ryhman-ensisijainen-hakukohde %)
             :hakukohderyhma-selected? (constantly false)}]
+          nil
           [h-and-h/search-listing
            {:id                         (str haku-oid "-" hakukohderyhma-oid)
             :haut                       [{:oid         haku-oid
