@@ -224,7 +224,7 @@
   (fn [_ _]
     [(re-frame/subscribe [:editor/used-by-haut-haut])])
   (fn [[haut] [_]]
-    (some :yhteishaku (vals haut))))
+    (boolean (some :yhteishaku (vals haut)))))
 
 (re-frame/reg-sub
   :editor/show-belongs-to-hakukohteet-modal
