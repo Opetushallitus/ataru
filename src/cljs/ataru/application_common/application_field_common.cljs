@@ -26,13 +26,13 @@
 (defonce builder (new HtmlSanitizer.Builder))
 (defonce html-sanitizer (.build builder))
 
-(defonce personblock-start-tag "#IF_PERSON")
-(defonce personblock-end-tag "#FI_PERSON")
+(defonce personblock-start-tag "BEGIN_PERSON")
+(defonce personblock-end-tag "END_PERSON")
 
 (defn- handle-person-block-text
   [person-oid text]
   (if (and person-oid text)
-    (string/replace text "${person-oid}" person-oid)
+    (string/replace text "$PERSON_OID" person-oid)
     ""))
 
 (defn- split-first [s tag]
