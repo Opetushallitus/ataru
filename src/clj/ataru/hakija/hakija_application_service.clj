@@ -3,13 +3,16 @@
     [taoensso.timbre :as log]
     [clojure.core.async :as async]
     [clojure.core.match :refer [match]]
+    [ataru.applications.application-service :as application-service]
     [ataru.applications.automatic-eligibility :as automatic-eligibility]
     [ataru.background-job.job :as job]
+    [ataru.db.db :as db]
     [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
     [ataru.email.application-email-confirmation :as application-email]
     [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
     [ataru.hakija.hakija-form-service :as hakija-form-service]
+    [ataru.log.audit-log :as audit-log]
     [ataru.person-service.person-integration :as person-integration]
     [ataru.tarjonta-service.hakuaika :as hakuaika]
     [ataru.tarjonta-service.hakukohde :as hakukohde]
@@ -25,8 +28,7 @@
     [ataru.config.core :refer [config]]
     [clj-time.core :as time]
     [clj-time.coerce :as t]
-    [ataru.applications.application-service :as application-service]
-    [ataru.log.audit-log :as audit-log]
+    [clojure.java.jdbc :as jdbc]
     [clj-time.format :as f]))
 
 (defn- store-and-log [application applied-hakukohteet form is-modify?]
@@ -256,16 +258,20 @@
         (store-and-log final-application applied-hakukohteet form is-modify?)))))
 
 (defn- start-person-creation-job [job-runner application-id]
-  (log/info "Started person creation job (to person service) with job id"
-            (job/start-job job-runner
-                           (:type person-integration/job-definition)
-                           {:application-id application-id})))
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+    (log/info "Started person creation job (to person service) with job id"
+              (job/start-job job-runner
+                             connection
+                             (:type person-integration/job-definition)
+                             {:application-id application-id}))))
 
 (defn- start-attachment-finalizer-job [job-runner application-id]
-  (log/info "Started attachment finalizer job (to Liiteri) with job id"
-            (job/start-job job-runner
-                           (:type attachment-finalizer-job/job-definition)
-                           {:application-id application-id})))
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+    (log/info "Started attachment finalizer job (to Liiteri) with job id"
+              (job/start-job job-runner
+                             connection
+                             (:type attachment-finalizer-job/job-definition)
+                             {:application-id application-id}))))
 
 (defn- start-submit-jobs [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
   (application-email/start-email-submit-confirmation-job koodisto-cache tarjonta-service

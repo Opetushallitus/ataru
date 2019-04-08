@@ -8,7 +8,8 @@
    [ataru.background-job.job :as job]
    [camel-snake-kebab.extras :refer [transform-keys]]
    [camel-snake-kebab.core :refer [->kebab-case-keyword]]
-   [ataru.db.db :as db]))
+   [ataru.db.db :as db]
+   [clojure.java.jdbc :as jdbc]))
 
 (defqueries "sql/dev-job-queries.sql")
 
@@ -78,7 +79,8 @@
      (with-redefs [time/now fixed-now
                    config   fake-config]
        (let [job-runner      (start-job-runner)
-             job-id          (job/start-job job-runner (:type retrying-job) {:counter 0})
+             job-id          (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                               (job/start-job job-runner connection (:type retrying-job) {:counter 0}))
              final-iteration (wait-for-final-iteration job-id)]
          (should= expected-final-iteration
                   final-iteration)

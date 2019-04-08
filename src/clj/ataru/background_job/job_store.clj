@@ -10,20 +10,19 @@
 
 (defqueries "sql/background-job-queries.sql")
 
-(defn store-new [job-type state]
-  (jdbc/with-db-transaction [data-source {:datasource (db/get-datasource :db)}]
-    (let [connection {:connection data-source}
-          new-job-id (:id (yesql-add-background-job<! {:job_type job-type} connection))]
-      (yesql-add-job-iteration<! {:job_id new-job-id
-                                  :step "initial"
-                                  :final false
-                                  :transition "start"
-                                  :state state
-                                  :next_activation (time/now)
-                                  :retry_count 0
-                                  :caused_by_error nil}
-                                  connection)
-      new-job-id)))
+(defn store-new [connection job-type state]
+  (let [new-job-id (:id (yesql-add-background-job<! {:job_type job-type}
+                                                    {:connection connection}))]
+    (yesql-add-job-iteration<! {:job_id          new-job-id
+                                :step            "initial"
+                                :final           false
+                                :transition      "start"
+                                :state           state
+                                :next_activation (time/now)
+                                :retry_count     0
+                                :caused_by_error nil}
+                               {:connection connection})
+    new-job-id))
 
 (defn job-iteration->db-format [job-iteration job-id]
   (assoc (transform-keys ->snake_case job-iteration)

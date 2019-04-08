@@ -8,7 +8,6 @@
             [ataru.information-request.information-request-job :as information-request-job]
             [ataru.information-request.information-request-store :as information-request-store]
             [ataru.applications.application-store :as app-store]
-            [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]
             [clojure.java.jdbc :as jdbc]
             [selmer.parser :as selmer]
             [ataru.background-job.job :as job]
@@ -21,14 +20,18 @@
        (map :value)
        (first)))
 
-(defn- initial-state [information-request]
-  (let [application-id  (app-store/add-new-secret-to-application (:application-key information-request))
-        application     (app-store/get-application application-id)
+(defn- initial-state [connection information-request]
+  (let [secret          (app-store/add-new-secret-to-application-in-tx
+                         connection
+                         (:application-key information-request))
+        application     (app-store/get-latest-application-by-key-in-tx
+                         connection
+                         (:application-key information-request))
         lang            (-> application :lang keyword)
         recipient-email (extract-answer-value "email" application)
         translations    (translations/get-translations lang)
         service-url     (get-in config [:public-config :applicant :service_url])
-        application-url (str service-url "/hakemus?modify=" (:secret application))
+        application-url (str service-url "/hakemus?modify=" secret)
         body            (selmer/render-file "templates/information-request-template.html"
                                             (merge {:message         (->safe-html (:message information-request))
                                                     :application-url application-url}
@@ -38,44 +41,64 @@
                 :recipients [recipient-email]
                 :body       body}))))
 
-(defn- start-email-job [job-runner information-request]
-  (let [initial-state (initial-state information-request)
+(defn- start-email-job [job-runner connection information-request]
+  (let [initial-state (initial-state connection information-request)
         job-type      (:type information-request-job/job-definition)
         job-id        (job/start-job job-runner
+                                     connection
                                      job-type
                                      initial-state)]
-    (log/info (str "Started information request email job with job id " job-id ", initial state: " initial-state))))
+    (log/info (str "Started information request email job with job id " job-id
+                   " for application " (:application-key information-request)))))
 
-(defn store [information-request session job-runner]
+(defn- store-in-tx
+  [information-request virkailija-oid job-runner connection]
   {:pre [(-> information-request :subject u/not-blank?)
          (-> information-request :message u/not-blank?)
-         (-> information-request :application-key u/not-blank?)]}
-  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [information-request (information-request-store/add-information-request
-                                (merge information-request {:message-type "information-request"})
-                                session
-                                conn)]
-      (audit-log/log {:new       information-request
-                      :operation audit-log/operation-new
-                      :id        (-> session :identity :oid)})
-      (start-email-job job-runner information-request)
-      information-request)))
+         (-> information-request :application-key u/not-blank?)
+         (-> information-request :message-type u/not-blank?)]}
+  (let [information-request (information-request-store/add-information-request
+                             information-request
+                             virkailija-oid
+                             connection)]
+    (start-email-job job-runner connection information-request)
+    (audit-log/log {:new       information-request
+                    :operation audit-log/operation-new
+                    :id        virkailija-oid})
+    information-request))
+
+(defn store [information-request virkailija-oid job-runner]
+  {:pre [(-> information-request :subject u/not-blank?)
+         (-> information-request :message u/not-blank?)
+         (-> information-request :application-key u/not-blank?)
+         (-> information-request :message-type u/not-blank?)]}
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+    (store-in-tx information-request virkailija-oid job-runner connection)))
+
+(defn mass-information-request-job-step
+  [state job-runner]
+  (if (empty? (:application-keys state))
+    {:transition {:id :final}}
+    (let [[now later] (split-at 100 (:application-keys state))]
+      (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+        (doseq [key now]
+          (store-in-tx (assoc (:information-request state)
+                              :application-key key)
+                       (:virkailija-oid state)
+                       job-runner
+                       connection)))
+      {:transition    {:id :to-next :step :initial}
+       :updated-state (assoc state :application-keys later)})))
 
 (defn mass-store
-  [information-requests session job-runner]
-  {:pre [(every? (comp u/not-blank? :subject) information-requests)
-         (every? (comp u/not-blank? :message) information-requests)
-         (every? (comp u/not-blank? :application-key) information-requests)]}
-  (let [stored-information-requests (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-                                      (mapv
-                                        #(information-request-store/add-information-request
-                                           (merge % {:message-type "mass-information-request"})
-                                           session
-                                           conn)
-                                        information-requests))]
-    (doseq [stored-information-request stored-information-requests]
-      (start-email-job job-runner stored-information-request)
-      (audit-log/log {:new       stored-information-request
-                      :operation audit-log/operation-new
-                      :id        (-> session :identity :oid)}))
-    stored-information-requests))
+  [information-request application-keys virkailija-oid job-runner]
+  {:pre [(-> information-request :subject u/not-blank?)
+         (-> information-request :message u/not-blank?)
+         (-> information-request :message-type u/not-blank?)]}
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+    (job/start-job job-runner
+                   connection
+                   "mass-information-request-job"
+                   {:information-request information-request
+                    :application-keys    application-keys
+                    :virkailija-oid      virkailija-oid})))

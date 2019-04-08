@@ -21,7 +21,11 @@
 
 (defn start-update-person-info-job
   [job-runner person-oid]
-  (job/start-job job-runner "update-person-info-job" {:person-oid person-oid}))
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+    (job/start-job job-runner
+                   connection
+                   "update-person-info-job"
+                   {:person-oid person-oid})))
 
 (defn upsert-and-log-person [job-runner person-service application-id]
   (let [application (application-store/get-application application-id)]

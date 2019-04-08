@@ -465,7 +465,13 @@
              session
              [(:application-key information-request)]
              [:edit-applications])
-          (ok (information-request/store information-request session job-runner))
+          (-> (information-request/store (assoc information-request
+                                                :message-type "information-request")
+                                         (get-in session [:identity :oid])
+                                         job-runner)
+              (assoc :first-name (get-in session [:identity :first-name])
+                     :last-name (get-in session [:identity :last-name]))
+              response/ok)
           (response/unauthorized {:error (str "Hakemuksen "
                                               (:application-key information-request)
                                               " käsittely ei ole sallittu")})))
@@ -475,17 +481,21 @@
                                            :subject s/Str}
                      :application-keys    [s/Str]}]
         :summary "Send information requests to multiple applicants"
-        :return [ataru-schema/InformationRequest]
-        (let [information-requests (map #(assoc (:message-and-subject body) :application-key %)
-                                        (:application-keys body))]
-          (if (access-controlled-application/applications-access-authorized?
-               organization-service
-               tarjonta-service
-               session
-               (map :application-key information-requests)
-               [:edit-applications])
-            (ok (information-request/mass-store information-requests session job-runner))
-            (response/unauthorized {:error "Hakemusten käsittely ei ole sallittu"}))))
+        :return {}
+        (if (access-controlled-application/applications-access-authorized?
+             organization-service
+             tarjonta-service
+             session
+             (:application-keys body)
+             [:edit-applications])
+          (do (information-request/mass-store
+               (assoc (:message-and-subject body)
+                      :message-type "mass-information-request")
+               (:application-keys body)
+               (get-in session [:identity :oid])
+               job-runner)
+              (response/accepted {}))
+          (response/unauthorized {:error "Hakemusten käsittely ei ole sallittu"})))
 
       (api/POST "/excel" {session :session}
         :form-params [application-keys :- s/Str
