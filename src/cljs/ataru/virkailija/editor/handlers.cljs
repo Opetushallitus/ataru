@@ -198,7 +198,9 @@
                                          [(generate-fn metadata)])
 
                                        @yhteishaku?
-                                       (map #(assoc-in % [:params :hidden] @yhteishaku?)))
+                                       (map #(cond-> %
+                                                     (not= "fieldset" (:fieldType %))
+                                                     (assoc-in [:params :hidden] @yhteishaku?))))
         first-component-idx   (cond-> sub-path
                                       (not (number? sub-path))
                                       (last))]
