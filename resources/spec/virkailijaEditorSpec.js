@@ -216,7 +216,7 @@
                     clickComponentMenuItem('Pudotusvalikko'),
                     setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__text-field').eq(0)}, 'Kolmas kysymys'),
                     setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__text-field:last')}, 'Ensimmäinen vaihtoehto'),
-                    clickElement(function() { return formComponents().eq(3).find('.editor-form__add-dropdown-item a') }),
+                    clickElement(function() { return formComponents().eq(3).find('.editor-form__multi-options-arrow--up:last') }),
                     setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__text-field:last')}, 'Toinen vaihtoehto'),
                     clickElement(function() { return formComponents().eq(3).find('.editor-form__add-dropdown-item a') }),
                     setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__text-field:last')}, 'Kolmas vaihtoehto'),
@@ -430,7 +430,6 @@
                     clickComponentMenuItem('Pudotusvalikko'),
                     setTextFieldValue(function() { return formComponents().eq(15).find('.editor-form__text-field').eq(0) }, 'Päätason pudotusvalikko'),
                     setTextFieldValue(function() { return formComponents().eq(15).find('.editor-form__multi-options-wrapper-outer .editor-form__text-field').eq(0) }, 'Pudotusvalikon 1. kysymys'),
-                    clickElement(function() { return formComponents().eq(15).find('.editor-form__multi-options_wrapper a:contains("Lisää")') }),
                     setTextFieldValue(function() { return formComponents().eq(15).find('.editor-form__multi-options-wrapper-outer .editor-form__text-field').eq(1) }, 'Pudotusvalikon 2. kysymys'),
                     clickElement(function() { return formComponents().eq(15).find('.editor-form__multi-options-container a:contains("Lisäkysymykset")') }),
                     clickSubComponentMenuItem('Vierekkäiset tekstikentät', function () { return formComponents().eq(15); }),
@@ -503,8 +502,6 @@
                 it('all inputs are unlocked', function() {
                     expect(getInputs(':disabled').length).to.equal(0);
                     expect(getInputs(':enabled').length).to.equal(getInputs('').length);
-                    expect(getRemoveElementButtons(':disabled').length).to.equal(0);
-                    expect(getRemoveElementButtons(':enabled').length).to.equal(getRemoveElementButtons('').length);
                     expect(allAddComponentToolbarsEnabled()).to.equal(true);
                     expect(elementExists(testFrame().find('.editor-form__form-editing-locked'))).to.equal(false);
                 })

@@ -88,7 +88,6 @@
           clickComponentMenuItem('Pudotusvalikko'),
           setTextFieldValue(function () { return formComponents().find('.editor-form__text-field:eq(0)') }, 'Päätaso: pudotusvalikko'),
           setTextFieldValue(function () { return formComponents().find('.editor-form__text-field:eq(1)') }, 'Päätaso: A'),
-          clickElement(function () { return formComponents().find('.editor-form__add-dropdown-item a:contains("Lisää")') }),
           setTextFieldValue(function () { return formComponents().find('.editor-form__text-field:eq(2)') }, 'Päätaso: B'),
           clickElement(function() { return formComponents().find('.editor-form__checkbox + label') })
         )
@@ -156,7 +155,6 @@
           clickSubComponentMenuItem(function () { return formComponents().find('.editor-form__followup-question-overlay .editor-form__component-wrapper'); }, 'Pudotusvalikko'),
           setTextFieldValue(function () { return formComponents().find('.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(1)') }, 'Kysymysryhmä: pudotusvalikko'),
           setTextFieldValue(function () { return formComponents().find('.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(2)') }, 'Pudotusvalikko: A'),
-          clickElement(function () { return formComponents().find('.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__add-dropdown-item a:contains("Lisää")') }),
           setTextFieldValue(function () { return formComponents().find('.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(3)') }, 'Pudotusvalikko: B'),
           clickElement(function () { return formComponents().find('.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox + label') })
         )
