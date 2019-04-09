@@ -36,34 +36,27 @@
     ""))
 
 (defn- split-first [s tag]
-  (when s
-    (let [i (string/index-of s tag)]
-      (if i
-        (let [[b r] (split-at i s)]
-          [(apply str b) (apply str (drop (count tag) r))])
-        [s nil]))))
+  (clojure.string/split s (re-pattern tag) 2))
 
 (defn- person-block
   ([person-oid text-before-block text-in-block {:keys [eof] :as state}]
    (let [[in-block outside-block] (split-first text-in-block personblock-end-tag)]
-     (if (or outside-block (not= (count in-block) (count text-in-block)))
-       [(str text-before-block
-             (handle-person-block-text person-oid in-block)
-             outside-block)
-        (dissoc state :personblock)]
-       [(str text-before-block (handle-person-block-text person-oid text-in-block))
-        (if eof
-          (dissoc state :personblock)
-          state)])))
+     [(str text-before-block
+           (handle-person-block-text person-oid
+             (if outside-block
+               in-block
+               text-in-block))
+           outside-block)
+      (if (or outside-block eof)
+        (dissoc state :personblock)
+        state)]))
   ([person-oid text {:keys [personblock] :as state}]
    (if personblock
      (person-block person-oid nil text state)
      (let [[before after] (split-first text personblock-start-tag)]
        (if after
          (person-block person-oid before after
-           (if (or after (not= (count before) (count text)))
-             (assoc state :personblock true)
-             state))
+           (assoc state :personblock true))
          [text state])))))
 
 (defn- add-link-target-prop
