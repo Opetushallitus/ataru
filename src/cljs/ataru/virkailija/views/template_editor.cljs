@@ -1,16 +1,11 @@
 (ns ataru.virkailija.views.template-editor
-  (:require [ataru.cljs-util :refer [get-virkailija-translation]]
-            [ataru.translations.texts :refer [email-default-texts virkailija-texts]]
+  (:require [ataru.translations.texts :refer [email-default-texts]]
+            [ataru.cljs-util :refer [get-virkailija-translation get-virkailija-label]]
             [ataru.virkailija.views.modal :as modal]
             [goog.string :as s]
             [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as r]
             [reagent.core :as reagent]))
-
-(def ^:private language-names
-  {:fi (:finnish virkailija-texts)
-   :sv (:swedish virkailija-texts)
-   :en (:english virkailija-texts)})
 
 (defn- get-body-class-list
   []
@@ -21,7 +16,10 @@
 (defn- render-template-editor []
   (let [tab-lang (r/atom :fi)]
     (fn []
-      (let [content          @(subscribe [:editor/email-template])
+      (let [language-names   {:fi (get-virkailija-label :finnish)
+                              :sv (get-virkailija-label :swedish)
+                              :en (get-virkailija-label :english)}
+            content          @(subscribe [:editor/email-template])
             contents-changed @(subscribe [:editor/email-templates-altered])
             any-changed?     (some true? (vals contents-changed))
             any-errors?      (some true? (map #(clojure.string/blank? (:subject %)) (vals content)))

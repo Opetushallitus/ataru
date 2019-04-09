@@ -1,8 +1,7 @@
 (ns ataru.virkailija.views.banner
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]])
-  (:require [ataru.cljs-util :as util :refer [get-virkailija-translation]]
-            [ataru.translations.texts :refer [virkailija-texts]]
+  (:require [ataru.cljs-util :as util :refer [get-virkailija-translation get-virkailija-label]]
             [ataru.virkailija.routes :as routes]
             [cljs.core.async :refer [<! timeout]]
             [cljs.core.match :refer-macros [match]]
@@ -13,25 +12,24 @@
             [taoensso.timbre :refer-macros [spy debug]]))
 
 (def panels
-  {:editor      {:text (:forms-panel virkailija-texts) :href "/lomake-editori/editor/"}
-   :application {:text (:applications-panel virkailija-texts) :href "/lomake-editori/applications/"}})
+  {:editor      {:text :forms-panel :href "/lomake-editori/editor/"}
+   :application {:text :applications-panel :href "/lomake-editori/applications/"}})
 
-(def right-labels {:form-edit (:form-edit-rights-panel virkailija-texts)
-                   :view-applications (:view-applications-rights-panel virkailija-texts)
-                   :edit-applications (:edit-applications-rights-panel virkailija-texts)})
+(def right-labels {:form-edit (get-virkailija-label :form-edit-rights-panel)
+                   :view-applications (get-virkailija-label :view-applications-rights-panel)
+                   :edit-applications (get-virkailija-label :edit-applications-rights-panel)})
 
 (def active-section-arrow [:i.active-section-arrow.zmdi.zmdi-chevron-down.zmdi-hc-lg])
 
 (defn section-link [panel-kw]
   (let [active-panel (subscribe [:active-panel])
-        active?      (reaction (= @active-panel panel-kw))
-        lang         (subscribe [:editor/virkailija-lang])]
+        active?      (reaction (= @active-panel panel-kw))]
     (fn []
       [:div.section-link {:class (name panel-kw)}
        [:a {:href (-> panels panel-kw :href)}
         (when @active?
           active-section-arrow)
-        (get-in panels [panel-kw :text @lang])]])))
+        (get-virkailija-translation (get-in panels [panel-kw :text]))]])))
 
 (defn title []
   (fn []

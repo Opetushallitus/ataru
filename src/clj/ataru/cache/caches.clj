@@ -4,6 +4,7 @@
             [ataru.cache.in-memory-cache :as in-memory]
             [ataru.cache.two-layer-cache :as two-layer]
             [ataru.cache.redis-cache :as redis]
+            [ataru.lokalisointi-service.lokalisointi-service :as lokalisointi-service]
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.organization-service.organization-client :as organization-client]
@@ -27,6 +28,11 @@
     (in-memory/map->InMemoryCache
      {:loader (cache/->FunctionCacheLoader
                (fn [_] (organization-client/get-groups)))
+      :expires-after [3 TimeUnit/DAYS]
+      :refresh-after [5 TimeUnit/MINUTES]})]
+   [:localizations-cache
+    (in-memory/map->InMemoryCache
+     {:loader        (cache/->FunctionCacheLoader lokalisointi-service/get-localizations)
       :expires-after [3 TimeUnit/DAYS]
       :refresh-after [5 TimeUnit/MINUTES]})]
    [:hakukohde-cache
