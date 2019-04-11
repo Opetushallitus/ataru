@@ -227,7 +227,7 @@
    (let [id         (keyword (:id field-descriptor))
          belongs-to (set (concat (:belongs-to-hakukohderyhma field-descriptor)
                                  (:belongs-to-hakukohteet field-descriptor)))
-         visible?   (and (not (get-in field-descriptor [:params :hidden]))
+         visible?   (and (not (get-in field-descriptor [:params :hidden] false))
                          visible?
                          (or (empty? belongs-to)
                              (not-empty (clojure.set/intersection
