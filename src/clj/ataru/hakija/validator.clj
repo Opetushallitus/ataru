@@ -133,7 +133,7 @@
 (defn build-results
   [koodisto-cache has-applied answers-by-key results form [{:keys [id] :as field} & rest-form-fields] hakukohderyhmat virkailija?]
   (let [id          (keyword id)
-        hidden?     (get-in field [:params :hidden])
+        hidden?     (get-in field [:params :hidden] false)
         answers     (wrap-coll (:value (get answers-by-key id)))
         hakukohteet (-> answers-by-key :hakukohteet :value set)]
     (into {}
