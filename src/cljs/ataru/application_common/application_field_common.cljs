@@ -42,10 +42,7 @@
   ([person-oid text-before-block text-in-block {:keys [eof] :as state}]
    (let [[in-block outside-block] (split-first text-in-block personblock-end-tag)]
      [(str text-before-block
-           (handle-person-block-text person-oid
-             (if outside-block
-               in-block
-               text-in-block))
+           (handle-person-block-text person-oid in-block)
            outside-block)
       (if (or outside-block eof)
         (dissoc state :personblock)
