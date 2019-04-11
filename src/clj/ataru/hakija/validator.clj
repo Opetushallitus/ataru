@@ -138,7 +138,18 @@
         hakukohteet (-> answers-by-key :hakukohteet :value set)]
     (into {}
           (if hidden?
-            results
+            (match field
+
+                   {:children children}
+                   (concat results {id {:passed? (answers-nil? answers-by-key children)}})
+
+                   {:options options}
+                   (concat results {id {:passed? (let [non-empty-answers (get-non-empty-answers field answers)
+                                                       followups         (get-followup-questions options non-empty-answers)]
+                                                   (all-answers-nil? non-empty-answers answers-by-key followups))}})
+
+                   :else
+                   (concat results {id {:passed? (every? nil? answers)}}))
             (if-let [ret (match (merge {:validators []
                                         :params     []}
                                        field)

@@ -171,6 +171,48 @@
         [] []
         (:content f) [] false)))
 
+  (it "passes validation on hidden"
+      (should=
+        (-> (validator/build-results koodisto-cache has-never-applied
+              (update
+                answers-by-key
+                :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
+                assoc
+                :value "")
+              [] []
+              (clojure.walk/postwalk
+                (fn [form]
+                    (match form
+                           {:id "c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0"}
+                           (-> form
+                               (assoc :validators ["required"])
+                               (assoc-in [:params :hidden] true))
+                           :else form))
+                (:content f))  [] false)
+            :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0)
+        {:passed? true}))
+
+  (it "fail validation on hidden with answer"
+      (should=
+       (-> (validator/build-results koodisto-cache has-never-applied
+             (update
+               answers-by-key
+               :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
+               assoc
+               :value "hidden with answer")
+             [] []
+             (clojure.walk/postwalk
+               (fn [form]
+                   (match form
+                          {:id "c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0"}
+                          (-> form
+                              (assoc :validators ["required"])
+                              (assoc-in [:params :hidden] true))
+                          :else form))
+               (:content f))  [] false)
+           :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0)
+       {:passed? false}))
+
   (it "passes validation on multipleChoice answer being empty"
     (should
       (-> (validator/build-results koodisto-cache has-never-applied
