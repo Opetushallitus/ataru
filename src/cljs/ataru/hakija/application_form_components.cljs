@@ -107,10 +107,11 @@
     (not (contains? validators-processing (keyword (:id field-descriptor))))))
 
 (defn info-text [field-descriptor]
-  (let [languages (subscribe [:application/default-languages])]
+  (let [languages (subscribe [:application/default-languages])
+        person    (subscribe [:application/person])]
     (fn [field-descriptor]
       (when-let [info (util/non-blank-val (-> field-descriptor :params :info-text :label) @languages)]
-        [markdown-paragraph info (-> field-descriptor :params :info-text-collapse)]))))
+        [markdown-paragraph info (-> field-descriptor :params :info-text-collapse) (:oid @person)]))))
 
 (defn question-hakukohde-names
   ([field-descriptor]
@@ -885,6 +886,7 @@
 
 (defn attachment [{:keys [id] :as field-descriptor} & {question-group-idx :idx}]
   (let [languages (subscribe [:application/default-languages])
+        person    (subscribe [:application/person])
         text      (reaction (util/non-blank-val (get-in field-descriptor [:params :info-text :value]) @languages))]
     (fn [{:keys [id] :as field-descriptor} & {question-group-idx :idx}]
       (let [attachment-count (reaction (count @(subscribe [:state-query [:application :answers (keyword id) :values question-group-idx]])))]
@@ -893,7 +895,7 @@
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [question-hakukohde-names field-descriptor :liitepyynto-for-hakukohde])
          (when-not (clojure.string/blank? @text)
-           [markdown-paragraph @text (-> field-descriptor :params :info-text-collapse)])
+           [markdown-paragraph @text (-> field-descriptor :params :info-text-collapse) (:oid @person)])
          (when (> @attachment-count 0)
            [:ol.application__attachment-filename-list
             (->> (range @attachment-count)
@@ -909,6 +911,7 @@
 
 (defn info-element [field-descriptor]
   (let [languages  (subscribe [:application/default-languages])
+        person     (subscribe [:application/person])
         header   (util/non-blank-val (:label field-descriptor) @languages)
         text     (util/non-blank-val (:text field-descriptor) @languages)]
     [:div.application__form-info-element.application__form-field
@@ -916,7 +919,7 @@
        [:label.application__form-field-label [:span header]])
      (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
        [question-hakukohde-names field-descriptor :info-for-hakukohde])
-     [markdown-paragraph text (-> field-descriptor :params :info-text-collapse)]]))
+     [markdown-paragraph text (-> field-descriptor :params :info-text-collapse) (:oid @person)]]))
 
 (defn- adjacent-field-input [field-descriptor row-idx question-group-idx]
   (let [id          (keyword (:id field-descriptor))

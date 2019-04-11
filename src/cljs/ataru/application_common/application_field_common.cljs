@@ -1,5 +1,6 @@
 (ns ataru.application-common.application-field-common
   (:require [markdown.core :refer [md->html]]
+            [markdown.transformers :refer [transformer-vector]]
             [reagent.core :as reagent]
             [clojure.string :as string]
             [goog.string :as s]
@@ -25,6 +26,36 @@
 (defonce builder (new HtmlSanitizer.Builder))
 (defonce html-sanitizer (.build builder))
 
+(defonce personblock-start-tag "BEGIN_PERSON")
+(defonce personblock-end-tag "END_PERSON")
+
+(defn- handle-person-block-text
+  [person-oid text]
+  (if (and person-oid text)
+    (string/replace text "$PERSON_OID" person-oid)
+    ""))
+
+(defn- split-first [s tag]
+  (clojure.string/split s (re-pattern tag) 2))
+
+(defn- person-block
+  ([person-oid text-before-block text-in-block {:keys [eof] :as state}]
+   (let [[in-block outside-block] (split-first text-in-block personblock-end-tag)]
+     [(str text-before-block
+           (handle-person-block-text person-oid in-block)
+           outside-block)
+      (if (or outside-block eof)
+        (dissoc state :personblock)
+        state)]))
+  ([person-oid text {:keys [personblock] :as state}]
+   (if personblock
+     (person-block person-oid nil text state)
+     (let [[before after] (split-first text personblock-start-tag)]
+       (if after
+         (person-block person-oid before after
+           (assoc state :personblock true))
+         [text state])))))
+
 (defn- add-link-target-prop
   [text state]
   [(string/replace text #"<a href=([^>]+)>" "<a target=\"_blank\" href=$1>") state])
@@ -39,8 +70,8 @@
 
 (defn- markdown-paragraph
   ([md-text]
-   (markdown-paragraph md-text false))
-  ([md-text collapse-enabled?]
+   (markdown-paragraph md-text false nil))
+  ([md-text collapse-enabled? person-oid]
    (let [collapsed        (reagent/atom true)
          scroll-height    (reagent/atom nil)
          listener         (reagent/atom nil)
@@ -68,7 +99,10 @@
        :reagent-render
        (fn []
          (let [sanitized-html (as-> md-text v
-                                (md->html v :custom-transformers [add-link-target-prop])
+                                (md->html v
+                                  :replacement-transformers (cons (partial person-block person-oid)
+                                                                  transformer-vector)
+                                  :custom-transformers [add-link-target-prop])
                                 (.sanitize html-sanitizer v)
                                 (.getTypedStringValue v))
                collapsable?   (and collapse-enabled? (< 140 (or @scroll-height 0)))]
