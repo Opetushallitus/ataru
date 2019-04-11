@@ -114,4 +114,5 @@
     (get-person oppijanumerorekisteri-cas-client key))
   (load-many [_ keys]
     (get-persons oppijanumerorekisteri-cas-client keys))
+  (load-many-size [_] 5000)
   (check-schema [_ _] nil))

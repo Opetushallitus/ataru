@@ -17,17 +17,17 @@
 (def caches
   [[:get-haut-cache
     (in-memory/map->InMemoryCache
-     {:loader (cache/->FunctionCacheLoader
-               (fn [key]
-                 (case key
-                   :haut             (application-store/get-haut)
-                   :direct-form-haut (application-store/get-direct-form-haut))))
+     {:loader        (cache/->FunctionCacheLoader
+                      (fn [key]
+                        (case key
+                          :haut             (application-store/get-haut)
+                          :direct-form-haut (application-store/get-direct-form-haut))))
       :expires-after [3 TimeUnit/DAYS]
       :refresh-after [5 TimeUnit/MINUTES]})]
    [:all-organization-groups-cache
     (in-memory/map->InMemoryCache
-     {:loader (cache/->FunctionCacheLoader
-               (fn [_] (organization-client/get-groups)))
+     {:loader        (cache/->FunctionCacheLoader
+                      (fn [_] (organization-client/get-groups)))
       :expires-after [3 TimeUnit/DAYS]
       :refresh-after [5 TimeUnit/MINUTES]})]
    [:localizations-cache
@@ -84,10 +84,11 @@
    [:henkilo-cache
     (component/using
      (two-layer/map->Cache
-      {:name          "henkilo"
-       :size          200000
-       :expires-after [3 TimeUnit/DAYS]
-       :refresh-after [1 TimeUnit/HOURS]})
+      {:name                   "henkilo"
+       :size                   200000
+       :expires-after          [3 TimeUnit/DAYS]
+       :refresh-off-heap-after [1 TimeUnit/DAYS]
+       :refresh-on-heap-after  [10 TimeUnit/SECONDS]})
      {:redis  :redis
       :loader :henkilo-cache-loader})]
    [:hakukohde-search-cache
