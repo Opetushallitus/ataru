@@ -99,7 +99,9 @@
     (common-actions-for-applications-route)
     (dispatch [:application/close-search-control])
     (dispatch [:application/set-filters-from-query])
-    (dispatch [:application/select-hakukohde hakukohde-oid]))
+    (dispatch [:application/select-hakukohde hakukohde-oid])
+    (if-let [application-key (:application-key query-params)]
+      (dispatch [:application/select-application application-key hakukohde-oid])))
 
   (defroute "/lomake-editori/applications/haku/:haku-oid/hakukohderyhma/:hakukohderyhma-oid"
     [haku-oid hakukohderyhma-oid query-params]
