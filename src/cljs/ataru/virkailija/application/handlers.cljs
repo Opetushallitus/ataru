@@ -376,7 +376,7 @@
           all-applications        (let [loaded   (get-in db [:application :applications])
                                         new-keys (set (map :key applications))]
                                     (into (filterv #(not (contains? new-keys (:key %))) loaded)
-                                          applications))
+                                      applications))
           fetch-more?             (and (contains? sort :offset)
                                        (get-in db [:application :fetching-applications?]))
           db                      (-> db
@@ -386,10 +386,18 @@
                                       (update-in [:application :attachment-state-counts] add-attachment-state-counts applications selected-hakukohde-oids)
                                       (assoc-in [:application :sort] sort)
                                       (assoc-in [:application :fetching-applications?] false))
+          application-key-param   (:application-key (cljs-util/extract-query-params))
+          selected-key            (-> db :application :selected-key)
           application-key         (cond
-                                    (= 1 (count all-applications))     (-> all-applications first :key)
-                                    (-> db :application :selected-key) (-> db :application :selected-key)
-                                    :else                              (:application-key (cljs-util/extract-query-params)))]
+                                   (= 1 (count all-applications))
+                                   (-> all-applications first :key)
+
+                                   (or selected-key
+                                       application-key-param)
+                                   (-> (filter #(or (= (:key %) selected-key)
+                                                    (= (:key %) application-key-param)) all-applications)
+                                       (first)
+                                       :key))]
       (if fetch-more?
         (fetch-applications-fx {:db db})
         {:db       db
