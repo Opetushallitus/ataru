@@ -70,7 +70,7 @@
     (common-actions)
     (common-actions-for-applications-route)
     (dispatch [:application/stop-loading-applications])
-    (dispatch [:application/refresh-haut-and-hakukohteet nil])
+    (dispatch [:application/refresh-haut-and-hakukohteet nil nil nil])
     (dispatch [:application/show-incomplete-haut-list]))
 
   (defroute #"^/lomake-editori/applications/complete/" []
@@ -80,7 +80,7 @@
     (common-actions)
     (common-actions-for-applications-route)
     (dispatch [:application/stop-loading-applications])
-    (dispatch [:application/refresh-haut-and-hakukohteet nil])
+    (dispatch [:application/refresh-haut-and-hakukohteet nil nil nil])
     (dispatch [:application/show-complete-haut-list]))
 
   (defroute "/lomake-editori/applications/search/" []

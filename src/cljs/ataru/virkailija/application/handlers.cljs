@@ -440,16 +440,17 @@
 (reg-event-fx
   :application/reload-applications
   (fn [{:keys [db]} _]
-    (let [db (-> db
-                 (assoc-in [:application :applications] [])
-                 (assoc-in [:application :review-state-counts] (get-in initial-db/default-db [:application :review-state-counts]))
-                 (assoc-in [:application :selection-state-counts] (get-in initial-db/default-db [:application :selection-state-counts]))
-                 (assoc-in [:application :attachment-state-counts] (get-in initial-db/default-db [:application :attachment-state-counts]))
-                 (update-in [:application :sort] dissoc :offset)
-                 (assoc-in [:application :fetching-applications?] true))]
-      (cond-> {:db       db
-               :dispatch [:application/refresh-haut-and-hakukohteet
-                          fetch-applications-fx]}
+    (let [haku-oid      (or (get-in db [:application :selected-haku])
+                            (first (get-in db [:application :selected-hakukohderyhma])))
+          hakukohde-oid (get-in db [:application :selected-hakukohde])]
+      (cond-> {:db       (-> db
+                             (assoc-in [:application :applications] [])
+                             (assoc-in [:application :review-state-counts] (get-in initial-db/default-db [:application :review-state-counts]))
+                             (assoc-in [:application :selection-state-counts] (get-in initial-db/default-db [:application :selection-state-counts]))
+                             (assoc-in [:application :attachment-state-counts] (get-in initial-db/default-db [:application :attachment-state-counts]))
+                             (update-in [:application :sort] dissoc :offset)
+                             (assoc-in [:application :fetching-applications?] true))
+               :dispatch [:application/refresh-haut-and-hakukohteet haku-oid hakukohde-oid fetch-applications-fx]}
               (some? (get-in db [:request-handles :applications-list]))
               (assoc :http-abort (get-in db [:request-handles :applications-list]))))))
 
@@ -714,13 +715,13 @@
 (defn- keys-to-names [m] (reduce-kv #(assoc %1 (name %2) %3) {} m))
 
 (reg-event-fx
-  :editor/handle-refresh-haut-and-hakukohteet
+  :application/handle-refresh-haut-and-hakukohteet
   (fn [{db :db} [_ {:keys [tarjonta-haut direct-form-haut haut hakukohteet hakukohderyhmat]} {:keys [callback-fx-transformer]}]]
     (callback-fx-transformer
      {:db (-> db
-              (assoc-in [:application :haut :tarjonta-haut] (keys-to-names tarjonta-haut))
-              (assoc-in [:application :haut :direct-form-haut] (keys-to-names direct-form-haut))
-              (assoc-in [:application :forms] (keys-to-names direct-form-haut))
+              (update-in [:application :haut :tarjonta-haut] merge (keys-to-names tarjonta-haut))
+              (update-in [:application :haut :direct-form-haut] merge (keys-to-names direct-form-haut))
+              (update-in [:application :forms] merge (keys-to-names direct-form-haut))
               (update :haut merge (keys-to-names haut))
               (update :hakukohteet merge (keys-to-names hakukohteet))
               (update :hakukohderyhmat merge (keys-to-names hakukohderyhmat))
@@ -729,18 +730,22 @@
 
 (reg-event-fx
   :application/refresh-haut-and-hakukohteet
-  (fn [{:keys [db]} [_ callback-fx-transformer]]
-    (when (zero? (:fetching-haut db))
-      {:db   (-> db
-                 (update :fetching-haut inc)
-                 (update :fetching-hakukohteet inc))
-       :http {:method              :get
-              :path                (str "/lomake-editori/api/haut?show-hakukierros-paattynyt="
-                                        (boolean (:show-hakukierros-paattynyt db)))
-              :handler-or-dispatch :editor/handle-refresh-haut-and-hakukohteet
-              :handler-args        {:callback-fx-transformer (or callback-fx-transformer identity)}
-              :skip-parse-times?   true
-              :cache-ttl           (* 1000 60 5)}})))
+  (fn [{:keys [db]} [_ haku-oid hakukohde-oid callback-fx-transformer]]
+    {:db   (-> db
+               (update :fetching-haut inc)
+               (update :fetching-hakukohteet inc))
+     :http {:method              :get
+            :path                (cond (some? haku-oid)
+                                       (str "/lomake-editori/api/haku?haku-oid=" haku-oid)
+                                       (some? hakukohde-oid)
+                                       (str "/lomake-editori/api/haku?hakukohde-oid=" hakukohde-oid)
+                                       :else
+                                       (str "/lomake-editori/api/haut?show-hakukierros-paattynyt="
+                                            (boolean (:show-hakukierros-paattynyt db))))
+            :handler-or-dispatch :application/handle-refresh-haut-and-hakukohteet
+            :handler-args        {:callback-fx-transformer (or callback-fx-transformer identity)}
+            :skip-parse-times?   true
+            :cache-ttl           (* 1000 60 5)}}))
 
 (reg-event-fx
   :application/navigate
@@ -1191,4 +1196,4 @@
   :application/toggle-show-hakukierros-paattynyt
   (fn toggle-show-hakukierros-paattynyt [{:keys [db]} _]
     {:db       (update db :show-hakukierros-paattynyt not)
-     :dispatch [:application/refresh-haut-and-hakukohteet]}))
+     :dispatch [:application/refresh-haut-and-hakukohteet nil nil nil]}))
