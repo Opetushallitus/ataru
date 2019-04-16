@@ -7,6 +7,6 @@ SET preferred_name = :preferred_name,
     last_name = :last_name,
     ssn = :ssn,
     email = :email,
-    dob = :dob,
+    dob = :dob::DATE,
     content = :content
 WHERE id = :id;
