@@ -516,7 +516,6 @@
       (assoc-in [:application :information-requests] information-requests)
       (update-in [:application :selected-review-hakukohde-oids]
         (fn [current-hakukohde-oids]
-          (prn current-hakukohde-oids)
           (cond
            (and (not-empty (:hakukohde application))
                 (not-empty current-hakukohde-oids)
