@@ -23,4 +23,5 @@
                      (when (:hostname env) (str "_" (:hostname env))))
        :pattern :daily})}
     :timestamp-opts {:pattern  "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
-                     :timezone (TimeZone/getTimeZone "Europe/Helsinki")}}))
+                     :timezone (TimeZone/getTimeZone "Europe/Helsinki")}
+    :output-fn      (partial timbre/default-output-fn {:stacktrace-fonts {}})}))
