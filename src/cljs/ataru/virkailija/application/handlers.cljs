@@ -79,29 +79,26 @@
   :application/select-application
   (fn [{:keys [db]} [_ application-key selected-hakukohde-oid with-newest-form?]]
     (let [different-application? (not= application-key (get-in db [:application :selected-key]))]
-      (cond
-       different-application? (let [db (-> db
-                                           (assoc-in [:application :selected-key] application-key)
-                                           (assoc-in [:application :selected-application-and-form] nil)
-                                           (assoc-in [:application :review-comment] nil)
-                                           (assoc-in [:application :application-list-expanded?] false)
-                                           (assoc-in [:application :information-request] nil))
-                                    db (if selected-hakukohde-oid
-                                         (assoc-in db [:application :selected-review-hakukohde-oids] [selected-hakukohde-oid])
-                                         db)]
-                                {:db         db
-                                 :dispatch-n [[:application/stop-autosave]
-                                              [:application/fetch-application application-key]]})
-       with-newest-form? {:db         (-> db
-                                          (assoc-in [:application :selected-application-and-form] nil)
-                                          (assoc-in [:application :latest-form] nil)
-                                          (assoc-in [:application :selected-review-hakukohde-oids] [selected-hakukohde-oid]))
-                          :dispatch-n [[:application/select-review-hakukohde selected-hakukohde-oid]
-                                       [:application/fetch-application application-key true]]}
-       selected-hakukohde-oid {:db         (-> db
-                                               (assoc-in [:application :selected-review-hakukohde-oids] [selected-hakukohde-oid]))
-                               :dispatch-n [[:application/select-review-hakukohde selected-hakukohde-oid]]}
-       :else nil))))
+      (merge
+        {:db (cond-> db
+                     different-application?
+                     (-> (assoc-in [:application :selected-key] application-key)
+                         (assoc-in [:application :selected-application-and-form] nil)
+                         (assoc-in [:application :review-comment] nil)
+                         (assoc-in [:application :application-list-expanded?] false)
+                         (assoc-in [:application :information-request] nil))
+
+                     selected-hakukohde-oid
+                     (assoc-in [:application :selected-review-hakukohde-oids] [selected-hakukohde-oid])
+
+                     with-newest-form?
+                     (->
+                      (assoc-in [:application :selected-application-and-form] nil)
+                      (assoc-in [:application :latest-form] nil)))}
+        (if-let [dispatches (when different-application?
+                              [[:application/stop-autosave]
+                               [:application/fetch-application application-key with-newest-form?]])]
+          {:dispatch-n dispatches})))))
 
 (defn close-application [db]
   (cljs-util/update-url-with-query-params {:application-key nil})
@@ -519,12 +516,19 @@
       (assoc-in [:application :information-requests] information-requests)
       (update-in [:application :selected-review-hakukohde-oids]
         (fn [current-hakukohde-oids]
-          (if (and (not-empty (:hakukohde application))
-                   (not-empty current-hakukohde-oids)
-                   (clojure.set/superset? (set (:hakukohde application))
-                                          (set current-hakukohde-oids)))
-            current-hakukohde-oids
-            [(or (first (:hakukohde application)) "form")])))))
+          (cond
+           (and (not-empty (:hakukohde application))
+                (not-empty current-hakukohde-oids)
+                (clojure.set/superset? (set (:hakukohde application))
+                                       (set current-hakukohde-oids)))
+           current-hakukohde-oids
+
+           (and (not-empty (:hakukohde application))
+                (:selected-hakukohde application))
+           [(:selected-hakukohde application)]
+
+           :else
+           [(or (first (:hakukohde application)) "form")])))))
 
 (defn review-autosave-predicate [current prev]
   (if (not= (:id current) (:id prev))
@@ -1149,7 +1153,6 @@
     (let [applications            (-> db :application :applications)
           application-count       (count applications)
           current-application-key (-> db :application :selected-key)
-          selected-hakukohde      (-> db :application :selected-hakukohde)
           current-application-idx (util/first-index-of #(= (:key %) current-application-key) applications)
           is-last?                (= current-application-idx (dec application-count))
           next-application-idx    (if is-last?
@@ -1163,7 +1166,7 @@
         (if is-last?
           {:dispatch [:application/show-more-applications]}
           {:update-url-query-params {:application-key next-application-key}
-           :dispatch                [:application/select-application next-application-key selected-hakukohde false]})))))
+           :dispatch                [:application/select-application next-application-key nil false]})))))
 
 (reg-event-fx
   :application/scroll-list-to-selected-or-previously-closed-application
