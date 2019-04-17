@@ -1155,18 +1155,13 @@
           current-application-key (-> db :application :selected-key)
           current-application-idx (util/first-index-of #(= (:key %) current-application-key) applications)
           is-last?                (= current-application-idx (dec application-count))
-          next-application-idx    (if is-last?
-                                    current-application-idx
-                                    (if (nil? current-application-idx)
-                                      0
-                                      (+ current-application-idx step)))
-          guarded-idx             (mod next-application-idx application-count)
-          next-application-key    (-> applications (nth guarded-idx) :key)]
+          next-idx                (mod (+ current-application-idx application-count step) application-count)
+          next-application-key    (-> applications (nth next-idx) :key)]
       (when next-application-key
-        (if is-last?
-          {:dispatch [:application/show-more-applications]}
-          {:update-url-query-params {:application-key next-application-key}
-           :dispatch                [:application/select-application next-application-key nil false]})))))
+        {:update-url-query-params {:application-key next-application-key}
+         :dispatch-n              [[:application/select-application next-application-key nil false]
+                                   (when is-last?
+                                     [:application/show-more-applications])]}))))
 
 (reg-event-fx
   :application/scroll-list-to-selected-or-previously-closed-application
