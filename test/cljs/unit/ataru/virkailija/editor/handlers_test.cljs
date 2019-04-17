@@ -1,6 +1,7 @@
 (ns ataru.virkailija.editor.handlers-test
   (:require [cljs.test :refer-macros [async deftest are is]]
             [ataru.virkailija.editor.handlers :as h]
+            [re-frame.core :refer [subscribe]]
             [ataru.virkailija.virkailija-ajax :as http :refer [post]]))
 
 (defn generate-fn
@@ -8,26 +9,28 @@
   {:fake :component})
 
 (deftest generate-component-adds-to-root-level
-  (let [form-key 1234
-        initial-form {:key form-key
+  (let [form-key     1234
+        initial-form {:key     form-key
                       :content [{:some :component}]}
-        new-content (-> {:editor {:selected-form-key form-key
-                                  :forms {form-key initial-form}}}
-                        (h/generate-component [:generate-component generate-fn 1])
-                        (get-in [:editor :forms form-key :content]))]
+        new-content  (with-redefs [subscribe (constantly (atom false))]
+                       (-> {:editor {:selected-form-key form-key
+                                     :forms             {form-key initial-form}}}
+                           (h/generate-component [:generate-component generate-fn 1])
+                           (get-in [:editor :forms form-key :content])))]
     (are [expected actual] (= expected actual)
       2 (count new-content)
       {:some :component} (first new-content)
       {:fake :component} (second new-content))))
 
 (deftest generate-component-adds-to-child
-  (let [form-key 1234
-        initial-form {:key form-key
+  (let [form-key     1234
+        initial-form {:key     form-key
                       :content [{:children [{:child :component}]}]}
-        new-children (-> {:editor {:selected-form-key form-key
-                                   :forms         {form-key initial-form}}}
-                         (h/generate-component [:generate-component generate-fn [0 :children 1]])
-                         (get-in [:editor :forms form-key :content 0 :children]))]
+        new-children (with-redefs [subscribe (constantly (atom false))]
+                       (-> {:editor {:selected-form-key form-key
+                                     :forms             {form-key initial-form}}}
+                           (h/generate-component [:generate-component generate-fn [0 :children 1]])
+                           (get-in [:editor :forms form-key :content 0 :children])))]
     (are [expected actual] (= expected actual)
       2 (count new-children)
       {:child :component} (first new-children)

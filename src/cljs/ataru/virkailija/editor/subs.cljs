@@ -220,6 +220,13 @@
              (str " - " (util/non-blank-val (:name haku) [lang :fi :sv :en])))))))
 
 (re-frame/reg-sub
+  :editor/yhteishaku?
+  (fn [_ _]
+    [(re-frame/subscribe [:editor/used-by-haut-haut])])
+  (fn [[haut] [_]]
+    (boolean (some :yhteishaku (vals haut)))))
+
+(re-frame/reg-sub
   :editor/show-belongs-to-hakukohteet-modal
   (fn [_ _]
     (re-frame/subscribe [:editor/ui]))

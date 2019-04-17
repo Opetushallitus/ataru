@@ -76,6 +76,7 @@
            :hakukohderyhmat          @hakukohderyhmat
            :hakukohde-selected?      #(contains? (set selected-hakukohteet) %)
            :hakukohderyhma-selected? #(contains? (set selected-hakukohderyhmat) %)}]
+         [h-and-h/visibility-checkbox id path]
          [h-and-h/search-listing
           {:id                         id
            :haut                       (map second @haut)
@@ -91,6 +92,7 @@
          [:div.belongs-to-hakukohteet-modal__no-haku-row
           [:p.belongs-to-hakukohteet-modal__no-haku
            (get-virkailija-translation :set-haku-to-form)]]
+         nil
          nil
          #(dispatch [:editor/hide-belongs-to-hakukohteet-modal id])]))))
 
@@ -127,6 +129,7 @@
                                                      :on-click (fn [_] (dispatch [:editor/remove-from-belongs-to-hakukohderyhma
                                                                                   path oid]))})
                                       (:belongs-to-hakukohderyhma initial-content))
+            hidden?                 (subscribe [:editor/get-component-value path :params :hidden])
             visible                 (sort-by :name (concat visible-hakukohteet
                                                            visible-hakukohderyhmat))]
         [:div.belongs-to-hakukohteet
@@ -137,9 +140,14 @@
                        (if @show-modal? on-click-hide on-click-show))}
           (str (get-virkailija-translation :visibility-on-form) " ")]
          [:span.belongs-to-hakukohteet__modal-toggle-label
-          (if (and (empty? visible))
-            (get-virkailija-translation :visible-to-all)
-            (get-virkailija-translation :visible-to-hakukohteet))]
+          (cond @hidden?
+                (get-virkailija-translation :hidden)
+
+                (and (empty? visible))
+                (get-virkailija-translation :visible-to-all)
+
+                :else
+                (get-virkailija-translation :visible-to-hakukohteet))]
          (when @show-modal?
            [belongs-to-hakukohteet-modal path
             (:id initial-content)

@@ -1400,6 +1400,12 @@ You will receive a confirmation of your application to your email."}
    :visible-to-all                              {:fi "näkyy kaikille"
                                                  :sv "visas för alla"
                                                  :en "EN: näkyy kaikille"}
+   :hidden                                      {:fi "piilotettu"
+                                                 :sv "SV: piilotettu"
+                                                 :en "hidden"}
+   :is-hidden?                                  {:fi "ei näytetä lomakkeella (piilotettu)"
+                                                 :sv "SV: ei näytetä lomakkeella (piilotettu)"
+                                                 :en "EN: ei näytetä lomakkeella (piilotettu)"}
    :visible-to-hakukohteet                      {:fi "vain valituille hakukohteille",
                                                  :sv "endast för valda ansökningsmål"
                                                  :en "EN: vain valituille hakukohteille"}

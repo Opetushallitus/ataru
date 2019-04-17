@@ -25,7 +25,8 @@
 (declare render-field)
 
 (defn- visible? [ui field-descriptor]
-  (and (get-in @ui [(keyword (:id field-descriptor)) :visible?] true)
+  (and (not (get-in @ui [(keyword (:id field-descriptor)) :params :hidden] false))
+       (get-in @ui [(keyword (:id field-descriptor)) :visible?] true)
        (or (empty? (:children field-descriptor))
            (some (partial visible? ui) (:children field-descriptor)))))
 

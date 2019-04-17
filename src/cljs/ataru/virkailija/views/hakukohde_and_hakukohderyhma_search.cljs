@@ -152,6 +152,19 @@
                     (.-value (.-target %))])
     :placeholder (cljs-util/get-virkailija-translation :search-hakukohde-placeholder)}])
 
+(defn visibility-checkbox
+  [id path]
+  [:div.hakukohde-and-hakukohderyhma-visibility-checkbox
+   [:input
+    {:id        id
+     :type      "checkbox"
+     :checked   (boolean @(re-frame/subscribe [:editor/get-component-value path :params :hidden]))
+     :disabled  (boolean @(re-frame/subscribe [:editor/form-locked?]))
+     :on-change #(re-frame/dispatch [:editor/toggle-element-visibility-on-form path])}]
+   [:label
+    {:for id}
+    (cljs-util/get-virkailija-translation :is-hidden?)]])
+
 (defn search-listing
   [{:keys [id
            haut
@@ -190,8 +203,9 @@
          on-hakukohde-unselect]))]))
 
 (defn popup
-  [header-component content-component on-close]
+  [header-component visibility-component content-component on-close]
   [:div.hakukohde-and-hakukohderyhma-search-popup
+   visibility-component
    [:div.hakukohde-and-hakukohderyhma-search-popup-header
     header-component
     [:button.virkailija-close-button
