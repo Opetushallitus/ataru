@@ -1155,7 +1155,11 @@
           current-application-key (-> db :application :selected-key)
           current-application-idx (util/first-index-of #(= (:key %) current-application-key) applications)
           is-last?                (= current-application-idx (dec application-count))
-          next-idx                (mod (+ current-application-idx application-count step) application-count)
+          next-idx                (mod (+ (or current-application-idx
+                                              (dec application-count))
+                                         application-count
+                                         step)
+                                    application-count)
           next-application-key    (-> applications (nth next-idx) :key)]
       (when next-application-key
         {:update-url-query-params {:application-key next-application-key}
