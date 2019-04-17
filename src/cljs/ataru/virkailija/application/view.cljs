@@ -539,7 +539,7 @@
         attachment-states       (application-attachment-states application)
         form-attachment-states  (:form attachment-states)]
     [:div.application-handling__list-row
-     {:on-click #(select-application (:key application) nil)
+     {:on-click #(select-application (:key application) nil false)
       :class    (clojure.string/join " " [(when selected?
                                             "application-handling__list-row--selected")
                                           (when (= "inactivated" (:state application))
