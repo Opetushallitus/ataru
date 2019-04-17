@@ -1153,7 +1153,6 @@
     (let [applications            (-> db :application :applications)
           application-count       (count applications)
           current-application-key (-> db :application :selected-key)
-          selected-hakukohde      (-> db :application :selected-hakukohde)
           current-application-idx (util/first-index-of #(= (:key %) current-application-key) applications)
           is-last?                (= current-application-idx (dec application-count))
           next-application-idx    (if is-last?
@@ -1167,7 +1166,7 @@
         (if is-last?
           {:dispatch [:application/show-more-applications]}
           {:update-url-query-params {:application-key next-application-key}
-           :dispatch                [:application/select-application next-application-key selected-hakukohde false]})))))
+           :dispatch                [:application/select-application next-application-key nil false]})))))
 
 (reg-event-fx
   :application/scroll-list-to-selected-or-previously-closed-application
