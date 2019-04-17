@@ -165,6 +165,42 @@
         (assoc-in (current-form-content-path db [path]) value)
         (update-modified-by path))))
 
+(defn- number-of-decimals [v]
+  (let [[_ decimals] (clojure.string/split v #",")]
+    (count decimals)))
+
+(reg-event-db
+  :editor/set-decimals-value
+  (fn [db [_ value & path]]
+    (let [min-value        (get-in db (current-form-content-path db [path :min-value]))
+          max-value        (get-in db (current-form-content-path db [path :max-value]))
+          min-out-of-range (or (nil? value) (> (number-of-decimals min-value) value))
+          max-out-of-range (or (nil? value) (> (number-of-decimals max-value) value))]
+      (cond-> (-> db
+                  (assoc-in (current-form-content-path db [path :decimals]) value)
+                  (update-modified-by path))
+
+              min-out-of-range
+              (update-in (current-form-content-path db [path]) (fn [params]
+                                                                 (dissoc params :min-value)))
+
+              max-out-of-range
+              (update-in (current-form-content-path db [path]) (fn [params]
+                                                                 (dissoc params :max-value)))))))
+
+(reg-event-db
+  :editor/set-range-value
+  (fn [db [_ range value & path]]
+    (cond-> (-> db
+                (update-modified-by path))
+
+            (empty? value)
+            (update-in (current-form-content-path db [path]) (fn [params]
+                                                               (dissoc params range)))
+
+            (not (empty? value))
+            (assoc-in (current-form-content-path db [path range]) value))))
+
 (reg-event-db
   :editor/update-mail-attachment
   (fn [db [_ mail-attachment? & path]]

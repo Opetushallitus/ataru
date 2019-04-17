@@ -1163,6 +1163,9 @@ You will receive a confirmation of your application to your email."}
    :only-numeric                                {:fi "Kenttään voi täyttää vain numeroita"
                                                  :sv "Endast siffror i fältet"
                                                  :en "Only numbers"}
+   :numeric-range                               {:fi "Arvoalueen rajaus"
+                                                 :sv "Arvoalueen rajaus"
+                                                 :en "Arvoalueen rajaus"}
    :open                                        {:fi "avaa"
                                                  :sv "öppna"
                                                  :en "Open"}

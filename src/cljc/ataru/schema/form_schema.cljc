@@ -69,6 +69,8 @@
                      (s/optional-key :yhteishaku)                       (s/maybe s/Bool)
                      (s/optional-key :repeatable)                       s/Bool
                      (s/optional-key :numeric)                          s/Bool
+                     (s/optional-key :min-value)                        s/Str
+                     (s/optional-key :max-value)                        s/Str
                      (s/optional-key :decimals)                         (s/maybe s/Int)
                      (s/optional-key :max-hakukohteet)                  (s/maybe s/Int)
                      (s/optional-key :question-group-id)                s/Int

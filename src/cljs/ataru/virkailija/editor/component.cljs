@@ -495,23 +495,83 @@
   (-> event .-target .-value))
 
 (defn- decimal-places-selector [path]
-  (let [decimal-places (subscribe [:editor/get-component-value path :params :decimals])
-        form-locked?   (subscribe [:editor/form-locked?])]
+  (let [decimal-places     (subscribe [:editor/get-component-value path :params :decimals])
+        form-locked?       (subscribe [:editor/form-locked?])
+        min-value          (r/atom @(subscribe [:editor/get-component-value path :params :min-value]))
+        max-value          (r/atom @(subscribe [:editor/get-component-value path :params :max-value]))
+        [min max]          [{:id     (util/new-uuid)
+                             :key    :min-value
+                             :value  min-value
+                             :valid? (r/atom true)}
+                            {:id     (util/new-uuid)
+                             :key    :max-value
+                             :value  max-value
+                             :valid? (r/atom true)}]
+        decimals           (subscribe [:editor/get-component-value path :params :decimals])
+        number-of-decimals (fn [v]
+                             (let [[_ decimals] (clojure.string/split v #",")]
+                               (count decimals)))
+        format-range       (fn [value]
+                             (clojure.string/replace (clojure.string/trim value) "." ","))
+        valid?             (fn [value]
+                             (let [clean  (format-range value)
+                                   match? (re-matches #"^\d*\,?\d*$" clean)]
+                               [(and match?
+                                     (<= (number-of-decimals clean) @decimals)) value]))
+        set-range          (fn [id value]
+                             (let [id        id
+                                   component (->> [min max]
+                                                  (filter #(= (:id %) id))
+                                                  (first))
+                                   [valid value] (valid? value)]
+                               (reset! (:valid? component) valid)
+                               (reset! (:value component) value)
+                               (when valid
+                                 (dispatch [:editor/set-range-value (:key component) (format-range value) path :params]))))
+        set-range-event    #(set-range (-> % .-target .-id) (-> % .-target .-value))
+        invalidate-values  (fn []
+                             (doall
+                               (for [component [min max]]
+                                 (set-range (:id component) (or @(:value component) "")))))]
     (fn [path]
-      [:div.editor-form__additional-params-container
-       [:header.editor-form__component-item-header (get-virkailija-translation :shape)]
-       [:select.editor-form__decimal-places-selector
-        {:value     (or @decimal-places "")
-         :disabled  @form-locked?
-         :on-change (fn [e]
-                      (let [new-val (get-val e)
-                            value   (when (not-empty new-val)
-                                      (js/parseInt new-val))]
-                        (dispatch [:editor/set-component-value value path :params :decimals])))}
-        [:option {:value "" :key 0} (get-virkailija-translation :integer)]
-        (doall
-         (for [i (range 1 5)]
-           [:option {:value i :key i} (str i " " (get-virkailija-translation :decimals))]))]])))
+      [:div
+       [:div.editor-form__additional-params-container
+        [:header.editor-form__component-item-header (get-virkailija-translation :shape)]
+        [:select.editor-form__decimal-places-selector
+         {:value     (or @decimal-places "")
+          :disabled  @form-locked?
+          :on-change (fn [e]
+                       (let [new-val (get-val e)
+                             value   (when (not-empty new-val)
+                                       (js/parseInt new-val))]
+                         (dispatch-sync [:editor/set-decimals-value value path :params])
+                         (invalidate-values)))}
+         [:option {:value "" :key 0} (get-virkailija-translation :integer)]
+         (doall
+           (for [i (range 1 5)]
+             [:option {:value i :key i} (str i " " (get-virkailija-translation :decimals))]))]]
+       [:div.editor-form__additional-params-container
+        [:label.editor-form__range-label
+         {:for   (:id min)
+          :class (when @form-locked? "editor-form__checkbox-label--disabled")}
+         (get-virkailija-translation :numeric-range)]
+        [:input.editor-form__range-input
+         {:type      "text"
+          :id        (:id min)
+          :class     (when-not @(:valid? min) "editor-form__text-field--invalid")
+          :disabled  @form-locked?
+          :value     @min-value
+          :on-blur   #(reset! (:value min) (format-range (-> % .-target .-value)))
+          :on-change set-range-event}]
+        [:span "—"]
+        [:input.editor-form__range-input
+         {:type      "text"
+          :id        (:id max)
+          :class     (when-not @(:valid? max) "editor-form__text-field--invalid")
+          :disabled  @form-locked?
+          :value     @max-value
+          :on-blur   #(reset! (:value max) (format-range (-> % .-target .-value)))
+          :on-change set-range-event}]]])))
 
 (defn- text-component-type-selector [path radio-group-id]
   (let [id           (util/new-uuid)
@@ -532,7 +592,7 @@
                                       :editor/add-validator
                                       :editor/remove-validator) "numeric" path])
                          (when-not checked-now?
-                           (dispatch [:editor/set-component-value nil path :params :decimals]))))}]
+                           (dispatch [:editor/set-decimals-value nil path :params]))))}]
         [:label.editor-form__checkbox-label
          {:for   id
           :class (when @form-locked? "editor-form__checkbox-label--disabled")}
@@ -561,6 +621,7 @@
         size-change       (fn [new-size]
                             (dispatch-sync [:editor/set-component-value new-size path :params :size]))
         text-area?        (= "Tekstialue" header-label)
+        numeric?          (subscribe [:editor/get-component-value path :params :numeric])
         animation-effect  (fade-out-effect path)
         form-locked?      (subscribe [:editor/form-locked?])]
     (fn [initial-content path & {:keys [header-label size-label]}]
