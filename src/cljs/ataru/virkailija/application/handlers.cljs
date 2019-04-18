@@ -1150,22 +1150,17 @@
 (reg-event-fx
   :application/navigate-application-list
   (fn [{:keys [db]} [_ step]]
-    (let [applications            (-> db :application :applications)
-          application-count       (count applications)
-          current-application-key (-> db :application :selected-key)
-          current-application-idx (util/first-index-of #(= (:key %) current-application-key) applications)
-          is-last?                (= current-application-idx (dec application-count))
-          next-idx                (mod (+ (or current-application-idx
-                                              (dec application-count))
-                                         application-count
-                                         step)
-                                    application-count)
-          next-application-key    (-> applications (nth next-idx) :key)]
-      (when next-application-key
-        {:update-url-query-params {:application-key next-application-key}
-         :dispatch-n              [[:application/select-application next-application-key nil false]
-                                   (when is-last?
-                                     [:application/show-more-applications])]}))))
+    (when-let [current-idx (util/first-index-of #(= (:key %) (-> db :application :selected-key))
+                                                (-> db :application :applications))]
+      (let [applications         (-> db :application :applications)
+            next-idx             (mod (+ current-idx step) (count applications))
+            next-application-key (-> applications (nth next-idx) :key)
+            next-not-visible?    (= next-idx (-> db :application :applications-to-render))]
+        (when next-application-key
+          {:update-url-query-params {:application-key next-application-key}
+           :dispatch-n              [[:application/select-application next-application-key nil false]
+                                     (when next-not-visible?
+                                       [:application/show-more-applications])]})))))
 
 (reg-event-fx
   :application/scroll-list-to-selected-or-previously-closed-application
