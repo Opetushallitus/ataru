@@ -13,6 +13,7 @@
    [cljs.core.match :refer-macros [match]]
    [goog.dom :as gdom]
    [goog.string :as s]
+   [ataru.number :refer [numeric-matcher]]
    [goog.date :as d]
    [cljs-time.core :as t]
    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
@@ -514,10 +515,11 @@
         format-range       (fn [value]
                              (clojure.string/replace (clojure.string/trim value) "." ","))
         valid?             (fn [value]
-                             (let [clean  (format-range value)
-                                   match? (re-matches #"^\d*\,?\d*$" clean)]
-                               [(and match?
-                                     (<= (number-of-decimals clean) @decimals)) value]))
+                             (let [clean (format-range value)]
+                               [(or
+                                 (empty? value)
+                                 (and (re-matches numeric-matcher clean)
+                                      (<= (number-of-decimals clean) @decimals))) value]))
         set-range          (fn [id value]
                              (let [id        id
                                    component (->> [min max]
