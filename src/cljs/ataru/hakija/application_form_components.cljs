@@ -22,6 +22,8 @@
             [clojure.string :as string]
             [ataru.hakija.person-info-fields :refer [editing-forbidden-person-info-field-ids]]))
 
+(defonce autocomplete-off "new-password")
+
 (declare render-field)
 
 (defn- visible? [ui field-descriptor]
@@ -196,6 +198,7 @@
                   :on-change     on-change
                   :required      (is-required-field? field-descriptor)
                   :aria-invalid  (not (:valid answer))
+                  :autoComplete  autocomplete-off
                   :default-value (if @(subscribe [:application/cannot-view? id])
                                    "***********"
                                    (:value answer))}
@@ -229,7 +232,9 @@
                                    (if show-error?
                                      " application__form-field-error"
                                      " application__form-text-input--normal"))
-                :aria-invalid (not (:valid answer))}]]))]))))
+                :aria-invalid (not (:valid answer))
+                :autoComplete autocomplete-off
+                }]]))]))))
 
 (defn text-field [field-descriptor & {:keys [div-kwd idx]
                                       :or   {div-kwd :div.application__form-field}}]
@@ -283,6 +288,7 @@
                                   (on-change evt))
                   :required     (is-required-field? field-descriptor)
                   :aria-invalid (not valid)
+                  :autoComplete autocomplete-off
                   :value        (cond cannot-view?
                                       "***********"
                                       (:focused? @local-state)
@@ -351,6 +357,7 @@
            :placeholder  (when last? (get-translation :add-more))
            :disabled     (or cannot-edit? (and last? first-is-empty?))
            :aria-invalid (not valid)
+           :autoComplete autocomplete-off
            :on-blur      on-blur
            :on-change    on-change}]
          (when (and (not cannot-edit?) (not last?))
@@ -754,7 +761,8 @@
        :key          (str "upload-button-" component-id "-" attachment-count)
        :on-change    (partial upload-attachment field-descriptor question-group-idx)
        :required     (is-required-field? field-descriptor)
-       :aria-invalid (not (:valid @(subscribe [:application/answer id question-group-idx nil])))}]
+       :aria-invalid (not (:valid @(subscribe [:application/answer id question-group-idx nil])))
+       :autoComplete autocomplete-off}]
      [:label.application__form-upload-label
       {:for id}
       [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
@@ -942,14 +950,15 @@
                                         value
                                         question-group-idx])))]
         [:input.application__form-text-input.application__form-text-input--normal
-         {:id        (str id "-" row-idx)
-          :type      "text"
-          :value     (if (:focused? @local-state)
-                       (:value @local-state)
-                       value)
-          :on-blur   on-blur
-          :on-change on-change
-          :disabled  cannot-edit?}]))))
+         {:id           (str id "-" row-idx)
+          :type         "text"
+          :value        (if (:focused? @local-state)
+                          (:value @local-state)
+                          value)
+          :on-blur      on-blur
+          :on-change    on-change
+          :disabled     cannot-edit?
+          :autoComplete autocomplete-off}]))))
 
 (defn adjacent-text-fields [field-descriptor]
   (let [cannot-edits? (map #(subscribe [:application/cannot-edit? (keyword (:id %))])
