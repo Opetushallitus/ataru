@@ -5,7 +5,7 @@
             [ataru.ssn :as ssn]
             [ataru.translations.texts :as texts]
             [ataru.preferred-name :as pn]
-            [ataru.number :refer [gte lte]]
+            [ataru.number :refer [gte lte numeric-matcher]]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             #?(:clj  [clojure.core.async :as async]
                :cljs [cljs.core.async :as async])
@@ -231,13 +231,11 @@
                                         (and (pos? num-answers) answers-subset-of-options?))
      :else true)))
 
-(def numeric-matcher #"[+-]?(0|[1-9][0-9]*)([,.][0-9]+)?")
-
 (defn- numeric-value?
   [field-descriptor value]
   (if (clojure.string/blank? value)
     true
-    (let [[_ integer-part decimal-part] (re-matches numeric-matcher value)
+    (let [[_ _ integer-part _ _ decimal-part] (re-matches numeric-matcher value)
           decimal-places (-> field-descriptor :params :decimals)
           min-value      (-> field-descriptor :params :min-value)
           max-value      (-> field-descriptor :params :max-value)]
