@@ -250,7 +250,7 @@
 
               (and decimal-part
                    (> (count decimal-part)
-                     (inc decimal-places)))
+                     decimal-places))
               false
 
               :else
