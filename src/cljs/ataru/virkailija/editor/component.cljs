@@ -13,7 +13,7 @@
    [cljs.core.match :refer-macros [match]]
    [goog.dom :as gdom]
    [goog.string :as s]
-   [ataru.number :refer [numeric-matcher]]
+   [ataru.number :refer [numeric-matcher lte]]
    [goog.date :as d]
    [cljs-time.core :as t]
    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
@@ -513,23 +513,34 @@
                              (let [[_ decimals] (clojure.string/split v #",")]
                                (count decimals)))
         format-range       (fn [value]
-                             (clojure.string/replace (clojure.string/trim value) "." ","))
+                             (clojure.string/replace (clojure.string/trim (or value "")) "." ","))
         valid?             (fn [value]
                              (let [clean (format-range value)]
-                               [(or
-                                 (empty? value)
-                                 (and (re-matches numeric-matcher clean)
-                                      (<= (number-of-decimals clean) @decimals))) value]))
+                               (or
+                                (empty? value)
+                                (and (re-matches numeric-matcher clean)
+                                     (<= (number-of-decimals clean) @decimals)))))
+        validate-and-set   (fn []
+                             (let [min-valid?      (valid? @min-value)
+                                   max-valid?      (valid? @max-value)
+                                   invalidate-both (and min-valid?
+                                                        max-valid?
+                                                        (not (empty? @min-value))
+                                                        (not (empty? @max-value))
+                                                        (not (lte @min-value @max-value)))]
+                               (reset! (:valid? min) (and min-valid? (not invalidate-both)))
+                               (reset! (:valid? max) (and max-valid? (not invalidate-both)))
+                               (when @(:valid? min)
+                                 (dispatch [:editor/set-range-value (:key min) (format-range @min-value) path :params]))
+                               (when @(:valid? max)
+                                 (dispatch [:editor/set-range-value (:key max) (format-range @max-value) path :params]))))
         set-range          (fn [id value]
                              (let [id        id
                                    component (->> [min max]
                                                   (filter #(= (:id %) id))
-                                                  (first))
-                                   [valid value] (valid? value)]
-                               (reset! (:valid? component) valid)
+                                                  (first))]
                                (reset! (:value component) value)
-                               (when valid
-                                 (dispatch [:editor/set-range-value (:key component) (format-range value) path :params]))))
+                               (validate-and-set)))
         set-range-event    #(set-range (-> % .-target .-id) (-> % .-target .-value))
         invalidate-values  (fn []
                              (doall
@@ -563,7 +574,7 @@
           :class     (when-not @(:valid? min) "editor-form__text-field--invalid")
           :disabled  @form-locked?
           :value     @min-value
-          :on-blur   #(reset! (:value min) (format-range (-> % .-target .-value)))
+          :on-blur   #(reset! min-value (format-range (-> % .-target .-value)))
           :on-change set-range-event}]
         [:span "—"]
         [:input.editor-form__range-input
@@ -572,7 +583,7 @@
           :class     (when-not @(:valid? max) "editor-form__text-field--invalid")
           :disabled  @form-locked?
           :value     @max-value
-          :on-blur   #(reset! (:value max) (format-range (-> % .-target .-value)))
+          :on-blur   #(reset! max-value (format-range (-> % .-target .-value)))
           :on-change set-range-event}]]])))
 
 (defn- text-component-type-selector [path radio-group-id]
