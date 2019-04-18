@@ -240,30 +240,26 @@
     (let [[_ integer-part decimal-part] (re-matches numeric-matcher value)
           decimal-places (-> field-descriptor :params :decimals)
           min-value      (-> field-descriptor :params :min-value)
-          max-value      (-> field-descriptor :params :max-value)
-          invalid        (fn [e]
-                           false)
-          when-true      (fn [e f]
-                           (when e (f)))]
-      (cond-> true
+          max-value      (-> field-descriptor :params :max-value)]
+      (cond
 
               (not integer-part)
-              (invalid)
+              false
 
               (and decimal-part
                    (not decimal-places))
-              (invalid)
+              false
 
               (and decimal-part
                    (> (count decimal-part)
                      (inc decimal-places)))
-              (invalid)
+              false
 
-              min-value
-              (when-true #(gte value min-value))
-
-              max-value
-              (when-true #(lte value max-value))))))
+              :else
+              (and (or (nil? min-value)
+                       (gte value min-value))
+                   (or (nil? max-value)
+                       (lte value max-value)))))))
 
 (defn- numeric?
   [{:keys [value field-descriptor]}]

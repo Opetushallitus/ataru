@@ -17,7 +17,9 @@
            (>= value-dec min-dec))))
 
 (defn- normalize [value-int value-dec min-int min-dec]
-  (let [max-trailing (max (count min-dec) (count value-dec))]
+  (let [value-dec    (or value-dec "0")
+        min-dec      (or min-dec "0")
+        max-trailing (max (count min-dec) (count value-dec))]
     [(->int (or value-int "0"))
      (->int (apply str value-dec (repeat (- max-trailing (count value-dec)) "0")))
      (->int (or min-int "0"))
@@ -35,12 +37,4 @@
         (greater-than-or-equal (normalize value-int value-dec min-int min-dec)))))))
 
 (defn lte [value max-value]
-  (let [[_ value-sign value-int _ _ value-dec] (re-matches numeric-matcher value)
-        [_ max-sign max-int _ _ max-dec] (re-matches numeric-matcher max-value)]
-    (and
-     (not (and (plus? value-sign) (minus? max-sign)))
-     (or
-      (and (plus? max-sign) (minus? value-sign))
-      (if (and (minus? max-sign) (minus? value-sign))
-        (greater-than-or-equal (normalize value-int value-dec max-int max-dec))
-        (greater-than-or-equal (normalize max-int max-dec value-int value-dec)))))))
+  (gte max-value value))
