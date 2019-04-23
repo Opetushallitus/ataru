@@ -10,3 +10,6 @@ SET preferred_name = :preferred_name,
     dob = :dob::DATE,
     content = :content
 WHERE id = :id;
+
+-- name: sql-application-secret-ids
+SELECT id FROM application_secrets;
