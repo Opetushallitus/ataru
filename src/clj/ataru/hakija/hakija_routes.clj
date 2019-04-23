@@ -308,7 +308,7 @@
       (try
         (response/ok
           (cond (and form-key selection-id question-id answer-id selection-group-id)
-                (selection-limit/swab-selection form-key selection-id question-id answer-id selection-group-id)
+                (selection-limit/swap-selection form-key selection-id question-id answer-id selection-group-id)
 
                 (and form-key question-id answer-id selection-group-id)
                 (selection-limit/new-selection form-key question-id answer-id selection-group-id)

@@ -90,7 +90,7 @@
                 {selection-id  :selection-id
                  limit-reached :limit-reached} (selection-limit/new-selection id question-id "0" id)
                 {limit-reached-outsider :limit-reached} (selection-limit/query-available-selections id)
-                {limit-after-swab :limit-reached} (selection-limit/swab-selection id selection-id question-id "0" id)
+                {limit-after-swab :limit-reached} (selection-limit/swap-selection id selection-id question-id "0" id)
                 {limit-reached-outsider-after-swab :limit-reached} (selection-limit/query-available-selections id)
                 application     {:answers [{:key   question-id
                                             :id    question-id

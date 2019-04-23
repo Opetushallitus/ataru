@@ -113,7 +113,7 @@
                                   :selection_group_id selection-group-id} connection)
            (enforce-limits limit application-key nil selection-group-id question-id answer-id connection)))))))
 
-(defn swab-selection [form-key selection-id question-id answer-id selection-group-id]
+(defn swap-selection [form-key selection-id question-id answer-id selection-group-id]
   (let [{:keys [params options]} (->> (fields-in-selection-group (forms/fetch-by-key form-key))
                                       (filter #(= (:id %) question-id))
                                       first)
@@ -131,4 +131,4 @@
     (query-available-selections form-key selection-id)))
 
 (defn new-selection [form-key question-id answer-id selection-group-id]
-  (swab-selection form-key (str (UUID/randomUUID)) question-id answer-id selection-group-id))
+  (swap-selection form-key (str (UUID/randomUUID)) question-id answer-id selection-group-id))
