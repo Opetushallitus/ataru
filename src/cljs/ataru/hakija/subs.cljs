@@ -282,6 +282,13 @@
                              [:application :answers parent-id :value]))]
       (= option-value value))))
 
+(re-frame/reg-sub
+  :application/single-choice-option-valid?
+  (fn [db [_ parent-id question-group-idx]]
+    (get-in db (if question-group-idx
+                 [:application :answers parent-id :values question-group-idx 0 :valid]
+                 [:application :answers parent-id :valid]))))
+
 (defn- hakukohteet-field [db]
   (->> (:flat-form-content db)
        (filter #(= "hakukohteet" (:id %)))

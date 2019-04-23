@@ -665,18 +665,20 @@
         option-id      (util/component-id)
         limit-reached? (subscribe [:application/limit-reached? parent-id option-value])
         checked?       (subscribe [:application/single-choice-option-checked? parent-id option-value question-group-idx])
+        valid?         (subscribe [:application/single-choice-option-valid? parent-id question-group-idx])
         on-change      (fn [event]
                          (let [value (.. event -target -value)]
                            (dispatch [:application/select-single-choice-button value field-descriptor question-group-idx])))]
     (fn [option parent-id field-descriptor question-group-idx lang use-multi-choice-style?]
-      (let [disabled? (or @verifying? @cannot-edit?
-                          (and (not @checked?)
-                               @limit-reached?))]
+      (let [unselectable? (and (or (not @checked?)
+                                   (not @valid?))
+                               @limit-reached?)
+            disabled?     (or @verifying? @cannot-edit? unselectable?)]
         [:div.application__form-single-choice-button-inner-container {:key option-id}
          [:input
           (merge {:id        option-id
                   :type      "checkbox"
-                  :checked   (and (not @verifying?) @checked?)
+                  :checked   (and (not @verifying?) (not unselectable?) @checked?)
                   :value     option-value
                   :on-change on-change
                   :role      "radio"
@@ -691,9 +693,9 @@
             [:span.application__form-single-choice-button--verifying
              [:i.zmdi.zmdi-spinner.spin]])
           label
-          (when (and (not @verifying?) (not @checked?) @limit-reached?)
+          (when (and (not @verifying?) unselectable?)
             (str " (" (get-translation :limit-reached) ")"))]
-         (when (and @checked?
+         (when (and (and @checked? @valid?)
                     (not-empty (:followups option))
                     (some (partial visible? (subscribe [:state-query [:application :ui]])) (:followups option)))
            (if use-multi-choice-style?

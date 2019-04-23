@@ -511,15 +511,11 @@
               (assoc-in db [:application :answers key :value] nil)))
       db (map keyword (:selection-limited db))))
 
-(defn reset-this-selection [db question-id]
-  (assoc-in db [:application :answers (keyword question-id) :value] nil))
-
 (reg-event-fx
   :application/handle-update-selection-limits
   (fn [{:keys [db]} [_ selection valid? question-id answer-id]]
     {:db (cond (false? valid?)
                (-> db
-                   (reset-this-selection question-id)
                    (set-limit-reached selection))
 
                (not (and valid? question-id answer-id))
