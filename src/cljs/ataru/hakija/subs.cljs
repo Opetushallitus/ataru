@@ -82,11 +82,22 @@
                      :valid true)))))
 
 (re-frame/reg-sub
+  :application/tarjonta-hakukohteet
+  (fn [db _]
+    (-> db :form :tarjonta :hakukohteet)))
+
+(re-frame/reg-sub
+  :application/tarjonta-hakukohteet-by-oid
+  (fn [_ _]
+    (re-frame/subscribe [:application/tarjonta-hakukohteet]))
+  (fn [hakukohteet _]
+    (util/group-by-first :oid hakukohteet)))
+
+(re-frame/reg-sub
   :application/attachment-deadline
   (fn [db _]
-    [(re-frame/subscribe [:state-query [:form :tarjonta :hakukohteet]])
-     (re-frame/subscribe [:application/selected-language])])
-  (fn [[hakukohteet selected-language] [_ field]]
+    (re-frame/subscribe [:application/selected-language]))
+  (fn [selected-language [_ field]]
     (-> field :params :deadline-label selected-language)))
 
 (re-frame/reg-sub
@@ -161,17 +172,14 @@
         (update :invalid-fields (partial sort-by :order-idx)))))
 
 (re-frame/reg-sub
- :application/can-apply?
- (fn [db]
-   (if-let [hakukohteet (get-in db [:form :tarjonta :hakukohteet])]
-     (or (some? (get-in db [:application :virkailija-secret]))
-         (some #(get-in % [:hakuaika :on]) hakukohteet))
-     true)))
-
-(re-frame/reg-sub
-  :application/hakukohde-count
-  (fn [db]
-    (count (-> db :tarjonta :hakukohteet))))
+  :application/can-apply?
+  (fn [_ _]
+    [(re-frame/subscribe [:application/tarjonta-hakukohteet])
+     (re-frame/subscribe [:application/virkailija?])])
+  (fn [[hakukohteet virkailija?] _]
+    (or (empty? hakukohteet)
+        virkailija?
+        (some #(get-in % [:hakuaika :on]) hakukohteet))))
 
 (re-frame/reg-sub
   :application/selected-language
@@ -306,19 +314,22 @@
 
 (re-frame/reg-sub
   :application/hakukohde-offending-priorization?
-  (fn [db [_ hakukohde-oid]]
-    (let [selected                     (selected-hakukohteet db)
-          priorisoivat-hakukohderyhmat @(re-frame/subscribe [:application/priorisoivat-hakukohderyhmat])]
-      (validators/offending-priorization hakukohde-oid selected priorisoivat-hakukohderyhmat))))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/selected-hakukohteet])
+     (re-frame/subscribe [:application/priorisoivat-hakukohderyhmat])])
+  (fn [[selected-hakukohteet priorisoivat-hakukohderyhmat] [_ hakukohde-oid]]
+    (validators/offending-priorization hakukohde-oid
+                                       selected-hakukohteet
+                                       priorisoivat-hakukohderyhmat)))
 
 (re-frame/reg-sub
   :application/hakukohde-editable?
-  (fn [db [_ hakukohde-oid]]
-    (or (some? (get-in db [:application :virkailija-secret]))
-        (->> (get-in db [:form :tarjonta :hakukohteet])
-             (some #(when (= hakukohde-oid (:oid %)) %))
-             :hakuaika
-             :on))))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/tarjonta-hakukohteet-by-oid])
+     (re-frame/subscribe [:application/virkailija?])])
+  (fn [[hakukohteet virkailija?] [_ hakukohde-oid]]
+    (or virkailija?
+        (get-in hakukohteet [hakukohde-oid :hakuaika :on]))))
 
 (re-frame/reg-sub
   :application/hakukohde-query
@@ -337,9 +348,10 @@
 
 (re-frame/reg-sub
   :application/hakukohde-selected?
-  (fn [db [_ hakukohde-oid]]
-    (some #(= % hakukohde-oid)
-          @(re-frame/subscribe [:application/selected-hakukohteet]))))
+  (fn [_ _]
+    (re-frame/subscribe [:application/selected-hakukohteet]))
+  (fn [selected-hakukohteet [_ hakukohde-oid]]
+    (some #(= % hakukohde-oid) selected-hakukohteet)))
 
 (re-frame/reg-sub
   :application/hakukohde-deleting?
@@ -380,10 +392,11 @@
 (re-frame/reg-sub
   :application/hakukohteet-full?
   (fn [_ _]
-    (if-let [max-hakukohteet @(re-frame/subscribe [:application/max-hakukohteet])]
-      (<= max-hakukohteet
-        (count @(re-frame/subscribe [:application/selected-hakukohteet])))
-      false)))
+    [(re-frame/subscribe [:application/max-hakukohteet])
+     (re-frame/subscribe [:application/selected-hakukohteet])])
+  (fn [[max-hakukohteet selected-hakukohteet] _]
+    (and (some? max-hakukohteet)
+         (<= max-hakukohteet (count selected-hakukohteet)))))
 
 (re-frame/reg-sub
   :application/default-languages
@@ -435,16 +448,11 @@
 
 (re-frame/reg-sub
   :application/hakukohde-priority-number
-  (fn [db [_ hakukohde-oid]]
-    (->> (-> db :application :answers :hakukohteet :values)
-         (keep-indexed #(when (= hakukohde-oid (:value %2))
-                          (inc %1)))
-         first)))
-
-(re-frame/reg-sub
-  :application/tarjonta-hakukohteet
-  (fn [db _]
-    (-> db :form :tarjonta :hakukohteet)))
+  (fn [_ _]
+    (re-frame/subscribe [:application/selected-hakukohteet]))
+  (fn [selected-hakukohteet [_ hakukohde-oid]]
+    (first (keep-indexed #(when (= hakukohde-oid %2) (inc %1))
+                         selected-hakukohteet))))
 
 (re-frame/reg-sub
   :application/validators-processing
