@@ -534,17 +534,17 @@
   :application/post-handle-form-dispatches
   (fn [{:keys [db]} _]
     (let [selection-limited (selection-limits db)]
-      (util/remove-empty-query-params
+      (merge
         {:db         (assoc db :selection-limited selection-limited)
-         :http       (when selection-limited
-                       {:method  :put
-                        :url     (str "/hakemus/api/selection-limit?form-key=" (-> db :form :key))
-                        :handler [:application/handle-update-selection-limits]})
          :dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
                       [:application/hakukohde-query-change (atom "")]
                       [:application/set-page-title]
                       [:application/update-answers-validity]
-                      [:application/validate-hakukohteet]]}))))
+                      [:application/validate-hakukohteet]]}
+        (when selection-limited
+          {:http {:method  :put
+                  :url     (str "/hakemus/api/selection-limit?form-key=" (-> db :form :key))
+                  :handler [:application/handle-update-selection-limits]}})))))
 
 (defn- handle-get-application [{:keys [db]}
                                [_
