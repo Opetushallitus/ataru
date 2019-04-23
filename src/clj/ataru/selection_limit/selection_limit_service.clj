@@ -87,32 +87,31 @@
    (let [selection-group-fields (group-by :id (fields-in-selection-group form))
          try-to-select          (->> answers
                                      (filter #(selection-group-fields (:key %)))
-                                     (seq))
-         permanently-select     (fn [limit selection-group-id question-id answer-id]
-                                    (yesql-remove-existing-initial-selection! {:selection_id       selection-id
-                                                                               :selection_group_id selection-group-id} connection)
-
-                                    (when-not (= 1 (-> (yesql-has-permanent-selection {:application_key    application-key
-                                                                                       :question_id        question-id
-                                                                                       :answer_id          answer-id
-                                                                                       :selection_group_id selection-group-id} connection)
-                                                       first
-                                                       :n))
-                                      (yesql-remove-existing-selection! {:application_key    application-key
-                                                                         :selection_group_id selection-group-id} connection)
-                                      (yesql-new-selection! {:application_key    application-key
-                                                             :question_id        question-id
-                                                             :answer_id          answer-id
-                                                             :selection_group_id selection-group-id} connection)
-                                      (enforce-limits limit application-key nil selection-group-id question-id answer-id connection)))]
+                                     (seq))]
      (doseq [{:keys [key value]} try-to-select]
        (let [{:keys [params options]} (first (selection-group-fields key))
              limit              (->> options
                                      (filter #(= (:value %) value))
                                      first
                                      :selection-limit)
-             selection-group-id (get params :selection-group-id)]
-         (permanently-select limit selection-group-id key value))))))
+             selection-group-id (get params :selection-group-id)
+             question-id        key
+             answer-id          value]
+         (yesql-remove-existing-initial-selection! {:selection_id       selection-id
+                                                    :selection_group_id selection-group-id} connection)
+         (when-not (= 1 (-> (yesql-has-permanent-selection {:application_key    application-key
+                                                            :question_id        question-id
+                                                            :answer_id          answer-id
+                                                            :selection_group_id selection-group-id} connection)
+                            first
+                            :n))
+           (yesql-remove-existing-selection! {:application_key    application-key
+                                              :selection_group_id selection-group-id} connection)
+           (yesql-new-selection! {:application_key    application-key
+                                  :question_id        question-id
+                                  :answer_id          answer-id
+                                  :selection_group_id selection-group-id} connection)
+           (enforce-limits limit application-key nil selection-group-id question-id answer-id connection)))))))
 
 (defn swab-selection [form-key selection-id question-id answer-id selection-group-id]
   (let [{:keys [params options]} (->> (fields-in-selection-group (forms/fetch-by-key form-key))
