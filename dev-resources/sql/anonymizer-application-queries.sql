@@ -1,5 +1,10 @@
 -- name: sql-get-all-applications
-SELECT id, person_oid, content FROM applications;
+SELECT id FROM applications;
+
+-- name: sql-get-application
+SELECT id, person_oid, content
+FROM applications
+WHERE id = :id;
 
 -- name: sql-update-application!
 UPDATE applications

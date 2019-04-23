@@ -70,7 +70,8 @@
 
 (defn anonymize-data [& args]
   (let [fake-persons (file->fake-persons (first args))]
-    (doseq [application (application-store/get-all-applications)]
+    (doseq [id   (application-store/get-all-application-ids)
+            :let [application (application-store/get-application id)]]
       (if-let [fake-person (first (get fake-persons (:person_oid application)))]
         (do (application-store/update-application (anonymize fake-person application))
             (log/info "Anonymized application" (:id application)))

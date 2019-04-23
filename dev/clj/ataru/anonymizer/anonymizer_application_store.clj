@@ -6,8 +6,11 @@
 
 (sql/defqueries "sql/anonymizer-application-queries.sql")
 
-(defn get-all-applications []
-  (db/exec :db sql-get-all-applications {}))
+(defn get-all-application-ids []
+  (map :id (db/exec :db sql-get-all-applications {})))
+
+(defn get-application [id]
+  (first (db/exec :db sql-get-application {:id id})))
 
 (defn update-application [application]
   (db/exec :db sql-update-application! application))
