@@ -371,20 +371,23 @@
   :application/rajaavat-hakukohteet
   (fn [_ _]
     [(re-frame/subscribe [:application/rajaavat-hakukohderyhmat])
-     (re-frame/subscribe [:application/tarjonta-hakukohteet])
+     (re-frame/subscribe [:application/tarjonta-hakukohteet-by-oid])
      (re-frame/subscribe [:application/selected-hakukohteet])])
   (fn rajaavat-hakukohteet [[rajaavat tarjonta-hakukohteet selected-hakukohteet] [_ hakukohde-oid]]
-    (when-let [rajaavat (seq rajaavat)]
-      (let [hakukohteet                   (set (cons hakukohde-oid selected-hakukohteet))
-            hakukohteet                   (filter #(contains? hakukohteet (:oid %)) tarjonta-hakukohteet)
-            hakukohde                     (first (filter #(= (:oid %) hakukohde-oid) hakukohteet))
-            hakukohteet                   (filter #(not-empty (clojure.set/intersection (set (:hakukohderyhmat %))
-                                                                                        (set (map :hakukohderyhma-oid rajaavat))
-                                                                                        (set (:hakukohderyhmat hakukohde)))) hakukohteet)
-            limitting-hakukohderyhma-oids (set (validators/limitting-hakukohderyhmat hakukohteet rajaavat))]
-        (->> hakukohteet
-             (filter #(not= hakukohde-oid (:oid %)))
-             (filter #(not-empty (clojure.set/intersection limitting-hakukohderyhma-oids (set (:hakukohderyhmat %))))))))))
+    (let [hakukohde                     (get tarjonta-hakukohteet hakukohde-oid)
+          possibly-limiting-hakukohteet (->> (remove #(= hakukohde-oid %) selected-hakukohteet)
+                                             (map tarjonta-hakukohteet)
+                                             (remove #(empty? (clojure.set/intersection
+                                                               (set (:hakukohderyhmat %))
+                                                               (set (map :hakukohderyhma-oid rajaavat))
+                                                               (set (:hakukohderyhmat hakukohde))))))
+          limiting-hakukohderyhma-oids  (-> (conj possibly-limiting-hakukohteet hakukohde)
+                                            (validators/limitting-hakukohderyhmat rajaavat)
+                                            set)]
+      (remove #(empty? (clojure.set/intersection
+                        limiting-hakukohderyhma-oids
+                        (set (:hakukohderyhmat %))))
+              possibly-limiting-hakukohteet))))
 
 (re-frame/reg-sub
   :application/hakukohteet-full?
