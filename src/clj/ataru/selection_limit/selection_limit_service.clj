@@ -98,22 +98,13 @@
                                                                                        :selection_group_id selection-group-id} connection)
                                                        first
                                                        :n))
-                                      (do
-                                        (yesql-remove-existing-selection! {:application_key    application-key
-                                                                           :selection_group_id selection-group-id} connection)
-
-                                        (or (= 1 (yesql-new-selection! {:application_key    application-key
-                                                                        :question_id        question-id
-                                                                        :answer_id          answer-id
-                                                                        :selection_group_id selection-group-id} connection))
-                                            (throw (limit-exception
-                                                     (format (str "Permanent selection failed to application-key = s%, question-id = %s"
-                                                               ", answer-id = %s, selection-group-id = %s")
-                                                       application-key
-                                                       question-id
-                                                       answer-id
-                                                       selection-group-id))))
-                                        (enforce-limits limit application-key nil selection-group-id question-id answer-id connection))))]
+                                      (yesql-remove-existing-selection! {:application_key    application-key
+                                                                         :selection_group_id selection-group-id} connection)
+                                      (yesql-new-selection! {:application_key    application-key
+                                                             :question_id        question-id
+                                                             :answer_id          answer-id
+                                                             :selection_group_id selection-group-id} connection)
+                                      (enforce-limits limit application-key nil selection-group-id question-id answer-id connection)))]
      (doseq [{:keys [key value]} try-to-select]
        (let [{:keys [params options]} (first (selection-group-fields key))
              limit              (->> options
