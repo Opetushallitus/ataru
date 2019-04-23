@@ -36,15 +36,10 @@
          limits              (into {} (mapcat #(map (fn [o] [[(:id %) (:value o)] [% (:selection-limit o)]]) (:options %)) fields))]
      (merge
       {:limit-reached (mapcat (fn [[key [parent limit]]]
-                                  (when limit
-                                        (if-let [result (selections key)]
-                                          (when (and (get-in parent [:params :selection-group-id])
-                                                     (<= (or limit 0) (:n result)))
-                                                [(zipmap [:question-id :answer-id] key)])
-                                          (when (= 0 limit)
-                                                [(zipmap [:question-id :answer-id] key)])))
-                                  ) limits)
-       }
+                                  (when (and limit
+                                             (get-in parent [:params :selection-group-id])
+                                             (<= limit (get-in selections [key :n] 0)))
+                                        [(zipmap [:question-id :answer-id] key)])) limits)}
       (when selection-id
             {:selection-id selection-id})))))
 
