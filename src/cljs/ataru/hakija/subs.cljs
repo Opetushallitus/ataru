@@ -204,25 +204,27 @@
     ;; form is loaded
     (or selected-language :fi)))
 
-(defn- selected-hakukohteet [db]
-  (map :value (get-in db [:application :answers :hakukohteet :values] [])))
-
-(defn- hakukohteet-from-tarjonta [db hakukohteet]
-  (->> (get-in db [:form :tarjonta :hakukohteet])
-       (filter #(contains? hakukohteet (:oid %)))))
-
-(defn- selected-hakukohteet-from-tarjonta [db]
-  (hakukohteet-from-tarjonta db (set (selected-hakukohteet db))))
+(re-frame/reg-sub
+  :application/selected-hakukohteet
+  (fn [_ _]
+    (re-frame/subscribe [:application/answer :hakukohteet nil nil]))
+  (fn [hakukohteet-answer _]
+    (map :value (:values hakukohteet-answer))))
 
 (re-frame/reg-sub
   :application/selected-hakukohteet-for-field
-  (fn [db [_ field]]
-    (when-let [ids (seq (concat (get field :belongs-to-hakukohderyhma [])
-                                (get field :belongs-to-hakukohteet [])))]
-      (filter #(not (empty? (clojure.set/intersection
-                             (set ids)
-                             (set (cons (:oid %) (:hakukohderyhmat %))))))
-              (selected-hakukohteet-from-tarjonta db)))))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/tarjonta-hakukohteet-by-oid])
+     (re-frame/subscribe [:application/selected-hakukohteet])])
+  (fn [[hakukohteet selected-hakukohteet] [_ field]]
+    (when-let [ids (some-> (concat (get field :belongs-to-hakukohderyhma)
+                                   (get field :belongs-to-hakukohteet))
+                           seq
+                           set)]
+      (->> (map hakukohteet selected-hakukohteet)
+           (remove #(empty? (clojure.set/intersection
+                             ids
+                             (conj (set (:hakukohderyhmat %)) (:oid %)))))))))
 
 (re-frame/reg-sub
   :application/cannot-view?
@@ -295,11 +297,6 @@
   (fn [db _]
     (into {} (map (juxt :value identity)
                   @(re-frame/subscribe [:application/hakukohde-options])))))
-
-(re-frame/reg-sub
-  :application/selected-hakukohteet
-  (fn [db _]
-    (selected-hakukohteet db)))
 
 (re-frame/reg-sub
   :application/hakukohteet-editable?
