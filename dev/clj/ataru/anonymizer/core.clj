@@ -9,7 +9,13 @@
   (let [[_ d m y] (re-matches #"(\d{2}).(\d{2}).(\d{4})" date)]
     (str y "-" m "-" d)))
 
-(defn- anonymize [fake-person application]
+(defn- anonymize-attachment
+  [answer attachment-key]
+  (update answer :value (partial map (fn [v] (if (string? v)
+                                               attachment-key
+                                               (map (constantly attachment-key) v))))))
+
+(defn- anonymize [fake-person attachment-key application]
   (let [anonymize-answer (fn [{:keys [key value] :as answer}]
                            (let [value (case key
                                          "gender"         (:gender fake-person)
@@ -25,7 +31,9 @@
                                          "postal-office"  (:postal-office fake-person)
                                          "home-town"      (:home-town fake-person)
                                          value)]
-                             (assoc answer :value value)))]
+                             (cond-> (assoc answer :value value)
+                                     (= "attachment" (:fieldType answer))
+                                     (anonymize-attachment attachment-key))))]
     (merge application {:preferred_name (:preferred-name fake-person)
                         :last_name      (:last-name fake-person)
                         :ssn            (:fake-ssn fake-person)
@@ -69,11 +77,13 @@
        (group-by :person-oid)))
 
 (defn anonymize-data [& args]
-  (let [fake-persons (file->fake-persons (first args))]
+  (assert (not (clojure.string/blank? (second args))))
+  (let [fake-persons   (file->fake-persons (first args))
+        attachment-key (second args)]
     (doseq [id   (application-store/get-all-application-ids)
             :let [application (application-store/get-application id)]]
       (if-let [fake-person (first (get fake-persons (:person_oid application)))]
-        (do (application-store/update-application (anonymize fake-person application))
+        (do (application-store/update-application (anonymize fake-person attachment-key application))
             (log/info "Anonymized application" (:id application)))
         (log/info "Did not anonymize application" (:id application))))
     (application-store/regenerate-application-secrets)))
