@@ -57,11 +57,11 @@
   (it "should fail to validate empty string"
       (should-not (validate! :ssn "" {} nil)))
 
-  (it "should fail to validate SSN with century - / + and year between 2000-current_year"
+  (it "should fail to validate SSN with century - and year between 2000-current_year"
       (let [fun (partial validate! :ssn)]
         (doseq [experiment ["020202-0202"
-                            "020202+0202"
-                            "020200+020J"]]
+                            "020202-0202"
+                            "020200-020J"]]
           (should-not (fun experiment {} nil)))
         (doseq [experiment ["020202A0202"
                             "020202A0202"

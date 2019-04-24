@@ -2,7 +2,7 @@
   (:require #?(:clj  [clj-time.core :as c]
                :cljs [cljs-time.core :as c])))
 
-(def ^:private ssn-pattern #"^(\d{2})(\d{2})(\d{2})([-|\+|A])(\d{3})([0-9a-zA-Z])$")
+(def ^:private ssn-pattern #"^(\d{2})(\d{2})(\d{2})([-|A])(\d{3})([0-9a-zA-Z])$")
 
 (def ^:private check-chars {0  "0"
                             1  "1"
@@ -47,8 +47,7 @@
       ; not (given year between 2000 and current-year)
       (not
         (and
-          (or (= "-" century)
-            (= "+" century))
+          (= "-" century)
           (-> year (>= 2000))
           (-> year (<= current-year))))
       ; not (given century is A and year in future)
