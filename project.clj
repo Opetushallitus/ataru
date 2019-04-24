@@ -95,9 +95,7 @@
                  ["snapshots" {:url "https://artifactory.opintopolku.fi/artifactory/oph-sade-snapshot-local"
                                ;                                   :creds :gpg
                                }]
-                 ["ext-snapshots" {:url "https://artifactory.opintopolku.fi/artifactory/ext-snapshot-local"}]
-                 ["Laughing Panda" {:url       "http://maven.laughingpanda.org/maven2"
-                                    :snapshots false}]]
+                 ["ext-snapshots" {:url "https://artifactory.opintopolku.fi/artifactory/ext-snapshot-local"}]]
 
   :source-paths ["src/clj" "src/cljc"]
   :test-paths ["spec"]
