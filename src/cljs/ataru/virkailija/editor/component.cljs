@@ -13,7 +13,6 @@
    [cljs.core.match :refer-macros [match]]
    [goog.dom :as gdom]
    [goog.string :as s]
-   [ataru.number :refer [numeric-matcher lte]]
    [goog.date :as d]
    [cljs-time.core :as t]
    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
@@ -495,58 +494,18 @@
 (defn- get-val [event]
   (-> event .-target .-value))
 
-(defn- decimal-places-selector [path]
-  (let [decimal-places     (subscribe [:editor/get-component-value path :params :decimals])
-        form-locked?       (subscribe [:editor/form-locked?])
-        min-value          (r/atom @(subscribe [:editor/get-component-value path :params :min-value]))
-        max-value          (r/atom @(subscribe [:editor/get-component-value path :params :max-value]))
-        [min max]          [{:id     (util/new-uuid)
-                             :key    :min-value
-                             :value  min-value
-                             :valid? (r/atom true)}
-                            {:id     (util/new-uuid)
-                             :key    :max-value
-                             :value  max-value
-                             :valid? (r/atom true)}]
-        decimals           (subscribe [:editor/get-component-value path :params :decimals])
-        number-of-decimals (fn [v]
-                             (let [[_ decimals] (clojure.string/split v #",")]
-                               (count decimals)))
-        format-range       (fn [value]
-                             (clojure.string/replace (clojure.string/trim (or value "")) "." ","))
-        valid?             (fn [value]
-                             (let [clean (format-range value)]
-                               (or
-                                (empty? value)
-                                (and (re-matches numeric-matcher clean)
-                                     (<= (number-of-decimals clean) @decimals)))))
-        validate-and-set   (fn []
-                             (let [min-valid?      (valid? @min-value)
-                                   max-valid?      (valid? @max-value)
-                                   invalidate-both (and min-valid?
-                                                        max-valid?
-                                                        (not (empty? @min-value))
-                                                        (not (empty? @max-value))
-                                                        (not (lte @min-value @max-value)))]
-                               (reset! (:valid? min) (and min-valid? (not invalidate-both)))
-                               (reset! (:valid? max) (and max-valid? (not invalidate-both)))
-                               (when @(:valid? min)
-                                 (dispatch [:editor/set-range-value (:key min) (format-range @min-value) path :params]))
-                               (when @(:valid? max)
-                                 (dispatch [:editor/set-range-value (:key max) (format-range @max-value) path :params]))))
-        set-range          (fn [id value]
-                             (let [id        id
-                                   component (->> [min max]
-                                                  (filter #(= (:id %) id))
-                                                  (first))]
-                               (reset! (:value component) value)
-                               (validate-and-set)))
-        set-range-event    #(set-range (-> % .-target .-id) (-> % .-target .-value))
-        invalidate-values  (fn []
-                             (doall
-                               (for [component [min max]]
-                                 (set-range (:id component) (or @(:value component) "")))))]
-    (fn [path]
+(defn- decimal-places-selector [component-id path]
+  (let [decimal-places (subscribe [:editor/get-component-value path :params :decimals])
+        form-locked?   (subscribe [:editor/form-locked?])
+        min-value      (subscribe [:editor/get-range-value component-id :min-value path])
+        max-value      (subscribe [:editor/get-range-value component-id :max-value path])
+        min-invalid?   (subscribe [:state-query [:editor :ui component-id :min-value :invalid?]])
+        max-invalid?   (subscribe [:state-query [:editor :ui component-id :max-value :invalid?]])
+        min-id         (util/new-uuid)
+        max-id         (util/new-uuid)
+        format-range   (fn [value]
+                         (clojure.string/replace (clojure.string/trim (or value "")) "." ","))]
+    (fn [component-id path]
       [:div
        [:div.editor-form__additional-params-container
         [:header.editor-form__component-item-header (get-virkailija-translation :shape)]
@@ -557,40 +516,39 @@
                        (let [new-val (get-val e)
                              value   (when (not-empty new-val)
                                        (js/parseInt new-val))]
-                         (dispatch-sync [:editor/set-decimals-value value path :params])
-                         (invalidate-values)))}
+                         (dispatch [:editor/set-decimals-value component-id value path])))}
          [:option {:value "" :key 0} (get-virkailija-translation :integer)]
          (doall
            (for [i (range 1 5)]
              [:option {:value i :key i} (str i " " (get-virkailija-translation :decimals))]))]]
        [:div.editor-form__additional-params-container
         [:label.editor-form__range-label
-         {:for   (:id min)
+         {:for   min-id
           :class (when @form-locked? "editor-form__checkbox-label--disabled")}
          (get-virkailija-translation :numeric-range)]
         [:input.editor-form__range-input
          {:type      "text"
-          :id        (:id min)
-          :class     (when-not @(:valid? min) "editor-form__text-field--invalid")
+          :id        min-id
+          :class     (when @min-invalid? "editor-form__text-field--invalid")
           :disabled  @form-locked?
           :value     @min-value
-          :on-blur   #(reset! min-value (format-range (-> % .-target .-value)))
-          :on-change set-range-event}]
+          :on-blur   #(dispatch [:editor/set-range-value component-id :min-value (format-range (-> % .-target .-value)) path])
+          :on-change #(dispatch [:editor/set-range-value component-id :min-value (-> % .-target .-value) path])}]
         [:span "—"]
         [:input.editor-form__range-input
          {:type      "text"
-          :id        (:id max)
-          :class     (when-not @(:valid? max) "editor-form__text-field--invalid")
+          :id        max-id
+          :class     (when @max-invalid? "editor-form__text-field--invalid")
           :disabled  @form-locked?
           :value     @max-value
-          :on-blur   #(reset! max-value (format-range (-> % .-target .-value)))
-          :on-change set-range-event}]]])))
+          :on-blur   #(dispatch [:editor/set-range-value component-id :max-value (format-range (-> % .-target .-value)) path])
+          :on-change #(dispatch [:editor/set-range-value component-id :max-value (-> % .-target .-value) path])}]]])))
 
-(defn- text-component-type-selector [path radio-group-id]
+(defn- text-component-type-selector [component-id path radio-group-id]
   (let [id           (util/new-uuid)
         checked?     (subscribe [:editor/get-component-value path :params :numeric])
         form-locked? (subscribe [:editor/form-locked?])]
-    (fn [path radio-group-id]
+    (fn [component-id path radio-group-id]
       [:div
        [:div.editor-form__checkbox-container
         [:input.editor-form__checkbox
@@ -611,7 +569,7 @@
           :class (when @form-locked? "editor-form__checkbox-label--disabled")}
          (get-virkailija-translation :only-numeric)]]
        (when @checked?
-         [decimal-places-selector path])])))
+         [decimal-places-selector component-id path])])))
 
 (defn- button-label-class
   [button-name form-locked?]
@@ -688,7 +646,7 @@
            (when-not text-area?
              [repeater-checkbox path initial-content])
            (when-not text-area?
-             [text-component-type-selector path radio-group-id])]
+             [text-component-type-selector (:id initial-content) path radio-group-id])]
           [belongs-to-hakukohteet path initial-content]]
          [info-addon path]]]])))
 
