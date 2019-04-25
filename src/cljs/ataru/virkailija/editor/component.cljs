@@ -162,13 +162,6 @@
   [event]
   (.preventDefault event))
 
-(defn- fade-out-effect
-  [path]
-  (reaction (case @(subscribe [:state-query [:editor :forms-meta path]])
-              :fade-out "fade-out"
-              :fade-in "animated fadeInUp"
-              nil)))
-
 (defn- cut-component-button [removable? path]
   (case @(subscribe [:editor/component-button-state :cut path])
     :active
@@ -194,12 +187,7 @@
     :confirm
     [:div.editor-form__component-button-group
      [:button.editor-form__remove-component-button--confirm.editor-form__remove-component-button
-      {:on-click (fn [event]
-                   (let [target (-> event
-                                    .-target
-                                    (gdom/getAncestorByClass "editor-form__component-wrapper"))]
-                     (set! (.-height (.-style target)) (str (.-offsetHeight target) "px"))
-                     (dispatch [:editor/confirm-remove-component path])))}
+      {:on-click (fn [_] (dispatch [:editor/confirm-remove-component path]))}
       (get-virkailija-translation :confirm-delete)]
      [:button.editor-form__remove-component-button
       {:on-click #(dispatch [:editor/unstart-component :remove path])}
@@ -593,11 +581,9 @@
                             (dispatch-sync [:editor/set-component-value new-size path :params :size]))
         text-area?        (= "Tekstialue" header-label)
         numeric?          (subscribe [:editor/get-component-value path :params :numeric])
-        animation-effect  (fade-out-effect path)
         form-locked?      (subscribe [:editor/form-locked?])]
     (fn [initial-content path & {:keys [header-label size-label]}]
       [:div.editor-form__component-wrapper
-       {:class @animation-effect}
        [text-header (:id initial-content) header-label path (:metadata initial-content)
         :sub-header @sub-header]
        [component-content
@@ -833,7 +819,6 @@
         options-koodisto         (subscribe [:editor/get-component-value path :koodisto-source])
         koodisto-ordered-by-user (subscribe [:editor/get-component-value path :koodisto-ordered-by-user])
         value                    (subscribe [:editor/get-component-value path])
-        animation-effect         (fade-out-effect path)
         koodisto-ordered-id      (util/new-uuid)
         form-locked?             (subscribe [:editor/form-locked?])]
     (fn [initial-content followups path {:keys [question-group-element?]}]
@@ -841,7 +826,6 @@
             field-type     (:fieldType @value)
             show-followups (r/atom nil)]
         [:div.editor-form__component-wrapper
-         {:class @animation-effect}
          (let [header (case field-type
                         "dropdown"       (get-virkailija-translation :dropdown)
                         "singleChoice"   (get-virkailija-translation :single-choice-button)
@@ -898,7 +882,6 @@
   (let [id                (:id content)
         languages         @(subscribe [:editor/languages])
         value             @(subscribe [:editor/get-component-value path])
-        animation-effect  @(fade-out-effect path)
         group-header-text (case (:fieldClass content)
                             "wrapperElement" (get-virkailija-translation :wrapper-element)
                             "questionGroup"  (get-virkailija-translation :question-group))
@@ -906,7 +889,6 @@
                             "wrapperElement" (get-virkailija-translation :wrapper-header)
                             "questionGroup"  (get-virkailija-translation :group-header))]
     [:div.editor-form__component-wrapper
-     {:class animation-effect}
      [text-header id group-header-text path (:metadata content)
       :sub-header (:label value)]
      [component-content
@@ -970,13 +952,11 @@
   "Info text which is a standalone component"
   [initial-content path]
   (let [languages        (subscribe [:editor/languages])
-        animation-effect (fade-out-effect path)
         collapse-checked (subscribe [:editor/get-component-value path :params :info-text-collapse])
         sub-header       (subscribe [:editor/get-component-value path :label])
         form-locked?     (subscribe [:editor/form-locked?])]
     (fn [initial-content path]
       [:div.editor-form__component-wrapper
-       {:class @animation-effect}
        [text-header (:id initial-content) (get-virkailija-translation :info-element) path (:metadata initial-content)
         :sub-header @sub-header]
        [component-content
@@ -1022,11 +1002,9 @@
 
 (defn pohjakoulutusristiriita
   [initial-content path]
-  (let [languages        (subscribe [:editor/languages])
-        animation-effect (fade-out-effect path)]
+  (let [languages (subscribe [:editor/languages])]
     (fn [initial-content path]
       [:div.editor-form__component-wrapper
-       {:class @animation-effect}
        [text-header (:id initial-content) (get-in initial-content [:label :fi]) path (:metadata initial-content)]
        [component-content
         path ;(:id initial-content)
@@ -1047,12 +1025,10 @@
                  doall)]]]]]])))
 
 (defn adjacent-fieldset [content path children]
-  (let [languages        (subscribe [:editor/languages])
-        sub-header       (subscribe [:editor/get-component-value path :label])
-        animation-effect (fade-out-effect path)]
+  (let [languages  (subscribe [:editor/languages])
+        sub-header (subscribe [:editor/get-component-value path :label])]
     (fn [content path children]
       [:div.editor-form__component-wrapper
-       {:class @animation-effect}
        [text-header (:id content) (get-virkailija-translation :adjacent-fieldset) path (:metadata content)
         :sub-header @sub-header]
        [component-content
@@ -1079,11 +1055,9 @@
                (dispatch [:generate-component component-fn (concat path [:children (count children)])]))])]]]])))
 
 (defn adjacent-text-field [content path]
-  (let [languages        (subscribe [:editor/languages])
-        animation-effect (fade-out-effect path)]
+  (let [languages (subscribe [:editor/languages])]
     (fn [content path]
       [:div.editor-form__component-wrapper
-       {:class @animation-effect}
        [text-header (:id content) (get-virkailija-translation :text-field) path (:metadata content)
         :foldable? false
         :movable? false]
@@ -1183,7 +1157,6 @@
 (defn attachment [content path]
   (let [component        (subscribe [:editor/get-component-value path])
         languages        (subscribe [:editor/languages])
-        animation-effect (fade-out-effect path)
         deadline-value   (r/atom (get-in @component [:params :deadline]))
         valid            (r/atom true)
         mail-attachment? (subscribe [:editor/get-component-value path :params :mail-attachment?])
@@ -1203,7 +1176,6 @@
                               :else (update-value value nil false))))]
     (fn [content path]
       [:div.editor-form__component-wrapper
-       {:class @animation-effect}
        [text-header (:id content) (get-virkailija-translation :attachment) path (:metadata content)
         :sub-header (:label @component)]
        [component-content

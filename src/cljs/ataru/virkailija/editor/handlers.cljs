@@ -311,16 +311,14 @@
   :editor/remove-component
   (fn [db [_ path]]
     (-> db
-        (update-in [:editor :forms-meta] assoc path :removed)
         (update-in [:editor :ui :component-button-state :remove] dissoc path)
         (remove-component path))))
 
 (reg-event-fx
   :editor/confirm-remove-component
   (fn [{db :db} [_ path]]
-    {:db (-> db
-             (assoc-in [:editor :forms-meta path] :fade-out)
-             (assoc-in [:editor :ui :component-button-state :remove path] :disabled))
+    {:db             (assoc-in db [:editor :ui :component-button-state :remove path] :disabled)
+     :dispatch       [:editor/fold (get-in db (vec (current-form-content-path db [path :id])))]
      :dispatch-later [{:ms 310 :dispatch [:editor/remove-component path]}]}))
 
 (reg-event-db
