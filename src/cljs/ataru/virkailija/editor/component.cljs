@@ -563,7 +563,7 @@
                                       :editor/add-validator
                                       :editor/remove-validator) "numeric" path])
                          (when-not checked-now?
-                           (dispatch [:editor/set-decimals-value nil path :params]))))}]
+                           (dispatch [:editor/set-decimals-value component-id nil path]))))}]
         [:label.editor-form__checkbox-label
          {:for   id
           :class (when @form-locked? "editor-form__checkbox-label--disabled")}
