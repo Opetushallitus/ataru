@@ -44,15 +44,18 @@
    :application-period                          {:fi "Hakuaika"
                                                  :sv "Ansökningstid"
                                                  :en "Application period"}
-   :application-period-left                     {:fi "Hakuaikaa jäljellä"
-                                                 :sv "Återstående ansökningstid"
-                                                 :en "Time left to apply"}
-   :application-period-left-until               {:fi "Hakuaika päättyy"
-                                                 :sv "Ansökninstiden utgår"
-                                                 :en "Application period ends"}
-   :application-period-minutes-left             {:fi "Hakuaikaa jäljellä alle %s minuuttia."
-                                                 :sv "Av ansökningstiden återstår %s minuter."
-                                                 :en "%s minutes left in the application period."}
+   :application-period-hours-left               {:fi "Hakuaikaa jäljellä %s tuntia"
+                                                 :sv "Av ansökningstiden återstår %s timmar"
+                                                 :en "%s hours left in the application period"}
+   :application-period-hour-left                {:fi "Hakuaikaa jäljellä yksi tunti"
+                                                 :sv "Av ansökningstiden återstår en timme"
+                                                 :en "One hour left in the application period"}
+   :application-period-minutes-left             {:fi "Hakuaikaa jäljellä alle %s minuuttia"
+                                                 :sv "Av ansökningstiden återstår %s minuter"
+                                                 :en "Less than %s minutes left in the application period"}
+   :application-period-left-until               {:fi "Hakuaika päättyy %s"
+                                                 :sv "Ansökninstiden utgår %s"
+                                                 :en "Application period ends %s"}
    :application-priorization-invalid            {:fi "Hakukohteet ovat väärässä ensisijaisuusjärjestyksessä"
                                                  :sv "Fel prioritetsordning för ansökningsmålen"
                                                  :en "Application options are in an invalid order of preference"}
