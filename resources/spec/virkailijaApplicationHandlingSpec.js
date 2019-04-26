@@ -160,8 +160,8 @@
       );
       describe('Default sort', function () {
         before(wait.until(applicantNamesExist));
-        it('Descending by modification time', function () {
-          expectApplicants(["Tyrni, Johanna Irmeli", "Vatanen, Ari", "Kuikeloinen, Seija Susanna"]);
+        it('Descending by applicant name', function () {
+          expectApplicants(["Kuikeloinen, Seija Susanna", "Tyrni, Johanna Irmeli", "Vatanen, Ari"]);
         });
       });
       describe('Ascending sort by modification time', function () {
