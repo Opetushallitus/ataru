@@ -6,7 +6,7 @@
             [ataru.fixtures.ssn :as ssn]
             [ataru.fixtures.first-name :as first-name]
             [ataru.fixtures.hakukohde :as hakukohde]
-            [ataru.fixtures.numeric-input :refer [numbers integers]]
+            [ataru.fixtures.numeric-input :refer [numbers integers value-between]]
             [ataru.hakija.application-validators :as validator]
             [speclj.core :refer :all]
             [clojure.core.async :as async]))
@@ -155,5 +155,19 @@
             :let [expected (get integers number)]]
         (it (str "should " (when-not expected "not ") "validate " number)
           (should= expected (validate! :numeric number nil {:params {:decimals nil
-                                                                     :numeric true}})))))))
+                                                                     :numeric true}}))))))
+
+  (describe "number between range"
+            (doall
+              (for [[number inputs] value-between]
+                (doall
+                  (for [[valid? ranges] inputs]
+                    (doall
+                      (for [[min-value max-value] ranges]
+                        (it (str "should " (when-not valid? "not ") "validate " number " between " (or min-value "_") " - " (or max-value "_"))
+                            (should= valid? (validate! :numeric number nil {:params {:decimals  8
+                                                                                     :numeric   true
+                                                                                     :min-value min-value
+                                                                                     :max-value max-value
+                                                                                     }})))))))))))
 

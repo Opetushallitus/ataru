@@ -5,6 +5,7 @@
             [ataru.ssn :as ssn]
             [ataru.translations.texts :as texts]
             [ataru.preferred-name :as pn]
+            [ataru.number :refer [gte lte numeric-matcher]]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             #?(:clj  [clojure.core.async :as async]
                :cljs [cljs.core.async :as async])
@@ -230,27 +231,33 @@
                                         (and (pos? num-answers) answers-subset-of-options?))
      :else true)))
 
-(def numeric-matcher #"[+-]?(0|[1-9][0-9]*)([,.][0-9]+)?")
-
 (defn- numeric-value?
   [field-descriptor value]
   (if (clojure.string/blank? value)
     true
-    (let [[_ integer-part decimal-part] (re-matches numeric-matcher value)
-          decimal-places (-> field-descriptor :params :decimals)]
+    (let [[_ _ integer-part _ _ decimal-part] (re-matches numeric-matcher value)
+          decimal-places (-> field-descriptor :params :decimals)
+          min-value      (-> field-descriptor :params :min-value)
+          max-value      (-> field-descriptor :params :max-value)]
       (cond
-        (not integer-part) false
 
-        (and decimal-part
-             (not decimal-places))
-        false
+              (not integer-part)
+              false
 
-        (and decimal-part
-             (> (count decimal-part)
-                (inc decimal-places)))                      ; inc to conside separator!
-        false
+              (and decimal-part
+                   (not decimal-places))
+              false
 
-        :else true))))
+              (and decimal-part
+                   (> (count decimal-part)
+                     decimal-places))
+              false
+
+              :else
+              (and (or (nil? min-value)
+                       (gte value min-value))
+                   (or (nil? max-value)
+                       (lte value max-value)))))))
 
 (defn- numeric?
   [{:keys [value field-descriptor]}]

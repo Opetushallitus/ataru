@@ -73,6 +73,14 @@
   (fn get-component-value [component [_ & path]]
     (get-in component (rest (flatten path)))))
 
+
+(re-frame/reg-sub
+  :editor/get-range-value
+  (fn [db [_ id range & path]]
+    (or (get-in db [:editor :ui id range :value])
+        @(re-frame/subscribe [:editor/get-component-value path :params range])
+        "")))
+
 (re-frame/reg-sub
   :editor/languages
   (fn [db]

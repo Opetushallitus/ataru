@@ -4,6 +4,7 @@
             [clojure.walk :as walk]
             [cljs-time.core :as c]
             [cljs.core.async :as async]
+            [ataru.number :refer [numeric-matcher lte gte]]
             [cljs.core.match :refer-macros [match]]
             [ataru.component-data.value-transformers :refer [update-options-while-keeping-existing-followups]]
             [ataru.virkailija.autosave :as autosave]
@@ -164,6 +165,84 @@
     (-> db
         (assoc-in (current-form-content-path db [path]) value)
         (update-modified-by path))))
+
+(defn- number-of-decimals [v]
+  (let [[_ decimals] (clojure.string/split v #",")]
+    (count decimals)))
+
+(defn- format-range [value]
+  (clojure.string/replace (clojure.string/trim (or value "")) "." ","))
+
+(defn valid-range? [value decimals]
+                     (let [clean (format-range value)]
+                       (or
+                        (empty? clean)
+                        (and (re-matches numeric-matcher clean)
+                             (<= (number-of-decimals clean) decimals)))))
+
+(defn- validate-min-max [min max decimals]
+  (let [min (format-range min)
+        max (format-range max)
+        min-valid?  (valid-range? min decimals)
+        max-valid?  (valid-range? max decimals)
+        empty-range?   (and (not (empty? min))
+                            (not (empty? max))
+                            (and min-valid? max-valid?)
+                            (gte min max))]
+    (if empty-range?
+      [false false]
+      [min-valid? max-valid?])))
+
+(reg-event-db
+  :editor/set-decimals-value
+  (fn [db [_ id value & path]]
+    (let [path             (concat path [:params])
+          min-value        (get-in db (current-form-content-path db [path :min-value]))
+          max-value        (get-in db (current-form-content-path db [path :max-value]))
+          [min? max?]      (validate-min-max min-value max-value value)]
+      (cond-> (-> db
+                  (assoc-in (current-form-content-path db [path :decimals]) value)
+                  (update-modified-by path)
+                  (assoc-in [:editor :ui id :min-value :invalid?] (not min?))
+                  (assoc-in [:editor :ui id :max-value :invalid?] (not max?)))
+
+
+              (not min?)
+              (update-in (current-form-content-path db path) (fn [params]
+                                                               (dissoc params :min-value)))
+
+              (not max?)
+              (update-in (current-form-content-path db path) (fn [params]
+                                                               (dissoc params :max-value)))))))
+
+(reg-event-db
+  :editor/set-range-value
+  (fn [db [_ id range value & path]]
+    (let [path           (concat path [:params])
+          min-range?     (= :min-value range)
+          decimals       @(subscribe [:editor/get-component-value path :decimals])
+          clean-value    (format-range value)
+          valid?         (valid-range? clean-value decimals)
+          opposing-range (if min-range?
+                           :max-value
+                           :min-value)
+          opposing-value (get-in db (current-form-content-path db [path opposing-range]) "")
+          [min? max?] (if min-range?
+                        (validate-min-max value opposing-value decimals)
+                        (validate-min-max opposing-value value decimals))]
+      (cond-> (-> db
+                  (update-modified-by path)
+                  (assoc-in [:editor :ui id range :value] value)
+                  (assoc-in [:editor :ui id :min-value :invalid?] (not min?))
+                  (assoc-in [:editor :ui id :max-value :invalid?] (not max?)))
+
+              (empty? clean-value)
+              (update-in (current-form-content-path db path) (fn [params]
+                                                                 (dissoc params range)))
+
+              (and (not (empty? clean-value)) (if min-range? min? max?))
+              (assoc-in (current-form-content-path db path range) clean-value)))))
+
 
 (reg-event-db
   :editor/update-mail-attachment
