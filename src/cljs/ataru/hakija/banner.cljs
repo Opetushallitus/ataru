@@ -110,31 +110,6 @@
          :on-click toggle-fn}
         (get-translation :preview-answers)]])))
 
-(defn- seconds-text [seconds]
-  (when (pos? seconds)
-    (str seconds " "
-         (if (= 1 seconds)
-           (get-translation :second)
-           (get-translation :seconds)))))
-
-(defn- minutes-text [minutes]
-  (when (pos? minutes)
-    (str minutes " "
-         (if (= 1 minutes)
-           (get-translation :minute)
-           (get-translation :minutes)))))
-
-(defn- minutes-seconds-text [minutes seconds]
-  (str (minutes-text minutes) " "
-       (seconds-text seconds)))
-
-(defn- hours-minutes-text [hours minutes]
-  (str hours " "
-       (if (= 1 hours)
-         (get-translation :hour)
-         (get-translation :hours))
-       " " (minutes-text minutes)))
-
 (defn- new-time-left [hakuaika-end time-diff]
   (/ (- hakuaika-end (.getTime (js/Date.)) time-diff) 1000))
 
@@ -143,25 +118,33 @@
     (/ (Math/ceil (* value inv)) inv)))
 
 (defn- hakuaika-left []
-  (let [hakuaika-end (subscribe [:state-query [:form :hakuaika-end]])
-        time-diff    (subscribe [:state-query [:form :time-delta-from-server]])
-        seconds-left (r/atom (new-time-left @hakuaika-end @time-diff))
-        interval     (r/atom nil)]
+  (let [haku-end-time (subscribe [:application/haku-end-time])
+        hakuaika-end  (subscribe [:state-query [:form :hakuaika-end]])
+        time-diff     (subscribe [:state-query [:form :time-delta-from-server]])
+        seconds-left  (r/atom (new-time-left @hakuaika-end @time-diff))
+        interval      (r/atom nil)]
     (reset! interval (js/setInterval (fn []
                                        (let [new-time (new-time-left @hakuaika-end @time-diff)]
                                          (if (or (nil? @hakuaika-end) (< 0 new-time))
                                            (reset! seconds-left new-time)
                                            (.clearInterval js/window @interval))))
-                       1000))
+                                     1000))
     (fn []
-      (when (and (> (* 24 3600) @seconds-left) (<= 1 @seconds-left))
+      (when (< 0 @seconds-left (* 3600 24))
         (let [hours   (Math/floor (/ @seconds-left 3600))
-              minutes (Math/floor (/ (rem @seconds-left 3600) 60))]
-          [:div.application__hakuaika-left
-           (str
-            (when (and (= hours 0) (< 0 minutes))
-              (str (s/format (get-translation :application-period-minutes-left) (round minutes 15)) " "))
-            (get-translation :application-period-left-until) " " @(subscribe [:application/haku-end-time]))])))))
+              minutes (round (Math/floor (/ (rem @seconds-left 3600) 60)) 15)]
+          (cond (< 1 hours)
+                [:div.application__hakuaika-left
+                 (s/format (get-translation :application-period-hours-left) hours)]
+                (= 1 hours)
+                [:div.application__hakuaika-left
+                 (get-translation :application-period-hour-left)]
+                :else
+                [:div.application__hakuaika-left
+                 [:div
+                  (s/format (get-translation :application-period-minutes-left) minutes)]
+                 [:div
+                  (s/format (get-translation :application-period-left-until) @haku-end-time)]]))))))
 
 (defn status-controls [submit-status]
   (let [valid-status (subscribe [:application/valid-status])
