@@ -10,9 +10,17 @@
 
 (def ^:private toolbar-elements
   [[:form-section component/form-section]
-   [:dropdown component/dropdown]
    [:single-choice-button component/single-choice-button]
+   [:dropdown component/dropdown]
+   [:dropdown-koodisto (fn [metadata]
+                         (assoc (component/dropdown metadata)
+                                :koodisto-source {:uri "" :title "" :version 1}
+                                :options []))]
    [:multiple-choice component/multiple-choice]
+   [:multiple-choice-koodisto (fn [metadata]
+                                (assoc (component/multiple-choice metadata)
+                                       :koodisto-source {:uri "" :title "" :version 1}
+                                       :options []))]
    [:text-field component/text-field]
    [:text-area component/text-area]
    [:adjacent-fieldset component/adjacent-fieldset]
@@ -28,9 +36,11 @@
 (def followup-toolbar-element-names
   #{:text-field
     :text-area
-    :dropdown
     :single-choice-button
+    :dropdown
+    :dropdown-koodisto
     :multiple-choice
+    :multiple-choice-koodisto
     :info-element
     :attachment
     :adjacent-fieldset
@@ -39,9 +49,11 @@
 (def question-group-toolbar-element-names
   #{:text-field
     :text-area
-    :dropdown
     :single-choice-button
+    :dropdown
+    :dropdown-koodisto
     :multiple-choice
+    :multiple-choice-koodisto
     :info-element
     :attachment
     :adjacent-fieldset})

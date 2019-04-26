@@ -896,6 +896,9 @@ You will receive a confirmation of your application to your email."}
    :dropdown                                    {:fi "Pudotusvalikko"
                                                  :sv "Rullgardinsmeny"
                                                  :en "Dropdown"}
+   :dropdown-koodisto                           {:fi "Pudotusvalikko, koodisto"
+                                                 :sv "Rullgardinsmeny, kodregister"
+                                                 :en "Dropdown, codes"}
    :edit-application                            {:fi "Muokkaa hakemusta"
                                                  :sv "Bearbeta ansökan"
                                                  :en "Edit the application"}
@@ -905,7 +908,7 @@ You will receive a confirmation of your application to your email."}
    :edit-applications-rights-panel              {:fi "Hakemusten arviointi"
                                                  :sv "Utvärdering av ansökningar"
                                                  :en "Evaluation of applications"}
-   :edit-email-templates                        {:fi "Muokkaa sähköpostipohjia"
+   :edit-email-templates                        {:fi "Muokkaa sähköpostipohjia"
                                                  :sv "Bearbeta e-postmallar"
                                                  :en "Edit the email templates"}
    :edit-link-sent-automatically                {:fi "Muokkauslinkki lähtee viestin mukana automaattisesti"
@@ -1154,6 +1157,9 @@ You will receive a confirmation of your application to your email."}
    :multiple-choice                             {:fi "Lista, monta valittavissa"
                                                  :sv "Flervalslista"
                                                  :en "Multiple choice"}
+   :multiple-choice-koodisto                    {:fi "Lista, monta valittavissa, koodisto"
+                                                 :sv "Flervalslista, kodregister"
+                                                 :en "Multiple choice, codes"}
    :multiple-organizations                      {:fi "Useita organisaatioita"
                                                  :sv "Flera organisationer"
                                                  :en "Multiple organizations"}

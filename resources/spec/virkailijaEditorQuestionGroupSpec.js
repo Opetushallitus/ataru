@@ -111,9 +111,11 @@
         it('opens up toolbar for adding followup components', function () {
           expect(_.map(formComponents().find('.editor-form__followup-question-overlay .form__add-component-toolbar--list-item a'), function (e) { return $(e).text(); }))
             .to.eql([
-              'Pudotusvalikko',
               'Painikkeet, yksi valittavissa',
+              'Pudotusvalikko',
+              'Pudotusvalikko, koodisto',
               'Lista, monta valittavissa',
+              'Lista, monta valittavissa, koodisto',
               'Tekstikenttä',
               'Tekstialue',
               'Vierekkäiset tekstikentät',
@@ -138,9 +140,11 @@
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__text-field').val()).to.equal('Kysymysryhmä: ryhmän otsikko')
           expect(_.map(formComponents().find('.editor-form__followup-question-overlay .editor-form__component-wrapper .form__add-component-toolbar--list-item a'), function (e) { return $(e).text(); }))
             .to.eql([
-              'Pudotusvalikko',
               'Painikkeet, yksi valittavissa',
+              'Pudotusvalikko',
+              'Pudotusvalikko, koodisto',
               'Lista, monta valittavissa',
+              'Lista, monta valittavissa, koodisto',
               'Tekstikenttä',
               'Tekstialue',
               'Vierekkäiset tekstikentät',

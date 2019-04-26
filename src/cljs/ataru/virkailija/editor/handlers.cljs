@@ -10,6 +10,7 @@
             [ataru.virkailija.autosave :as autosave]
             [ataru.component-data.component :as component]
             [ataru.component-data.person-info-module :as pm]
+            [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
             [ataru.virkailija.dev.lomake :as dev]
             [ataru.virkailija.editor.components.followup-question :as followup]
             [ataru.virkailija.editor.editor-macros :refer-macros [with-form-key]]
@@ -127,11 +128,16 @@
           (update-in dropdown-path dissoc :koodisto-source)
           (update-in dropdown-path assoc :options [])))))
 
-(reg-event-db
+(reg-event-fx
   :editor/select-koodisto-options
-  (fn [db [_ uri version title & path]]
-    (let [dropdown-path (current-form-content-path db [path])]
-      (update-in db dropdown-path assoc :koodisto-source {:uri uri :version version :title title} :options []))))
+  (fn [{db :db} [_ uri path]]
+    (when-let [koodisto (some #(when (= uri (:uri %)) %) koodisto-whitelist/koodisto-whitelist)]
+      (let [dropdown-path (current-form-content-path db [path])
+            id            (get-in db (concat dropdown-path [:id]))]
+        {:db       (update-in db dropdown-path assoc
+                              :koodisto-source koodisto
+                              :options [])
+         :dispatch [:editor/fetch-koodisto-for-component-with-id id koodisto]}))))
 
 (defn- update-modified-by
   [db path]
