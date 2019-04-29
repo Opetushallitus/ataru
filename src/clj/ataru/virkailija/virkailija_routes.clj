@@ -40,6 +40,7 @@
             [ataru.organization-service.session-organizations :refer [organization-list] :as session-orgs]
             [ataru.organization-service.organization-selection :as organization-selection]
             [ataru.organization-service.organization-client :as organization-client]
+            [ataru.organization-service.organization-service :as organization-service]
             [cheshire.core :as json]
             [cheshire.generate :refer [add-encoder]]
             [clojure.core.match :refer [match]]
@@ -65,7 +66,8 @@
             [schema.core :as s]
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [spy debug error warn info]]
-            [ataru.organization-service.user-rights :as user-rights])
+            [ataru.organization-service.user-rights :as user-rights]
+            [ataru.util :as util])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.format.DateTimeFormat
@@ -586,6 +588,27 @@
                                  session
                                  show-hakukierros-paattynyt)))
 
+    (api/GET "/haku" {session :session}
+      :query-params [{haku-oid :- s/Str nil}
+                     {hakukohde-oid :- s/Str nil}]
+      :summary "List haku and hakukohde information found for applications stored in system"
+      :return ataru-schema/Haut
+      (let [haku-oid (or haku-oid (:hakuOid (tarjonta/get-hakukohde tarjonta-service hakukohde-oid)))]
+        (if (some? haku-oid)
+          (-> {:tarjonta-haut    {}
+               :direct-form-haut {}
+               :haut             {haku-oid (tarjonta-service/parse-haku
+                                            (tarjonta/get-haku tarjonta-service
+                                                               haku-oid))}
+               :hakukohteet      (util/group-by-first :oid (tarjonta/hakukohde-search
+                                                            tarjonta-service
+                                                            haku-oid
+                                                            nil))
+               :hakukohderyhmat  (util/group-by-first :oid (organization-service/get-hakukohde-groups organization-service))}
+              response/ok
+              (response/header "Cache-Control" "public, max-age=300"))
+          (response/bad-request))))
+
     (api/context "/koodisto" []
       :tags ["koodisto-api"]
       (api/GET "/:koodisto-uri/:version" [koodisto-uri version]
@@ -599,7 +622,7 @@
       (api/GET "/hakukohderyhmat" []
         :return [ataru-schema/Hakukohderyhma]
         (->
-         (.get-hakukohde-groups organization-service)
+         (organization-service/get-hakukohde-groups organization-service)
          ok
          (header "Cache-Control" "public, max-age=300")))
 
