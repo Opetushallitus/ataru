@@ -507,8 +507,8 @@
           })
         )
         it('reduces application list and recipient count', function () {
-          expect(testFrame().find('.application-handling__list-row--application-applicant:eq(0)').text()).to.equal('Vatanen, Ari')
-          expect(testFrame().find('.application-handling__list-row--application-applicant:eq(1)').text()).to.equal('Kuikeloinen, Seija Susanna')
+          expect(testFrame().find('.application-handling__list-row--application-applicant:eq(0)').text()).to.equal('Kuikeloinen, Seija Susanna')
+          expect(testFrame().find('.application-handling__list-row--application-applicant:eq(1)').text()).to.equal('Vatanen, Ari')
           expect(massInformationRequestText()).to.eql('Lähetä sähköposti 2 hakijalle:')
         })
       })
