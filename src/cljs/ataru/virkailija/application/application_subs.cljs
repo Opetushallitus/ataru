@@ -113,12 +113,7 @@
     (let [selected-hakukohde-oid  (get-in db [:application :selected-hakukohde])
           selected-hakukohderyhma (get-in db [:application :selected-hakukohderyhma])]
       (cond (some? selected-hakukohde-oid)
-            (->> (get-in db [:application :haut :tarjonta-haut])
-                 (filter (fn [[_ {:keys [hakukohteet]}]]
-                           (some (fn [{:keys [oid]}]
-                                   (= selected-hakukohde-oid oid))
-                             hakukohteet)))
-                 ffirst)
+            (get-in db [:hakukohteet selected-hakukohde-oid :haku-oid])
             (some? selected-hakukohderyhma)
             (first selected-hakukohderyhma)
             :else
@@ -130,13 +125,8 @@
     (let [selected-hakukohde-oid  (get-in db [:application :selected-hakukohde])
           selected-hakukohderyhma (get-in db [:application :selected-hakukohderyhma])
           selected-haku-oid       @(re-frame/subscribe [:application/selected-haku-oid])
-          haun-hakukohteet        (->> (get-in db [:application
-                                                   :haut
-                                                   :tarjonta-haut
-                                                   selected-haku-oid
-                                                   :hakukohteet])
-                                       (map :oid)
-                                       (keep #(get-in db [:hakukohteet %])))
+          haun-hakukohteet        (keep #(get-in db [:hakukohteet %])
+                                        (get-in db [:haut selected-haku-oid :hakukohteet]))
           haun-hakukohderyhmat    (->> haun-hakukohteet
                                        (mapcat :ryhmaliitokset)
                                        distinct

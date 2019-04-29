@@ -282,7 +282,8 @@
    :yhteishaku             s/Bool
    :prioritize-hakukohteet s/Bool
    :hakuajat               [{:start                java.time.ZonedDateTime
-                             (s/optional-key :end) java.time.ZonedDateTime}]})
+                             (s/optional-key :end) java.time.ZonedDateTime}]
+   :hakukohteet            [s/Str]})
 
 (s/defschema Hakukohderyhma
   {:oid             s/Str

@@ -65,7 +65,8 @@
    :name                   (parse-multi-lang-text (:nimi haku))
    :prioritize-hakukohteet (:usePriority haku)
    :yhteishaku             (yhteishaku? haku)
-   :hakuajat               (mapv parse-hakuaika (:hakuaikas haku))})
+   :hakuajat               (mapv parse-hakuaika (:hakuaikas haku))
+   :hakukohteet            (:hakukohdeOids haku)})
 
 (defn- parse-hakukohde
   [hakukohde]
