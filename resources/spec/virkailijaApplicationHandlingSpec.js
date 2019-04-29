@@ -400,7 +400,7 @@
         )
 
         it('has expected data in applications and popup', function() {
-          expect(applicationHakukohdeStates()).to.eql(['Käsittelemättä', 'Käsittelyssä', 'Käsittelemättä'])
+          expect(applicationHakukohdeStates()).to.eql(['Käsittelemättä', 'Käsittelemättä', 'Käsittelyssä'])
           expect(massUpdateFromStateSelectionClosed().text()).to.equal('Käsittelemättä (2)')
           expect(massUpdateToStateSelectionClosed().text()).to.equal('Käsittelemättä (2)')
         })
@@ -454,7 +454,7 @@
           })
         )
         it('to selected state', function() {
-          expect(applicationHakukohdeStates()).to.eql(['Käsitelty', 'Käsittelyssä', 'Käsitelty'])
+          expect(applicationHakukohdeStates()).to.eql(['Käsitelty', 'Käsitelty', 'Käsittelyssä'])
         })
       })
     })
