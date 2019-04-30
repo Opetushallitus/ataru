@@ -1,5 +1,6 @@
 (ns ataru.tarjonta-service.mock-tarjonta-service
   (:require [com.stuartsierra.component :as component]
+            [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
             [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService VirkailijaTarjontaService]]))
 
 (def base-haku
@@ -41,7 +42,7 @@
    :canSubmitMultipleApplications                        true})
 
 (def base-hakukohde
-  {:tila                                    "LUONNOS",
+  {:tila                                    "JULKAISTU",
    :ataruLomakeAvain                        "41101b4f-1762-49af-9db0-e3603adae3ad",
    :ryhmaliitokset                          [],
    :overridesHaunHakulomakeUrl              false,
@@ -273,26 +274,6 @@
                                 :tutkintonimike-names [{:fi "Tutkintonimike D"}]
                                 :tarkenne             "Tarkenne D"}})
 
-(defn- parse-multi-lang-text
-  [text]
-  (reduce-kv (fn [m lang s]
-               (if (or (nil? s) (clojure.string/blank? s))
-                 m
-                 (assoc m lang s)))
-             {}
-             (clojure.set/rename-keys text {:kieli_fi :fi
-                                            :kieli_sv :sv
-                                            :kieli_en :en})))
-
-(defn- parse-hakukohde
-  [hakukohde]
-  {:oid (:oid hakukohde)
-   :haku-oid (:hakuOid hakukohde)
-   :name (parse-multi-lang-text (:nimi hakukohde))
-   :tarjoaja-name (:tarjoajaNimet hakukohde)
-   :tarjoaja-oids (:tarjoajaOids hakukohde)
-   :ryhmaliitokset (map :ryhmaOid (:ryhmaliitokset hakukohde))})
-
 (defrecord MockTarjontaService []
   component/Lifecycle
   TarjontaService
@@ -301,7 +282,8 @@
   (stop [this] this)
 
   (get-hakukohde [this hakukohde-oid]
-    ((keyword hakukohde-oid) hakukohde))
+    (when-let [h ((keyword hakukohde-oid) hakukohde)]
+      (tarjonta-client/parse-hakukohde h)))
 
   (get-hakukohteet [this hakukohde-oids]
     (keep #(.get-hakukohde this %) hakukohde-oids))
@@ -313,8 +295,7 @@
 
   (hakukohde-search [_ haku-oid _]
     (let [to-hakukohteet (fn [hakukohde-oids] (->> (map #(get hakukohde %) hakukohde-oids)
-                                                   (map #(assoc % :nimi (:hakukohteenNimet %)))
-                                                   (map parse-hakukohde)
+                                                   (map tarjonta-client/parse-hakukohde)
                                                    (map #(assoc % :user-organization? true))))]
          (case haku-oid
                "1.2.246.562.29.65950024187" (to-hakukohteet [:1.2.246.562.20.49028100001

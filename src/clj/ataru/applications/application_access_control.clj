@@ -15,11 +15,10 @@
 (defn authorized-by-tarjoajat?
   [authorized-organization-oids application]
   (let [tarjoajat       (->> (:hakukohde application)
-                             (mapcat :tarjoajaOids)
+                             (mapcat :tarjoaja-oids)
                              set)
         hakukohderyhmat (->> (:hakukohde application)
                              (mapcat :ryhmaliitokset)
-                             (map :ryhmaOid)
                              set)]
     (boolean (some authorized-organization-oids
                    (concat tarjoajat hakukohderyhmat)))))

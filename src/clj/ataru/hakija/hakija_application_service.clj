@@ -16,7 +16,6 @@
     [ataru.person-service.person-integration :as person-integration]
     [ataru.tarjonta-service.hakuaika :as hakuaika]
     [ataru.tarjonta-service.hakukohde :as hakukohde]
-    [ataru.tarjonta-service.tarjonta-protocol :refer [get-hakukohde get-haku]]
     [ataru.forms.form-store :as form-store]
     [ataru.hakija.validator :as validator]
     [ataru.application.review-states :refer [complete-states]]

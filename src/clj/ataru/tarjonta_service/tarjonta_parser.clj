@@ -30,24 +30,18 @@
    hakukohde]
   (when (:oid hakukohde)
     {:oid                        (:oid hakukohde)
-     :name                       (->> (clojure.set/rename-keys (:hakukohteenNimet hakukohde)
-                                                               lang-key-renames)
-                                      (remove (comp clojure.string/blank? second))
-                                      (into {}))
-     :hakukohderyhmat            (->> (:ryhmaliitokset hakukohde)
-                                      (map :ryhmaOid)
-                                      (distinct)
-                                      (filter #(contains? hakukohderyhmat %)))
+     :name                       (:name hakukohde)
+     :hakukohderyhmat            (filter #(contains? hakukohderyhmat %) (:ryhmaliitokset hakukohde))
      :kohdejoukko-korkeakoulu?   (clojure.string/starts-with?
                                   (:kohdejoukkoUri haku)
                                   "haunkohdejoukko_12#")
-     :tarjoaja-name              (:tarjoajaNimet hakukohde)
-     :form-key                   (:ataruLomakeAvain hakukohde)
-     :koulutukset                (mapv #(or (get tarjonta-koulutukset (:oid %))
-                                            (throw (new RuntimeException (str "Koulutus " (:oid %) " not found"))))
-                                       (:koulutukset hakukohde))
+     :tarjoaja-name              (:tarjoaja-name hakukohde)
+     :form-key                   (:ataruLomakeAvain haku)
+     :koulutukset                (mapv #(or (get tarjonta-koulutukset %)
+                                            (throw (new RuntimeException (str "Koulutus " % " not found"))))
+                                       (:koulutus-oids hakukohde))
      :hakuaika                   (hakuaika/get-hakuaika-info now haku ohjausparametrit hakukohde)
-     :applicable-base-educations (mapcat pohjakoulutukset-by-vaatimus (:hakukelpoisuusvaatimusUris hakukohde))}))
+     :applicable-base-educations (mapcat pohjakoulutukset-by-vaatimus (:hakukelpoisuusvaatimus-uris hakukohde))}))
 
 (defn- pohjakoulutukset-by-vaatimus
   [pohjakoulutusvaatimuskorkeakoulut]
@@ -82,8 +76,7 @@
            tarjonta-hakukohteet              (tarjonta-protocol/get-hakukohteet tarjonta-service
                                                                                 included-hakukohde-oids)
            tarjonta-koulutukset              (->> tarjonta-hakukohteet
-                                                  (mapcat :koulutukset)
-                                                  (map :oid)
+                                                  (mapcat :koulutus-oids)
                                                   distinct
                                                   (tarjonta-protocol/get-koulutukset tarjonta-service))
            hakukohteet                       (map #(parse-hakukohde tarjonta-service

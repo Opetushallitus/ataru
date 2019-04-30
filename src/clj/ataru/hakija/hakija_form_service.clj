@@ -234,7 +234,7 @@
                             koodisto-cache
                             organization-service
                             ohjausparametrit-service
-                            (:hakuOid hakukohde)
+                            (:haku-oid hakukohde)
                             false
                             roles)))
 
@@ -286,7 +286,7 @@
    roles :- [form-role/FormRole]]
   (let [hakukohde (tarjonta/get-hakukohde tarjonta-service hakukohde-oid)]
     (fetch-form-by-haku-oid-str-cached form-by-haku-oid-str-cache
-                                       (:hakuOid hakukohde)
+                                       (:haku-oid hakukohde)
                                        false
                                        roles)))
 

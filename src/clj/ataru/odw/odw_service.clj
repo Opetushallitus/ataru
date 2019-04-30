@@ -68,7 +68,7 @@
                                 :let  [hakukohde-oid (nth hakukohteet (dec index) nil)
                                        hakukohde     (when hakukohde-oid
                                                        (tarjonta-protocol/get-hakukohde tarjonta-service hakukohde-oid))
-                                       tarjoaja-oid  (-> hakukohde :tarjoajaOids first)]]
+                                       tarjoaja-oid  (-> hakukohde :tarjoaja-oids first)]]
                             {(keyword (str "pref" index "_hakukohde_oid"))     hakukohde-oid
                              (keyword (str "pref" index "_opetuspiste_oid"))   tarjoaja-oid
                              (keyword (str "pref" index "_sora"))              nil

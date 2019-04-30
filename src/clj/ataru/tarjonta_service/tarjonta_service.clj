@@ -68,22 +68,11 @@
    :hakuajat               (mapv parse-hakuaika (:hakuaikas haku))
    :hakukohteet            (:hakukohdeOids haku)})
 
-(defn- parse-hakukohde
-  [hakukohde]
-  {:oid (:oid hakukohde)
-   :haku-oid (:hakuOid hakukohde)
-   :name (parse-multi-lang-text (:hakukohteenNimet hakukohde))
-   :tarjoaja-name (parse-multi-lang-text (:tarjoajaNimet hakukohde))
-   :tarjoaja-oids (:tarjoajaOids hakukohde)
-   :ryhmaliitokset (some->> (:ryhmaliitokset hakukohde)
-                     (map :ryhmaOid)
-                     (distinct))})
-
 (defn- parse-search-result
   [search-result]
   (mapcat :tulokset (:tulokset search-result)))
 
-(def allowed-hakukohde-tilas #{"VALMIS" "JULKAISTU"})
+(def allowed-hakukohde-tilas #{:valmis :julkaistu})
 
 (defn fetch-or-cached-hakukohde-search
   [hakukohde-search-cache haku-oid organization-oid]
@@ -104,19 +93,14 @@
   (get-hakukohde [this hakukohde-oid]
     (when-let [hakukohde (cache/get-from hakukohde-cache hakukohde-oid)]
       (when (contains? allowed-hakukohde-tilas (:tila hakukohde))
-        ;; Serialization breaks boxed booleans, as it doesn't return the
-        ;; canonical instance
-        (update hakukohde
-                :kaytetaanHakukohdekohtaistaHakuaikaa #(.booleanValue %)))))
+        hakukohde)))
 
   (get-hakukohteet [this hakukohde-oids]
-    (remove #(or (nil? %)
-                 (not (contains? allowed-hakukohde-tilas (:tila %))))
+    (filter #(contains? allowed-hakukohde-tilas (:tila %))
             (vals (cache/get-many-from hakukohde-cache hakukohde-oids))))
 
   (get-hakukohde-name [this hakukohde-oid]
-    (when-let [hakukohde (.get-hakukohde this hakukohde-oid)]
-      (parse-multi-lang-text (:hakukohteenNimet hakukohde))))
+    (:name (cache/get-from hakukohde-cache hakukohde-oid)))
 
   (hakukohde-search [this haku-oid organization-oid]
     (let [filtered-hakukohde-oids (->> (fetch-or-cached-hakukohde-search
@@ -128,7 +112,6 @@
       (->> (fetch-or-cached-hakukohde-search hakukohde-search-cache haku-oid nil)
            (map :oid)
            (.get-hakukohteet this)
-           (mapv parse-hakukohde)
            (map #(assoc % :user-organization? (contains? filtered-hakukohde-oids (:oid %)))))))
 
   (get-haku [this haku-oid]

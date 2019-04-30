@@ -144,7 +144,7 @@
    ylioppilas-tai-ammatillinen?]
   (when (automatic-eligibility-if-ylioppilas-in-use? haku ohjausparametrit now)
     (->> hakukohteet
-         (filter :ylioppilastutkintoAntaaHakukelpoisuuden)
+         (filter :ylioppilastutkinto-antaa-hakukelpoisuuden?)
          (keep (fn [hakukohde]
                  (if ylioppilas-tai-ammatillinen?
                    {:from        "unreviewed"

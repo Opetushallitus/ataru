@@ -15,11 +15,7 @@
 
 (defn- hakukohteiden-hakukohderyhmat
   [tarjonta-service ryhmat]
-  (reduce #(->> %2
-                :ryhmaliitokset
-                (map :ryhmaOid)
-                set
-                (assoc %1 (:oid %2)))
+  (reduce #(assoc %1 (:oid %2) (set (:ryhmaliitokset %2)))
           {}
           (some->> ryhmat
                    (mapcat :prioriteetit)
