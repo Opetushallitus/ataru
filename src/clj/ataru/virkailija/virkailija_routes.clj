@@ -598,7 +598,7 @@
                      {hakukohde-oid :- s/Str nil}]
       :summary "List haku and hakukohde information found for applications stored in system"
       :return ataru-schema/Haut
-      (let [haku-oid (or haku-oid (:hakuOid (tarjonta/get-hakukohde tarjonta-service hakukohde-oid)))]
+      (let [haku-oid (or haku-oid (:haku-oid (tarjonta/get-hakukohde tarjonta-service hakukohde-oid)))]
         (if (some? haku-oid)
           (-> {:tarjonta-haut    {}
                :direct-form-haut {}
@@ -671,7 +671,7 @@
       (api/GET "/hakukohde" []
         :query-params [organizationOid :- (api/describe s/Str "Organization OID")
                        hakuOid :- (api/describe s/Str "Haku OID")]
-        :return [ataru-schema/Hakukohde]
+        :return [ataru-schema/HakukohdeSearchResult]
         (if-let [hakukohteet (tarjonta/hakukohde-search
                                tarjonta-service
                                hakuOid

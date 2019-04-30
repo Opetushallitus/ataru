@@ -52,7 +52,7 @@
        (not (ended? now end))))
 
 (defn- hakukohteen-hakuaika [haku hakukohde]
-  (some #(when (= (:hakuaikaId hakukohde)
+  (some #(when (= (:hakuaika-id hakukohde)
                   (:hakuaikaId %))
            %)
         (:hakuaikas haku)))
@@ -133,9 +133,9 @@
                            :end-time (millis->localized-time end)})))
 
 (defn get-hakuaika-info [now haku ohjausparametrit hakukohde]
-  (let [[start end] (if (:kaytetaanHakukohdekohtaistaHakuaikaa hakukohde)
-                      [(:hakuaikaAlkuPvm hakukohde)
-                       (:hakuaikaLoppuPvm hakukohde)]
+  (let [[start end] (if (:kaytetaan-hakukohdekohtaista-hakuaikaa? hakukohde)
+                      [(:hakuaika-alku hakukohde)
+                       (:hakuaika-loppu hakukohde)]
                       (let [hakuaika (hakukohteen-hakuaika haku hakukohde)]
                         [(:alkuPvm hakuaika)
                          (:loppuPvm hakuaika)]))]

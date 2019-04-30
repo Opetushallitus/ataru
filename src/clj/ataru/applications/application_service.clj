@@ -198,7 +198,7 @@
 (defn ->hakukohde-query
   [tarjonta-service hakukohde-oid ensisijaisesti]
   (let [hakukohde (tarjonta-service/get-hakukohde tarjonta-service hakukohde-oid)]
-    (merge {:haku (:hakuOid hakukohde)}
+    (merge {:haku (:haku-oid hakukohde)}
            (if ensisijaisesti
              {:ensisijainen-hakukohde [hakukohde-oid]}
              {:hakukohde [hakukohde-oid]}))))

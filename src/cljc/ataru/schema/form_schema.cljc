@@ -302,13 +302,23 @@
    :active?         s/Bool})
 
 (s/defschema Hakukohde
-  {:oid                s/Str
-   :user-organization? s/Bool
-   :haku-oid           s/Str
-   :name               LocalizedStringOptional
-   :tarjoaja-name      LocalizedStringOptional
-   :tarjoaja-oids      [s/Str]
-   :ryhmaliitokset     [s/Str]})
+  {:oid                                        s/Str
+   :tila                                       s/Keyword
+   :haku-oid                                   s/Str
+   :koulutus-oids                              [s/Str]
+   :name                                       LocalizedStringOptional
+   :tarjoaja-name                              LocalizedStringOptional
+   :tarjoaja-oids                              [s/Str]
+   :ryhmaliitokset                             [s/Str]
+   :kaytetaan-hakukohdekohtaista-hakuaikaa?    s/Bool
+   (s/optional-key :hakuaika-id)               s/Str
+   (s/optional-key :hakuaika-alku)             s/Int
+   (s/optional-key :hakuaika-loppu)            s/Int
+   :hakukelpoisuusvaatimus-uris                [s/Str]
+   :ylioppilastutkinto-antaa-hakukelpoisuuden? s/Bool})
+
+(s/defschema HakukohdeSearchResult
+  (assoc Hakukohde :user-organization? s/Bool))
 
 (s/defschema File
   {:key                      s/Str
@@ -605,7 +615,7 @@
 (s/defschema Haut {:tarjonta-haut    {s/Str TarjontaHaku}
                    :direct-form-haut {s/Str DirectFormHaku}
                    :haut             {s/Str Haku}
-                   :hakukohteet      {s/Str Hakukohde}
+                   :hakukohteet      {s/Str HakukohdeSearchResult}
                    :hakukohderyhmat  {s/Str Hakukohderyhma}})
 
 (s/defschema ApplicationFeedback {:form-key   s/Str

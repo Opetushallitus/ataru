@@ -9,7 +9,6 @@
             [ataru.files.file-store :as file-store]
             [ataru.util :as util]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
-            [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.translations.texts :refer [excel-texts virkailija-texts]]
             [clj-time.core :as t]
             [clj-time.format :as f]

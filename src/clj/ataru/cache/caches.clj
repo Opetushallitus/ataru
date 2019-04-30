@@ -37,12 +37,14 @@
       :refresh-after [5 TimeUnit/MINUTES]})]
    [:hakukohde-cache
     (component/using
-     (redis/map->Cache
-      {:name            "hakukohde"
-       :loader          (cache/->FunctionCacheLoader tarjonta-client/get-hakukohde)
-       :ttl-after-read  [3 TimeUnit/DAYS]
-       :ttl-after-write [3 TimeUnit/DAYS]
-       :update-period   [15 TimeUnit/MINUTES]})
+     (two-layer/map->Cache
+      {:name                   "hakukohde"
+       :size                   5000
+       :loader                 (cache/->FunctionCacheLoader tarjonta-client/get-hakukohde
+                                                            tarjonta-client/hakukohde-checker)
+       :expires-after          [3 TimeUnit/DAYS]
+       :refresh-off-heap-after [15 TimeUnit/MINUTES]
+       :refresh-on-heap-after  [1 TimeUnit/MINUTES]})
      [:redis])]
    [:haku-cache
     (component/using

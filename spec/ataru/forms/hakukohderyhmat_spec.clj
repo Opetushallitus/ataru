@@ -15,7 +15,7 @@
   [oid kuuluu?]
   {:oid            oid
    :ryhmaliitokset (if kuuluu?
-                     [{:ryhmaOid "hakukohderyhma-oid"}]
+                     ["hakukohderyhma-oid"]
                      [])})
 
 (def priorisoiva-hakukohderyhma-gen
