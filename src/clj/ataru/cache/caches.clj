@@ -75,13 +75,14 @@
      [:redis])]
    [:koulutus-cache
     (component/using
-     (redis/map->Cache
-      {:name            "koulutus"
-       :loader          (cache/->FunctionCacheLoader tarjonta-client/get-koulutus
-                                                     tarjonta-client/koulutus-checker)
-       :ttl-after-read  [3 TimeUnit/DAYS]
-       :ttl-after-write [3 TimeUnit/DAYS]
-       :update-period   [15 TimeUnit/MINUTES]})
+     (two-layer/map->Cache
+      {:name                   "koulutus"
+       :size                   5000
+       :loader                 (cache/->FunctionCacheLoader tarjonta-client/get-koulutus
+                                                            tarjonta-client/koulutus-checker)
+       :expires-after          [3 TimeUnit/DAYS]
+       :refresh-off-heap-after [15 TimeUnit/MINUTES]
+       :refresh-on-heap-after  [1 TimeUnit/MINUTES]})
      [:redis])]
    [:henkilo-cache
     (component/using
