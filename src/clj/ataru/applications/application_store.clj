@@ -719,7 +719,9 @@ WHERE la.key IS NULL\n"
           (yesql-add-application-event<! event connection))))))
 
 (defn save-application-hakukohde-review
-  [application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state session]
+  ([application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state session]
+   (save-application-hakukohde-review application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state session true))
+  ([application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state session upsert?]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (let [connection                  {:connection conn}
                                   review-to-store             {:application_key application-key
