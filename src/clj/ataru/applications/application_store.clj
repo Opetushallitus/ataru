@@ -421,6 +421,7 @@
        a.haku,
        a.hakukohde,
        a.ssn,
+       to_char(a.dob, 'dd.MM.YYYY')     AS \"dob\",
        hcbe.value                       AS \"base-education\",
        ar.state                         AS state,
        ar.score                         AS score,
