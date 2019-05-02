@@ -39,12 +39,12 @@
     (component/using
      (two-layer/map->Cache
       {:name                   "hakukohde"
-       :size                   5000
+       :size                   6000
        :loader                 (cache/->FunctionCacheLoader tarjonta-client/get-hakukohde
                                                             tarjonta-client/hakukohde-checker)
        :expires-after          [3 TimeUnit/DAYS]
        :refresh-off-heap-after [15 TimeUnit/MINUTES]
-       :refresh-on-heap-after  [1 TimeUnit/MINUTES]})
+       :refresh-on-heap-after  [7 TimeUnit/MINUTES]})
      [:redis])]
    [:haku-cache
     (component/using
@@ -77,12 +77,12 @@
     (component/using
      (two-layer/map->Cache
       {:name                   "koulutus"
-       :size                   5000
+       :size                   6000
        :loader                 (cache/->FunctionCacheLoader tarjonta-client/get-koulutus
                                                             tarjonta-client/koulutus-checker)
        :expires-after          [3 TimeUnit/DAYS]
        :refresh-off-heap-after [15 TimeUnit/MINUTES]
-       :refresh-on-heap-after  [1 TimeUnit/MINUTES]})
+       :refresh-on-heap-after  [7 TimeUnit/MINUTES]})
      [:redis])]
    [:henkilo-cache
     (component/using
