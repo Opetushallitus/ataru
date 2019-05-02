@@ -17,10 +17,10 @@
     "VALMIS"      :valmis
     "KESKEN"      :kesken
     "KESKEYTYNYT" :keskeytynyt
-    :else         (throw
-                   (new RuntimeException
-                        (str "Unknown suorituksen tila " (:tila data)
-                             " in suoritus " data)))))
+    (throw
+     (new RuntimeException
+          (str "Unknown suorituksen tila " (:tila data)
+               " in suoritus " data)))))
 
 (defn- ->suoritus-person-oid
   [data]
