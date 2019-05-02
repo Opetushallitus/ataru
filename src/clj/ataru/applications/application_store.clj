@@ -1241,11 +1241,8 @@ WHERE la.key IS NULL\n"
   (when-not (= (exec-db :db yesql-remove-review-note! {:id note-id}) 0)
     note-id))
 
-(defn get-application-keys-by-person-oid [person-oid]
-  (exec-db :db yesql-get-latest-application-ids-distinct-by-person-oid {:person_oid person-oid}))
-
 (defn get-application-keys []
-  (get-application-keys-by-person-oid nil))
+  (exec-db :db yesql-get-latest-application-ids-distinct-by-person-oid nil))
 
 (defn get-application-version-changes [koodisto-cache application-key]
   (let [all-versions         (exec-db :db
