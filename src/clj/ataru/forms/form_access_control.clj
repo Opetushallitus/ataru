@@ -10,8 +10,6 @@
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
    [taoensso.timbre :refer [warn]]))
 
-(defonce form-access-control-session {:user-agent "server"})
-
 (defn form-allowed-by-id?
   "id identifies a version of the form"
   [form-id session organization-service right]
@@ -103,7 +101,7 @@
         (assoc
          form-with-org
          :created-by (-> session :identity :username))
-         form-access-control-session)))))
+         session)))))
 
 (defn edit-form-with-operations
   [id operations session virkailija-tarjonta-service organization-service]
@@ -120,7 +118,7 @@
       (fn []
         (form-store/create-form-or-increment-version!
          (assoc form :deleted true)
-          form-access-control-session)))))
+          session)))))
 
 (defn- get-forms-as-ordinary-user [session virkailija-tarjonta-service organization-oids]
   (let [forms-with-organization-oids                              (form-store/get-forms organization-oids)
