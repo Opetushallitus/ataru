@@ -1,6 +1,7 @@
 (ns ataru.virkailija.authentication.auth-routes
   (:require [ataru.virkailija.authentication.auth :refer [login cas-login logout cas-initiated-logout]]
             [ataru.config.url-helper :refer [resolve-url]]
+            [ataru.middleware.session-client :as session-client]
             [ataru.config.core :refer [config]]
             [compojure.api.sweet :as api]
             [environ.core :refer [env]]
@@ -21,8 +22,8 @@
 (defn- fake-login-provider [ticket]
   (fn []
       (let [username      (if (= ticket "USER-WITH-HAKUKOHDE-ORGANIZATION")
-                            "USER-WITH-HAKUKOHDE-ORGANIZATION"
-                            "DEVELOPER")
+                            "1.2.246.562.11.22222222222"
+                            "1.2.246.562.11.11111111111")
             unique-ticket (str (System/currentTimeMillis) "-" (rand-int (Integer/MAX_VALUE)))]
         [username unique-ticket])))
 
@@ -30,6 +31,7 @@
                    person-service
                    organization-service]
   (api/context "/auth" []
+    (api/middleware [session-client/wrap-session-client-headers]
     (api/undocumented
       (api/GET "/cas" [ticket :as request]
                (let [redirect-url (if-let [url-from-session (get-in request [:session :original-url])]
@@ -42,8 +44,9 @@
                         kayttooikeus-service
                         person-service
                         organization-service
-                        redirect-url)))
+                        redirect-url
+                        (:session request))))
       (api/POST "/cas" [logoutRequest]
                 (cas-initiated-logout logoutRequest))
       (api/GET "/logout" {session :session}
-                (logout session)))))
+                (logout session))))))

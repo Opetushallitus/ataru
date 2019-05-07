@@ -14,6 +14,8 @@
             [taoensso.timbre :as log]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]))
 
+(defonce information-request-job-session {:client-ip "127.0.0.1" :user-agent "server"})
+
 (defn- extract-answer-value [answer-key-str application]
   (->> (:answers application)
        (filter (comp (partial = answer-key-str) :key))
@@ -52,7 +54,7 @@
                    " for application " (:application-key information-request)))))
 
 (defn- store-in-tx
-  [information-request virkailija-oid job-runner connection]
+  [information-request virkailija-oid job-runner connection session]
   {:pre [(-> information-request :subject u/not-blank?)
          (-> information-request :message u/not-blank?)
          (-> information-request :application-key u/not-blank?)
@@ -64,6 +66,7 @@
     (start-email-job job-runner connection information-request)
     (audit-log/log {:new       information-request
                     :operation audit-log/operation-new
+                    :session   session
                     :id        virkailija-oid})
     information-request))
 
@@ -73,7 +76,7 @@
          (-> information-request :application-key u/not-blank?)
          (-> information-request :message-type u/not-blank?)]}
   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-    (store-in-tx information-request virkailija-oid job-runner connection)))
+    (store-in-tx information-request virkailija-oid job-runner connection information-request-job-session)))
 
 (defn mass-information-request-job-step
   [state job-runner]
@@ -86,7 +89,7 @@
                               :application-key key)
                        (:virkailija-oid state)
                        job-runner
-                       connection)))
+                       connection information-request-job-session)))
       {:transition    {:id :to-next :step :initial}
        :updated-state (assoc state :application-keys later)})))
 

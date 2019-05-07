@@ -118,7 +118,7 @@
   (first
     (execute yesql-add-form<! (dissoc form :created-time :id))))
 
-(defn create-form-or-increment-version! [{:keys [id organization-oid] :as form}]
+(defn create-form-or-increment-version! [{:keys [id organization-oid] :as form} session]
   (or
     (with-db-transaction [conn {:datasource (get-datasource :db)}]
       (when-let [latest-version (not-empty (and id (fetch-latest-version-and-lock-for-update id conn)))]
@@ -143,6 +143,7 @@
             (audit-log/log {:new              (dissoc new-form :content)
                             :old              (dissoc latest-version :content)
                             :id               log-id
+                            :session          session
                             :operation        (if (:deleted new-form) audit-log/operation-delete audit-log/operation-modify)
                             :organization-oid organization-oid})
             new-form))))
@@ -151,10 +152,11 @@
                              (create-new-form! form))
           log-id           (:created-by new-form)
           organization-oid (:organization-oid new-form)]
-      (audit-log/log {:new              (dissoc new-form :content)
-                      :id               log-id
-                      :operation        audit-log/operation-new
-                      :organization-oid organization-oid})
+            (audit-log/log {:new              (dissoc new-form :content)
+                            :id               log-id
+                            :session          session
+                            :operation        audit-log/operation-new
+                            :organization-oid organization-oid})
       new-form)))
 
 (defn get-latest-form-by-name [form-name]

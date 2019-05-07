@@ -98,6 +98,7 @@
     (when (some? application)
       (audit-log/log {:new       (dissoc application :content)
                       :id        (get-in session [:identity :oid])
+                      :session   session
                       :operation audit-log/operation-read}))
     application))
 

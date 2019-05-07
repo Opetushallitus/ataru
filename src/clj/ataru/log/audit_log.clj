@@ -1,37 +1,61 @@
 (ns ataru.log.audit-log
   (:require [ataru.util.app-utils :as app-utils]
+            [ataru.config.core :refer [config]]
             [clj-time.core :as c]
             [clj-time.format :as f]
             [clojure.core.match :as m]
             [cheshire.core :as json]
-            [taoensso.timbre :as log])
-  (:import [fi.vm.sade.auditlog Audit ApplicationType CommonLogMessageFields AbstractLogMessage]
+            [taoensso.timbre :as timbre]
+            [environ.core :refer [env]]
+            [clojure.data :refer [diff]]
+            [taoensso.timbre.appenders.3rd-party.rolling :refer [rolling-appender]])
+  (:import [fi.vm.sade.auditlog Operation HeartbeatDaemon Changes$Builder Target$Builder Target Changes Clock Logger Audit ApplicationType User]
            [org.joda.time DateTime]
            [com.fasterxml.jackson.databind ObjectMapper]
-           [com.github.fge.jsonpatch.diff JsonDiff]))
+           [com.github.fge.jsonpatch.diff JsonDiff]
+           (org.slf4j LoggerFactory)
+           (java.util Date)
+           (java.net InetAddress)
+           (org.ietf.jgss Oid)))
 
-(def operation-failed "epäonnistunut")
-(def operation-read "luku")
-(def operation-new "lisäys")
-(def operation-modify "muutos")
-(def operation-delete "poisto")
-(def operation-login "kirjautuminen")
+(defn- create-operation [op]
+  (proxy [Operation] [] (name [] op)))
+
+(def operation-failed (create-operation "epäonnistunut"))
+(def operation-read (create-operation "luku"))
+(def operation-new (create-operation "lisäys"))
+(def operation-modify (create-operation "muutos"))
+(def operation-delete (create-operation "poisto"))
+(def operation-login (create-operation "kirjautuminen"))
 
 (def ^:private object-mapper (ObjectMapper.))
 
-(defn- service-name []
-  (case (app-utils/get-app-id)
-    :virkailija "ataru-virkailija"
-    :hakija "ataru-hakija"
-    "ataru"))
+(defn- create-audit-logger []
+  (let [service-name     (case (app-utils/get-app-id)
+                           :virkailija "ataru_virkailija"
+                           :hakija "ataru_hakija"
+                           nil)
+        audit-log-config (assoc timbre/example-config
+                                :appenders {:file-appender
+                                            (assoc (rolling-appender {:path    (str (-> config :log :virkailija-base-path)
+                                                                                 ; ^Virkailija and hakia paths are the same
+                                                                                 "/access_" service-name
+                                                                                 ; Hostname will differentiate files in actual environments
+                                                                                 (when (:hostname env)
+                                                                                       (str "_" (:hostname env)))
+                                                                                 ".log")
+                                                                      :pattern :daily})
+                                                   :output-fn (fn [{:keys [msg_]}] (force msg_)))})
+        logger           (proxy [Logger] [] (log [str]
+                                              (prn str)
+                                              (timbre/log* audit-log-config :info str)))
+        application-type (case (app-utils/get-app-id)
+                           :virkailija ApplicationType/VIRKAILIJA
+                           :hakija ApplicationType/OPPIJA
+                           ApplicationType/BACKEND)]
+    (new Audit logger service-name application-type)))
 
-(defn- application-type []
-  (case (app-utils/get-app-id)
-    :virkailija ApplicationType/VIRKAILIJA
-    :hakija ApplicationType/OPISKELIJA
-    ApplicationType/BACKEND))
-
-(def ^:private logger (Audit. (service-name) (application-type)))
+(def ^:private logger (create-audit-logger))
 
 (def ^:private date-time-formatter (f/formatter :date-time))
 
@@ -45,42 +69,40 @@
 
 (def ^:private not-blank? (comp not clojure.string/blank?))
 
-(defn- diff [old new]
-  (let [old-str (json/generate-string old)
-        new-str (json/generate-string new)
-        diff-node (JsonDiff/asJsonPatch (.readTree object-mapper old-str)
-                                        (.readTree object-mapper new-str))]
-    (.writeValueAsString object-mapper diff-node)))
+(defn- path-> [p k]
+  (str (when p (str p "."))
+    (if (keyword? k)
+      (name k)
+      k)))
 
-(defn- date->str [x]
-  (cond->> x
-    (instance? DateTime x)
-    (f/unparse date-time-formatter)))
+(defn unnest
+  ([m]
+   (unnest m nil))
+  ([mm prefix]
+   (reduce-kv (fn [m key val]
+                  (if (map-or-vec? val)
+                    (merge m (unnest val (path-> prefix key)))
+                    (assoc m (path-> prefix key) val))) {} mm)))
 
-(defn- transform-values [t coll]
-  (clojure.walk/prewalk (fn [x]
-                          (cond->> x
-                            (map? x)
-                            (into {} (map (fn [[k v]] [k (t v)])))))
-                        coll))
+(defn ->changes [new old]
+  (if (and (map-or-vec? new) (map-or-vec? old))
+    (let [[new-diff old-diff _] (diff (unnest new) (unnest old))
+          added-kw   (clojure.set/difference (set (keys new-diff)) (set (keys old-diff)))
+          removed-kw (clojure.set/difference (set (keys old-diff)) (set (keys new-diff)))
+          updated-kw (clojure.set/intersection (set (keys old-diff)) (set (keys new-diff)))]
+      [(select-keys new-diff added-kw)
+       (select-keys old-diff removed-kw)
+       (into {} (for [kw updated-kw]
+                  [kw [(get new-diff kw) (get old-diff kw)]]))])
+    [nil old new]))
 
-(defn- get-message [new old]
-  (m/match [new old]
-           [(_ :guard map-or-vec?) (_ :guard map-or-vec?)]
-           (diff old new)
-
-           [(_ :guard map-or-vec?) (_ :guard nil?)]
-           (json/generate-string (dissoc new :content :answers))
-
-           [(_ :guard string?) _]
-           new))
-
-(defn- do-log [{:keys [new old id operation organization-oid]}]
+(defn- do-log [{:keys [new old id operation organization-oid session]}]
   {:pre [(or (and (or (string? new)
                       (map-or-vec? new))
                   (nil? old))
              (and (map-or-vec? old)
                   (map-or-vec? new)))
+         (not-blank? (:user-agent session))
          (not-blank? id)
          (some #{operation} [operation-failed
                              operation-new
@@ -88,16 +110,30 @@
                              operation-modify
                              operation-delete
                              operation-login])]}
-  (let [message (get-message (transform-values date->str new)
-                             (transform-values date->str old))
-        log-map (cond-> {CommonLogMessageFields/ID        id
-                         CommonLogMessageFields/TIMESTAMP (timestamp)
-                         CommonLogMessageFields/OPERAATIO operation
-                         CommonLogMessageFields/MESSAGE   message}
-                  (not-blank? organization-oid)
-                  (assoc "organizationOid" organization-oid))]
-    (->> (proxy [AbstractLogMessage] [log-map])
-         (.log logger))))
+  (let [oid     (str (if (keyword? id)
+                  (name id)
+                  id))
+        ip      (:client-ip session)
+        user    (User.
+                  (Oid. oid)
+                  (if ip
+                    (InetAddress/getByName ip)
+                    (InetAddress/getLocalHost))
+                  (-> :session :identity :ticket)
+                  (:user-agent session))
+        [added removed updated] (->changes new old)
+        changes (doto (Changes$Builder.)
+                  (#(doseq [[path val] added]
+                      (.added % path (str val))))
+                  (#(doseq [[path val] removed]
+                      (.removed % path (str val))))
+                  (#(doseq [[path [n o]] updated]
+                      (.updated % (str path) (str n) (str o)))))]
+    (.log logger user operation
+      (-> (Target$Builder.)
+          (.setField "oid" oid)
+          (.build))
+      (.build changes))))
 
 (defn log
   "Create an audit log entry. Provide map with :new and optional :old

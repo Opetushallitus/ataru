@@ -30,10 +30,10 @@
     [clojure.java.jdbc :as jdbc]
     [clj-time.format :as f]))
 
-(defn- store-and-log [application applied-hakukohteet form is-modify?]
+(defn- store-and-log [application applied-hakukohteet form is-modify? session]
   {:pre [(boolean? is-modify?)]}
   (let [store-fn (if is-modify? application-store/update-application application-store/add-application)
-        application-id (store-fn application applied-hakukohteet form)]
+        application-id (store-fn application applied-hakukohteet form session)]
     (log/info "Stored application with id: " application-id)
     {:passed?        true
      :id application-id
@@ -139,11 +139,12 @@
 (def ^:private modified-time-format
   (f/formatter "dd.MM.yyyy HH:mm:ss" tz))
 
-(defn- log-late-submitted-application [application submitted-at]
+(defn- log-late-submitted-application [application submitted-at session]
   (audit-log/log {:new       (format "Hakija yritti palauttaa hakemuksen hakuajan päätyttyä: %s. Hakemus: %s"
                                      (f/unparse modified-time-format submitted-at)
                                      (cheshire.core/generate-string application))
                   :operation audit-log/operation-new
+                  :session   session
                   :id        (util/extract-email application)}))
 
 (defn- validate-and-store [koodisto-cache
@@ -152,7 +153,8 @@
                            ohjausparametrit-service
                            form-by-haku-oid-and-id-cache
                            application
-                           is-modify?]
+                           is-modify?
+                           session]
   (let [now                           (time/now)
         tarjonta-info                 (when (:haku application)
                                         (tarjonta-parser/parse-tarjonta-info-by-haku
@@ -237,7 +239,7 @@
            (nil? virkailija-secret)
            (some #(not (:on (:hakuaika %))) applied-hakukohteet))
       (do
-        (log-late-submitted-application application now)
+        (log-late-submitted-application application now session)
         {:passed? false
          :failures ["Application period is not open."]
          :code :application-period-closed})
@@ -254,7 +256,7 @@
       :else
       (do
         (remove-orphan-attachments final-application latest-application)
-        (store-and-log final-application applied-hakukohteet form is-modify?)))))
+        (store-and-log final-application applied-hakukohteet form is-modify? session)))))
 
 (defn- start-person-creation-job [job-runner application-id]
   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
@@ -310,7 +312,8 @@
    organization-service
    ohjausparametrit-service
    form-by-haku-oid-and-id-cache
-   application]
+   application
+   session]
   (log/info "Application submitted:" application)
   (let [{:keys [passed? id]
          :as   result}
@@ -320,7 +323,8 @@
                             ohjausparametrit-service
                             form-by-haku-oid-and-id-cache
                             application
-                            false)
+                            false
+                            session)
         virkailija-secret (:virkailija-secret application)]
     (if passed?
       (do
@@ -330,6 +334,7 @@
       (do
         (audit-log/log {:new       application
                         :operation audit-log/operation-failed
+                        :session   session
                         :id        (util/extract-email application)})
         (log/warn "Application failed verification" result)))
     result))
@@ -341,7 +346,8 @@
    organization-service
    ohjausparametrit-service
    form-by-haku-oid-and-id-cache
-   input-application]
+   input-application
+   session]
   (log/info "Application edited:" input-application)
   (let [{:keys [passed? id application]
          :as   result}
@@ -351,7 +357,8 @@
                             ohjausparametrit-service
                             form-by-haku-oid-and-id-cache
                             input-application
-                            true)
+                            true
+                            session)
         virkailija-secret (:virkailija-secret application)]
     (if passed?
       (if virkailija-secret
@@ -363,6 +370,7 @@
       (do
         (audit-log/log {:new       input-application
                         :operation audit-log/operation-failed
+                        :session   session
                         :id        (util/extract-email input-application)})
         (log/warn "Application edit failed verification" result)))
     result))

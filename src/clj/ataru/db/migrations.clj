@@ -32,6 +32,8 @@
             [medley.core :refer [find-first]])
   (:import (java.time ZonedDateTime ZoneId)))
 
+(defonce migration-session {:client-ip "127.0.0.1" :user-agent "migration"})
+
 (def default-fetch-size 50)
 
 (defn- with-query-results-cursor [conn [sql & params :as sql-params] func]
@@ -71,7 +73,8 @@
                      :sv "dd.mm.åååå"
                      :en "dd.mm.yyyy"})
           :else expr))
-      form))))
+      form)
+      migration-session)))
 
 (defn refresh-person-info-modules []
   (let [new-person-module (person-info-module/person-info-module)]
@@ -79,7 +82,8 @@
                       (map #(store/fetch-by-id (:id %)))
                       (sort-by :created-time))]
       (store/create-form-or-increment-version!
-       (update-person-info-module new-person-module form)))))
+       (update-person-info-module new-person-module form)
+        migration-session))))
 
 (defn inject-hakukohde-component-if-missing
   "Add hakukohde component to legacy forms (new ones have one added on creation)"
@@ -180,11 +184,13 @@
   []
   (let [existing-forms (try
                          (map #(store/fetch-by-id (:id %)) (migration-form-store/get-all-forms))
-                         (catch Exception _ []))]
+                         (catch Exception _ []))
+        wrap (fn [w]
+                 (store/create-form-or-increment-version! w migration-session))]
     (doseq [form existing-forms]
       (some-> form
               wrap-followups
-              (store/create-form-or-increment-version!)))))
+              (wrap)))))
 
 (defn followups-to-vectored-followups-like-all-of-them
   []

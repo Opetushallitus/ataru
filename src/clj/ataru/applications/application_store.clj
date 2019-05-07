@@ -279,7 +279,7 @@
        first
        :virkailija_oid))
 
-(defn add-application [new-application applied-hakukohteet form]
+(defn add-application [new-application applied-hakukohteet form session]
     (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
       (info (str "Inserting new application"))
       (let [selection-id   (:selection-id new-application)
@@ -296,6 +296,7 @@
             connection     {:connection conn}]
         (audit-log/log {:new       new-application
                         :operation audit-log/operation-new
+                        :session   session
                         :id        (if (some? virkailija-oid)
                                      virkailija-oid
                                      (util/extract-email new-application))})
@@ -331,7 +332,7 @@
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
 
-(defn update-application [{:keys [lang secret virkailija-secret selection-id] :as new-application} applied-hakukohteet form]
+(defn update-application [{:keys [lang secret virkailija-secret selection-id] :as new-application} applied-hakukohteet form session]
   {:pre [(or (not-blank? secret)
              (not-blank? virkailija-secret))]}
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
@@ -376,6 +377,7 @@
       (audit-log/log {:new       (application->loggable-form new-application)
                       :old       (application->loggable-form old-application)
                       :operation audit-log/operation-modify
+                      :session   session
                       :id        (if updated-by-applicant?
                                    (util/extract-email new-application)
                                    virkailija-oid)})
@@ -689,17 +691,19 @@ WHERE la.key IS NULL\n"
 
 (defn- auditlog-review-modify
   [review old-value session]
-  (audit-log/log {:new              review
-                  :old              old-value
-                  :id               (get-in session [:identity :oid])
-                  :operation        audit-log/operation-modify}))
+  (audit-log/log {:new       review
+                  :old       old-value
+                  :id        (get-in session [:identity :oid])
+                  :session   session
+                  :operation audit-log/operation-modify}))
 
 (defn- store-and-log-review-event
   [connection event session]
   (yesql-add-application-event<! event connection)
-  (audit-log/log {:new              event
-                  :id               (get-in session [:identity :oid])
-                  :operation        audit-log/operation-new}))
+  (audit-log/log {:new       event
+                  :id        (get-in session [:identity :oid])
+                  :session   session
+                  :operation audit-log/operation-new}))
 
 (defn save-application-review [review session]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
@@ -1100,7 +1104,7 @@ WHERE la.key IS NULL\n"
                                (partial update-hakukohde-process-state! connection session hakukohde-oid from-state to-state)
                                application-keys)))]
     (doseq [audit-log-entry (filter some? audit-log-entries)]
-      (audit-log/log audit-log-entry))
+      (audit-log/log (assoc audit-log-entry :session session)))
     true))
 
 (defn add-application-event [event session]

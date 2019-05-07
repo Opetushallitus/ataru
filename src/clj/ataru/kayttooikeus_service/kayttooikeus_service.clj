@@ -28,7 +28,7 @@
                          ", body: " body)))))))
 
 (def fake-virkailija-value
-  {"DEVELOPER"
+  {"1.2.246.562.11.11111111111"
    {:oidHenkilo    "1.2.246.562.11.11111111012"
     :organisaatiot [{:organisaatioOid "1.2.246.562.10.0439845"
                      :kayttooikeudet  [{:palvelu "ATARU_EDITORI"
@@ -40,7 +40,7 @@
                                         :oikeus  "CRUD"}
                                        {:palvelu "ATARU_HAKEMUS"
                                         :oikeus  "CRUD"}]}]}
-   "USER-WITH-HAKUKOHDE-ORGANIZATION"
+   "1.2.246.562.11.22222222222"
    {:oidHenkilo    "1.2.246.562.11.11111111000"
     :organisaatiot [{:organisaatioOid "1.2.246.562.10.0439846"
                      :kayttooikeudet  [{:palvelu "ATARU_EDITORI"
@@ -56,4 +56,4 @@
 (defrecord FakeKayttooikeusService []
   KayttooikeusService
   (virkailija-by-username [_ username]
-    (get fake-virkailija-value username (get fake-virkailija-value "DEVELOPER"))))
+    (get fake-virkailija-value username (get fake-virkailija-value "1.2.246.562.11.11111111111"))))

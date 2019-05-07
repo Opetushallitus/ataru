@@ -13,7 +13,7 @@
     :hakija "ataru_hakija"
     nil))
 
-(defonce audit-log-config
+(defonce access-log-config
   (assoc timbre/example-config
          :appenders {:file-appender
                      (assoc (rolling-appender {:path    (str (-> config :log :virkailija-base-path)
@@ -27,13 +27,13 @@
                             :output-fn (fn [{:keys [msg_]}] (force msg_)))}))
 
 (defn info [str]
-  (timbre/log* audit-log-config :info str))
+  (timbre/log* access-log-config :info str))
 
 (defn warn [str]
-  (timbre/log* audit-log-config :warn str))
+  (timbre/log* access-log-config :warn str))
 
 (defn error [str]
-  (timbre/log* audit-log-config :error str))
+  (timbre/log* access-log-config :error str))
 
 (defn- extract-header
   [http-entity header-name]
