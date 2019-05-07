@@ -47,7 +47,6 @@
                                                                       :pattern :daily})
                                                    :output-fn (fn [{:keys [msg_]}] (force msg_)))})
         logger           (proxy [Logger] [] (log [str]
-                                              (prn str)
                                               (timbre/log* audit-log-config :info str)))
         application-type (case (app-utils/get-app-id)
                            :virkailija ApplicationType/VIRKAILIJA
