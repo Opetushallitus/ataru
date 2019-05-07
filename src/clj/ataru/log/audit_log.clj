@@ -117,8 +117,8 @@
                   (if ip
                     (InetAddress/getByName ip)
                     (InetAddress/getLocalHost))
-                  (-> :session :identity :ticket)
-                  (:user-agent session))
+                  (or (-> :session :identity :ticket) "no session")
+                  (or (:user-agent session) "no user agent"))
         [added removed updated] (->changes new old)
         changes (doto (Changes$Builder.)
                   (#(doseq [[path val] added]
