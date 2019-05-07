@@ -129,14 +129,14 @@
                      " and hakukohde " (:oid hakukohde))))))
 
 (defn update-application-hakukohde-review
-  [connection {:keys [application hakukohde from to]} session]
+  [connection {:keys [application hakukohde from to]}]
   (when (case to
           "eligible"
           (set-eligible connection application hakukohde)
           "unreviewed"
           (set-unreviewed connection application hakukohde))
         (insert-application-event connection application hakukohde to)
-        (audit-log application hakukohde from to session)))
+        (audit-log application hakukohde from to automatic-eligibility-session)))
 
 (defn automatic-eligibility-if-ylioppilas
   [application
@@ -188,7 +188,7 @@
                         now
                         hakukohteet
                         ylioppilas-tai-ammatillinen?)]
-          (update-application-hakukohde-review connection update automatic-eligibility-session)))
+          (update-application-hakukohde-review connection update)))
       {:transition {:id :final}})
     {:transition {:id :retry}}))
 
