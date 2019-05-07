@@ -32,7 +32,7 @@
             [medley.core :refer [find-first]])
   (:import (java.time ZonedDateTime ZoneId)))
 
-(defonce migration-session {:client-ip "127.0.0.1" :user-agent "migration"})
+(defonce migration-session {:user-agent "migration"})
 
 (def default-fetch-size 50)
 

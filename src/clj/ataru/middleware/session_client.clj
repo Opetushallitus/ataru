@@ -7,8 +7,7 @@
   (fn [{:keys [headers] :as req}]
       (let [user-agent (:user-agent headers)
             client-ip  (or (get headers "x-real-ip")
-                           (get headers "x-forwarded-for")
-                           "127.0.0.1")]
+                           (get headers "x-forwarded-for"))]
         (handler (-> req
                      (assoc-in [:session :user-agent] user-agent)
                      (assoc-in [:session :client-ip] client-ip))))))

@@ -14,7 +14,7 @@
             [taoensso.timbre :as log]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]))
 
-(defonce information-request-job-session {:client-ip "127.0.0.1" :user-agent "server"})
+(defonce information-request-job-session {:user-agent "server"})
 
 (defn- extract-answer-value [answer-key-str application]
   (->> (:answers application)

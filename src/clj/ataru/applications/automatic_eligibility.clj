@@ -11,6 +11,8 @@
             [taoensso.timbre :as log]
             [yesql.core :refer [defqueries]]))
 
+(defonce automatic-eligibility-session {:user-agent "eligibility"})
+
 (defqueries "sql/automatic-eligibility-queries.sql")
 
 (defn- get-application
@@ -186,7 +188,7 @@
                         now
                         hakukohteet
                         ylioppilas-tai-ammatillinen?)]
-          (update-application-hakukohde-review connection update nil)))
+          (update-application-hakukohde-review connection update automatic-eligibility-session)))
       {:transition {:id :final}})
     {:transition {:id :retry}}))
 

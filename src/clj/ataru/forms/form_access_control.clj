@@ -10,7 +10,7 @@
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
    [taoensso.timbre :refer [warn]]))
 
-(defonce form-access-control-session {:client-ip "127.0.0.1" :user-agent "server"})
+(defonce form-access-control-session {:user-agent "server"})
 
 (defn form-allowed-by-id?
   "id identifies a version of the form"
