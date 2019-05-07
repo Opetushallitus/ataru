@@ -101,7 +101,6 @@
                   (nil? old))
              (and (map-or-vec? old)
                   (map-or-vec? new)))
-         (not-blank? (:user-agent session))
          (not-blank? id)
          (some #{operation} [operation-failed
                              operation-new
