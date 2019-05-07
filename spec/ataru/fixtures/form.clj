@@ -21,7 +21,7 @@
 
 (defn create-form [& elements]
   {:name       {:fi (clojure.string/join "" (get-names elements))}
-   :created-by "DEVELOPER"
+   :created-by "1.2.246.562.11.11111111111"
    :locked     nil
    :locked-by  nil
    :content    elements})
@@ -37,7 +37,7 @@
 
 (def form-with-content
   {:name       {:fi "Test fixture!"}
-   :created-by "DEVELOPER"
+   :created-by "1.2.246.562.11.11111111111"
    :locked     nil
    :locked-by  nil
    :content    [(component/hakukohteet)
@@ -61,7 +61,7 @@
   {:id               2147483647                             ;; shouldn't clash with serial sequence id. Tests also create forms which use serial id, and the previous id 15 caused serious issues.
    :key              "41101b4f-1762-49af-9db0-e3603adae3ae"
    :name             {:fi "Uusi lomake"}
-   :created-by       "DEVELOPER"
+   :created-by       "1.2.246.562.11.11111111111"
    :organization-oid "1.2.246.562.10.2.45"
    :created-time     "2016-07-28T09:58:34.217+03:00"
    :locked           nil
@@ -153,7 +153,7 @@
 
 (def version-test-form
   {:name       {:fi "Test fixture!"}
-   :created-by "DEVELOPER"
+   :created-by "1.2.246.562.11.11111111111"
    :locked     nil
    :locked-by  nil
    :content    [(component/hakukohteet)
@@ -177,7 +177,7 @@
 
 (def attachment-test-form
   {:name       {:fi "Attachment test form"}
-   :created-by "DEVELOPER"
+   :created-by "1.2.246.562.11.11111111111"
    :locked     nil
    :locked-by  nil
    :content    [(component/hakukohteet)

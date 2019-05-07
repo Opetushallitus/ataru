@@ -16,7 +16,7 @@
   {:id 37,
    :name {:fi "uusi lomake"},
    :created-time "x",
-   :created-by "DEVELOPER",
+   :created-by "1.2.246.562.11.11111111111",
    :content [{:id "G__1",
               :label {:fi "osio1", :sv "Avsnitt namn"},
               :children [{:id "G__2",
@@ -46,7 +46,7 @@
 (def person-info-form
   {:id 22,
    :name {:fi "Testilomake"},
-   :created-by "DEVELOPER",
+   :created-by "1.2.246.562.11.11111111111",
    :created-time "2016-07-15T13:48:17.815+03:00",
    :content
    [{:fieldClass "wrapperElement"
@@ -210,7 +210,7 @@
   {:id 38,
    :name {:fi "toinen lomake"},
    :created-time "y",
-   :created-by "DEVELOPER",
+   :created-by "1.2.246.562.11.11111111111",
    :content [{:id "w1",
               :label {:fi "osio1", :sv ""},
               :children [{:id "f1",
