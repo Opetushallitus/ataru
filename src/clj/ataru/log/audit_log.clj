@@ -99,7 +99,8 @@
      (into {} (for [kw updated-kw]
                 [kw [(get new-diff kw) (get old-diff kw)]]))]))
 
-
+(defn- oid? [o]
+  (clojure.string/starts-with? o "1.2."))
 
 (defn- do-log [{:keys [new old id operation organization-oid session]}]
   {:pre [(or (and (or (string? new)
@@ -115,6 +116,9 @@
                              operation-login])]}
   (let [oid     (cond
                   (nil? id)
+                  oidless
+
+                  (not (oid? id))
                   oidless
 
                   (keyword? id)
