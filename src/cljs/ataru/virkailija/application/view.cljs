@@ -1602,7 +1602,7 @@
             (doall
               (for [[state labels]
                     review-types]
-                (let [label (get labels lang)]
+                (let [label (get labels @virkailija-lang)]
                   [:div.application-handling__review-state-row.application-handling__review-state-row--small
                    {:class    (when (= state selected-state) "application-handling__review-state-row--selected application-handling__review-state-row--enabled")
                     :on-click (if (= state selected-state)
