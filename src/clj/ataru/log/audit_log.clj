@@ -18,6 +18,8 @@
            (java.net InetAddress)
            (org.ietf.jgss Oid)))
 
+(def oidless "1.2.246.562.11.00000000000")
+
 (defn- create-operation [op]
   (proxy [Operation] [] (name [] op)))
 
@@ -27,8 +29,6 @@
 (def operation-modify (create-operation "muutos"))
 (def operation-delete (create-operation "poisto"))
 (def operation-login (create-operation "kirjautuminen"))
-
-(def ^:private object-mapper (ObjectMapper.))
 
 (defn- create-audit-logger []
   (let [service-name     (case (app-utils/get-app-id)
@@ -79,21 +79,27 @@
    (unnest m nil))
   ([mm prefix]
    (reduce-kv (fn [m key val]
-                  (if (map-or-vec? val)
+                  (cond
+                    (nil? val)
+                    (assoc m (path-> prefix key) "")
+
+                    (map-or-vec? val)
                     (merge m (unnest val (path-> prefix key)))
+
+                    :else
                     (assoc m (path-> prefix key) val))) {} mm)))
 
 (defn ->changes [new old]
-  (if (and (map-or-vec? new) (map-or-vec? old))
-    (let [[new-diff old-diff _] (diff (unnest new) (unnest old))
-          added-kw   (clojure.set/difference (set (keys new-diff)) (set (keys old-diff)))
-          removed-kw (clojure.set/difference (set (keys old-diff)) (set (keys new-diff)))
-          updated-kw (clojure.set/intersection (set (keys old-diff)) (set (keys new-diff)))]
-      [(select-keys new-diff added-kw)
-       (select-keys old-diff removed-kw)
-       (into {} (for [kw updated-kw]
-                  [kw [(get new-diff kw) (get old-diff kw)]]))])
-    [nil old new]))
+  (let [[new-diff old-diff _] (diff (unnest new) (unnest old))
+        added-kw   (clojure.set/difference (set (keys new-diff)) (set (keys old-diff)))
+        removed-kw (clojure.set/difference (set (keys old-diff)) (set (keys new-diff)))
+        updated-kw (clojure.set/intersection (set (keys old-diff)) (set (keys new-diff)))]
+    [(select-keys new-diff added-kw)
+     (select-keys old-diff removed-kw)
+     (into {} (for [kw updated-kw]
+                [kw [(get new-diff kw) (get old-diff kw)]]))]))
+
+
 
 (defn- do-log [{:keys [new old id operation organization-oid session]}]
   {:pre [(or (and (or (string? new)
@@ -101,16 +107,21 @@
                   (nil? old))
              (and (map-or-vec? old)
                   (map-or-vec? new)))
-         (not-blank? id)
          (some #{operation} [operation-failed
                              operation-new
                              operation-read
                              operation-modify
                              operation-delete
                              operation-login])]}
-  (let [oid     (str (if (keyword? id)
+  (let [oid     (cond
+                  (nil? id)
+                  oidless
+
+                  (keyword? id)
                   (name id)
-                  id))
+
+                  :else
+                  (str id))
         ip      (:client-ip session)
         user    (User.
                   (Oid. oid)

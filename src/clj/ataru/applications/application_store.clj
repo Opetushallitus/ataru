@@ -299,7 +299,7 @@
                         :session   session
                         :id        (if (some? virkailija-oid)
                                      virkailija-oid
-                                     (util/extract-email new-application))})
+                                     nil)})
         (yesql-add-application-event<! {:application_key  key
                                         :event_type       (if (some? virkailija-oid)
                                                             "received-from-virkailija"
@@ -379,7 +379,7 @@
                       :operation audit-log/operation-modify
                       :session   session
                       :id        (if updated-by-applicant?
-                                   (util/extract-email new-application)
+                                   nil
                                    virkailija-oid)})
       id)))
 

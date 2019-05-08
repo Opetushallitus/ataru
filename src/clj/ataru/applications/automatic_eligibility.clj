@@ -96,7 +96,7 @@
                               :requirement     "eligibility-state"
                               :state           old-state
                               :hakukohde       (:oid hakukohde)}
-                  :id        "automatic-eligibility-check"
+                  :id        "1.2.246.562.11.11111111111"
                   :session   session
                   :operation audit-log/operation-modify}))
 

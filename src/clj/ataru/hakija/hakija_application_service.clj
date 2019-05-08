@@ -145,7 +145,7 @@
                                      (cheshire.core/generate-string application))
                   :operation audit-log/operation-new
                   :session   session
-                  :id        (util/extract-email application)}))
+                  :id        nil}))
 
 (defn- validate-and-store [koodisto-cache
                            tarjonta-service
@@ -335,7 +335,7 @@
         (audit-log/log {:new       application
                         :operation audit-log/operation-failed
                         :session   session
-                        :id        (util/extract-email application)})
+                        :id        nil})
         (log/warn "Application failed verification" result)))
     result))
 
@@ -371,7 +371,7 @@
         (audit-log/log {:new       input-application
                         :operation audit-log/operation-failed
                         :session   session
-                        :id        (util/extract-email input-application)})
+                        :id        nil})
         (log/warn "Application edit failed verification" result)))
     result))
 
