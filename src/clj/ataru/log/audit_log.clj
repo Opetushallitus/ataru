@@ -114,7 +114,7 @@
                              operation-modify
                              operation-delete
                              operation-login])]}
-  (let [oid     (cond
+  (let [oid     (str (cond
                   (nil? id)
                   oidless
 
@@ -125,7 +125,7 @@
                   (name id)
 
                   :else
-                  (str id))
+                  id))
         ip      (:client-ip session)
         user    (User.
                   (Oid. oid)
