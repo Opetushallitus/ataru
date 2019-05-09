@@ -303,6 +303,11 @@
                                                  :lang              (or lang "fi")
                                                  :config            config})))
 
+(defn- wrap-referrer-policy
+  [handler policy]
+  (fn [request]
+    (response/header (handler request) "Referrer-Policy" policy)))
+
 (defrecord Handler []
   component/Lifecycle
 
@@ -355,6 +360,7 @@
                                                      (clojure.string/starts-with? uri "/hakemus/api/"))
                                                (access-log/log options request response totaltime))))
                             (wrap-gzip)
+                            (wrap-referrer-policy "same-origin")
                             (cache-control/wrap-cache-control))))
 
   (stop [this]

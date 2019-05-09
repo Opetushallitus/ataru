@@ -31,6 +31,8 @@
         hakija-secret     (:modify query-params)
         virkailija-secret (:virkailija-secret query-params)
         hakukohteet       (clojure.string/split (:hakukohteet query-params) #",")]
+    (cljs-util/unset-query-param "modify")
+    (cljs-util/unset-query-param "virkailija-secret")
     (cond
       (u/not-blank? hakukohde-oid)
       (re-frame/dispatch [:application/get-latest-form-by-hakukohde hakukohde-oid virkailija-secret])

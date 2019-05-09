@@ -496,6 +496,7 @@
                                 {:keys [application
                                         person
                                         form]}]]
+  (util/set-query-param "application-key" (:key application))
   (let [[secret-kwd secret-val] (if-not (clojure.string/blank? secret)
                                   [:secret secret]
                                   [:virkailija-secret virkailija-secret])]
