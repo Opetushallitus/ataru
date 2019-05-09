@@ -1549,6 +1549,9 @@ You will receive a confirmation of your application to your email."}
    :incomplete-answer      {:fi "Puutteellinen"
                             :sv "Bristfällig"
                             :en "Incomplete"}
+   :overdue                {:fi "Myöhässä"
+                            :sv "Försenad"
+                            :en "Overdue"}
    :attachmentless         {:fi "Liitteettömät"
                             :sv "Utan bilagor"
                             :en "No attachments"}})
