@@ -642,6 +642,8 @@ and (max-width: 1000px) {
 }
 
 .application-handling__attachment-review-header {
+  display: flex;
+  justify-content: space-between;
   margin-top: 20px;
   padding-bottom: 5px;
   border-bottom: solid @review-separator-color 1px;
@@ -654,20 +656,32 @@ and (max-width: 1000px) {
 
 .application__attachment-review-row {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
 
   &:not(:last-child) {
     margin: 10px 0;
+    padding-bottom: 10px;
     border-bottom: dashed @review-separator-color 1px;
   }
 }
 
-.application__attachment-review-row-answer-information {
+.application__attachment-review-info-row {
+  display: flex;
+  align-items: flex-start;
+}
+
+.application__attachment-review-row-attachments {
+  padding: 0px;
+  margin: 0px;
   font-weight: lighter;
+  list-style: none;
 }
 
 .application__attachment-review-row-label {
-  margin: 0 10px 5px 0;
+  flex-grow: 2;
+  align-self: flex-start;
+  font-weight: lighter;
+  margin: 0 10px 0 0;
 }
 
 .application-handling__review-outer-container {
@@ -1041,7 +1055,6 @@ and (max-width: 1000px) {
 }
 
 .application-handling__excel-request-row {
-  position: relative;
 }
 
 .application-handling__information-request-row--checkmark-container {
@@ -1131,6 +1144,34 @@ and (max-width: 1000px) {
   flex-flow: row nowrap;
   align-items: center;
   justify-content: center;
+
+  &:hover {
+    background-color: @editor-control-button-hover-blue;
+  }
+
+  &:disabled {
+    background-color: @section-gray-border;
+  }
+}
+
+.application-handling__download-attachments-button {
+  color: @white;
+  background-color: @link-color;
+  border-radius: 3px;
+  box-shadow :none;
+  padding: 5px;
+  height: 41px;
+  margin-right: 0;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 14px;
+  border: none;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  width: 150px;
+  flex-shrink: 0;
 
   &:hover {
     background-color: @editor-control-button-hover-blue;
@@ -1328,12 +1369,6 @@ and (max-width: 1000px) {
   display: inline-block;
   padding-left: 5px;
   min-width: 40px;
-}
-
-.application-handling__review-state-row--small {
-  width: 150px;
-  height: 41px;
-  flex-shrink: 0;
 }
 
 .application-handling__review-state-row--mass-update {
@@ -2445,6 +2480,11 @@ th.application__readonly-adjacent--header {
   color: @gray;
   cursor: pointer;
   margin-bottom: 2px;
+}
+
+.application-handling__attachment-download-checkbox {
+  align-self: flex-start;
+  margin: 0 10px 0 0;
 }
 
 .application-handling__filter-checkbox-label--all {
