@@ -485,7 +485,7 @@
 
 (defn omatsivut-applications
   [organization-service person-service session person-oid]
-  (->> (person-service/linked-oids person-service person-oid)
+  (->> (get (person-service/linked-oids person-service [person-oid]) person-oid)
        :linked-oids
        (mapcat #(aac/omatsivut-applications organization-service session %))))
 
@@ -662,3 +662,9 @@
                                  hakukohderyhma-oid
                                  rajaus-hakukohteella
                                  ryhman-hakukohteet)))))
+
+(defn suoritusrekisteri-applications
+  [person-service haku-oid hakukohde-oids person-oids modified-after offset]
+  (let [person-oids (when (seq person-oids)
+                      (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))]
+    (application-store/suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset)))

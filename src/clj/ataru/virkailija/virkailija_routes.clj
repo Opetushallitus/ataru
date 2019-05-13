@@ -910,7 +910,8 @@
               (response/unauthorized {:error "Unauthorized"})
               :else
               (response/ok
-               (application-store/suoritusrekisteri-applications
+               (application-service/suoritusrekisteri-applications
+                person-service
                 hakuOid
                 hakukohdeOids
                 hakijaOids
