@@ -55,7 +55,7 @@
    :preferred-name etunimi
    :postal-code    "00100"
    :postal-office  "Helsinki"
-   :home-town      "Helsinki"
+   :home-town      "091"
    :gender         sukupuoli
    :birth-date     syntymaaika})
 
