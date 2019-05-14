@@ -413,38 +413,36 @@
                  :oid  (:oidHenkilo virkailija)
                  :date (ZonedDateTime/now (ZoneId/of "Europe/Helsinki"))}})
 
-(def get-virkailija
+(defn- migrate-element-metadata-to-forms
+  [connection]
   (let [kayttooikeus-service (if (-> config :dev :fake-dependencies)
                                (kayttooikeus-service/->FakeKayttooikeusService)
                                (kayttooikeus-service/->HttpKayttooikeusService
                                 (cas/new-client "/kayttooikeus-service")))
-        person-service       (person-service/new-person-service)]
-    (memoize (fn [username]
-               (->> username
-                    (kayttooikeus-service/virkailija-by-username kayttooikeus-service)
-                    :oid
-                    (person-service/get-person person-service))))))
-
-(defn- migrate-element-metadata-to-forms
-  [connection]
-  (doseq [id   (migration-app-store/get-1.88-form-ids connection)
-          :let [form           (migration-app-store/get-1.88-form connection id)
-                virkailija     (get-virkailija (:created_by form))
-                field-metadata (get-field-metadata virkailija)]]
-    (-> (:content form)
-        (update :content
-                (fn [content]
-                  (for [field content
-                        :let  [metadata (if (or (= "hakukohteet" (:id field))
-                                                (= "person-info" (:module field)))
-                                          system-metadata
-                                          field-metadata)]]
-                    (clojure.walk/prewalk (fn [x]
-                                            (if (and (map? x) (contains? x :fieldType))
-                                              (assoc x :metadata metadata)
-                                              x))
-                                          field))))
-        (migration-app-store/update-1.88-form-content (:id form) connection))))
+        person-service       (person-service/new-person-service)
+        get-virkailija       (memoize (fn [username]
+                                        (->> username
+                                             (kayttooikeus-service/virkailija-by-username kayttooikeus-service)
+                                             :oid
+                                             (person-service/get-person person-service))))]
+    (doseq [id   (migration-app-store/get-1.88-form-ids connection)
+            :let [form           (migration-app-store/get-1.88-form connection id)
+                  virkailija     (get-virkailija (:created_by form))
+                  field-metadata (get-field-metadata virkailija)]]
+      (-> (:content form)
+          (update :content
+                  (fn [content]
+                    (for [field content
+                          :let  [metadata (if (or (= "hakukohteet" (:id field))
+                                                  (= "person-info" (:module field)))
+                                            system-metadata
+                                            field-metadata)]]
+                      (clojure.walk/prewalk (fn [x]
+                                              (if (and (map? x) (contains? x :fieldType))
+                                                (assoc x :metadata metadata)
+                                                x))
+                                            field))))
+          (migration-app-store/update-1.88-form-content (:id form) connection)))))
 
 (defn- create-attachment-reviews
   [attachment-field application-key hakutoiveet]

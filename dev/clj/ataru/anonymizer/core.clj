@@ -1,8 +1,8 @@
 (ns ataru.anonymizer.core
   (:require [ataru.anonymizer.anonymizer-application-store :as application-store]
             [ataru.anonymizer.data :as data]
-            [taoensso.timbre :as log]
-            [ataru.anonymizer.ssn-generator :as ssn-gen]))
+            [ataru.anonymizer.ssn-generator :as ssn-gen]
+            [taoensso.timbre :as log]))
 
 (defn- date-to-iso8601
   [date]
@@ -70,8 +70,10 @@
 
 (defn anonymize-data [& args]
   (let [fake-persons (file->fake-persons (first args))]
-    (doseq [application (application-store/get-all-applications)]
+    (doseq [id   (application-store/get-all-application-ids)
+            :let [application (application-store/get-application id)]]
       (if-let [fake-person (first (get fake-persons (:person_oid application)))]
         (do (application-store/update-application (anonymize fake-person application))
             (log/info "Anonymized application" (:id application)))
-        (log/info "Did not anonymize application" (:id application))))))
+        (log/info "Did not anonymize application" (:id application))))
+    (application-store/regenerate-application-secrets)))
