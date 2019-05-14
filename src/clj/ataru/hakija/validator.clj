@@ -2,6 +2,7 @@
   (:require [ataru.forms.form-store :as form-store]
             [ataru.hakija.application-validators :as validator]
             [ataru.util :as util :refer [collect-ids]]
+            [clojure.core.async :as asyncm]
             [clojure.set :refer [difference]]
             [clojure.core.match :refer [match]]
             [clojure.core.async :as async]
@@ -42,6 +43,7 @@
 (defn- passed? [has-applied form answer validators answers-by-key field-descriptor virkailija?]
   (every? (fn [validator]
               (first (async/<!! (validator/validate {:has-applied                  has-applied
+                                                     :try-selection                (constantly (asyncm/go [true []]))
                                                      :validator                    validator
                                                      :value                        answer
                                                      :answers-by-key               answers-by-key
@@ -181,7 +183,7 @@
                                 (concat results (build-results koodisto-cache has-applied answers-by-key [] form children hakukohderyhmat virkailija?))
 
                                 {:fieldClass "formField"
-                                 :fieldType  (:or "dropdown" "multipleChoice")
+                                 :fieldType  (:or "dropdown" "multipleChoice" "singleChoice")
                                  :validators validators
                                  :options    options}
                                 (let [koodisto-source   (:koodisto-source field)

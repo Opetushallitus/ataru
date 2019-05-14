@@ -273,7 +273,7 @@
                     setTextFieldValue(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__multi-option-wrapper .editor-form__text-field:eq(0)') }, 'Kyllä'),
                     clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__add-dropdown-item a:contains("Lisää")') }),
                     setTextFieldValue(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__multi-option-wrapper .editor-form__text-field:eq(1)') }, 'En'),
-                    clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__checkbox + .editor-form__checkbox-label') }),
+                    clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__checkbox + .editor-form__checkbox-label:first') }),
                     clickSubComponentMenuItem('Vierekkäiset tekstikentät', function () { return formComponents().eq(5); }),
                     setTextFieldValue(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__text-field').eq(3) }, 'Vierekkäinen tekstikenttä monivalinnan jatkokysymyksenä'),
                     clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__checkbox + label.editor-form__checkbox-label:contains("Vastaaja voi lisätä useita vastauksia")') }),
@@ -371,7 +371,7 @@
                 before(
                     clickComponentMenuItem('Painikkeet, yksi valittavissa'),
                     setTextFieldValue(function() { return formComponents().eq(11).find('.editor-form__text-field') }, 'Lyhyen listan kysymys'),
-                    clickElement(function() { return formComponents().eq(11).find('.editor-form__checkbox-wrapper label') }),
+                    clickElement(function() { return formComponents().eq(11).find('.editor-form__checkbox-wrapper label:first') }),
                     clickElement(function() { return formComponents().eq(11).find('.editor-form__add-dropdown-item a') }),
                     setTextFieldValue(function () { return formComponents().eq(11).find('.editor-form__text-field:last') }, 'Ensimmäinen vaihtoehto'),
                     clickElement(function() { return formComponents().eq(11).find('.editor-form__add-dropdown-item a') }),

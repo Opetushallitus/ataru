@@ -40,15 +40,15 @@
   (fn [title]
     (aset js/document "title" title)))
 
-(defn- validatep [{:keys [field-descriptor] :as params}]
+(defn- validatep [{:keys [field-descriptor try-selection] :as params}]
   (async/merge
-   (map (fn [v] (validator/validate (assoc params :validator v :has-applied has-applied)))
+   (map (fn [v] (validator/validate (assoc params :validator v :has-applied has-applied :try-selection try-selection)))
         (:validators field-descriptor))))
 
 (defn- all-valid? [valid-ch]
-  (async/reduce (fn [[all-valid? all-errors] [valid? errors]]
-                  [(and all-valid? valid?) (concat all-errors errors)])
-                [true []]
+  (async/reduce (fn [[all-valid? all-errors all-metadata] [valid? errors metadata]]
+                  [(and all-valid? valid?) (concat all-errors errors) (concat all-metadata metadata)])
+                [true [] []]
                 valid-ch))
 
 (def validation-debounces (atom {}))
@@ -66,7 +66,7 @@
 (defn- async-validate-values
   [{:keys [field-descriptor editing? on-validated values] :as params}]
   (if (and editing? (:cannot-edit field-descriptor))
-    (on-validated [true []])
+    (on-validated [true [] []])
     (async/take! (all-valid?
                    (async/merge
                      (map (fn [value] (validatep (merge params {:value value})))

@@ -226,13 +226,15 @@
                                     :target-path "target-virkailija"
                                     :env         {:app "virkailija"}
                                     :jvm-opts    ^:replace ["-Dapp=virkailija"
-                                                            "-Duser.home=."]}]
+                                                            "-Duser.home=."
+                                                            "-XX:MaxJavaStackTraceDepth=10"]}]
              :hakija-dev     [:dev {:figwheel    {:nrepl-port  3336
                                                   :server-port 3450}
                                     :target-path "target-hakija"
                                     :env         {:app "hakija"}
                                     :jvm-opts    ^:replace ["-Dapp=hakija"
-                                                            "-Duser.home=."]}]
+                                                            "-Duser.home=."
+                                                            "-XX:MaxJavaStackTraceDepth=10"]}]
              :uberjar        {:aot            :all
                               :resource-paths ["resources"]}}
 

@@ -5,6 +5,7 @@
             [ataru.util :as autil]
             [ataru.hakija.rules :as rules]
             [ataru.hakija.resumable-upload :as resumable-upload]
+            [ataru.hakija.try-selection :refer [try-selection]]
             [cljs.core.match :refer-macros [match]]
             [ataru.hakija.application :refer [create-initial-answers
                                               create-application-to-submit
@@ -481,14 +482,65 @@
         (original-values->answers)
         (set-field-visibilities))))
 
+(defn- selection-limits [{:keys [flat-form-content]}]
+  (let [limited? (fn [{:keys [validators]}]
+                   (some #(= "selection-limit" %) validators))]
+    (->> flat-form-content
+         (filter limited?)
+         (map :id)
+         (set)
+         (not-empty))))
+
+(defn set-limit-reached [db {:keys [selection-id limit-reached] :as selection}]
+  (if (nil? selection)
+    db
+    (let [new-limits (group-by :question-id limit-reached)]
+      (reduce (fn [db question-id]
+                (if-let [answers (new-limits (name question-id))]
+                  (assoc-in db [:application :answers question-id :limit-reached] (set (map :answer-id answers)))
+                  (assoc-in db [:application :answers question-id :limit-reached] nil)))
+        (if selection-id
+          (assoc-in db [:application :selection-id] selection-id)
+          db)
+        (map keyword (:selection-limited db))))))
+
+(defn reset-other-selections [db question-id answer-id]
+  (reduce (fn [db key]
+            (if (= key question-id)
+              db
+              (assoc-in db [:application :answers key :value] nil)))
+      db (map keyword (:selection-limited db))))
+
+(reg-event-fx
+  :application/handle-update-selection-limits
+  (fn [{:keys [db]} [_ selection valid? question-id answer-id]]
+    {:db (cond (false? valid?)
+               (-> db
+                   (set-limit-reached selection))
+
+               (not (and valid? question-id answer-id))
+               (set-limit-reached db selection)
+
+               (and question-id answer-id)
+               (-> db
+                   (set-limit-reached selection)
+                   (reset-other-selections question-id answer-id)))}))
+
 (reg-event-fx
   :application/post-handle-form-dispatches
-  (fn [_ _]
-    {:dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
-                  [:application/hakukohde-query-change (atom "")]
-                  [:application/set-page-title]
-                  [:application/update-answers-validity]
-                  [:application/validate-hakukohteet]]}))
+  (fn [{:keys [db]} _]
+    (let [selection-limited (selection-limits db)]
+      (merge
+        {:db         (assoc db :selection-limited selection-limited)
+         :dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
+                      [:application/hakukohde-query-change (atom "")]
+                      [:application/set-page-title]
+                      [:application/update-answers-validity]
+                      [:application/validate-hakukohteet]]}
+        (when selection-limited
+          {:http {:method  :put
+                  :url     (str "/hakemus/api/selection-limit?form-key=" (-> db :form :key))
+                  :handler [:application/handle-update-selection-limits]}})))))
 
 (defn- handle-get-application [{:keys [db]}
                                [_
@@ -830,38 +882,48 @@
 (reg-event-fx
   :application/select-single-choice-button
   (fn [{db :db} [_ value field-descriptor question-group-idx]]
-    (let [id            (keyword (:id field-descriptor))
-          button-path   [:application :answers id]
-          value-path    (cond-> button-path
-                                (some? question-group-idx)
-                                (conj :values question-group-idx 0)
-                                true
-                                (conj :value))
-          current-value (get-in db value-path)
-          new-value     (when (not= value current-value) value)
-          db            (if (some? question-group-idx)
-                          (-> db
-                              (update-in (conj button-path :values) (util/vector-of-length (inc question-group-idx)))
-                              (update-in (conj button-path :values question-group-idx) (fnil identity []))
-                              (assoc-in value-path new-value)
-                              (update-in button-path (fn [answer]
-                                                       (assoc answer :value (mapv (partial mapv :value)
-                                                                              (:values answer)))))
-                              (set-multi-value-changed id :value))
-                          (-> db
-                              (assoc-in value-path new-value)
-                              (set-multi-value-changed id :value)
-                              (set-field-visibility field-descriptor)))]
+    (let [id                 (keyword (:id field-descriptor))
+          button-path        [:application :answers id]
+          value-path         (cond-> button-path
+                                     (some? question-group-idx)
+                                     (conj :values question-group-idx 0)
+                                     true
+                                     (conj :value))
+          current-value      (get-in db value-path)
+          new-value          (when (not= value current-value) value)
+          form-key (get-in db [:form :key])
+          selection-id (get-in db [:application :selection-id])
+          selection-group-id (get-in field-descriptor [:params :selection-group-id])
+          db                 (if (some? question-group-idx)
+                               (-> db
+                                   (update-in (conj button-path :values) (util/vector-of-length (inc question-group-idx)))
+                                   (update-in (conj button-path :values question-group-idx) (fnil identity []))
+                                   (assoc-in value-path new-value)
+                                   (update-in button-path (fn [answer]
+                                                            (assoc answer :value (mapv (partial mapv :value)
+                                                                                   (:values answer)))))
+                                   (set-multi-value-changed id :value))
+                               (-> db
+                                   (assoc-in value-path new-value)
+                                   (set-multi-value-changed id :value)
+                                   (set-field-visibility field-descriptor)))]
       {:db                 (set-validator-processing db id)
        :validate-debounced {:value                        new-value
                             :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
                             :answers-by-key               (get-in db [:application :answers])
                             :field-descriptor             field-descriptor
                             :editing?                     (get-in db [:application :editing?])
+                            :try-selection                (partial try-selection
+                                                            form-key
+                                                            selection-id
+                                                            selection-group-id)
                             :group-idx                    question-group-idx
                             :field-idx                    0
                             :virkailija?                  (contains? (:application db) :virkailija-secret)
-                            :on-validated                 (fn [[valid? errors]]
+                            :on-validated                 (fn [[valid? errors selection-limit]]
+                                                            (when selection-limit
+                                                              (dispatch [:application/handle-update-selection-limits
+                                                                         (first selection-limit) valid? id new-value]))
                                                             (dispatch [:application/set-repeatable-application-field-valid
                                                                        field-descriptor
                                                                        question-group-idx

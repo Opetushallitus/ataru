@@ -5,6 +5,7 @@ var virkailijaCreateSecret = '{{virkailija-create-secret}}'
 function newForm(formName) {
   var testFormKey = '{{test-form-key}}';
   var testQuestionGroupFormKey = '{{test-question-group-form-key}}';
+  var testSelectionLimitFormKey = '{{test-selection-limit-form-key}}';
   var ssnFormKey = '{{ssn-form-key}}';
   var formKey;
 
@@ -15,6 +16,9 @@ function newForm(formName) {
     case 'testQuestionGroupForm':
       formKey = testQuestionGroupFormKey;
       break;
+    case 'testSelectionLimitForm':
+        formKey = testSelectionLimitFormKey;
+        break;
     case 'ssnTestForm':
       formKey = ssnFormKey;
       break;

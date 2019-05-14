@@ -65,6 +65,8 @@ const getUrl = () => {
             return 'http://localhost:8350/lomake-editori/virkailija-test.html';
         case 'virkailija-question-group':
             return 'http://localhost:8350/lomake-editori/virkailija-question-group-test.html';
+        case 'virkailija-selection-limit':
+            return 'http://localhost:8350/lomake-editori/virkailija-selection-limit-test.html';
         case 'virkailija-koodisto':
             return 'http://localhost:8350/lomake-editori/virkailija-koodisto-test.html';
         case 'virkailija-with-hakukohde-organization':
@@ -73,6 +75,8 @@ const getUrl = () => {
             return 'http://localhost:8351/hakemus/hakija-form-test.html';
         case 'hakija-question-group-form':
             return 'http://localhost:8351/hakemus/hakija-question-group-form-test.html';
+        case 'hakija-selection-limit':
+            return 'http://localhost:8351/hakemus/hakija-selection-limit-test.html';
         case 'hakija-haku':
             return 'http://localhost:8351/hakemus/hakija-haku-test.html';
         case 'hakija-hakukohde':

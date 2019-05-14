@@ -282,6 +282,13 @@
                              [:application :answers parent-id :value]))]
       (= option-value value))))
 
+(re-frame/reg-sub
+  :application/single-choice-option-valid?
+  (fn [db [_ parent-id question-group-idx]]
+    (get-in db (if question-group-idx
+                 [:application :answers parent-id :values question-group-idx 0 :valid]
+                 [:application :answers parent-id :valid]))))
+
 (defn- hakukohteet-field [db]
   (->> (:flat-form-content db)
        (filter #(= "hakukohteet" (:id %)))
@@ -407,6 +414,21 @@
     (concat [selected-language]
             languages
             [:fi :sv :en])))
+
+(re-frame/reg-sub
+  :application/fetching-selection-limits?
+  (fn [db [_ id]]
+    (if-let [limited (get db :selection-limited)]
+      (and (limited (name id))
+           (some #(get-in db [:application :validators-processing (keyword %)]) limited)))))
+
+(re-frame/reg-sub
+  :application/limit-reached?
+  (fn [db [_ question-id answer-id]]
+    (let [original-value (get-in db [:application :answers question-id :original-value])]
+      (if-let [limits (get-in db [:application :answers question-id :limit-reached])]
+        (and (limits answer-id)
+             (not= original-value answer-id))))))
 
 (re-frame/reg-sub
   :application/hakukohde-label

@@ -51,6 +51,8 @@
       (run-karma-test "virkailija" (last (split (utils/login) #"="))))
     (it "is created with a question group successfully"
       (run-karma-test "virkailija-question-group" (last (split (utils/login) #"="))))
+    (it "is created with a selection limit successfully"
+        (run-karma-test "virkailija-selection-limit" (last (split (utils/login) #"="))))
     (it "is able to use lomake with hakukohde organization connection"
         (run-karma-test "virkailija-with-hakukohde-organization" (last (split (utils/login) #"=")))))
 
@@ -65,6 +67,8 @@
       (run-karma-test "hakija-ssn"))
     (it "is possible to apply using a form with a question group"
       (run-karma-test "hakija-question-group-form"))
+    (it "is possible to apply with selection limit"
+        (run-karma-test "hakija-selection-limit"))
     (it "is possible to apply as virkailija"
       (run-karma-test "virkailija-haku")))
 

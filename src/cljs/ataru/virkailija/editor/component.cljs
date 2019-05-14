@@ -11,6 +11,7 @@
    [ataru.virkailija.temporal :as temporal]
    [ataru.virkailija.views.hakukohde-and-hakukohderyhma-search :as h-and-h]
    [cljs.core.match :refer-macros [match]]
+   [clojure.string :as string]
    [goog.dom :as gdom]
    [goog.string :as s]
    [goog.date :as d]
@@ -20,25 +21,31 @@
    [reagent.ratom :refer-macros [reaction]]
    [taoensso.timbre :refer-macros [spy debug]]))
 
-(defn- required-checkbox
-  [path initial-content]
+(defn- required-disabled [initial-content]
+  (contains? (-> initial-content :validators set) "required-hakija"))
+
+(defn- validator-checkbox
+  [path initial-content key disabled? on-change]
   (let [id         (util/new-uuid)
-        validators (-> initial-content :validators set)
-        disabled?  (or @(subscribe [:editor/form-locked?])
-                       (contains? validators "required-hakija"))]
+        disabled?  (or disabled?
+                       @(subscribe [:editor/form-locked?]))
+        validators (-> initial-content :validators set)]
     [:div.editor-form__checkbox-container
      [:input.editor-form__checkbox {:type      "checkbox"
                                     :id        id
-                                    :checked   (contains? validators "required")
+                                    :checked   (contains? validators (name key))
                                     :disabled  disabled?
                                     :on-change (fn [event]
-                                                 (dispatch [(if (-> event .-target .-checked)
-                                                              :editor/add-validator
-                                                              :editor/remove-validator) "required" path]))}]
+                                                 (let [checked (boolean (-> event .-target .-checked))]
+                                                   (when on-change
+                                                     (on-change checked))
+                                                   (dispatch [(if checked
+                                                                :editor/add-validator
+                                                                :editor/remove-validator) (name key) path])))}]
      [:label.editor-form__checkbox-label
       {:for   id
        :class (when disabled? "editor-form__checkbox-label--disabled")}
-      (get-virkailija-translation :required)]]))
+      (get-virkailija-translation key)]]))
 
 (defn- repeater-checkbox
   [path initial-content]
@@ -363,7 +370,7 @@
                              (.open js/window url "_blank")))}
       (get-virkailija-translation :md-help-more)]]]])
 
-(defn input-field [path lang dispatch-fn {:keys [class value-fn tag]
+(defn input-field [path lang dispatch-fn {:keys [class value-fn tag placeholder]
                                           :or   {tag :input}}]
   (let [component    (subscribe [:editor/get-component-value path])
         focus?       (subscribe [:state-query [:editor :ui (:id @component) :focus?]])
@@ -384,6 +391,7 @@
                              [tag
                               {:class     (str "editor-form__text-field " (when-not (empty? class) class))
                                :value     @value
+                               :placeholder placeholder
                                :on-change dispatch-fn
                                :on-drop   prevent-default
                                :disabled  @form-locked?}])})))
@@ -628,7 +636,7 @@
                 :disabled  @form-locked?
                 :on-change #(max-length-change (get-val %))}]])]
           [:div.editor-form__checkbox-wrapper
-           [required-checkbox path initial-content]
+           [validator-checkbox path initial-content :required (required-disabled initial-content)]
            (when-not text-area?
              [repeater-checkbox path initial-content])
            (when-not text-area?
@@ -669,7 +677,13 @@
                                 (reset! show-followups nil)
                                 (dispatch [(if up?
                                              :editor/move-option-up
-                                             :editor/move-option-down) path option-index])))]
+                                             :editor/move-option-down) path option-index])))
+        selection-limit?    (subscribe [:editor/selection-limit? path])
+        only-numbers        (fn [value]
+                              (let [n (string/replace value #"\D" "")]
+                                (if (empty? n)
+                                  nil
+                                  (js/parseInt n))))]
     (fn [option-index option-count option-path followups path languages show-followups parent-key option-value question-group-element? &
          {:keys [header? editable?]
           :or   {header? false editable? true}
@@ -693,6 +707,13 @@
               [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
             languages)
            [koodisto-fields-with-lang languages option-path])]
+        (when @selection-limit?
+          [:div.editor-form__selection-limit
+           [input-field option-path :dont-care #(dispatch [:editor/set-dropdown-option-selection-limit
+                                                           (only-numbers (-> % .-target .-value)) option-path :selection-limit])
+            {:placeholder (get-virkailija-translation :selection-limit-input)
+             :class       "editor-form__text-field--selection-limit"
+             :value-fn    (fn [v] (:selection-limit v))}]])
         (when (not question-group-element?)
           [followup-question option-index followups option-path show-followups parent-key option-value question-group-element?])
         (when editable?
@@ -819,6 +840,8 @@
         options-koodisto         (subscribe [:editor/get-component-value path :koodisto-source])
         koodisto-ordered-by-user (subscribe [:editor/get-component-value path :koodisto-ordered-by-user])
         value                    (subscribe [:editor/get-component-value path])
+        support-selection-limit? (subscribe [:editor/dropdown-with-selection-limit? path])
+        selected-form-key        (subscribe [:editor/selected-form-key])
         koodisto-ordered-id      (util/new-uuid)
         form-locked?             (subscribe [:editor/form-locked?])]
     (fn [initial-content followups path {:keys [question-group-element?]}]
@@ -833,7 +856,7 @@
            [text-header (:id initial-content) header path (:metadata initial-content)
             :sub-header (:label @value)])
          [component-content
-          path ; (:id initial-content)
+          path
           [:div
            [:div.editor-form__component-row-wrapper
             [:div.editor-form__multi-question-wrapper
@@ -846,7 +869,11 @@
                languages
                :header? true)]
              [:div.editor-form__checkbox-wrapper
-              [required-checkbox path initial-content]]
+              [validator-checkbox path initial-content :required (required-disabled initial-content)]]
+             (when @support-selection-limit?
+               [:div.editor-form__checkbox-wrapper
+                [validator-checkbox path initial-content :selection-limit nil
+                 #(dispatch [:editor/set-selection-group-id (when % @selected-form-key) path])]])
              [belongs-to-hakukohteet path initial-content]]]
            [info-addon path initial-content]
            [:div.editor-form__component-row-wrapper
@@ -1072,7 +1099,7 @@
            @languages
            :header? true)]
          [:div.editor-form__checkbox-wrapper
-          [required-checkbox path content]]
+          [validator-checkbox path content :required (required-disabled content)]]
          [belongs-to-hakukohteet path content]]]])))
 
 (defn attachment-textarea [path]
@@ -1199,7 +1226,8 @@
              :on-blur     format-deadline
              :placeholder "pp.kk.vvvv hh:mm"
              :on-change   update-deadline}]]
-          (when-not @mail-attachment? [:div.editor-form__checkbox-wrapper
-           [required-checkbox path content]])
+          (when-not @mail-attachment?
+            [:div.editor-form__checkbox-wrapper
+             [validator-checkbox path content :required (required-disabled content)]])
           [belongs-to-hakukohteet path content]]
          [attachment-textarea path]]]])))
