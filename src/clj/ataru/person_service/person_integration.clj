@@ -111,7 +111,7 @@
       {:person-oid person-oid})
     (job/start-job job-runner
       connection
-      "automatic-maksuvelvollisuus-job"
+      "automatic-payment-obligation-job"
       {:person-oid person-oid})))
 
 (defn- try-handle-message
