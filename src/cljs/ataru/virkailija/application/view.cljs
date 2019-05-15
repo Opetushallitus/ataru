@@ -777,21 +777,22 @@
 
 (defn- application-filters
   []
-  (let [filters                    (subscribe [:state-query [:application :filters]])
-        filters-checkboxes         (subscribe [:state-query [:application :filters-checkboxes]])
-        applications-count         (subscribe [:application/loaded-applications-count])
-        fetching?                  (subscribe [:application/fetching-applications?])
-        enabled-filter-count       (subscribe [:application/enabled-filter-count])
-        review-settings            (subscribe [:state-query [:application :review-settings :config]])
-        selected-hakukohde-oid     (subscribe [:state-query [:application :selected-hakukohde]])
-        has-base-education-answers (subscribe [:application/applications-have-base-education-answers])
-        show-ensisijaisesti?       (subscribe [:application/show-ensisijaisesti?])
-        show-rajaa-hakukohteella?  (subscribe [:application/show-rajaa-hakukohteella?])
-        filters-changed?           (subscribe [:application/filters-changed?])
-        filters-visible            (r/atom false)
-        rajaava-hakukohde-opened?  (r/atom false)
-        filters-to-include         #{:language-requirement :degree-requirement :eligibility-state :payment-obligation}
-        lang                       (subscribe [:editor/virkailija-lang])]
+  (let [filters                                   (subscribe [:state-query [:application :filters]])
+        filters-checkboxes                        (subscribe [:state-query [:application :filters-checkboxes]])
+        applications-count                        (subscribe [:application/loaded-applications-count])
+        fetching?                                 (subscribe [:application/fetching-applications?])
+        enabled-filter-count                      (subscribe [:application/enabled-filter-count])
+        review-settings                           (subscribe [:state-query [:application :review-settings :config]])
+        selected-hakukohde-oid                    (subscribe [:state-query [:application :selected-hakukohde]])
+        show-eligibility-set-automatically-filter (subscribe [:application/show-eligibility-set-automatically-filter])
+        has-base-education-answers                (subscribe [:application/applications-have-base-education-answers])
+        show-ensisijaisesti?                      (subscribe [:application/show-ensisijaisesti?])
+        show-rajaa-hakukohteella?                 (subscribe [:application/show-rajaa-hakukohteella?])
+        filters-changed?                          (subscribe [:application/filters-changed?])
+        filters-visible                           (r/atom false)
+        rajaava-hakukohde-opened?                 (r/atom false)
+        filters-to-include                        #{:language-requirement :degree-requirement :eligibility-state :payment-obligation}
+        lang                                      (subscribe [:editor/virkailija-lang])]
     (fn []
       [:span.application-handling__filters
        [:a
@@ -852,13 +853,14 @@
                              (-> @review-settings (get kw) (false?) (not)))))
                   (map (partial review-type-filter filters-checkboxes @lang))
                   (doall))
-             [:div.application-handling__filter-group
-              [:div.application-handling__filter-group-title
-               (util/non-blank-val (get-virkailija-label :eligibility-set-automatically)
-                                   [@lang :fi :sv :en])]
-              [:div.application-handling__filter-group-checkboxes
-               [application-filter-checkbox filters-checkboxes (:yes general-texts) @lang :eligibility-set-automatically :yes]
-               [application-filter-checkbox filters-checkboxes (:no general-texts) @lang :eligibility-set-automatically :no]]]]]
+             (when @show-eligibility-set-automatically-filter
+               [:div.application-handling__filter-group
+                [:div.application-handling__filter-group-title
+                 (util/non-blank-val (get-virkailija-label :eligibility-set-automatically)
+                                     [@lang :fi :sv :en])]
+                [:div.application-handling__filter-group-checkboxes
+                 [application-filter-checkbox filters-checkboxes (:yes general-texts) @lang :eligibility-set-automatically :yes]
+                 [application-filter-checkbox filters-checkboxes (:no general-texts) @lang :eligibility-set-automatically :no]]])]]
            (when @has-base-education-answers
              [:div.application-handling__popup-column.application-handling__popup-column--large
               [application-base-education-filters filters-checkboxes @lang]])]
