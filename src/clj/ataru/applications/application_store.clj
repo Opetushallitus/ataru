@@ -739,7 +739,7 @@ WHERE la.key IS NULL\n"
                                              :virkailija_oid   (-> session :identity :oid)}]
                                   (yesql-add-application-event<! event connection))))))
 
-(defn save-automatic-application-hakukohde-review
+(defn save-payment-obligation-automatically-changed
   [application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection                  {:connection conn}
@@ -748,10 +748,12 @@ WHERE la.key IS NULL\n"
                                        :state           hakukohde-review-state
                                        :hakukohde       hakukohde-oid}
           existing-modified-by-user?  (->> (yesql-get-application-events {:application_key application-key} connection)
+                                           (filter #(and (= hakukohde-oid (:hakukohde %))
+                                                         (= hakukohde-review-requirement (:requirement %))))
                                            (sort-by :time)
                                            (last)
                                            :event_type
-                                           (#(not= % "payment-obligation-automatically-changed")))
+                                           (not= "payment-obligation-automatically-changed"))
           existing-duplicate-review   (yesql-get-existing-application-hakukohde-review review-to-store connection)
           existing-requirement-review (first (yesql-get-existing-requirement-review review-to-store connection))]
       (when (and (empty? existing-duplicate-review)

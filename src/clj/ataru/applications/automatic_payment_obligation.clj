@@ -18,7 +18,7 @@
                                       (map application-store/get-latest-application-by-key))]
         (doseq [application applications]
           (doseq [hakukohde-oid (:hakukohde application)]
-            (application-store/save-automatic-application-hakukohde-review
+            (application-store/save-payment-obligation-automatically-changed
               (:key application)
               hakukohde-oid
               "payment-obligation"
