@@ -956,7 +956,7 @@ WHERE a.person_oid IS NOT NULL
   AND ar.state <> 'inactivated';
 
 --name: yesql-get-latest-application-keys-distinct-by-person-oid
-SELECT DISTINCT ON (person_oid) a.key FROM latest_applications AS a WHERE a.person_oid = :person_oid ORDER BY a.person_oid, id DESC;
+SELECT a.key FROM latest_applications AS a WHERE a.person_oid = :person_oid;
 
 --name: yesql-get-latest-application-secret
 SELECT secret
