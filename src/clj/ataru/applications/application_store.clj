@@ -740,7 +740,7 @@ WHERE la.key IS NULL\n"
                                   (yesql-add-application-event<! event connection))))))
 
 (defn save-automatic-application-hakukohde-review
-  [application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state session]
+  [application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection                  {:connection conn}
           review-to-store             {:application_key application-key
@@ -758,13 +758,13 @@ WHERE la.key IS NULL\n"
                  (or (not existing-requirement-review)
                      (not existing-modified-by-user?)))
             (yesql-upsert-application-hakukohde-review! review-to-store connection)
-            (let [hakukohde-event {:application_key  application-key
-                                   :event_type       "payment-obligation-automatically-changed"
-                                   :new_review_state (:state review-to-store)
-                                   :review_key       hakukohde-review-requirement
-                                   :hakukohde        (:hakukohde review-to-store)
-                                   :virkailija_oid   (-> session :identity :oid)}]
-              (store-and-log-review-event connection hakukohde-event session))))))
+            (let [event {:application_key  application-key
+                         :event_type       "payment-obligation-automatically-changed"
+                         :new_review_state (:state review-to-store)
+                         :review_key       hakukohde-review-requirement
+                         :hakukohde        (:hakukohde review-to-store)
+                         :virkailija_oid   nil}]
+              (yesql-add-application-event<! event connection))))))
 
 (defn save-attachment-hakukohde-review
   [application-key hakukohde-oid attachment-key hakukohde-review-state session]

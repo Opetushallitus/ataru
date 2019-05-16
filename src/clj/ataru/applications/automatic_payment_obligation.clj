@@ -22,6 +22,5 @@
               (:key application)
               hakukohde-oid
               "payment-obligation"
-              (if finnish-nationality? "not-obligated" "obligated")
-              nil))))))
+              (if finnish-nationality? "not-obligated" "obligated")))))))
   {:transition {:id :final}})
