@@ -955,8 +955,8 @@ WHERE a.person_oid IS NOT NULL
   AND (array_length(ARRAY[:application_keys], 1) < 2 OR a.key IN (:application_keys))
   AND ar.state <> 'inactivated';
 
---name: yesql-get-latest-application-ids-distinct-by-person-oid
-SELECT DISTINCT ON (person_oid) id FROM latest_applications ORDER BY person_oid, id DESC;
+--name: yesql-get-latest-application-keys-distinct-by-person-oid
+SELECT DISTINCT ON (person_oid) a.key FROM latest_applications AS a WHERE a.person_oid = :person_oid ORDER BY a.person_oid, id DESC;
 
 --name: yesql-get-latest-application-secret
 SELECT secret
