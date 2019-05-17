@@ -160,8 +160,8 @@
       );
       describe('Default sort', function () {
         before(wait.until(applicantNamesExist));
-        it('Descending by applicant name', function () {
-          expectApplicants(["Kuikeloinen, Seija Susanna", "Tyrni, Johanna Irmeli", "Vatanen, Ari"]);
+        it('Descending by modification time', function () {
+          expectApplicants(["Tyrni, Johanna Irmeli", "Vatanen, Ari", "Kuikeloinen, Seija Susanna"]);
         });
       });
       describe('Ascending sort by modification time', function () {
@@ -400,7 +400,7 @@
         )
 
         it('has expected data in applications and popup', function() {
-          expect(applicationHakukohdeStates()).to.eql(['Käsittelemättä', 'Käsittelemättä', 'Käsittelyssä'])
+          expect(applicationHakukohdeStates()).to.eql(['Käsittelemättä', 'Käsittelyssä', 'Käsittelemättä'])
           expect(massUpdateFromStateSelectionClosed().text()).to.equal('Käsittelemättä (2)')
           expect(massUpdateToStateSelectionClosed().text()).to.equal('Käsittelemättä (2)')
         })
@@ -454,7 +454,7 @@
           })
         )
         it('to selected state', function() {
-          expect(applicationHakukohdeStates()).to.eql(['Käsitelty', 'Käsitelty', 'Käsittelyssä'])
+          expect(applicationHakukohdeStates()).to.eql(['Käsitelty', 'Käsittelyssä', 'Käsitelty'])
         })
       })
     })
@@ -507,8 +507,8 @@
           })
         )
         it('reduces application list and recipient count', function () {
-          expect(testFrame().find('.application-handling__list-row--application-applicant:eq(0)').text()).to.equal('Kuikeloinen, Seija Susanna')
-          expect(testFrame().find('.application-handling__list-row--application-applicant:eq(1)').text()).to.equal('Vatanen, Ari')
+          expect(testFrame().find('.application-handling__list-row--application-applicant:eq(0)').text()).to.equal('Vatanen, Ari')
+          expect(testFrame().find('.application-handling__list-row--application-applicant:eq(1)').text()).to.equal('Kuikeloinen, Seija Susanna')
           expect(massInformationRequestText()).to.eql('Lähetä sähköposti 2 hakijalle:')
         })
       })
