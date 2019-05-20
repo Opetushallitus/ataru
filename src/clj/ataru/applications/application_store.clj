@@ -391,52 +391,153 @@
        (clojure.string/join " & ")))
 
 (defn- query->db-query
-  ([connection query]
-   (-> (merge {:form                         nil
-               :application_oid              nil
-               :application_oids             nil
-               :person_oid                   nil
-               :name                         nil
-               :email                        nil
-               :dob                          nil
-               :ssn                          nil
-               :haku                         nil
-               :hakukohde                    nil
-               :ensisijainen_hakukohde       nil
-               :ensisijaisesti_hakukohteissa nil}
-              (transform-keys ->snake_case query))
-       (update :hakukohde
-               #(some->> (seq %)
-                         to-array
-                         (.createArrayOf (:connection connection) "varchar")))
-       (update :application_oids
-               #(some->> (seq %)
-                         to-array
-                         (.createArrayOf (:connection connection) "text")))
-       (update :ensisijainen_hakukohde
-               #(some->> (seq %)
-                         to-array
-                         (.createArrayOf (:connection connection) "varchar")))
-       (update :ensisijaisesti_hakukohteissa
-               #(some->> (seq %)
-                         to-array
-                         (.createArrayOf (:connection connection) "varchar")))))
-  ([connection query sort]
-   (merge (query->db-query connection query)
-          {:offset_key            (:key (:offset sort))
-           :offset_submitted      (:submitted (:offset sort))
-           :offset_created_time   (:created-time (:offset sort))
-           :offset_last_name      (:last-name (:offset sort))
-           :offset_preferred_name (:preferred-name (:offset sort))
-           :order_by              (:order-by sort)
-           :order                 (:order sort)})))
+  [connection query sort]
+  (let [query (cond-> query
+                      (contains? query :hakukohde)
+                      (update :hakukohde
+                              #(some->> (seq %)
+                                        to-array
+                                        (.createArrayOf (:connection connection) "varchar")))
+                      (contains? query :ensisijainen-hakukohde)
+                      (update :ensisijainen-hakukohde
+                              #(some->> (seq %)
+                                        to-array
+                                        (.createArrayOf (:connection connection) "varchar")))
+                      (contains? query :ensisijaisesti-hakukohteissa)
+                      (update :ensisijaisesti-hakukohteissa
+                              #(some->> (seq %)
+                                        to-array
+                                        (.createArrayOf (:connection connection) "varchar"))))
+        comp  (if (= "asc" (:order sort)) ">" "<")
+        order (if (= "asc" (:order sort)) "ASC" "DESC")]
+    (cons
+     (str "SELECT a.id,
+       a.person_oid                     AS \"person-oid\",
+       a.key,
+       a.lang,
+       a.preferred_name                 AS \"preferred-name\",
+       a.last_name                      AS \"last-name\",
+       a.created_time                   AS \"created-time\",
+       a.haku,
+       a.hakukohde,
+       a.ssn,
+       hcbe.value                       AS \"base-education\",
+       ar.state                         AS state,
+       ar.score                         AS score,
+       a.form_id                        AS form,
+       ae.eligibility_set_automatically AS \"eligibility-set-automatically\",
+       ae.new_modifications_count       AS \"new-application-modifications\",
+       a.submitted,
+       lf.organization_oid              AS \"organization-oid\",
+       (SELECT jsonb_agg(jsonb_build_object('requirement', requirement,
+                                            'state', state,
+                                            'hakukohde', hakukohde))
+        FROM application_hakukohde_reviews ahr
+        WHERE ahr.application_key = a.key) AS \"application-hakukohde-reviews\",
+       (SELECT jsonb_agg(jsonb_build_object('attachment-key', attachment_key,
+                                            'state', state,
+                                            'hakukohde', hakukohde))
+        FROM application_hakukohde_attachment_reviews aar
+        WHERE aar.application_key = a.key) AS \"application-attachment-reviews\"
+FROM applications AS a
+LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id
+JOIN application_reviews AS ar ON a.key = ar.application_key
+JOIN forms AS f ON f.id = a.form_id
+JOIN LATERAL (SELECT organization_oid
+              FROM forms
+              WHERE key = f.key
+              ORDER BY id DESC
+              LIMIT 1) AS lf ON true
+LEFT JOIN LATERAL (SELECT value->'value' AS value
+                   FROM jsonb_array_elements(a.content->'answers')
+                   WHERE value->>'key' = 'higher-completed-base-education'
+                   LIMIT 1) AS hcbe ON true
+JOIN LATERAL (SELECT coalesce(array_agg(ae.hakukohde) FILTER (WHERE ae.review_key = 'eligibility-state' AND
+                                                                    ae.event_type = 'eligibility-state-automatically-changed'), '{}')
+                       AS eligibility_set_automatically,
+                     count(*) FILTER (WHERE ae.review_key = 'processing-state' AND
+                                            ae.new_review_state = 'information-request' AND
+                                            ae.time < a.created_time)
+                       AS new_modifications_count
+              FROM (SELECT DISTINCT ON (hakukohde, review_key) hakukohde, review_key, event_type, new_review_state, time
+                    FROM application_events
+                    WHERE application_key = a.key
+                    ORDER BY hakukohde, review_key, id DESC) AS ae) AS ae ON true
+WHERE la.key IS NULL\n"
+          (when (contains? query :form)
+            "      AND (f.key = ? AND a.haku IS NULL)\n")
+          (when (contains? query :application-oid)
+            "      AND a.key = ?\n")
+          (when (contains? query :person-oid)
+            "      AND a.person_oid = ?\n")
+          (when (contains? query :name)
+            "      AND to_tsvector('unaccent_simple', a.preferred_name || ' ' || a.last_name) @@ to_tsquery('unaccent_simple', ?)\n")
+          (when (contains? query :email)
+            "      AND lower(a.email) = lower(?)\n")
+          (when (contains? query :dob)
+            "      AND a.dob = to_date(?, 'DD.MM.YYYY')\n")
+          (when (contains? query :ssn)
+            "      AND a.ssn = ?\n")
+          (when (contains? query :haku)
+            "      AND a.haku = ?\n")
+          (when (contains? query :hakukohde)
+            "      AND a.hakukohde && ?\n")
+          (when (contains? query :ensisijainen-hakukohde)
+            "      AND (SELECT t.h
+           FROM unnest(a.hakukohde) WITH ORDINALITY AS t(h, i)
+           WHERE t.h = ANY(coalesce(?, a.hakukohde))
+           ORDER BY t.i ASC
+           LIMIT 1) = ANY(?)\n")
+          (when (contains? sort :offset)
+            (case (:order-by sort)
+              "submitted"
+              (str "      AND (date_trunc('second', a.submitted AT TIME ZONE 'Europe/Helsinki'), a.key) "
+                   comp
+                   " (date_trunc('second', ? AT TIME ZONE 'Europe/Helsinki'), ?)\n")
+              "created-time"
+              (str "      AND (date_trunc('second', a.created_time AT TIME ZONE 'Europe/Helsinki'), a.key) "
+                   comp
+                   " (date_trunc('second', ? AT TIME ZONE 'Europe/Helsinki'), ?)\n")
+              "applicant-name"
+              (str "      AND (a.last_name, a.preferred_name, a.key) "
+                   comp
+                   " (? COLLATE \"fi_FI\", ? COLLATE \"fi_FI\", ?)\n")))
+          (case (:order-by sort)
+            "submitted"
+            (str "ORDER BY date_trunc('second', a.submitted AT TIME ZONE 'Europe/Helsinki') " order ",\n"
+                 "         a.key " order "\n")
+            "created-time"
+            (str "ORDER BY date_trunc('second', a.created_time AT TIME ZONE 'Europe/Helsinki') " order ",\n"
+                 "         a.key " order "\n")
+            "applicant-name"
+            (str "ORDER BY a.last_name COLLATE \"fi_FI\" " order ",\n"
+                 "         a.preferred_name COLLATE \"fi_FI\" " order ",\n"
+                 "         a.key " order "\n"))
+          "LIMIT 1000;")
+     (concat (keep #(get query %) [:form
+                                   :application-oid
+                                   :person-oid
+                                   :name
+                                   :email
+                                   :dob
+                                   :ssn
+                                   :haku
+                                   :hakukohde
+                                   :ensisijaisesti-hakukohteissa
+                                   :ensisijainen-hakukohde])
+             (when (contains? sort :offset)
+               (case (:order-by sort)
+                 "submitted"
+                 [(:submitted (:offset sort)) (:key (:offset sort))]
+                 "created-time"
+                 [(:created-time (:offset sort)) (:key (:offset sort))]
+                 "applicant-name"
+                 [(:last-name (:offset sort)) (:preferred-name (:offset sort)) (:key (:offset sort))]))))))
 
 (defn get-application-heading-list
   [query sort]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-    (yesql-get-application-list-for-virkailija
-     (query->db-query connection query sort)
-     {:connection connection})))
+    (jdbc/query connection (query->db-query connection query sort))))
 
 (defn get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
   [person-oid]
@@ -903,7 +1004,19 @@
   [query]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
     (->> {:connection connection}
-         (yesql-valinta-ui-applications (query->db-query connection query))
+         (yesql-valinta-ui-applications (-> (merge {:application_oids nil
+                                                    :name             nil
+                                                    :haku             nil
+                                                    :hakukohde        nil}
+                                                   (transform-keys ->snake_case query))
+                                            (update :application_oids
+                                                    #(some->> (seq %)
+                                                              to-array
+                                                              (.createArrayOf (:connection connection) "text")))
+                                            (update :hakukohde
+                                                    #(some->> (seq %)
+                                                              to-array
+                                                              (.createArrayOf (:connection connection) "varchar")))))
          (map #(assoc (->kebab-case-kw %)
                       :hakutoiveet
                       (unwrap-external-application-hakutoiveet %)))
