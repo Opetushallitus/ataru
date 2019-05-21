@@ -349,7 +349,8 @@
                  {:id                  :applications-list
                   :method              :post
                   :path                "/lomake-editori/api/applications/list"
-                  :params              (merge {:sort               (get-in db [:application :sort])
+                  :params              (merge {:sort               (get-in db [:application :sort] {:order-by "applicant-name"
+                                                                                                    :order    "asc"})
                                                :states-and-filters {:attachment-states-to-include (get-in db [:application :attachment-state-filter])
                                                                     :processing-states-to-include (get-in db [:application :processing-state-filter])
                                                                     :selection-states-to-include  (get-in db [:application :selection-state-filter])

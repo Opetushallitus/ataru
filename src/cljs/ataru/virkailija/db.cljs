@@ -58,8 +58,8 @@
                                 :processing-state-filter    (set (mapv first review-states/application-hakukohde-processing-states))
                                 :selection-state-filter     (set (mapv first review-states/application-hakukohde-selection-states))
                                 :fetching-applications?     false
-                                :sort                       {:order-by "created-time"
-                                                             :order    "desc"}
+                                :sort                       {:order-by "applicant-name"
+                                                             :order    "asc"}
                                 :selected-time-column       "created-time"
                                 :application-list-expanded? true
                                 :mass-information-request   {:form-status :disabled}
