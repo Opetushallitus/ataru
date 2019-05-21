@@ -18,7 +18,7 @@
   (get-person [this oid]
     "Find a person from ONR.")
 
-  (linked-oids [this oid]))
+  (linked-oids [this oids]))
 
 (defrecord IntegratedPersonService [henkilo-cache
                                     oppijanumerorekisteri-cas-client]
@@ -37,8 +37,8 @@
 
   (get-person [_ oid] (cache/get-from henkilo-cache oid))
 
-  (linked-oids [_ oid]
-    (person-client/linked-oids oppijanumerorekisteri-cas-client oid)))
+  (linked-oids [_ oids]
+    (person-client/linked-oids oppijanumerorekisteri-cas-client oids)))
 
 (def fake-person-from-creation {:personOid    "1.2.3.4.5.6"
                   :firstName    "Foo"
@@ -88,7 +88,7 @@
       (merge fake-onr-person
              {:oidHenkilo oid})))
 
-  (linked-oids [this oid]
+  (linked-oids [this oids]
     {}))
 
 (defn new-person-service []

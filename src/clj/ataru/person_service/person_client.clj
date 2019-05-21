@@ -79,32 +79,31 @@
                               (:body result))))))
 
 (defn- parse-duplicate-henkilos
-  [data query-oid]
-  (let [gs (seq (group-by :masterOid data))]
-    (cond (empty? gs)
-          {:master-oid  query-oid
-           :linked-oids #{query-oid}}
-          (empty? (rest gs))
-          (let [[[master-oid links] & _] gs]
-            {:master-oid  master-oid
-             :linked-oids (->> links
-                               (map :henkiloOid)
-                               (cons master-oid)
-                               set)})
-          :else
-          (throw (new RuntimeException
-                      (str "Person oid " query-oid
-                           " linked to multiple master oids"))))))
+  [data query-oids]
+  (let [link-infos (reduce (fn [acc [master-oid links]]
+                             (let [link-info {:master-oid  master-oid
+                                              :linked-oids (set (map :henkiloOid links))}]
+                               (reduce #(assoc %1 %2 link-info)
+                                       (assoc acc master-oid link-info)
+                                       (:linked-oids link-info))))
+                           {}
+                           (group-by :masterOid data))]
+    (->> query-oids
+         (map #(vector % (update (or (get link-infos %)
+                                     {:master-oid  %
+                                      :linked-oids #{}})
+                                 :linked-oids conj %)))
+         (into {}))))
 
-(defn linked-oids [cas-client oid]
+(defn linked-oids [cas-client oids]
   (let [result (cas/cas-authenticated-post
                 cas-client
                 (resolve-url :oppijanumerorekisteri-service.duplicate-henkilos)
-                {:henkiloOids [oid]})]
+                {:henkiloOids oids})]
     (match result
       {:status 200 :body body}
-      (parse-duplicate-henkilos (json/parse-string body true) oid)
-      :else (throw-error (str "Could not get linked oids for oid " oid ", "
+      (parse-duplicate-henkilos (json/parse-string body true) oids)
+      :else (throw-error (str "Could not get linked oids for oids " (clojure.string/join ", " oids) ", "
                               "status: " (:status result) ", "
                               "response body: " (:body result))))))
 
