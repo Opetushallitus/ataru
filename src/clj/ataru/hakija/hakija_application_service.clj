@@ -464,3 +464,17 @@
                                                                    organization-service ohjausparametrit-service
                                                                    job-runner
                                                                    application-id)))
+
+(defn can-access-attachment?
+  [secret virkailija-secret attachment-key]
+  (when-let [application (cond (and (some? virkailija-secret) (virkailija-edit/virkailija-rewrite-secret-valid? virkailija-secret))
+                               (application-store/get-latest-application-for-virkailija-rewrite-edit secret)
+
+                               (and (some? virkailija-secret) (virkailija-edit/virkailija-update-secret-valid? virkailija-secret))
+                               (application-store/get-latest-application-for-virkailija-edit secret)
+
+                               (some? secret)
+                               (application-store/get-latest-application-by-secret secret))]
+    (some #(and (= "attachment" (:fieldType %))
+                (some #{attachment-key} (flatten (:value %))))
+          (:answers application))))

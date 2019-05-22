@@ -269,6 +269,20 @@
               :liiteri-error (response/internal-server-error {})))
           (finally
             (io/delete-file (:tempfile file-part) true))))
+      (api/GET "/:key" []
+        :summary "Download a file"
+        :path-params [key :- s/Str]
+        :query-params [{secret :- s/Str nil}
+                       {virkailija-secret :- s/Str nil}]
+        (if (hakija-application-service/can-access-attachment?
+             secret virkailija-secret key)
+          (if-let [file (file-store/get-file key)]
+            (-> (:body file)
+                response/ok
+                (response/header "Content-Disposition"
+                                 (:content-disposition file)))
+            (response/not-found))
+          (response/unauthorized)))
       (api/DELETE "/:key" []
         :summary "Delete a file"
         :path-params [key :- s/Str]

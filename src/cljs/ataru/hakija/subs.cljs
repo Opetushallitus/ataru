@@ -516,3 +516,12 @@
   (fn [db]
     (not-empty (mapcat keys (vals (:attachments-uploading db))))))
 
+(re-frame/reg-sub
+  :application/attachment-download-link
+  (fn [db [_ attachment-key]]
+    (let [secret            (get-in db [:application :secret])
+          virkailija-secret (get-in db [:application :virkailija-secret])]
+      (cond (some? secret)
+            (str "/hakemus/api/files/" attachment-key "?secret=" secret)
+            (some? virkailija-secret)
+            (str "/hakemus/api/files/" attachment-key "?virkailija-secret=" virkailija-secret)))))
