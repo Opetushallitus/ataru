@@ -17,17 +17,17 @@
 (def caches
   [[:get-haut-cache
     (in-memory/map->InMemoryCache
-     {:loader (cache/->FunctionCacheLoader
-               (fn [key]
-                 (case key
-                   :haut             (application-store/get-haut)
-                   :direct-form-haut (application-store/get-direct-form-haut))))
+     {:loader        (cache/->FunctionCacheLoader
+                      (fn [key]
+                        (case key
+                          :haut             (application-store/get-haut)
+                          :direct-form-haut (application-store/get-direct-form-haut))))
       :expires-after [3 TimeUnit/DAYS]
       :refresh-after [5 TimeUnit/MINUTES]})]
    [:all-organization-groups-cache
     (in-memory/map->InMemoryCache
-     {:loader (cache/->FunctionCacheLoader
-               (fn [_] (organization-client/get-groups)))
+     {:loader        (cache/->FunctionCacheLoader
+                      (fn [_] (organization-client/get-groups)))
       :expires-after [3 TimeUnit/DAYS]
       :refresh-after [5 TimeUnit/MINUTES]})]
    [:localizations-cache
@@ -37,12 +37,14 @@
       :refresh-after [5 TimeUnit/MINUTES]})]
    [:hakukohde-cache
     (component/using
-     (redis/map->Cache
-      {:name            "hakukohde"
-       :loader          (cache/->FunctionCacheLoader tarjonta-client/get-hakukohde)
-       :ttl-after-read  [3 TimeUnit/DAYS]
-       :ttl-after-write [3 TimeUnit/DAYS]
-       :update-period   [15 TimeUnit/MINUTES]})
+     (two-layer/map->Cache
+      {:name                   "hakukohde"
+       :size                   6000
+       :loader                 (cache/->FunctionCacheLoader tarjonta-client/get-hakukohde
+                                                            tarjonta-client/hakukohde-checker)
+       :expires-after          [3 TimeUnit/DAYS]
+       :refresh-off-heap-after [15 TimeUnit/MINUTES]
+       :refresh-on-heap-after  [7 TimeUnit/MINUTES]})
      [:redis])]
    [:haku-cache
     (component/using
@@ -73,21 +75,23 @@
      [:redis])]
    [:koulutus-cache
     (component/using
-     (redis/map->Cache
-      {:name            "koulutus"
-       :loader          (cache/->FunctionCacheLoader tarjonta-client/get-koulutus
-                                                     tarjonta-client/koulutus-checker)
-       :ttl-after-read  [3 TimeUnit/DAYS]
-       :ttl-after-write [3 TimeUnit/DAYS]
-       :update-period   [15 TimeUnit/MINUTES]})
+     (two-layer/map->Cache
+      {:name                   "koulutus"
+       :size                   6000
+       :loader                 (cache/->FunctionCacheLoader tarjonta-client/get-koulutus
+                                                            tarjonta-client/koulutus-checker)
+       :expires-after          [3 TimeUnit/DAYS]
+       :refresh-off-heap-after [15 TimeUnit/MINUTES]
+       :refresh-on-heap-after  [7 TimeUnit/MINUTES]})
      [:redis])]
    [:henkilo-cache
     (component/using
      (two-layer/map->Cache
-      {:name          "henkilo"
-       :size          200000
-       :expires-after [3 TimeUnit/DAYS]
-       :refresh-after [1 TimeUnit/HOURS]})
+      {:name                   "henkilo"
+       :size                   200000
+       :expires-after          [3 TimeUnit/DAYS]
+       :refresh-off-heap-after [1 TimeUnit/DAYS]
+       :refresh-on-heap-after  [10 TimeUnit/SECONDS]})
      {:redis  :redis
       :loader :henkilo-cache-loader})]
    [:hakukohde-search-cache

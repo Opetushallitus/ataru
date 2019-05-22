@@ -146,7 +146,7 @@
 (defn- get-haku-for-hakukohde
   [hakukohde-oid]
   (info "Loading hakukohde" hakukohde-oid)
-  (when-let [haku-oid (:hakuOid (tarjonta-client/get-hakukohde hakukohde-oid))]
+  (when-let [haku-oid (:haku-oid (tarjonta-client/get-hakukohde hakukohde-oid))]
     (tarjonta-client/get-haku haku-oid)))
 
 (def memo-get-haku-for-hakukohde (memoize get-haku-for-hakukohde))
@@ -486,16 +486,6 @@
                      (followup-option-selected? field answers))))
           fields))
 
-(defn- parse-hakukohde
-  [oid hakukohde]
-  {:oid            (or (:oid hakukohde) oid)
-   :ryhmaliitokset (some->> (:ryhmaliitokset hakukohde)
-                            (map #(:ryhmaOid %)))})
-
-(defn- get-hakukohde-rymaliitoket
-  [oid]
-  (parse-hakukohde oid (tarjonta-client/get-hakukohde oid)))
-
 (defn- migrate-add-subject-and-content-finish []
   (let [submit-email-subjects (get-in email-default-texts [:email-submit-confirmation-template :submit-email-subjects])
         email-content-ending  (get-in email-default-texts [:email-submit-confirmation-template :without-application-period])]
@@ -508,7 +498,7 @@
 
 (defn- migrate-attachment-states-to-applications
   [connection]
-  (let [get-cached-hakukohde-and-ryhmaliitokset (memoize get-hakukohde-rymaliitoket)]
+  (let [get-cached-hakukohde-and-ryhmaliitokset (memoize tarjonta-client/get-hakukohde)]
     (doseq [key    (migration-app-store/get-1.92-latest-application-keys connection)
             :let [application (migration-app-store/get-1.92-application connection key)
                   hakutoiveet (map get-cached-hakukohde-and-ryhmaliitokset (:hakukohde application))

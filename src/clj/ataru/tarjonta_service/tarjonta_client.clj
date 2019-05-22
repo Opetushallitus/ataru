@@ -9,6 +9,7 @@
    [taoensso.timbre :refer [warn info]]))
 
 (def koulutus-checker (s/checker schema/Koulutus))
+(def hakukohde-checker (s/checker schema/Hakukohde))
 
 (defn- localized-names
   ([names]
@@ -18,7 +19,7 @@
          (for [[input-k output-k] [[:kieli_fi :fi]
                                    [:kieli_sv :sv]
                                    [:kieli_en :en]]
-               :let               [val (-> names input-k key-fn)]
+               :let               [val (key-fn (or (input-k names) (output-k names)))]
                :when              (not (clojure.string/blank? val))]
            [output-k val]))))
 
@@ -53,6 +54,43 @@
           (not (clojure.string/blank? (:tarkenne response)))
           (assoc :tarkenne (:tarkenne response))))
 
+(defn- parse-hakukohde-tila
+  [hakukohde]
+  (case (:tila hakukohde)
+    "POISTETTU"     :poistettu
+    "LUONNOS"       :luonnos
+    "VALMIS"        :valmis
+    "JULKAISTU"     :julkaistu
+    "PERUTTU"       :peruttu
+    "KOPIOITU"      :kopioitu
+    "PUUTTEELLINEN" :puutteellinen
+    (throw
+     (new RuntimeException
+          (str "Unknown hakukohteen tila " (:tila hakukohde)
+               " in hakukohde " (:oid hakukohde))))))
+
+(defn parse-hakukohde
+  [hakukohde]
+  (let [kaytetaan-hakukohdekohtaista-hakuaikaa? (boolean (:kaytetaanHakukohdekohtaistaHakuaikaa hakukohde))]
+    (merge {:oid                                        (:oid hakukohde)
+            :tila                                       (parse-hakukohde-tila hakukohde)
+            :haku-oid                                   (:hakuOid hakukohde)
+            :koulutus-oids                              (map :oid (:koulutukset hakukohde))
+            :name                                       (localized-names (:hakukohteenNimet hakukohde))
+            :tarjoaja-name                              (localized-names (:tarjoajaNimet hakukohde))
+            :tarjoaja-oids                              (:tarjoajaOids hakukohde)
+            :ryhmaliitokset                             (some->> (:ryhmaliitokset hakukohde)
+                                                                 (map :ryhmaOid)
+                                                                 (distinct))
+            :kaytetaan-hakukohdekohtaista-hakuaikaa?    kaytetaan-hakukohdekohtaista-hakuaikaa?
+            :hakukelpoisuusvaatimus-uris                (:hakukelpoisuusvaatimusUris hakukohde)
+            :ylioppilastutkinto-antaa-hakukelpoisuuden? (boolean (:ylioppilastutkintoAntaaHakukelpoisuuden hakukohde))}
+           (if kaytetaan-hakukohdekohtaista-hakuaikaa?
+             (merge {:hakuaika-alku (:hakuaikaAlkuPvm hakukohde)}
+                    (when (some? (:hakuaikaLoppuPvm hakukohde))
+                      {:hakuaika-loppu (:hakuaikaLoppuPvm hakukohde)}))
+             {:hakuaika-id (:hakuaikaId hakukohde)}))))
+
 (defn- get-result
   [url]
   (let [{:keys [status body]} (http-util/do-get url)]
@@ -72,11 +110,12 @@
     (when (= 200 status)
       (:result (json/parse-string body true)))))
 
-(defn get-hakukohde
-  [hakukohde-oid]
+(s/defn ^:always-validate get-hakukohde :- schema/Hakukohde
+  [hakukohde-oid :- s/Str]
   (-> :tarjonta-service.hakukohde
       (resolve-url hakukohde-oid)
-      try-get-result))
+      get-result
+      parse-hakukohde))
 
 (defn hakukohde-search
   [haku-oid organization-oid]
@@ -105,8 +144,3 @@
   (-> :tarjonta-service.forms-in-use
       (resolve-url {"oid" organization-oid})
       try-get-result))
-
-(defn get-form-key-for-hakukohde
-  [hakukohde-oid]
-  (when-let [hakukohde (get-hakukohde hakukohde-oid)]
-    (:ataruLomakeAvain hakukohde)))
