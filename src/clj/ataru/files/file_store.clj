@@ -3,8 +3,11 @@
             [ataru.config.url-helper :refer [resolve-url]]
             [ataru.url :as url]
             [ataru.util.http-util :as http-util]
-            [cheshire.core :as json])
-  (:import (java.text Normalizer Normalizer$Form)))
+            [cheshire.core :as json]
+            [clojure.java.io :as io]
+            [taoensso.timbre :as log])
+  (:import [java.text Normalizer Normalizer$Form]
+           [java.util.zip ZipOutputStream ZipEntry]))
 
 (defn upload-file [{:keys [tempfile filename]}]
   (let [url  (resolve-url :liiteri.files)
@@ -42,3 +45,15 @@
     (when (= (:status resp) 200)
       {:body                (:body resp)
        :content-disposition (-> resp :headers :content-disposition)})))
+
+(defn get-file-zip [keys out]
+  (with-open [zout (ZipOutputStream. out)]
+    (doseq [key keys]
+      (if-let [file (get-file key)]
+        (let [[_ filename] (re-matches #"attachment; filename=\"(.*)\"" (:content-disposition file))]
+          (.putNextEntry zout (new ZipEntry (str filename)))
+          (with-open [fin (:body file)]
+            (io/copy fin zout))
+          (.closeEntry zout)
+          (.flush zout))
+        (log/error "Could not get file" key)))))

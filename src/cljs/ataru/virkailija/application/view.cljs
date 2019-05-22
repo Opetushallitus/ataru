@@ -1568,15 +1568,16 @@
        [:div.application-handling__resend-modify-link-confirmation-indicator]
        (get-virkailija-translation :send-edit-link-to-applicant)])))
 
-(defn- attachment-review-row [all-similar-attachments lang]
+(defn- attachment-review-row [selected-reviews all-similar-attachments lang]
   (let [list-opened (r/atom false)]
-    (fn [all-similar-attachments lang]
+    (fn [selected-reviews all-similar-attachments lang]
       (let [all-reviews          (map first all-similar-attachments)
             all-states           (set (map :state all-reviews))
             multiple-values?     (seq (rest all-states))
             review               (first all-reviews)
             selected-hakukohteet (map second all-similar-attachments)
             attachment-key       (-> review :key keyword)
+            files                (filter identity (-> review :values flatten))
             selected-state       (or (when multiple-values?
                                        "multiple-values")
                                      (:state review)
@@ -1587,23 +1588,23 @@
                                    review-states/attachment-hakukohde-review-types-with-multiple-values
                                    review-states/attachment-hakukohde-review-types)]
         [:div.application__attachment-review-row
-         [:div.application__attachment-review-row-answer-information
+         [:div.application__attachment-review-info-row
+          [:input.application-handling__attachment-download-checkbox
+           {:type      "checkbox"
+            :checked   (every? #(contains? @selected-reviews (:key %)) files)
+            :on-change (fn [_]
+                         (swap! selected-reviews (fn [s]
+                                                   (if (every? #(contains? @selected-reviews (:key %)) files)
+                                                     (reduce disj s (map :key files))
+                                                     (reduce conj s (map :key files))))))}]
           [:p.application__attachment-review-row-label (some #(-> review :label % not-empty) [lang :fi :sv :en])]
-          (for [attachment-file (filter identity (-> review :values flatten))
-                :let [text (str (:filename attachment-file) " (" (util/size-bytes->str (:size attachment-file)) ")")]]
-            ^{:key (:key (str "attachment-file-" attachment-file))}
-            [:div
-             (if (= (:virus-scan-status attachment-file) "done")
-               [:a {:href (str "/lomake-editori/api/files/content/" (:key attachment-file))}
-                text]
-               text)])]
-         (if @list-opened
-           [:div.application-handling__review-state-list
-            (doall
+          (if @list-opened
+            [:div.application-handling__review-state-list
+             (doall
               (for [[state labels]
                     review-types]
                 (let [label (get labels @virkailija-lang)]
-                  [:div.application-handling__review-state-row.application-handling__review-state-row--small
+                  [:div.application-handling__review-state-row
                    {:class    (when (= state selected-state) "application-handling__review-state-row--selected application-handling__review-state-row--enabled")
                     :on-click (if (= state selected-state)
                                 #(swap! list-opened not)
@@ -1612,33 +1613,76 @@
                                   (doall (map #(dispatch [:application/update-attachment-review attachment-key % state]) selected-hakukohteet))))
                     :key      (str attachment-key label)}
                    (if (= state selected-state) [icon-check]
-                                                [icon-unselected]) label])))]
-           [:div.application-handling__review-state-row.application-handling__review-state-row--small.application-handling__review-state-row--selected
-            {:class    (if @can-edit?
-                         "application-handling__review-state-row--enabled"
-                         "application-handling__review-state-row--disabled")
-             :on-click #(when @can-edit? (swap! list-opened not))}
-            [icon-check]
-            (application-states/get-review-state-label-by-name review-types selected-state @virkailija-lang)])]))))
+                       [icon-unselected]) label])))]
+            [:div.application-handling__review-state-row.application-handling__review-state-row--selected
+             {:class    (if @can-edit?
+                          "application-handling__review-state-row--enabled"
+                          "application-handling__review-state-row--disabled")
+              :on-click #(when @can-edit? (swap! list-opened not))}
+             [icon-check]
+             (application-states/get-review-state-label-by-name review-types selected-state @virkailija-lang)])]
+         [:ul.application__attachment-review-row-attachments
+          (for [attachment-file files
+                :let            [text (str (:filename attachment-file) " (" (util/size-bytes->str (:size attachment-file)) ")")]]
+            ^{:key (:key (str "attachment-file-" attachment-file))}
+            [:li
+             (if (= (:virus-scan-status attachment-file) "done")
+               [:a {:href (str "/lomake-editori/api/files/content/" (:key attachment-file))}
+                text]
+               text)])]]))))
 
 (defn- attachment-review-area [reviews review-positioning lang]
-  (fn [reviews review-positioning lang]
-    [:div.application-handling__attachment-review-container.animated
-     {:class (str (when (= :fixed review-positioning)
-                    "application-handling__attachment-review-container-floating")
-                  (if @(subscribe [:state-query [:application :show-attachment-reviews?]])
-                    " fadeInRight"
-                    " fadeOutRight"))}
-     (when (not-empty reviews)
-       [:div
-        [:p.application-handling__attachment-review-header
-         (gstring/format "%s %s (%d)"
-           (if (= "form" (second (first (vals reviews)))) (get-virkailija-translation :of-form) (get-virkailija-translation :of-hakukohde))
-           (.toLowerCase (get-virkailija-translation :attachments))
-           (count (keys reviews)))]
-        (doall (for [all-similar-attachments (vals reviews)]
-                 ^{:key (:key (ffirst all-similar-attachments))}
-                 [attachment-review-row all-similar-attachments lang]))])]))
+  (let [all-keys         (->> (vals reviews)
+                              (mapcat #(-> % ffirst :values flatten))
+                              (keep :key)
+                              set)
+        selected-reviews (r/atom all-keys)]
+    (fn [reviews review-positioning lang]
+      [:div.application-handling__attachment-review-container.animated
+       {:class (str (when (= :fixed review-positioning)
+                      "application-handling__attachment-review-container-floating")
+                    (if @(subscribe [:state-query [:application :show-attachment-reviews?]])
+                      " fadeInRight"
+                      " fadeOutRight"))}
+       (when (not-empty reviews)
+         [:div
+          [:div.application-handling__attachment-review-header
+           [:div
+            (gstring/format "%s %s (%d)"
+              (if (= "form" (second (first (vals reviews)))) (get-virkailija-translation :of-form) (get-virkailija-translation :of-hakukohde))
+              (.toLowerCase (get-virkailija-translation :attachments))
+              (count (keys reviews)))]]
+          [:div.application__attachment-review-row
+           [:div.application__attachment-review-info-row
+            [:input.application-handling__attachment-download-checkbox
+             {:type      "checkbox"
+              :checked   (= all-keys @selected-reviews)
+              :on-change (fn [_]
+                           (swap! selected-reviews (fn [s]
+                                                     (if (= all-keys s)
+                                                       #{}
+                                                       all-keys))))}]
+            [:p.application__attachment-review-row-label
+             (get-virkailija-translation :select-all)]
+            [:div.application-handling__excel-request-row
+             [:form#attachment-download-link
+              {:action "/lomake-editori/api/files/zip"
+               :method "POST"}
+              [:input {:type  "hidden"
+                       :name  "keys"
+                       :value (.stringify js/JSON (clj->js @selected-reviews))}]
+              (when-let [csrf-token (cljs-util/csrf-token)]
+                [:input {:type  "hidden"
+                         :name  "CSRF"
+                         :value csrf-token}])]
+             [:button.application-handling__download-attachments-button
+              {:disabled (empty? @selected-reviews)
+               :on-click (fn [e]
+                           (.submit (.getElementById js/document "attachment-download-link")))}
+              (get-virkailija-translation :load-attachments)]]]]
+          (doall (for [all-similar-attachments (vals reviews)]
+                   ^{:key (:key (ffirst all-similar-attachments))}
+                   [attachment-review-row selected-reviews all-similar-attachments lang]))])])))
 
 (defn application-review []
   (let [review-positioning      (subscribe [:state-query [:application :review-positioning]])

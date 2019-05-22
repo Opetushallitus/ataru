@@ -1073,6 +1073,12 @@ You will receive a confirmation of your application to your email."}
    :load-excel                                  {:fi "Lataa Excel"
                                                  :sv "Ladda ner Excel"
                                                  :en "Load excel"}
+   :load-attachments                            {:fi "Lataa liitteet"
+                                                 :sv "Ladda ner bilagor"
+                                                 :en "Load attachments"}
+   :select-all                                  {:fi "Valitse kaikki"
+                                                 :sv "Valitse kaikki"
+                                                 :en "Select all"}
    :lock-form                                   {:fi "Lukitse lomake"
                                                  :sv "Lås blanketten"
                                                  :en "Lock the form"}

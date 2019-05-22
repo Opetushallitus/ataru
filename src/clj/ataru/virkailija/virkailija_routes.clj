@@ -60,9 +60,10 @@
             [ring.middleware.gzip :refer [wrap-gzip]]
             [ring.middleware.logger :refer [wrap-with-logger] :as middleware-logger]
             [ring.middleware.session :as ring-session]
+            [ring.util.io :as ring-io]
             [ring.swagger.json-schema :as json-schema]
             [ring.util.http-response :refer [ok internal-server-error not-found bad-request content-type set-cookie] :as response]
-            [ring.util.response :refer [redirect header]]
+            [ring.util.response :refer [redirect header] :as ring-util]
             [schema.core :as s]
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [spy debug error warn info]]
@@ -703,7 +704,17 @@
           (header (ok (:body file-response))
             "Content-Disposition"
             (:content-disposition file-response))
-          (not-found))))
+          (not-found)))
+      (api/POST "/zip" []
+        :form-params [keys :- s/Str
+                      {CSRF :- s/Str nil}]
+        :summary "Download files as a ZIP archive"
+        (let [keys (json/parse-string keys)]
+          (->
+           (ring-util/response
+            (ring-io/piped-input-stream
+             (fn [out] (file-store/get-file-zip keys out))))
+           (header "Content-Disposition" (str "attachment; filename=" "attachments.zip"))))))
 
     (api/context "/statistics" []
       :tags ["statistics-api"]
