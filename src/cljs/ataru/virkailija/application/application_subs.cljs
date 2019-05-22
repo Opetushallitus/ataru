@@ -778,6 +778,18 @@
       true)))
 
 (re-frame/reg-sub
+  :application/show-eligibility-set-automatically-filter
+  (fn [_ _]
+    [(re-frame/subscribe [:application/selected-haku-oid])
+     (re-frame/subscribe [:application/selected-hakukohde-oid-set])
+     (re-frame/subscribe [:application/haut])
+     (re-frame/subscribe [:application/hakukohteet])])
+  (fn [[haku-oid hakukohde-oids haut hakukohteet] _]
+    (if-let [oids (or (seq hakukohde-oids) (seq (get-in haut [haku-oid :hakukohteet])))]
+      (some #(get-in hakukohteet [% :ylioppilastutkinto-antaa-hakukelpoisuuden?]) oids)
+      (not (contains? hakukohde-oids "form")))))
+
+(re-frame/reg-sub
   :application/loaded-applications-count
   (fn [db _]
     (-> db :application :applications (count))))
