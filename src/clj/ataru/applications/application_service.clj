@@ -306,19 +306,24 @@
            (let [onr-person (get persons (:person-oid application))
                  person     (if (or (:yksiloity onr-person)
                                     (:yksiloityVTJ onr-person))
-                              {:oid            (:oidHenkilo onr-person)
-                               :preferred-name (:kutsumanimi onr-person)
-                               :last-name      (:sukunimi onr-person)
-                               :yksiloity      true
-                               :ssn            (boolean (:hetu onr-person))}
-                              {:oid            (:person-oid application)
-                               :preferred-name (:preferred-name application)
-                               :last-name      (:last-name application)
-                               :yksiloity      false
-                               :ssn            (boolean (:ssn application))})]
+                              (merge {:oid            (:oidHenkilo onr-person)
+                                      :preferred-name (:kutsumanimi onr-person)
+                                      :last-name      (:sukunimi onr-person)
+                                      :yksiloity      true
+                                      :dob            (bd-converter/convert-to-finnish-format (:syntymaaika onr-person))}
+                                     (when (some? (:hetu onr-person))
+                                       {:ssn (:hetu onr-person)}))
+                              (merge {:preferred-name (:preferred-name application)
+                                      :last-name      (:last-name application)
+                                      :yksiloity      false
+                                      :dob            (:dob application)}
+                                     (when (some? (:person-oid application))
+                                       {:oid (:person-oid application)})
+                                     (when (some? (:ssn application))
+                                       {:ssn (:ssn application)})))]
              (-> application
                  (assoc :person person)
-                 (dissoc :ssn :person-oid :preferred-name :last-name))))
+                 (dissoc :ssn :dob :person-oid :preferred-name :last-name))))
          applications)))
 
 (defn get-application-list-by-query

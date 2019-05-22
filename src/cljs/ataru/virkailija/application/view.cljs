@@ -548,7 +548,8 @@
       :id       (str "application-list-row-" (:key application))}
      [:div.application-handling__list-row-person-info
       [:span.application-handling__list-row--application-applicant
-       (or applicant [:span.application-handling__list-row--applicant-unknown (get-virkailija-translation :unknown)])]
+       [:span.application-handling__list-row--applicant-name (or applicant [:span.application-handling__list-row--applicant-unknown (get-virkailija-translation :unknown)])]
+       [:span.application-handling__list-row--applicant-details (or (-> application :person :ssn) (-> application :person :dob))]]
       [:span.application-handling__list-row--application-time
        [:span.application-handling__list-row--time-day day]
        [:span date-time]]

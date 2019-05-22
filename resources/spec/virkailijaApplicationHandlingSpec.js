@@ -99,11 +99,11 @@
 
       function selectionStateOpened() { return testFrame().find('.application-handling__review-state-container-selection-state .application-handling__review-state-list--opened') }
 
-      function firstApplication() { return testFrame().find('.application-handling__list-row--application-applicant:contains(Vatanen)').closest('.application-handling__list-row') }
+      function firstApplication() { return testFrame().find('.application-handling__list-row--applicant-name:contains(Vatanen)').closest('.application-handling__list-row') }
 
-      function secondApplication() { return testFrame().find('.application-handling__list-row--application-applicant:contains(Kuikeloinen)').closest('.application-handling__list-row') }
+      function secondApplication() { return testFrame().find('.application-handling__list-row--applicant-name:contains(Kuikeloinen)').closest('.application-handling__list-row') }
 
-      function thirdApplication() { return testFrame().find('.application-handling__list-row--application-applicant:contains(Tyrni)').closest('.application-handling__list-row') }
+      function thirdApplication() { return testFrame().find('.application-handling__list-row--applicant-name:contains(Tyrni)').closest('.application-handling__list-row') }
 
       function reviewNotes() { return testFrame().find('.application-handling__review-note-input') }
 
@@ -128,7 +128,7 @@
       }
 
       function applicationRow() {
-        return testFrame().find('.application-handling__list-row:not(.application-handling__list-header) .application-handling__list-row--application-applicant:contains(Vatanen)')
+        return testFrame().find('.application-handling__list-row:not(.application-handling__list-header) .application-handling__list-row--applicant-name:contains(Vatanen)')
       }
 
       function selectedState() {
@@ -156,7 +156,7 @@
           //clickElement doesn't work for a href here:
           form1OnList()[0].click()
         },
-        wait.until(function() { return applicationHeader().text() ===  'Selaintestilomake1' }),
+        wait.until(function() { return applicationHeader().text() ===  'Selaintestilomake1' })
       );
       describe('Default sort', function () {
         before(wait.until(applicantNamesExist));
@@ -210,7 +210,7 @@
       }
 
       function applicantNames() {
-        var scoreColumnObjects = testFrame().find('.application-handling__list-row--application-applicant');
+        var scoreColumnObjects = testFrame().find('.application-handling__list-row--applicant-name');
         return _(scoreColumnObjects)
             .map(function (obj) { return $(obj).text() })
             .filter(function (val) { return val !== 'Hakija' })
@@ -285,7 +285,7 @@
           })
         )
         it('reduces application list', function () {
-          expect(testFrame().find('.application-handling__list-row--application-applicant:eq(0)').text()).to.equal('Tyrni, Johanna Irmeli')
+          expect(testFrame().find('.application-handling__list-row--applicant-name:eq(0)').text()).to.equal('Tyrni, Johanna Irmeli')
         })
       })
 
@@ -301,7 +301,7 @@
           clickElement(selectionStateFilterLink)
         )
         it('grows application list', function () {
-          expect(testFrame().find('.application-handling__list-row--application-applicant:eq(0)').text()).to.equal('Kuikeloinen, Seija Susanna')
+          expect(testFrame().find('.application-handling__list-row--applicant-name:eq(0)').text()).to.equal('Kuikeloinen, Seija Susanna')
         })
       })
     })
@@ -325,7 +325,7 @@
       });
 
       function multipleApplicationsApplicant() {
-        return testFrame().find('.application-handling__list-row--application-applicant:contains(Kuikeloinen)')
+        return testFrame().find('.application-handling__list-row--applicant-name:contains(Kuikeloinen)')
       }
 
       function searchApplicationsBySsnLink() {
@@ -343,7 +343,7 @@
       }
 
       function applicantNames() {
-        var scoreColumnObjects = testFrame().find('.application-handling__list-row--application-applicant');
+        var scoreColumnObjects = testFrame().find('.application-handling__list-row--applicant-name');
         return _.map(scoreColumnObjects, function (obj) { return $(obj).text() })
       }
     });
@@ -507,8 +507,8 @@
           })
         )
         it('reduces application list and recipient count', function () {
-          expect(testFrame().find('.application-handling__list-row--application-applicant:eq(0)').text()).to.equal('Kuikeloinen, Seija Susanna')
-          expect(testFrame().find('.application-handling__list-row--application-applicant:eq(1)').text()).to.equal('Vatanen, Ari')
+          expect(testFrame().find('.application-handling__list-row--applicant-name:eq(0)').text()).to.equal('Kuikeloinen, Seija Susanna')
+          expect(testFrame().find('.application-handling__list-row--applicant-name:eq(1)').text()).to.equal('Vatanen, Ari')
           expect(massInformationRequestText()).to.eql('Lähetä sähköposti 2 hakijalle:')
         })
       })
@@ -673,7 +673,7 @@
     }
 
     function applicationRow() {
-      return testFrame().find('.application-handling__list-row:not(.application-handling__list-header) .application-handling__list-row--application-applicant:contains(Vatanen)')
+      return testFrame().find('.application-handling__list-row:not(.application-handling__list-header) .application-handling__list-row--applicant-name:contains(Vatanen)')
     }
 
     function reviewHeader() {
