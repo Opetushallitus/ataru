@@ -32,14 +32,9 @@ process-resources() {
     ./bin/lein resource
 }
 
-build-clojurescript-virkailija() {
-    echo "Building virkailija clojurescript"
-    ./bin/lein cljsbuild once virkailija-min
-}
-
-build-clojurescript-hakija() {
-    echo "Building hakija clojurescript"
-    ./bin/lein cljsbuild once hakija-min
+build-clojurescript() {
+    echo "Building clojurescript"
+    ./bin/lein cljsbuild once virkailija-min hakija-min
 }
 
 test-clojure() {
@@ -79,8 +74,7 @@ reset-test-database-with-fixture() {
 
 ui-compile() {
     clean
-    build-clojurescript-hakija
-    build-clojurescript-virkailija
+    build-clojurescript
     compile-less
 }
 
@@ -92,8 +86,7 @@ prepare-ui-tests() {
 
 create-uberjar() {
     clean
-    build-clojurescript-hakija
-    build-clojurescript-virkailija
+    build-clojurescript
     compile-less
     process-resources
     echo "Creating uberjar"
@@ -109,8 +102,7 @@ run-tests() {
     run-migrations
     test-clojure
     compile-less
-    build-clojurescript-virkailija
-    build-clojurescript-hakija
+    build-clojurescript
     test-browser
 }
 
@@ -127,8 +119,7 @@ run-browser-tests() {
     nuke-test-db
     run-migrations
     compile-less
-    build-clojurescript-virkailija
-    build-clojurescript-hakija
+    build-clojurescript
     test-browser
 }
 
@@ -144,11 +135,8 @@ case "$command" in
     "process-resources" )
         process-resources
         ;;
-    "build-clojurescript-virkailija" )
-        build-clojurescript-virkailija
-        ;;
-    "build-clojurescript-hakija" )
-        build-clojurescript-hakija
+    "build-clojurescript" )
+        build-clojurescript
         ;;
     "prepare-ui-tests" )
         prepare-ui-tests
@@ -198,8 +186,7 @@ case "$command" in
 * compile-less
 * npm-dependencies
 * process-resources
-* build-clojurescript-virkailija
-* build-clojurescript-hakija
+* build-clojurescript
 * test-clojure
 * test-clojurescript
 * test-browser
