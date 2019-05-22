@@ -721,65 +721,27 @@
        (when (not question-group-element?)
          [followup-question-overlay option-index followups option-path show-followups])])))
 
-(defn- dropdown-multi-options [path options-koodisto]
-  (let [dropdown-id                (util/new-uuid)
-        custom-button-value        (get-virkailija-translation :custom-choice-label)
-        custom-button-id           (str dropdown-id "-custom")
-        koodisto-button-value      (reaction (str (get-virkailija-translation :koodisto)
-                                                  (when-let [koodisto-name (:title @options-koodisto)]
-                                                    (str ": " koodisto-name))))
-        koodisto-button-id         (str dropdown-id "-koodisto")
-        koodisto-popover-expanded? (r/atom false)
-        form-locked?               (subscribe [:editor/form-locked?])]
-    (fn [path options-koodisto]
-      [:div.editor-form__button-group
-       [:input.editor-form__button.editor-form__button--large
-        {:type      "radio"
-         :value     custom-button-value
-         :checked   (nil? @options-koodisto)
-         :name      dropdown-id
-         :id        custom-button-id
-         :disabled  @form-locked?
-         :on-change (fn [evt]
-                      (.preventDefault evt)
-                      (reset! koodisto-popover-expanded? false)
-                      (dispatch [:editor/select-custom-multi-options path]))}]
-       [:label.editor-form__button-label.editor-form__button-label--left-edge
-        {:for   custom-button-id
-         :class (when @form-locked? "editor-form__button-label--disabled")}
-        custom-button-value]
-       [:input.editor-form__button.editor-form__button--large
-        {:type      "radio"
-         :value     @koodisto-button-value
-         :checked   (not (nil? @options-koodisto))
-         :name      dropdown-id
-         :id        koodisto-button-id
-         :disabled  @form-locked?
-         :on-change (fn [evt]
-                      (.preventDefault evt)
-                      (reset! koodisto-popover-expanded? true))}]
-       [:label.editor-form__button-label.editor-form__button-label--right-edge
-        {:for   koodisto-button-id
-         :class (when @form-locked? "editor-form__button-label--disabled")}
-        @koodisto-button-value]
-       (when @koodisto-popover-expanded?
-         [:div.editor-form__koodisto-popover
-          [:div.editor-form__koodisto-popover-header (get-virkailija-translation :koodisto)
-           [:a.editor-form__koodisto-popover-close
-            {:on-click (fn [e]
-                         (.preventDefault e)
-                         (reset! koodisto-popover-expanded? false))}
-            [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
-          [:ul.editor-form__koodisto-popover-list
-           (doall (for [{:keys [uri title version]} koodisto-whitelist/koodisto-whitelist]
-                    ^{:key (str "koodisto-" uri)}
-                    [:li.editor-form__koodisto-popover-list-item
-                     [:a.editor-form__koodisto-popover-link
-                      {:on-click (fn [e]
-                                   (.preventDefault e)
-                                   (reset! koodisto-popover-expanded? false)
-                                   (dispatch [:editor/select-koodisto-options uri version title path]))}
-                      title]]))]])])))
+(defn- select-koodisto-dropdown
+  [path]
+  (let [id                (util/new-uuid)
+        selected-koodisto (subscribe [:editor/get-component-value path :koodisto-source])]
+    (fn [path]
+      [:div.editor-form__koodisto-options
+       [:label.editor-form__select-koodisto-dropdown-label
+        {:for id}
+        (get-virkailija-translation :koodisto)]
+       [:div.editor-form__select-koodisto-dropdown-wrapper
+        [:select.editor-form__select-koodisto-dropdown
+         {:id        id
+          :value     (:uri @selected-koodisto)
+          :on-change #(dispatch [:editor/select-koodisto-options (.-value (.-target %)) path])}
+         (when (= (:uri @selected-koodisto) "")
+           [:option {:value "" :disabled true} ""])
+         (for [{:keys [uri title version]} koodisto-whitelist/koodisto-whitelist]
+           ^{:key (str "koodisto-" uri)}
+           [:option {:value uri} title])]
+        [:div.editor-form__select-koodisto-dropdown-arrow
+         [:i.zmdi.zmdi-chevron-down]]]])))
 
 (defn- custom-answer-options [languages
                               options
@@ -811,18 +773,17 @@
                               :editable? editable?])
                            options))])))
 
-(defn koodisto-answer-options [id followups path selected-koodisto question-group-element? parent-key]
+(defn koodisto-answer-options [id followups path question-group-element? parent-key]
   (let [opened? (r/atom false)]
-    (fn [id followups path selected-koodisto question-group-element?]
+    (fn [id followups path question-group-element?]
       (let [languages             @(subscribe [:editor/languages])
             value                 @(subscribe [:editor/get-component-value path])
             editable?             false
             hide-koodisto-options (fn [evt]
                                     (reset! opened? false))
             show-koodisto-options (fn [evt]
-                                    (dispatch [:editor/fetch-koodisto-for-component-with-id id selected-koodisto])
                                     (reset! opened? true))
-            show-followups (r/atom nil)]
+            show-followups        (r/atom nil)]
         (if (not @opened?)
           [:div.editor-form__show-koodisto-values
            [:a
@@ -850,9 +811,13 @@
             show-followups (r/atom nil)]
         [:div.editor-form__component-wrapper
          (let [header (case field-type
-                        "dropdown"       (get-virkailija-translation :dropdown)
+                        "dropdown"       (if (some? @options-koodisto)
+                                           (get-virkailija-translation :dropdown-koodisto)
+                                           (get-virkailija-translation :dropdown))
                         "singleChoice"   (get-virkailija-translation :single-choice-button)
-                        "multipleChoice" (get-virkailija-translation :multiple-choice))]
+                        "multipleChoice" (if (some? @options-koodisto)
+                                           (get-virkailija-translation :multiple-choice-koodisto)
+                                           (get-virkailija-translation :multiple-choice)))]
            [text-header (:id initial-content) header path (:metadata initial-content)
             :sub-header (:label @value)])
          [component-content
@@ -869,31 +834,32 @@
                languages
                :header? true)]
              [:div.editor-form__checkbox-wrapper
-              [validator-checkbox path initial-content :required (required-disabled initial-content)]]
-             (when @support-selection-limit?
-               [:div.editor-form__checkbox-wrapper
+              [validator-checkbox path initial-content :required (required-disabled initial-content)]
+              (when @support-selection-limit?
                 [validator-checkbox path initial-content :selection-limit nil
-                 #(dispatch [:editor/set-selection-group-id (when % @selected-form-key) path])]])
+                 #(dispatch [:editor/set-selection-group-id (when % @selected-form-key) path])])
+              (when (some? @options-koodisto)
+                [:div.editor-form__checkbox-container
+                 [:input.editor-form__checkbox
+                  {:id        koodisto-ordered-id
+                   :type      "checkbox"
+                   :checked   (not @koodisto-ordered-by-user)
+                   :disabled  @form-locked?
+                   :on-change (fn [event]
+                                (dispatch [:editor/set-ordered-by-user (-> event .-target .-checked) path]))}]
+                 [:label.editor-form__checkbox-label
+                  {:for koodisto-ordered-id}
+                  (get-virkailija-translation :alphabetically)]])]
              [belongs-to-hakukohteet path initial-content]]]
            [info-addon path initial-content]
            [:div.editor-form__component-row-wrapper
             [:div.editor-form__multi-options_wrapper
-             [:header.editor-form__component-item-header (get-virkailija-translation :options)]
-             (when (some? @options-koodisto)
-               [:div.editor-form__ordered-by-user-checkbox
-                [:input {:id        koodisto-ordered-id
-                         :type      "checkbox"
-                         :checked   (not @koodisto-ordered-by-user)
-                         :disabled  @form-locked?
-                         :on-change (fn [event]
-                                      (dispatch [:editor/set-ordered-by-user (-> event .-target .-checked) path]))}]
-                [:label
-                 {:for koodisto-ordered-id}
-                 (get-virkailija-translation :alphabetically)]])
-             (when-not (= field-type "singleChoice") [dropdown-multi-options path options-koodisto])
+             (if (some? @options-koodisto)
+               [select-koodisto-dropdown path]
+               [:header.editor-form__component-item-header (get-virkailija-translation :options)])
              (if (nil? @options-koodisto)
                [custom-answer-options languages (:options @value) followups path question-group-element? true show-followups (:id initial-content)]
-               [koodisto-answer-options (:id @value) followups path @options-koodisto question-group-element? (:id initial-content)])
+               [koodisto-answer-options (:id @value) followups path question-group-element? (:id initial-content)])
              (when (nil? @options-koodisto)
                [:div.editor-form__add-dropdown-item
                 [:a

@@ -244,14 +244,18 @@
 
             describe('dropdown from koodisto', function() {
                 before(
-                    clickComponentMenuItem('Pudotusvalikko'),
+                    clickComponentMenuItem('Pudotusvalikko, koodisto'),
                     setTextFieldValue(function() { return formComponents().eq(4).find('.editor-form__text-field')}, 'Neljäs kysymys'),
-                    clickElement(function() { return formComponents().eq(4).find('.editor-form__multi-options_wrapper label:contains("Koodisto")')}),
-                    clickElement(function() { return formComponents().eq(4).find('.editor-form__koodisto-popover a:contains("Pohjakoulutus")') })
+                    function() {
+                        var e = formComponents().eq(4).find('.editor-form__select-koodisto-dropdown')
+                        e.val("pohjakoulutuseditori")
+                        triggerEvent(e, 'change')
+                        return
+                    }
                 );
                 it('selected correctly', function() {
                     expect(formComponents()).to.have.length(5);
-                    expect(formComponents().eq(4).find('.editor-form__multi-options_wrapper .editor-form__button-label--right-edge').text()).to.equal("Koodisto: Pohjakoulutus")
+                    expect(formComponents().eq(4).find('.editor-form__select-koodisto-dropdown').val()).to.equal("pohjakoulutuseditori")
                 })
             });
 
@@ -304,14 +308,18 @@
 
             describe('multiple choice from koodisto', function() {
                 before(
-                    clickComponentMenuItem('Lista, monta valittavissa'),
+                    clickComponentMenuItem('Lista, monta valittavissa, koodisto'),
                     setTextFieldValue(function() { return formComponents().eq(6).find('.editor-form__text-field') }, 'Kuudes kysymys'),
-                    clickElement(function() { return formComponents().eq(6).find('.editor-form__multi-options_wrapper label:contains("Koodisto")') }),
-                    clickElement(function() { return formComponents().eq(6).find('.editor-form__koodisto-popover a:contains("Tutkinto")') })
+                    function() {
+                        var e = formComponents().eq(6).find('.editor-form__select-koodisto-dropdown')
+                        e.val("tutkinto")
+                        triggerEvent(e, 'change')
+                        return
+                    }
                 );
                 it('selected correctly', function() {
                     expect(formComponents()).to.have.length(7);
-                    expect(formComponents().eq(6).find('.editor-form__multi-options_wrapper .editor-form__button-label--right-edge').text()).to.equal("Koodisto: Tutkinto")
+                    expect(formComponents().eq(6).find('.editor-form__select-koodisto-dropdown').val()).to.equal("tutkinto")
                 })
             });
 
@@ -356,14 +364,18 @@
              */
             describe('second dropdown from koodisto (optional)', function() {
                 before(
-                    clickComponentMenuItem('Pudotusvalikko'),
+                    clickComponentMenuItem('Pudotusvalikko, koodisto'),
                     setTextFieldValue(function() { return formComponents().eq(10).find('.editor-form__text-field')}, 'Viimeinen kysymys'),
-                    clickElement(function() { return formComponents().eq(10).find('.editor-form__multi-options_wrapper label:contains("Koodisto")')}),
-                    clickElement(function() { return formComponents().eq(10).find('.editor-form__koodisto-popover a:contains("Tutkinto")') })
+                    function() {
+                        var e = formComponents().eq(10).find('.editor-form__select-koodisto-dropdown')
+                        e.val("tutkinto")
+                        triggerEvent(e, 'change')
+                        return
+                    }
                 );
                 it('selected correctly', function() {
                     expect(formComponents()).to.have.length(11);
-                    expect(formComponents().eq(10).find('.editor-form__multi-options_wrapper .editor-form__button-label--right-edge').text()).to.equal("Koodisto: Tutkinto")
+                    expect(formComponents().eq(10).find('.editor-form__select-koodisto-dropdown').val()).to.equal("tutkinto")
                 })
             });
 

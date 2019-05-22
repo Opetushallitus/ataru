@@ -605,7 +605,7 @@
 }
 
 .editor-form__info-addon-wrapper {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   .editor-form__info-addon-checkbox {
     display: flex;
     font-size: 14px;
@@ -692,7 +692,7 @@
 
 .editor-form__show-koodisto-values {
   font-size: 15px;
-  margin: -5px 14px 0 415px;
+  margin-bottom: 12px;
 }
 
 .editor-form__text-field-auto-width {
@@ -729,8 +729,6 @@
 }
 
 .editor-form__multi-options_wrapper {
-  padding-top: 10px;
-  padding-bottom: 5px;
   width: 100%;
 }
 
@@ -738,7 +736,7 @@
   align-items: stretch;
   display: flex;
   flex-flow: row nowrap;
-  margin: 18px 0px;
+  margin-bottom: 12px;
 }
 
 .editor-form__multi-options-arrows-container {
@@ -954,17 +952,48 @@
   margin-bottom: 5px;
 }
 
-.editor-form__ordered-by-user-checkbox {
-  display: flex;
-  label {
-    color: @blue-text-color;
-    cursor: pointer;
-    font-size: 14px;
-  }
-  input {
-    margin-right: 9px;
-  }
+.editor-form__koodisto-options {
+  display: inline-flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+
+.editor-form__select-koodisto-dropdown-label {
+  font-size: 14px;
+  color: @blue-text-color;
   margin-bottom: 5px;
+}
+
+.editor-form__select-koodisto-dropdown-wrapper {
+  display: inline-flex;
+  height: 43px;
+  border: 1px solid #C1C1C1;
+  border-radius: 2px;
+  font-size: 16px;
+  color: @text-color;
+  background-color: #fff;
+  background-image: linear-gradient(-180deg, #f0f0f0  0%, #FFFFFF  9%);
+  margin-right: 12px;
+}
+
+.editor-form__select-koodisto-dropdown-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 43px;
+  margin-left: -43px;
+  z-index: 1;
+}
+
+.editor-form__select-koodisto-dropdown {
+  border: 0;
+  padding-left: 10px;
+  padding-right: 43px;
+  background-color: rgba(1, 1, 1, 0);
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  appearance: none;
+  z-index: 2;
 }
 
 .editor-form__header-wrapper {
@@ -1210,6 +1239,7 @@
 
 .editor-form__followup-question-overlay-parent {
   position: relative;
+  margin-bottom: 12px;
 }
 
 .editor-form__followup-question-overlay-outer {
