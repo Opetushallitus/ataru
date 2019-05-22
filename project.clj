@@ -143,6 +143,7 @@
                                        :output-to            "resources/public/js/compiled/virkailija-app.js"
                                        :output-dir           "resources/public/js/compiled/out"
                                        :asset-path           "/lomake-editori/js/compiled/out"
+                                       :parallel-build       true
                                        :optimizations        :none
                                        :source-map-timestamp true}}
 
@@ -154,6 +155,7 @@
                                        :output-to            "resources/public/js/compiled/hakija-app.js"
                                        :output-dir           "resources/public/js/compiled/hakija-out"
                                        :asset-path           "/hakemus/js/compiled/hakija-out"
+                                       :parallel-build       true
                                        :optimizations        :none
                                        :source-map-timestamp true}}
 
@@ -161,6 +163,7 @@
                         :source-paths ["src/cljs" "test/cljs/unit" "src/cljc" "test/cljc/unit"]
                         :compiler     {:output-to     "resources/public/js/test/test.js"
                                        :main          "ataru.unit-runner"
+                                       :parallel-build       true
                                        :process-shim  false
                                        :optimizations :none}}
 
@@ -171,6 +174,7 @@
                                        :output-to            "resources/public/js/compiled/virkailija-app.js"
                                        :output-dir           "resources/public/js/compiled/virkailija-app-out"
                                        :externs              ["resources/virkailija-externs.js"]
+                                       :parallel-build       true
                                        :optimizations        :advanced
                                        :closure-defines      {goog.DEBUG false}
                                        :source-map           "resources/public/js/compiled/virkailija-app.js.map"
@@ -184,6 +188,7 @@
                                        :output-to            "resources/public/js/compiled/hakija-app.js"
                                        :output-dir           "resources/public/js/compiled/hakija-app-out"
                                        :externs              ["resources/hakija-externs.js"]
+                                       :parallel-build       true
                                        :optimizations        :advanced
                                        :closure-defines      {goog.DEBUG false}
                                        :source-map           "resources/public/js/compiled/hakija-app.js.map"
