@@ -13,63 +13,63 @@ echo "Lein version:"
 
 clean() {
     echo "Cleaning everything"
-    ./bin/lein clean
+    time ./bin/lein clean
 }
 
 compile-less() {
     echo "Compiling less"
-    ./bin/lein less once
+    time ./bin/lein less once
 }
 
 npm-dependencies() {
     echo "Installing npm dependencies"
-    npm install
+    time npm install
     export CHROME_BIN=$(node -e "console.log(require('puppeteer').executablePath());")
 }
 
 process-resources() {
     echo "Processing resources"
-    ./bin/lein resource
+    time ./bin/lein resource
 }
 
 build-clojurescript() {
     echo "Building clojurescript"
-    ./bin/lein cljsbuild once virkailija-min hakija-min
+    time ./bin/lein cljsbuild once virkailija-min hakija-min
 }
 
 test-clojure() {
     echo "Running clojure tests"
-    ./bin/lein spec -t ~ui
+    time ./bin/lein spec -t ~ui
 }
 
 test-clojurescript() {
     echo "Testing clojurescript"
-    ./bin/lein doo chrome-headless test once
+    time ./bin/lein doo chrome-headless test once
 }
 
 test-browser() {
-    ./bin/lein spec -t ui
+    time ./bin/lein spec -t ui
 }
 
 run-migrations() {
     echo "Running migrations"
-    ./bin/lein with-profile dev run -m ataru.db.migrations/migrate
+    time ./bin/lein with-profile dev run -m ataru.db.migrations/migrate
 }
 
 nuke-test-db() {
     echo "Nuking test database"
-    ./bin/lein with-profile dev run -m ataru.fixtures.db.unit-test-db/clear-database
+    time ./bin/lein with-profile dev run -m ataru.fixtures.db.unit-test-db/clear-database
 }
 
 create-db-schema() {
     echo "Creating DB schema diagrams"
-    ./bin/lein db-schema
+    time ./bin/lein db-schema
 }
 
 reset-test-database-with-fixture() {
     nuke-test-db
     run-migrations
-    ./bin/lein with-profile dev run -m ataru.fixtures.db.browser-test-db/init-db-fixture
+    time ./bin/lein with-profile dev run -m ataru.fixtures.db.browser-test-db/init-db-fixture
 }
 
 ui-compile() {
@@ -90,12 +90,12 @@ create-uberjar() {
     compile-less
     process-resources
     echo "Creating uberjar"
-    ./bin/lein uberjar
+    time ./bin/lein uberjar
 }
 
 run-tests() {
     echo "Starting test run"
-    ./bin/lein clean
+    clean
     npm-dependencies
     test-clojurescript
     nuke-test-db
@@ -109,7 +109,7 @@ run-tests() {
 run-tests-and-create-uberjar() {
     run-tests
     process-resources
-    ./bin/lein uberjar
+    time ./bin/lein uberjar
 }
 
 run-browser-tests() {
