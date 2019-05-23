@@ -1,5 +1,6 @@
 (ns ataru.applications.automatic-payment-obligation
   (:require [ataru.background-job.job :as job]
+            [ataru.cache.cache-service :as cache]
             [ataru.koodisto.koodisto-codes :as codes]
             [ataru.person-service.person-service :as person-service]
             [ataru.applications.application-store :as application-store]))
@@ -9,7 +10,8 @@
 
 (defn automatic-payment-obligation-job-step
   [{:keys [person-oid]}
-   {:keys [person-service]}]
+   {:keys [person-service henkilo-cache]}]
+  (cache/remove-from henkilo-cache person-oid)
   (let [person (person-service/get-person person-service person-oid)]
     (when (:yksiloityVTJ person)
       (let [finnish-nationality? (nationality-finland? person)
