@@ -935,6 +935,9 @@ You will receive a confirmation of your application to your email."}
    :eligibility-set-automatically               {:fi "Hakukelpoisuus asetettu automaattisesti"
                                                  :sv "Ansökningsbehörigheten har satts automatiskt"
                                                  :en "Eligibility set automatically"}
+   :payment-obligation-set-automatically        {:fi "Maksuvelvollisuus asetettu automaattisesti"
+                                                 :sv "Betalningsskyldighet har ställts automatiskt"
+                                                 :en "Payment obligation set automatically"}
    :email-content                               {:fi "Sähköpostiviestin sisältö"
                                                  :sv "E-postmeddelandets innehåll"
                                                  :en "Content of the email"}

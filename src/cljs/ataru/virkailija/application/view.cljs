@@ -1278,6 +1278,19 @@
           [:span.application-handling__event-caption--inner.application-handling__event-caption--extra-info
            @(subscribe [:application/hakukohde-and-tarjoaja-name (:hakukohde event)])]]
 
+         {:event-type "payment-obligation-automatically-changed"}
+         [:div.application-handling__multi-line-event-caption
+          [:span.application-handling__event-caption--inner
+           (str (get-virkailija-translation :payment-obligation)
+                ": "
+                (some #(when (= (:new-review-state event) (first %))
+                         (get (second %) lang))
+                      review-states/application-payment-obligation-states))
+           [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
+            {:title (get-virkailija-translation :payment-obligation-set-automatically)}]]
+          [:span.application-handling__event-caption--inner.application-handling__event-caption--extra-info
+           @(subscribe [:application/hakukohde-and-tarjoaja-name (:hakukohde event)])]]
+
          {:event-type "attachment-review-state-change"}
          [:span.application-handling__event-caption--inner
           (gstring/format "%s: %s "
