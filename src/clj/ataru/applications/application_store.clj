@@ -747,18 +747,17 @@ WHERE la.key IS NULL\n"
                                        :requirement     hakukohde-review-requirement
                                        :state           hakukohde-review-state
                                        :hakukohde       hakukohde-oid}
-          existing-modified-by-user?  (->> (yesql-get-application-events {:application_key application-key} connection)
+          automatically-changed?      (->> (yesql-get-application-events {:application_key application-key} connection)
                                            (filter #(and (= hakukohde-oid (:hakukohde %))
                                                          (= hakukohde-review-requirement (:requirement %))))
-                                           (sort-by :time)
-                                           (last)
+                                           last
                                            :event_type
-                                           (not= "payment-obligation-automatically-changed"))
+                                           (= "payment-obligation-automatically-changed"))
           existing-duplicate-review   (yesql-get-existing-application-hakukohde-review review-to-store connection)
           existing-requirement-review (first (yesql-get-existing-requirement-review review-to-store connection))]
       (when (and (empty? existing-duplicate-review)
                  (or (not existing-requirement-review)
-                     (not existing-modified-by-user?)))
+                     automatically-changed?))
             (yesql-upsert-application-hakukohde-review! review-to-store connection)
             (let [event {:application_key  application-key
                          :event_type       "payment-obligation-automatically-changed"

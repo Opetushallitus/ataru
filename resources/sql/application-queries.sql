@@ -108,7 +108,7 @@ SELECT
 FROM application_events ae
 LEFT JOIN virkailija v ON ae.virkailija_oid = v.oid
 WHERE ae.application_key = :application_key
-ORDER BY ae.time ASC;
+ORDER BY ae.id ASC;
 
 -- name: yesql-get-application-review
 SELECT
