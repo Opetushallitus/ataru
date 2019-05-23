@@ -758,14 +758,14 @@ WHERE la.key IS NULL\n"
       (when (and (empty? existing-duplicate-review)
                  (or (not existing-requirement-review)
                      automatically-changed?))
-            (yesql-upsert-application-hakukohde-review! review-to-store connection)
-            (let [event {:application_key  application-key
-                         :event_type       "payment-obligation-automatically-changed"
-                         :new_review_state (:state review-to-store)
-                         :review_key       hakukohde-review-requirement
-                         :hakukohde        (:hakukohde review-to-store)
-                         :virkailija_oid   nil}]
-              (yesql-add-application-event<! event connection))))))
+        (yesql-upsert-application-hakukohde-review! review-to-store connection)
+        (let [event {:application_key  application-key
+                     :event_type       "payment-obligation-automatically-changed"
+                     :new_review_state (:state review-to-store)
+                     :review_key       hakukohde-review-requirement
+                     :hakukohde        (:hakukohde review-to-store)
+                     :virkailija_oid   nil}]
+          (yesql-add-application-event<! event connection))))))
 
 (defn save-attachment-hakukohde-review
   [application-key hakukohde-oid attachment-key hakukohde-review-state session]
