@@ -5,8 +5,8 @@
             [ataru.person-service.person-service :as person-service]
             [ataru.applications.application-store :as application-store]))
 
-(defn nationality-finland? [{:keys [kansalaisuus]}]
-  (some true? (map #(= codes/finland-country-code (:kansalaisuusKoodi %)) kansalaisuus)))
+(defn nationality-finland? [person]
+  (some #(= codes/finland-country-code (:kansalaisuusKoodi %)) (:kansalaisuus person)))
 
 (defn automatic-payment-obligation-job-step
   [{:keys [person-oid]}
