@@ -13,7 +13,8 @@
    {:keys [person-service henkilo-cache]}]
   (cache/remove-from henkilo-cache person-oid)
   (let [person (person-service/get-person person-service person-oid)]
-    (when (:yksiloityVTJ person)
+    (when (or (:yksiloity person)
+              (:yksiloityVTJ person))
       (let [finnish-nationality? (nationality-finland? person)
             applications         (->> (application-store/get-application-keys-for-person-oid person-oid)
                                       (map :key)
