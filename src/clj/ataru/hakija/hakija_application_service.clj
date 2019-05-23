@@ -468,10 +468,10 @@
 (defn can-access-attachment?
   [secret virkailija-secret attachment-key]
   (when-let [application (cond (and (some? virkailija-secret) (virkailija-edit/virkailija-rewrite-secret-valid? virkailija-secret))
-                               (application-store/get-latest-application-for-virkailija-rewrite-edit secret)
+                               (application-store/get-latest-application-for-virkailija-rewrite-edit virkailija-secret)
 
                                (and (some? virkailija-secret) (virkailija-edit/virkailija-update-secret-valid? virkailija-secret))
-                               (application-store/get-latest-application-for-virkailija-edit secret)
+                               (application-store/get-latest-application-for-virkailija-edit virkailija-secret)
 
                                (some? secret)
                                (application-store/get-latest-application-by-secret secret))]
