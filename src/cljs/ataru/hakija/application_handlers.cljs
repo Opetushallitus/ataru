@@ -547,6 +547,7 @@
                                   [:secret secret]
                                   [:virkailija-secret virkailija-secret])]
     {:db       (-> db
+                   (assoc-in [:application :application-identifier] (:application-identifier application))
                    (assoc-in [:application :editing?] true)
                    (assoc-in [:application secret-kwd] secret-val)
                    (assoc-in [:application :state] (:state application))

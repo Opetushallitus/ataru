@@ -26,34 +26,34 @@
 (defonce builder (new HtmlSanitizer.Builder))
 (defonce html-sanitizer (.build builder))
 
-(defonce personblock-start-tag "BEGIN_PERSON")
-(defonce personblock-end-tag "END_PERSON")
+(defonce application-identifier-block-start-tag "BEGIN_APPLICATION_IDENTIFIER")
+(defonce application-identifier-block-end-tag "END_APPLICATION_IDENTIFIER")
 
-(defn- handle-person-block-text
-  [person-oid text]
-  (if (and person-oid text)
-    (string/replace text "$PERSON_OID" person-oid)
+(defn- handle-application-identifier-block-text
+  [application-identifier text]
+  (if (and application-identifier text)
+    (string/replace text "$APPLICATION_IDENTIFIER" application-identifier)
     ""))
 
 (defn- split-first [s tag]
   (clojure.string/split s (re-pattern tag) 2))
 
-(defn- person-block
-  ([person-oid text-before-block text-in-block {:keys [eof] :as state}]
-   (let [[in-block outside-block] (split-first text-in-block personblock-end-tag)]
+(defn- application-identifier-block
+  ([application-identifier text-before-block text-in-block {:keys [eof] :as state}]
+   (let [[in-block outside-block] (split-first text-in-block application-identifier-block-end-tag)]
      [(str text-before-block
-           (handle-person-block-text person-oid in-block)
+           (handle-application-identifier-block-text application-identifier in-block)
            outside-block)
       (if (or outside-block eof)
-        (dissoc state :personblock)
+        (dissoc state :in-application-identifier-block)
         state)]))
-  ([person-oid text {:keys [personblock] :as state}]
-   (if personblock
-     (person-block person-oid nil text state)
-     (let [[before after] (split-first text personblock-start-tag)]
+  ([application-identifier text {:keys [in-application-identifier-block] :as state}]
+   (if in-application-identifier-block
+     (application-identifier-block application-identifier nil text state)
+     (let [[before after] (split-first text application-identifier-block-start-tag)]
        (if after
-         (person-block person-oid before after
-           (assoc state :personblock true))
+         (application-identifier-block application-identifier before after
+           (assoc state :in-application-identifier-block true))
          [text state])))))
 
 (defn- add-link-target-prop
@@ -71,7 +71,7 @@
 (defn markdown-paragraph
   ([md-text]
    (markdown-paragraph md-text false nil))
-  ([md-text collapse-enabled? person-oid]
+  ([md-text collapse-enabled? application-identifier]
    (let [collapsed        (reagent/atom true)
          scroll-height    (reagent/atom nil)
          listener         (reagent/atom nil)
@@ -100,9 +100,9 @@
        (fn []
          (let [sanitized-html (as-> md-text v
                                 (md->html v
-                                  :replacement-transformers (cons (partial person-block person-oid)
-                                                                  transformer-vector)
-                                  :custom-transformers [add-link-target-prop])
+                                          :replacement-transformers (cons (partial application-identifier-block application-identifier)
+                                                                          transformer-vector)
+                                          :custom-transformers [add-link-target-prop])
                                 (.sanitize html-sanitizer v)
                                 (.getTypedStringValue v))
                collapsable?   (and collapse-enabled? (< 140 (or @scroll-height 0)))]

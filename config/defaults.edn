@@ -20,6 +20,7 @@
                                                            :verify-certificate true
                                                            :path               ""
                                                            :timeout-seconds    10}}
+ :application-key-masking   {:secret-key "u2gxnoyCiV87s+CsOEnGnw=="}
  :yksiloimattomat {:allow false}
  :cache           {:type :redis}
  :redis           {:uri "redis://localhost:6379"}
