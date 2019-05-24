@@ -1237,6 +1237,7 @@ WHERE la.key IS NULL\n"
         eligibilities-by-hakutoive (get-application-eligibilities-by-hakutoive application)]
     (-> application
         (dissoc :content :application_hakukohde_reviews)
+        (assoc :maksuvelvollisuus (reduce-kv #(assoc %1 (name %2) %3) {} (:maksuvelvollisuus application)))
         (assoc :keyValues (merge keyword-values eligibilities-by-hakutoive))
         (clojure.set/rename-keys {:key :hakemusOid :person_oid :personOid :haku :hakuOid}))))
 
