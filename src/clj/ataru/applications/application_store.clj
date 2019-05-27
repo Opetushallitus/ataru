@@ -484,11 +484,13 @@ WHERE la.key IS NULL\n"
           (when (contains? query :hakukohde)
             "      AND a.hakukohde && ?\n")
           (when (contains? query :ensisijainen-hakukohde)
-            "      AND (SELECT t.h
+            (if (contains? query :ensisijaisesti-hakukohteissa)
+              "      AND (SELECT t.h
            FROM unnest(a.hakukohde) WITH ORDINALITY AS t(h, i)
-           WHERE t.h = ANY(coalesce(?, a.hakukohde))
+           WHERE t.h = ANY(?)
            ORDER BY t.i ASC
-           LIMIT 1) = ANY(?)\n")
+           LIMIT 1) = ANY(?)\n"
+              "      AND a.hakukohde[1] = ANY(?)\n"))
           (when (contains? sort :offset)
             (case (:order-by sort)
               "submitted"
