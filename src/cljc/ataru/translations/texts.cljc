@@ -834,13 +834,13 @@ You will receive a confirmation of your application to your email."}
                                                  :sv "Radera inte"
                                                  :en "Don't remove"}
    :confirm-cut                                 {:fi "Vahvista leikkaus"
-                                                 :sv "Bekräfta klippa"
+                                                 :sv "Bekräfta utklippning"
                                                  :en "Confirm the cut"}
    :cancel-cut                                  {:fi "Älä leikkaa"
-                                                 :sv "Klippa inte"
+                                                 :sv "Klipp inte ut"
                                                  :en "Don't cut"}
    :only-selected-hakukohteet                   {:fi "vain valituille hakukohteille"
-                                                 :sv "vain valituille hakukohteille"
+                                                 :sv "till valda ansökningsmål"
                                                  :en "only selected application options"}
    :confirmation-sent                           {:fi "Vahvistussähköposti lähetetty hakijalle"
                                                  :sv "E-post med bekräftelse har skickats till sökande"
@@ -852,13 +852,13 @@ You will receive a confirmation of your application to your email."}
                                                  :sv "Kopiera blanketten"
                                                  :en "Copy the form"}
    :cut-element                                 {:fi "Leikkaa"
-                                                 :sv "SV: Cut"
+                                                 :sv "Klipp ut"
                                                  :en "Cut"}
    :paste-element                               {:fi "Liitä"
-                                                 :sv "SV: Paste"
+                                                 :sv "Klistra in"
                                                  :en "Paste"}
    :copy-element                                {:fi "Kopioi"
-                                                 :sv "SV: Copy"
+                                                 :sv "Kopiera"
                                                  :en "Copy"}
    :copy-answer-id                              {:fi "Kopioi vastauksen tunniste leikepöydälle"
                                                  :sv "Kopiera svarstaggen till klippbordet"
@@ -888,10 +888,10 @@ You will receive a confirmation of your application to your email."}
                                                  :sv "Jämför ändringen"
                                                  :en "Compare the change"}
    :diff-added                                  {:fi "Lisätty"
-                                                 :sv "SV: Lisätty"
+                                                 :sv "Lagts till"
                                                  :en "Added"}
    :diff-removed                                {:fi "Poistettu"
-                                                 :sv "SV: Poistettu"
+                                                 :sv "Raderats"
                                                  :en "Removed"}
    :dropdown                                    {:fi "Pudotusvalikko"
                                                  :sv "Rullgardinsmeny"
@@ -903,7 +903,7 @@ You will receive a confirmation of your application to your email."}
                                                  :sv "Bearbeta ansökan"
                                                  :en "Edit the application"}
    :edit-application-with-rewrite               {:fi "Muokkaa hakemusta rekisterinpitäjänä"
-                                                 :sv "Muokkaa hakemusta rekisterinpitäjänä"
+                                                 :sv "Bearbeta ansökan som registerförare"
                                                  :en "Muokkaa hakemusta rekisterinpitäjänä"}
    :edit-applications-rights-panel              {:fi "Hakemusten arviointi"
                                                  :sv "Utvärdering av ansökningar"
@@ -930,7 +930,7 @@ You will receive a confirmation of your application to your email."}
                                                  :sv "Förklaring till behörighetsanteckningen"
                                                  :en "Explanation of eligibility"}
    :eligibility-set-automatically               {:fi "Hakukelpoisuus asetettu automaattisesti"
-                                                 :sv "Ansökningsbehörigheten har ställts automatiskt"
+                                                 :sv "Ansökningsbehörigheten har satts automatiskt"
                                                  :en "Eligibility set automatically"}
    :email-content                               {:fi "Sähköpostiviestin sisältö"
                                                  :sv "E-postmeddelandets innehåll"
@@ -957,7 +957,7 @@ You will receive a confirmation of your application to your email."}
                                                  :sv "Avgränsa ansökningar"
                                                  :en "Filter the applications"}
    :filters-apply-button                        {:fi "Ota käyttöön"
-                                                 :sv "Använda"
+                                                 :sv "Använd"
                                                  :en "Apply"}
    :filters-cancel-button                       {:fi "Peruuta"
                                                  :sv "Annullera"
@@ -1017,10 +1017,10 @@ You will receive a confirmation of your application to your email."}
                                                  :sv "Ansökningsmål"
                                                  :en "Application options"}
    :hakukohderyhmat                             {:fi "Hakukohderyhmät"
-                                                 :sv "SV: Hakukohderyhmät"
+                                                 :sv "Ansökningsmålsgrupp"
                                                  :en "Application option groups"}
    :search-hakukohde-placeholder                {:fi "Etsi hakukohteita ja hakukohderyhmiä"
-                                                 :sv "SV: Etsi hakukohteita ja hakukohderyhmiä"
+                                                 :sv "Sök ansökningsmål och ansökningsmålsgrupper"
                                                  :en "Search for application options and application option groups"}
    :handling-notes                              {:fi "Käsittelymerkinnät"
                                                  :sv "Anteckningar om behandling"
@@ -1101,10 +1101,10 @@ You will receive a confirmation of your application to your email."}
                                                  :sv "Excel"
                                                  :en "Excel"}
    :excel-included-ids                          {:fi "Exceliin sisältyvät tunnisteet:"
-                                                 :sv "Exceliin sisältyvät tunnisteet:"
+                                                 :sv "Identifikationer som ingår i excelfilen:"
                                                  :en "Exceliin sisältyvät tunnisteet:"}
    :excel-include-all-placeholder               {:fi "Kaikki tunnisteet"
-                                                 :sv "Kaikki tunnisteet"
+                                                 :sv "Alla identifikationer"
                                                  :en "Kaikki tunnisteet"}
    :mass-information-request                    {:fi "Massaviesti"
                                                  :sv "Massmeddelande"
@@ -1197,16 +1197,16 @@ You will receive a confirmation of your application to your email."}
                                                  :sv "Personens prestationer"
                                                  :en "Applicant's exams in Finland"}
    :metadata-not-found                          {:fi "Hakijan liitteitä ei löytynyt"
-                                                 :sv "SV: Hakijan liitteitä ei löytynyt"
+                                                 :sv "Sökandes bilagor hittades inte"
                                                  :en "Applicant's attachements can't be found"}
    :person-not-individualized                   {:fi "Hakijaa ei ole yksilöity."
-                                                 :sv "Sökande har inte individualiserats."
+                                                 :sv "Sökande har inte identifierats."
                                                  :en "Applicant isn't identified."}
    :individualize-in-henkilopalvelu             {:fi "Tee yksilöinti henkilöpalvelussa."
-                                                 :sv "Tee yksilöinti henkilöpalvelussa."
+                                                 :sv "Identifiera i persontjänsten."
                                                  :en "Identify the applicant."}
    :creating-henkilo-failed                     {:fi "Henkilön luonti ei ole valmistunut! Tarkista hakemuksen nimitiedot (esim. kutsumanimi on yksi etunimistä)."
-                                                 :sv "SV: Henkilön luonti ei ole valmistunut! Tarkista hakemuksen nimitiedot (esim. kutsumanimi on yksi etunimistä)"
+                                                 :sv "Att bilda personen är inte färdig. Kontrollera att namnuppgifterna är korrekta (t.ex. att tilltalsnamnet ingår)"
                                                  :en "EN: Henkilön luonti ei ole valmistunut! Tarkista hakemuksen nimitiedot (esim. kutsumanimi on yksi etunimistä)"}
    :pohjakoulutus_am                            {:fi "Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"
                                                  :sv "I Finland avlagd yrkesinriktad grundexamen, examen på skolnivå, institutnivå eller inom yrkesutbildning på högre nivå"
@@ -1281,7 +1281,7 @@ You will receive a confirmation of your application to your email."}
                                                  :sv "SV: Rajoitettu valinta"
                                                  :en "Limited selection"}
    :selection-limit-input                       {:fi "Raja-arvo"
-                                                 :sv "SV: Raja-arvo"
+                                                 :sv "Gränsvärde"
                                                  :en "Limit"}
    :required                                    {:fi "Pakollinen tieto"
                                                  :sv "Obligatorisk uppgift"
@@ -1305,7 +1305,7 @@ You will receive a confirmation of your application to your email."}
                                                  :sv "Namn, personbeteckning, födelsetid eller e-postadress"
                                                  :en "Name, Finnish personal identity number, date of birth, email or OIDs"}
    :questions                                   {:fi "kysymykset"
-                                                 :sv "Frågar"
+                                                 :sv "frågor"
                                                  :en "questions"}
    :selection                                   {:fi "Valinta"
                                                  :sv "Antagning"
@@ -1341,7 +1341,7 @@ You will receive a confirmation of your application to your email."}
                                                  :sv "Visa svarsalternativ"
                                                  :en "EN: Näytä vastausvaihtoehdot"}
    :single-choice-button                        {:fi "Painikkeet, yksi valittavissa"
-                                                 :sv "Tangenter av vilka en kan väljas"
+                                                 :sv "En tangent kan väljas"
                                                  :en "EN: Painikkeet, yksi valittavissa"}
    :ssn                                         {:fi "Henkilötunnus"
                                                  :sv "Personbeteckning"
@@ -1389,19 +1389,19 @@ You will receive a confirmation of your application to your email."}
                                                  :sv "Status ändras till"
                                                  :en "Change status to"}
    :unidentified                                {:fi "Yksilöimättömät"
-                                                 :sv "Inte individualiserade"
+                                                 :sv "Inte identifierad"
                                                  :en "Unidentified"}
    :unknown                                     {:fi "Tuntematon"
                                                  :sv "Okänd"
                                                  :en "Unknown"}
    :unknown-virkailija                          {:fi "Tuntematon virkailija"
-                                                 :sv "SV: Tuntematon virkailija"
+                                                 :sv "Okänd administratör"
                                                  :en "Unknown official"}
    :unknown-option                              {:fi "Tuntematon vastausvaihtoehto"
                                                  :sv "Okänt svarsalternativ"
                                                  :en "Unknown option"}
    :unprocessed                                 {:fi "Käsittelemättä"
-                                                 :sv "Obehandlade"
+                                                 :sv "Obehandlad"
                                                  :en "Unprocessed"}
    :unprocessed-haut                            {:fi "Käsittelemättä olevat haut"
                                                  :sv "Obehandlade ansökningar"
@@ -1428,10 +1428,10 @@ You will receive a confirmation of your application to your email."}
                                                  :sv "visas för alla"
                                                  :en "EN: näkyy kaikille"}
    :hidden                                      {:fi "piilotettu"
-                                                 :sv "SV: piilotettu"
+                                                 :sv "dold"
                                                  :en "hidden"}
    :is-hidden?                                  {:fi "ei näytetä lomakkeella (piilotettu)"
-                                                 :sv "SV: ei näytetä lomakkeella (piilotettu)"
+                                                 :sv "visas inte på blanketten (dold)"
                                                  :en "EN: ei näytetä lomakkeella (piilotettu)"}
    :visible-to-hakukohteet                      {:fi "vain valituille hakukohteille",
                                                  :sv "endast för valda ansökningsmål"
@@ -1452,28 +1452,28 @@ You will receive a confirmation of your application to your email."}
                                                  :sv "Passiverade"
                                                  :en "Passives"}
    :application-count-unprocessed               {:fi "Käsittelemättä"
-                                                 :sv "SV: Käsittelemättä"
+                                                 :sv "Obehandlad"
                                                  :en "Unprocessed"}
    :application-count-processing                {:fi "Käsittely on kesken"
-                                                 :sv "SV: Käsittely on kesken"
+                                                 :sv "Behandlingen är inte färdig"
                                                  :en "In process"}
    :application-count-processed                 {:fi "Käsitelty"
-                                                 :sv "SV: Käsitelty"
+                                                 :sv "Behandlad"
                                                  :en "Processed"}
    :navigate-applications-forward               {:fi "Seuraava hakemus"
-                                                 :sv "SV: Seuraava hakemus"
+                                                 :sv "Följande ansökan"
                                                  :en "Next application"}
    :navigate-applications-back                  {:fi "Edellinen hakemus"
-                                                 :sv "SV: Edellinen hakemus"
+                                                 :sv "Föregående ansökan"
                                                  :en "Previous application"}
    :autosave-enabled                            {:fi "Automaattitalletus: päällä"
-                                                 :sv "SV: Automaattitalletus: päällä"
+                                                 :sv "Automatspar: på"
                                                  :en "Auto-save: enabled"}
    :multiple-values                             {:fi "Monta arvoa"
-                                                 :sv "SV: Monta arvoa"
+                                                 :sv "Multipla värden"
                                                  :en "Multiple values"}
    :autosave-disabled                           {:fi "Automaattitalletus: pois päältä"
-                                                 :sv "SV: Automaattitalletus: pois päältä"
+                                                 :sv "Automatspar: av"
                                                  :en "Auto-save: disabled"}})
 
 (def state-translations
@@ -1490,10 +1490,10 @@ You will receive a confirmation of your application to your email."}
                             :sv "Under behandling"
                             :en "Under process"}
    :invited-to-interview   {:fi "Kutsuttu haast."
-                            :sv "Kallade till intervju"
+                            :sv "Kallad till intervju"
                             :en "Invited to interview"}
    :invited-to-exam        {:fi "Kutsuttu valintak."
-                            :sv "Kallade till urvalsprov"
+                            :sv "Kallad till urvalsprov"
                             :en "Invited to entrance examination"}
    :evaluating             {:fi "Arvioinnissa"
                             :sv "Under bedömning"
