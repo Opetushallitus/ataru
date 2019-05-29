@@ -125,25 +125,6 @@
               ^{:key (str "editor-name-" l)}
               [editor-name-wrapper l false true]))]))
 
-(def ^:private lang-versions
-  {:fi (get-virkailija-label :finnish)
-   :sv (get-virkailija-label :swedish)
-   :en (get-virkailija-label :english)})
-
-(defn- lang-checkbox [lang-kwd checked? virkailija-lang]
-  (let [id (str "lang-checkbox-" (name lang-kwd))]
-    [:div.editor-form__checkbox-with-label
-     {:key id}
-     [:input.editor-form__checkbox
-      {:id      id
-       :checked checked?
-       :type    "checkbox"
-       :on-change (fn [_]
-                    (dispatch [:editor/toggle-language lang-kwd]))}]
-     [:label.editor-form__checkbox-label.editor-form__language-checkbox-label
-      {:for id}
-      (-> lang-versions lang-kwd virkailija-lang)]]))
-
 (defn- get-org-name [org]
   (str (get-in org [:name :fi])
        (if (= "group" (:type org))
@@ -204,19 +185,35 @@
           (get-virkailija-translation :autosave-enabled)
           (get-virkailija-translation :autosave-disabled))]])))
 
+(defn- lang-checkbox [lang-kwd]
+  (let [id (str "lang-checkbox-" (name lang-kwd))]
+    [:div.editor-form__checkbox-with-label
+     {:key id}
+     [:input.editor-form__checkbox
+      {:id        id
+       :checked   (some? (some #{lang-kwd} @(subscribe [:editor/languages])))
+       :type      "checkbox"
+       :on-change (fn [_] (dispatch [:editor/toggle-language lang-kwd]))}]
+     [:label.editor-form__checkbox-label.editor-form__language-checkbox-label
+      {:for id}
+      (get-virkailija-translation (case lang-kwd
+                                    :fi :finnish
+                                    :sv :swedish
+                                    :en :english))]]))
+
 (defn- form-toolbar [form]
   (let [languages @(subscribe [:editor/languages])
         lang      (subscribe [:editor/virkailija-lang])]
     [:div.editor-form__toolbar
      [:div.editor-form__toolbar-left
       [:div.editor-form__language-controls
-       (doall (map (fn [lang-kwd]
-                     (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages)) @lang))
-                   (keys lang-versions)))]
+       [lang-checkbox :fi]
+       [lang-checkbox :sv]
+       [lang-checkbox :en]]
       [:div.editor-form__preview-buttons
        [:a.editor-form__email-template-editor-link
         {:on-click #(dispatch [:editor/toggle-email-template-editor])}
-        (get-virkailija-translation :edit-email-templates )]]
+        (get-virkailija-translation :edit-email-templates)]]
       [lock-form-editing]
       [disable-autosave]]
      [:div.editor-form__toolbar-right
