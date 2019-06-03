@@ -14,8 +14,6 @@
             [taoensso.timbre :as log]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]))
 
-(defonce information-request-job-session {:user-agent "server"})
-
 (defn- extract-answer-value [answer-key-str application]
   (->> (:answers application)
        (filter (comp (partial = answer-key-str) :key))
@@ -54,29 +52,29 @@
                    " for application " (:application-key information-request)))))
 
 (defn- store-in-tx
-  [information-request virkailija-oid job-runner connection session]
+  [session information-request job-runner connection]
   {:pre [(-> information-request :subject u/not-blank?)
          (-> information-request :message u/not-blank?)
          (-> information-request :application-key u/not-blank?)
          (-> information-request :message-type u/not-blank?)]}
   (let [information-request (information-request-store/add-information-request
                              information-request
-                             virkailija-oid
+                             (-> session :identity :oid)
                              connection)]
     (start-email-job job-runner connection information-request)
     (audit-log/log {:new       information-request
                     :operation audit-log/operation-new
                     :session   session
-                    :id        virkailija-oid})
+                    :id        {:applicationOid (:application-key information-request)}})
     information-request))
 
-(defn store [information-request virkailija-oid job-runner]
+(defn store [session information-request job-runner]
   {:pre [(-> information-request :subject u/not-blank?)
          (-> information-request :message u/not-blank?)
          (-> information-request :application-key u/not-blank?)
          (-> information-request :message-type u/not-blank?)]}
   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-    (store-in-tx information-request virkailija-oid job-runner connection information-request-job-session)))
+    (store-in-tx session information-request job-runner connection)))
 
 (defn mass-information-request-job-step
   [state job-runner]
@@ -85,11 +83,11 @@
     (let [[now later] (split-at 100 (:application-keys state))]
       (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
         (doseq [key now]
-          (store-in-tx (assoc (:information-request state)
+          (store-in-tx {:identity {:oid (:virkailija-oid state)}}
+                       (assoc (:information-request state)
                               :application-key key)
-                       (:virkailija-oid state)
                        job-runner
-                       connection information-request-job-session)))
+                       connection)))
       {:transition    {:id :to-next :step :initial}
        :updated-state (assoc state :application-keys later)})))
 

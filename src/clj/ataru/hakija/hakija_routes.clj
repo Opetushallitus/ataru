@@ -58,7 +58,7 @@
             (audit-log/log {:new       application
                             :operation audit-log/operation-read
                             :session   session
-                            :id        nil})
+                            :id        {:applicationOid (:key application)}})
             (response/ok application-form-and-person))
 
           secret-expired?

@@ -9,7 +9,16 @@
             [environ.core :refer [env]]
             [clojure.data :refer [diff]]
             [taoensso.timbre.appenders.3rd-party.rolling :refer [rolling-appender]])
-  (:import [fi.vm.sade.auditlog Operation HeartbeatDaemon Changes$Builder Target$Builder Target Changes Clock Logger Audit ApplicationType User]
+  (:import [fi.vm.sade.auditlog
+            Operation
+            Changes$Builder
+            Target$Builder
+            Target
+            Changes
+            Logger
+            Audit
+            ApplicationType
+            User]
            [org.joda.time DateTime]
            [com.fasterxml.jackson.databind ObjectMapper]
            [com.github.fge.jsonpatch.diff JsonDiff]
@@ -17,8 +26,6 @@
            (java.util Date)
            (java.net InetAddress)
            (org.ietf.jgss Oid)))
-
-(def oidless "1.2.246.562.11.00000000000")
 
 (defn- create-operation [op]
   (proxy [Operation] [] (name [] op)))
@@ -97,10 +104,7 @@
      (into {} (for [kw updated-kw]
                 [kw [(get new-diff kw) (get old-diff kw)]]))]))
 
-(defn- oid? [o]
-  (clojure.string/starts-with? o "1.2."))
-
-(defn- do-log [{:keys [new old id operation organization-oid session]}]
+(defn- do-log [{:keys [new old id operation session]}]
   {:pre [(or (and (or (string? new)
                       (map-or-vec? new))
                   (nil? old))
@@ -112,46 +116,38 @@
                              operation-modify
                              operation-delete
                              operation-login])]}
-  (let [oid     (str (cond
-                  (nil? id)
-                  oidless
-
-                  (not (oid? id))
-                  oidless
-
-                  (keyword? id)
-                  (name id)
-
-                  :else
-                  id))
-        ip      (:client-ip session)
-        user    (User.
-                  (Oid. oid)
-                  (if ip
-                    (InetAddress/getByName ip)
-                    (InetAddress/getLocalHost))
-                  (or (-> :session :identity :ticket) "no session")
-                  (or (:user-agent session) "no user agent"))
-        [added removed updated] (->changes new old)
-        changes (doto (Changes$Builder.)
-                  (#(doseq [[path val] added]
-                      (.added % path (str val))))
-                  (#(doseq [[path val] removed]
-                      (.removed % path (str val))))
-                  (#(doseq [[path [n o]] updated]
-                      (.updated % (str path) (str n) (str o)))))]
+  (let [user      (User.
+                   (when-let [oid (-> :session :identity :oid)]
+                     (Oid. oid))
+                   (if-let [ip (:client-ip session)]
+                     (InetAddress/getByName ip)
+                     (InetAddress/getLocalHost))
+                   (or (-> :session :identity :ticket) "no session")
+                   (or (:user-agent session) "no user agent"))
+        [added
+         removed
+         updated] (->changes new old)
+        changes   (doto (Changes$Builder.)
+                    (#(doseq [[path val] added]
+                        (.added % path (str val))))
+                    (#(doseq [[path val] removed]
+                        (.removed % path (str val))))
+                    (#(doseq [[path [n o]] updated]
+                        (.updated % (str path) (str n) (str o)))))]
     (.log logger user operation
-      (-> (Target$Builder.)
-          (.setField "oid" oid)
-          (.build))
-      (.build changes))))
+          (let [tb (Target$Builder.)]
+            (doseq [[field value] id
+                    :when (some? value)]
+              (.setField tb (name field) value))
+            (.build tb))
+          (.build changes))))
 
 (defn log
   "Create an audit log entry. Provide map with :new and optional :old
    values to log.
 
    When both values are provided, both of them must be of same type and
-   either a vector or a map. An RFC6902 compliant patch is logged.
+   either a vector or a map.
 
    If only :new value is provided, it can also be a String."
   [params]

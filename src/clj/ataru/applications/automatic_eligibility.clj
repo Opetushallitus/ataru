@@ -11,8 +11,6 @@
             [taoensso.timbre :as log]
             [yesql.core :refer [defqueries]]))
 
-(defonce automatic-eligibility-session {:user-agent "eligibility"})
-
 (defqueries "sql/automatic-eligibility-queries.sql")
 
 (defn- get-application
@@ -87,7 +85,7 @@
                      " and hakukohde " (:oid hakukohde))))))
 
 (defn- audit-log
-  [application hakukohde new-state old-state session]
+  [application hakukohde new-state old-state]
   (audit-log/log {:new       {:application_key (:key application)
                               :requirement     "eligibility-state"
                               :state           new-state
@@ -96,8 +94,10 @@
                               :requirement     "eligibility-state"
                               :state           old-state
                               :hakukohde       (:oid hakukohde)}
-                  :id        "1.2.246.562.11.11111111111"
-                  :session   session
+                  :id        {:applicationOid (:key application)
+                              :hakukohdeOid   (:oid hakukohde)
+                              :requirement    "eligibility-state"}
+                  :session   nil
                   :operation audit-log/operation-modify}))
 
 (defn- set-eligible
@@ -136,7 +136,7 @@
           "unreviewed"
           (set-unreviewed connection application hakukohde))
         (insert-application-event connection application hakukohde to)
-        (audit-log application hakukohde from to automatic-eligibility-session)))
+        (audit-log application hakukohde from to)))
 
 (defn automatic-eligibility-if-ylioppilas
   [application

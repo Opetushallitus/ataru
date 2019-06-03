@@ -133,30 +133,27 @@
                        " created-time "
                        (:created-time form)))
             (throw (user-feedback-exception "Lomakkeen sisältö on muuttunut. Lataa sivu uudelleen.")))
-          (let [new-form         (increment-version
-                                  (-> form
-                                        ; use :key set in db just to be sure it never is nil
-                                      (assoc :key (:key latest-version))
-                                      (update :deleted identity))
-                                  conn)
-                log-id           (:created-by new-form)]
-            (audit-log/log {:new              (dissoc new-form :content)
-                            :old              (dissoc latest-version :content)
-                            :id               log-id
-                            :session          session
-                            :operation        (if (:deleted new-form) audit-log/operation-delete audit-log/operation-modify)
-                            :organization-oid organization-oid})
+          (let [new-form (increment-version
+                          (-> form
+                              ;; use :key set in db just to be sure it never is nil
+                              (assoc :key (:key latest-version))
+                              (update :deleted identity))
+                          conn)]
+            (audit-log/log {:new       (dissoc new-form :content)
+                            :old       (dissoc latest-version :content)
+                            :id        {:formKey (:key new-form)}
+                            :session   session
+                            :operation (if (:deleted new-form)
+                                         audit-log/operation-delete
+                                         audit-log/operation-modify)})
             new-form))))
-    (let [new-form         (if (:key form)
-                             (create-new-form! form (:key form))
-                             (create-new-form! form))
-          log-id           (:created-by new-form)
-          organization-oid (:organization-oid new-form)]
-            (audit-log/log {:new              (dissoc new-form :content)
-                            :id               log-id
-                            :session          session
-                            :operation        audit-log/operation-new
-                            :organization-oid organization-oid})
+    (let [new-form (if (:key form)
+                     (create-new-form! form (:key form))
+                     (create-new-form! form))]
+      (audit-log/log {:new       (dissoc new-form :content)
+                      :id        {:formKey (:key new-form)}
+                      :session   session
+                      :operation audit-log/operation-new})
       new-form)))
 
 (defn get-latest-form-by-name [form-name]

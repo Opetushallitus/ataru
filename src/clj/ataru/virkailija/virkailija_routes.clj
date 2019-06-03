@@ -474,9 +474,9 @@
              session
              [(:application-key information-request)]
              [:edit-applications])
-          (-> (information-request/store (assoc information-request
+          (-> (information-request/store session
+                                         (assoc information-request
                                                 :message-type "information-request")
-                                         (get-in session [:identity :oid])
                                          job-runner)
               (assoc :first-name (get-in session [:identity :first-name])
                      :last-name (get-in session [:identity :last-name]))
