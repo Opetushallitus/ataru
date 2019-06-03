@@ -32,25 +32,23 @@
 
 (defn- create-audit-logger []
   (let [service-name     (case (app-utils/get-app-id)
-                           :virkailija "ataru_virkailija"
-                           :hakija "ataru_hakija"
+                           :virkailija "ataru-editori"
+                           :hakija     "ataru-hakija"
                            nil)
         audit-log-config (assoc timbre/example-config
                                 :appenders {:file-appender
                                             (assoc (rolling-appender {:path    (str (-> config :log :virkailija-base-path)
-                                                                                 ; ^Virkailija and hakia paths are the same
-                                                                                 "/access_" service-name
-                                                                                 ; Hostname will differentiate files in actual environments
-                                                                                 (when (:hostname env)
-                                                                                       (str "_" (:hostname env)))
-                                                                                 ".log")
+                                                                                    "/auditlog_" service-name
+                                                                                    ;; Hostname will differentiate files in actual environments
+                                                                                    (when (:hostname env) (str "_" (:hostname env)))
+                                                                                    ".log")
                                                                       :pattern :daily})
                                                    :output-fn (fn [{:keys [msg_]}] (force msg_)))})
         logger           (proxy [Logger] [] (log [str]
                                               (timbre/log* audit-log-config :info str)))
         application-type (case (app-utils/get-app-id)
                            :virkailija ApplicationType/VIRKAILIJA
-                           :hakija ApplicationType/OPPIJA
+                           :hakija     ApplicationType/OPPIJA
                            ApplicationType/BACKEND)]
     (new Audit logger service-name application-type)))
 
