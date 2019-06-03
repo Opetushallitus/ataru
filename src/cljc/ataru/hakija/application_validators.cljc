@@ -65,17 +65,15 @@
   [{:keys [has-applied value answers-by-key field-descriptor]}]
   (let [multiple?      (get-in field-descriptor [:params :can-submit-multiple-applications] true)
         haku-oid       (get-in field-descriptor [:params :haku-oid])
-        yhteishaku?    (get-in field-descriptor [:params :yhteishaku] false)
         this-answer    (get answers-by-key (keyword (:id field-descriptor)))
         preferred-name (:preferred-name answers-by-key)
         original-value (:original-value this-answer)
         modifying?     (some? original-value)
-        value          (if yhteishaku? (:value this-answer) value)
+        value          (:value this-answer)
         verify-value   (:verify this-answer)]
     (asyncm/go
       (cond (or (not (email/email? value))
-                (and yhteishaku?
-                     verify-value
+                (and verify-value
                      (not= verify-value value)))
             [false []]
             (and modifying? (= value original-value))
@@ -88,7 +86,7 @@
                  texts/email-applied-error) value (when (:valid preferred-name)
                                                     (:value preferred-name)))]]
             :else
-            [true [(texts/email-check-correct-notification value)]]))))
+            [true []]))))
 
 (defn- selection-limit?
   [{:keys [try-selection answers-by-key value field-descriptor]}]
