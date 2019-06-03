@@ -140,28 +140,30 @@
                              " in " timeout-ms "ms")))
             :else
             (let [key-batch (take load-size to-load)
-                  loaded    (try
-                              (let [result  (redis-mget-n-lock redis loader name key-batch lock-id timeout-ms)
-                                    fresh?  #(<= min-ttl (get-in result [:ttls %]))
-                                    locked? #(get-in result [:locked? %])]
-                                (merge (->> (:hits result)
-                                            (filter (comp fresh? first))
-                                            (into {}))
-                                       (when-let [ks (->> (:hits result)
-                                                          (map first)
-                                                          (remove fresh?)
-                                                          (concat (:misses result))
-                                                          (filter locked?)
-                                                          seq)]
-                                         (redis-mset redis name px (cache/load-many loader ks)))))
+                  [to-load
+                   values]  (try
+                              (let [result         (redis-mget-n-lock redis loader name key-batch lock-id timeout-ms)
+                                    fresh?         #(<= min-ttl (get-in result [:ttls %]))
+                                    locked?        #(get-in result [:locked? %])
+                                    fresh-hits     (filter (comp fresh? first) (:hits result))
+                                    loader-to-load (->> (:hits result)
+                                                        (map first)
+                                                        (remove fresh?)
+                                                        (concat (:misses result))
+                                                        (filter locked?))]
+                                [(clojure.set/difference to-load
+                                                         (set (map first fresh-hits))
+                                                         (set loader-to-load))
+                                 (merge (into values fresh-hits)
+                                        (when (not-empty loader-to-load)
+                                          (redis-mset redis name px (cache/load-many loader loader-to-load))))])
                               (finally
                                 (wcar (:connection-opts redis)
                                       (doseq [key key-batch]
                                         (release-lock (->lock-key name key) lock-id)))))]
-              (let [to-load (clojure.set/difference to-load (set (keys loaded)))]
-                (when (not-empty to-load)
-                  (Thread/sleep (inc (rand-int 10))))
-                (recur to-load (merge values loaded))))))))
+              (when (not-empty to-load)
+                (Thread/sleep (inc (rand-int 10))))
+              (recur to-load values))))))
 
 (defn- batch-load-key
   [batch-queue io-executor redis loader name key px min-ttl timeout-ms]
@@ -171,16 +173,13 @@
       (if (.offer batch-queue [key output-queue])
         (supplyAsync io-executor
                      (fn []
-                       (let [to-load (loop [acc {}]
-                                       (if (= (count acc) (cache/load-many-size loader))
-                                         acc
-                                         (if-let [[key queue] (.poll batch-queue)]
-                                           (recur (assoc acc key queue))
-                                           acc)))]
-                         (doseq [[key value] (load-keys redis loader name (keys to-load) px min-ttl timeout-ms)]
-                           (when-not (.offer (get to-load key) value)
+                       (let [to-load (->> (repeatedly (cache/load-many-size loader) (fn [] (.poll batch-queue)))
+                                          (filter some?))
+                             values  (load-keys redis loader name (map first to-load) px min-ttl timeout-ms)]
+                         (doseq [[key queue] to-load]
+                           (when-not (.offer queue [(get values key)])
                              (throw (new RuntimeException (str "Offer of key " key " of cache " name " failed"))))))
-                       (if-let [value (.poll output-queue timeout-ms TimeUnit/MILLISECONDS)]
+                       (if-let [[value] (.poll output-queue timeout-ms TimeUnit/MILLISECONDS)]
                          value
                          (throw (new RuntimeException
                                      (str "Poll for key " key
