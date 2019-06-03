@@ -37,7 +37,7 @@
              (let [expected (get email/email-list email)
                    pred     (if expected true? false?)
                    actual   (first (async/<! (validator/validate {:has-applied has-never-applied :validator "email" :value email
-                                                                  :answers-by-key {:email {:value "test@example.com" :verify "test@example.com"}}
+                                                                  :answers-by-key {:email {:value email :verify email}}
                                                                   :field-descriptor {:id :email}})))
                    message  (if expected "valid" "invalid")]
                (is (pred actual)
