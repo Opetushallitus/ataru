@@ -77,7 +77,9 @@ function selectedHakukohdeName(hakukohdeRow) {
 function hasFormField(fieldId) {
   return testFrame().find('#scroll-to-' + fieldId).length === 1;
 }
-
+function setFieldInputValue(id, value) {
+  return setTextFieldValue(function() { return testFrame().find(id).focus() }, value)
+}
 function setNthFieldInputValue(n, value) {
   return setTextFieldValue(function() { return formFields().eq(n).find('input').focus() }, value)
 }

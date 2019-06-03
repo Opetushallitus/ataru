@@ -85,6 +85,7 @@
         setNthFieldInputValue(8, '12345'),
         setNthFieldInputValue(9, 'id-12345'),
         setNthFieldInputValue(10, 'test@example.com'),
+        setFieldInputValue("#verify-email", 'test@example.com'),
         setNthFieldInputValue(11, '0123456789'),
         setNthFieldInputValue(13, 'Katutie 12 B'),
         setNthFieldInputValue(14, '40100'),

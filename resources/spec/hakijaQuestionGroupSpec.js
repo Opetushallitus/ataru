@@ -24,6 +24,7 @@
         setNthFieldInputValue(2, 'Sukunimi'),
         setNthFieldInputValue(4, '020202A0202'),
         setNthFieldInputValue(5, 'test@example.com'),
+        setFieldInputValue("#verify-email", 'test@example.com'),
         setNthFieldInputValue(6, '050123'),
         setNthFieldInputValue(8, 'Katutie 12 B'),
         setNthFieldInputValue(9, '40100'),
