@@ -133,7 +133,7 @@
                     (#(doseq [[path val] removed]
                         (.removed % path (str val))))
                     (#(doseq [[path [n o]] updated]
-                        (.updated % (str path) (str n) (str o)))))]
+                        (.updated % (str path) (str o) (str n)))))]
     (.log logger user operation
           (let [tb (Target$Builder.)]
             (doseq [[field value] id
