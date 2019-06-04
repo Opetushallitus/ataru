@@ -24,10 +24,13 @@
       describe('structure', function() {
         it('has the correct fields', function() {
           var labels = _.map(personInfoModule().find('label'), function(e) { return $(e).text() })
-          var expectedLabels = ["Etunimet *.","Kutsumanimi *.","Sukunimi *.","Kansalaisuus *.","Henkilötunnus *.","Sähköpostiosoite *.","Matkapuhelin *.","Asuinmaa *.","Katuosoite *.","Postinumero *.","Postitoimipaikka *.","Kotikunta *.","Äidinkieli *."]
+          var expectedLabels = ["Etunimet *.", "Kutsumanimi *.","Sukunimi *.","Kansalaisuus *.","Henkilötunnus *.",
+              "Sähköpostiosoite *.", "Varmista sähköpostiosoite *.", "Matkapuhelin *.","Asuinmaa *.","Katuosoite *.",
+              "Postinumero *.", "Postitoimipaikka *.","Kotikunta *.","Äidinkieli *."]
 
           expect(personInfoModule().find('.application__wrapper-heading h2').text()).to.equal('Henkilötiedot')
-          expect(labels).to.eql(expectedLabels)
+
+          expectedLabels.every(function(e,i) {expect(e).to.equal(labels[i])})
         })
       })
 
