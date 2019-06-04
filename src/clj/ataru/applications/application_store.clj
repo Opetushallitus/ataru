@@ -697,12 +697,18 @@ WHERE la.key IS NULL\n"
 
 (defn save-application-review [review session]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [connection       {:connection conn}
-          app-key          (:application-key review)
-          old-review       (first (yesql-get-application-review {:application_key app-key} connection))
-          review-to-store  (transform-keys ->snake_case review)]
-      (auditlog-review-modify review-to-store old-review session)
-      (yesql-save-application-review! review-to-store connection)
+    (let [connection      {:connection conn}
+          app-key         (:application-key review)
+          old-review      (when-let [data (first (yesql-get-application-review {:application_key app-key} connection))]
+                            {:application_key (:application_key data)
+                             :state           (:state data)
+                             :score           (some-> (:score data) (.doubleValue))})
+          review-to-store {:application_key (:application-key review)
+                           :state           (:state review)
+                           :score           (:score review)}]
+      (when (not= old-review review-to-store)
+        (yesql-save-application-review! review-to-store connection)
+        (auditlog-review-modify review-to-store old-review session))
       (when (not= (:state old-review) (:state review-to-store))
         (let [event {:application_key  app-key
                      :event_type       "review-state-change"
