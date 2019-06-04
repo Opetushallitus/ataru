@@ -27,10 +27,10 @@
   (reify java.util.function.Function
     (apply [_ x] (f x))))
 
-(defn- ->bi-comsumer
+(defn- ->bi-function
   [f]
-  (reify java.util.function.BiConsumer
-    (accept [_ x y] (f x y))))
+  (reify java.util.function.BiFunction
+    (apply [_ x y] (f x y))))
 
 (defn- supplyAsync
   [executor f]
@@ -40,9 +40,9 @@
   [executor completion-stage f]
   (.thenComposeAsync completion-stage (->function f) executor))
 
-(defn- whenComplete
-  [completion-stage f]
-  (.whenComplete completion-stage (->bi-comsumer f)))
+(defn- handleAsync
+  [executor completion-stage f]
+  (.handleAsync completion-stage (->bi-function f) executor))
 
 (defn- ->cache-key
   [name key]
@@ -140,56 +140,58 @@
                              " in " timeout-ms "ms")))
             :else
             (let [key-batch (take load-size to-load)
-                  loaded    (try
-                              (let [result  (redis-mget-n-lock redis loader name key-batch lock-id timeout-ms)
-                                    fresh?  #(<= min-ttl (get-in result [:ttls %]))
-                                    locked? #(get-in result [:locked? %])]
-                                (merge (->> (:hits result)
-                                            (filter (comp fresh? first))
-                                            (into {}))
-                                       (when-let [ks (->> (:hits result)
-                                                          (map first)
-                                                          (remove fresh?)
-                                                          (concat (:misses result))
-                                                          (filter locked?)
-                                                          seq)]
-                                         (redis-mset redis name px (cache/load-many loader ks)))))
+                  [to-load
+                   values]  (try
+                              (let [result         (redis-mget-n-lock redis loader name key-batch lock-id timeout-ms)
+                                    fresh?         #(<= min-ttl (get-in result [:ttls %]))
+                                    locked?        #(get-in result [:locked? %])
+                                    fresh-hits     (filter (comp fresh? first) (:hits result))
+                                    loader-to-load (->> (:hits result)
+                                                        (map first)
+                                                        (remove fresh?)
+                                                        (concat (:misses result))
+                                                        (filter locked?))]
+                                [(clojure.set/difference to-load
+                                                         (set (map first fresh-hits))
+                                                         (set loader-to-load))
+                                 (merge (into values fresh-hits)
+                                        (when (not-empty loader-to-load)
+                                          (redis-mset redis name px (cache/load-many loader loader-to-load))))])
                               (finally
                                 (wcar (:connection-opts redis)
                                       (doseq [key key-batch]
                                         (release-lock (->lock-key name key) lock-id)))))]
-              (let [to-load (clojure.set/difference to-load (set (keys loaded)))]
-                (when (not-empty to-load)
-                  (Thread/sleep (inc (rand-int 10))))
-                (recur to-load (merge values loaded))))))))
+              (when (not-empty to-load)
+                (Thread/sleep (inc (rand-int 10))))
+              (recur to-load values))))))
 
 (defn- batch-load-key
   [batch-queue io-executor redis loader name key px min-ttl timeout-ms]
   (if (nil? batch-queue)
     (supplyAsync io-executor (fn [] (get (load-keys redis loader name [key] px min-ttl timeout-ms) key)))
-    (let [output-queue (new ArrayBlockingQueue 1)]
-      (if (.offer batch-queue [key output-queue])
-        (supplyAsync io-executor
-                     (fn []
-                       (let [to-load (loop [acc {}]
-                                       (if (= (count acc) (cache/load-many-size loader))
-                                         acc
-                                         (if-let [[key queue] (.poll batch-queue)]
-                                           (recur (assoc acc key queue))
-                                           acc)))]
-                         (doseq [[key value] (load-keys redis loader name (keys to-load) px min-ttl timeout-ms)]
-                           (when-not (.offer (get to-load key) value)
-                             (throw (new RuntimeException (str "Offer of key " key " of cache " name " failed"))))))
-                       (if-let [value (.poll output-queue timeout-ms TimeUnit/MILLISECONDS)]
-                         value
-                         (throw (new RuntimeException
-                                     (str "Poll for key " key
-                                          " of cache " name
-                                          " took more than " timeout-ms "ms"))))))
-        (throw (new RuntimeException
-                    (str "Offer of key " key
-                         " of cache " name
-                         " to batch queue failed")))))))
+    (let [p (new CompletableFuture)]
+      (if (.offer batch-queue [key p])
+        (.execute
+         io-executor
+         (fn []
+           (try
+             (let [to-load (->> (repeatedly (cache/load-many-size loader)
+                                            (fn [] (.poll batch-queue)))
+                                (filter some?))]
+               (try
+                 (let [values (load-keys redis loader name (map first to-load) px min-ttl timeout-ms)]
+                   (doseq [[key pp] to-load]
+                     (.complete pp (get values key))))
+                 (catch Exception e
+                   (doseq [[_ pp] to-load]
+                     (.completeExceptionally pp e)))))
+             (catch Exception e
+               (log/error e "Failed to batch load key" key "of cache" name)))))
+        (.completeExceptionally p (new RuntimeException
+                                       (str "Offer of key " key
+                                            " of cache " name
+                                            " to batch queue failed"))))
+      p)))
 
 (defn- ->redis-loader
   [batch-queue redis-executor io-executor redis loader name expires-after refresh-after load-timeout]
@@ -203,11 +205,7 @@
          (supplyAsync redis-executor (fn [] (redis-get redis loader name key)))
          (fn [[value ttl]]
            (when (and (some? value) (< ttl min-ttl))
-             (whenComplete
-              (batch-load-key batch-queue io-executor redis loader name key px min-ttl load-timeout-ms)
-              (fn [_ t]
-                (when (some? t)
-                  (log/error t "Failed to refresh key" key "of cache" name)))))
+             (.asyncReload this key value executor))
            (if (some? value)
              (CompletableFuture/completedFuture value)
              (batch-load-key batch-queue io-executor redis loader name key px min-ttl load-timeout-ms)))))
@@ -217,12 +215,9 @@
          executor
          (supplyAsync redis-executor (fn [] (redis-mget-n-lock redis loader name keys nil nil)))
          (fn [from-redis]
-           (when-let [keys (seq (keep (fn [[key ttl]] (when (< ttl min-ttl) key)) (:ttls from-redis)))]
-             (whenComplete
-              (supplyAsync io-executor (fn [] (load-keys redis loader name keys px min-ttl load-timeout-ms)))
-              (fn [_ t]
-                (when (some? t)
-                  (log/error t "Failed to refresh" (count keys) "keys of cache" name)))))
+           (doseq [[key value] (:hits from-redis)
+                   :when       (< (get-in from-redis [:ttls key]) min-ttl)]
+             (.asyncReload this key value executor))
            (if (empty? (:misses from-redis))
              (CompletableFuture/completedFuture (:hits from-redis))
              (thenComposeAsync
@@ -233,17 +228,14 @@
                  (merge (:hits from-redis) result))))))))
 
       (asyncReload [this key old-value executor]
-        (try
-          (thenComposeAsync
-           executor
-           (supplyAsync redis-executor (fn [] (redis-get redis loader name key)))
-           (fn [[value ttl]]
-             (if (or (nil? value) (< ttl min-ttl))
-               (batch-load-key batch-queue io-executor redis loader name key px min-ttl load-timeout-ms)
-               (CompletableFuture/completedFuture value))))
-          (catch Exception e
-            (log/error e "Failed to refresh key" key "of cache" name)
-            (CompletableFuture/completedFuture old-value)))))))
+        (handleAsync
+         executor
+         (batch-load-key batch-queue io-executor redis loader name key px min-ttl load-timeout-ms)
+         (fn [value e]
+           (if (some? value)
+             value
+             (do (log/error e "Failed to refresh key" key "of cache" name)
+                 old-value))))))))
 
 (defrecord Cache [redis
                   name
