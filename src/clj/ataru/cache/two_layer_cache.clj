@@ -169,26 +169,29 @@
   [batch-queue io-executor redis loader name key px min-ttl timeout-ms]
   (if (nil? batch-queue)
     (supplyAsync io-executor (fn [] (get (load-keys redis loader name [key] px min-ttl timeout-ms) key)))
-    (let [output-queue (new ArrayBlockingQueue 1)]
-      (if (.offer batch-queue [key output-queue])
-        (supplyAsync io-executor
-                     (fn []
-                       (let [to-load (->> (repeatedly (cache/load-many-size loader) (fn [] (.poll batch-queue)))
-                                          (filter some?))
-                             values  (load-keys redis loader name (map first to-load) px min-ttl timeout-ms)]
-                         (doseq [[key queue] to-load]
-                           (when-not (.offer queue [(get values key)])
-                             (throw (new RuntimeException (str "Offer of key " key " of cache " name " failed"))))))
-                       (if-let [[value] (.poll output-queue timeout-ms TimeUnit/MILLISECONDS)]
-                         value
-                         (throw (new RuntimeException
-                                     (str "Poll for key " key
-                                          " of cache " name
-                                          " took more than " timeout-ms "ms"))))))
+    (let [p (new CompletableFuture)]
+      (when-not (.offer batch-queue [key p])
         (throw (new RuntimeException
                     (str "Offer of key " key
                          " of cache " name
-                         " to batch queue failed")))))))
+                         " to batch queue failed"))))
+      (.execute
+       io-executor
+       (fn []
+         (try
+           (let [to-load (->> (repeatedly (cache/load-many-size loader)
+                                          (fn [] (.poll batch-queue)))
+                              (filter some?))]
+             (try
+               (let [values (load-keys redis loader name (map first to-load) px min-ttl timeout-ms)]
+                 (doseq [[key pp] to-load]
+                   (.complete pp (get values key))))
+               (catch Exception e
+                 (doseq [[_ pp] to-load]
+                   (.completeExceptionally pp e)))))
+           (catch Exception e
+             (log/error e "Failed to batch load key" key "of cache" name)))))
+      p)))
 
 (defn- ->redis-loader
   [batch-queue redis-executor io-executor redis loader name expires-after refresh-after load-timeout]
