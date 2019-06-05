@@ -8,6 +8,7 @@
             [taoensso.timbre :as timbre]
             [environ.core :refer [env]]
             [clojure.data :refer [diff]]
+            [taoensso.timbre.appenders.core :refer [println-appender]]
             [taoensso.timbre.appenders.3rd-party.rolling :refer [rolling-appender]])
   (:import [fi.vm.sade.auditlog
             Operation
@@ -19,13 +20,8 @@
             Audit
             ApplicationType
             User]
-           [org.joda.time DateTime]
-           [com.fasterxml.jackson.databind ObjectMapper]
-           [com.github.fge.jsonpatch.diff JsonDiff]
-           (org.slf4j LoggerFactory)
-           (java.util Date)
-           (java.net InetAddress)
-           (org.ietf.jgss Oid)))
+           java.net.InetAddress
+           org.ietf.jgss.Oid))
 
 (defn- create-operation [op]
   (proxy [Operation] [] (name [] op)))
@@ -42,15 +38,23 @@
                            :virkailija "ataru-editori"
                            :hakija     "ataru-hakija"
                            nil)
+        base-path        (case (app-utils/get-app-id)
+                           :virkailija (-> config :log :virkailija-base-path)
+                           :hakija     (-> config :log :hakija-base-path))
         audit-log-config (assoc timbre/example-config
-                                :appenders {:file-appender
-                                            (assoc (rolling-appender {:path    (str (-> config :log :virkailija-base-path)
-                                                                                    "/auditlog_" service-name
+                                :appenders {:file-appender   (assoc (rolling-appender
+                                                                     {:path    (str base-path
+                                                                                    "/audit_" service-name
                                                                                     ;; Hostname will differentiate files in actual environments
-                                                                                    (when (:hostname env) (str "_" (:hostname env)))
-                                                                                    ".log")
+                                                                                    (when (:hostname env) (str "_" (:hostname env))))
                                                                       :pattern :daily})
-                                                   :output-fn (fn [{:keys [msg_]}] (force msg_)))})
+                                                                    :output-fn (fn [data] (force (:msg_ data))))
+                                            :stdout-appender (assoc (println-appender
+                                                                     {:stream :std-out})
+                                                                    :output-fn (fn [data]
+                                                                                 (json/generate-string
+                                                                                  {:eventType "audit"
+                                                                                   :event     (json/parse-string (force (:msg_ data)))})))})
         logger           (proxy [Logger] [] (log [str]
                                               (timbre/log* audit-log-config :info str)))
         application-type (case (app-utils/get-app-id)
