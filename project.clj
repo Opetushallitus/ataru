@@ -68,7 +68,6 @@
                  [ring.middleware.logger "0.5.0" :exclusions [onelog]] ; Remove :exclusions and onelog dependency below when updating if included onelog works with clojure 1.9.0
                  [onelog "0.5.0"]
                  [ring/ring-session-timeout "0.2.0"]
-                 [org.clojure/tools.logging "0.4.0"]
                  [org.apache.poi/poi-ooxml "3.17"]
                  [org.clojure/core.cache "0.7.1"]
                  [nrepl "0.4.5"]

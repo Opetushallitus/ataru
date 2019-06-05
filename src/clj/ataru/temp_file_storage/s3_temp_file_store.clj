@@ -1,7 +1,7 @@
 (ns ataru.temp-file-storage.s3-temp-file-store
   (:require [ataru.config.core :refer [config]]
-            [clojure.tools.logging :as log]
-            [ataru.temp-file-storage.temp-file-store :refer [TempFileStorage]])
+            [ataru.temp-file-storage.temp-file-store :refer [TempFileStorage]]
+            [taoensso.timbre :as log])
   (:import (java.io File FileOutputStream)
            (org.apache.commons.io IOUtils)))
 

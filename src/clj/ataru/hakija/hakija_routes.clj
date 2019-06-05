@@ -33,7 +33,7 @@
             [ataru.flowdock.flowdock-client :as flowdock-client]
             [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret alter-application-to-hakuaikaloppu-for-secret]]
             [ataru.hakija.resumable-file-transfer :as resumable-file]
-            [clojure.tools.logging :as log])
+            [taoensso.timbre :as log])
   (:import [ring.swagger.upload Upload]
            [java.io InputStream]))
 
