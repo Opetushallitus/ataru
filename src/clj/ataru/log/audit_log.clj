@@ -20,6 +20,7 @@
             Audit
             ApplicationType
             User]
+           java.util.TimeZone
            java.net.InetAddress
            org.ietf.jgss.Oid))
 
@@ -54,7 +55,10 @@
                                                                     :output-fn (fn [data]
                                                                                  (json/generate-string
                                                                                   {:eventType "audit"
-                                                                                   :event     (json/parse-string (force (:msg_ data)))})))})
+                                                                                   :timestamp (force (:timestamp_ data))
+                                                                                   :event     (json/parse-string (force (:msg_ data)))})))}
+                                :timestamp-opts {:pattern  "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+                                                 :timezone (TimeZone/getTimeZone "Europe/Helsinki")})
         logger           (proxy [Logger] [] (log [str]
                                               (timbre/log* audit-log-config :info str)))
         application-type (case (app-utils/get-app-id)

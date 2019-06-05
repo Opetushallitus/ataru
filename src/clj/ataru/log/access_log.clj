@@ -7,7 +7,8 @@
             [environ.core :refer [env]]
             [taoensso.timbre :as timbre]
             [taoensso.timbre.appenders.core :refer [println-appender]]
-            [taoensso.timbre.appenders.3rd-party.rolling :refer [rolling-appender]]))
+            [taoensso.timbre.appenders.3rd-party.rolling :refer [rolling-appender]])
+  (:import java.util.TimeZone))
 
 (defonce service-name
   (case (app-utils/get-app-id)
@@ -30,7 +31,10 @@
                                              :output-fn (fn [data]
                                                           (json/generate-string
                                                            {:eventType "access"
-                                                            :event     (json/parse-string (force (:msg_ data)))})))}))
+                                                            :timestamp (force (:timestamp_ data))
+                                                            :event     (dissoc (json/parse-string (force (:msg_ data))) :timestamp)})))}
+         :timestamp-opts {:pattern  "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+                          :timezone (TimeZone/getTimeZone "Europe/Helsinki")}))
 
 (defn info [str]
   (timbre/log* access-log-config :info str))
