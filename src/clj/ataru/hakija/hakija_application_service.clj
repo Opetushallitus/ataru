@@ -16,6 +16,7 @@
     [ataru.person-service.person-integration :as person-integration]
     [ataru.tarjonta-service.hakuaika :as hakuaika]
     [ataru.tarjonta-service.hakukohde :as hakukohde]
+    [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
     [ataru.forms.form-store :as form-store]
     [ataru.hakija.validator :as validator]
     [ataru.application.review-states :refer [complete-states]]
@@ -282,6 +283,9 @@
                                                          application-id)
   (start-person-creation-job job-runner application-id)
   (start-attachment-finalizer-job job-runner application-id)
+  (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-submit-job
+   job-runner
+   application-id)
   (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
    job-runner
    application-id))
@@ -300,6 +304,9 @@
   (application-email/start-email-edit-confirmation-job koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                                                        job-runner
                                                        application-id)
+  (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-edit-job
+   job-runner
+   application-id)
   (start-attachment-finalizer-job job-runner application-id)
   (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
    job-runner

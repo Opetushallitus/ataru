@@ -39,6 +39,10 @@ docker run -d --name ataru-dev-db -p 5432:5432 -e POSTGRES_DB=ataru-dev -e POSTG
 
 `docker run --name ataru-dev-redis -p 6379:6379 -d redis`
 
+### Create a FTPS server for mocked ASHA integration
+
+`docker build -t ataru-test-ftpd -t ataru-dev-ftpd ./test-ftpd && docker run -d --name ataru-dev-ftpd -p 2221:21 -p 30000-30009:30000-30009 ataru-dev-ftpd`
+
 ### Run application:
 
 This will also allow you to connect to the nREPL servers of the jvm processes individually and change running code without restarting the JVM.
@@ -108,15 +112,21 @@ AWS_ACCESS_KEY_ID=abc AWS_SECRET_ACCESS_KEY=xyz CONFIG=config_file.edn ./bin/lei
 
 ### Backend & browser tests
 
-Tests require a special database and a special Redis. Here is an example of running those
-with Docker:
+Tests require a special database, a special Redis and a special FTPS server.
+Here is an example of running those with Docker:
 
 ```
 docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph ataru-test-db
 docker run --name ataru-test-redis -p 6380:6379 -d redis
+docker run -d --name ataru-test-ftpd -p 2221:21 -p 30000-30009:30000-30009 ataru-test-ftpd
 ```
 
-For Travis CI the ataru-test-db image has to be available as `190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-postgres`. To make that happen, first login by executing the output of:
+For Travis CI the ataru-test-db and ataru-test-ftpd images have to be
+available as
+`190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-postgres`
+and
+`190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-ftpd`.
+To make that happen, first login by executing the output of:
 
 ```
 aws ecr get-login --region eu-west-1 --profile oph-utility --no-include-email
@@ -127,6 +137,8 @@ You should then be able to push images to the repository:
 ```
 docker tag ataru-test-db 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-postgres
 docker push 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-postgres
+docker tag ataru-test-ftpd 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-ftpd
+docker push 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-ftpd
 ```
 
 To build and run all the tests in the system:

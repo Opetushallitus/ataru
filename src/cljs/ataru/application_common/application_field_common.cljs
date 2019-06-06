@@ -68,7 +68,7 @@
                             (aget 0)
                             .-scrollHeight)))
 
-(defn- markdown-paragraph
+(defn markdown-paragraph
   ([md-text]
    (markdown-paragraph md-text false nil))
   ([md-text collapse-enabled? person-oid]

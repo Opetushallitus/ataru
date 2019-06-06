@@ -87,7 +87,7 @@
 
                    :else (do
                            (error content)
-                           (throw "error" content)))]
+                           (throw (new js/Error (str "Unknown component type " content)))))]
         [:div
          [dnd/drag-n-drop-spacer path]
          component]))))
