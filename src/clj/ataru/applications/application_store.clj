@@ -749,14 +749,14 @@ WHERE la.key IS NULL\n"
                                        :hakukohde       hakukohde-oid}
           automatically-changed?      (->> (yesql-get-application-events {:application_key application-key} connection)
                                            (filter #(and (= hakukohde-oid (:hakukohde %))
-                                                         (= hakukohde-review-requirement (:requirement %))))
+                                                         (= hakukohde-review-requirement (:review_key %))))
                                            last
                                            :event_type
                                            (= "payment-obligation-automatically-changed"))
-          existing-duplicate-review   (yesql-get-existing-application-hakukohde-review review-to-store connection)
           existing-requirement-review (first (yesql-get-existing-requirement-review review-to-store connection))]
-      (when (and (empty? existing-duplicate-review)
-                 (or (not existing-requirement-review)
+      (when (and (not= (:state review-to-store) (:state existing-requirement-review))
+                 (or (nil? (:state existing-requirement-review))
+                     (= "unreviewed" (:state existing-requirement-review))
                      automatically-changed?))
         (yesql-upsert-application-hakukohde-review! review-to-store connection)
         (let [event {:application_key  application-key
