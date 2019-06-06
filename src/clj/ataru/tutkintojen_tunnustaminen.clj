@@ -30,6 +30,11 @@
 
 (defn- ->case
   [application]
+  (when (or (not (string? (:country application)))
+            (clojure.string/blank? (:country application)))
+    (throw (new RuntimeException
+                (str "Application " (:id application)
+                     " has invalid country: " (:country application)))))
   (let [application-key (:key application)
         name            (:name application)
         country         (:country application)
@@ -98,11 +103,6 @@
     (when (nil? application)
       (throw (new RuntimeException (str "Application " application-id
                                         " not found"))))
-    (when (or (not (string? (:country application)))
-              (clojure.string/blank? (:country application)))
-      (throw (new RuntimeException (str "Application " application-id
-                                        " has invalid country: " (:country application)
-                                        " as value for question " country-question-id))))
     application))
 
 (defn- get-application-by-event-id

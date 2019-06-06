@@ -116,12 +116,13 @@
 (def ^:dynamic *wrong-form-id*)
 (def ^:dynamic *application-id*)
 (def ^:dynamic *edited-application-id*)
+(def ^:dynamic *in-wrong-form-application-id*)
 (def ^:dynamic *event-id*)
 (def ^:dynamic *application-key*)
 (def ^:dynamic *application-submitted*)
 
 (describe "Tutkintojen tunnustaminen integration"
-  (tags :unit)
+  (tags :unit :foo)
 
   (around [it]
     (let [form-id       (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
@@ -207,15 +208,28 @@
                                                                              {:key       "last-name"
                                                                               :value     "Sukunimi"
                                                                               :fieldType "textField"}]})
+                                                           {:connection connection}))
+          in-wrong-form (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                          (yesql-add-application-version<! (assoc application
+                                                                  :content
+                                                                  {:answers [{:key       "first-name"
+                                                                              :value     "Etunimi Toinenetunimi"
+                                                                              :fieldType "textField"}
+                                                                             {:key       "last-name"
+                                                                              :value     "Sukunimi"
+                                                                              :fieldType "textField"}]}
+                                                                  :form_id
+                                                                  wrong-form-id)
                                                            {:connection connection}))]
-      (binding [*form-id*               form-id
-                *wrong-form-id*         wrong-form-id
-                *application-id*        (:id application)
-                *event-id*              event-id
-                *edited-application-id* (:id edited)
-                *application-key*       (:key application)
-                *application-submitted* (f/unparse (f/formatter :date-time-no-ms (t/time-zone-for-id "Europe/Helsinki"))
-                                                   (:submitted application))]
+      (binding [*form-id*                      form-id
+                *wrong-form-id*                wrong-form-id
+                *application-id*               (:id application)
+                *event-id*                     event-id
+                *edited-application-id*        (:id edited)
+                *in-wrong-form-application-id* (:id in-wrong-form)
+                *application-key*              (:key application)
+                *application-submitted*        (f/unparse (f/formatter :date-time-no-ms (t/time-zone-for-id "Europe/Helsinki"))
+                                                          (:submitted application))]
         (try
           (with-redefs [file-store/get-metadata get-metadata
                         file-store/get-file     get-attachment]
@@ -231,9 +245,10 @@
                               event-id])
               (jdbc/execute! connection
                              ["DELETE FROM applications
-                               WHERE id IN (?, ?)"
+                               WHERE id IN (?, ?, ?)"
                               (:id application)
-                              (:id edited)])
+                              (:id edited)
+                              (:id in-wrong-form)])
               (jdbc/execute! connection
                              ["DELETE FROM forms
                                WHERE id IN (?, ?)"
@@ -322,16 +337,9 @@
         (should-be empty? attachments))))
 
   (it "should not do anything if hakemus in wrong form"
-    (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-      (jdbc/execute! connection
-                     ["UPDATE applications
-                       SET form_id = ?
-                       WHERE id = ?"
-                      *wrong-form-id*
-                      *application-id*]))
     (should= {:transition {:id :final}}
              (tutkintojen-tunnustaminen-submit-job-step
-              {:application-id *application-id*}
+              {:application-id *in-wrong-form-application-id*}
               {}))
     (should= nil
-             (get-file (str *application-key* "_" *application-id* ".xml")))))
+             (get-file (str *application-key* "_" *in-wrong-form-application-id* ".xml")))))
