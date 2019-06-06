@@ -195,8 +195,39 @@
               :id :language
               :koodisto-source {:uri "kieli" :version 1 :default-option "suomi"}})))
 
+(defn onr-person-info-module [metadata]
+  [(first-name-section metadata)
+   (last-name-component metadata)
+   (nationality-component metadata)
+   (have-finnish-ssn-component metadata)
+   (ssn-birthdate-gender-wrapper metadata)
+   (birthplace metadata)
+   (passport-number metadata)
+   (national-id-number metadata)
+   (email-component metadata)
+   (phone-component metadata)
+   (country-of-residence-component metadata)
+   (street-address-component metadata)
+   (postal-office-section metadata)
+   (home-town-component metadata)
+   (city-component metadata)
+   (native-language-section metadata)])
+
+(defn tutu-person-info-module [metadata]
+  [(first-name-section metadata)
+   (last-name-component metadata)
+   (email-component metadata)
+   (phone-component metadata)
+   (country-of-residence-component metadata)
+   (street-address-component metadata)
+   (postal-office-section metadata)
+   (home-town-component metadata)
+   (city-component metadata)])
+
 (defn person-info-module
-  []
+  ([]
+   (person-info-module :onr))
+  ([version]
   (let [metadata {:created-by  {:name "system"
                                 :oid  "system"
                                 :date "1970-01-01T00:00:00Z"}
@@ -206,23 +237,11 @@
     (merge (component/form-section metadata)
            {:label           (:label person-info-module-texts)
             :label-amendment (:label-amendment person-info-module-texts)
-            :children        [(first-name-section metadata)
-                              (last-name-component metadata)
-                              (nationality-component metadata)
-                              (have-finnish-ssn-component metadata)
-                              (ssn-birthdate-gender-wrapper metadata)
-                              (birthplace metadata)
-                              (passport-number metadata)
-                              (national-id-number metadata)
-                              (email-component metadata)
-                              (phone-component metadata)
-                              (country-of-residence-component metadata)
-                              (street-address-component metadata)
-                              (postal-office-section metadata)
-                              (home-town-component metadata)
-                              (city-component metadata)
-                              (native-language-section metadata)]
-            :module          :person-info})))
+            :id              (name version)
+            :children        (if (= version :tutu)
+                               (tutu-person-info-module metadata)
+                               (onr-person-info-module metadata))
+            :module          :person-info}))))
 
 
 (def person-info-questions
