@@ -4,7 +4,7 @@
             [ataru.config.url-helper :refer [resolve-url]]
             [ataru.util.http-util :as http-util]
             [cheshire.core :as json]
-            [clojure.tools.logging :as log]))
+            [taoensso.timbre :as log]))
 
 (def oph-organization "1.2.246.562.10.00000000001")
 

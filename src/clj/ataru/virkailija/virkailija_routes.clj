@@ -25,6 +25,7 @@
             [ataru.middleware.cache-control :as cache-control]
             [ataru.middleware.session-store :refer [create-store]]
             [ataru.middleware.session-timeout :as session-timeout]
+            [ataru.middleware.session-client :as session-client]
             [ataru.middleware.user-feedback :as user-feedback]
             [ataru.person-service.person-integration :as person-integration]
             [ataru.schema.form-schema :as ataru-schema]
@@ -473,9 +474,9 @@
              session
              [(:application-key information-request)]
              [:edit-applications])
-          (-> (information-request/store (assoc information-request
+          (-> (information-request/store session
+                                         (assoc information-request
                                                 :message-type "information-request")
-                                         (get-in session [:identity :oid])
                                          job-runner)
               (assoc :first-name (get-in session [:identity :first-name])
                      :last-name (get-in session [:identity :last-name]))
@@ -1204,6 +1205,7 @@
                                                        (ex/with-logging ex/response-validation-handler :error)
                                                        ::ex/default
                                                        (ex/with-logging ex/safe-handler :error)}}}
+
                               redirect-routes
                               (when (:dev? env) rich-routes)
                               (when (:dev? env) local-raami-routes)
@@ -1215,7 +1217,8 @@
                                 (api/middleware [user-feedback/wrap-user-feedback
                                                  wrap-database-backed-session
                                                  auth-middleware/with-authentication]
-                                  (api/middleware [session-timeout/wrap-idle-session-timeout]
+                                  (api/middleware [session-client/wrap-session-client-headers
+                                                   session-timeout/wrap-idle-session-timeout]
                                     app-routes
                                     (api-routes this))
                                   (auth-routes (:kayttooikeus-service this)
@@ -1239,6 +1242,7 @@
                                                      (clojure.string/starts-with? uri "/lomake-editori/api/"))
                                                (access-log/log options request response totaltime))))
                             (wrap-gzip)
+
                             (cache-control/wrap-cache-control))))
 
   (stop [this]

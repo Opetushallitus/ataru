@@ -2,10 +2,10 @@
   (:require [ataru.config.core :refer [config config-name]]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as string]
-            [clojure.tools.logging :as log]
             [hikari-cp.core :refer :all]
             [ataru.db.extensions]
-            [pandect.algo.sha256 :refer :all])
+            [pandect.algo.sha256 :refer :all]
+            [taoensso.timbre :as log])
   (:import [java.security SecureRandom]))
 
 (defn- datasource-spec
@@ -46,7 +46,7 @@
       (try (jdbc/db-do-commands {:datasource (get-datasource ds-key)} true
              [(str "drop schema if exists " schema-name " cascade")
               (str "create schema " schema-name)])
-           (catch Exception e (log/error (get-next-exception-or-original e) (.toString e))))
+           (catch Exception e (log/error (get-next-exception-or-original e))))
       (throw (RuntimeException. (str "Clearing database is not allowed! "
                                      "check that you run with correct mode. "
                                      "Current config name is " (config-name)))))))

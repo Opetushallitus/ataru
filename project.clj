@@ -33,7 +33,7 @@
                  [com.stuartsierra/component "0.3.2"]
                  [metosin/compojure-api "1.1.11"]
                  [aleph "0.4.4"]
-                 [fi.vm.sade/auditlogger "5.0.0-SNAPSHOT"]
+                 [fi.vm.sade/auditlogger "8.3.0-SNAPSHOT"]
                  [fi.vm.sade.java-utils/java-properties "0.1.0-SNAPSHOT"]
                  [http-kit "2.2.0"]
                  [ring "1.6.3"]
@@ -68,7 +68,6 @@
                  [ring.middleware.logger "0.5.0" :exclusions [onelog]] ; Remove :exclusions and onelog dependency below when updating if included onelog works with clojure 1.9.0
                  [onelog "0.5.0"]
                  [ring/ring-session-timeout "0.2.0"]
-                 [org.clojure/tools.logging "0.4.0"]
                  [org.apache.poi/poi-ooxml "3.17"]
                  [org.clojure/core.cache "0.7.1"]
                  [nrepl "0.4.5"]

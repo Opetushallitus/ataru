@@ -7,7 +7,7 @@
             [pandect.algo.md5 :refer [md5]]
             [ataru.temp-file-storage.temp-file-store :as temp-file-store]
             [clojure.core.match :refer [match]]
-            [clojure.tools.logging :as log])
+            [taoensso.timbre :as log])
   (:import (java.text Normalizer Normalizer$Form)
            (java.io File FileInputStream)))
 

@@ -3,6 +3,7 @@
             [ataru.log.audit-log :as audit-log]
             [ataru.util :as util]
             [ataru.middleware.cache-control :as cache-control]
+            [ataru.middleware.session-client :as session-client]
             [ataru.applications.application-store :as application-store]
             [ataru.hakija.hakija-form-service :as form-service]
             [ataru.hakija.hakija-application-service :as hakija-application-service]
@@ -32,7 +33,7 @@
             [ataru.flowdock.flowdock-client :as flowdock-client]
             [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret alter-application-to-hakuaikaloppu-for-secret]]
             [ataru.hakija.resumable-file-transfer :as resumable-file]
-            [clojure.tools.logging :as log])
+            [taoensso.timbre :as log])
   (:import [ring.swagger.upload Upload]
            [java.io InputStream]))
 
@@ -42,7 +43,7 @@
   (true? deleted))
 
 (defn- get-application
-  [secret tarjonta-service form-by-haku-oid-and-id-cache koodisto-cache person-client]
+  [secret tarjonta-service form-by-haku-oid-and-id-cache koodisto-cache person-client session]
   (let [[application-form-and-person secret-expired? lang-override inactivated?]
         (hakija-application-service/get-latest-application-by-secret secret
                                                                      tarjonta-service
@@ -56,7 +57,8 @@
           (let [application (:application application-form-and-person)]
             (audit-log/log {:new       application
                             :operation audit-log/operation-read
-                            :id        (util/extract-email application)})
+                            :session   session
+                            :id        {:applicationOid (:key application)}})
             (response/ok application-form-and-person))
 
           secret-expired?
@@ -176,7 +178,7 @@
           (flowdock-client/send-application-feedback saved-application)
           (response/ok {:id (:id saved-application)}))
         (response/bad-request)))
-    (api/POST "/application" []
+    (api/POST "/application" {session :session}
       :summary "Submit application"
       :body [application ataru-schema/Application]
       (match (hakija-application-service/handle-application-submit
@@ -186,13 +188,14 @@
               organization-service
               ohjausparametrit-service
               form-by-haku-oid-and-id-cache
-              application)
+              application
+              session)
              {:passed? false :failures failures :code code}
              (response/bad-request {:failures failures :code code})
 
              {:passed? true :id application-id}
              (response/ok {:id application-id})))
-    (api/PUT "/application" []
+    (api/PUT "/application" {session :session}
       :summary "Edit application"
       :body [application ataru-schema/Application]
       (match (hakija-application-service/handle-application-edit
@@ -202,13 +205,14 @@
               organization-service
               ohjausparametrit-service
               form-by-haku-oid-and-id-cache
-              application)
+              application
+              session)
              {:passed? false :failures failures :code code}
              (response/bad-request {:failures failures :code code})
 
              {:passed? true :id application-id}
              (response/ok {:id application-id})))
-    (api/GET "/application" []
+    (api/GET "/application" {session :session}
       :summary "Get submitted application by secret"
       :query-params [{secret :- s/Str nil}
                      {virkailija-secret :- s/Str nil}]
@@ -218,14 +222,16 @@
                              tarjonta-service
                              form-by-haku-oid-and-id-cache
                              koodisto-cache
-                             person-service)
+                             person-service
+                             session)
 
             (not-blank? virkailija-secret)
             (get-application {:virkailija virkailija-secret}
                              tarjonta-service
                              form-by-haku-oid-and-id-cache
                              koodisto-cache
-                             person-service)
+                             person-service
+                             session)
 
             :else
             (response/bad-request {:code :secret-expired
@@ -370,6 +376,7 @@
                               (when (is-dev-env?) james-routes)
                               (api/routes
                                (api/context "/hakemus" []
+                                 (api/middleware [session-client/wrap-session-client-headers]
                                   test-routes
                                   (api-routes this)
                                   (route/resources "/")
@@ -386,7 +393,7 @@
                                     (api/GET "/" []
                                       :query-params [{lang :- s/Str nil}]
                                       (render-application lang))))
-                               (route/not-found "<h1>Page not found</h1>")))
+                               (route/not-found "<h1>Page not found</h1>"))))
                             (wrap-with-logger
                               :debug identity
                               :info (fn [x] (access-log/info x))

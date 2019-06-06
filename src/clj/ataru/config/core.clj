@@ -1,7 +1,7 @@
 (ns ataru.config.core
   (:require [clojure.edn]
             [environ.core :refer [env]]
-            [clojure.tools.logging :as log]))
+            [taoensso.timbre :as log]))
 
 (defn config-name [] (env :config))
 

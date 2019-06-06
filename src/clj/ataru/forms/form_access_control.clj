@@ -100,7 +100,8 @@
        (form-store/create-form-or-increment-version!
         (assoc
          form-with-org
-         :created-by (-> session :identity :username)))))))
+         :created-by (-> session :identity :username))
+         session)))))
 
 (defn edit-form-with-operations
   [id operations session virkailija-tarjonta-service organization-service]
@@ -116,7 +117,8 @@
     (check-edit-authorization form session virkailija-tarjonta-service organization-service
       (fn []
         (form-store/create-form-or-increment-version!
-         (assoc form :deleted true))))))
+         (assoc form :deleted true)
+          session)))))
 
 (defn- get-forms-as-ordinary-user [session virkailija-tarjonta-service organization-oids]
   (let [forms-with-organization-oids                              (form-store/get-forms organization-oids)

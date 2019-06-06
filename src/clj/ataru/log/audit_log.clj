@@ -1,37 +1,73 @@
 (ns ataru.log.audit-log
   (:require [ataru.util.app-utils :as app-utils]
+            [ataru.config.core :refer [config]]
             [clj-time.core :as c]
             [clj-time.format :as f]
             [clojure.core.match :as m]
             [cheshire.core :as json]
-            [taoensso.timbre :as log])
-  (:import [fi.vm.sade.auditlog Audit ApplicationType CommonLogMessageFields AbstractLogMessage]
-           [org.joda.time DateTime]
-           [com.fasterxml.jackson.databind ObjectMapper]
-           [com.github.fge.jsonpatch.diff JsonDiff]))
+            [taoensso.timbre :as timbre]
+            [environ.core :refer [env]]
+            [clojure.data :refer [diff]]
+            [taoensso.timbre.appenders.core :refer [println-appender]]
+            [taoensso.timbre.appenders.3rd-party.rolling :refer [rolling-appender]])
+  (:import [fi.vm.sade.auditlog
+            Operation
+            Changes$Builder
+            Target$Builder
+            Target
+            Changes
+            Logger
+            Audit
+            ApplicationType
+            User]
+           java.util.TimeZone
+           java.net.InetAddress
+           org.ietf.jgss.Oid))
 
-(def operation-failed "epäonnistunut")
-(def operation-read "luku")
-(def operation-new "lisäys")
-(def operation-modify "muutos")
-(def operation-delete "poisto")
-(def operation-login "kirjautuminen")
+(defn- create-operation [op]
+  (proxy [Operation] [] (name [] op)))
 
-(def ^:private object-mapper (ObjectMapper.))
+(def operation-failed (create-operation "epäonnistunut"))
+(def operation-read (create-operation "luku"))
+(def operation-new (create-operation "lisäys"))
+(def operation-modify (create-operation "muutos"))
+(def operation-delete (create-operation "poisto"))
+(def operation-login (create-operation "kirjautuminen"))
 
-(defn- service-name []
-  (case (app-utils/get-app-id)
-    :virkailija "ataru-virkailija"
-    :hakija "ataru-hakija"
-    "ataru"))
+(defn- create-audit-logger []
+  (let [service-name     (case (app-utils/get-app-id)
+                           :virkailija "ataru-editori"
+                           :hakija     "ataru-hakija"
+                           nil)
+        base-path        (case (app-utils/get-app-id)
+                           :virkailija (-> config :log :virkailija-base-path)
+                           :hakija     (-> config :log :hakija-base-path))
+        audit-log-config (assoc timbre/example-config
+                                :appenders {:file-appender   (assoc (rolling-appender
+                                                                     {:path    (str base-path
+                                                                                    "/audit_" service-name
+                                                                                    ;; Hostname will differentiate files in actual environments
+                                                                                    (when (:hostname env) (str "_" (:hostname env))))
+                                                                      :pattern :daily})
+                                                                    :output-fn (fn [data] (force (:msg_ data))))
+                                            :stdout-appender (assoc (println-appender
+                                                                     {:stream :std-out})
+                                                                    :output-fn (fn [data]
+                                                                                 (json/generate-string
+                                                                                  {:eventType "audit"
+                                                                                   :timestamp (force (:timestamp_ data))
+                                                                                   :event     (json/parse-string (force (:msg_ data)))})))}
+                                :timestamp-opts {:pattern  "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+                                                 :timezone (TimeZone/getTimeZone "Europe/Helsinki")})
+        logger           (proxy [Logger] [] (log [str]
+                                              (timbre/log* audit-log-config :info str)))
+        application-type (case (app-utils/get-app-id)
+                           :virkailija ApplicationType/VIRKAILIJA
+                           :hakija     ApplicationType/OPPIJA
+                           ApplicationType/BACKEND)]
+    (new Audit logger service-name application-type)))
 
-(defn- application-type []
-  (case (app-utils/get-app-id)
-    :virkailija ApplicationType/VIRKAILIJA
-    :hakija ApplicationType/OPISKELIJA
-    ApplicationType/BACKEND))
-
-(def ^:private logger (Audit. (service-name) (application-type)))
+(def ^:private logger (create-audit-logger))
 
 (def ^:private date-time-formatter (f/formatter :date-time))
 
@@ -45,66 +81,81 @@
 
 (def ^:private not-blank? (comp not clojure.string/blank?))
 
-(defn- diff [old new]
-  (let [old-str (json/generate-string old)
-        new-str (json/generate-string new)
-        diff-node (JsonDiff/asJsonPatch (.readTree object-mapper old-str)
-                                        (.readTree object-mapper new-str))]
-    (.writeValueAsString object-mapper diff-node)))
+(defn- path-> [p k]
+  (str (when p (str p "."))
+    (if (keyword? k)
+      (name k)
+      k)))
 
-(defn- date->str [x]
-  (cond->> x
-    (instance? DateTime x)
-    (f/unparse date-time-formatter)))
+(defn unnest
+  ([m]
+   (unnest m nil))
+  ([mm prefix]
+   (reduce-kv (fn [m key val]
+                  (cond
+                    (nil? val)
+                    (assoc m (path-> prefix key) "")
 
-(defn- transform-values [t coll]
-  (clojure.walk/prewalk (fn [x]
-                          (cond->> x
-                            (map? x)
-                            (into {} (map (fn [[k v]] [k (t v)])))))
-                        coll))
+                    (map-or-vec? val)
+                    (merge m (unnest val (path-> prefix key)))
 
-(defn- get-message [new old]
-  (m/match [new old]
-           [(_ :guard map-or-vec?) (_ :guard map-or-vec?)]
-           (diff old new)
+                    :else
+                    (assoc m (path-> prefix key) val))) {} mm)))
 
-           [(_ :guard map-or-vec?) (_ :guard nil?)]
-           (json/generate-string (dissoc new :content :answers))
+(defn ->changes [new old]
+  (let [[new-diff old-diff _] (diff (unnest new) (unnest old))
+        added-kw   (clojure.set/difference (set (keys new-diff)) (set (keys old-diff)))
+        removed-kw (clojure.set/difference (set (keys old-diff)) (set (keys new-diff)))
+        updated-kw (clojure.set/intersection (set (keys old-diff)) (set (keys new-diff)))]
+    [(select-keys new-diff added-kw)
+     (select-keys old-diff removed-kw)
+     (into {} (for [kw updated-kw]
+                [kw [(get new-diff kw) (get old-diff kw)]]))]))
 
-           [(_ :guard string?) _]
-           new))
-
-(defn- do-log [{:keys [new old id operation organization-oid]}]
+(defn- do-log [{:keys [new old id operation session]}]
   {:pre [(or (and (or (string? new)
                       (map-or-vec? new))
                   (nil? old))
              (and (map-or-vec? old)
                   (map-or-vec? new)))
-         (not-blank? id)
          (some #{operation} [operation-failed
                              operation-new
                              operation-read
                              operation-modify
                              operation-delete
                              operation-login])]}
-  (let [message (get-message (transform-values date->str new)
-                             (transform-values date->str old))
-        log-map (cond-> {CommonLogMessageFields/ID        id
-                         CommonLogMessageFields/TIMESTAMP (timestamp)
-                         CommonLogMessageFields/OPERAATIO operation
-                         CommonLogMessageFields/MESSAGE   message}
-                  (not-blank? organization-oid)
-                  (assoc "organizationOid" organization-oid))]
-    (->> (proxy [AbstractLogMessage] [log-map])
-         (.log logger))))
+  (let [user      (User.
+                   (when-let [oid (-> session :identity :oid)]
+                     (Oid. oid))
+                   (if-let [ip (:client-ip session)]
+                     (InetAddress/getByName ip)
+                     (InetAddress/getLocalHost))
+                   (or (:key session) "no session")
+                   (or (:user-agent session) "no user agent"))
+        [added
+         removed
+         updated] (->changes new old)
+        changes   (doto (Changes$Builder.)
+                    (#(doseq [[path val] added]
+                        (.added % path (str val))))
+                    (#(doseq [[path val] removed]
+                        (.removed % path (str val))))
+                    (#(doseq [[path [n o]] updated]
+                        (.updated % (str path) (str o) (str n)))))]
+    (.log logger user operation
+          (let [tb (Target$Builder.)]
+            (doseq [[field value] id
+                    :when (some? value)]
+              (.setField tb (name field) value))
+            (.build tb))
+          (.build changes))))
 
 (defn log
   "Create an audit log entry. Provide map with :new and optional :old
    values to log.
 
    When both values are provided, both of them must be of same type and
-   either a vector or a map. An RFC6902 compliant patch is logged.
+   either a vector or a map.
 
    If only :new value is provided, it can also be a String."
   [params]

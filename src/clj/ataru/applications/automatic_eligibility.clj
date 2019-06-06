@@ -94,7 +94,10 @@
                               :requirement     "eligibility-state"
                               :state           old-state
                               :hakukohde       (:oid hakukohde)}
-                  :id        "automatic-eligibility-check"
+                  :id        {:applicationOid (:key application)
+                              :hakukohdeOid   (:oid hakukohde)
+                              :requirement    "eligibility-state"}
+                  :session   nil
                   :operation audit-log/operation-modify}))
 
 (defn- set-eligible
@@ -132,8 +135,8 @@
           (set-eligible connection application hakukohde)
           "unreviewed"
           (set-unreviewed connection application hakukohde))
-    (insert-application-event connection application hakukohde to)
-    (audit-log application hakukohde from to)))
+        (insert-application-event connection application hakukohde to)
+        (audit-log application hakukohde from to)))
 
 (defn automatic-eligibility-if-ylioppilas
   [application

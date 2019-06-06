@@ -23,7 +23,7 @@
 (def form1 {:id               1
             :key              "foobar1"
             :name             {:fi "Selaintestilomake1"}
-            :created-by       "DEVELOPER"
+            :created-by       "1.2.246.562.11.11111111111"
             :organization-oid "1.2.246.562.10.0439845"
             :content          [{:fieldClass "wrapperElement"
                                 :id         "G__31"
@@ -42,7 +42,7 @@
 (def form2 {:id               2
             :key              "foobar2"
             :name             {:fi "Selaintestilomake2"}
-            :created-by       "DEVELOPER"
+            :created-by       "1.2.246.562.11.11111111111"
             :organization-oid "1.2.246.562.10.0439845"
             :content          [{:fieldClass "wrapperElement"
                                 :metadata   metadata
@@ -61,7 +61,7 @@
 (def form3 {:id               3
             :key              "41101b4f-1762-49af-9db0-e3603adae3ad"
             :name             {:fi "Selaintestilomake3"}
-            :created-by       "DEVELOPER"
+            :created-by       "1.2.246.562.11.11111111111"
             :organization-oid "1.2.246.562.10.0439845"
             :languages        ["fi" "en"]
             :content          [(component/hakukohteet)
@@ -83,7 +83,7 @@
 (def ssn-testform {:id               4
                    :key              "41101b4f-1762-49af-9db0-e3603adae656"
                    :name             {:fi "SSN_testilomake"}
-                   :created-by       "DEVELOPER"
+                   :created-by       "1.2.246.562.11.11111111111"
                    :organization-oid "1.2.246.562.10.0439845"
                    :languages        ["fi"]
                    :content          [(component/hakukohteet)
@@ -94,7 +94,7 @@
 (def belongs-to-hakukohteet-test-form {:id               5
                                        :key              "belongs-to-hakukohteet-test-form"
                                        :name             {:fi "belongs-to-hakukohteet-test-form"}
-                                       :created-by       "DEVELOPER"
+                                       :created-by       "1.2.246.562.11.11111111111"
                                        :organization-oid "1.2.246.562.10.0439845"
                                        :languages        ["fi"]
                                        :content          [(component/hakukohteet)
@@ -111,7 +111,7 @@
 (def hakija-hakukohteen-hakuaika-test-form {:id               6
                                             :key              "hakija-hakukohteen-hakuaika-test-form"
                                             :name             {:fi "hakija-hakukohteen-hakuaika-test-form"}
-                                            :created-by       "DEVELOPER"
+                                            :created-by       "1.2.246.562.11.11111111111"
                                             :organization-oid "1.2.246.562.10.0439845"
                                             :languages        ["fi"]
                                             :content          [(component/hakukohteet)
@@ -150,7 +150,7 @@
 (def assosiaatio-hakukohteen-organisaatiosta-form {:id 7
                                                    :key "hakukohteen-organisaatiosta-form"
                                                    :name {:fi "hakukohteen-organisaatiosta"}
-                                                   :created-by "DEVELOPER"
+                                                   :created-by "1.2.246.562.11.11111111111"
                                                    :organization-oid "1.2.246.562.10.01010101"
                                                    :languages ["fi"]
                                                    :content
@@ -281,9 +281,9 @@
                                (:key belongs-to-hakukohteet-test-form))
   (form-store/create-new-form! hakija-hakukohteen-hakuaika-test-form
                                (:key hakija-hakukohteen-hakuaika-test-form))
-  (application-store/add-application application1 [] form1)
-  (application-store/add-application application2 [] form1)
-  (application-store/add-application application3 [] form1))
+  (application-store/add-application application1 [] form1 {})
+  (application-store/add-application application2 [] form1 {})
+  (application-store/add-application application3 [] form1 {}))
 
 (defn reset-test-db [insert-initial-fixtures?]
   (db/clear-db! :db (-> config :db :schema))

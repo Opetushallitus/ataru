@@ -1,8 +1,8 @@
 (ns ataru.db.flyway-migration
   (:gen-class)
   (:require [ataru.config.core :refer [config]]
-            [clojure.tools.logging :as log]
-            [ataru.db.db :as db])
+            [ataru.db.db :as db]
+            [taoensso.timbre :as log])
   (:import [org.flywaydb.core Flyway]
            [org.flywaydb.core.api.migration.jdbc JdbcMigration]
            [org.flywaydb.core.api.migration MigrationInfoProvider]

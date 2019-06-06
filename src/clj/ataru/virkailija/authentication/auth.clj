@@ -49,7 +49,8 @@
              kayttooikeus-service
              person-service
              organization-service
-             redirect-url]
+             redirect-url
+             session]
   (try
     (if-let [[username ticket] (login-provider)]
       (do
@@ -71,8 +72,9 @@
           (db/exec :db yesql-upsert-virkailija<! {:oid        (:oidHenkilo henkilo)
                                                   :first_name (:kutsumanimi henkilo)
                                                   :last_name  (:sukunimi henkilo)})
-          (audit-log/log {:new       ticket
-                          :id        username
+          (audit-log/log {:new       {:ticket ticket}
+                          :id        {:henkiloOid (:oidHenkilo henkilo)}
+                          :session   session
                           :operation audit-log/operation-login})
           (-> (resp/redirect redirect-url)
               (assoc :session {:identity {:username                 username
