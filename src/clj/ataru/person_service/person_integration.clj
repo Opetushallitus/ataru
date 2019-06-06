@@ -103,15 +103,26 @@
     (throw (new RuntimeException
                 (str "Could not find key oidHenkilo from message '" s "'")))))
 
+(defn- start-jobs-for-person [job-runner person-oid]
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+    (job/start-job job-runner
+      connection
+      "update-person-info-job"
+      {:person-oid person-oid})
+    (job/start-job job-runner
+      connection
+      "automatic-payment-obligation-job"
+      {:person-oid person-oid})))
+
 (defn- try-handle-message
-  [henkilo-cache person-service sns-message-manager drain-failed? message]
+  [job-runner sns-message-manager drain-failed? message]
   (try
     (some->> message
              .getBody
              (sns/handle-message sns-message-manager)
              .getMessage
              parse-henkilo-modified-message
-             (update-person-info henkilo-cache person-service))
+             (start-jobs-for-person job-runner))
     message
     (catch Exception e
       (if drain-failed?
@@ -121,8 +132,7 @@
 
 (defn- try-handle-messages
   [amazon-sqs
-   henkilo-cache
-   person-service
+   job-runner
    sns-message-manager
    drain-failed?
    queue-url
@@ -131,8 +141,7 @@
     (->> (repeatedly #(sqs/batch-receive amazon-sqs queue-url receive-wait))
          (take-while not-empty)
          (map (partial keep (partial try-handle-message
-                                     henkilo-cache
-                                     person-service
+                                     job-runner
                                      sns-message-manager
                                      drain-failed?)))
          (map (partial sqs/batch-delete amazon-sqs queue-url))
@@ -141,8 +150,7 @@
       (log/warn e "Handling henkilö modified messages failed"))))
 
 (defrecord UpdatePersonInfoWorker [amazon-sqs
-                                   henkilo-cache
-                                   person-service
+                                   job-runner
                                    sns-message-manager
                                    enabled?
                                    drain-failed?
@@ -159,8 +167,7 @@
          executor
          (partial try-handle-messages
                   amazon-sqs
-                  henkilo-cache
-                  person-service
+                  job-runner
                   sns-message-manager
                   drain-failed?
                   queue-url

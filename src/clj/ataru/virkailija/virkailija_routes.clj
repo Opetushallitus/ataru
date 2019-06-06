@@ -1,6 +1,7 @@
 (ns ataru.virkailija.virkailija-routes
   (:require [ataru.log.access-log :as access-log]
             [ataru.applications.automatic-eligibility :as automatic-eligibility]
+            [ataru.applications.automatic-payment-obligation :as automatic-payment-obligation]
             [ataru.application.review-states :as review-states]
             [ataru.applications.application-access-control :as access-controlled-application]
             [ataru.applications.application-service :as application-service]
@@ -297,6 +298,14 @@
           (do (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
                job-runner
                application-id)
+              (response/ok {}))
+          (response/unauthorized {})))
+      (api/POST "/start-automatic-payment-obligation-job/:person-oid" {session :session}
+        :path-params [person-oid :- s/Str]
+        (if (get-in session [:identity :superuser])
+          (do (automatic-payment-obligation/start-automatic-payment-obligation-job
+               job-runner
+               person-oid)
               (response/ok {}))
           (response/unauthorized {}))))
 
