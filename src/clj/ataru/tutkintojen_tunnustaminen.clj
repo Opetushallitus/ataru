@@ -3,7 +3,6 @@
             [ataru.config.core :refer [config]]
             [ataru.db.db :as db]
             [ataru.files.file-store :as file-store]
-            [ataru.person-service.person-service :as person-service]
             [clj-time.core :as t]
             [clj-time.format :as f]
             [clojure.data.xml :as xml]
@@ -30,9 +29,9 @@
                (xml/element :value {} value)))
 
 (defn- ->case
-  [application person]
+  [application]
   (let [application-key (:key application)
-        name            (str (:etunimet person) " " (:sukunimi person))
+        name            (:name application)
         country         (:country application)
         submitted       (f/unparse (f/formatter :date-time-no-ms (t/time-zone-for-id "Europe/Helsinki"))
                                    (:submitted application))]
@@ -69,25 +68,25 @@
                attachments))))
 
 (defn- ->application-submitted
-  [application person attachments]
+  [application attachments]
   (apply
    xml/element :message {}
-   (->case application person)
+   (->case application)
    (->action "Hakemuksen saapuminen" "01.01")
    (->documents application attachments)))
 
 (defn- ->application-edited
-  [application person attachments]
+  [application attachments]
   (apply
    xml/element :message {}
-   (->case application person)
+   (->case application)
    (->action "Täydennys" "01.02")
    (->documents application attachments)))
 
 (defn- ->application-inactivated
-  [application person]
+  [application]
   (xml/element :message {}
-               (->case application person)
+               (->case application)
                (->action "Hakemuksen peruutus" "03.01")))
 
 (defn- get-application
@@ -117,10 +116,6 @@
     {:review-key  (:review-key id-and-state)
      :state       (:state id-and-state)
      :application (get-application country-question-id (:id id-and-state))}))
-
-(defn- get-person
-  [person-service application]
-  (person-service/get-person person-service (:person-oid application)))
 
 (defn- attachment-as-bytes
   [key]
@@ -216,68 +211,56 @@
     cfg))
 
 (defn- application-job-step
-  [person-service application-id edit?]
+  [application-id edit?]
   (let [{:keys [form-key
                 country-question-id
                 attachment-total-size-limit
                 ftp]} (get-configuration)
         application   (get-application country-question-id application-id)]
-    (cond (and (some? (:person-oid application))
-               (= form-key (:form-key application)))
-          (let [person      (get-person person-service application)
-                attachments (get-attachments attachment-total-size-limit application)
-                message     (if edit?
-                              (->application-edited application person attachments)
-                              (->application-submitted application person attachments))]
-            (log/info "Sending application"
-                      (if edit? "edited" "submitted")
-                      "message to ASHA for application"
-                      application-id)
-            (transfer ftp
-                      (str (:key application) "_" application-id ".xml")
-                      message)
-            (log/info "Sent application"
-                      (if edit? "edited" "submitted")
-                      "message to ASHA for application"
-                      application-id)
-            {:transition {:id :final}})
-          (= form-key (:form-key application))
-          {:transition {:id :retry}}
-          :else
-          {:transition {:id :final}})))
+    (if (= form-key (:form-key application))
+      (let [attachments (get-attachments attachment-total-size-limit application)
+            message     (if edit?
+                          (->application-edited application attachments)
+                          (->application-submitted application attachments))]
+        (log/info "Sending application"
+                  (if edit? "edited" "submitted")
+                  "message to ASHA for application"
+                  application-id)
+        (transfer ftp
+                  (str (:key application) "_" application-id ".xml")
+                  message)
+        (log/info "Sent application"
+                  (if edit? "edited" "submitted")
+                  "message to ASHA for application"
+                  application-id)
+        {:transition {:id :final}})
+      {:transition {:id :final}})))
 
 (defn tutkintojen-tunnustaminen-submit-job-step
-  [{:keys [application-id]} {:keys [person-service]}]
-  (application-job-step person-service application-id false))
+  [{:keys [application-id]} _]
+  (application-job-step application-id false))
 
 (defn tutkintojen-tunnustaminen-edit-job-step
-  [{:keys [application-id]} {:keys [person-service]}]
-  (application-job-step person-service application-id true))
+  [{:keys [application-id]} _]
+  (application-job-step application-id true))
 
 (defn tutkintojen-tunnustaminen-review-state-changed-job-step
-  [{:keys [event-id]} {:keys [person-service]}]
+  [{:keys [event-id]} _]
   (let [{:keys [form-key
                 country-question-id
                 ftp]}         (get-configuration)
         application-and-state (get-application-by-event-id country-question-id event-id)
         application           (:application application-and-state)]
-    (cond (and (some? (:person-oid application))
-               (= form-key (:form-key application))
-               (nil? (:review-key application-and-state))
-               (= "inactivated" (:state application-and-state)))
-          (let [person  (get-person person-service application)
-                message (->application-inactivated application person)]
-            (log/info "Sending application inactivated message to ASHA for application"
-                      (:id application))
-            (transfer ftp
-                      (str (:key application) "_" (:id application) "_" event-id ".xml")
-                      message)
-            (log/info "Sent application inactivated message to ASHA for application"
-                      (:id application))
-            {:transition {:id :final}})
-          (and (= form-key (:form-key application))
-               (nil? (:review-key application-and-state))
-               (= "inactivated" (:state application-and-state)))
-          {:transition {:id :retry}}
-          :else
-          {:transition {:id :final}})))
+    (if (and (= form-key (:form-key application))
+             (nil? (:review-key application-and-state))
+             (= "inactivated" (:state application-and-state)))
+      (let [message (->application-inactivated application)]
+        (log/info "Sending application inactivated message to ASHA for application"
+                  (:id application))
+        (transfer ftp
+                  (str (:key application) "_" (:id application) "_" event-id ".xml")
+                  message)
+        (log/info "Sent application inactivated message to ASHA for application"
+                  (:id application))
+        {:transition {:id :final}})
+      {:transition {:id :final}})))

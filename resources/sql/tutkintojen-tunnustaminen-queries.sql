@@ -5,6 +5,12 @@ SELECT a.id,
        a.person_oid AS "person-oid",
        a.submitted,
        a.lang AS "lang",
+       ((SELECT value->>'value'
+         FROM jsonb_array_elements(a.content->'answers')
+         WHERE value->>'key' = 'first-name') || ' ' ||
+        (SELECT value->>'value'
+         FROM jsonb_array_elements(a.content->'answers')
+         WHERE value->>'key' = 'last-name')) AS "name",
        (SELECT value->>'value'
         FROM jsonb_array_elements(a.content->'answers')
         WHERE value->>'key' = :country_question_id) AS "country",

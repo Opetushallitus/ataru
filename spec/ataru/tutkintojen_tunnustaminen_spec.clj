@@ -64,21 +64,6 @@
        :content
        first))
 
-(def person-service
-  (reify person-service/PersonService
-    (create-or-find-person [this person]
-      (throw (new RuntimeException "")))
-    (get-persons [this oids]
-      (throw (new RuntimeException "")))
-    (get-person [this oid]
-      (if (= "1.2.246.562.24.00000000001" oid)
-        {:oidHenkilo "1.2.246.562.24.00000000001"
-         :etunimet   "Etunimi Toinenetunimi"
-         :sukunimi   "Sukunimi"}
-        (throw (new RuntimeException ""))))
-    (linked-oids [this oid]
-      (throw (new RuntimeException "")))))
-
 (def attachment-metadata
   {"hakemus"        {:filename "hakemus.json"}
    "liite-1-id"     {:size     10
@@ -175,13 +160,19 @@
                                                                                {:key       "liite-3"
                                                                                 :value     [["liite-3-1-1-id"]
                                                                                             ["liite-3-2-1-id" "liite-3-2-2-id"]]
-                                                                                :fieldType "attachment"}]}
+                                                                                :fieldType "attachment"}
+                                                                               {:key       "first-name"
+                                                                                :value     "Etunimi Toinenetunimi"
+                                                                                :fieldType "textField"}
+                                                                               {:key       "last-name"
+                                                                                :value     "Sukunimi"
+                                                                                :fieldType "textField"}]}
                                                     :lang           "fi"
                                                     :preferred_name "Testi"
                                                     :last_name      "Testi"
                                                     :hakukohde      []
                                                     :haku           nil
-                                                    :person_oid     "1.2.246.562.24.00000000001"
+                                                    :person_oid     nil
                                                     :ssn            nil
                                                     :dob            (dob/str->dob "24.09.1989")
                                                     :email          "test@example.com"}
@@ -209,7 +200,13 @@
                                                                               :fieldType "attachment"}
                                                                              {:key       "liite-3"
                                                                               :value     [["liite-3-1-2-id"]]
-                                                                              :fieldType "attachment"}]})
+                                                                              :fieldType "attachment"}
+                                                                             {:key       "first-name"
+                                                                              :value     "Etunimi Toinenetunimi"
+                                                                              :fieldType "textField"}
+                                                                             {:key       "last-name"
+                                                                              :value     "Sukunimi"
+                                                                              :fieldType "textField"}]})
                                                            {:connection connection}))]
       (binding [*form-id*               form-id
                 *wrong-form-id*         wrong-form-id
@@ -246,7 +243,7 @@
   (it "should send submit message to ASHA SFTP server"
     (let [r       (tutkintojen-tunnustaminen-submit-job-step
                    {:application-id *application-id*}
-                   {:person-service person-service})
+                   {})
           message (xml/parse-str (get-file (str *application-key* "_" *application-id* ".xml")))]
       (should= {:transition {:id :final}} r)
       (should= :message (:tag message))
@@ -277,7 +274,7 @@
   (it "should send edit message to ASHA SFTP server"
     (let [r       (tutkintojen-tunnustaminen-edit-job-step
                    {:application-id *edited-application-id*}
-                   {:person-service person-service})
+                   {})
           message (xml/parse-str (get-file (str *application-key* "_" *edited-application-id* ".xml")))]
       (should= {:transition {:id :final}} r)
       (should= :message (:tag message))
@@ -305,36 +302,10 @@
             (should-contain filename (set (map (comp :filename second) attachment-metadata)))
             (should= "fi" lang))))))
 
-  (it "should retry if no person oid in hakemus"
-    (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-      (jdbc/execute! connection
-                     ["UPDATE applications
-                       SET person_oid = NULL
-                       WHERE id = ?"
-                      *application-id*]))
-    (should= {:transition {:id :retry}}
-             (tutkintojen-tunnustaminen-submit-job-step
-              {:application-id *application-id*}
-              {:person-service person-service})))
-
-  (it "should not retry if no person oid in hakemus but wrong form"
-    (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-      (jdbc/execute! connection
-                     ["UPDATE applications
-                       SET person_oid = NULL,
-                           form_id = ?
-                       WHERE id = ?"
-                      *wrong-form-id*
-                      *application-id*]))
-    (should= {:transition {:id :final}}
-             (tutkintojen-tunnustaminen-submit-job-step
-              {:application-id *application-id*}
-              {:person-service person-service})))
-
   (it "should send inactivated message to ASHA SFTP server"
     (let [r       (tutkintojen-tunnustaminen-review-state-changed-job-step
                    {:event-id *event-id*}
-                   {:person-service person-service})
+                   {})
           message (xml/parse-str (get-file (str *application-key* "_" *application-id* "_" *event-id* ".xml")))]
       (should= {:transition {:id :final}} r)
       (should= :message (:tag message))
@@ -348,4 +319,19 @@
         (should= "Hakemuksen peruutus" (property-value "ams_title" action))
         (should= "03.01" (property-value "ams_processtaskid" action)))
       (let [attachments (by-tag :createDocument (:content message))]
-        (should-be empty? attachments)))))
+        (should-be empty? attachments))))
+
+  (it "should not do anything if hakemus in wrong form"
+    (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+      (jdbc/execute! connection
+                     ["UPDATE applications
+                       SET form_id = ?
+                       WHERE id = ?"
+                      *wrong-form-id*
+                      *application-id*]))
+    (should= {:transition {:id :final}}
+             (tutkintojen-tunnustaminen-submit-job-step
+              {:application-id *application-id*}
+              {}))
+    (should= nil
+             (get-file (str *application-key* "_" *application-id* ".xml")))))
