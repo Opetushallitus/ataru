@@ -125,12 +125,12 @@
                              operation-delete
                              operation-login])]}
   (let [user      (User.
-                   (when-let [oid (-> :session :identity :oid)]
+                   (when-let [oid (-> session :identity :oid)]
                      (Oid. oid))
                    (if-let [ip (:client-ip session)]
                      (InetAddress/getByName ip)
                      (InetAddress/getLocalHost))
-                   (or (-> :session :identity :ticket) "no session")
+                   (or (:key session) "no session")
                    (or (:user-agent session) "no user agent"))
         [added
          removed

@@ -7,14 +7,15 @@
 (defqueries "sql/session-queries.sql")
 
 (defn read-data [key]
-  (:data (first  (exec :db yesql-get-session-query {:key key}))))
+  (when-let [data (:data (first (exec :db yesql-get-session-query {:key key})))]
+    (assoc data :key key)))
 
 (defn add-data [key data]
-  (exec :db yesql-add-session-query! {:key key :data data})
+  (exec :db yesql-add-session-query! {:key key :data (dissoc data :key)})
   key)
 
 (defn save-data [key data]
-  (exec :db yesql-update-session-query! {:key key :data data})
+  (exec :db yesql-update-session-query! {:key key :data (dissoc data :key)})
   key)
 
 (defn delete-data [key]
