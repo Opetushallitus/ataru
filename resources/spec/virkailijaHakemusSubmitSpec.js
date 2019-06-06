@@ -32,6 +32,7 @@
         setNthFieldInputValue(3, 'Täyttämä'),
         setNthFieldInputValue(5, '020202A0202'),
         setNthFieldInputValue(6, 'test@example.com'),
+        setFieldInputValue("#verify-email", 'test@example.com'),
         setNthFieldInputValue(7, '0123456789'),
         setNthFieldInputValue(9, 'Katutie 12 B'),
         setNthFieldInputValue(10, '00100'),

@@ -155,6 +155,18 @@
                          {:key (str "error-" idx)}))
                      errors))])))
 
+(defn info-element [field-descriptor]
+  (let [languages  (subscribe [:application/default-languages])
+        person     (subscribe [:application/person])
+        header   (util/non-blank-val (:label field-descriptor) @languages)
+        text     (util/non-blank-val (:text field-descriptor) @languages)]
+    [:div.application__form-info-element.application__form-field
+     (when (not-empty header)
+       [:label.application__form-field-label [:span header]])
+     (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
+       [question-hakukohde-names field-descriptor :info-for-hakukohde])
+     [markdown-paragraph text (-> field-descriptor :params :info-text-collapse) (:oid @person)]]))
+
 (defn email-field [field-descriptor & {:keys [div-kwd disabled editing idx]
                                        :or   {div-kwd  :div.application__form-field
                                               disabled false
@@ -163,8 +175,7 @@
         languages             (subscribe [:application/default-languages])
         size                  (get-in field-descriptor [:params :size])
         size-class            (text-field-size->class size)
-        validators-processing (subscribe [:state-query [:application :validators-processing]])
-        verify-email?         (subscribe [:application/verify-email? id])]
+        validators-processing (subscribe [:state-query [:application :validators-processing]])]
     (fn []
       (let [answer      @(subscribe [:application/answer id idx nil])
             on-change   #(if idx
@@ -181,10 +192,7 @@
                                                       (:valid answer))]
         [div-kwd
          [label field-descriptor]
-         (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
-           [question-hakukohde-names field-descriptor])
-         [:div.application__form-text-input-info-text
-          [info-text field-descriptor]]
+         [markdown-paragraph (get-translation :email-info-text) false nil]
          [:input.application__form-text-input
           (merge {:id            id
                   :type          "text"
@@ -201,40 +209,38 @@
                   :autoComplete  autocomplete-off
                   :default-value (if @(subscribe [:application/cannot-view? id])
                                    "***********"
-                                   (:value answer))}
-                 (when @verify-email?
-                   {:on-paste (fn [event]
-                                (.preventDefault event))})
+                                   (:value answer))
+                  :on-paste (fn [event]
+                              (.preventDefault event))}
                  (when (or disabled
                            @(subscribe [:application/cannot-edit? id]))
                    {:disabled true}))]
          [validation-error (:errors answer)]
-         (when @verify-email?
-           (let [id           :verify-email
-                 verify-label (get-translation :verify-email)]
-             [:div
-              [:label.application__form-field-label.label.application__form-field-label--verify-email
-               {:id  "application-form-field-label-verify-email"
-                :for id}
-               [:span (str verify-label (required-hint field-descriptor))]]
-              [:input.application__form-text-input
-               {:id           id
-                :type         "text"
-                :required     true
-                :value        (if @(subscribe [:application/cannot-view? id])
-                                "***********"
-                                (:verify answer))
-                :on-blur      #(email-verify-field-change field-descriptor (:value answer) %)
-                :on-paste     (fn [event]
-                                (.preventDefault event))
-                :on-change    #(email-verify-field-change field-descriptor (:value answer) %)
-                :class        (str size-class
-                                   (if show-error?
-                                     " application__form-field-error"
-                                     " application__form-text-input--normal"))
-                :aria-invalid (not (:valid answer))
-                :autoComplete autocomplete-off
-                }]]))]))))
+         (let [id           :verify-email
+               verify-label (get-translation :verify-email)]
+           [:div
+            [:label.application__form-field-label.label.application__form-field-label--verify-email
+             {:id  "application-form-field-label-verify-email"
+              :for id}
+             [:span (str verify-label (required-hint field-descriptor))]]
+            [:input.application__form-text-input
+             {:id           id
+              :type         "text"
+              :required     true
+              :value        (if @(subscribe [:application/cannot-view? id])
+                              "***********"
+                              (:verify answer))
+              :on-blur      #(email-verify-field-change field-descriptor (:value answer) %)
+              :on-paste     (fn [event]
+                              (.preventDefault event))
+              :on-change    #(email-verify-field-change field-descriptor (:value answer) %)
+              :class        (str size-class
+                                 (if show-error?
+                                   " application__form-field-error"
+                                   " application__form-text-input--normal"))
+              :aria-invalid (not (:valid answer))
+              :autoComplete autocomplete-off
+              }]])]))))
 
 (defn text-field [field-descriptor & {:keys [div-kwd idx]
                                       :or   {div-kwd :div.application__form-field}}]
@@ -934,18 +940,6 @@
               [deadline-info deadline]])
            (when-not @(subscribe [:application/cannot-edit? (keyword id)])
              [attachment-upload field-descriptor id @attachment-count question-group-idx]))]))))
-
-(defn info-element [field-descriptor]
-  (let [languages  (subscribe [:application/default-languages])
-        person     (subscribe [:application/person])
-        header   (util/non-blank-val (:label field-descriptor) @languages)
-        text     (util/non-blank-val (:text field-descriptor) @languages)]
-    [:div.application__form-info-element.application__form-field
-     (when (not-empty header)
-       [:label.application__form-field-label [:span header]])
-     (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
-       [question-hakukohde-names field-descriptor :info-for-hakukohde])
-     [markdown-paragraph text (-> field-descriptor :params :info-text-collapse) (:oid @person)]]))
 
 (defn- adjacent-field-input [field-descriptor row-idx question-group-idx]
   (let [id          (keyword (:id field-descriptor))

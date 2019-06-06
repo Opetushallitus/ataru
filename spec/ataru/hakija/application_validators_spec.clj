@@ -22,8 +22,8 @@
    (first (async/<!! (validator/validate {:has-applied      has-applied
                                           :validator        validator
                                           :value            value
-                                          :answers-by-key   answers-by-key
-                                          :field-descriptor field-descriptor})))))
+                                          :answers-by-key   (assoc answers-by-key :email {:value value :verify value})
+                                          :field-descriptor (assoc field-descriptor :id :email)})))))
 
 (describe "required validator"
   (tags :unit :validator)

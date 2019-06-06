@@ -128,6 +128,9 @@
    :expired-secret-sent                         {:fi "Uusi linkki lähetetty!"
                                                  :en "The new link has been sent!"
                                                  :sv "Den nya länken har skickats!"}
+   :email-info-text                             {:fi "Varmista, että antamasi sähköpostiosoite on kirjoitettu oikein ja se on henkilökohtainen. Lähetämme sinulle tärkeitä viestejä tähän sähköpostiosoitteeseen."
+                                                 :en "Please ensure that the given email address is typed correctly and is your personal address. Important messages will be sent to this email address."
+                                                 :sv "Försäkra dig om att du skrivit din e-postadress rätt och att det är din personliga e-post. Vi skickar viktiga meddelanden till denna e-postadress."}
    :feedback-disclaimer                         {:fi "Yhteystietojasi ei käytetä tai yhdistetä palautteen tietoihin."
                                                  :en "Your personal information is not sent or associated with the feedback given."
                                                  :sv "Dina kontaktuppgifter används inte och kopplas inte heller ihop med responsuppgifterna."}
@@ -1629,21 +1632,6 @@ You will receive a confirmation of your application to your email."}
    :notes                    {:fi "Muistiinpanot"
                               :sv "Anteckningar"
                               :en "EN: Muistiinpanot"}})
-
-(defn email-check-correct-notification
-  [email]
-  {:fi [:div
-        [:p "Varmista, että antamasi sähköpostiosoite " [:strong email] " on
-         kirjoitettu oikein ja se on henkilökohtainen. Lähetämme sinulle
-         tärkeitä viestejä tähän sähköpostiosoitteeseen."]]
-   :sv [:div
-        [:p "Försäkra dig om att du skrivit din e-postadress " [:strong email]
-         " rätt och att det är din personliga e-post. Vi skickar viktiga
-         meddelanden till denna e-postadress."]]
-   :en [:div
-        [:p "Please ensure that the given email address " [:strong email] " is
-         typed correctly and is your personal address. Important messages will
-         be sent to this email address."]]})
 
 (defn email-applied-error
   [email preferred-name]

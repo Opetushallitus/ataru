@@ -36,14 +36,18 @@
            (doseq [email (keys email/email-list)]
              (let [expected (get email/email-list email)
                    pred     (if expected true? false?)
-                   actual   (first (async/<! (validator/validate {:has-applied has-never-applied :validator "email" :value email})))
+                   actual   (first (async/<! (validator/validate {:has-applied has-never-applied :validator "email" :value email
+                                                                  :answers-by-key {:email {:value email :verify email}}
+                                                                  :field-descriptor {:id :email}})))
                    message  (if expected "valid" "invalid")]
                (is (pred actual)
                    (str "email " email " was not " message))))
            (is (not (first (async/<! (validator/validate {:has-applied      (fn [_ _] (asyncm/go true))
                                                           :validator        "email"
                                                           :value            "test@example.com"
-                                                          :field-descriptor {:params {:can-submit-multiple-applications false
+                                                          :answers-by-key {:email {:value "test@example.com" :verify "test@example.com"}}
+                                                          :field-descriptor {:id :email
+                                                                             :params {:can-submit-multiple-applications false
                                                                                       :haku-oid                         "dummy-haku-oid"}}})))))
            (done))))
 
