@@ -213,7 +213,7 @@
    (city-component metadata)
    (native-language-section metadata)])
 
-(defn tutu-person-info-module [metadata]
+(defn muu-person-info-module [metadata]
   [(first-name-section metadata)
    (last-name-component metadata)
    (email-component metadata)
@@ -238,8 +238,8 @@
            {:label           (:label person-info-module-texts)
             :label-amendment (:label-amendment person-info-module-texts)
             :id              (name version)
-            :children        (if (= version :tutu)
-                               (tutu-person-info-module metadata)
+            :children        (if (= version :muu)
+                               (muu-person-info-module metadata)
                                (onr-person-info-module metadata))
             :module          :person-info}))))
 

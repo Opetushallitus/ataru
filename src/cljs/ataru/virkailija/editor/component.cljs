@@ -930,7 +930,7 @@
   (let [languages       (subscribe [:editor/languages])
         value           (subscribe [:editor/get-component-value path])
         virkailija-lang (subscribe [:editor/virkailija-lang])
-        values          (set ["onr" "tutu"])]
+        values          (set ["onr" "muu"])]
     (fn [content path]
       [:div.editor-form__component-wrapper
        [text-header (:id content) (get-in @value [:label @virkailija-lang]) path nil
