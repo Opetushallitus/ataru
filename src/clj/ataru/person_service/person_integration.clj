@@ -172,7 +172,7 @@
                   drain-failed?
                   queue-url
                   receive-wait)
-         0 1 TimeUnit/MINUTES)
+         0 20 TimeUnit/SECONDS)
         (assoc this :executor executor))
       this))
   (stop [this]
