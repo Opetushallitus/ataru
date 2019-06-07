@@ -126,7 +126,7 @@
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-doo "0.1.10"]
-            [lein-figwheel "0.5.14"]
+            [lein-figwheel "0.5.18"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.14"]
             [lein-environ "1.1.0"]
