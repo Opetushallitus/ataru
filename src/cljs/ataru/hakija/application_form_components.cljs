@@ -192,7 +192,8 @@
                                                       (:valid answer))]
         [div-kwd
          [label field-descriptor]
-         [markdown-paragraph (get-translation :email-info-text) false nil]
+         [:div.application__form-info-element
+          [markdown-paragraph (get-translation :email-info-text) false nil]]
          [:input.application__form-text-input
           (merge {:id            id
                   :type          "text"
