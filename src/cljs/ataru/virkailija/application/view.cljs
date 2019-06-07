@@ -1128,13 +1128,14 @@
 
 (defn- application-hakukohde-review-input
   [label kw states]
-  (let [current-hakukohteet                (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-        list-click                         (partial toggle-review-list-visibility kw)
-        list-opened                        (subscribe [:state-query [:application :ui/review kw]])
-        settings-visible?                  (subscribe [:state-query [:application :review-settings :visible?]])
-        input-visible?                     (subscribe [:application/review-state-setting-enabled? kw])
-        eligibility-automatically-checked? (subscribe [:application/eligibility-automatically-checked?])
-        lang                               (subscribe [:editor/virkailija-lang])]
+  (let [current-hakukohteet                       (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+        list-click                                (partial toggle-review-list-visibility kw)
+        list-opened                               (subscribe [:state-query [:application :ui/review kw]])
+        settings-visible?                         (subscribe [:state-query [:application :review-settings :visible?]])
+        input-visible?                            (subscribe [:application/review-state-setting-enabled? kw])
+        eligibility-automatically-checked?        (subscribe [:application/eligibility-automatically-checked?])
+        payment-obligation-automatically-checked? (subscribe [:application/payment-obligation-automatically-checked?])
+        lang                                      (subscribe [:editor/virkailija-lang])]
     (fn [_ _ _]
       (when (or @settings-visible? @input-visible?)
         (let [review-states-for-hakukohteet (set (doall (map (fn [oid] @(subscribe [:state-query [:application :review :hakukohde-reviews (keyword oid) kw]]))
@@ -1148,10 +1149,14 @@
            [:div.application-handling__review-header
             {:class (str "application-handling__review-header--" (name kw))}
             [:span (util/non-blank-val label [@lang :fi :sv :en])]
-            (when (and (= :eligibility-state kw)
+            (cond (and (= :eligibility-state kw)
                        @eligibility-automatically-checked?)
-              [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
-               {:title (get-virkailija-translation :eligibility-set-automatically)}])]
+                  [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
+                   {:title (get-virkailija-translation :eligibility-set-automatically)}]
+                  (and (= :payment-obligation kw)
+                       @payment-obligation-automatically-checked?)
+                  [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
+                   {:title (get-virkailija-translation :payment-obligation-set-automatically)}])]
            (if @list-opened
              (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
                      {:on-click list-click}]

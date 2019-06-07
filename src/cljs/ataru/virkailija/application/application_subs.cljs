@@ -763,6 +763,19 @@
                                                                       (= "eligibility-state-automatically-changed")))]
       (every? newest-event-automatically-changed hakukohde-oids))))
 
+(re-frame.core/reg-sub
+  :application/payment-obligation-automatically-checked?
+  (fn [db _]
+    (let [hakukohde-oids                     (get-in db [:application :selected-review-hakukohde-oids])
+          newest-event-automatically-changed (fn [hakukohde-oid] (->> (get-in db [:application :events])
+                                                                      (filter #(and (= "payment-obligation" (:review-key %))
+                                                                                    (= hakukohde-oid (:hakukohde %))))
+                                                                      (sort-by :id >)
+                                                                      first
+                                                                      :event-type
+                                                                      (= "payment-obligation-automatically-changed")))]
+      (every? newest-event-automatically-changed hakukohde-oids))))
+
 (re-frame/reg-sub
   :application/all-pohjakoulutus-filters-selected?
   (fn [db _]
