@@ -4,6 +4,7 @@
             [ataru.background-job.email-job :as email-job]
             [ataru.information-request.information-request-job :as information-request-job]
             [ataru.information-request.information-request-service :as information-request-service]
+            [ataru.person-service.person-integration :as person-integration]
             [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]))
 
 (def job-definitions
@@ -16,4 +17,6 @@
    "mass-information-request-job"                       {:steps {:initial information-request-service/mass-information-request-job-step}
                                                          :type  "mass-information-request-job"}
    "tutkintojen-tunnustaminen-review-state-changed-job" {:steps {:initial tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-review-state-changed-job-step}
-                                                         :type  "tutkintojen-tunnustaminen-review-state-changed-job"}})
+                                                         :type  "tutkintojen-tunnustaminen-review-state-changed-job"}
+   "update-person-info-job"                             {:steps {:initial person-integration/update-person-info-job-step}
+                                                         :type  "update-person-info-job"}})
