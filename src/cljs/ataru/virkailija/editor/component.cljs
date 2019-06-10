@@ -930,6 +930,7 @@
   (let [languages       (subscribe [:editor/languages])
         value           (subscribe [:editor/get-component-value path])
         virkailija-lang (subscribe [:editor/virkailija-lang])
+        form-locked?    (subscribe [:editor/form-locked?])
         values          (set ["onr" "muu"])]
     (fn [content path]
       [:div.editor-form__component-wrapper
@@ -945,6 +946,7 @@
                                 new-module (pm/person-info-module version)]
                             (dispatch-sync [:editor/set-component-value
                                             new-module path])))
+             :disabled  @form-locked?
              :value     (or (get values (:id content)) "onr")}
             (doall (for [opt values]
                      [:option {:value opt
