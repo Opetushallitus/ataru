@@ -6,6 +6,7 @@
    [ataru.component-data.component :as component]
    [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
    [ataru.virkailija.editor.components.followup-question :refer [followup-question followup-question-overlay]]
+   [ataru.component-data.person-info-module :as pm]
    [ataru.virkailija.editor.components.toolbar :as toolbar]
    [ataru.virkailija.editor.components.drag-n-drop-spacer :as dnd]
    [ataru.virkailija.temporal :as temporal]
@@ -928,13 +929,28 @@
 (defn module [content path]
   (let [languages       (subscribe [:editor/languages])
         value           (subscribe [:editor/get-component-value path])
-        virkailija-lang (subscribe [:editor/virkailija-lang])]
+        virkailija-lang (subscribe [:editor/virkailija-lang])
+        form-locked?    (subscribe [:editor/form-locked?])
+        values          (set ["onr" "muu"])]
     (fn [content path]
       [:div.editor-form__component-wrapper
        [text-header (:id content) (get-in @value [:label @virkailija-lang]) path nil
         :foldable? false
         :removable? false]
        [:div.editor-form__component-content-wrapper
+        (when (= "person-info" (name (:module content)))
+          [:div.editor-form__module-fields
+           [:select.editor-form__select
+            {:on-change (fn [event]
+                          (let [version    (keyword (-> event .-target .-value))
+                                new-module (pm/person-info-module version)]
+                            (dispatch-sync [:editor/set-component-value
+                                            new-module path])))
+             :disabled  @form-locked?
+             :value     (or (get values (:id content)) "onr")}
+            (doall (for [opt values]
+                     [:option {:value opt
+                               :key   opt} (get-virkailija-translation (keyword (str "person-info-module-" opt)))]))]])
         [:div.editor-form__module-fields
          [:span.editor-form__module-fields-label
           (get-virkailija-translation :contains-fields)]

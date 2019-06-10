@@ -1205,6 +1205,12 @@ You will receive a confirmation of your application to your email."}
    :person-completed-education                  {:fi "Henkilön suoritukset"
                                                  :sv "Personens prestationer"
                                                  :en "Applicant's exams in Finland"}
+   :person-info-module-onr                      {:fi "Opiskelijavalinta"
+                                                 :en "Opiskelijavalinta"
+                                                 :sv "Opiskelijavalinta"}
+   :person-info-module-muu                      {:fi "Muu käyttö"
+                                                 :en "Muu käyttö"
+                                                 :sv "Muu käyttö"}
    :metadata-not-found                          {:fi "Hakijan liitteitä ei löytynyt"
                                                  :sv "Sökandes bilagor hittades inte"
                                                  :en "Applicant's attachements can't be found"}
