@@ -44,6 +44,7 @@
                  [markdown-clj "1.0.7"]
 
                  ;clojure
+                 [com.rpl/specter "1.1.2"]
                  [compojure "1.6.1"]
                  [com.github.fge/json-patch "1.9"]
                  [com.stuartsierra/component "0.4.0"]
