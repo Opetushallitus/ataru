@@ -216,6 +216,9 @@
 (defn muu-person-info-module [metadata]
   [(first-name-section metadata)
    (last-name-component metadata)
+   (nationality-component metadata)
+   (have-finnish-ssn-component metadata)
+   (ssn-birthdate-gender-wrapper metadata)
    (email-component metadata)
    (phone-component metadata)
    (country-of-residence-component metadata)
