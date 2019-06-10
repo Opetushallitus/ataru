@@ -1652,17 +1652,15 @@
                 text]
                text)])]]))))
 
-(defn- attachment-review-area [reviews review-positioning lang]
+(defn- attachment-review-area [reviews lang]
   (let [all-keys         (->> (vals reviews)
                               (mapcat #(-> % ffirst :values flatten))
                               (keep :key)
                               set)
         selected-reviews (r/atom all-keys)]
-    (fn [reviews review-positioning lang]
+    (fn [reviews lang]
       [:div.application-handling__attachment-review-container.animated
-       {:class (str (when (= :fixed review-positioning)
-                      "application-handling__attachment-review-container-floating")
-                    (if @(subscribe [:state-query [:application :show-attachment-reviews?]])
+       {:class (str (if @(subscribe [:state-query [:application :show-attachment-reviews?]])
                       " fadeInRight"
                       " fadeOutRight"))}
        (when (not-empty reviews)
@@ -1706,8 +1704,7 @@
                    [attachment-review-row selected-reviews all-similar-attachments lang]))])])))
 
 (defn application-review []
-  (let [review-positioning      (subscribe [:state-query [:application :review-positioning]])
-        settings-visible        (subscribe [:state-query [:application :review-settings :visible?]])
+  (let [settings-visible        (subscribe [:state-query [:application :review-settings :visible?]])
         superuser?              (subscribe [:state-query [:editor :user-info :superuser?]])
         show-attachment-review? (r/atom false)]
     (fn []
@@ -1719,8 +1716,6 @@
                                                            @(subscribe [:application/get-attachment-reviews-for-selected-hakukohde oid]))) selected-review-hakukohde))
             lang                             (subscribe [:application/lang])]
         [:div.application-handling__review-outer
-         {:class (when (= :fixed @review-positioning)
-                   "application-handling__review-outer-floating")}
          [:a.application-handling__review-area-settings-link
           {:on-click (fn [event]
                        (.preventDefault event)
@@ -1728,18 +1723,15 @@
           [:i.application-handling__review-area-settings-button.zmdi.zmdi-settings]]
          [:div.application-handling__review-settings
           {:style (when-not @settings-visible
-                    {:visibility "hidden"})
-           :class (when (= :fixed @review-positioning)
-                    "application-handling__review-settings-floating")}
+                    {:visibility "hidden"})}
           [:div.application-handling__review-settings-indicator-outer
            [:div.application-handling__review-settings-indicator-inner]]
-          (when (not= :fixed @review-positioning)
-            [:div.application-handling__review-settings-header
+          [:div.application-handling__review-settings-header
              [:i.zmdi.zmdi-account.application-handling__review-settings-header-icon]
-             [:span.application-handling__review-settings-header-text (get-virkailija-translation :settings)]])]
+             [:span.application-handling__review-settings-header-text (get-virkailija-translation :settings)]]]
          [:div.application-handling__review
           (when @show-attachment-review?
-            [attachment-review-area attachment-reviews-for-hakukohde @review-positioning @lang])
+            [attachment-review-area attachment-reviews-for-hakukohde @lang])
           [:div.application-handling__review-outer-container
            [application-hakukohde-selection]
            (when (not-empty selected-review-hakukohde)
@@ -1902,7 +1894,6 @@
 (defn application-review-area []
   (let [selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
         expanded?                     (subscribe [:state-query [:application :application-list-expanded?]])
-        review-positioning            (subscribe [:state-query [:application :review-positioning]])
         application-loading           (subscribe [:state-query [:application :loading?]])]
     (fn []
       (let [application (:application @selected-application-and-form)]
@@ -1918,7 +1909,6 @@
               [:div.application-handling__application-contents
                [application-contents @selected-application-and-form]]
               [:span#application-handling__review-position-canary]
-              (when (= :fixed @review-positioning) [floating-application-review-placeholder])
               [application-review]])])))))
 
 (defn create-application-paging-scroll-handler
@@ -1958,19 +1948,6 @@
        (when (not @search-control-all-page)
          [:div.application-handling__review-area-container
           [application-review-area]])])))
-
-(defn create-review-position-handler []
-  (let [review-canary-visible        (atom true)
-        positioning-change-threshold 45]
-    (fn [_]
-      (when-let [canary-element (.getElementById js/document "application-handling__review-position-canary")]
-        (if (<= (-> canary-element .getBoundingClientRect .-top) positioning-change-threshold)
-          (when @review-canary-visible
-            (dispatch [:state-update #(assoc-in % [:application :review-positioning] :fixed)])
-            (reset! review-canary-visible false))
-          (when-not @review-canary-visible
-            (dispatch [:state-update #(assoc-in % [:application :review-positioning] :in-flow)])
-            (reset! review-canary-visible true)))))))
 
 (defn application-version-history-header [changes-amount]
   (let [event (subscribe [:application/selected-event])]
