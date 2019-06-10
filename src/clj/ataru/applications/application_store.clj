@@ -1204,18 +1204,18 @@ WHERE la.key IS NULL\n"
    (fn [acc {:keys [key value fieldType] :as answer}]
      (let [index-fn (cond (= "multipleChoice" fieldType)
                           indexed-by-values
-                          (= "textField" fieldType)
+                          (or (= "textField" fieldType)
+                              (= "attachment" fieldType))
                           indexed-by-value-order
                           :else
                           not-indexed)]
-       (into acc (cond (= "attachment" fieldType)
-                       nil
-                       (and (sequential? value)
+       (into acc (cond (and (sequential? value)
                             (every? sequential? value))
                        (indexed-by-question-group index-fn key value)
                        (and (sequential? value)
-                            (contains? #{"multipleChoice" "textField"}
-                                       fieldType))
+                            (or (= "attachment" fieldType)
+                                (= "multipleChoice" fieldType)
+                                (= "textField" fieldType)))
                        (index-fn key value)
                        (not (sequential? value))
                        [[key value]]
