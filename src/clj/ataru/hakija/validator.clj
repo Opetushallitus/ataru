@@ -114,7 +114,10 @@
 
 (defn get-allowed-values [koodisto-cache koodisto-source options]
   (if koodisto-source
-    (koodisto/all-koodisto-values koodisto-cache (:uri koodisto-source) (:version koodisto-source))
+    (koodisto/all-koodisto-values koodisto-cache
+                                  (:uri koodisto-source)
+                                  (:version koodisto-source)
+                                  (:allow-invalid? koodisto-source))
     (allowed-values options)))
 
 (defn- all-answers-allowed? [all-answers allowed-values]

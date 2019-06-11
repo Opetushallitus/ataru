@@ -72,7 +72,8 @@
            pohjakoulutukset-by-vaatimus      (pohjakoulutukset-by-vaatimus
                                               (get-koodisto-options koodisto-cache
                                                                     "pohjakoulutusvaatimuskorkeakoulut"
-                                                                    1))
+                                                                    1
+                                                                    false))
            tarjonta-hakukohteet              (tarjonta-protocol/get-hakukohteet tarjonta-service
                                                                                 included-hakukohde-oids)
            tarjonta-koulutukset              (->> tarjonta-hakukohteet

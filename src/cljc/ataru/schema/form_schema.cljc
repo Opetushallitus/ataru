@@ -323,6 +323,15 @@
 (s/defschema HakukohdeSearchResult
   (assoc Hakukohde :user-organization? s/Bool))
 
+(s/defschema Koodi
+  {:uri                     s/Str
+   :version                 s/Int
+   :value                   s/Str
+   :label                   LocalizedStringOptional
+   :valid                   {(s/optional-key :start) java.time.ZonedDateTime
+                             (s/optional-key :end)   java.time.ZonedDateTime}
+   (s/optional-key :within) [(s/recursive #'Koodi)]})
+
 (s/defschema File
   {:key                      s/Str
    :content-type             s/Str

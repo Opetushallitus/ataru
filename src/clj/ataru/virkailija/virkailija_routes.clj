@@ -623,10 +623,14 @@
 
     (api/context "/koodisto" []
       :tags ["koodisto-api"]
-      (api/GET "/:koodisto-uri/:version" [koodisto-uri version]
+      (api/GET "/:koodisto-uri/:version" {session :session}
         :path-params [koodisto-uri :- s/Str version :- Long]
         :return s/Any
-        (let [koodi-options (koodisto/get-koodisto-options koodisto-cache koodisto-uri version)]
+        (let [koodi-options (koodisto/get-koodisto-options
+                             koodisto-cache
+                             koodisto-uri
+                             version
+                             false)]
           (ok koodi-options))))
 
     (api/context "/organization" []

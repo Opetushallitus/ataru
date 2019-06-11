@@ -126,12 +126,13 @@
      [:redis])]
    [:koodisto-cache
     (component/using
-     (redis/map->Cache
-      {:name            "koodisto"
-       :loader          (cache/->FunctionCacheLoader koodisto-cache/get-koodi-options)
-       :ttl-after-read  [3 TimeUnit/DAYS]
-       :ttl-after-write [3 TimeUnit/DAYS]
-       :update-period   [15 TimeUnit/MINUTES]})
+     (two-layer/map->Cache
+      {:name                   "koodisto"
+       :loader                 (cache/->FunctionCacheLoader koodisto-cache/get-koodi-options
+                                                            koodisto-cache/koodisto-checker)
+       :expires-after          [3 TimeUnit/DAYS]
+       :refresh-off-heap-after [15 TimeUnit/MINUTES]
+       :refresh-on-heap-after  [7 TimeUnit/MINUTES]})
      [:redis])]
    [:form-by-haku-oid-and-id-cache
     (component/using

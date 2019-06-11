@@ -2,9 +2,15 @@
   (:require [ataru.config.url-helper :refer [resolve-url]]
             [ataru.koodisto.koodisto-codes :refer [institution-type-codes]]
             [ataru.organization-service.organization-client :as organization-client]
+            [ataru.schema.form-schema :as schema]
             [ataru.util.http-util :as http-util]
             [cheshire.core :as cheshire]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [schema.core :as s])
+  (:import [java.time LocalDate LocalTime ZonedDateTime ZoneId]
+           java.time.format.DateTimeFormatter))
+
+(def koodisto-checker (s/checker [schema/Koodi]))
 
 (defn- do-get [url]
   (let [{:keys [status headers body error] :as resp} (http-util/do-get url)]
@@ -16,86 +22,86 @@
                                                             :error   error
                                                             :headers headers})))))
 
-(defn- nil-to-empty-string [x]
-  (or x ""))
-
-(defn- extract-name-with-language [language metadata]
+(defn- extract-name-with-language [metadata language]
   (->> metadata
-       (filter #(= language (:kieli %)))
-       (filter :nimi)
-       (set)
-       (mapv :nimi)
-       (first)
-       nil-to-empty-string))
-
-(defn- compare-case-insensitively [s1 s2]
-  (compare (str/upper-case s1) (str/upper-case s2)))
+       (keep #(when (= language (:kieli %))
+                (:nimi %)))
+       first))
 
 (defn- koodi-value->soresu-option [koodi-value]
   {:uri     (:koodiUri koodi-value)
    :version (:versio koodi-value)
    :value   (:koodiArvo koodi-value)
-   :label   {:fi (->> koodi-value :metadata (extract-name-with-language "FI"))
-             :sv (->> koodi-value :metadata (extract-name-with-language "SV"))
-             :en (->> koodi-value :metadata (extract-name-with-language "EN"))}})
+   :label   (into {}
+                  (for [[ik ok] [["FI" :fi]
+                                 ["SV" :sv]
+                                 ["EN" :en]]
+                        :let    [name (-> koodi-value :metadata (extract-name-with-language ik))]
+                        :when   (not (str/blank? name))]
+                    [ok name]))
+   :valid   (merge {}
+                   (when-let [start (:voimassaAlkuPvm koodi-value)]
+                     {:start (ZonedDateTime/of (LocalDate/parse start (DateTimeFormatter/ofPattern "yyyy-MM-dd"))
+                                               LocalTime/MIDNIGHT
+                                               (ZoneId/of "Europe/Helsinki"))})
+                   (when-let [end (:voimassaLoppuPvm koodi-value)]
+                     {:end (ZonedDateTime/of (LocalDate/parse end (DateTimeFormatter/ofPattern "yyyy-MM-dd"))
+                                             LocalTime/MIDNIGHT
+                                             (ZoneId/of "Europe/Helsinki"))}))})
 
-(defn- code-element->soresu-option [element]
-  {:uri     (:codeElementUri element)
-   :version (:codeElementVersion element)
-   :value   (:codeElementValue element)
-   :label   {:fi (->> element :relationMetadata (extract-name-with-language "FI"))
-             :sv (->> element :relationMetadata (extract-name-with-language "SV"))
-             :en (->> element :relationMetadata (extract-name-with-language "EN"))}})
+(defn- get-koodisto
+  [koodisto version]
+  (->> (resolve-url :koodisto-service.koodi koodisto
+                    {"koodistoVersio" (str version)})
+       do-get
+       (mapv koodi-value->soresu-option)))
 
 (defn- add-within
-  [koodi-option]
-  (->> (do-get (resolve-url :koodisto-service.koodi-detail
-                            (:uri koodi-option)
-                            (:version koodi-option)))
-       :withinCodeElements
-       (filter #(not (:passive %)))
-       (map code-element->soresu-option)
-       (group-by :uri)
-       (map (fn [[_ versions]] (apply max-key :version versions)))
-       (assoc koodi-option :within)))
+  [koodisto koodit]
+  (let [koodit-by-uri (memoize (fn [versio]
+                                 (->> (get-koodisto koodisto versio)
+                                      (map (fn [koodi] [(:uri koodi) koodi]))
+                                      (into {}))))
+        get-koodi     (memoize (fn [koodi versio]
+                                 (get (koodit-by-uri versio) koodi)))]
+    (mapv (fn [koodi]
+            (->> (resolve-url :koodisto-service.koodi-detail
+                              (:uri koodi)
+                              (:version koodi))
+                 do-get
+                 :withinCodeElements
+                 (keep #(when (str/starts-with? (:codeElementUri %)
+                                                (str koodisto "_"))
+                          (get-koodi (:codeElementUri %)
+                                     (:codeElementVersion %))))
+                 (assoc koodi :within)))
+          koodit)))
 
 (defn- get-vocational-degree-options [version]
-  (->> {:uri     "ammatillisetopsperustaiset_1"
-        :version version}
-       add-within
-       :within
-       (filter #(str/starts-with? (:uri %) "koulutus_"))))
-
-(defn- get-vocational-institutions-by-type [type version]
-  (->> {:uri     (str "oppilaitostyyppi_" type)
-        :version version}
-       add-within
-       :within
-       (filter #(str/starts-with? (:uri %) "oppilaitosnumero_"))
-       (map #(assoc % :label (:nimi (organization-client/get-organization-by-oid-or-number (:value %)))))))
+  (->> [{:uri     "ammatillisetopsperustaiset_1"
+         :version version}]
+       (add-within "koulutus")
+       (mapcat :within)))
 
 (defn- get-vocational-institutions [version]
-  (mapcat #(get-vocational-institutions-by-type % version)
-          institution-type-codes))
+  (->> institution-type-codes
+       (map (fn [type]
+              {:uri     (str "oppilaitostyyppi_" type)
+               :version version}))
+       (add-within "oppilaitosnumero")
+       (mapcat :within)
+       (map #(assoc % :label (:nimi (organization-client/get-organization-by-oid-or-number (:value %)))))))
 
-(defn get-koodi-options [koodisto-uri]
+(s/defn ^:always-validate get-koodi-options :- [schema/Koodi]
+  [koodisto-uri :- s/Str]
   (let [[uri version] (str/split koodisto-uri #"#")]
     (condp = uri
 
-           "AmmatillisetOPSperustaiset" (get-vocational-degree-options version)
+      "AmmatillisetOPSperustaiset" (get-vocational-degree-options version)
 
-           "oppilaitostyyppi" (get-vocational-institutions version)
+      "oppilaitostyyppi" (get-vocational-institutions version)
 
-           "pohjakoulutusvaatimuskorkeakoulut" (->> (resolve-url :koodisto-service.koodi uri
-                                                      {"koodistoVersio"  (str version)
-                                                       "onlyValidKoodis" "true"})
-                                                    do-get
-                                                    (mapv koodi-value->soresu-option)
-                                                    (mapv add-within))
+      "pohjakoulutusvaatimuskorkeakoulut" (add-within "pohjakoulutuskklomake"
+                                                      (get-koodisto uri version))
 
-           (let [url (resolve-url :koodisto-service.koodi uri
-                       {"koodistoVersio"  (str version)
-                        "onlyValidKoodis" "true"})]
-             (->> (do-get url)
-                  (mapv koodi-value->soresu-option)
-                  (sort-by (comp :fi :label) compare-case-insensitively))))))
+      (get-koodisto uri version))))
