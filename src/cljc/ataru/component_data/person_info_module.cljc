@@ -110,14 +110,36 @@
      (gender-section metadata)]
     metadata))
 
+(defn ^:private birthdate-component
+  [metadata]
+  (component/row-section
+    [(merge-with merge
+       (text-field
+         (:birth-date person-info-module-texts)
+         :size "S"
+         :id :birth-date
+         :metadata metadata
+         :validators [:past-date :required])
+       {:params {:placeholder (:date-formats person-info-module-texts)}})]
+    metadata))
+
 (defn- ssn-birthdate-gender-wrapper
   [metadata]
   (assoc
-    (component/row-section
-      [(ssn-component metadata)
-       (birthdate-and-gender-component metadata)]
-      metadata)
-    :child-validator :birthdate-and-gender-component))
+   (component/row-section
+     [(ssn-component metadata)
+      (birthdate-and-gender-component metadata)]
+     metadata)
+   :child-validator :birthdate-and-gender-component))
+
+(defn- ssn-birthdate-wrapper
+  [metadata]
+  (assoc
+   (component/row-section
+     [(ssn-component metadata)
+      (birthdate-component metadata)]
+     metadata)
+   :child-validator :ssn-or-birthdate-component))
 
 (defn- passport-number
   [metadata]
@@ -218,7 +240,7 @@
    (last-name-component metadata)
    (nationality-component metadata)
    (have-finnish-ssn-component metadata)
-   (ssn-birthdate-gender-wrapper metadata)
+   (ssn-birthdate-wrapper metadata)
    (email-component metadata)
    (phone-component metadata)
    (country-of-residence-component metadata)

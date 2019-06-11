@@ -28,10 +28,21 @@
              (and (clojure.string/blank? (-> answers-by-key :ssn :value))
                   (not (nationalities-value-contains-finland? (-> answers-by-key :nationality :value))))))))
 
+(defn- validate-ssn-or-birthdate-component
+  [answers-by-key child-answers]
+  (boolean
+    (and (-> child-answers :birth-date :passed?)
+         (or (-> child-answers :ssn :passed?)
+             (and (clojure.string/blank? (-> answers-by-key :ssn :value))
+                  (not (nationalities-value-contains-finland? (-> answers-by-key :nationality :value))))))))
+
 (defn validator-keyword->fn [validator-keyword]
   (case (keyword validator-keyword)
     :birthdate-and-gender-component
     validate-birthdate-and-gender-component
+
+    :ssn-or-birthdate-component
+    validate-ssn-or-birthdate-component
 
     :one-of ; one of the answers of a group of fields must validate to true - used in old versions of person info module
     (fn [_ child-answers]

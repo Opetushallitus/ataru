@@ -168,7 +168,7 @@
    #(= "pohjakoulutusristiriita" (:fieldClass %)) Pohjakoulutusristiriita
    :else InfoElement))
 
-(s/defschema ChildValidator (s/enum :one-of :birthdate-and-gender-component))
+(s/defschema ChildValidator (s/enum :one-of :birthdate-and-gender-component :ssn-or-birthdate-component))
 
 (s/defschema WrapperElement {:fieldClass                              (apply s/enum ["wrapperElement" "questionGroup"])
                              :id                                      s/Str
