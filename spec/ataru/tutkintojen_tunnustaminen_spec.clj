@@ -264,7 +264,7 @@
       (should= :message (:tag message))
       (let [case (create-folder-by-type "ams_case" message)]
         (should= *application-key* (property-value "ams_studypathid" case))
-        (should= "Etunimi Toinenetunimi Sukunimi" (property-value "ams_orignator" case))
+        (should= "Sukunimi Etunimi Toinenetunimi" (property-value "ams_orignator" case))
         (should= "024" (property-value "ams_applicantcountry" case))
         (should= *application-submitted* (property-value "ams_registrationdate" case))
         (should= "Hakemus" (property-value "ams_title" case)))
@@ -295,7 +295,7 @@
       (should= :message (:tag message))
       (let [case (create-folder-by-type "ams_case" message)]
         (should= *application-key* (property-value "ams_studypathid" case))
-        (should= "Etunimi Toinenetunimi Sukunimi" (property-value "ams_orignator" case))
+        (should= "Sukunimi Etunimi Toinenetunimi" (property-value "ams_orignator" case))
         (should= "028" (property-value "ams_applicantcountry" case))
         (should= *application-submitted* (property-value "ams_registrationdate" case))
         (should= "Hakemus" (property-value "ams_title" case)))
@@ -326,7 +326,7 @@
       (should= :message (:tag message))
       (let [case (create-folder-by-type "ams_case" message)]
         (should= *application-key* (property-value "ams_studypathid" case))
-        (should= "Etunimi Toinenetunimi Sukunimi" (property-value "ams_orignator" case))
+        (should= "Sukunimi Etunimi Toinenetunimi" (property-value "ams_orignator" case))
         (should= "024" (property-value "ams_applicantcountry" case))
         (should= *application-submitted* (property-value "ams_registrationdate" case))
         (should= "Hakemus" (property-value "ams_title" case)))

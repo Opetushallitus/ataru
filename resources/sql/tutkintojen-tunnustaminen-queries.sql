@@ -7,10 +7,10 @@ SELECT a.id,
        a.lang AS "lang",
        ((SELECT value->>'value'
          FROM jsonb_array_elements(a.content->'answers')
-         WHERE value->>'key' = 'first-name') || ' ' ||
+         WHERE value->>'key' = 'last-name') || ' ' ||
         (SELECT value->>'value'
          FROM jsonb_array_elements(a.content->'answers')
-         WHERE value->>'key' = 'last-name')) AS "name",
+         WHERE value->>'key' = 'first-name')) AS "name",
        (SELECT value->>'value'
         FROM jsonb_array_elements(a.content->'answers')
         WHERE value->>'key' = :country_question_id) AS "country",
