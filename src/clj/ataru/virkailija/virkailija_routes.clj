@@ -625,12 +625,13 @@
       :tags ["koodisto-api"]
       (api/GET "/:koodisto-uri/:version" {session :session}
         :path-params [koodisto-uri :- s/Str version :- Long]
+        :query-params [allow-invalid :- s/Bool]
         :return s/Any
         (let [koodi-options (koodisto/get-koodisto-options
                              koodisto-cache
                              koodisto-uri
                              version
-                             false)]
+                             allow-invalid)]
           (ok koodi-options))))
 
     (api/context "/organization" []

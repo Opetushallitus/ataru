@@ -477,6 +477,28 @@
                 })
             });
 
+            describe('dropdown from koodisto, with invalid options', function() {
+                before(
+                    clickComponentMenuItem('Pudotusvalikko, koodisto'),
+                    setTextFieldValue(function() { return formComponents().eq(17).find('.editor-form__text-field')}, 'Alasvetovalikko, koodisto, päättyneet'),
+                    function() {
+                        var e = formComponents().eq(17).find('.editor-form__select-koodisto-dropdown')
+                        e.val("maatjavaltiot2")
+                        triggerEvent(e, 'change')
+                        return
+                    },
+                    clickElement(function() { return formComponents().eq(17).find('.editor-form__checkbox + label:contains("Sisällytä päättyneet koodit")'); }),
+                    clickElement(function() { return formComponents().eq(17).find('.editor-form__show-koodisto-values a'); }),
+                    wait.until(function() { return elementExists(formComponents().eq(17).find('.editor-form__koodisto-field:contains("Suomi")')); })
+                );
+                it('selected correctly', function() {
+                    expect(formComponents()).to.have.length(18);
+                    expect(formComponents().eq(17).find('.editor-form__select-koodisto-dropdown').val()).to.equal("maatjavaltiot2");
+                    expect(formComponents().eq(17).find('.editor-form__checkbox + label:contains("Sisällytä päättyneet koodit")').siblings().prop('checked')).to.equal(true);
+                    expect(elementExists(formComponents().eq(17).find('.editor-form__koodisto-field:contains("Entinen Neuvostoliitto")'))).to.equal(true);
+                })
+            });
+
             describe('locking form', function() {
                 before(
                     wait.forMilliseconds(1000), // wait abit since

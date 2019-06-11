@@ -737,6 +737,9 @@ You will receive a confirmation of your application to your email."}
    :all-hakukohteet                             {:fi "Kaikki hakukohteet"
                                                  :sv "Alla ansökningsmål"
                                                  :en "All application options"}
+   :allow-invalid-koodis                        {:fi "Sisällytä päättyneet koodit"
+                                                 :sv "SV: Sisällytä päättyneet koodit"
+                                                 :en "EN: Sisällytä päättyneet koodit"}
    :alphabetically                              {:fi "Aakkosjärjestyksessä"
                                                  :sv "I alfabetisk ordning"
                                                  :en "In alphabetical order"}

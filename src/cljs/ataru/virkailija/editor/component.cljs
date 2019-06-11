@@ -781,7 +781,7 @@
         [:select.editor-form__select-koodisto-dropdown
          {:id        id
           :value     (:uri @selected-koodisto)
-          :on-change #(dispatch [:editor/select-koodisto-options (.-value (.-target %)) path])}
+          :on-change #(dispatch [:editor/select-koodisto-options (.-value (.-target %)) path (:allow-invalid? @selected-koodisto)])}
          (when (= (:uri @selected-koodisto) "")
            [:option {:value "" :disabled true} ""])
          (for [{:keys [uri title version]} koodisto-whitelist/koodisto-whitelist]
@@ -851,7 +851,8 @@
         support-selection-limit? (subscribe [:editor/dropdown-with-selection-limit? path])
         selected-form-key        (subscribe [:editor/selected-form-key])
         koodisto-ordered-id      (util/new-uuid)
-        component-locked?             (subscribe [:editor/component-locked? path])]
+        component-locked?        (subscribe [:editor/component-locked? path])
+        allow-invalid-koodis-id  (util/new-uuid)]
     (fn [initial-content followups path {:keys [question-group-element?]}]
       (let [languages      @languages
             field-type     (:fieldType @value)
@@ -896,7 +897,21 @@
                                 (dispatch [:editor/set-ordered-by-user (-> event .-target .-checked) path]))}]
                  [:label.editor-form__checkbox-label
                   {:for koodisto-ordered-id}
-                  (get-virkailija-translation :alphabetically)]])]
+                  (get-virkailija-translation :alphabetically)]])
+              (when (some? @options-koodisto)
+                [:div.editor-form__checkbox-container
+                 [:input.editor-form__checkbox
+                  {:id        allow-invalid-koodis-id
+                   :type      "checkbox"
+                   :checked   (boolean (:allow-invalid? @options-koodisto))
+                   :disabled  @component-locked?
+                   :on-change #(dispatch [:editor/select-koodisto-options
+                                          (:uri @options-koodisto)
+                                          path
+                                          (not (:allow-invalid? @options-koodisto))])}]
+                 [:label.editor-form__checkbox-label
+                  {:for allow-invalid-koodis-id}
+                  (get-virkailija-translation :allow-invalid-koodis)]])]
              [belongs-to-hakukohteet path initial-content]]]
            [info-addon path initial-content]
            [:div.editor-form__component-row-wrapper

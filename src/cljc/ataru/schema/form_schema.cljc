@@ -125,7 +125,8 @@
                         (s/optional-key :koodisto-source)                {:uri                             s/Str
                                                                           :version                         s/Int
                                                                           (s/optional-key :default-option) s/Any
-                                                                          (s/optional-key :title)          s/Str}
+                                                                          (s/optional-key :title)          s/Str
+                                                                          (s/optional-key :allow-invalid?) s/Bool}
                         (s/optional-key :options)                        [{:value                            s/Str
                                                                            (s/optional-key :label)           LocalizedStringOptional
                                                                            (s/optional-key :description)     LocalizedStringOptional

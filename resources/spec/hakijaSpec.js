@@ -11,7 +11,7 @@
         wait.until(function() { return formSections().length == 2 })
       )
       it('with complete form', function() {
-        expect(formFields().length).to.equal(27)
+        expect(formFields().length).to.equal(28)
         expect(submitButton().prop('disabled')).to.equal(true)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 13 tietoa')
@@ -111,6 +111,7 @@
         setNthFieldSubInputValue(31, 3, 'A2'),
         setNthFieldSubInputValue(31, 5, 'C2'),
         setNthFieldInputValue(32, "1,323"),
+        setNthFieldOption(33, '810'),
         wait.until(function() { return !submitButton().prop('disabled') })
       )
       it('works and validates correctly', function() {
@@ -161,7 +162,8 @@
             "Jatkokysymys A",
             "Jatkokysymys B",
             "Pudotusvalikon 1. kysymys",
-            "1,323"];
+            "1,323",
+            "Entinen Neuvostoliitto"];
 
         var tabularValues = _.map(testFrame().find('.application__form-field table td'), function(e) { return $(e).text() })
         var expectedTabularValues = ["A1", "B1", "C1", "A2", "", "C2", "A1", "B1", "C1", "A2", "", "C2", "Vasen vierekkäinen", "Oikea vierekkäinen", "A1", "B1", "C1", "A2", "", "C2"]

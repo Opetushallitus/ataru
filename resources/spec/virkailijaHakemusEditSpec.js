@@ -10,11 +10,11 @@
     describe('shows application with secret', function () {
       before(
         wait.until(function () {
-          return formSections().length == 2 && formFields().length == 31
+          return formSections().length == 2 && formFields().length == 32
         })
       )
       it('with complete form', function () {
-        expect(formFields().length).to.equal(31)
+        expect(formFields().length).to.equal(32)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(submitButton().prop('disabled')).to.equal(true)
       })
@@ -64,7 +64,8 @@
           "Muokattu vastaus",
           "Toinen vaihtoehto",
           "Pudotusvalikon 1. kysymys",
-          "1,323"
+          "1,323",
+          "Entinen Neuvostoliitto"
         ];
 
         var tabularValues = _.map(testFrame().find('.application__form-field table td'), function (e) {
