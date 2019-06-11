@@ -105,6 +105,27 @@
           (show-field :birth-date)
           (show-field :gender)))))
 
+(defn- birth-date
+  ^{:dependencies [:have-finnish-ssn :ssn]}
+  [db]
+  (let [have-finnish-ssn (get-in db [:application :answers :have-finnish-ssn :value])
+        ssn              (get-in db [:application :answers :ssn])
+        cannot-view?     (and (get-in db [:application :editing?])
+                              (->> (:flat-form-content db)
+                                   (filter #(= "ssn" (:id %)))
+                                   first
+                                   :cannot-view))]
+    (if (= "true" have-finnish-ssn)
+      (let [birth-date (cond (and (:valid ssn)
+                                  (not-empty (:value ssn)))
+                             (parse-birth-date-from-ssn (:value ssn))
+                             cannot-view?
+                             (get-in db [:application :answers :birth-date :value])
+                             :else
+                             "")]
+        (hide-field db :birth-date birth-date))
+      (show-field db :birth-date))))
+
 (defn- passport-number
   ^{:dependencies [:have-finnish-ssn]}
   [db]
@@ -158,6 +179,16 @@
       national-id-number
       birthplace
       birth-date-and-gender))
+
+(defn- toggle-ssn-based-fields-without-gender
+  [db _]
+  (-> db
+      have-finnish-ssn
+      ssn
+      passport-number
+      national-id-number
+      birthplace
+      birth-date))
 
 (defn- postal-office
   ^{:dependencies [:country-of-residence :postal-code]}
@@ -236,6 +267,8 @@
     select-postal-office-based-on-postal-code
     :toggle-ssn-based-fields
     toggle-ssn-based-fields
+    :toggle-ssn-based-fields-without-gender
+    toggle-ssn-based-fields-without-gender
     :change-country-of-residence
     change-country-of-residence
     :pohjakoulutusristiriita

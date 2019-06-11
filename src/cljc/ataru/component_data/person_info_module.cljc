@@ -52,14 +52,16 @@
                {:default-value default-value}))))
 
 (defn ^:private nationality-component
-  [metadata]
+  [metadata gender?]
   (-> (component/question-group metadata)
       (merge {:children [(merge (dissoc (component/dropdown metadata) :validators)
                                 {:label           (:nationality person-info-module-texts)
                                  :options         []
                                  :id              :nationality
                                  :validators      [:required]
-                                 :rules           {:swap-ssn-birthdate-based-on-nationality [:ssn :birth-date]}
+                                 :rules           (if gender?
+                                                    {:toggle-ssn-based-fields nil}
+                                                    {:toggle-ssn-based-fields-without-gender nil})
                                  :koodisto-source {:uri "maatjavaltiot2" :version 1 :default-option "Suomi"}})]})))
 
 (defn- country-of-residence-component
@@ -72,10 +74,12 @@
               :koodisto-source {:uri "maatjavaltiot2" :version 1 :default-option "Suomi"}})))
 
 (defn- have-finnish-ssn-component
-  [metadata]
+  [metadata gender?]
   (-> (component/dropdown metadata)
       (merge {:label (:have-finnish-ssn person-info-module-texts)
-              :rules {:toggle-ssn-based-fields :ssn}
+              :rules (if gender?
+                       {:toggle-ssn-based-fields nil}
+                       {:toggle-ssn-based-fields-without-gender nil})
               :no-blank-option true
               :exclude-from-answers true
               :id :have-finnish-ssn})
@@ -83,9 +87,11 @@
                        (dropdown-option "false" (:no general-texts))])))
 
 (defn ^:private ssn-component
-  [metadata]
+  [metadata gender?]
   (assoc (text-field (:ssn person-info-module-texts) :size "S" :id :ssn :metadata metadata)
-         :rules {:update-gender-and-birth-date-based-on-ssn :gender}
+         :rules (if gender?
+                  {:toggle-ssn-based-fields nil}
+                  {:toggle-ssn-based-fields-without-gender nil})
          :validators [:ssn :required]))
 
 (defn ^:private gender-section
@@ -127,7 +133,7 @@
   [metadata]
   (assoc
    (component/row-section
-     [(ssn-component metadata)
+     [(ssn-component metadata true)
       (birthdate-and-gender-component metadata)]
      metadata)
    :child-validator :birthdate-and-gender-component))
@@ -136,7 +142,7 @@
   [metadata]
   (assoc
    (component/row-section
-     [(ssn-component metadata)
+     [(ssn-component metadata false)
       (birthdate-component metadata)]
      metadata)
    :child-validator :ssn-or-birthdate-component))
@@ -220,8 +226,8 @@
 (defn onr-person-info-module [metadata]
   [(first-name-section metadata)
    (last-name-component metadata)
-   (nationality-component metadata)
-   (have-finnish-ssn-component metadata)
+   (nationality-component metadata true)
+   (have-finnish-ssn-component metadata true)
    (ssn-birthdate-gender-wrapper metadata)
    (birthplace metadata)
    (passport-number metadata)
@@ -238,8 +244,8 @@
 (defn muu-person-info-module [metadata]
   [(first-name-section metadata)
    (last-name-component metadata)
-   (nationality-component metadata)
-   (have-finnish-ssn-component metadata)
+   (nationality-component metadata false)
+   (have-finnish-ssn-component metadata false)
    (ssn-birthdate-wrapper metadata)
    (email-component metadata)
    (phone-component metadata)
