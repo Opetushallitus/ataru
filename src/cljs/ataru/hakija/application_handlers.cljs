@@ -295,18 +295,15 @@
     (toggle-values answer (clojure.string/split value #"\s*,\s*"))
     (toggle-values answer value)))
 
-(defn- set-ssn-field-visibility
-  [db]
-  (rules/run-rules db {:toggle-ssn-based-fields "ssn"}))
-
-(defn- set-country-specific-fields-visibility
-  [db]
-  (rules/run-rules db {:change-country-of-residence nil}))
-
 (defonce multi-value-field-types #{"multipleChoice" "singleChoice" "textField" "attachment" "hakukohteet" "dropdown" "textArea"})
 
 (defn- supports-multiple-values [field-type]
   (contains? multi-value-field-types field-type))
+
+(defn application-run-rules [db rule]
+  (if (not-empty rule)
+    (rules/run-rules db rule)
+    (rules/run-all-rules db (:flat-form-content db))))
 
 (defn- set-have-finnish-ssn
   [db]
@@ -412,8 +409,7 @@
                            submitted-answers)))
       (populate-hakukohde-answers-if-necessary)
       (set-have-finnish-ssn)
-      (set-ssn-field-visibility)
-      (set-country-specific-fields-visibility)
+      (application-run-rules [])
       (set-question-group-row-amounts)))
 
 (defn- original-values->answers [db]
@@ -784,11 +780,6 @@
 
 (defn default-error-handler [db [_ response]]
   (response->error-message db response))
-
-(defn application-run-rules [db rule]
-  (if (not-empty rule)
-    (rules/run-rules db rule)
-    (rules/run-all-rules db (:flat-form-content db))))
 
 (reg-event-db
   :application/run-rules
