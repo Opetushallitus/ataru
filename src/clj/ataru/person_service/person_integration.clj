@@ -4,10 +4,10 @@
    [clj-time.format :as f]
    [clojure.core.async :as async]
    [clojure.core.match :refer [match]]
+   [ataru.component-data.person-info-module :as person-info-module]
    [ataru.forms.form-store :as form-store]
    [clojure.java.jdbc :as jdbc]
    [com.stuartsierra.component :as component]
-   [com.rpl.specter :refer [select walker]]
    [taoensso.timbre :as log]
    [ataru.applications.application-store :as application-store]
    [ataru.aws.sqs :as sqs]
@@ -30,11 +30,8 @@
                    {:person-oid person-oid})))
 
 (defn muu-person-info-module? [application]
-  (let [form (form-store/fetch-by-id (:form application))
-        person-info-id (->> (select (walker #(= (:module %) "person-info")) form)
-                            (first)
-                            :id)]
-    (= "muu" person-info-id)))
+  (person-info-module/muu-person-info-module?
+   (form-store/fetch-by-id (:form application))))
 
 (defn upsert-and-log-person [job-runner person-service application-id application]
   (try

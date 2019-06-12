@@ -4,6 +4,7 @@
             [re-frame.core :as re-frame]
             [medley.core :refer [find-first]]
             [ataru.application-common.application-field-common :as common]
+            [ataru.component-data.person-info-module :as person-info-module]
             [ataru.virkailija.db :as initial-db]
             [ataru.util :as u]
             [ataru.cljs-util :as util]))
@@ -830,3 +831,12 @@
   :application/show-hakukierros-paattynyt?
   (fn show-hakukierros-paattynyt? [db _]
     (boolean (:show-hakukierros-paattynyt db))))
+
+(re-frame/reg-sub
+  :application/show-creating-henkilo-failed?
+  (fn [_ _]
+    [(re-frame/subscribe [:application/selected-application])
+     (re-frame/subscribe [:application/selected-form])])
+  (fn show-creating-henkilo-failed? [[application form] _]
+    (and (not (person-info-module/muu-person-info-module? form))
+         (nil? (get-in application [:person :oid])))))

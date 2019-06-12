@@ -1,8 +1,9 @@
-  (ns ataru.component-data.person-info-module
-    (:require [ataru.component-data.component :as component]
-              [ataru.util :as util]
-              [ataru.translations.texts :refer [person-info-module-texts general-texts]]
-              [clojure.walk]))
+(ns ataru.component-data.person-info-module
+  (:require [ataru.component-data.component :as component]
+            [ataru.util :as util]
+            [ataru.translations.texts :refer [person-info-module-texts general-texts]]
+            [clojure.walk]
+            [com.rpl.specter :refer [select walker]]))
 
 ; validators defined in ataru.hakija.application-validators
 
@@ -281,3 +282,10 @@
        util/flatten-form-fields
        (map (comp name :id))
        set))
+
+(defn muu-person-info-module?
+  [form]
+  (->> (select (walker #(= (:module %) "person-info")) form)
+       (first)
+       :id
+       (= "muu")))
