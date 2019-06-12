@@ -1,8 +1,9 @@
-  (ns ataru.component-data.person-info-module
-    (:require [ataru.component-data.component :as component]
-              [ataru.util :as util]
-              [ataru.translations.texts :refer [person-info-module-texts general-texts]]
-              [clojure.walk]))
+(ns ataru.component-data.person-info-module
+  (:require [ataru.component-data.component :as component]
+            [ataru.util :as util]
+            [ataru.translations.texts :refer [person-info-module-texts general-texts]]
+            [clojure.walk]
+            [com.rpl.specter :refer [select walker]]))
 
 ; validators defined in ataru.hakija.application-validators
 
@@ -52,14 +53,16 @@
                {:default-value default-value}))))
 
 (defn ^:private nationality-component
-  [metadata]
+  [metadata gender?]
   (-> (component/question-group metadata)
       (merge {:children [(merge (dissoc (component/dropdown metadata) :validators)
                                 {:label           (:nationality person-info-module-texts)
                                  :options         []
                                  :id              :nationality
                                  :validators      [:required]
-                                 :rules           {:swap-ssn-birthdate-based-on-nationality [:ssn :birth-date]}
+                                 :rules           (if gender?
+                                                    {:toggle-ssn-based-fields nil}
+                                                    {:toggle-ssn-based-fields-without-gender nil})
                                  :koodisto-source {:uri "maatjavaltiot2" :version 1 :default-option "Suomi"}})]})))
 
 (defn- country-of-residence-component
@@ -72,10 +75,12 @@
               :koodisto-source {:uri "maatjavaltiot2" :version 1 :default-option "Suomi"}})))
 
 (defn- have-finnish-ssn-component
-  [metadata]
+  [metadata gender?]
   (-> (component/dropdown metadata)
       (merge {:label (:have-finnish-ssn person-info-module-texts)
-              :rules {:toggle-ssn-based-fields :ssn}
+              :rules (if gender?
+                       {:toggle-ssn-based-fields nil}
+                       {:toggle-ssn-based-fields-without-gender nil})
               :no-blank-option true
               :exclude-from-answers true
               :id :have-finnish-ssn})
@@ -83,9 +88,11 @@
                        (dropdown-option "false" (:no general-texts))])))
 
 (defn ^:private ssn-component
-  [metadata]
+  [metadata gender?]
   (assoc (text-field (:ssn person-info-module-texts) :size "S" :id :ssn :metadata metadata)
-         :rules {:update-gender-and-birth-date-based-on-ssn :gender}
+         :rules (if gender?
+                  {:toggle-ssn-based-fields nil}
+                  {:toggle-ssn-based-fields-without-gender nil})
          :validators [:ssn :required]))
 
 (defn ^:private gender-section
@@ -110,14 +117,36 @@
      (gender-section metadata)]
     metadata))
 
+(defn ^:private birthdate-component
+  [metadata]
+  (component/row-section
+    [(merge-with merge
+       (text-field
+         (:birth-date person-info-module-texts)
+         :size "S"
+         :id :birth-date
+         :metadata metadata
+         :validators [:past-date :required])
+       {:params {:placeholder (:date-formats person-info-module-texts)}})]
+    metadata))
+
 (defn- ssn-birthdate-gender-wrapper
   [metadata]
   (assoc
-    (component/row-section
-      [(ssn-component metadata)
-       (birthdate-and-gender-component metadata)]
-      metadata)
-    :child-validator :birthdate-and-gender-component))
+   (component/row-section
+     [(ssn-component metadata true)
+      (birthdate-and-gender-component metadata)]
+     metadata)
+   :child-validator :birthdate-and-gender-component))
+
+(defn- ssn-birthdate-wrapper
+  [metadata]
+  (assoc
+   (component/row-section
+     [(ssn-component metadata false)
+      (birthdate-component metadata)]
+     metadata)
+   :child-validator :ssn-or-birthdate-component))
 
 (defn- passport-number
   [metadata]
@@ -198,8 +227,8 @@
 (defn onr-person-info-module [metadata]
   [(first-name-section metadata)
    (last-name-component metadata)
-   (nationality-component metadata)
-   (have-finnish-ssn-component metadata)
+   (nationality-component metadata true)
+   (have-finnish-ssn-component metadata true)
    (ssn-birthdate-gender-wrapper metadata)
    (birthplace metadata)
    (passport-number metadata)
@@ -216,9 +245,9 @@
 (defn muu-person-info-module [metadata]
   [(first-name-section metadata)
    (last-name-component metadata)
-   (nationality-component metadata)
-   (have-finnish-ssn-component metadata)
-   (ssn-birthdate-gender-wrapper metadata)
+   (nationality-component metadata false)
+   (have-finnish-ssn-component metadata false)
+   (ssn-birthdate-wrapper metadata)
    (email-component metadata)
    (phone-component metadata)
    (country-of-residence-component metadata)
@@ -253,3 +282,10 @@
        util/flatten-form-fields
        (map (comp name :id))
        set))
+
+(defn muu-person-info-module?
+  [form]
+  (->> (select (walker #(= (:module %) "person-info")) form)
+       (first)
+       :id
+       (= "muu")))

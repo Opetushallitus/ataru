@@ -66,12 +66,12 @@
         clickElement(firstApplication)()
           .then(wait.until(applicationHeadingIs('Vatanen, Ari — 141196-933S')))
           .then(function() {
-            expect(elementExists(testFrame().find('.individualization'))).to.equal(false);
+            expect(elementExists(testFrame().find('span:contains("Tee yksilöinti henkilöpalvelussa.")'))).to.equal(false);
           })
           .then(clickElement(thirdApplication))
           .then(wait.until(applicationHeadingIs('Tyrni, Johanna Irmeli — 020202A0202')))
           .then(wait.until(function() {
-            return elementExists(testFrame().find('.individualization'))
+            return elementExists(testFrame().find('span:contains("Tee yksilöinti henkilöpalvelussa.")'))
           }))
           .then(done)
           .fail(done)
