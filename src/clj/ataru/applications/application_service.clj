@@ -69,45 +69,58 @@
 
 (defn- person-info-from-application [application]
   (let [answers (util/answers-by-key (:answers application))]
-    {:first-name     (-> answers :first-name :value)
-     :preferred-name (-> answers :preferred-name :value)
-     :last-name      (-> answers :last-name :value)
-     :ssn            (-> answers :ssn :value)
-     :birth-date     (-> answers :birth-date :value)
-     :gender         (-> answers :gender :value)
-     :nationality    (-> answers :nationality :value)
-     :language       (-> answers :language :value)}))
+    (merge {:first-name     (-> answers :first-name :value)
+            :preferred-name (-> answers :preferred-name :value)
+            :last-name      (-> answers :last-name :value)
+            :birth-date     (-> answers :birth-date :value)
+            :nationality    (-> answers :nationality :value)}
+           (when-not (clojure.string/blank? (-> answers :ssn :value))
+             {:ssn (-> answers :ssn :value)})
+           (when-not (clojure.string/blank? (-> answers :gender :value))
+             {:gender (-> answers :gender :value)})
+           (when-not (clojure.string/blank? (-> answers :language :value))
+             {:language (-> answers :language :value)}))))
+
+(defn- parse-onr-aidinkieli
+  [person]
+  (try
+    (-> person :aidinkieli :kieliKoodi clojure.string/upper-case)
+    (catch Exception e
+      (throw (new RuntimeException
+                  (str "Could not parse aidinkieli "
+                       (:aidinkieli person)
+                       "of person "
+                       (:oidHenkilo person))
+                  e)))))
 
 (defn- person-info-from-onr-person [person]
-  {:first-name     (:etunimet person)
-   :preferred-name (:kutsumanimi person)
-   :last-name      (:sukunimi person)
-   :ssn            (:hetu person)
-   :birth-date     (some-> person :syntymaaika bd-converter/convert-to-finnish-format)
-   :gender         (-> person :sukupuoli)
-   :nationality    (->> (-> person :kansalaisuus)
-                        (mapv #(vector (get % :kansalaisuusKoodi "999"))))
-   :language       (try
-                     (-> person :aidinkieli :kieliKoodi clojure.string/upper-case)
-                     (catch Exception e
-                       (throw (new RuntimeException
-                                   (str "Could not parse aidinkieli "
-                                        (:aidinkieli person)
-                                        "of person "
-                                        (:oidHenkilo person))
-                                   e))))})
+  (merge {:first-name     (:etunimet person)
+          :preferred-name (:kutsumanimi person)
+          :last-name      (:sukunimi person)
+          :nationality    (->> (-> person :kansalaisuus)
+                               (mapv #(vector (get % :kansalaisuusKoodi "999"))))}
+         (let [birth-date (:syntymaaika person)]
+           (when-not (clojure.string/blank? birth-date)
+             {:birth-date (bd-converter/convert-to-finnish-format birth-date)}))
+         (when-not (clojure.string/blank? (:hetu person))
+           {:ssn (:hetu person)})
+         (when-not (clojure.string/blank? (-> person :sukupuoli))
+           {:gender (-> person :sukupuoli)})
+         (let [aidinkieli (parse-onr-aidinkieli person)]
+           (when-not (clojure.string/blank? aidinkieli)
+             {:language aidinkieli}))))
 
 (defn parse-person [application person-from-onr]
-  (let [yksiloity       (or (-> person-from-onr :yksiloity)
-                            (-> person-from-onr :yksiloityVTJ))
-        person-info     (if yksiloity
-                          (person-info-from-onr-person person-from-onr)
-                          (person-info-from-application application))]
-    (merge
-      {:oid         (:person-oid application)
-       :turvakielto (-> person-from-onr :turvakielto boolean)
-       :yksiloity   (boolean yksiloity)}
-      person-info)))
+  (let [yksiloity   (or (-> person-from-onr :yksiloity)
+                        (-> person-from-onr :yksiloityVTJ))
+        person-info (if yksiloity
+                      (person-info-from-onr-person person-from-onr)
+                      (person-info-from-application application))]
+    (merge person-info
+           (when (some? (:person-oid application))
+             {:oid         (:person-oid application)
+              :turvakielto (-> person-from-onr :turvakielto boolean)
+              :yksiloity   (boolean yksiloity)}))))
 
 (defn get-person
   [application person-client]

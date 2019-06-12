@@ -418,19 +418,17 @@
    (s/optional-key :person-oid)         (s/maybe s/Str)})
 
 (s/defschema Person
-  {:oid                                 (s/maybe s/Str)
-   :turvakielto                         s/Bool
-   :yksiloity                           s/Bool
-   :first-name                          s/Str
-   :preferred-name                      s/Str
-   :last-name                           s/Str
-   :gender                              s/Str
-   :nationality                         [(s/constrained [s/Str] #(= 1 (count %)))]
-   :language                            s/Str
-   (s/optional-key :gender-string)      s/Str
-   (s/optional-key :nationality-string) s/Str
-   (s/optional-key :ssn)                (s/maybe s/Str)
-   (s/optional-key :birth-date)         s/Str})
+  {(s/optional-key :oid)         s/Str
+   (s/optional-key :turvakielto) s/Bool
+   (s/optional-key :yksiloity)   s/Bool
+   :first-name                   s/Str
+   :preferred-name               s/Str
+   :last-name                    s/Str
+   :nationality                  [(s/constrained [s/Str] #(= 1 (count %)))]
+   (s/optional-key :birth-date)  s/Str
+   (s/optional-key :gender)      s/Str
+   (s/optional-key :language)    s/Str
+   (s/optional-key :ssn)         s/Str})
 
 (s/defschema ApplicationWithPerson
   (-> Application
