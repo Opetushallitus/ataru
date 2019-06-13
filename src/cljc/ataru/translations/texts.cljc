@@ -1319,6 +1319,9 @@ You will receive a confirmation of your application to your email."}
    :search-terms-list                           {:fi "Nimi, henkilötunnus, syntymäaika, sähköpostiosoite tai oidit"
                                                  :sv "Namn, personbeteckning, födelsetid eller e-postadress"
                                                  :en "Name, Finnish personal identity number, date of birth, email or OIDs"}
+   :id-in-shared-use                            {:fi "(tunniste on jaetussa käytössä)"
+                                                 :sv "(tunniste on jaetussa käytössä)"
+                                                 :en "(tunniste on jaetussa käytössä)"}
    :questions                                   {:fi "kysymykset"
                                                  :sv "frågor"
                                                  :en "questions"}

@@ -657,7 +657,7 @@
 
 (defn- remove-dropdown-option-button [path option-index disabled? parent-key option-value question-group-element?]
   [:div.editor-form__multi-options-remove--cross
-   [copy-link (str parent-key "_" (when question-group-element? "groupN_") option-value) :answer? true]
+   [copy-link (str parent-key "_" (when question-group-element? "groupN_") option-value) :answer? true :shared-use-warning? false]
    [:i.zmdi.zmdi-delete.zmdi-hc-lg
     {:on-click (fn [evt]
                  (when-not disabled?
