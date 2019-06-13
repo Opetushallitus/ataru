@@ -65,7 +65,7 @@
        first))
 
 (def attachment-metadata
-  {"hakemus"        {:filename "hakemus.json"}
+  {"hakemus"        {:filename "hakemus.txt"}
    "liite-1-id"     {:size     10
                      :filename "liite-1"
                      :key      "liite-1-id"
@@ -122,7 +122,7 @@
 (def ^:dynamic *application-submitted*)
 
 (describe "Tutkintojen tunnustaminen integration"
-  (tags :unit :foo)
+  (tags :unit)
 
   (around [it]
     (let [form-id       (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]

@@ -3,6 +3,7 @@
             [ataru.config.core :refer [config]]
             [ataru.db.db :as db]
             [ataru.files.file-store :as file-store]
+            [cheshire.core :as json]
             [clj-time.core :as t]
             [clj-time.format :as f]
             [clojure.data.xml :as xml]
@@ -68,8 +69,11 @@
                         (xml/element :contentStream {}
                                      (xml/element :filename {} filename)
                                      (xml/element :stream {} (new String (.encode encoder data) "UTF-8")))))
-         (cons {:filename "hakemus.json"
-                :data     (.getBytes (:content application) "UTF-8")}
+         (cons {:filename "hakemus.txt"
+                :data     (-> (:content application)
+                              json/parse-string
+                              (json/generate-string {:pretty true})
+                              (.getBytes "UTF-8"))}
                attachments))))
 
 (defn- ->application-submitted
