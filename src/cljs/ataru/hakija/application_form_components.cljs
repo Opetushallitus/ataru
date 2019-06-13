@@ -5,6 +5,7 @@
             [markdown.core :refer [md->html]]
             [cljs.core.match :refer-macros [match]]
             [cljs-time.core :as time]
+            [ataru.virkailija.editor.form-utils :refer [visible-for-ylioppilas?]]
             [ataru.cljs-util :as cljs-util :refer [get-translation]]
             [ataru.application-common.application-field-common
              :refer
@@ -26,11 +27,12 @@
 
 (declare render-field)
 
-(defn- visible? [ui field-descriptor]
+(defn- visible? [ui answers field-descriptor]
   (and (not (get-in @ui [(keyword (:id field-descriptor)) :params :hidden] false))
+       (visible-for-ylioppilas? field-descriptor @answers)
        (get-in @ui [(keyword (:id field-descriptor)) :visible?] true)
        (or (empty? (:children field-descriptor))
-           (some (partial visible? ui) (:children field-descriptor)))))
+           (some (partial visible? ui answers) (:children field-descriptor)))))
 
 (defn- text-field-size->class [size]
   (match size
@@ -618,7 +620,8 @@
       (let [on-change (fn [_]
                         (dispatch [:application/toggle-multiple-choice-option field-descriptor option question-group-idx]))
             checked?  (subscribe [:application/multiple-choice-option-checked? parent-id value question-group-idx])
-            ui        (subscribe [:state-query [:application :ui]])]
+            ui        (subscribe [:state-query [:application :ui]])
+            answers   (subscribe [:state-query [:application :answers]])]
         [:div {:key option-id}
          [:input.application__form-checkbox
           (merge {:id        option-id
@@ -634,7 +637,7 @@
           label]
          (when (and @checked?
                     (not-empty (:followups option))
-                    (some (partial visible? ui) (:followups option))
+                    (some (partial visible? ui answers) (:followups option))
                     (not question-group-idx))
            [multi-choice-followups (:followups option)])]))))
 
@@ -701,7 +704,9 @@
             (str " (" (get-translation :limit-reached) ")"))]
          (when (and (and @checked? @valid?)
                     (not-empty (:followups option))
-                    (some (partial visible? (subscribe [:state-query [:application :ui]])) (:followups option)))
+                    (some (partial visible?
+                            (subscribe [:state-query [:application :ui]])
+                            (subscribe [:state-query [:application :answers]])) (:followups option)))
            (if use-multi-choice-style?
              (multi-choice-followups (:followups option))
              [:div.application__form-single-choice-followups-indicator]))]))))
@@ -746,7 +751,9 @@
          (when (and (not idx)
                     (not use-multi-choice-style?)
                     (seq followups)
-                    (some (partial visible? (subscribe [:state-query [:application :ui]])) followups))
+                    (some (partial visible?
+                            (subscribe [:state-query [:application :ui]])
+                            (subscribe [:state-query [:application :answers]])) followups))
            [:div.application__form-multi-choice-followups-container.animated.fadeIn
             (for [followup followups]
               ^{:key (:id followup)}
@@ -1021,9 +1028,10 @@
 (defn render-field
   [field-descriptor & args]
   (let [ui       (subscribe [:state-query [:application :ui]])
-        editing? (subscribe [:state-query [:application :editing?]])]
+        editing? (subscribe [:state-query [:application :editing?]])
+        answers  (subscribe [:state-query [:application :answers]])]
     (fn [field-descriptor & {:keys [idx] :as args}]
-      (if (visible? ui field-descriptor)
+      (if (visible? ui answers field-descriptor)
         (let [disabled? (get-in @ui [(keyword (:id field-descriptor)) :disabled?] false)]
           (cond-> (match field-descriptor
                          {:id "email"

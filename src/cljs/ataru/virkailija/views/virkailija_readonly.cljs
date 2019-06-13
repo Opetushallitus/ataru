@@ -20,6 +20,7 @@
             [ataru.feature-config :as fc]
             [ataru.component-data.component-util :refer [answer-to-always-include?]]
             [ataru.util :as util]
+            [ataru.virkailija.editor.form-utils :refer [visible-for-ylioppilas?]]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
             [clojure.string :refer [trim]]
@@ -48,6 +49,7 @@
 
 (defn- visible? [field-descriptor application]
   (and (not (get-in field-descriptor [:params :hidden] false))
+       (visible-for-ylioppilas? field-descriptor (:answers application))
        (not= "infoElement" (:fieldClass field-descriptor))
        (not (:exclude-from-answers field-descriptor))
        (or (and (empty? (:belongs-to-hakukohteet field-descriptor))

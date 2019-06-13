@@ -24,8 +24,18 @@
               (:option-value field))
            (parent-is-visible followup-of fields answers hakutoiveet hakukohteet))))
 
+(defn ids []
+  (set ["c1894413-0f89-4039-bf11-c56f76a8c832"]))
+
+(defn visible-for-ylioppilas? [field answers]
+  (if (get answers :pohjakoulutus_yo)
+    (let [id (:id field)]
+      (not (get (ids) id)))
+    true))
+
 (defn visible? [field fields answers hakutoiveet hakukohteet]
   (and (not (get-in field [:params :hidden]))
+       (visible-for-ylioppilas? field answers)
        (not= "infoElement" (:fieldClass field))
        (not (:exclude-from-answers field))
        (or (and (empty? (:belongs-to-hakukohteet field))

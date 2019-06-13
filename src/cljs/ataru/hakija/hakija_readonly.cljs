@@ -9,6 +9,7 @@
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe]]
             [ataru.util :as util]
+            [ataru.virkailija.editor.form-utils :refer [visible-for-ylioppilas?]]
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
@@ -29,10 +30,11 @@
     (clojure.string/split s #"\s*,\s*")
     s))
 
-(defn- visible? [ui field-descriptor]
+(defn- visible? [ui field-descriptor application]
   (and (get-in @ui [(keyword (:id field-descriptor)) :visible?] true)
+       (visible-for-ylioppilas? field-descriptor (:answers application))
        (or (empty? (:children field-descriptor))
-           (some #(and (visible? ui %)
+           (some #(and (visible? ui % application)
                        (not= "infoElement" (:fieldClass %)))
                  (:children field-descriptor)))))
 
@@ -89,7 +91,7 @@
 
 (defn child-fields [children application lang ui question-group-id]
   (for [child children
-        :when (visible? ui child)]
+        :when (visible? ui child application)]
     ^{:key (str (:id child)
                 (when question-group-id
                   (str "-" question-group-id)))}
@@ -185,7 +187,7 @@
           [:div
            [:p.application__text-field-paragraph
             (from-multi-lang (:label option) lang)]
-           (when (some #(visible? ui %) (:followups option))
+           (when (some #(visible? ui % application) (:followups option))
              (into [:div.application-handling__nested-container]
                    (child-fields (:followups option) application lang ui question-group-idx)))])))]])
 
