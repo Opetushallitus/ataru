@@ -1,6 +1,7 @@
 (ns ataru.hakija.validator
   (:require [ataru.forms.form-store :as form-store]
             [ataru.hakija.application-validators :as validator]
+            [ataru.virkailija.editor.form-utils :refer [visible-for-ylioppilas?]]
             [ataru.util :as util :refer [collect-ids]]
             [clojure.core.async :as asyncm]
             [clojure.set :refer [difference]]
@@ -149,7 +150,8 @@
 (defn build-results
   [koodisto-cache has-applied answers-by-key results form [{:keys [id] :as field} & rest-form-fields] hakukohderyhmat virkailija?]
   (let [id          (keyword id)
-        hidden?     (get-in field [:params :hidden] false)
+        hidden?     (or (get-in field [:params :hidden] false)
+                        (not (visible-for-ylioppilas? field answers-by-key)))
         answers     (wrap-coll (:value (get answers-by-key id)))
         hakukohteet (-> answers-by-key :hakukohteet :value set)]
     (into {}
