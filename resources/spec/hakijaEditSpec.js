@@ -31,7 +31,7 @@
           "Sukunimi",
           "***********",
           "test@example.com",
-          "",
+          "test@example.com",
           "0123456789",
           "Katutie 12 B",
           "40100",
