@@ -397,9 +397,7 @@
                                                                 :values (parse-values (:value answer))}))
 
                                                      {:key "email"}
-                                                     (if (-> db :form :tarjonta :yhteishaku)
-                                                       (update answers answer-key merge {:valid true :value value :verify value})
-                                                       (update answers answer-key merge {:valid true :value value}))
+                                                     (update answers answer-key merge {:valid true :value value :verify value})
 
                                                      :else
                                                      (update answers answer-key merge {:valid true :value value}))]
