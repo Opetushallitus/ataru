@@ -1,6 +1,7 @@
 -- name: yesql-get-application
 SELECT a.id,
        a.key,
+       a.form_id AS "form-id",
        f.key AS "form-key",
        a.person_oid AS "person-oid",
        a.submitted,
@@ -22,7 +23,7 @@ SELECT a.id,
                                             WHEN 'array' THEN s_or_a
                                           END) AS attachment_key ON true
         WHERE answers->>'fieldType' = 'attachment') AS "attachment-keys",
-       a.content::text
+       a.content
 FROM applications AS a
 JOIN forms AS f ON f.id = a.form_id
 WHERE a.id = :id;

@@ -106,6 +106,7 @@
                  (job/new-job-runner hakija-jobs/job-definitions)
                  [:ohjausparametrit-service
                   :henkilo-cache
+                  :koodisto-cache
                   :person-service
                   :tarjonta-service
                   :suoritus-service])

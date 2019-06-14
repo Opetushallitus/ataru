@@ -3,6 +3,8 @@
             [ataru.config.core :refer [config]]
             [ataru.db.db :as db]
             [ataru.files.file-store :as file-store]
+            [ataru.hakija.hakija-form-service :as hakija-form-service]
+            [ataru.util :as util]
             [cheshire.core :as json]
             [clj-time.core :as t]
             [clj-time.format :as f]
@@ -58,8 +60,58 @@
                             (->property-string "ams_processtaskid" task-id))
                (xml/element :folderType {} "ams_action")))
 
+(defn- value->text
+  [attachments lang field value]
+  (if (sequential? value)
+    (mapv (partial value->text attachments lang field) value)
+    (let [option (some #(when (= value (:value %)) %) (:options field))]
+      (cond (= "attachment" (:fieldType field))
+            (get-in attachments [value :filename] value)
+            (some? option)
+            (get-in option [:label lang] value)
+            :else
+            value))))
+
+(defn- field->label-value
+  [answers attachments lang field]
+  [(get-in field [:label lang] (:id field))
+   (value->text attachments lang field (get-in answers [(:id field) :value] ""))])
+
+(defn- pretty-print-value
+  [prefix value]
+  (if (sequential? value)
+    (clojure.string/join
+     "\n"
+     (map (fn [value]
+            (if (sequential? value)
+              (str "  -\n"
+                   (clojure.string/join
+                    "\n"
+                    (map (partial pretty-print-value "    - ") value)))
+              (pretty-print-value "  - " value)))
+          value))
+    (str prefix (clojure.string/replace value "\n" (apply str "\n" (repeat (count prefix) " "))))))
+
+(defn- pretty-print
+  [[label value]]
+  (str "- " label "\n"
+       (pretty-print-value "  " value)))
+
+(defn- application->document
+  [application form attachments]
+  (let [attachments (util/group-by-first :key attachments)
+        answers     (util/group-by-first :key (:answers (:content application)))
+        lang        (keyword (:lang application))]
+    {:filename "hakemus.txt"
+     :data     (->> (:content form)
+                    util/flatten-form-fields
+                    (map (partial field->label-value answers attachments lang))
+                    (map pretty-print)
+                    (clojure.string/join "\n")
+                    ((fn [x] (println x) (.getBytes x "UTF-8"))))}))
+
 (defn- ->documents
-  [application attachments]
+  [application form attachments]
   (let [lang    (:lang application)
         encoder (Base64/getEncoder)]
     (map (fn [{:keys [filename data]}]
@@ -69,28 +121,24 @@
                         (xml/element :contentStream {}
                                      (xml/element :filename {} filename)
                                      (xml/element :stream {} (new String (.encode encoder data) "UTF-8")))))
-         (cons {:filename "hakemus.txt"
-                :data     (-> (:content application)
-                              json/parse-string
-                              (json/generate-string {:pretty true})
-                              (.getBytes "UTF-8"))}
+         (cons (application->document application form attachments)
                attachments))))
 
 (defn- ->application-submitted
-  [application attachments]
+  [application form attachments]
   (apply
    xml/element :message {}
    (->case application)
    (->action "Hakemuksen saapuminen" "01.01")
-   (->documents application attachments)))
+   (->documents application form attachments)))
 
 (defn- ->application-edited
-  [application attachments]
+  [application form attachments]
   (apply
    xml/element :message {}
    (->case application)
    (->action "Täydennys" "01.02")
-   (->documents application attachments)))
+   (->documents application form attachments)))
 
 (defn- ->application-inactivated
   [application]
@@ -108,6 +156,19 @@
       (throw (new RuntimeException (str "Application " application-id
                                         " not found"))))
     application))
+
+(defn- get-form
+  [koodisto-cache application]
+  (let [form (hakija-form-service/fetch-form-by-id
+              (:form-id application)
+              [:hakija]
+              koodisto-cache
+              nil
+              false)]
+    (when (nil? form)
+      (throw (new RuntimeException (str "Form " (:form-id application)
+                                        " not found"))))
+    form))
 
 (defn- get-application-by-event-id
   [country-question-id event-id]
@@ -141,7 +202,8 @@
                      ", skipping attachments")
           [])
       (map (fn [{:keys [key filename]}]
-             {:filename filename
+             {:key      key
+              :filename filename
               :data     (attachment-as-bytes key)})
            attachment-metadata))))
 
@@ -215,17 +277,18 @@
     cfg))
 
 (defn- application-job-step
-  [application-id edit?]
+  [koodisto-cache application-id edit?]
   (let [{:keys [form-key
                 country-question-id
                 attachment-total-size-limit
                 ftp]} (get-configuration)
         application   (get-application country-question-id application-id)]
     (if (= form-key (:form-key application))
-      (let [attachments (get-attachments attachment-total-size-limit application)
+      (let [form        (get-form koodisto-cache application)
+            attachments (get-attachments attachment-total-size-limit application)
             message     (if edit?
-                          (->application-edited application attachments)
-                          (->application-submitted application attachments))]
+                          (->application-edited application form attachments)
+                          (->application-submitted application form attachments))]
         (log/info "Sending application"
                   (if edit? "edited" "submitted")
                   "message to ASHA for application"
@@ -241,12 +304,12 @@
       {:transition {:id :final}})))
 
 (defn tutkintojen-tunnustaminen-submit-job-step
-  [{:keys [application-id]} _]
-  (application-job-step application-id false))
+  [{:keys [application-id]} {:keys [koodisto-cache]}]
+  (application-job-step koodisto-cache application-id false))
 
 (defn tutkintojen-tunnustaminen-edit-job-step
-  [{:keys [application-id]} _]
-  (application-job-step application-id true))
+  [{:keys [application-id]} {:keys [koodisto-cache]}]
+  (application-job-step koodisto-cache application-id true))
 
 (defn tutkintojen-tunnustaminen-review-state-changed-job-step
   [{:keys [event-id]} _]

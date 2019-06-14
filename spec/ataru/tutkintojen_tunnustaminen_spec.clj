@@ -1,5 +1,6 @@
 (ns ataru.tutkintojen-tunnustaminen
-  (:require [ataru.config.core :refer [config]]
+  (:require [ataru.cache.cache-service :as cache-service]
+            [ataru.config.core :refer [config]]
             [ataru.db.db :as db]
             [ataru.dob :as dob]
             [clojure.data.xml :as xml]
@@ -112,6 +113,30 @@
     {:body (new ByteArrayInputStream (.getBytes data))}
     (throw (new RuntimeException (str "no file " key " found")))))
 
+(def maatjavaltiot2-024
+  {:uri     "maatjavaltiot2_024"
+   :version 1
+   :value   "024"
+   :label   {:fi "Angola"
+             :sv "Angola"
+             :en "Angola"}})
+
+(def maatjavaltiot2-028
+  {:uri     "maatjavaltiot2_028"
+   :version 1
+   :value   "028"
+   :label   {:fi "Antigua ja Barbuda"
+             :sv "Antigua och Barbuda"
+             :en "Antigua and Barbuda"}})
+
+(def koodisto-cache-mock
+  (reify cache-service/Cache
+    (get-from [this key]
+      [maatjavaltiot2-024 maatjavaltiot2-028])
+    (get-many-from [this keys])
+    (remove-from [this key])
+    (clear-all [this])))
+
 (def ^:dynamic *form-id*)
 (def ^:dynamic *wrong-form-id*)
 (def ^:dynamic *application-id*)
@@ -127,7 +152,38 @@
   (around [it]
     (let [form-id       (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                           (:id (yesql-add-form<! {:name             {:fi "Lomake"}
-                                                  :content          {:content []}
+                                                  :content          {:content [{:id              (get-in config [:tutkintojen-tunnustaminen :country-question-id])
+                                                                                :fieldType       "dropdown"
+                                                                                :koodisto-source {:uri     "maatjavaltiot2"
+                                                                                                  :version 1}
+                                                                                :label           {:fi "FI: Suoritusmaa"
+                                                                                                  :sv "SV: Suoritusmaa"
+                                                                                                  :en "EN: Suoritusmaa"}}
+                                                                               {:id        "liite-1"
+                                                                                :fieldType "attachment"
+                                                                                :label     {:fi "FI: Liite 1"
+                                                                                            :sv "SV: Liite 1"
+                                                                                            :en "EN: Liite 1"}}
+                                                                               {:id        "liite-2"
+                                                                                :fieldType "attachment"
+                                                                                :label     {:fi "FI: Liite 2"
+                                                                                            :sv "SV: Liite 2"
+                                                                                            :en "EN: Liite 2"}}
+                                                                               {:id        "liite-3"
+                                                                                :fieldType "attachment"
+                                                                                :label     {:fi "FI: Liite 3"
+                                                                                            :sv "SV: Liite 3"
+                                                                                            :en "EN: Liite 3"}}
+                                                                               {:id        "first-name"
+                                                                                :fieldType "textField"
+                                                                                :label     {:fi "FI: Etunimet"
+                                                                                            :sv "SV: Etunimet"
+                                                                                            :en "EN: Etunimet"}}
+                                                                               {:id        "last-name"
+                                                                                :fieldType "textField"
+                                                                                :label     {:fi "FI: Sukunimi"
+                                                                                            :sv "SV: Sukunimi"
+                                                                                            :en "EN: Sukunimi"}}]}
                                                   :created_by       "testi"
                                                   :key              (get-in config [:tutkintojen-tunnustaminen :form-key])
                                                   :languages        {:languages ["fi"]}
@@ -258,7 +314,7 @@
   (it "should send submit message to ASHA SFTP server"
     (let [r       (tutkintojen-tunnustaminen-submit-job-step
                    {:application-id *application-id*}
-                   {})
+                   {:koodisto-cache koodisto-cache-mock})
           message (xml/parse-str (get-file (str *application-key* "_" *application-id* ".xml")))]
       (should= {:transition {:id :final}} r)
       (should= :message (:tag message))
@@ -289,7 +345,7 @@
   (it "should send edit message to ASHA SFTP server"
     (let [r       (tutkintojen-tunnustaminen-edit-job-step
                    {:application-id *edited-application-id*}
-                   {})
+                   {:koodisto-cache koodisto-cache-mock})
           message (xml/parse-str (get-file (str *application-key* "_" *edited-application-id* ".xml")))]
       (should= {:transition {:id :final}} r)
       (should= :message (:tag message))
@@ -340,6 +396,6 @@
     (should= {:transition {:id :final}}
              (tutkintojen-tunnustaminen-submit-job-step
               {:application-id *in-wrong-form-application-id*}
-              {}))
+              {:koodisto-cache koodisto-cache-mock}))
     (should= nil
              (get-file (str *application-key* "_" *in-wrong-form-application-id* ".xml")))))
