@@ -33,7 +33,10 @@
   (person-info-module/muu-person-info-module?
    (form-store/fetch-by-id (:form application))))
 
-(defn upsert-and-log-person [job-runner person-service application-id application]
+(defn- upsert-and-log-person [job-runner person-service application-id application]
+  (log/info "Adding applicant from application"
+            application-id
+            "to oppijanumerorekisteri")
   (try
     (let [{:keys [status oid]} (person-service/create-or-find-person
                                  person-service
@@ -49,8 +52,7 @@
       (log/info "Started person info update job for application" application-id))
     (catch IllegalArgumentException e
       (log/error e "Failed to create-or-find person for application"
-        application-id)))
-  {:transition {:id :final}})
+        application-id))))
 
 (defn upsert-person
   [{:keys [application-id]}
@@ -58,11 +60,12 @@
   {:pre [(not (nil? application-id))
          (not (nil? person-service))]}
   (let [application (application-store/get-application application-id)]
-    (when-not (muu-person-info-module? application)
-      (log/info "Trying to add applicant from application"
-        application-id
-        "to oppijanumerorekisteri")
-      (upsert-and-log-person job-runner person-service application-id application))))
+    (if (muu-person-info-module? application)
+      (log/info "Not adding applicant from application"
+                application-id
+                "to oppijanumerorekisteri")
+      (upsert-and-log-person job-runner person-service application-id application))
+    {:transition {:id :final}}))
 
 (defn- update-person-info-as-in-person
   [person-oid person]
