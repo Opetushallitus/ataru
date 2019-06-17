@@ -25,7 +25,6 @@
     [ataru.files.file-store :as file-store]
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
-    [ataru.config.core :refer [config]]
     [clj-time.core :as time]
     [clj-time.coerce :as t]
     [clojure.java.jdbc :as jdbc]
@@ -457,13 +456,16 @@
                                      (some-> application
                                              (application-service/get-person person-client)
                                              (dissoc :ssn :birth-date)))
-        full-application           (some-> application
-                                           (remove-unviewable-answers form)
-                                           attachments-metadata->answers
-                                           (dissoc :person-oid :application-hakukohde-reviews)
-                                           (assoc :cannot-edit-because-in-processing (and
-                                                                                      (not= actor-role :virkailija)
-                                                                                      (in-processing-state? application form))))]
+        full-application           (merge (some-> application
+                                                  (remove-unviewable-answers form)
+                                                  attachments-metadata->answers
+                                                  (dissoc :person-oid :application-hakukohde-reviews)
+                                                  (assoc :cannot-edit-because-in-processing (and
+                                                                                             (not= actor-role :virkailija)
+                                                                                             (in-processing-state? application form))))
+                                          (when (and (:yksiloity person)
+                                                     (some? (:key application)))
+                                            {:application-identifier (application-service/mask-application-key (:key application))}))]
     [(when full-application
        {:application full-application
         :person      person

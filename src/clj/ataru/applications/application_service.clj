@@ -3,6 +3,7 @@
     [ataru.applications.application-access-control :as aac]
     [ataru.applications.application-store :as application-store]
     [ataru.applications.excel-export :as excel]
+    [ataru.config.core :refer [config]]
     [ataru.email.application-email-confirmation :as email]
     [ataru.forms.form-access-control :as form-access-control]
     [ataru.forms.form-store :as form-store]
@@ -22,14 +23,19 @@
     [ataru.virkailija.editor.form-utils :refer [visible?]]
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
     [medley.core :refer [find-first filter-vals]]
-    [taoensso.timbre :refer [spy debug]]
+    [taoensso.timbre :refer [spy debug] :as log]
     [ataru.application.review-states :as review-states]
     [ataru.application.application-states :as application-states]
     [ataru.schema.form-schema :as ataru-schema]
     [ataru.organization-service.session-organizations :as session-orgs]
     [schema.core :as s]
     [ataru.dob :as dob])
-  (:import [java.io ByteArrayInputStream]))
+  (:import
+   java.io.ByteArrayInputStream
+   java.security.SecureRandom
+   java.util.Base64
+   [javax.crypto AEADBadTagException Cipher]
+   [javax.crypto.spec GCMParameterSpec SecretKeySpec]))
 
 (defn- extract-koodisto-fields [field-descriptor-list]
   (reduce
@@ -690,3 +696,37 @@
   (let [person-oids (when (seq person-oids)
                       (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))]
     (application-store/suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset)))
+
+(defn- init-cipher
+  [nonce mode]
+  (let [cipher   (Cipher/getInstance "AES/GCM/NoPadding")
+        key      (-> (:secret-key (:application-key-masking config))
+                     (.getBytes "UTF-8")
+                     ((fn [bs] (.decode (Base64/getDecoder) bs)))
+                     (SecretKeySpec. "AES"))
+        gcm-spec (new GCMParameterSpec 128 nonce 0 12)]
+    (.init cipher mode key gcm-spec)
+    cipher))
+
+(defn mask-application-key
+  [application-key]
+  (let [nonce (let [ba (byte-array 12)]
+                (.nextBytes (new SecureRandom) ba)
+                ba)]
+    (new String
+         (->> (.doFinal (init-cipher nonce Cipher/ENCRYPT_MODE) (.getBytes application-key "UTF-8"))
+              (concat nonce)
+              byte-array
+              (.encode (Base64/getUrlEncoder)))
+         "UTF-8")))
+
+(defn unmask-application-key
+  [string]
+  (try
+    (let [input (.decode (Base64/getUrlDecoder) (.getBytes string "UTF-8"))]
+      (new String
+           (.doFinal (init-cipher input Cipher/DECRYPT_MODE) input 12 (- (alength input) 12))
+           "UTF-8"))
+    (catch Exception e
+      (log/error e "Failed to unmask" string)
+      nil)))

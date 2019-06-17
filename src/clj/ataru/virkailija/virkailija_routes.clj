@@ -1114,7 +1114,19 @@
                {:error      "Yksilöimättömiä hakijoita"
                 :personOids yksiloimattomat}))
             {:unauthorized _}
-            (response/unauthorized {:error "Unauthorized"})))))))
+            (response/unauthorized {:error "Unauthorized"}))))
+
+      (api/GET "/application-identifier/:application-identifier" {session :session}
+        :summary "Get the application oid and person oid matching the
+                  application identifier"
+        :path-params [application-identifier :- s/Str]
+        :return {:applicationOid s/Str
+                 :personOid      s/Str}
+        (if-let [application (some->> (application-service/unmask-application-key application-identifier)
+                                      application-store/get-latest-application-by-key)]
+          (response/ok {:applicationOid (:key application)
+                        :personOid      (:person-oid application)})
+          (response/not-found))))))
 
 (api/defroutes resource-routes
   (api/undocumented

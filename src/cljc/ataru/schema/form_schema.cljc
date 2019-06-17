@@ -438,6 +438,7 @@
 
 (s/defschema ApplicationWithPersonAndForm
   {:application (-> Application
+                    (st/assoc (s/optional-key :application-identifier) s/Str)
                     (st/dissoc :person-oid)
                     (st/assoc :cannot-edit-because-in-processing s/Bool))
    :person      Person

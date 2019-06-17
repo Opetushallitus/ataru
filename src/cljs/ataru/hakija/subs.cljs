@@ -32,6 +32,13 @@
     (:application db)))
 
 (re-frame/reg-sub
+  :application/application-identifier
+  (fn [_ _]
+    (re-frame/subscribe [:application/application]))
+  (fn [application _]
+    (:application-identifier application)))
+
+(re-frame/reg-sub
   :application/editing?
   (fn [_ _]
     (re-frame/subscribe [:application/application]))
