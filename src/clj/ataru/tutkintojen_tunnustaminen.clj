@@ -108,7 +108,7 @@
                     (map (partial field->label-value answers attachments lang))
                     (map pretty-print)
                     (clojure.string/join "\n")
-                    ((fn [x] (println x) (.getBytes x "UTF-8"))))}))
+                    ((fn [x] (.getBytes x "UTF-8"))))}))
 
 (defn- ->documents
   [application form attachments]
