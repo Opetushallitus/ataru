@@ -4,7 +4,8 @@
             [ataru.util :as util]
             [ataru.application-common.application-field-common :as afc]
             [ataru.hakija.application-validators :as validators]
-            [ataru.hakija.person-info-fields :as person-info-fields]))
+            [ataru.hakija.person-info-fields :as person-info-fields]
+            [cemerick.url :as url]))
 
 (defonce attachment-modify-grace-period-days
   (get (js->clj js/config) "attachment-modify-grace-period-days" 14))
@@ -526,3 +527,14 @@
             (str "/hakemus/api/files/" attachment-key "?secret=" secret)
             (some? virkailija-secret)
             (str "/hakemus/api/files/" attachment-key "?virkailija-secret=" virkailija-secret)))))
+
+(re-frame/reg-sub
+  :application/language-version-link
+  (fn [db [_ language]]
+    (let [url               (url/url (.. js/window -location -href))
+          virkailija-secret (get-in db [:application :virkailija-secret])]
+      (-> (cond-> url
+                  (some? virkailija-secret)
+                  (assoc-in [:query "virkailija-secret"] virkailija-secret))
+          (assoc-in [:query "lang"] (name language))
+          str))))
