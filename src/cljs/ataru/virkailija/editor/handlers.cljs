@@ -301,7 +301,10 @@
 
                                        @yhteishaku?
                                        (map #(cond-> %
-                                                     (not= "fieldset" (:fieldType %))
+                                                     (not (contains? #{"pohjakoulutusristiriita"
+                                                                       "fieldset"
+                                                                       "hakukohteet"}
+                                                                     (:fieldType %)))
                                                      (assoc-in [:params :hidden] @yhteishaku?))))
         first-component-idx   (cond-> sub-path
                                       (not (number? sub-path))
