@@ -169,11 +169,17 @@
                                                                                 :label     {:fi "FI: Liite 2"
                                                                                             :sv "SV: Liite 2"
                                                                                             :en "EN: Liite 2"}}
-                                                                               {:id        "liite-3"
-                                                                                :fieldType "attachment"
-                                                                                :label     {:fi "FI: Liite 3"
-                                                                                            :sv "SV: Liite 3"
-                                                                                            :en "EN: Liite 3"}}
+                                                                               {:id         "ryhma-1"
+                                                                                :fieldClass "questionGroup"
+                                                                                :fieldType  "fieldset"
+                                                                                :label      {:fi ""
+                                                                                             :sv ""
+                                                                                             :en ""}
+                                                                                :children   [{:id        "liite-3"
+                                                                                              :fieldType "attachment"
+                                                                                              :label     {:fi "FI: Liite 3"
+                                                                                                          :sv "SV: Liite 3"
+                                                                                                          :en "EN: Liite 3"}}]}
                                                                                {:id        "first-name"
                                                                                 :fieldType "textField"
                                                                                 :label     {:fi "FI: Etunimet"
@@ -216,6 +222,7 @@
                                                                                 :fieldType "attachment"}
                                                                                {:key       "liite-3"
                                                                                 :value     [["liite-3-1-1-id"]
+                                                                                            []
                                                                                             ["liite-3-2-1-id" "liite-3-2-2-id"]]
                                                                                 :fieldType "attachment"}
                                                                                {:key       "first-name"

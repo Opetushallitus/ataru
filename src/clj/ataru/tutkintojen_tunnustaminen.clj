@@ -74,8 +74,9 @@
 
 (defn- field->label-value
   [answers attachments lang field]
-  [(get-in field [:label lang] (:id field))
-   (value->text attachments lang field (get-in answers [(:id field) :value] ""))])
+  (when (contains? answers (:id field))
+    [(get-in field [:label lang] (:id field))
+     (value->text attachments lang field (get-in answers [(:id field) :value] ""))]))
 
 (defn- pretty-print-value
   [prefix value]
@@ -84,11 +85,10 @@
      "\n"
      (map (fn [value]
             (if (sequential? value)
-              (str "  -\n"
-                   (clojure.string/join
-                    "\n"
-                    (map (partial pretty-print-value "    - ") value)))
-              (pretty-print-value "  - " value)))
+              (if (empty? value)
+                (str "  -")
+                (str "  -\n" (pretty-print-value (str prefix "  ") value)))
+              (pretty-print-value (str prefix "- ") value)))
           value))
     (str prefix (clojure.string/replace value "\n" (apply str "\n" (repeat (count prefix) " "))))))
 
@@ -105,9 +105,9 @@
     {:filename "hakemus.txt"
      :data     (->> (:content form)
                     util/flatten-form-fields
-                    (map (partial field->label-value answers attachments lang))
+                    (keep (partial field->label-value answers attachments lang))
                     (map pretty-print)
-                    (clojure.string/join "\n")
+                    (clojure.string/join "\n\n")
                     ((fn [x] (.getBytes x "UTF-8"))))}))
 
 (defn- ->documents
