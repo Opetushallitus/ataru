@@ -3,6 +3,7 @@
             [cheshire.core :as json]
             [ataru.application.review-states :refer [incomplete-states] :as application-review-states]
             [ataru.db.db :as db]
+            [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             [ataru.dob :as dob]
             [ataru.forms.form-store :as forms]
             [ataru.koodisto.koodisto :as koodisto]
@@ -875,7 +876,8 @@ WHERE la.key IS NULL\n"
 
 (defn- unwrap-hakurekisteri-application
   [{:keys [key haku hakukohde person_oid lang email content payment-obligations eligibilities]}]
-  (let [answers (answers-by-key (:answers content))]
+  (let [answers  (answers-by-key (:answers content))
+        foreign? (not= finland-country-code (-> answers :country-of-residence :value))]
     {:oid                         key
      :personOid                   person_oid
      :applicationSystemId         haku
@@ -885,7 +887,9 @@ WHERE la.key IS NULL\n"
      :matkapuhelin                (-> answers :phone :value)
      :lahiosoite                  (-> answers :address :value)
      :postinumero                 (-> answers :postal-code :value)
-     :postitoimipaikka            (-> answers :postal-office :value)
+     :postitoimipaikka            (if foreign?
+                                    (-> answers :city :value)
+                                    (-> answers :postal-office :value))
      ;; Default asuinmaa to finland for forms that are from before
      ;; country-of-residence was implemented, or copied from those forms.
      :asuinmaa                    (or (-> answers :country-of-residence :value) "246")
