@@ -726,11 +726,11 @@
 
 (defn clear-copy-component [db]
   (let [copy-component-form-key (get-in db [:editor :copy-component :copy-component-form-key])]
-    (cond-> db
+    (cond-> (-> db
+                (update :editor dissoc :copy-component)
+                (assoc-in [:editor :ui :component-button-state] {}))
             (not= copy-component-form-key (get-in db [:editor :selected-form-key]))
-            (update-in [:editor :forms copy-component-form-key] assoc :content [])
-            true
-            (update :editor dissoc :copy-component))))
+            (update-in [:editor :forms copy-component-form-key] assoc :content []))))
 
 (defn copy-paste-component
   [db [_ {:keys [copy-component-form-key copy-component-path copy-component-cut? copy-component-unique-ids]} target-path]]
