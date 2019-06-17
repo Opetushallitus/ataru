@@ -5,7 +5,6 @@
             [ataru.hakija.hakija-readonly :as readonly-view]
             [ataru.cljs-util :as util :refer [get-translation]]
             [re-frame.core :refer [subscribe dispatch]]
-            [cemerick.url :as url]
             [cljs.core.match :refer-macros [match]]
             [cljs-time.core :refer [to-default-time-zone now after?]]
             [cljs-time.format :refer [unparse unparse-local formatter]]
@@ -50,16 +49,16 @@
                  (> (count languages) 0)
                  (nil? secret))
         [:span.application__header-text
-         (map-indexed (fn [idx lang]
-                        (cond-> [:span {:key (name lang)}
-                                 [:a {:href (-> (.. js/window -location -href)
-                                                (url/url)
-                                                (assoc-in [:query "lang"] (name lang))
-                                                str)}
-                                  (get language-names lang)]]
-                                (> (dec (count languages)) idx)
-                                (conj [:span.application__header-language-link-separator " | "])))
-                      languages)])]
+         (doall
+          (rest
+           (mapcat (fn [language]
+                     [[:span.application__header-language-link-separator
+                       {:key (str "separator-" (name language))}
+                       " | "]
+                      [:span {:key (name language)}
+                       [:a {:href @(subscribe [:application/language-version-link language])}
+                        (get language-names language)]]])
+                   languages)))])]
      (when (not-empty apply-dates)
        [:div.application__sub-header-container
         [:span.application__sub-header-dates apply-dates]])
