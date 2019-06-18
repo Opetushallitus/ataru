@@ -109,7 +109,7 @@
     }
 
     function getRemoveElementButtons(pseudoClass) {
-        return testFrame().find('div.editor-form__panel-container .editor-form__remove-component-button' + pseudoClass);
+        return testFrame().find('div.editor-form__panel-container .editor-form__component-button:contains("Poista")' + pseudoClass);
     }
 
     function allAddComponentToolbarsDisabled() {

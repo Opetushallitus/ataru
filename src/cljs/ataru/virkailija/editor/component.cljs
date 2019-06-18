@@ -170,40 +170,54 @@
   [event]
   (.preventDefault event))
 
-(defn- cut-component-button [removable? path]
-  (case @(subscribe [:editor/component-button-state :cut path])
-    :active
-    [:button.editor-form__copy-component-button
-     {:on-click #(dispatch [:editor/start-component :cut path])}
+(defn- cut-component-button [path]
+  (case @(subscribe [:editor/component-button-state path :cut])
+    :enabled
+    [:button.editor-form__component-button
+     {:on-click #(dispatch [:editor/copy-component path true])}
      (get-virkailija-translation :cut-element)]
-    :confirm
-    [:div.editor-form__component-button-group
-     [:button.editor-form__copy-component-button--pressed.editor-form__copy-component-button
-      {:on-click (fn [event]
-                   (dispatch [:editor/copy-component path true removable?]))}
-      (get-virkailija-translation :confirm-cut)]
-     [:button.editor-form__copy-component-button
-      {:on-click #(dispatch [:editor/unstart-component :cut path])}
-      (get-virkailija-translation :cancel-cut)]]))
+    :active
+    [:button.editor-form__component-button
+     {:on-click #(dispatch [:editor/cancel-copy-component])}
+     (get-virkailija-translation :cancel-cut)]
+    :disabled
+    [:button.editor-form__component-button
+     {:disabled true}
+     (get-virkailija-translation :cut-element)]))
+
+(defn- copy-component-button [path]
+  (case @(subscribe [:editor/component-button-state path :copy])
+    :enabled
+    [:button.editor-form__component-button
+     {:on-click #(dispatch [:editor/copy-component path false])}
+     (get-virkailija-translation :copy-element)]
+    :active
+    [:button.editor-form__component-button
+     {:on-click #(dispatch [:editor/cancel-copy-component])}
+     (get-virkailija-translation :cancel-copy)]
+    :disabled
+    [:button.editor-form__component-button
+     {:disabled true}
+     (get-virkailija-translation :copy-element)]))
 
 (defn- remove-component-button [path]
-  (case @(subscribe [:editor/component-button-state :remove path])
-    :active
-    [:button.editor-form__remove-component-button
-     {:on-click #(dispatch [:editor/start-component :remove path])}
+  (case @(subscribe [:editor/component-button-state path :remove])
+    :enabled
+    [:button.editor-form__component-button
+     {:on-click #(dispatch [:editor/start-remove-component path])}
      (get-virkailija-translation :remove)]
     :confirm
     [:div.editor-form__component-button-group
-     [:button.editor-form__remove-component-button--confirm.editor-form__remove-component-button
+     [:button.editor-form__component-button.editor-form__component-button--confirm
       {:on-click (fn [_] (dispatch [:editor/confirm-remove-component path]))}
       (get-virkailija-translation :confirm-delete)]
-     [:button.editor-form__remove-component-button
-      {:on-click #(dispatch [:editor/unstart-component :remove path])}
+     [:button.editor-form__component-button
+      {:on-click #(dispatch [:editor/cancel-remove-component path])}
       (get-virkailija-translation :cancel-remove)]]
-     :disabled
-     [:button.editor-form__remove-component-button--disabled.editor-form__remove-component-button
-      {:disabled true}
-      (get-virkailija-translation :confirm-delete)]))
+    :disabled
+    [:button.editor-form__component-button
+     {:disabled true}
+     (get-virkailija-translation :remove)]))
 
 (defn- header-metadata
   [metadata]
@@ -219,20 +233,16 @@
              (-> metadata :modified-by :date temporal/str->googdate temporal/time->date))])
 
 (defn- text-header
-  [id label path metadata & {:keys [movable?
-                                    foldable?
-                                    removable?
+  [id label path metadata & {:keys [foldable?
+                                    can-copy?
+                                    can-cut?
+                                    can-remove?
                                     sub-header]
-                             :or   {movable? true
-                                    foldable?  true
-                                    removable? true}}]
-  (let [folded?                 @(subscribe [:editor/folded? id])
-        selected-form-key       @(subscribe [:editor/selected-form-key])
-        locked?                 @(subscribe [:editor/form-locked?])
-        copy-component          @(subscribe [:editor/copy-component])
-        copy-component-path     (:copy-component-path copy-component)
-        copy-component-cut?     (:copy-component-cut? copy-component)
-        copy-component-form-key (:copy-component-form-key copy-component)]
+                             :or   {foldable?   true
+                                    can-copy?   true
+                                    can-cut?    true
+                                    can-remove? true}}]
+  (let [folded? @(subscribe [:editor/folded? id])]
     [:div.editor-form__header-wrapper
      [:header.editor-form__component-header
       (when foldable?
@@ -256,31 +266,11 @@
               (clojure.string/join " - ")))]]
      (when metadata
        (header-metadata metadata))
-     (when (and (not locked?) movable?)
-       (cond (and (= copy-component-path path) copy-component-cut? (= selected-form-key copy-component-form-key))
-             [:button.editor-form__copy-component-button.editor-form__copy-component-button--pressed
-              {:on-click (fn [_] (dispatch [:editor/clear-copy-component]))}
-              (get-virkailija-translation :cut-element)]
-             (some? copy-component-path)
-             [:button.editor-form__copy-component-button.editor-form__copy-component-button--disabled
-              {:on-click (fn [_] (dispatch [:editor/clear-copy-component]))}
-              (get-virkailija-translation :cut-element)]
-             :else
-             [cut-component-button removable? path]))
-     (when (and (not locked?) removable? movable?)
-       (cond (and (= copy-component-path path) (not copy-component-cut?) (= selected-form-key copy-component-form-key))
-             [:button.editor-form__copy-component-button.editor-form__copy-component-button--pressed
-              {:on-click (fn [_] (dispatch [:editor/clear-copy-component]))}
-              (get-virkailija-translation :copy-element)]
-             (some? copy-component-path)
-             [:button.editor-form__copy-component-button.editor-form__copy-component-button--disabled
-              {:on-click (fn [_] (dispatch [:editor/clear-copy-component]))}
-              (get-virkailija-translation :copy-element)]
-             :else
-             [:button.editor-form__copy-component-button
-              {:on-click (fn [_] (dispatch [:editor/copy-component path false removable?]))}
-              (get-virkailija-translation :copy-element)]))
-     (when removable?
+     (when can-cut?
+       [cut-component-button path])
+     (when can-copy?
+       [copy-component-button path])
+     (when can-remove?
        [remove-component-button path])]))
 
 (defn- fold-transition
@@ -921,7 +911,9 @@
       [:div.editor-form__component-wrapper
        [text-header (:id content) (get-in @value [:label @virkailija-lang]) path nil
         :foldable? false
-        :removable? false]
+        :can-cut? true
+        :can-copy? false
+        :can-remove? false]
        [:div.editor-form__component-content-wrapper
         [:div.editor-form__module-fields
          (get-virkailija-translation :hakukohde-info)]]])))
@@ -936,7 +928,9 @@
       [:div.editor-form__component-wrapper
        [text-header (:id content) (get-in @value [:label @virkailija-lang]) path nil
         :foldable? false
-        :removable? false]
+        :can-cut? true
+        :can-copy? false
+        :can-remove? false]
        [:div.editor-form__component-content-wrapper
         (when (= "person-info" (name (:module content)))
           [:div.editor-form__module-fields
@@ -1069,7 +1063,9 @@
       [:div.editor-form__component-wrapper
        [text-header (:id content) (get-virkailija-translation :text-field) path (:metadata content)
         :foldable? false
-        :movable? false]
+        :can-cut? false
+        :can-copy? false
+        :can-remove? true]
        [:div.editor-form__component-content-wrapper
         [:div.editor-form__component-row-wrapper
          [:div.editor-form__text-field-wrapper

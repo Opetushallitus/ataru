@@ -835,13 +835,16 @@ You will receive a confirmation of your application to your email."}
                                                  :en "Confirm the deletion"}
    :cancel-remove                               {:fi "Älä poista"
                                                  :sv "Radera inte"
-                                                 :en "Don't remove"}
+                                                 :en "Cancel remove"}
    :confirm-cut                                 {:fi "Vahvista leikkaus"
                                                  :sv "Bekräfta utklippning"
                                                  :en "Confirm the cut"}
    :cancel-cut                                  {:fi "Älä leikkaa"
                                                  :sv "Klipp inte ut"
-                                                 :en "Don't cut"}
+                                                 :en "Cancel cut"}
+   :cancel-copy                                 {:fi "Älä kopio"
+                                                 :sv "Kopiera inte"
+                                                 :en "Cancel copy"}
    :only-selected-hakukohteet                   {:fi "vain valituille hakukohteille"
                                                  :sv "till valda ansökningsmål"
                                                  :en "only selected application options"}

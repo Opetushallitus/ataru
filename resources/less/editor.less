@@ -77,13 +77,13 @@
   padding: 0 20px;
 }
 
-.editor-form__copy-component-button {
+.editor-form__component-button {
   border: 0;
   border-radius: 3px;
   color: @white;
   display: flex;
   height: 25px;
-  margin: 8px 8px 8px 0px;
+  margin-right: 8px;
   align-items: center;
   justify-content: center;
   background-color: @pale-blue;
@@ -102,113 +102,22 @@
   &:hover {
     background-color: @editor-control-button-hover-blue;
   }
+
+  &:disabled {
+    background-color: @section-gray-border;
+    cursor: default;
+  }
 }
 
-.editor-form__copy-component-button--pressed {
+.editor-form__component-button--confirm {
   background-color: @editor-control-button-confirm-red;
   &:hover {
     background-color: @editor-control-button-confirm-red;
   }
 }
 
-.editor-form__copy-component-button--disabled {
-  background-color: @section-gray-border;
-  cursor: default;
-  &:hover {
-    background-color: @section-gray-border;
-  }
-}
-
-.editor-form__move-component-button {
-  border: solid 1px @pale-blue;
-  border-radius: 3px;
-  color: @white;
-  display: flex;
-  height: 25px;
-  margin-left: 3px;
-  margin-right: 3px;
-  background-color: @pale-blue;
-  cursor: pointer;
-  font-size: 14px;
-  font-family: 'Open Sans', sans-serif;
-
-  &:focus {
-    outline: none;
-  }
-
-  &::-moz-focus-inner {
-    border: 0px;
-  }
-
-  &:hover {
-    border: solid 1px @editor-control-button-hover-blue;
-    background-color: @editor-control-button-hover-blue;
-  }
-}
-.editor-form__move-component-button--disabled {
-  border: solid 1px @section-gray-border;
-  background-color: @section-gray-border;
-  cursor: default;
-  &:hover {
-    background-color: @section-gray-border;
-    border: solid 1px @section-gray-border;
-  }
-}
-
-.editor-form__move-component-button--pressed {
-  background-color: @element-header-background;
-  color: @pale-blue;
-  border: solid 1px @pale-blue;
-  &:hover {
-    border: solid 1px @pale-blue;
-    background-color: @element-header-background;
-  }
-}
 .editor-form__component-button-group {
   display: flex;
-}
-.editor-form__remove-component-button {
-  border: 0;
-  border-radius: 3px;
-  color: @white;
-  display: flex;
-  height: 25px;
-  margin: 8px 8px 8px 0px;
-  align-items: center;
-  justify-content: center;
-  background-color: @pale-blue;
-  cursor: pointer;
-  font-size: 14px;
-  font-family: 'Open Sans', sans-serif;
-
-  &:focus {
-    outline: none;
-  }
-
-  &::-moz-focus-inner {
-    border: 0px;
-  }
-
-  &:hover {
-    background-color: @editor-control-button-hover-blue;
-  }
-}
-
-.editor-form__remove-component-button--confirm {
-  background-color: @editor-control-button-confirm-red;
-
-  &:hover {
-    background-color: @editor-control-button-confirm-red;
-  }
-}
-
-.editor-form__remove-component-button--disabled {
-  background-color: @section-gray-border;
-  cursor: default;
-
-  &:hover {
-    background-color: @section-gray-border;
-  }
 }
 
 .editor-form__list {
