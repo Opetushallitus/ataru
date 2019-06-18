@@ -982,6 +982,28 @@
               :handler-or-dispatch :editor/update-form-lock
               :handler-args        {:form-key form-key}}})))
 
+(defn- descendant-paths
+  [field path]
+  (into [path]
+        (concat
+         (for [[i child] (map vector (range) (:children field))]
+           (descendant-paths child (conj path :children i)))
+         (for [[i option]   (map vector (range) (:options field))
+               [j followup] (map vector (range) (:followups option))]
+           (descendant-paths followup (conj path :options i :followups j))))))
+
+(reg-event-db
+  :editor/toggle-component-lock
+  (fn [db [_ path]]
+    (let [field      (get-in db (vec (current-form-content-path db path)))
+          new-locked (not (get-in field [:metadata :locked]))]
+      (reduce (fn [db path]
+                (-> db
+                    (assoc-in (vec (current-form-content-path db [path :metadata :locked])) new-locked)
+                    (update-modified-by [path])))
+              db
+              (descendant-paths field (vec path))))))
+
 (defn- add-stored-content-to-templates
   [previews]
   (map #(assoc % :stored-content (dissoc % :stored-content)) previews))

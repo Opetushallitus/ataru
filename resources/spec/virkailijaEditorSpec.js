@@ -112,15 +112,6 @@
         return testFrame().find('div.editor-form__panel-container .editor-form__component-button:contains("Poista")' + pseudoClass);
     }
 
-    function allAddComponentToolbarsDisabled() {
-        return testFrame().find('.form__add-component-toolbar--list').length === 0
-    }
-
-    function allAddComponentToolbarsEnabled() {
-        return testFrame().find('.form__add-component-toolbar--list').length ===
-            testFrame().find('.editor-form__add-component-toolbar').length;
-    }
-
     before(function () {
         loadInFrame('http://localhost:8350/lomake-editori/auth/cas?ticket=DEVELOPER')
     });
@@ -499,7 +490,7 @@
                     expect(getInputs(':enabled').length).to.equal(0);
                     expect(getRemoveElementButtons(':disabled').length).to.equal(getRemoveElementButtons('').length);
                     expect(getRemoveElementButtons(':enabled').length).to.equal(0);
-                    expect(allAddComponentToolbarsDisabled()).to.equal(true);
+                    expect(testFrame().find('.editor-form__add-component-toolbar .plus-component--disabled').length).to.equal(1);
                     expect(elementExists(testFrame().find('.editor-form__form-editing-locked'))).to.equal(true);
                 })
             });
@@ -514,7 +505,7 @@
                 it('all inputs are unlocked', function() {
                     expect(getInputs(':disabled').length).to.equal(0);
                     expect(getInputs(':enabled').length).to.equal(getInputs('').length);
-                    expect(allAddComponentToolbarsEnabled()).to.equal(true);
+                    expect(testFrame().find('.editor-form__add-component-toolbar .plus-component--disabled').length).to.equal(0);
                     expect(elementExists(testFrame().find('.editor-form__form-editing-locked'))).to.equal(false);
                 })
             });

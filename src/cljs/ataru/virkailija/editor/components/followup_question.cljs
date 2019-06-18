@@ -23,18 +23,20 @@
                                   :modified-by metadata})]
       (update-in db (util/flatten-path db option-path :followups) (fnil conj []) component))))
 
-(defn followup-question-overlay [option-index followups option-path show-followups]
+(defn followup-question-overlay [option-index followups path show-followups]
   (when (get @show-followups option-index)
-    [:div.editor-form__followup-question-overlay-parent
-     [:div.editor-form__followup-question-overlay-outer
-      [:div.editor-form__followup-indicator]
-      [:div.editor-form__followup-indicator-inlay]
-      [:div.editor-form__followup-question-overlay
-       followups
-       [dnd/drag-n-drop-spacer (conj option-path :followups (count followups))]
-       [toolbar/followup-toolbar option-path
-        (fn [generate-fn]
-          (dispatch [:editor/generate-followup-component generate-fn option-path]))]]]]))
+    (let [option-path (conj path :options option-index)]
+      [:div.editor-form__followup-question-overlay-parent
+       [:div.editor-form__followup-question-overlay-outer
+        [:div.editor-form__followup-indicator]
+        [:div.editor-form__followup-indicator-inlay]
+        [:div.editor-form__followup-question-overlay
+         followups
+         [dnd/drag-n-drop-spacer (conj option-path :followups (count followups))]
+         (when-not @(subscribe [:editor/component-locked? path])
+           [toolbar/followup-toolbar option-path
+            (fn [generate-fn]
+              (dispatch [:editor/generate-followup-component generate-fn option-path]))])]]])))
 
 (defn followup-question [option-index followups option-path show-followups]
   (let [attrs {:on-click #(swap! show-followups

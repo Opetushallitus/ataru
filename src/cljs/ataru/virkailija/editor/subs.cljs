@@ -285,6 +285,15 @@
     (some? (:locked form))))
 
 (re-frame/reg-sub
+  :editor/component-locked?
+  (fn [[_ path] _]
+    [(re-frame/subscribe [:editor/form-locked?])
+     (re-frame/subscribe [:editor/get-component-value path])])
+  (fn [[form-locked? field] _]
+    (or form-locked?
+        (get-in field [:metadata :locked] false))))
+
+(re-frame/reg-sub
   :editor/dropdown-with-selection-limit?
   (fn [[_ & path] _]
     (re-frame/subscribe [:editor/top-level-content (first (flatten path))]))
@@ -332,11 +341,11 @@
   :editor/component-button-state
   (fn [[_ path] _]
     [(re-frame/subscribe [:editor/ui])
-     (re-frame/subscribe [:editor/form-locked?])
+     (re-frame/subscribe [:editor/component-locked? path])
      (re-frame/subscribe [:editor/copy-component])
      (re-frame/subscribe [:editor/get-component-value path])
      (re-frame/subscribe [:editor/selected-form-key])])
-  (fn component-button-state [[ui form-locked? copy-component field selected-form-key] [_ path button-type]]
+  (fn component-button-state [[ui component-locked? copy-component field selected-form-key] [_ path button-type]]
     (case button-type
       :copy
       (cond (nil? copy-component)
@@ -348,7 +357,7 @@
             :else
             :disabled)
       :cut
-      (cond form-locked?
+      (cond component-locked?
             :disabled
             (nil? copy-component)
             :enabled
@@ -359,7 +368,7 @@
             :else
             :disabled)
       :remove
-      (cond (or form-locked? (some? copy-component))
+      (cond (or component-locked? (some? copy-component))
             :disabled
             (= :confirm (get-in ui [(:id field) :remove]))
             :confirm
