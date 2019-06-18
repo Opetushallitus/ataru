@@ -33,12 +33,12 @@
 
 (reg-event-fx
   :application/handle-get-application-by-hakija-secret-error
-  (fn [{:keys [db]} [_ {:keys [status response] :as params}]]
+  (fn [{:keys [db]} [_ old-secret {:keys [status response] :as params}]]
     (if (and (= status 401) (= "secret-expired" (:code response)))
       {:db (-> db
                (assoc-in [:form :selected-language] (keyword (:lang response)))
                (assoc-in [:application :secret-expired?] true)
-               (assoc-in [:application :old-secret] (:modify (util/extract-query-params))))}
+               (assoc-in [:application :old-secret] old-secret))}
       {:db       db
        :dispatch [:application/default-handle-error params]})))
 
@@ -63,7 +63,7 @@
   {:db   db
    :http {:method        :get
           :url           (str "/hakemus/api/application?secret=" secret)
-          :error-handler :application/handle-get-application-by-hakija-secret-error
+          :error-handler [:application/handle-get-application-by-hakija-secret-error secret]
           :handler       [:application/handle-get-application {:secret secret}]}})
 
 (reg-event-fx
