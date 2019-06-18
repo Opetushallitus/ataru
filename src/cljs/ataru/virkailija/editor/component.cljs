@@ -898,7 +898,8 @@
                                                    :label lang])])
          languages
          :header? true)]
-       children
+       [:div.editor-form__wrapper-element-well
+        children]
        [dnd/drag-n-drop-spacer (conj path :children (count children))]
        (case (:fieldClass content)
          "wrapperElement" [toolbar/add-component (conj path :children (count children))]

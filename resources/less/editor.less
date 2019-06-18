@@ -737,13 +737,13 @@
   display: flex;
   flex-flow: row nowrap;
   margin-bottom: 12px;
+  background-color: @element-list-item-background;
 }
 
 .editor-form__multi-options-arrows-container {
   width: 35px;
   height: 100%;
   margin-right: 2px;
-  background-color: @element-header-background;
   display: flex;
   flex-flow: column nowrap;
   align-items: stretch;
@@ -777,7 +777,7 @@
 }
 
 .editor-form__multi-options-wrapper-inner {
-  background-color: @element-header-background;
+  background-color: @element-list-item-background;
   margin-right: 2px;
   padding: 10px 10px;
   border-radius: 3px;
@@ -789,8 +789,12 @@
   width: 170px;
   display: flex;
   align-items: center;
-  background-color: @element-header-background;
   border-radius: 3px;
+}
+
+.editor-form__wrapper-element-well {
+  background-color: @element-wrapper-element-well-background;
+  padding: 5px 10px 20px 10px;
 }
 
 .editor-form__multi-options-remove--cross {
@@ -799,7 +803,6 @@
   color: @pale-blue;
   display: flex;
   align-items: center;
-  background-color: @element-header-background;
   border-radius: 3px;
 
   .zmdi-hc-lg {
@@ -1112,7 +1115,7 @@
   justify-content: center;
   border: 1px dashed @section-gray-border;
   border-radius: 2px;
-  background-color: #F7F7F7;
+  background-color: @element-toolbar-background;
   padding: 0.5em;
   min-height: 43px;
   color: @selected-blue;
@@ -1246,7 +1249,7 @@
   height: 0;
   border-left: 9px solid transparent;
   border-right: 9px solid transparent;
-  border-bottom: 8px solid #fcfcfc;
+  border-bottom: 8px solid @element-followup-well-background;
 }
 
 .editor-form__followup-question-overlay-parent {
@@ -1260,7 +1263,7 @@
 
 .editor-form__followup-question-overlay {
   border: 1px solid @section-gray-border;
-  background-color: #fcfcfc;
+  background-color: @element-followup-well-background;
   padding: 12px;
 }
 
