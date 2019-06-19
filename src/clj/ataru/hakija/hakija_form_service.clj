@@ -10,7 +10,7 @@
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options populate-attachment-deadlines]]
-            [taoensso.timbre :refer [warn]]
+            [taoensso.timbre :as log]
             [clj-time.core :as time]
             [clj-time.coerce :as t]
             [clj-time.format :as f]
@@ -188,17 +188,14 @@
         priorisoivat  (:ryhmat (hakukohderyhmat/priorisoivat-hakukohderyhmat tarjonta-service haku-oid))
         rajaavat      (:ryhmat (hakukohderyhmat/rajaavat-hakukohderyhmat haku-oid))
         form          (fetch-form-by-id id roles koodisto-cache hakukohteet application-in-processing-state?)]
-    (when (not tarjonta-info)
-      (throw (Exception. (str "No haku found for haku " haku-oid))))
-    (if form
+    (when (and (some? form) (some? tarjonta-info))
       (-> form
           (merge tarjonta-info)
           (assoc? :priorisoivat-hakukohderyhmat priorisoivat)
           (assoc? :rajaavat-hakukohderyhmat rajaavat)
           (assoc :load-time (System/currentTimeMillis))
           (populate-hakukohde-answer-options tarjonta-info)
-          (populate-can-submit-multiple-applications tarjonta-info))
-      (warn "could not find local form for haku" haku-oid "with id" id))))
+          (populate-can-submit-multiple-applications tarjonta-info)))))
 
 (s/defn ^:always-validate fetch-form-by-haku-oid :- s/Any
   [tarjonta-service :- s/Any
@@ -208,9 +205,9 @@
    haku-oid :- s/Any
    application-in-processing-state? :- s/Bool
    roles :- [form-role/FormRole]]
-  (if-let [latest-id (some-> (tarjonta/get-haku tarjonta-service haku-oid)
-                             :ataruLomakeAvain
-                             form-store/latest-id-by-key)]
+  (when-let [latest-id (some-> (tarjonta/get-haku tarjonta-service haku-oid)
+                               :ataruLomakeAvain
+                               form-store/latest-id-by-key)]
     (fetch-form-by-haku-oid-and-id tarjonta-service
                                    koodisto-cache
                                    organization-service
@@ -218,8 +215,7 @@
                                    haku-oid
                                    latest-id
                                    application-in-processing-state?
-                                   roles)
-    (throw (RuntimeException. (str "No form found for haku " haku-oid)))))
+                                   roles)))
 
 (s/defn ^:always-validate fetch-form-by-hakukohde-oid :- s/Any
   [tarjonta-service :- s/Any
@@ -229,7 +225,7 @@
    hakukohde-oid :- s/Any
    application-in-processing-state? :- s/Bool
    roles :- [form-role/FormRole]]
-  (let [hakukohde (tarjonta/get-hakukohde tarjonta-service hakukohde-oid)]
+  (when-let [hakukohde (tarjonta/get-hakukohde tarjonta-service hakukohde-oid)]
     (fetch-form-by-haku-oid tarjonta-service
                             koodisto-cache
                             organization-service
@@ -257,15 +253,14 @@
    haku-oid :- s/Any
    application-in-processing-state? :- s/Bool
    roles :- [form-role/FormRole]]
-  (if-let [latest-id (some-> (tarjonta/get-haku tarjonta-service haku-oid)
-                             :ataruLomakeAvain
-                             form-store/latest-id-by-key)]
+  (when-let [latest-id (some-> (tarjonta/get-haku tarjonta-service haku-oid)
+                               :ataruLomakeAvain
+                               form-store/latest-id-by-key)]
     (fetch-form-by-haku-oid-and-id-cached form-by-haku-oid-and-id-cache
                                           haku-oid
                                           latest-id
                                           application-in-processing-state?
-                                          roles)
-    (throw (RuntimeException. (str "No form found for haku " haku-oid)))))
+                                          roles)))
 
 (s/defn ^:always-validate fetch-form-by-haku-oid-str-cached :- s/Any
   [form-by-haku-oid-str-cache :- s/Any
@@ -284,7 +279,7 @@
    hakukohde-oid :- s/Str
    application-in-processing-state? :- s/Bool
    roles :- [form-role/FormRole]]
-  (let [hakukohde (tarjonta/get-hakukohde tarjonta-service hakukohde-oid)]
+  (when-let [hakukohde (tarjonta/get-hakukohde tarjonta-service hakukohde-oid)]
     (fetch-form-by-haku-oid-str-cached form-by-haku-oid-str-cache
                                        (:haku-oid hakukohde)
                                        false
@@ -317,13 +312,12 @@
   cache/CacheLoader
   (load [_ key]
     (let [[haku-oid aips? & roles] (clojure.string/split key #"#")]
-      (json/generate-string
-       (form-coercer
-        (fetch-form-by-haku-oid-cached tarjonta-service
-                                       form-by-haku-oid-and-id-cache
-                                       haku-oid
-                                       (Boolean/valueOf aips?)
-                                       (map keyword roles))))))
+      (when-let [form (fetch-form-by-haku-oid-cached tarjonta-service
+                                                     form-by-haku-oid-and-id-cache
+                                                     haku-oid
+                                                     (Boolean/valueOf aips?)
+                                                     (map keyword roles))]
+        (json/generate-string (form-coercer form)))))
   (load-many [this keys]
     (into {} (keep #(when-let [v (cache/load this %)] [% v]) keys)))
   (check-schema [_ _] nil))
