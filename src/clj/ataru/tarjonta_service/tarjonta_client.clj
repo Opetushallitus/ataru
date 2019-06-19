@@ -99,18 +99,14 @@
                                         "status: " status ", "
                                         "body: " body))))
     (let [{:keys [status result]} (json/parse-string body true)]
-      (when (not= "OK" status)
+      (case status
+        "OK"        result
+        "NOT_FOUND" nil
         (throw (new RuntimeException (str "Could not get " url ", "
-                                          "tarjonta status: " status))))
-      result)))
+                                          "status: " status ", "
+                                          "body: " body)))))))
 
-(defn- try-get-result
-  [url]
-  (let [{:keys [status body]} (http-util/do-get url)]
-    (when (= 200 status)
-      (:result (json/parse-string body true)))))
-
-(s/defn ^:always-validate get-hakukohde :- schema/Hakukohde
+(s/defn ^:always-validate get-hakukohde :- (s/maybe schema/Hakukohde)
   [hakukohde-oid :- s/Str]
   (-> :tarjonta-service.hakukohde
       (resolve-url hakukohde-oid)
@@ -124,15 +120,15 @@
                             "defaultTarjoaja" organization-oid}
                            (some? organization-oid)
                            (assoc "organisationOid" organization-oid)))
-      try-get-result))
+      get-result))
 
 (defn get-haku
   [haku-oid]
   (-> :tarjonta-service.haku
       (resolve-url haku-oid)
-      try-get-result))
+      get-result))
 
-(s/defn ^:always-validate get-koulutus :- schema/Koulutus
+(s/defn ^:always-validate get-koulutus :- (s/maybe schema/Koulutus)
   [koulutus-oid :- s/Str]
   (-> :tarjonta-service.koulutus
       (resolve-url koulutus-oid)
@@ -143,4 +139,4 @@
   [organization-oid]
   (-> :tarjonta-service.forms-in-use
       (resolve-url {"oid" organization-oid})
-      try-get-result))
+      get-result))
