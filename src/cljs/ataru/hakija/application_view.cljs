@@ -26,7 +26,7 @@
                                             (:languages form))
         submitted?                         @(subscribe [:application/submitted?])
         cannot-edit-because-in-processing? @(subscribe [:application/cannot-edit-because-in-processing?])
-        secret                             (:modify (util/extract-query-params))
+        editing?                           @(subscribe [:application/editing?])
         virkailija?                        @(subscribe [:application/virkailija?])
         apply-dates                        (when-let [hakuaika @(subscribe [:application/haku-aika])]
                                              (if (:jatkuva-haku? hakuaika)
@@ -46,8 +46,8 @@
       [:span.application__header (or (-> form :tarjonta :haku-name selected-lang)
                                      (-> form :name selected-lang))]
       (when (and (not submitted?)
-                 (> (count languages) 0)
-                 (nil? secret))
+                 (not editing?)
+                 (> (count languages) 0))
         [:span.application__header-text
          (doall
           (rest
