@@ -571,6 +571,7 @@
   border: 1px solid @section-gray-border;
   background-color: white;
   border-radius: 2px;
+  box-shadow: 0 0 3px #DDD;
 }
 
 .editor-form__component-content-wrapper {
@@ -779,7 +780,7 @@
 .editor-form__multi-options-wrapper-inner {
   background-color: @element-list-item-background;
   margin-right: 2px;
-  padding: 10px 10px;
+  padding: 4px 10px;
   border-radius: 3px;
 }
 
@@ -1259,6 +1260,7 @@
 
 .editor-form__followup-question-overlay-outer {
   width: 100%;
+  animation: 0.4s fadeIn;
 }
 
 .editor-form__followup-question-overlay {
@@ -1401,7 +1403,7 @@ input.editor-form__text-field ~ .editor-form__markdown-anchor {
 
   &__hakukohde-list-item {
     display: flex;
-    background: @element-header-background;
+    background: @element-list-item-background;
     margin-bottom: 6px;
     border: 0px;
     border-radius: 4px;
