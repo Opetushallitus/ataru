@@ -43,7 +43,7 @@
      (if (empty? followups)
        [:a attrs (util/get-virkailija-translation :followups)]
        [:a attrs
-        (s/format "%s (%d)"
+        (s/format "%s (%d) "
                   (util/get-virkailija-translation :followups)
                   (count followups))
         (if (get @show-followups option-index)
