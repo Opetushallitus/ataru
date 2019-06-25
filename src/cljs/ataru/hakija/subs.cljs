@@ -70,6 +70,16 @@
         (get person id)))
 
 (re-frame/reg-sub
+  :application/visible-options
+  (fn [db [_ field-description]]
+    (let [visibility (get-in db [:application :ui (keyword (:id field-description))])]
+      (->> (:options field-description)
+           (map-indexed (fn [index option]
+                          (when-not (get-in visibility [index :hide?])
+                            option)))
+           (remove nil?)))))
+
+(re-frame/reg-sub
   :application/answer
   (fn [[_ id _ _] _]
     [(re-frame/subscribe [:application/answers])

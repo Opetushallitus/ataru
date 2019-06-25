@@ -724,7 +724,8 @@
         use-multi-choice-style? (use-multi-choice-style? field-descriptor @languages)]
     (fn [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
       (let [answer    @(subscribe [:application/answer button-id idx nil])
-            followups (->> (:options field-descriptor)
+            options   @(subscribe [:application/visible-options field-descriptor])
+            followups (->> options
                            (filter (comp (partial = (:value answer)) :value))
                            (map :followups)
                            (first))]
@@ -744,7 +745,7 @@
             (map-indexed (fn [option-idx option]
                            ^{:key (str "single-choice-" (when idx (str idx "-")) (:id field-descriptor) "-" option-idx)}
                            [single-choice-option option button-id field-descriptor idx languages use-multi-choice-style? verifying?])
-                         (:options field-descriptor)))]
+                         options))]
          (when (and (not idx)
                     (not use-multi-choice-style?)
                     (seq followups)

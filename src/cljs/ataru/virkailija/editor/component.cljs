@@ -66,7 +66,7 @@
       (get-virkailija-translation :multiple-answers)]]))
 
 (defn- belongs-to-hakukohteet-modal
-  [path id selected-hakukohteet selected-hakukohderyhmat]
+  [path id selected-hakukohteet selected-hakukohderyhmat hidden-disabled?]
   (let [search-term     (subscribe [:editor/belongs-to-hakukohteet-modal-search-term-value id])
         fetching?       (subscribe [:editor/fetching-haut?])
         used-by-haku?   (subscribe [:editor/used-by-haku?])
@@ -75,7 +75,7 @@
         on-click        (fn [_] (dispatch [:editor/hide-belongs-to-hakukohteet-modal id]))
         on-change       (fn [e] (dispatch [:editor/on-belongs-to-hakukohteet-modal-search-term-change
                                            id (.-value (.-target e))]))]
-    (fn [path id selected-hakukohteet selected-hakukohderyhmat]
+    (fn [path id selected-hakukohteet selected-hakukohderyhmat hidden-disabled?]
       (if @used-by-haku?
         [h-and-h/popup
          [h-and-h/search-input
@@ -84,7 +84,8 @@
            :hakukohderyhmat          @hakukohderyhmat
            :hakukohde-selected?      #(contains? (set selected-hakukohteet) %)
            :hakukohderyhma-selected? #(contains? (set selected-hakukohderyhmat) %)}]
-         [h-and-h/visibility-checkbox id path]
+         (when-not hidden-disabled?
+           [h-and-h/visibility-checkbox id path])
          [h-and-h/search-listing
           {:id                         id
            :haut                       (map second @haut)
@@ -116,6 +117,54 @@
        [:button.belongs-to-hakukohteet__hakukohde-remove
         {:on-click on-click}
         [:i.zmdi.zmdi-close.zmdi-hc-lg]]])))
+
+(defn- belongs-to-hakukohteet-option
+  [parent-key index path]
+  (let [id            (str parent-key "-" index)
+        on-click-show (fn [_]
+                        (dispatch [:editor/show-belongs-to-hakukohteet-modal id]))
+        on-click-hide (fn [_]
+                        (dispatch [:editor/hide-belongs-to-hakukohteet-modal id]))
+        show-modal?   (subscribe [:editor/show-belongs-to-hakukohteet-modal id])
+        form-locked?  (subscribe [:editor/form-locked?])]
+    (fn [parent-key index path]
+      (let [id            (str parent-key "-" index)
+            initial-content @(subscribe [:editor/get-component-value path])
+            visible-hakukohteet     (mapv (fn [oid] {:oid      oid
+                                                     :name     @(subscribe [:editor/belongs-to-hakukohde-name oid])
+                                                     :on-click (fn [_] (dispatch [:editor/remove-from-belongs-to-hakukohteet
+                                                                                  path oid]))})
+                                      (:belongs-to-hakukohteet initial-content))
+            visible-hakukohderyhmat (mapv (fn [oid] {:oid      oid
+                                                     :name     @(subscribe [:editor/belongs-to-hakukohderyhma-name oid])
+                                                     :on-click (fn [_] (dispatch [:editor/remove-from-belongs-to-hakukohderyhma
+                                                                                  path oid]))})
+                                      (:belongs-to-hakukohderyhma initial-content))
+            visible                 (sort-by :name (concat visible-hakukohteet
+                                                           visible-hakukohderyhmat))]
+        [:div.belongs-to-hakukohteet
+         [:button.belongs-to-hakukohteet__modal-toggle
+          {:disabled @form-locked?
+           :class    (when @form-locked? "belongs-to-hakukohteet__modal-toggle--disabled")
+           :on-click (when-not @form-locked?
+                       (if @show-modal? on-click-hide on-click-show))}
+          (str (get-virkailija-translation :visibility-on-form) " ")]
+         [:span.belongs-to-hakukohteet__modal-toggle-label
+          (cond (and (empty? visible))
+                (get-virkailija-translation :visible-to-all)
+
+                :else
+                (get-virkailija-translation :visible-to-hakukohteet))]
+         (when @show-modal?
+           [belongs-to-hakukohteet-modal path
+            id
+            (map :oid visible-hakukohteet)
+            (map :oid visible-hakukohderyhmat)
+            true])
+         [:ul.belongs-to-hakukohteet__hakukohde-list
+          (for [{:keys [oid name on-click]} visible]
+            ^{:key oid}
+            [belongs-to path oid name on-click])]]))))
 
 (defn- belongs-to-hakukohteet
   [path initial-content]
@@ -713,6 +762,7 @@
              :value-fn    (fn [v] (:selection-limit v))}]])
         (when (not question-group-element?)
           [followup-question option-index followups option-path show-followups parent-key option-value question-group-element?])
+        [belongs-to-hakukohteet-option parent-key option-index option-path]
         (when editable?
           [remove-dropdown-option-button path option-index (or @component-locked? (< option-count 3)) parent-key option-value question-group-element?])]
        (when (not question-group-element?)
