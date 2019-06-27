@@ -304,9 +304,9 @@
         (should= 200 (:status resp))
         (let [fields (-> resp :body :content util/flatten-form-fields)]
           (should= (map :id (remove cannot-edit? fields))
-                   ["birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "home-town" "city"])
+                   ["birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city"])
           (should= (map :id (filter cannot-edit? fields))
-                   ["hakukohteet" "first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "postal-office" "language" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b"])
+                   ["hakukohteet" "first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b"])
           (should= (map :id (filter cannot-view? fields))
                    ["ssn" "birth-date"])))))
 

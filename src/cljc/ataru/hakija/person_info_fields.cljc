@@ -17,6 +17,7 @@
     :country-of-residence
     :address
     :postal-code
+    :postal-office
     :home-town
     :city
     :language})
