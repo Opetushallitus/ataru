@@ -41,7 +41,7 @@
         setTextFieldValue(reviewNotes, 'Reipas kaveri')()
         .then(wait.until(function() { return reviewNotesSubmitButton().attr('disabled') !== 'disabled' }))
         .then(clickElement(reviewNotesSubmitButton))
-        .then(wait.until(function() { return testFrame().find('.application-handling__review-note-details-row > div:eq(0)').text().startsWith('Testi Ihminen') }))
+        .then(wait.until(function() { return testFrame().find('.application-handling__review-note-summary-text').text().endsWith('Testi Ihminen') }))
         .then(setTextFieldValue(score, scoreForVatanen))
         .then(clickElement(secondApplication))
         .then(wait.until(applicationHeadingIs('Kuikeloinen, Seija Susanna — 020202A0202')))
@@ -52,7 +52,7 @@
         .then(clickElement(firstApplication))
         .then(wait.until(applicationHeadingIs('Vatanen, Ari — 141196-933S')))
         .then(function () {
-          expect(testFrame().find('.application-handling__review-note-details-row > div:eq(0)').text().startsWith('Testi Ihminen')).to.equal(true);
+          expect(testFrame().find('.application-handling__review-note-summary-text').text().endsWith('Testi Ihminen')).to.equal(true);
           expect(score().val()).to.equal(scoreForVatanen + '');
         })
         .then(clickElement(thirdApplication))

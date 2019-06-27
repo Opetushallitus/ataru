@@ -1158,11 +1158,14 @@ WHERE la.key IS NULL\n"
 (defn add-review-note [note session]
   {:pre [(-> note :application-key clojure.string/blank? not)
          (-> note :notes clojure.string/blank? not)]}
-  (-> (exec-db :db yesql-add-review-note<! {:application_key (:application-key note)
-                                            :notes           (:notes note)
-                                            :virkailija_oid  (-> session :identity :oid)
-                                            :hakukohde       (:hakukohde note)
-                                            :state_name      (:state-name note)})
+  (-> (exec-db :db yesql-add-review-note<! {:application_key          (:application-key note)
+                                            :notes                    (:notes note)
+                                            :virkailija_oid           (-> session :identity :oid)
+                                            :hakukohde                (:hakukohde note)
+                                            :virkailija_organizations (->> (-> session :identity :organizations keys)
+                                                                           (map name)
+                                                                           (json/generate-string))
+                                            :state_name               (:state-name note)})
       util/remove-nil-values
       (merge (select-keys (:identity session) [:first-name :last-name]))
       (dissoc :virkailija_oid :removed)
