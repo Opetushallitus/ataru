@@ -704,10 +704,7 @@ and (max-width: 1000px) {
   .unselectable;
   display: inline;
 }
-.application-handling__review-note--hakutoive {
-  .unselectable;
-  cursor: help;
-}
+
 .application-handling__review-checkbox + label {
   font-weight: lighter;
 }
@@ -940,12 +937,27 @@ and (max-width: 1000px) {
   white-space: nowrap;
 }
 
-.application-handling__review-note-details-row {
+.application-handling__review-note-summary-row {
   color: @gray-of-the-beast;
   display: flex;
   font-size: 14px;
   justify-content: space-between;
   flex-flow: row nowrap;
+}
+
+.application-handling__review-note-summary-text {
+  cursor: pointer;
+}
+
+.application-handling__review-note-details-row {
+  color: @gray-of-the-beast;
+  font-size: 14px;
+}
+
+.application-handling__review-note-organizations-list {
+  list-style: none;
+  padding: 0px;
+  margin: 0px;
 }
 
 .application-handling__review-note-remove-link {
@@ -1130,7 +1142,7 @@ and (max-width: 1000px) {
   font-size: 14px;
   border: none;
   display: flex;
-  flex-flow: row nowrap;
+  flex-flow: column;
   align-items: center;
   justify-content: center;
 }

@@ -11,6 +11,7 @@
     [ataru.information-request.information-request-store :as information-request-store]
     [ataru.koodisto.koodisto :as koodisto]
     [ataru.middleware.user-feedback :refer [user-feedback-exception]]
+    [ataru.organization-service.organization-service :as organization-service]
     [ataru.person-service.birth-date-converter :as bd-converter]
     [ataru.person-service.person-service :as person-service]
     [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
@@ -164,6 +165,13 @@
              fields-right   (sort-by :id (visible-fields form-right))]
          (not (fields-equal? (diff fields-left fields-right))))))
 
+(defn- enrich-virkailija-organizations
+  [organization-service m]
+  (cond-> m
+          (contains? m :virkailija-organizations)
+          (update :virkailija-organizations
+                  (partial organization-service/get-organizations-for-oids organization-service))))
+
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
@@ -196,7 +204,8 @@
           attachment-reviews   (future (parse-application-attachment-reviews application-key))
           events               (future (application-store/get-application-events application-key))
           review               (future (application-store/get-application-review application-key))
-          review-notes         (future (application-store/get-application-review-notes application-key))
+          review-notes         (future (map (partial enrich-virkailija-organizations organization-service)
+                                            (application-store/get-application-review-notes application-key)))
           information-requests (future (information-request-store/get-information-requests application-key))]
       (util/remove-nil-values {:application          (-> application
                                                          (dissoc :person-oid)
@@ -495,7 +504,9 @@
          session
          [(:application-key note)]
          [:view-applications :edit-applications])
-    (application-store/add-review-note note session)))
+    (enrich-virkailija-organizations
+     organization-service
+     (application-store/add-review-note note session))))
 
 (defn remove-review-note [note-id]
   (application-store/remove-review-note note-id))

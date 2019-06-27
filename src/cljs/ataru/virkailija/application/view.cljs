@@ -1060,6 +1060,8 @@
         remove-note         (fn []
                               (dispatch [:application/remove-review-note note-idx])
                               (reset! removing? false))
+        lang                (subscribe [:editor/virkailija-lang])
+        details-folded?     (r/atom true)
         start-removing-note (fn []
                               (reset! removing? true)
                               (js/setTimeout #(reset! removing? false) 1200))]
@@ -1067,13 +1069,13 @@
       [:div.application-handling__review-note
        (when @animated?
          {:class "animated fadeIn"})
-       [:div.application-handling__review-note-details-row
-        [:div
-         [:span (str @name " ")]
-         [:span.application-handling__review-note-details-timestamp (str @created-time)]
-         (when-let [hakutoive-nro @(subscribe [:application/hakutoive-nro (:hakukohde @note)])]
-           [:span.application-handling__review-note--hakutoive {:data-tooltip @hakukohde-name}
-            " (" hakutoive-nro ")"])]
+       [:div.application-handling__review-note-summary-row
+        [:span.application-handling__review-note-summary-text
+         {:on-click #(swap! details-folded? not)}
+         (if @details-folded?
+           [:i.zmdi.zmdi-chevron-up]
+           [:i.zmdi.zmdi-chevron-down])
+         (str " " @created-time " " @name)]
         [:div.application-handling__review-note-remove-link
          {:class    (when @remove-disabled? "application-handling__review-note-remove-link--disabled")
           :on-click #(when-not @remove-disabled?
@@ -1083,6 +1085,21 @@
          (if @removing?
            (get-virkailija-translation :confirm-delete)
            [:i.zmdi.zmdi-close])]]
+       (when-not @details-folded?
+         [:div.application-handling__review-note-details-row
+          (when-let [name @hakukohde-name]
+            [:div name])
+          [:ul.application-handling__review-note-organizations-list
+           (doall
+            (for [org  (:virkailija-organizations @note)
+                  :let [oid (:oid org)]]
+              ^{:key oid}
+              [:li
+               [:a
+                {:key    oid
+                 :href   (str "/organisaatio-ui/html/organisaatiot/" oid)
+                 :target "_blank"}
+                (util/non-blank-val (:name org) [@lang :fi :sv :en])]]))]])
        [:div.application-handling__review-note-content
         (when (:hakukohde @note)
           {:data-tooltip (str (get-virkailija-translation :eligibility-explanation)
@@ -1578,8 +1595,8 @@
                      (if (or @settings-visible? (not @can-edit?))
                        " application-handling__send-information-request-button--cursor-default"
                        " application-handling__send-information-request-button--cursor-pointer"))}
-     [:span (get-virkailija-translation :send-confirmation-email-to-applicant)]
-     [:span.application-handling__resend-modify-application-link-email-text @recipient]]))
+     [:div (get-virkailija-translation :send-confirmation-email-to-applicant)]
+     [:div.application-handling__resend-modify-application-link-email-text @recipient]]))
 
 (defn- application-resend-modify-link-confirmation []
   (let [state (subscribe [:state-query [:application :modify-application-link :state]])]
