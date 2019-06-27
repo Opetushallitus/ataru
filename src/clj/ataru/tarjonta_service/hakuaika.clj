@@ -145,3 +145,16 @@
                           :attachment-modify-grace-period-days (-> ohjausparametrit :PH_LMT :value)
                           :jatkuva-haku?                       (jatkuva-haku? haku)
                           :hakukierros-end                     (-> ohjausparametrit :PH_HKP :date)})))
+
+(defn haun-hakuajat
+  [now haku ohjausparametrit]
+  (map (fn [hakuaika]
+         (let [start (:alkuPvm hakuaika)
+               end   (:loppuPvm hakuaika)]
+           (hakuaika-with-label {:start                               start
+                                 :end                                 end
+                                 :on                                  (hakuaika-on now start end)
+                                 :attachment-modify-grace-period-days (-> ohjausparametrit :PH_LMT :value)
+                                 :jatkuva-haku?                       (jatkuva-haku? haku)
+                                 :hakukierros-end                     (-> ohjausparametrit :PH_HKP :date)})))
+       (:hakuaikas haku)))
