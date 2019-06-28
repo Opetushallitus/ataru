@@ -38,7 +38,7 @@
 
 (defn text [field-descriptor application lang group-idx]
   (let [id (keyword (:id field-descriptor))
-        answer (get-in application [:answers id])]
+        answer @(subscribe [:application/answer id])]
     [:div.application__form-field
      [:label.application__form-field-label
       (str (from-multi-lang (:label field-descriptor) lang)
@@ -172,10 +172,8 @@
    [:div.application__form-field-label
     (from-multi-lang (:label content) lang)]
    [:div.application-handling__nested-container
-    (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
-
-                                       (some? question-group-idx)
-                                       (nth question-group-idx))
+    (let [values           (-> @(subscribe [:application/answer (:id content) question-group-idx nil])
+                               :value
                                vector
                                flatten
                                set)
@@ -190,6 +188,24 @@
            (when (some #(visible? ui %) (:followups option))
              (into [:div.application-handling__nested-container]
                    (child-fields (:followups option) application lang ui question-group-idx)))])))]])
+
+(defn- multiple-choice [content application lang question-group-idx]
+  [:div.application__form-field
+   [:div.application__form-field-label
+    (from-multi-lang (:label content) lang)]
+   [:div.application-handling__nested-container
+    (let [selected-options (filterv #(deref (subscribe [:application/multiple-choice-option-checked? (keyword (:id content)) (:value %) question-group-idx]))
+                                    (:options content))
+          ui               (subscribe [:state-query [:application :ui]])]
+      (doall
+       (for [option selected-options]
+         ^{:key (:value option)}
+         [:div
+          [:p.application__text-field-paragraph
+           (from-multi-lang (:label option) lang)]
+          (when (some #(visible? ui %) (:followups option))
+            (into [:div.application-handling__nested-container]
+                  (child-fields (:followups option) application lang ui question-group-idx)))])))]])
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
@@ -231,8 +247,9 @@
          {:fieldClass "formField" :exclude-from-answers true} nil
          {:fieldClass "pohjakoulutusristiriita"} nil
          {:fieldClass "infoElement"} nil
-         {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")} [selectable content application lang question-group-index]
-         {:fieldClass "formField" :fieldType (:or "textField" "textArea")} (text content application lang question-group-index)
+         {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice content application lang question-group-index]
+         {:fieldClass "formField" :fieldType (:or "dropdown" "singleChoice")} [selectable content application lang question-group-index]
+         {:fieldClass "formField" :fieldType (:or "textField" "textArea")} [text content application lang question-group-index]
          {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang question-group-index]
          {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content]))
 
