@@ -284,9 +284,13 @@
 .editor-form__fold-clickable-text {
   color: @link-color;
   cursor: pointer;
+
   .unselectable
 }
-
+.editor-form__fold-clickable-text--disabled {
+  color: @disabled-font-gray;
+  cursor: default;
+}
 .editor-form__fold-description-text {
   color: @blue-text-color;
   .unselectable

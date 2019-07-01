@@ -155,7 +155,9 @@
     (clojure.string/upper-case (name lang-kwd))]])
 
 (defn- lock-form-editing []
-  (let [form-locked-info @(subscribe [:editor/form-locked-info])]
+  (let [form-locked-info @(subscribe [:editor/form-locked-info])
+        enabled?         (or (not @(subscribe [:editor/yhteishaku?]))
+                             @(subscribe [:editor/superuser?]))]
     [:div.editor-form__preview-buttons
      (when (some? form-locked-info)
        [:div.editor-form__form-editing-locked
@@ -168,7 +170,9 @@
               (-> form-locked-info :locked temporal/str->googdate temporal/time->short-str)
               ")")]])
      [:div#lock-form.editor-form__fold-clickable-text
-      {:on-click #(dispatch [:editor/toggle-form-editing-lock])}
+      (if enabled?
+        {:on-click #(dispatch [:editor/toggle-form-editing-lock])}
+        {:class "editor-form__fold-clickable-text--disabled"})
       (if (some? form-locked-info)
         (get-virkailija-translation :remove-lock)
         (get-virkailija-translation :lock-form))]]))

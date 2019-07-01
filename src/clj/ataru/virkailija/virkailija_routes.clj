@@ -234,7 +234,7 @@
       :return {:locked    (s/maybe org.joda.time.DateTime)
                :id        Long}
       :summary "Toggle form locked state"
-      (ok (access-controlled-form/update-form-lock id operation session virkailija-tarjonta-service organization-service)))
+      (ok (access-controlled-form/update-form-lock id operation session tarjonta-service virkailija-tarjonta-service organization-service)))
 
     (api/DELETE "/forms/:id" {session :session}
       :path-params [id :- Long]

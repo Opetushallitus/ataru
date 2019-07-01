@@ -5,6 +5,7 @@
    [ataru.schema.form-schema :as form-schema]
    [ataru.virkailija.editor.form-diff :as form-diff]
    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
+   [ataru.tarjonta-service.tarjonta-service :refer [yhteishaku?]]
    [ataru.organization-service.session-organizations :as session-orgs]
    [ataru.organization-service.organization-client :refer [oph-organization]]
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
@@ -36,6 +37,16 @@
         :identity
         :user-right-organizations
         :form-edit)))
+
+(defn- check-lock-authorization [{:keys [key id]} session tarjonta-service virkailija-tarjonta-service]
+  (when-not (-> session :identity :superuser)
+    (let [haut        (keys (get (tarjonta-protocol/get-forms-in-use virkailija-tarjonta-service session) key))
+          yhteishaut? (->> haut
+                           (map #(tarjonta-protocol/get-haku tarjonta-service %))
+                           (filter yhteishaku?))]
+      (when (first yhteishaut?)
+            (throw (user-feedback-exception
+                     (format "Lukitseminen ja avaaminen yhteishaussa vain rekisterinpitäjän oikeuksilla!")))))))
 
 (defn- check-edit-authorization [form session virkailija-tarjonta-service organization-service do-fn]
   (let [organizations (get-organizations-with-edit-rights session)]
@@ -136,7 +147,7 @@
            #(get-forms-as-ordinary-user session virkailija-tarjonta-service (vec %))
            #(form-store/get-all-forms))})
 
-(defn update-form-lock [form-id operation session virkailija-tarjonta-service organization-service]
+(defn update-form-lock [form-id operation session tarjonta-service virkailija-tarjonta-service organization-service]
   (let [latest-version  (form-store/fetch-form form-id)
         previous-locked (:locked latest-version)
         lock?           (= "close" operation)
@@ -144,6 +155,7 @@
                                (if lock?
                                  {:locked "now()" :locked-by (-> session :identity :oid)}
                                  {:locked nil :locked-by nil}))]
+    (check-lock-authorization latest-version session tarjonta-service virkailija-tarjonta-service)
     (if (or (and lock? (some? previous-locked))
             (and (not lock?) (nil? previous-locked)))
       (throw (user-feedback-exception "Lomakkeen sisältö on muuttunut. Lataa sivu uudelleen."))
