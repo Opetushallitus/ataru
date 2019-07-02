@@ -74,7 +74,7 @@
       [:span
       (str (from-multi-lang (:label field-descriptor) lang)
            (required-hint field-descriptor))
-        [copy-link id :include? exclude-always-included]]]
+        [copy-link id :shared-use-warning? false :include? exclude-always-included]]]
      [:div.application__form-field-value
       (cond (and (sequential? values) (< 1 (count values)))
             [:ul.application__form-field-list
@@ -124,7 +124,7 @@
       [:span
        (str (from-multi-lang (:label field-descriptor) lang)
             (required-hint field-descriptor))
-       [copy-link id :include? exclude-always-included]]]
+       [copy-link id :shared-use-warning? false :include? exclude-always-included]]]
      [attachment-list values]]))
 
 (declare field)
@@ -211,7 +211,7 @@
     [:div.application__form-field-label
      [:span
       (from-multi-lang (:label content) lang)
-      [copy-link (:id content) :include? exclude-always-included]]]
+      [copy-link (:id content) :shared-use-warning? false :include? exclude-always-included]]]
     (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
                                        (some? question-group-idx)
                                        (nth question-group-idx))

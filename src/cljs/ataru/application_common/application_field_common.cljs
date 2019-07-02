@@ -5,7 +5,7 @@
             [clojure.string :as string]
             [goog.string :as s]
             [ataru.util :as util]
-            [ataru.cljs-util :refer [get-translation get-virkailija-translation]])
+            [ataru.cljs-util :refer [valid-uuid? get-translation get-virkailija-translation]])
   (:import (goog.html.sanitizer HtmlSanitizer)))
 
 (defn answer-key [field-data]
@@ -234,14 +234,18 @@
     (.select copy-container)
     (.execCommand js/document "copy")))
 
-(defn copy-link [id & {:keys [answer? include?]}]
+(defn copy-link [id & {:keys [shared-use-warning? answer? include?]}]
   (let [id (cond-> id
                    keyword?
                    (name))]
     (when-not (and include?
                    (not (include? id)))
-      [:a.editor-form__copy-question-id
-       {:data-tooltip  (s/format (get-virkailija-translation (if answer? :copy-answer-id :copy-question-id))
-                         id)
-        :on-mouse-down #(copy id)}
-       "id"])))
+      [:div.editor-form__id-container
+       [:a.editor-form__copy-question-id
+        {:data-tooltip  (s/format (get-virkailija-translation (if answer? :copy-answer-id :copy-question-id))
+                          id)
+         :on-mouse-down #(copy id)}
+        "id"]
+       (when (and (not (false? shared-use-warning?)) (not (valid-uuid? id)))
+         [:span.editor-form__id-fixed
+          (get-virkailija-translation :id-in-shared-use)])])))
