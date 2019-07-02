@@ -198,8 +198,7 @@
            unique-ids :copy-component-unique-ids} copy-component
           same-form?        (= selected-form-key form-key)]
       (if same-form?
-        (or cut?
-            (and (not cut?) (empty? unique-ids)))
+        (or cut? (empty? unique-ids))
         (and (not cut?)
              (empty? (clojure.set/intersection unique-ids unique-ids-in-form)))))))
 
@@ -286,6 +285,15 @@
     (some? (:locked form))))
 
 (re-frame/reg-sub
+  :editor/component-locked?
+  (fn [[_ path] _]
+    [(re-frame/subscribe [:editor/form-locked?])
+     (re-frame/subscribe [:editor/get-component-value path])])
+  (fn [[form-locked? field] _]
+    (or form-locked?
+        (get-in field [:metadata :locked] false))))
+
+(re-frame/reg-sub
   :editor/dropdown-with-selection-limit?
   (fn [[_ & path] _]
     (re-frame/subscribe [:editor/top-level-content (first (flatten path))]))
@@ -325,14 +333,47 @@
       (get ui :remove-form-button-state :active))))
 
 (re-frame/reg-sub
+  :editor/copy-component
+  (fn copy-component-path [db _]
+    (get-in db [:editor :copy-component])))
+
+(re-frame/reg-sub
   :editor/component-button-state
-  (fn [_ _]
+  (fn [[_ path] _]
     [(re-frame/subscribe [:editor/ui])
-     (re-frame/subscribe [:editor/form-locked?])])
-  (fn component-button-state [[ui form-locked?] [_ component-type path]]
-    (if form-locked?
-      :disabled
-      (get-in ui [:component-button-state component-type path] :active))))
+     (re-frame/subscribe [:editor/component-locked? path])
+     (re-frame/subscribe [:editor/copy-component])
+     (re-frame/subscribe [:editor/get-component-value path])
+     (re-frame/subscribe [:editor/selected-form-key])])
+  (fn component-button-state [[ui component-locked? copy-component field selected-form-key] [_ path button-type]]
+    (case button-type
+      :copy
+      (cond (nil? copy-component)
+            :enabled
+            (and (= selected-form-key (:copy-component-form-key copy-component))
+                 (= path (:copy-component-path copy-component))
+                 (not (:copy-component-cut? copy-component)))
+            :active
+            :else
+            :disabled)
+      :cut
+      (cond component-locked?
+            :disabled
+            (nil? copy-component)
+            :enabled
+            (and (= selected-form-key (:copy-component-form-key copy-component))
+                 (= path (:copy-component-path copy-component))
+                 (:copy-component-cut? copy-component))
+            :active
+            :else
+            :disabled)
+      :remove
+      (cond (or component-locked? (some? copy-component))
+            :disabled
+            (= :confirm (get-in ui [(:id field) :remove]))
+            :confirm
+            :else
+            :enabled))))
 
 (re-frame/reg-sub
   :editor/email-templates-altered
@@ -387,8 +428,3 @@
   :editor/autosave-enabled?
   (fn [db _]
     (some? (-> db :editor :autosave))))
-
-(re-frame/reg-sub
-  :editor/copy-component
-  (fn copy-component-path [db _]
-    (get-in db [:editor :copy-component])))

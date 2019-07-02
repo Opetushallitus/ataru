@@ -159,7 +159,7 @@
     {:id        id
      :type      "checkbox"
      :checked   (boolean @(re-frame/subscribe [:editor/get-component-value path :params :hidden]))
-     :disabled  (boolean @(re-frame/subscribe [:editor/form-locked?]))
+     :disabled  @(re-frame/subscribe [:editor/component-locked? path])
      :on-change #(re-frame/dispatch [:editor/toggle-element-visibility-on-form path])}]
    [:label
     {:for id}

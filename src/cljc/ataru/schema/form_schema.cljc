@@ -85,12 +85,13 @@
                      (s/optional-key :info-text-collapse)               (s/maybe s/Bool)})
 
 (s/defschema ElementMetadata
-  {:created-by  {:name s/Str
-                 :oid  s/Str
-                 :date s/Str} ; java.time.ZonedDateTime
-   :modified-by {:name s/Str
-                 :oid  s/Str
-                 :date s/Str}})
+  {:created-by                {:name s/Str
+                               :oid  s/Str
+                               :date s/Str} ; java.time.ZonedDateTime
+   :modified-by               {:name s/Str
+                               :oid  s/Str
+                               :date s/Str}
+   (s/optional-key :locked)   s/Bool})
 
 (s/defschema Button {:fieldClass                              (s/eq "button")
                      :id                                      s/Str

@@ -18,11 +18,12 @@
                same-form? (= @selected-form-key form-key)]
            [:div.editor-form__drag_n_drop_spacer--dashbox
             (if @(re-frame/subscribe [:editor/can-copy-or-paste?])
-              [:button.editor-form__move-component-button
+              [:button.editor-form__component-button
                {
                 :on-click (fn [_] (when (and @expanded?)
                                     (reset! expanded? false)
-                                    (re-frame/dispatch [:editor/copy-paste-component @copy-component path])))}
+                                    (re-frame/dispatch [:editor/paste-component @copy-component path])))}
                (get-virkailija-translation :paste-element)]
-              [:button.editor-form__move-component-button.editor-form__move-component-button--disabled
+              [:button.editor-form__component-button
+               {:disabled true}
                (get-virkailija-translation :paste-element)])]))])))

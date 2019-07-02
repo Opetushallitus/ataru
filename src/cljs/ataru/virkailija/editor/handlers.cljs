@@ -336,28 +336,30 @@
 (reg-event-db
   :editor/remove-component
   (fn [db [_ path]]
-    (-> db
-        (update-in [:editor :ui :component-button-state :remove] dissoc path)
-        (remove-component path))))
+    (let [id (get-in db (vec (current-form-content-path db [path :id])))]
+      (-> db
+          (update-in [:editor :ui id] dissoc :remove)
+          (remove-component path)))))
 
 (reg-event-fx
   :editor/confirm-remove-component
   (fn [{db :db} [_ path]]
-    {:db             (assoc-in db [:editor :ui :component-button-state :remove path] :disabled)
-     :dispatch       [:editor/fold (get-in db (vec (current-form-content-path db [path :id])))]
-     :dispatch-later [{:ms 310 :dispatch [:editor/remove-component path]}]}))
+    (let [id (get-in db (vec (current-form-content-path db [path :id])))]
+      {:db             (assoc-in db [:editor :ui id :remove] :disabled)
+       :dispatch       [:editor/fold id]
+       :dispatch-later [{:ms 310 :dispatch [:editor/remove-component path]}]})))
 
 (reg-event-db
-  :editor/unstart-component
-  (fn [db [_ component-type path]]
-    (cond-> db
-      (= :confirm (get-in db [:editor :ui :component-button-state component-type path]))
-      (assoc-in [:editor :ui :component-button-state component-type path] :active))))
+  :editor/start-remove-component
+  (fn [db [_ path]]
+    (let [id (get-in db (vec (current-form-content-path db [path :id])))]
+      (assoc-in db [:editor :ui id :remove] :confirm))))
 
-(reg-event-fx
-  :editor/start-component
-  (fn [{db :db} [_ component-type path]]
-    {:db (assoc-in db [:editor :ui :component-button-state component-type path] :confirm)}))
+(reg-event-db
+  :editor/cancel-remove-component
+  (fn [db [_ path]]
+    (let [id (get-in db (vec (current-form-content-path db [path :id])))]
+      (update-in db [:editor :ui id] dissoc :remove))))
 
 (defn stamp-user-organization [is-user-organization-fn hakukohderyhma]
   (merge hakukohderyhma
@@ -726,13 +728,11 @@
 
 (defn clear-copy-component [db]
   (let [copy-component-form-key (get-in db [:editor :copy-component :copy-component-form-key])]
-    (cond-> db
+    (cond-> (update db :editor dissoc :copy-component)
             (not= copy-component-form-key (get-in db [:editor :selected-form-key]))
-            (update-in [:editor :forms copy-component-form-key] assoc :content [])
-            true
-            (update :editor dissoc :copy-component))))
+            (update-in [:editor :forms copy-component-form-key] assoc :content []))))
 
-(defn copy-paste-component
+(defn paste-component
   [db [_ {:keys [copy-component-form-key copy-component-path copy-component-cut? copy-component-unique-ids]} target-path]]
   (or
    (with-form-key [db form-key]
@@ -754,9 +754,9 @@
                                                       (assoc-in x [:params :selection-group-id] form-key)
                                                       x))
                    component                (clojure.walk/prewalk
-                                              #(-> %
-                                                   (reset-uuid)
-                                                   (reset-selection-group-id)) component)
+                                             #(-> %
+                                                  (reset-uuid)
+                                                  (reset-selection-group-id)) component)
                    db                       (-> db
                                                 (add-component-to-list form-key component target-path)
                                                 (clear-copy-component))]
@@ -769,21 +769,22 @@
                  (clear-copy-component)))))))
    db))
 
-(reg-event-db :editor/copy-paste-component copy-paste-component)
+(reg-event-db :editor/paste-component paste-component)
 
 (reg-event-db
   :editor/copy-component
-  (fn copy-component [db [_ path cut? clonable?]]
+  (fn copy-component [db [_ path cut?]]
     (assoc-in db [:editor :copy-component] {:copy-component-form-key   (-> db :editor :selected-form-key)
                                             :copy-component-path       path
                                             :copy-component-cut?       cut?
-                                            :copy-component-unique-ids (set (->> (get-in db (current-form-content-path db path))
+                                            :copy-component-unique-ids (set (->> (get-in db (vec (current-form-content-path db path)))
                                                                                  (collect-ids [])
-                                                                                 (remove cu/valid-uuid?)))
-                                            :copy-component-clonable?  clonable?})))
+                                                                                 (remove cu/valid-uuid?)))})))
 
 (reg-event-db
-  :editor/clear-copy-component clear-copy-component)
+  :editor/cancel-copy-component
+  (fn [db _]
+    (clear-copy-component db)))
 
 (def ^:private lang-order
   [:fi :sv :en])
@@ -980,6 +981,28 @@
               :path                (str "/lomake-editori/api/forms/" (:id form) "/lock/" operation)
               :handler-or-dispatch :editor/update-form-lock
               :handler-args        {:form-key form-key}}})))
+
+(defn- descendant-paths
+  [field path]
+  (into [path]
+        (concat
+         (for [[i child] (map vector (range) (:children field))]
+           (descendant-paths child (conj path :children i)))
+         (for [[i option]   (map vector (range) (:options field))
+               [j followup] (map vector (range) (:followups option))]
+           (descendant-paths followup (conj path :options i :followups j))))))
+
+(reg-event-db
+  :editor/toggle-component-lock
+  (fn [db [_ path]]
+    (let [field      (get-in db (vec (current-form-content-path db path)))
+          new-locked (not (get-in field [:metadata :locked]))]
+      (reduce (fn [db path]
+                (-> db
+                    (assoc-in (vec (current-form-content-path db [path :metadata :locked])) new-locked)
+                    (update-modified-by [path])))
+              db
+              (descendant-paths field (vec path))))))
 
 (defn- add-stored-content-to-templates
   [previews]
