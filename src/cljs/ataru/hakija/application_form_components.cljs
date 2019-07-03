@@ -742,10 +742,10 @@
            :role            "radiogroup"
            :class           (when use-multi-choice-style? "application__form-single-choice-button-container--column")}
           (doall
-            (map-indexed (fn [option-idx option]
-                           ^{:key (str "single-choice-" (when idx (str idx "-")) (:id field-descriptor) "-" option-idx)}
-                           [single-choice-option option button-id field-descriptor idx languages use-multi-choice-style? verifying?])
-                         options))]
+            (map (fn [option]
+                   ^{:key (str "single-choice-" (when idx (str idx "-")) (:id field-descriptor) "-" (:value option))}
+                   [single-choice-option option button-id field-descriptor idx languages use-multi-choice-style? verifying?])
+                 options))]
          (when (and (not idx)
                     (not use-multi-choice-style?)
                     (seq followups)
