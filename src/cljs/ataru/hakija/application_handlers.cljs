@@ -223,9 +223,9 @@
 (defn- set-option-visibility [db [index option] field-descriptor selected-hakukohteet-and-ryhmat]
   (if-let [belongs-to (seq (concat (:belongs-to-hakukohderyhma option)
                                    (:belongs-to-hakukohteet option)))]
-    (assoc-in db [:application :ui (keyword (:id field-descriptor)) index :hide?] (not (not-empty (clojure.set/intersection
+    (assoc-in db [:application :ui (keyword (:id field-descriptor)) index :hide?] (empty (clojure.set/intersection
                                                                                                 (set belongs-to)
-                                                                                                selected-hakukohteet-and-ryhmat))))
+                                                                                                selected-hakukohteet-and-ryhmat)))
     db))
 
 (defn- set-field-visibility
