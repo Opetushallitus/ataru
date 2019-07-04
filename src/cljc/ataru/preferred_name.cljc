@@ -2,7 +2,7 @@
 
 (defn main-first-name?
   [{:keys [value answers-by-key]}]
-  (let [first-names     (clojure.string/split (-> answers-by-key :first-name :value) #"[\s-]+")
+  (let [first-names     (clojure.string/split (clojure.string/trim (-> answers-by-key :first-name :value)) #"[\s-]+")
         num-first-names (count first-names)
         possible-names  (set
                           (for [sub-length (range 1 (inc num-first-names))
