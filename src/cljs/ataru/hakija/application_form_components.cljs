@@ -562,7 +562,8 @@
                       (dispatch [:application/dropdown-change
                                  field-descriptor
                                  (.-value (.-target e))
-                                 idx]))]
+                                 idx]))
+        options     @(subscribe [:application/visible-options field-descriptor])]
     [div-kwd
      [label field-descriptor]
      (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
@@ -588,14 +589,14 @@
              (and
                (nil? (:koodisto-source field-descriptor))
                (not (:no-blank-option field-descriptor))
-               (not= "" (:value (first (:options field-descriptor)))))
+               (not= "" (:value (first options))))
              [^{:key (str "blank-" (:id field-descriptor))} [:option {:value ""} ""]])
-           (map-indexed
-             (fn [idx option]
+           (map
+             (fn [option]
                [:option {:value (:value option)
-                         :key   idx}
+                         :key   (:value option)}
                 (non-blank-option-label option @languages)])
-             (cond->> (:options field-descriptor)
+             (cond->> options
                       (and (some? (:koodisto-source field-descriptor))
                            (not (:koodisto-ordered-by-user field-descriptor)))
                       (sort-by #(non-blank-option-label % @languages))))))]]
