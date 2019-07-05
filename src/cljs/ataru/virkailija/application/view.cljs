@@ -1208,167 +1208,179 @@
   [event]
   (let [[name initials] (name-and-initials event)]
     (when (and name initials)
-      [:span.application-handling__review-state-initials {:data-tooltip name} (str "(" initials ")")])))
+      [:span {:data-tooltip name} (str "(" initials ")")])))
 
-(defn- update-event-caption [text-span event show-details?]
-  [:span.application-handling__event-caption--inner
-   {:on-click #(swap! show-details? not)
-    :class    "application-handling__event-caption-modify-event"}
-   text-span
-   (if @show-details?
-     [:i.zmdi.zmdi-chevron-up.application-handling__event-caption-chevron]
-     [:i.zmdi.zmdi-chevron-down.application-handling__event-caption-chevron])
-   "|"
-   [:a.application-handling__event-caption-compare
-    {:on-click (fn [e]
-                 (.stopPropagation e)
-                 (dispatch [:application/open-application-version-history event]))}
-    (get-virkailija-translation :compare)]])
+(defn- update-event [caption event]
+  [[:span caption "| " [:a
+                        {:on-click (fn [e]
+                                     (.stopPropagation e)
+                                     (dispatch [:application/open-application-version-history event]))}
+                        (get-virkailija-translation :compare)]]
+   [:ul.application-handling__event-row-update-list
+    (for [[key field] @(subscribe [:application/changes-made-for-event (:id event)])]
+      [:li
+       {:on-click (fn [e]
+                    (.stopPropagation e)
+                    (dispatch [:application/highlight-field key]))
+        :key      (str "event-list-row-for-" (:id event) "-" key)}
+       [:a (:label field)]])]])
 
-(defn event-caption [event show-details? lang]
+(defn- event-organizations-list
+  [event lang]
+  (when (some? (:virkailija-organizations event))
+    [:ul.application-handling__event-row-organization-list
+     (doall
+      (for [org  (:virkailija-organizations event)
+            :let [oid (:oid org)]]
+        ^{:key oid}
+        [:li
+         [:a
+          {:key    oid
+           :href   (str "/organisaatio-ui/html/organisaatiot/" oid)
+           :target "_blank"}
+          (util/non-blank-val (:name org) [lang :fi :sv :en])]]))]))
+
+(defn event-content [event lang]
   (match event
-         {:event-type "review-state-change"}
-         (let [label (application-states/get-review-state-label-by-name
-                      review-states/application-review-states
-                      (:new-review-state event)
-                      lang)]
-           [:span.application-handling__event-caption--inner
-            label
-            " "
-            (or (virkailija-initials-span event)
-                (get-virkailija-translation :unknown))])
-
-         {:event-type "updated-by-applicant"}
-         (update-event-caption
-          [:span (gstring/format "%s %d %s"
-                                 (get-virkailija-translation :from-applicant)
-                                 (count @(subscribe [:application/changes-made-for-event (:id event)]))
-                                 (get-virkailija-translation :changes))]
-          event
-          show-details?)
-
-         {:event-type "updated-by-virkailija"}
-         (update-event-caption
-           [:span
-            (or (virkailija-initials-span event) (get-virkailija-translation :unknown))
-            (gstring/format " %s %d %s"
-                            (get-virkailija-translation :did)
-                            (count @(subscribe [:application/changes-made-for-event (:id event)]))
-                            (get-virkailija-translation :changes))]
-          event
-          show-details?)
-
-         {:event-type "received-from-applicant"}
-         (get-virkailija-translation :application-received)
-
-         {:event-type "received-from-virkailija"}
-         [:span.application-handling__event-caption--inner
-          (virkailija-initials-span event)
-          (str " " (get-virkailija-translation :submitted-application))]
-
-         {:event-type "hakukohde-review-state-change"}
-         [:div.application-handling__multi-line-event-caption
-          [:span.application-handling__event-caption--inner
-           (str (->> review-states/hakukohde-review-types
-                     (filter #(= (keyword (:review-key event)) (first %)))
-                     (first)
-                     (second)
-                     ((fn [label] (util/non-blank-val label [lang :fi :sv :en])))) ": "
-                (application-states/get-review-state-label-by-name
-                 (->> review-states/hakukohde-review-types
-                      (map last)
-                      (apply concat)
-                      (distinct))
+    {:event-type "review-state-change"}
+    (let [label (application-states/get-review-state-label-by-name
+                 review-states/application-review-states
                  (:new-review-state event)
-                 lang))
-           " "
-           (virkailija-initials-span event)]
+                 lang)]
+      [[:span label " " (or (virkailija-initials-span event)
+                            (get-virkailija-translation :unknown))]
+       nil])
+
+    {:event-type "updated-by-applicant"}
+    (update-event
+     (gstring/format "%s %d %s"
+                     (get-virkailija-translation :from-applicant)
+                     (count @(subscribe [:application/changes-made-for-event (:id event)]))
+                     (get-virkailija-translation :changes))
+     event)
+
+    {:event-type "updated-by-virkailija"}
+    (update-event
+     [:span
+      (or (virkailija-initials-span event) (get-virkailija-translation :unknown))
+      (gstring/format " %s %d %s"
+                      (get-virkailija-translation :did)
+                      (count @(subscribe [:application/changes-made-for-event (:id event)]))
+                      (get-virkailija-translation :changes))]
+     event)
+
+    {:event-type "received-from-applicant"}
+    [[:span (get-virkailija-translation :application-received)]
+     nil]
+
+    {:event-type "received-from-virkailija"}
+    [[:span
+      (virkailija-initials-span event)
+      " "
+      (get-virkailija-translation :submitted-application)]
+     nil]
+
+    {:event-type "hakukohde-review-state-change"}
+    [[:span
+      (->> review-states/hakukohde-review-types
+           (filter #(= (keyword (:review-key event)) (first %)))
+           (first)
+           (second)
+           ((fn [label] (util/non-blank-val label [lang :fi :sv :en]))))
+      ": "
+      (application-states/get-review-state-label-by-name
+       (->> review-states/hakukohde-review-types
+            (map last)
+            (apply concat)
+            (distinct))
+       (:new-review-state event)
+       lang)
+      " "
+      (virkailija-initials-span event)]
+     (let [hakukohde (:hakukohde event)
+           org-list  (event-organizations-list event lang)]
+       (when (or (not= "form" hakukohde)
+                 (some? org-list))
+         [:div
           (when (not= "form" (:hakukohde event))
-            [:span.application-handling__event-caption--inner.application-handling__event-caption--extra-info
-             @(subscribe [:application/hakukohde-and-tarjoaja-name (:hakukohde event)])])]
+            [:span @(subscribe [:application/hakukohde-and-tarjoaja-name (:hakukohde event)])])
+          org-list]))]
 
-         {:event-type "eligibility-state-automatically-changed"}
-         [:div.application-handling__multi-line-event-caption
-          [:span.application-handling__event-caption--inner
-           (str (get-virkailija-translation :eligibility)
-                ": "
-                (some #(when (= (:new-review-state event) (first %))
-                         (get (second %) lang))
-                      review-states/application-hakukohde-eligibility-states))
-           [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
-            {:title (get-virkailija-translation :eligibility-set-automatically)}]]
-          [:span.application-handling__event-caption--inner.application-handling__event-caption--extra-info
-           @(subscribe [:application/hakukohde-and-tarjoaja-name (:hakukohde event)])]]
+    {:event-type "eligibility-state-automatically-changed"}
+    [[:span
+      (get-virkailija-translation :eligibility)
+      ": "
+      (some #(when (= (:new-review-state event) (first %))
+               (get (second %) lang))
+            review-states/application-hakukohde-eligibility-states)
+      [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
+       {:title (get-virkailija-translation :eligibility-set-automatically)}]]
+     [:span @(subscribe [:application/hakukohde-and-tarjoaja-name (:hakukohde event)])]]
 
-         {:event-type "payment-obligation-automatically-changed"}
-         [:div.application-handling__multi-line-event-caption
-          [:span.application-handling__event-caption--inner
-           (str (get-virkailija-translation :payment-obligation)
-                ": "
-                (some #(when (= (:new-review-state event) (first %))
-                         (get (second %) lang))
-                      review-states/application-payment-obligation-states))
-           [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
-            {:title (get-virkailija-translation :payment-obligation-set-automatically)}]]
-          [:span.application-handling__event-caption--inner.application-handling__event-caption--extra-info
-           @(subscribe [:application/hakukohde-and-tarjoaja-name (:hakukohde event)])]]
+    {:event-type "payment-obligation-automatically-changed"}
+    [[:span
+      (get-virkailija-translation :payment-obligation)
+      ": "
+      (some #(when (= (:new-review-state event) (first %))
+               (get (second %) lang))
+            review-states/application-payment-obligation-states)
+      [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
+       {:title (get-virkailija-translation :payment-obligation-set-automatically)}]]
+     [:span @(subscribe [:application/hakukohde-and-tarjoaja-name (:hakukohde event)])]]
 
-         {:event-type "attachment-review-state-change"}
-         [:span.application-handling__event-caption--inner
-          (gstring/format "%s: %s "
-                          (get-virkailija-translation :attachment)
-                          (application-states/get-review-state-label-by-name
-                            review-states/attachment-hakukohde-review-types
-                            (:new-review-state event)
-                            lang))
-          (virkailija-initials-span event)]
+    {:event-type "attachment-review-state-change"}
+    [[:span
+      (gstring/format "%s: %s "
+                      (get-virkailija-translation :attachment)
+                      (application-states/get-review-state-label-by-name
+                       review-states/attachment-hakukohde-review-types
+                       (:new-review-state event)
+                       lang))
+      (virkailija-initials-span event)]
+     nil]
 
-         {:event-type "modification-link-sent"}
-         (get-virkailija-translation :confirmation-sent)
+    {:event-type "modification-link-sent"}
+    [[:span (get-virkailija-translation :confirmation-sent)]
+     nil]
 
-         {:subject _ :message _ :message-type message-type}
-         [:div.application-handling__multi-line-event-caption
-          [:span.application-handling__event-caption--inner.application-handling__event-caption-modify-event
-           {:on-click #(swap! show-details? not)}
-           (str
-            (if (= message-type "mass-information-request")
-              (get-virkailija-translation :mass-information-request-sent)
-              (get-virkailija-translation :information-request-sent))
-            " ")
-           (virkailija-initials-span event)
-           (if @show-details?
-             [:i.zmdi.zmdi-chevron-up.application-handling__event-caption-chevron]
-             [:i.zmdi.zmdi-chevron-down.application-handling__event-caption-chevron])]]
+    {:subject _ :message _ :message-type message-type}
+    [[:span
+      (if (= message-type "mass-information-request")
+        (get-virkailija-translation :mass-information-request-sent)
+        (get-virkailija-translation :information-request-sent))
+      " "
+      (virkailija-initials-span event)]
+     [:div.application-handling__event-row--message
+      [:span.application-handling__event-row--message-subject
+       (:subject event)]
+      [:span.application-handling__event-row--message-body
+       (:message event)]]]
 
-         :else (get-virkailija-translation :unknown)))
+    :else
+    [[:span (get-virkailija-translation :unknown)]
+     nil]))
 
 (defn event-row
   [_]
   (let [show-details? (r/atom false)
         lang          (subscribe [:editor/virkailija-lang])]
     (fn [event]
-      [:div.application-handling__event-row
-       [:div.application-handling__event-row--header
-        [:span.application-handling__event-timestamp
-         (t/time->short-str (or (:time event) (:created-time event)))]
-        [:div.application-handling__event-caption
-         (event-caption event show-details? @lang)]]
-       (when @show-details?
-         (if (or (= (:event-type event) "updated-by-applicant")
-                 (= (:event-type event) "updated-by-virkailija"))
-           [:ul.application-handling__event-row-details
-            (for [[key field] @(subscribe [:application/changes-made-for-event (:id event)])]
-              [:li
-               {:on-click (fn [e]
-                            (.stopPropagation e)
-                            (dispatch [:application/highlight-field key]))
-                :key      (str "event-list-row-for-" (:id event) "-" key)}
-               [:a (:label field)]])]
-           [:div.application-handling__event-row--message
-            [:span.application-handling__event-row--message-subject
-             (:subject event)]
-            [:span.application-handling__event-row--message-body
-             (:message event)]]))])))
+      (let [[caption details] (event-content event @lang)]
+        [:div.application-handling__event-row
+         [:div.application-handling__event-row-header
+          {:on-click #(swap! show-details? not)
+           :class    (when (some? details) "application-handling__event-row-header--clickable")}
+          [:div.application-handling__event-row-fold-container
+           (when (some? details)
+             (if @show-details?
+               [:i.zmdi.zmdi-chevron-up]
+               [:i.zmdi.zmdi-chevron-down]))]
+          [:div.application-handling__event-timestamp
+           (t/time->short-str (or (:time event) (:created-time event)))]
+          caption]
+         (when (and @show-details? (some? details))
+           [:div.application-handling__event-row-details
+            details])]))))
 
 (defn application-review-events []
   [:div.application-handling__event-list

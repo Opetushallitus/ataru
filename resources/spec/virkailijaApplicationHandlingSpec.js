@@ -30,7 +30,7 @@
         expect(downloadLink().text()).to.equal('Lataa Excel')
       });
       it('stores an event for review state change', function() {
-        var firstEventNow = testFrame().find('.application-handling__event-caption').first().text();
+        var firstEventNow = testFrame().find('.application-handling__event-row-header > span').first().text();
         expect(firstEventNow).to.equal('Käsittelyvaihe: Käsittelyssä (TI)')
       });
       it('Successfully stores notes and score for an application', function(done) {
@@ -124,7 +124,7 @@
       }
 
       function eventCaptions() {
-        return testFrame().find('.application-handling__event-caption')
+        return testFrame().find('.application-handling__event-row-header > span')
       }
 
       function applicationRow() {

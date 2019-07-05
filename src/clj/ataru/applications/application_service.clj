@@ -172,6 +172,11 @@
           (update :virkailija-organizations
                   (partial organization-service/get-organizations-for-oids organization-service))))
 
+(defn- get-application-events
+  [organization-service application-key]
+  (map (partial enrich-virkailija-organizations organization-service)
+       (application-store/get-application-events application-key)))
+
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
@@ -202,7 +207,7 @@
                                        (dissoc :organization-oid))
           hakukohde-reviews    (future (parse-application-hakukohde-reviews application-key))
           attachment-reviews   (future (parse-application-attachment-reviews application-key))
-          events               (future (application-store/get-application-events application-key))
+          events               (future (get-application-events organization-service application-key))
           review               (future (application-store/get-application-review application-key))
           review-notes         (future (map (partial enrich-virkailija-organizations organization-service)
                                             (application-store/get-application-review-notes application-key)))
@@ -467,7 +472,7 @@
          event-id))
       (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session)
       (save-attachment-hakukohde-reviews application-key (:attachment-reviews review) session)
-      {:events (application-store/get-application-events application-key)})))
+      {:events (get-application-events organization-service application-key)})))
 
 (defn mass-update-application-states
   [organization-service tarjonta-service session application-keys hakukohde-oid from-state to-state]
@@ -493,9 +498,11 @@
                                   application-key))]
     (application-store/add-new-secret-to-application application-key)
     (email/start-email-submit-confirmation-job koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id)
-    (application-store/add-application-event {:application-key application-key
-                                              :event-type      "modification-link-sent"}
-                                             session)))
+    (enrich-virkailija-organizations
+     organization-service
+     (application-store/add-application-event {:application-key application-key
+                                               :event-type      "modification-link-sent"}
+                                              session))))
 
 (defn add-review-note [organization-service tarjonta-service session note]
   (when (aac/applications-access-authorized?
