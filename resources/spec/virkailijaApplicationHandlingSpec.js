@@ -41,9 +41,9 @@
         expect(applicationHeader().text()).to.equal('Selaintestilomake1')
         expect(downloadLink().text()).to.equal('Lataa Excel')
       })
-      it('stores an event for review state change', () => {
+      it('stores an event for review state change', function() {
         const firstEventNow = testFrame()
-          .find('.application-handling__event-caption')
+          .find('.application-handling__event-row-header > span')
           .first()
           .text()
         expect(firstEventNow).to.equal('Käsittelyvaihe: Käsittelyssä (TI)')
@@ -232,8 +232,10 @@
         loadInFrame('http://localhost:8350/lomake-editori/applications/')
       }
 
-      const eventCaptions = () => {
-        return testFrame().find('.application-handling__event-caption')
+      function eventCaptions() {
+        return testFrame().find(
+          '.application-handling__event-row-header > span'
+        )
       }
 
       const applicationRow = () => {

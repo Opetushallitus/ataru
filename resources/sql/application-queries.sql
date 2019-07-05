@@ -104,7 +104,8 @@ SELECT
   ae.hakukohde,
   ae.review_key,
   v.first_name,
-  v.last_name
+  v.last_name,
+  ae.virkailija_organizations
 FROM application_events ae
 LEFT JOIN virkailija v ON ae.virkailija_oid = v.oid
 WHERE ae.application_key = :application_key
@@ -494,8 +495,8 @@ FOR UPDATE;
 
 -- name: yesql-add-application-event<!
 -- Add application event
-INSERT INTO application_events (application_key, event_type, new_review_state, virkailija_oid, hakukohde, review_key)
-VALUES (:application_key, :event_type, :new_review_state, :virkailija_oid, :hakukohde, :review_key);
+INSERT INTO application_events (application_key, event_type, new_review_state, virkailija_oid, hakukohde, review_key, virkailija_organizations)
+VALUES (:application_key, :event_type, :new_review_state, :virkailija_oid, :hakukohde, :review_key, :virkailija_organizations::jsonb);
 
 -- name: yesql-add-application-review!
 -- Add application review, initially it doesn't have all fields. This is just a "skeleton"

@@ -243,12 +243,13 @@
                                                    {:connection connection}))
           _             (Thread/sleep 1000) ;; avoid equal created_time
           event-id      (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-                          (:id (yesql-add-application-event<! {:application_key  (:key application)
-                                                               :event_type       "review-state-change"
-                                                               :new_review_state "inactivated"
-                                                               :review_key       nil
-                                                               :hakukohde        nil
-                                                               :virkailija_oid   nil}
+                          (:id (yesql-add-application-event<! {:application_key          (:key application)
+                                                               :event_type               "review-state-change"
+                                                               :new_review_state         "inactivated"
+                                                               :review_key               nil
+                                                               :hakukohde                nil
+                                                               :virkailija_oid           nil
+                                                               :virkailija_organizations nil}
                                                               {:connection connection})))
           _             (Thread/sleep 1000) ;; avoid equal created_time
           edited        (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
