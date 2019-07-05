@@ -887,15 +887,6 @@
                                      id search-term]}}))
 
 (reg-event-db
-  :editor/add-to-belongs-to-hakukohteet
-  (fn [db [_ path oid]]
-    (let [content-path (conj (vec (current-form-content-path db path))
-                        :belongs-to-hakukohteet)]
-      (-> db
-          (update-in content-path (fnil (comp vec #(conj % oid) set) []))
-          (update-modified-by [path])))))
-
-(reg-event-db
   :editor/toggle-element-visibility-on-form
   (fn [db [_ path]]
     (let [content-path (conj (vec (current-form-content-path db path))
@@ -904,6 +895,20 @@
           (update-in content-path #(boolean (not %)))
           (update-modified-by [path])))))
 
+(defn remove-option-path [path]
+  (if (= :options (last (butlast path)))
+    (vec (butlast (butlast path)))
+    path))
+
+(reg-event-db
+  :editor/add-to-belongs-to-hakukohteet
+  (fn [db [_ path oid]]
+    (let [content-path (conj (vec (current-form-content-path db path))
+                         :belongs-to-hakukohteet)]
+      (-> db
+          (update-in content-path (fnil (comp vec #(conj % oid) set) []))
+          (update-modified-by [(remove-option-path path)])))))
+
 (reg-event-db
   :editor/remove-from-belongs-to-hakukohteet
   (fn [db [_ path oid]]
@@ -911,7 +916,7 @@
                         :belongs-to-hakukohteet)]
       (-> db
           (update-in content-path (fnil (comp vec #(disj % oid) set) []))
-          (update-modified-by [path])))))
+          (update-modified-by [(remove-option-path path)])))))
 
 (reg-event-db
   :editor/add-to-belongs-to-hakukohderyhma
@@ -920,7 +925,7 @@
                         :belongs-to-hakukohderyhma)]
       (-> db
           (update-in content-path (fnil (comp vec #(conj % oid) set) []))
-          (update-modified-by [path])))))
+          (update-modified-by [(remove-option-path path)])))))
 
 (reg-event-db
   :editor/remove-from-belongs-to-hakukohderyhma
@@ -929,7 +934,7 @@
                         :belongs-to-hakukohderyhma)]
       (-> db
           (update-in content-path (fnil (comp vec #(disj % oid) set) []))
-          (update-modified-by [path])))))
+          (update-modified-by [(remove-option-path path)])))))
 
 (reg-event-db
   :editor/fold

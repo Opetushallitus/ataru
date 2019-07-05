@@ -131,6 +131,8 @@
                                                                            (s/optional-key :description)     LocalizedStringOptional
                                                                            (s/optional-key :selection-limit) (s/maybe s/Int)
                                                                            (s/optional-key :default-value)   (s/maybe s/Bool)
+                                                                           (s/optional-key :belongs-to-hakukohteet)    [s/Str]
+                                                                           (s/optional-key :belongs-to-hakukohderyhma) [s/Str]
                                                                            (s/optional-key :followups)       [(s/if (comp some? :children) (s/recursive #'WrapperElement) (s/recursive #'BasicElement))]}]
                         (s/optional-key :belongs-to-hakukohteet)         [s/Str]
                         (s/optional-key :belongs-to-hakukohderyhma)      [s/Str]})
