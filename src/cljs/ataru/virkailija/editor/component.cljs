@@ -284,8 +284,8 @@
    [:button.editor-form__component-lock-button
     {:on-click #(dispatch [:editor/toggle-component-lock path])}
     (if @(subscribe [:editor/component-locked? path])
-      [:i.zmdi.zmdi-lock-outline]
-      [:i.zmdi.zmdi-lock-open])]])
+      [:i.zmdi.zmdi-lock-outline.zmdi-hc-lg.editor-form__component-lock-button--locked]
+      [:i.zmdi.zmdi-lock-open.zmdi-hc-lg])]])
 
 (defn- text-header
   [id label path metadata & {:keys [foldable?
