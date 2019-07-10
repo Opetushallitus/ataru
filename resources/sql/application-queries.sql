@@ -928,7 +928,11 @@ SELECT
   (SELECT json_object_agg(hakukohde, state)
    FROM application_hakukohde_reviews AS ahr
    WHERE ahr.application_key = key
-         AND ahr.requirement = 'eligibility-state') AS application_hakukohde_reviews
+         AND ahr.requirement = 'eligibility-state') AS application_hakukohde_reviews,
+  coalesce((SELECT jsonb_object_agg(hakukohde, state)
+            FROM application_hakukohde_reviews AS ahr
+            WHERE ahr.application_key = key AND
+                  ahr.requirement = 'payment-obligation'), '{}') AS maksuvelvollisuus
 FROM latest_applications
   JOIN application_reviews ON application_key = key
 WHERE person_oid IS NOT NULL
