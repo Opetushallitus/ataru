@@ -991,11 +991,13 @@
   [field path]
   (into [path]
         (concat
-         (for [[i child] (map vector (range) (:children field))]
-           (descendant-paths child (conj path :children i)))
-         (for [[i option]   (map vector (range) (:options field))
-               [j followup] (map vector (range) (:followups option))]
-           (descendant-paths followup (conj path :options i :followups j))))))
+         (for [[i child]       (map vector (range) (:children field))
+               descendant-path (descendant-paths child (conj path :children i))]
+           descendant-path)
+         (for [[i option]      (map vector (range) (:options field))
+               [j followup]    (map vector (range) (:followups option))
+               descendant-path (descendant-paths followup (conj path :options i :followups j))]
+           descendant-path))))
 
 (reg-event-db
   :editor/toggle-component-lock
