@@ -56,9 +56,9 @@
                             value]))))))
 
 (def ->textual-field-blur
-  (memoize (fn [field-descriptor]
-             (fn [_]
-               (dispatch [:application/textual-field-blur field-descriptor])))))
+  (memoize (fn [field-descriptor idx]
+             (fn [evt]
+               (dispatch [:application/textual-field-blur field-descriptor (-> evt .-target .-value) idx])))))
 
 (defn- multi-value-field-change [field-descriptor data-idx question-group-idx event]
   (let [value (some-> event .-target .-value)]
@@ -182,10 +182,7 @@
                            (multi-value-field-change field-descriptor 0 idx %)
                            (textual-field-change field-descriptor %))
             on-blur     (fn [evt]
-                          (if idx
-                            (multi-value-field-change field-descriptor 0 idx evt)
-                            (textual-field-change field-descriptor evt))
-                          (dispatch [:application/textual-field-blur field-descriptor]))
+                          (dispatch [:application/textual-field-blur field-descriptor (-> evt .-target .-value) idx]))
             show-error? (show-text-field-error-class? field-descriptor
                                                       @validators-processing
                                                       (:value answer)
@@ -268,7 +265,7 @@
             on-change              (if idx
                                      (->multi-value-field-change field-descriptor 0 idx)
                                      (->textual-field-change field-descriptor))
-            on-blur                (->textual-field-blur field-descriptor)]
+            on-blur                (->textual-field-blur field-descriptor idx)]
         [div-kwd
          [label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
