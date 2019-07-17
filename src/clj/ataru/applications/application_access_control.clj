@@ -96,7 +96,7 @@
                                               session
                                               (application-store/get-latest-application-by-key application-key))))]
     (when (some? application)
-      (audit-log/log {:new       (dissoc application :content)
+      (audit-log/log {:new       (dissoc application :answers)
                       :id        {:applicationOid application-key}
                       :session   session
                       :operation audit-log/operation-read}))
