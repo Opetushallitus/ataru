@@ -181,8 +181,6 @@
             on-change   #(if idx
                            (multi-value-field-change field-descriptor 0 idx %)
                            (textual-field-change field-descriptor %))
-            on-blur     (fn [evt]
-                          (dispatch [:application/textual-field-blur field-descriptor (-> evt .-target .-value) idx]))
             show-error? (show-text-field-error-class? field-descriptor
                                                       @validators-processing
                                                       (:value answer)
@@ -200,7 +198,7 @@
                                       (if show-error?
                                         " application__form-field-error"
                                         " application__form-text-input--normal"))
-                  :on-blur       on-blur
+                  :on-blur       (->textual-field-blur field-descriptor idx)
                   :on-change     on-change
                   :required      (is-required-field? field-descriptor)
                   :aria-invalid  (not (:valid answer))

@@ -621,7 +621,7 @@
       (merge
         (when (string? (:value answer))
           {:db (assoc-in db [:application :answers id :value] value)})
-        {:dispatch-n (doall (concat
+        {:dispatch-n (vec (concat
                              (when-not skip-rules?
                                [[:application/run-rules (:blur-rules field)]])
                              (if idx
