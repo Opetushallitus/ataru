@@ -55,10 +55,9 @@
                             field-descriptor
                             value]))))))
 
-(def ->textual-field-blur
-  (memoize (fn [field-descriptor idx]
-             (fn [evt]
-               (dispatch [:application/textual-field-blur field-descriptor (-> evt .-target .-value) idx])))))
+(defn textual-field-blur
+  [field-descriptor idx value]
+  (dispatch [:application/textual-field-blur field-descriptor value idx]))
 
 (defn- multi-value-field-change [field-descriptor data-idx question-group-idx event]
   (let [value (some-> event .-target .-value)]
@@ -198,7 +197,7 @@
                                       (if show-error?
                                         " application__form-field-error"
                                         " application__form-text-input--normal"))
-                  :on-blur       (->textual-field-blur field-descriptor idx)
+                  :on-blur       (fn [_] (textual-field-blur field-descriptor idx (:value answer)))
                   :on-change     on-change
                   :required      (is-required-field? field-descriptor)
                   :aria-invalid  (not (:valid answer))
@@ -263,7 +262,7 @@
             on-change              (if idx
                                      (->multi-value-field-change field-descriptor 0 idx)
                                      (->textual-field-change field-descriptor))
-            on-blur                (->textual-field-blur field-descriptor idx)]
+            on-blur                (fn [_] (textual-field-blur field-descriptor idx value))]
         [div-kwd
          [label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
