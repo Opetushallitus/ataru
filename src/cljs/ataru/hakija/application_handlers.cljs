@@ -619,14 +619,14 @@
                            (not (contains? (-> db :application :validators-processing) id))))
           value       (clojure.string/trim value)]
       (merge
+        (when (string? (:value answer))
+          {:db (assoc-in db [:application :answers id :value] value)})
         {:dispatch-n (doall (concat
+                             (when-not skip-rules?
+                               [[:application/run-rules (:blur-rules field)]])
                              (if idx
                                [[:application/set-repeatable-application-field field value 0 idx]]
-                               [[:application/set-application-field field value]])
-                             (when-not skip-rules?
-                               [[:application/run-rules (:blur-rules field)]])))}
-        (when (string? (:value answer))
-          {:db (assoc-in db [:application :answers id :value] value)})))))
+                               [[:application/set-application-field field value]])))}))))
 
 (defn set-validator-processing
   [db id]
