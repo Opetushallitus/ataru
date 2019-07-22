@@ -617,7 +617,7 @@
                           (and
                            (-> answer :valid not)
                            (not (contains? (-> db :application :validators-processing) id))))
-          value       (clojure.string/trim value)]
+          value       (clojure.string/trim (or value ""))]
       (merge
         (when (string? (:value answer))
           {:db (assoc-in db [:application :answers id :value] value)})
