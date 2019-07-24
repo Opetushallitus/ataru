@@ -180,9 +180,10 @@
                            (multi-value-field-change field-descriptor 0 idx %)
                            (textual-field-change field-descriptor %))
             show-error? (show-text-field-error-class? field-descriptor
-                                                      @validators-processing
-                                                      (:value answer)
-                                                      (:valid answer))]
+                          @validators-processing
+                          (:value answer)
+                          (:valid answer))
+            value       (:value answer)]
         [div-kwd
          [label field-descriptor]
          [:div.application__form-info-element
@@ -196,11 +197,12 @@
                                       (if show-error?
                                         " application__form-field-error"
                                         " application__form-text-input--normal"))
-                  :on-blur       (fn [evt] (textual-field-blur field-descriptor idx (-> evt .-target .-value)))
+                  :on-blur       (fn [_] (textual-field-blur field-descriptor idx value))
                   :on-change     on-change
                   :required      (is-required-field? field-descriptor)
                   :aria-invalid  (not (:valid answer))
                   :autoComplete  autocomplete-off
+                  :value         value
                   :default-value (if @(subscribe [:application/cannot-view? id])
                                    "***********"
                                    (:value answer))
