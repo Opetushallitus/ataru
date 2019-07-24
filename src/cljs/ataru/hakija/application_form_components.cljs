@@ -39,9 +39,8 @@
          "L" "application__form-text-input__size-large"
          :else "application__form-text-input__size-medium"))
 
-(defn- email-verify-field-change [field-descriptor value evt]
-  (let [verify-value (clojure.string/trim (or (-> evt .-target .-value) ""))]
-    (dispatch [:application/set-email-verify-field field-descriptor value verify-value])))
+(defn- email-verify-field-change [field-descriptor value verify-value]
+  (dispatch [:application/set-email-verify-field field-descriptor value verify-value]))
 
 (defn- textual-field-change [field-descriptor evt]
   (let [value (-> evt .-target .-value)]
@@ -225,10 +224,11 @@
               :value        (if @(subscribe [:application/cannot-view? id])
                               "***********"
                               (:verify answer))
-              :on-blur      #(email-verify-field-change field-descriptor (:value answer) %)
+              :on-blur      #(email-verify-field-change field-descriptor (:value answer)
+                               (clojure.string/trim (or (-> % .-target .-value) "")))
               :on-paste     (fn [event]
                               (.preventDefault event))
-              :on-change    #(email-verify-field-change field-descriptor (:value answer) %)
+              :on-change    #(email-verify-field-change field-descriptor (:value answer) (-> % .-target .-value))
               :class        (str size-class
                                  (if show-error?
                                    " application__form-field-error"
