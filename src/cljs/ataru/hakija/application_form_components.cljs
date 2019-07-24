@@ -39,9 +39,8 @@
          "L" "application__form-text-input__size-large"
          :else "application__form-text-input__size-medium"))
 
-(defn- email-verify-field-change [field-descriptor value evt]
-  (let [verify-value (clojure.string/trim (or (-> evt .-target .-value) ""))]
-    (dispatch [:application/set-email-verify-field field-descriptor value verify-value])))
+(defn- email-verify-field-change [field-descriptor value verify-value]
+  (dispatch [:application/set-email-verify-field field-descriptor value verify-value]))
 
 (defn- textual-field-change [field-descriptor evt]
   (let [value (-> evt .-target .-value)]
@@ -55,10 +54,9 @@
                             field-descriptor
                             value]))))))
 
-(def ->textual-field-blur
-  (memoize (fn [field-descriptor]
-             (fn [_]
-               (dispatch [:application/textual-field-blur field-descriptor])))))
+(defn textual-field-blur
+  [field-descriptor idx value]
+  (dispatch [:application/textual-field-blur field-descriptor value idx]))
 
 (defn- multi-value-field-change [field-descriptor data-idx question-group-idx event]
   (let [value (some-> event .-target .-value)]
@@ -181,15 +179,11 @@
             on-change   #(if idx
                            (multi-value-field-change field-descriptor 0 idx %)
                            (textual-field-change field-descriptor %))
-            on-blur     (fn [evt]
-                          (if idx
-                            (multi-value-field-change field-descriptor 0 idx evt)
-                            (textual-field-change field-descriptor evt))
-                          (dispatch [:application/textual-field-blur field-descriptor]))
             show-error? (show-text-field-error-class? field-descriptor
-                                                      @validators-processing
-                                                      (:value answer)
-                                                      (:valid answer))]
+                          @validators-processing
+                          (:value answer)
+                          (:valid answer))
+            value       (:value answer)]
         [div-kwd
          [label field-descriptor]
          [:div.application__form-info-element
@@ -203,11 +197,12 @@
                                       (if show-error?
                                         " application__form-field-error"
                                         " application__form-text-input--normal"))
-                  :on-blur       on-blur
+                  :on-blur       (fn [_] (textual-field-blur field-descriptor idx value))
                   :on-change     on-change
                   :required      (is-required-field? field-descriptor)
                   :aria-invalid  (not (:valid answer))
                   :autoComplete  autocomplete-off
+                  :value         value
                   :default-value (if @(subscribe [:application/cannot-view? id])
                                    "***********"
                                    (:value answer))
@@ -231,10 +226,11 @@
               :value        (if @(subscribe [:application/cannot-view? id])
                               "***********"
                               (:verify answer))
-              :on-blur      #(email-verify-field-change field-descriptor (:value answer) %)
+              :on-blur      #(email-verify-field-change field-descriptor (:value answer)
+                               (clojure.string/trim (or (-> % .-target .-value) "")))
               :on-paste     (fn [event]
                               (.preventDefault event))
-              :on-change    #(email-verify-field-change field-descriptor (:value answer) %)
+              :on-change    #(email-verify-field-change field-descriptor (:value answer) (-> % .-target .-value))
               :class        (str size-class
                                  (if show-error?
                                    " application__form-field-error"
@@ -268,7 +264,7 @@
             on-change              (if idx
                                      (->multi-value-field-change field-descriptor 0 idx)
                                      (->textual-field-change field-descriptor))
-            on-blur                (->textual-field-blur field-descriptor)]
+            on-blur                (fn [_] (textual-field-blur field-descriptor idx value))]
         [div-kwd
          [label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)

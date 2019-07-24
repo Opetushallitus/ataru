@@ -610,15 +610,25 @@
 
 (reg-event-fx
   :application/textual-field-blur
-  (fn [{db :db} [_ field]]
-    (let [id     (keyword (:id field))
-          answer (get-in db [:application :answers id])]
-      {:dispatch-n (if (or (empty? (:blur-rules field))
-                           (and
-                             (-> answer :valid not)
-                             (not (contains? (-> db :application :validators-processing) id))))
-                     []
-                     [[:application/run-rules (:blur-rules field)]])})))
+  (fn [{db :db} [_ field value idx]]
+    (let [id          (keyword (:id field))
+          answer      (get-in db [:application :answers id])
+          skip-rules? (or (empty? (:blur-rules field))
+                          (and
+                           (-> answer :valid not)
+                           (not (contains? (-> db :application :validators-processing) id))))
+          plain-value (or value "")
+          value       (clojure.string/trim plain-value)]
+      (merge
+        (when (string? (:value answer))
+          {:db (assoc-in db [:application :answers id :value] value)})
+        {:dispatch-n (vec (concat
+                           (when-not skip-rules?
+                             [[:application/run-rules (:blur-rules field)]])
+                           (when (not= plain-value value)
+                             (if idx
+                               [[:application/set-repeatable-application-field field value 0 idx]]
+                               [[:application/set-application-field field value]]))))}))))
 
 (defn set-validator-processing
   [db id]
