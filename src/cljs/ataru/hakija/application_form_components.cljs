@@ -197,7 +197,7 @@
                                       (if show-error?
                                         " application__form-field-error"
                                         " application__form-text-input--normal"))
-                  :on-blur       (fn [_] (textual-field-blur field-descriptor idx (:value answer)))
+                  :on-blur       (fn [evt] (textual-field-blur field-descriptor idx (-> evt .-target .-value)))
                   :on-change     on-change
                   :required      (is-required-field? field-descriptor)
                   :aria-invalid  (not (:valid answer))
