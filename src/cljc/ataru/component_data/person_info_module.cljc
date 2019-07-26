@@ -97,7 +97,7 @@
 
 (defn ^:private gender-section
   [metadata]
-  (-> (component/dropdown metadata)
+  (-> (dissoc (component/dropdown metadata) :options)
       (merge {:label           (:gender person-info-module-texts)
               :validators      [:required]
               :id              :gender
