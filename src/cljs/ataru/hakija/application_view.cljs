@@ -43,7 +43,7 @@
                                                   (str " (" (get-translation :not-within-application-period) ")"))]))]
     [:div
      [:div.application__header-container
-      [:span.application__header (or (-> form :tarjonta :haku-name selected-lang)
+      [:h1.application__header (or (-> form :tarjonta :haku-name selected-lang)
                                      (-> form :name selected-lang))]
       (when (and (not submitted?)
                  (not editing?)
