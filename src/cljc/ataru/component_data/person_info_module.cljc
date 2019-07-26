@@ -67,7 +67,7 @@
 
 (defn- country-of-residence-component
   [metadata]
-  (-> (component/dropdown metadata)
+  (-> (dissoc (component/dropdown metadata) :options)
       (merge {:label (:country-of-residence person-info-module-texts)
               :validators [:required]
               :rules {:change-country-of-residence nil}
@@ -177,7 +177,7 @@
 
 (defn ^:private home-town-component
   [metadata]
-  (merge (component/dropdown metadata)
+  (merge (dissoc (component/dropdown metadata) :options)
          {:label (:home-town person-info-module-texts)
           :id :home-town
           :validators [:home-town]
@@ -218,7 +218,7 @@
 
 (defn ^:private native-language-section
   [metadata]
-  (-> (component/dropdown metadata)
+  (-> (dissoc (component/dropdown metadata) :options)
       (merge {:label (:language person-info-module-texts)
               :validators [:required]
               :id :language
