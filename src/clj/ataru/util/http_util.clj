@@ -4,7 +4,7 @@
 
 (defn do-request
   [{:keys [url method] :as opts}]
-  (let [opts        (update opts :headers merge {"clientSubSystemCode" "ataru" "Caller-Id" "ataru"})
+  (let [opts        (update opts :headers merge {"Caller-Id" "ataru"})
         method-name (clojure.string/upper-case (name method))
         start       (System/currentTimeMillis)
         response    @(http/request opts)
