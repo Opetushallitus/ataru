@@ -16,7 +16,7 @@
         })
       )
       it('with complete form', function () {
-        expect(formFields().length).to.equal(33)
+        expect(formFields().length).to.equal(34)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(submitButton().prop('disabled')).to.equal(true)
       })
@@ -79,7 +79,8 @@
           "Kolmas vaihtoehto",
           "Lisensiaatin tutkinto",
           "",
-          "Pudotusvalikon 1. kysymys"
+          "Pudotusvalikon 1. kysymys",
+          "Entinen Neuvostoliitto"
         ]
 
         expect(textInputValues).to.eql(expectedTestInputValues)
@@ -152,7 +153,8 @@
           "Muokattu vastaus",
           "Toinen vaihtoehto",
           "Pudotusvalikon 1. kysymys",
-          "1,323"
+          "1,323",
+          "Entinen Neuvostoliitto"
         ];
 
         var tabularValues = _.map(testFrame().find('.application__form-field table td'), function (e) {

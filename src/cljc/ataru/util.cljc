@@ -85,7 +85,8 @@
   [values field get-koodisto-options]
   (if (:koodisto-source field)
     (let [koodisto (get-koodisto-options (-> field :koodisto-source :uri)
-                                         (-> field :koodisto-source :version))]
+                                         (-> field :koodisto-source :version)
+                                         (-> field :koodisto-source :allow-invalid?))]
       (cond
         (and (sequential? values)
              (every? sequential? values))

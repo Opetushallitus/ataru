@@ -125,7 +125,8 @@
                         (s/optional-key :koodisto-source)                {:uri                             s/Str
                                                                           :version                         s/Int
                                                                           (s/optional-key :default-option) s/Any
-                                                                          (s/optional-key :title)          s/Str}
+                                                                          (s/optional-key :title)          s/Str
+                                                                          (s/optional-key :allow-invalid?) s/Bool}
                         (s/optional-key :options)                        [{:value                            s/Str
                                                                            (s/optional-key :label)           LocalizedStringOptional
                                                                            (s/optional-key :description)     LocalizedStringOptional
@@ -322,6 +323,15 @@
 
 (s/defschema HakukohdeSearchResult
   (assoc Hakukohde :user-organization? s/Bool))
+
+(s/defschema Koodi
+  {:uri                     s/Str
+   :version                 s/Int
+   :value                   s/Str
+   :label                   LocalizedStringOptional
+   :valid                   {(s/optional-key :start) java.time.ZonedDateTime
+                             (s/optional-key :end)   java.time.ZonedDateTime}
+   (s/optional-key :within) [(s/recursive #'Koodi)]})
 
 (s/defschema File
   {:key                      s/Str

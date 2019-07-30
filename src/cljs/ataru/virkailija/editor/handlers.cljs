@@ -130,9 +130,10 @@
 
 (reg-event-fx
   :editor/select-koodisto-options
-  (fn [{db :db} [_ uri path]]
+  (fn [{db :db} [_ uri path allow-invalid?]]
     (when-let [koodisto (some #(when (= uri (:uri %)) %) koodisto-whitelist/koodisto-whitelist)]
-      (let [dropdown-path (current-form-content-path db [path])
+      (let [koodisto      (assoc koodisto :allow-invalid? (boolean allow-invalid?))
+            dropdown-path (current-form-content-path db [path])
             id            (get-in db (concat dropdown-path [:id]))]
         {:db       (update-in db dropdown-path assoc
                               :koodisto-source koodisto
@@ -827,9 +828,9 @@
 
 (reg-event-fx
   :editor/fetch-koodisto-for-component-with-id
-  (fn [{db :db} [_ id {:keys [uri version]}]]
+  (fn [{db :db} [_ id {:keys [uri version allow-invalid?]}]]
     {:http {:method              :get
-            :path                (str "/lomake-editori/api/koodisto/" uri "/" version)
+            :path                (str "/lomake-editori/api/koodisto/" uri "/" version "?allow-invalid=" allow-invalid?)
             :handler-or-dispatch :editor/set-new-koodisto-while-keeping-existing-followups
             :handler-args        {:id id :uri uri :version version}}}))
 
@@ -838,8 +839,11 @@
   (fn [db [_ new-koodisto {:keys [id uri version]}]]
     (let [key                       (get-in db [:editor :selected-form-key])
           form                      (get-in db [:editor :forms key :content])
-          new-options               (mapv #(select-keys % [:value :label])
-                                          new-koodisto)
+          lang                      (keyword (get-in db [:editor :user-info :lang]))
+          new-options               (->> new-koodisto
+                                         (map #(select-keys % [:value :label]))
+                                         (sort-by (comp lang :label))
+                                         vec)
           update-koodisto-component (fn [component]
                                       (assoc component :options
                                              (update-options-while-keeping-existing-followups new-options (:options component))))

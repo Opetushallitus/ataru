@@ -233,7 +233,9 @@
         koodisto-source (:koodisto-source field-descriptor)
         options (:options field-descriptor)]
     (cond (some? koodisto-source)
-          (let [koodisto (get-koodisto-options (:uri koodisto-source) (:version koodisto-source))
+          (let [koodisto (get-koodisto-options (:uri koodisto-source)
+                                               (:version koodisto-source)
+                                               (:allow-invalid? koodisto-source))
                 koodi-uri->label (partial get-label koodisto lang)]
             (->> (clojure.string/split value #"\s*,\s*")
                  (mapv koodi-uri->label)
@@ -490,8 +492,8 @@
         application-meta-fields      (indexed-meta-fields application-meta-fields)
         get-form-by-id               (memoize form-store/fetch-by-id)
         get-latest-form-by-key       (memoize form-store/fetch-by-key)
-        get-koodisto-options         (memoize (fn [uri version]
-                                                (koodisto/get-koodisto-options koodisto-cache uri version)))
+        get-koodisto-options         (memoize (fn [uri version allow-invalid?]
+                                                (koodisto/get-koodisto-options koodisto-cache uri version allow-invalid?)))
         get-tarjonta-info            (memoize (fn [haku-oid]
                                                   (tarjonta-parser/parse-tarjonta-info-by-haku
                                                    koodisto-cache
