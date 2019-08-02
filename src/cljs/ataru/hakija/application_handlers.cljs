@@ -938,7 +938,7 @@
                             :field-idx                    0
                             :virkailija?                  (contains? (:application db) :virkailija-secret)
                             :on-validated                 (fn [[valid? errors selection-limit]]
-                                                            (when selection-limit
+                                                            (when (and selection-limit (not-empty selection-limit))
                                                               (dispatch [:application/handle-update-selection-limits
                                                                          (first selection-limit) valid? id new-value]))
                                                             (dispatch [:application/set-repeatable-application-field-valid
