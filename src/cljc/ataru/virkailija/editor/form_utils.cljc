@@ -24,13 +24,38 @@
               (:option-value field))
            (parent-is-visible followup-of fields answers hakutoiveet hakukohteet))))
 
-(defn ids []
-  (set ["c1894413-0f89-4039-bf11-c56f76a8c832"]))
+(def exluded-attachment-ids-when-yo
+  (set ["pohjakoulutus-yo--attachment"
+        "pohjakoulutus_kk_ulk--attachement"
+        "oppilaitoksen-myontama-ennakkoarvio-arvosanoista"
+        "oppilaitoksen-myontama-ennakkoarvio-arvosanoista-2"
+        "reifeprufung-dia-tutkintotodistus"
+        "reifeprufung-dia-tutkintotodistus-2"
+        "reifeprufung-dia-tutkintotodistus-3"
+        "reifeprufung-dia-tutkintotodistus-4"
+        "candidate-predicted-grades"
+        "candidate-predicted-grades-2"
+        "oppilaitoksen-myontama-todistus-arvosanoista"
+        "oppilaitoksen-myontama-todistus-arvosanoista-2"
+        "european-baccalaureate-certificate"
+        "european-baccalaureate-certificate-2"
+        "european-baccalaureate-certificate-3"
+        "european-baccalaureate-certificate-4"
+        "diploma-programme"
+        "diploma-programme-2"
+        "lukion-paattotodistus"
+        "pohjakoulutus_ulk--attachment"
+        "pohjakoulutus_avoin--attachment"
+        "ib-diploma"
+        "ib-diploma-2"
+        "todistus-muusta-korkeakoulukelpoisuudesta"
+        "korkeakoulututkinnon-tutkintotodistus"
+        ]))
 
 (defn visible-for-ylioppilas? [field answers]
   (if (get answers :pohjakoulutus_yo)
     (let [id (:id field)]
-      (not (get (ids) id)))
+      (not (get exluded-attachment-ids-when-yo id)))
     true))
 
 (defn visible? [field fields answers hakutoiveet hakukohteet]
