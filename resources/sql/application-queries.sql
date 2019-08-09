@@ -905,10 +905,11 @@ UPDATE application_review_notes SET removed = NOW() WHERE id = :id;
 
 --name: yesql-tilastokeskus-applications
 SELECT
-  haku AS haku_oid,
-  key AS hakemus_oid,
-  person_oid henkilo_oid,
-  hakukohde AS hakukohde_oids
+  haku AS "haku-oid",
+  key AS "hakemus-oid",
+  person_oid "henkilo-oid",
+  hakukohde AS "hakukohde-oids",
+  content AS "content"
 FROM latest_applications
   JOIN application_reviews ON application_key = key
 WHERE person_oid IS NOT NULL
