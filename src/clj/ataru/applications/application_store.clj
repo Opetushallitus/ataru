@@ -299,14 +299,15 @@
                         :operation audit-log/operation-new
                         :session   session
                         :id        {:email (util/extract-email new-application)}})
-        (yesql-add-application-event<! {:application_key  key
-                                        :event_type       (if (some? virkailija-oid)
-                                                            "received-from-virkailija"
-                                                            "received-from-applicant")
-                                        :new_review_state nil
-                                        :virkailija_oid   virkailija-oid
-                                        :hakukohde        nil
-                                        :review_key       nil}
+        (yesql-add-application-event<! {:application_key          key
+                                        :event_type               (if (some? virkailija-oid)
+                                                                    "received-from-virkailija"
+                                                                    "received-from-applicant")
+                                        :new_review_state         nil
+                                        :virkailija_oid           virkailija-oid
+                                        :virkailija_organizations nil
+                                        :hakukohde                nil
+                                        :review_key               nil}
           connection)
         (yesql-add-application-review! {:application_key key
                                         :state           application-review-states/initial-application-review-state}
@@ -361,14 +362,15 @@
       (info (str "Updating application with key "
                  (:key old-application)
                  " based on valid application secret, retaining key" (when-not updated-by-applicant? " and secret") " from previous version"))
-      (yesql-add-application-event<! {:application_key  key
-                                      :event_type       (if updated-by-applicant?
-                                                          "updated-by-applicant"
-                                                          "updated-by-virkailija")
-                                      :new_review_state nil
-                                      :virkailija_oid   virkailija-oid
-                                      :hakukohde        nil
-                                      :review_key       nil}
+      (yesql-add-application-event<! {:application_key          key
+                                      :event_type               (if updated-by-applicant?
+                                                                  "updated-by-applicant"
+                                                                  "updated-by-virkailija")
+                                      :new_review_state         nil
+                                      :virkailija_oid           virkailija-oid
+                                      :virkailija_organizations nil
+                                      :hakukohde                nil
+                                      :review_key               nil}
                                     {:connection conn})
 
       (selection-limit/permanent-select-on-store-application key new-application selection-id form conn)
@@ -684,7 +686,11 @@ WHERE la.key IS NULL\n"
       (:id application))))
 
 (defn get-application-events [application-key]
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-application-events {:application_key application-key})))
+  (->> (exec-db :db yesql-get-application-events {:application_key application-key})
+       (mapv ->kebab-case-kw)
+       (mapv #(if (nil? (:virkailija-organizations %))
+                (dissoc % :virkailija-organizations)
+                %))))
 
 (defn- auditlog-review-modify
   [review old-value session]
@@ -711,12 +717,15 @@ WHERE la.key IS NULL\n"
         (yesql-save-application-review! review-to-store connection)
         (auditlog-review-modify review-to-store old-review session))
       (when (not= (:state old-review) (:state review-to-store))
-        (let [event {:application_key  app-key
-                     :event_type       "review-state-change"
-                     :new_review_state (:state review-to-store)
-                     :virkailija_oid   (-> session :identity :oid)
-                     :hakukohde        nil
-                     :review_key       nil}]
+        (let [event {:application_key          app-key
+                     :event_type               "review-state-change"
+                     :new_review_state         (:state review-to-store)
+                     :virkailija_oid           (-> session :identity :oid)
+                     :virkailija_organizations (->> (-> session :identity :organizations keys)
+                                                    (map name)
+                                                    (json/generate-string))
+                     :hakukohde                nil
+                     :review_key               nil}]
           (:id (yesql-add-application-event<! event connection)))))))
 
 (defn save-application-hakukohde-review
@@ -732,12 +741,15 @@ WHERE la.key IS NULL\n"
                               (when (empty? existing-duplicate-review)
                                 (auditlog-review-modify review-to-store (first existing-requirement-review) session)
                                 (yesql-upsert-application-hakukohde-review! review-to-store connection)
-                                (let [event {:application_key  application-key
-                                             :event_type       "hakukohde-review-state-change"
-                                             :new_review_state (:state review-to-store)
-                                             :review_key       hakukohde-review-requirement
-                                             :hakukohde        (:hakukohde review-to-store)
-                                             :virkailija_oid   (-> session :identity :oid)}]
+                                (let [event {:application_key          application-key
+                                             :event_type               "hakukohde-review-state-change"
+                                             :new_review_state         (:state review-to-store)
+                                             :review_key               hakukohde-review-requirement
+                                             :hakukohde                (:hakukohde review-to-store)
+                                             :virkailija_oid           (-> session :identity :oid)
+                                             :virkailija_organizations (->> (-> session :identity :organizations keys)
+                                                                            (map name)
+                                                                            (json/generate-string))}]
                                   (yesql-add-application-event<! event connection))))))
 
 (defn save-payment-obligation-automatically-changed
@@ -760,12 +772,13 @@ WHERE la.key IS NULL\n"
                      (= "unreviewed" (:state existing-requirement-review))
                      automatically-changed?))
         (yesql-upsert-application-hakukohde-review! review-to-store connection)
-        (let [event {:application_key  application-key
-                     :event_type       "payment-obligation-automatically-changed"
-                     :new_review_state (:state review-to-store)
-                     :review_key       hakukohde-review-requirement
-                     :hakukohde        (:hakukohde review-to-store)
-                     :virkailija_oid   nil}]
+        (let [event {:application_key          application-key
+                     :event_type               "payment-obligation-automatically-changed"
+                     :new_review_state         (:state review-to-store)
+                     :review_key               hakukohde-review-requirement
+                     :hakukohde                (:hakukohde review-to-store)
+                     :virkailija_oid           nil
+                     :virkailija_organizations nil}]
           (yesql-add-application-event<! event connection))))))
 
 (defn save-attachment-hakukohde-review
@@ -780,12 +793,15 @@ WHERE la.key IS NULL\n"
         (when-not (= hakukohde-review-state (:state existing-attachment-review))
           (auditlog-review-modify review-to-store existing-attachment-review session)
           (yesql-update-attachment-hakukohde-review! review-to-store connection)
-          (let [event {:application_key  application-key
-                       :event_type       "attachment-review-state-change"
-                       :new_review_state (:state review-to-store)
-                       :review_key       attachment-key
-                       :hakukohde        (:hakukohde review-to-store)
-                       :virkailija_oid   (-> session :identity :oid)}]
+          (let [event {:application_key          application-key
+                       :event_type               "attachment-review-state-change"
+                       :new_review_state         (:state review-to-store)
+                       :review_key               attachment-key
+                       :hakukohde                (:hakukohde review-to-store)
+                       :virkailija_oid           (-> session :identity :oid)
+                       :virkailija_organizations (->> (-> session :identity :organizations keys)
+                                                      (map name)
+                                                      (json/generate-string))}]
             (yesql-add-application-event<! event connection)))
         (throw (new IllegalStateException (str "No existing attahcment review found for " review-to-store)))))))
 
@@ -1097,13 +1113,16 @@ WHERE la.key IS NULL\n"
                                 (assoc :state to-state)
                                 (assoc :application_key application-key))
                            existing-reviews)
-        new-event        {:application_key  application-key
-                          :event_type       "hakukohde-review-state-change"
-                          :new_review_state to-state
-                          :virkailija_oid   (-> session :identity :oid)
-                          :first_name       (:first-name session)
-                          :last_name        (:last-name session)
-                          :review_key       "processing-state"}]
+        new-event        {:application_key          application-key
+                          :event_type               "hakukohde-review-state-change"
+                          :new_review_state         to-state
+                          :virkailija_oid           (-> session :identity :oid)
+                          :virkailija_organizations (->> (-> session :identity :organizations keys)
+                                                         (map name)
+                                                         (json/generate-string))
+                          :first_name               (:first-name session)
+                          :last_name                (:last-name session)
+                          :review_key               "processing-state"}]
     (doseq [new-review new-reviews]
       (yesql-upsert-application-hakukohde-review! new-review connection)
       (yesql-add-application-event<! (assoc new-event :hakukohde (:hakukohde new-review))
@@ -1141,11 +1160,14 @@ WHERE la.key IS NULL\n"
 (defn add-application-event [event session]
   (jdbc/with-db-transaction [db {:datasource (db/get-datasource :db)}]
     (let [conn       {:connection db}]
-      (-> {:event_type       nil
-           :new_review_state nil
-           :virkailija_oid   (-> session :identity :oid)
-           :hakukohde        nil
-           :review_key       nil}
+      (-> {:event_type               nil
+           :new_review_state         nil
+           :virkailija_oid           (-> session :identity :oid)
+           :virkailija_organizations (->> (-> session :identity :organizations keys)
+                                          (map name)
+                                          (json/generate-string))
+           :hakukohde                nil
+           :review_key               nil}
           (merge (transform-keys ->snake_case event))
           (yesql-add-application-event<! conn)
           (dissoc :virkailija_oid)
@@ -1158,11 +1180,14 @@ WHERE la.key IS NULL\n"
 (defn add-review-note [note session]
   {:pre [(-> note :application-key clojure.string/blank? not)
          (-> note :notes clojure.string/blank? not)]}
-  (-> (exec-db :db yesql-add-review-note<! {:application_key (:application-key note)
-                                            :notes           (:notes note)
-                                            :virkailija_oid  (-> session :identity :oid)
-                                            :hakukohde       (:hakukohde note)
-                                            :state_name      (:state-name note)})
+  (-> (exec-db :db yesql-add-review-note<! {:application_key          (:application-key note)
+                                            :notes                    (:notes note)
+                                            :virkailija_oid           (-> session :identity :oid)
+                                            :hakukohde                (:hakukohde note)
+                                            :virkailija_organizations (->> (-> session :identity :organizations keys)
+                                                                           (map name)
+                                                                           (json/generate-string))
+                                            :state_name               (:state-name note)})
       util/remove-nil-values
       (merge (select-keys (:identity session) [:first-name :last-name]))
       (dissoc :virkailija_oid :removed)

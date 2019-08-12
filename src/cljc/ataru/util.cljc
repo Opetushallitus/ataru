@@ -188,7 +188,7 @@
 
 (defn remove-nil-values [m]
   (->> m
-       (filter second)
+       (remove #(nil? (second %)))
        (into {})))
 
 (def ^:private email-pred (comp (partial = "email") :key))
