@@ -3,6 +3,7 @@
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
             [ataru.util :as autil]
+            [ataru.hakija.person-info-fields :as person-info-fields]
             [ataru.hakija.rules :as rules]
             [ataru.hakija.resumable-upload :as resumable-upload]
             [ataru.hakija.try-selection :refer [try-selection]]
@@ -349,7 +350,11 @@
 
 (defn set-question-group-row-amounts [db]
   (reduce (fn [db field-descriptor]
-            (let [{:keys [value values]} (-> db :application :answers (get (keyword (:id field-descriptor))))
+            (let [id                     (keyword (:id field-descriptor))
+                  {:keys [value values]} (if (and (:cannot-edit field-descriptor)
+                                                  (contains? person-info-fields/editing-forbidden-person-info-field-ids id))
+                                           {:value (get-in db [:application :person id])}
+                                           (get-in db [:application :answers id]))
                   question-group-id      (-> field-descriptor :params :question-group-id)]
               (cond-> db
                       question-group-id
