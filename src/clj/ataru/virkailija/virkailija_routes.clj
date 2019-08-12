@@ -1248,7 +1248,8 @@
                                                    session-timeout/wrap-idle-session-timeout]
                                     app-routes
                                     (api-routes this))
-                                  (auth-routes (:kayttooikeus-service this)
+                                  (auth-routes (:login-cas-client this)
+                                               (:kayttooikeus-service this)
                                                (:person-service this)
                                                (:organization-service this))))
                               (api/undocumented

@@ -71,17 +71,7 @@
                  [cheshire/cheshire "5.8.1"]
                  [selmer "1.12.12"]
                  [metosin/ring-http-response "0.9.1"]
-                 ;; These two explicit dependencies are required to force
-                 ;; newer, fixed versions of those which come with Scala Cas Client
-                 ;; Used by clj-util below. Without these, we would not be able to
-                 ;; authenticate to /oppijanumerorekisteri-service, we would just get:
-                 ;; BadResponse Response lacks status Reason  [trace missing]
-                 ;; We can't upgrade these either. Looks like Cas requires a specific
-                 ;; version, and it's this one.
-                 [org.http4s/blaze-http_2.11 "0.10.1" :upgrade false]
-                 [org.http4s/http4s-json4s-native_2.11 "0.10.1" :upgrade false]
-                 ;; And naturally this exclusion is important as well
-                 [oph/clj-util "0.1.0" :exclusions [org.http4s/blaze-http_2.11]]
+                 [fi.vm.sade/scala-cas_2.12 "1.2.0-SNAPSHOT"]
                  [ring.middleware.logger "0.5.0" :exclusions [onelog]] ; Remove :exclusions and onelog dependency below when updating if included onelog works with clojure 1.9.0
                  [onelog "0.5.0"]
                  [ring/ring-session-timeout "0.2.0"]

@@ -2,46 +2,52 @@
   (:require [ataru.config.url-helper :refer [resolve-url]]
             [ataru.config.core :refer [config]]
             [ataru.util.http-util :as http-util]
-            [cheshire.core :as json]
-            [clj-util.cas :as cas]))
+            [cheshire.core :as json])
+  (:import [fi.vm.sade.utils.cas CasClient CasParams]))
 
-(defrecord CasClient [client params session-id])
+(defrecord CasClientState [client params session-cookie-name session-id])
 
-(defn new-client [cas-uri]
+(defn new-cas-client []
+  (new CasClient
+       (resolve-url :cas-client)
+       (.defaultClient org.http4s.client.blaze.package$/MODULE$)))
+
+(defn new-client [service security-uri-suffix session-cookie-name]
   {:pre [(some? (:cas config))]}
   (let [username   (get-in config [:cas :username])
         password   (get-in config [:cas :password])
-        cas-url    (resolve-url :cas-client)
-        cas-params (cas/cas-params cas-uri username password)
-        cas-client (cas/cas-client cas-url)]
-    (map->CasClient {:client     cas-client
-                     :params     cas-params
-                     :session-id (atom nil)})))
+        cas-params (CasParams/apply service security-uri-suffix username password)
+        cas-client (new-cas-client)]
+    (map->CasClientState {:client              cas-client
+                          :params              cas-params
+                          :session-cookie-name session-cookie-name
+                          :session-id          (atom nil)})))
 
 (defn- request-with-json-body [request body]
   (-> request
       (assoc-in [:headers "Content-Type"] "application/json")
       (assoc :body (json/generate-string body))))
 
-(defn- create-params [cas-session-id body]
-  (cond-> {:headers          {"Cookie" (str "JSESSIONID=" @cas-session-id)}
+(defn- create-params [session-cookie-name cas-session-id body]
+  (cond-> {:headers          {"Cookie" (str session-cookie-name "=" @cas-session-id)}
            :follow-redirects false}
           (some? body)
           (request-with-json-body body)))
 
 (defn- cas-http [client method url & [body]]
-  (let [cas-client     (:client client)
-        cas-params     (:params client)
-        cas-session-id (:session-id client)]
+  (let [cas-client          (:client client)
+        cas-params          (:params client)
+        session-cookie-name (:session-cookie-name client)
+        cas-session-id      (:session-id client)]
     (when (nil? @cas-session-id)
-      (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params))))
+      (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params session-cookie-name))))
     (let [resp (http-util/do-request (merge {:url url :method method}
-                                            (create-params cas-session-id body)))]
+                                            (create-params session-cookie-name cas-session-id body)))]
       (if (= 302 (:status resp))
         (do
-          (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params)))
+          (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params session-cookie-name)))
           (http-util/do-request (merge {:url url :method method}
-                                       (create-params cas-session-id body))))
+                                       (create-params session-cookie-name cas-session-id body))))
         resp))))
 
 (defn cas-authenticated-get [client url]

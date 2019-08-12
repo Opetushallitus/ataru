@@ -10,7 +10,6 @@
             [ataru.person-service.person-service :as person-service]
             [ataru.virkailija.authentication.cas-ticketstore :as cas-store]
             [ataru.util :as util]
-            [clj-util.cas :as cas]
             [environ.core :refer [env]]
             [medley.core :refer [map-kv]]
             [ring.util.http-response :refer [ok]]
@@ -24,12 +23,11 @@
 
 (sql/defqueries "sql/virkailija-queries.sql")
 
-(defn cas-login [ticket]
+(defn cas-login [cas-client ticket]
   (fn []
-      (when ticket
-        (let [cas-client (cas/cas-client (resolve-url :cas-client))
-              username   (.run (.validateServiceTicket cas-client (resolve-url :ataru.login-success) ticket))]
-          [username ticket]))))
+    (when ticket
+      [(.run (.validateServiceTicket cas-client (resolve-url :ataru.login-success) ticket))
+       ticket])))
 
 (defn- user-right-organizations->organization-rights
   [user-right-organizations]
