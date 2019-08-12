@@ -27,7 +27,8 @@
             unique-ticket (str (System/currentTimeMillis) "-" (rand-int (Integer/MAX_VALUE)))]
         [username unique-ticket])))
 
-(defn auth-routes [kayttooikeus-service
+(defn auth-routes [cas-client
+                   kayttooikeus-service
                    person-service
                    organization-service]
   (api/context "/auth" []
@@ -39,7 +40,7 @@
                                     (get-in config [:public-config :virkailija :service_url]))
                      login-provider (if (-> config :dev :fake-dependencies)
                                       (fake-login-provider ticket)
-                                      (cas-login ticket))]
+                                      (cas-login cas-client ticket))]
                  (login login-provider
                         kayttooikeus-service
                         person-service

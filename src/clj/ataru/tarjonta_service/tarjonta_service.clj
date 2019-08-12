@@ -117,9 +117,13 @@
   (get-haku [this haku-oid]
     ;; Serialization breaks boxed booleans, as it doesn't return the
     ;; canonical instance
-    (some-> (cache/get-from haku-cache haku-oid)
-            (update :canSubmitMultipleApplications #(.booleanValue %))
-            (update :usePriority #(.booleanValue %))))
+    (try
+      (some-> (cache/get-from haku-cache haku-oid)
+              (update :canSubmitMultipleApplications #(.booleanValue %))
+              (update :usePriority #(.booleanValue %)))
+      (catch Exception e
+        (println "O.o" haku-oid)
+        (throw e))))
 
   (get-haku-name [this haku-oid]
     (when-let [haku (.get-haku this haku-oid)]

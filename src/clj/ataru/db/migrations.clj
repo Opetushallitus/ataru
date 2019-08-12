@@ -424,7 +424,7 @@
   (let [kayttooikeus-service (if (-> config :dev :fake-dependencies)
                                (kayttooikeus-service/->FakeKayttooikeusService)
                                (kayttooikeus-service/->HttpKayttooikeusService
-                                (cas/new-client "/kayttooikeus-service")))
+                                (cas/new-client "/kayttooikeus-service" "j_spring_cas_security_check" "JSESSIONID")))
         person-service       (person-service/new-person-service)
         get-virkailija       (memoize (fn [username]
                                         (->> username

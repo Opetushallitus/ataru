@@ -45,7 +45,7 @@
                                (ohjausparametrit-service/new-ohjausparametrit-service)
                                [:ohjausparametrit-cache])
 
-    :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service")
+    :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service" "j_spring_cas_security_check" "JSESSIONID")
 
     :henkilo-cache-loader (component/using
                            (person-client/map->PersonCacheLoader {})
@@ -67,7 +67,7 @@
                      (person-service/new-person-service)
                      [:henkilo-cache :oppijanumerorekisteri-cas-client])
 
-    :suoritusrekisteri-cas-client (cas/new-client "/suoritusrekisteri")
+    :suoritusrekisteri-cas-client (cas/new-client "/suoritusrekisteri" "j_spring_cas_security_check" "JSESSIONID")
 
     :suoritus-service (component/using
                        (suoritus-service/new-suoritus-service)
