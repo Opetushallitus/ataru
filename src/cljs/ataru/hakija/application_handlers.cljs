@@ -221,13 +221,14 @@
     (set-followups-visibility db selected-hakukohteet-and-ryhmat field-descriptor #(get options (:value %)))))
 
 
-(defn- set-option-visibility [db [index option] field-descriptor selected-hakukohteet-and-ryhmat]
-  (if-let [belongs-to (seq (concat (:belongs-to-hakukohderyhma option)
-                                   (:belongs-to-hakukohteet option)))]
-    (assoc-in db [:application :ui (keyword (:id field-descriptor)) index :hide?] (empty? (clojure.set/intersection
-                                                                                                (set belongs-to)
-                                                                                                selected-hakukohteet-and-ryhmat)))
-    db))
+(defn- set-option-visibility [db [index option] id selected-hakukohteet-and-ryhmat]
+  (let [belongs-to (set (concat (:belongs-to-hakukohderyhma option)
+                                (:belongs-to-hakukohteet option)))]
+    (assoc-in db [:application :ui id index :visible?]
+              (or (empty? belongs-to)
+                  (not-empty (clojure.set/intersection
+                              belongs-to
+                              selected-hakukohteet-and-ryhmat))))))
 
 (defn- set-field-visibility
   ([db field-descriptor]
@@ -249,7 +250,7 @@
                                db
                                (:children field-descriptor)))
          option-visibility (fn [db]
-                             (reduce #(set-option-visibility %1 %2 field-descriptor selected-hakukohteet-and-ryhmat)
+                             (reduce #(set-option-visibility %1 %2 id selected-hakukohteet-and-ryhmat)
                                db
                                (map-indexed vector (:options field-descriptor))))]
      (cond-> (-> (assoc-in db [:application :ui id :visible?] visible?)

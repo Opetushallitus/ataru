@@ -73,11 +73,10 @@
   :application/visible-options
   (fn [db [_ field-description]]
     (let [visibility (get-in db [:application :ui (keyword (:id field-description))])]
-      (->> (:options field-description)
-           (map-indexed (fn [index option]
-                          (when-not (get-in visibility [index :hide?])
-                            option)))
-           (remove nil?)))))
+      (keep-indexed (fn [index option]
+                      (when (get-in visibility [index :visible?] true)
+                        option))
+                    (:options field-description)))))
 
 (re-frame/reg-sub
   :application/answer
