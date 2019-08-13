@@ -232,9 +232,7 @@
 
 (defn- set-field-visibility
   ([db field-descriptor]
-   (set-field-visibility db field-descriptor true))
-  ([db field-descriptor visible?]
-   (set-field-visibility db field-descriptor visible? (selected-hakukohteet-and-ryhmat db)))
+   (set-field-visibility db field-descriptor true (selected-hakukohteet-and-ryhmat db)))
   ([db field-descriptor visible? selected-hakukohteet-and-ryhmat]
    (let [id                (keyword (:id field-descriptor))
          belongs-to        (set (concat (:belongs-to-hakukohderyhma field-descriptor)
@@ -247,12 +245,12 @@
                                                 selected-hakukohteet-and-ryhmat))))
          child-visibility  (fn [db]
                              (reduce #(set-field-visibility %1 %2 visible? selected-hakukohteet-and-ryhmat)
-                               db
-                               (:children field-descriptor)))
+                                     db
+                                     (:children field-descriptor)))
          option-visibility (fn [db]
                              (reduce #(set-option-visibility %1 %2 id selected-hakukohteet-and-ryhmat)
-                               db
-                               (map-indexed vector (:options field-descriptor))))]
+                                     db
+                                     (map-indexed vector (:options field-descriptor))))]
      (cond-> (-> (assoc-in db [:application :ui id :visible?] visible?)
                  (child-visibility)
                  (option-visibility))
