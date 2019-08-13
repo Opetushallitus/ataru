@@ -29,19 +29,20 @@
    pohjakoulutukset-by-vaatimus
    hakukohde]
   (when (:oid hakukohde)
-    {:oid                        (:oid hakukohde)
-     :name                       (:name hakukohde)
-     :hakukohderyhmat            (filter #(contains? hakukohderyhmat %) (:ryhmaliitokset hakukohde))
-     :kohdejoukko-korkeakoulu?   (clojure.string/starts-with?
-                                  (:kohdejoukkoUri haku)
-                                  "haunkohdejoukko_12#")
-     :tarjoaja-name              (:tarjoaja-name hakukohde)
-     :form-key                   (:ataruLomakeAvain haku)
-     :koulutukset                (mapv #(or (get tarjonta-koulutukset %)
-                                            (throw (new RuntimeException (str "Koulutus " % " not found"))))
-                                       (:koulutus-oids hakukohde))
-     :hakuaika                   (hakuaika/get-hakuaika-info now haku ohjausparametrit hakukohde)
-     :applicable-base-educations (mapcat pohjakoulutukset-by-vaatimus (:hakukelpoisuusvaatimus-uris hakukohde))}))
+    {:oid                                                         (:oid hakukohde)
+     :name                                                        (:name hakukohde)
+     :hakukohderyhmat                                             (filter #(contains? hakukohderyhmat %) (:ryhmaliitokset hakukohde))
+     :kohdejoukko-korkeakoulu?                                    (clojure.string/starts-with?
+                                                                   (:kohdejoukkoUri haku)
+                                                                   "haunkohdejoukko_12#")
+     :tarjoaja-name                                               (:tarjoaja-name hakukohde)
+     :form-key                                                    (:ataruLomakeAvain haku)
+     :koulutukset                                                 (mapv #(or (get tarjonta-koulutukset %)
+                                                                             (throw (new RuntimeException (str "Koulutus " % " not found"))))
+                                                                        (:koulutus-oids hakukohde))
+     :hakuaika                                                    (hakuaika/get-hakuaika-info now haku ohjausparametrit hakukohde)
+     :applicable-base-educations                                  (mapcat pohjakoulutukset-by-vaatimus (:hakukelpoisuusvaatimus-uris hakukohde))
+     :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (:jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? hakukohde))}))
 
 (defn- pohjakoulutukset-by-vaatimus
   [pohjakoulutusvaatimuskorkeakoulut]

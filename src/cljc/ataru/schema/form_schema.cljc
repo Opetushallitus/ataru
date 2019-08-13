@@ -270,15 +270,17 @@
    (s/optional-key :tarkenne) s/Str})
 
 (s/defschema FormTarjontaHakukohde
-  {:oid                        s/Str
-   :name                       LocalizedStringOptional
-   :kohdejoukko-korkeakoulu?   s/Bool
-   :tarjoaja-name              LocalizedStringOptional
-   (s/optional-key :form-key)  (s/maybe s/Str)
-   :hakukohderyhmat            [s/Str]
-   :hakuaika                   Hakuaika
-   :koulutukset                [Koulutus]
-   :applicable-base-educations [s/Str]})
+  {:oid                                                                          s/Str
+   :name                                                                         LocalizedStringOptional
+   :kohdejoukko-korkeakoulu?                                                     s/Bool
+   :tarjoaja-name                                                                LocalizedStringOptional
+   (s/optional-key :form-key)                                                    (s/maybe s/Str)
+   :hakukohderyhmat                                                              [s/Str]
+   :hakuaika                                                                     Hakuaika
+   :koulutukset                                                                  [Koulutus]
+   :applicable-base-educations                                                   [s/Str]
+   ;; jyemp
+   (s/optional-key :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja?) s/Bool})
 
 (s/defschema FormTarjontaMetadata
   {:hakukohteet                        [FormTarjontaHakukohde]
@@ -306,20 +308,22 @@
    :active?         s/Bool})
 
 (s/defschema Hakukohde
-  {:oid                                        s/Str
-   :tila                                       s/Keyword
-   :haku-oid                                   s/Str
-   :koulutus-oids                              [s/Str]
-   :name                                       LocalizedStringOptional
-   :tarjoaja-name                              LocalizedStringOptional
-   :tarjoaja-oids                              [s/Str]
-   :ryhmaliitokset                             [s/Str]
-   :kaytetaan-hakukohdekohtaista-hakuaikaa?    s/Bool
-   (s/optional-key :hakuaika-id)               s/Str
-   (s/optional-key :hakuaika-alku)             s/Int
-   (s/optional-key :hakuaika-loppu)            s/Int
-   :hakukelpoisuusvaatimus-uris                [s/Str]
-   :ylioppilastutkinto-antaa-hakukelpoisuuden? s/Bool})
+  {:oid                                                                          s/Str
+   :tila                                                                         s/Keyword
+   :haku-oid                                                                     s/Str
+   :koulutus-oids                                                                [s/Str]
+   :name                                                                         LocalizedStringOptional
+   :tarjoaja-name                                                                LocalizedStringOptional
+   :tarjoaja-oids                                                                [s/Str]
+   :ryhmaliitokset                                                               [s/Str]
+   :kaytetaan-hakukohdekohtaista-hakuaikaa?                                      s/Bool
+   (s/optional-key :hakuaika-id)                                                 s/Str
+   (s/optional-key :hakuaika-alku)                                               s/Int
+   (s/optional-key :hakuaika-loppu)                                              s/Int
+   :hakukelpoisuusvaatimus-uris                                                  [s/Str]
+   :ylioppilastutkinto-antaa-hakukelpoisuuden?                                   s/Bool
+   ;; jyemp
+   (s/optional-key :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja?) s/Bool})
 
 (s/defschema HakukohdeSearchResult
   (assoc Hakukohde :user-organization? s/Bool))

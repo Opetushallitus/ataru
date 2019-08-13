@@ -72,19 +72,20 @@
 (defn parse-hakukohde
   [hakukohde]
   (let [kaytetaan-hakukohdekohtaista-hakuaikaa? (boolean (:kaytetaanHakukohdekohtaistaHakuaikaa hakukohde))]
-    (merge {:oid                                        (:oid hakukohde)
-            :tila                                       (parse-hakukohde-tila hakukohde)
-            :haku-oid                                   (:hakuOid hakukohde)
-            :koulutus-oids                              (map :oid (:koulutukset hakukohde))
-            :name                                       (localized-names (:hakukohteenNimet hakukohde))
-            :tarjoaja-name                              (localized-names (:tarjoajaNimet hakukohde))
-            :tarjoaja-oids                              (:tarjoajaOids hakukohde)
-            :ryhmaliitokset                             (some->> (:ryhmaliitokset hakukohde)
-                                                                 (map :ryhmaOid)
-                                                                 (distinct))
-            :kaytetaan-hakukohdekohtaista-hakuaikaa?    kaytetaan-hakukohdekohtaista-hakuaikaa?
-            :hakukelpoisuusvaatimus-uris                (:hakukelpoisuusvaatimusUris hakukohde)
-            :ylioppilastutkinto-antaa-hakukelpoisuuden? (boolean (:ylioppilastutkintoAntaaHakukelpoisuuden hakukohde))}
+    (merge {:oid                                                         (:oid hakukohde)
+            :tila                                                        (parse-hakukohde-tila hakukohde)
+            :haku-oid                                                    (:hakuOid hakukohde)
+            :koulutus-oids                                               (map :oid (:koulutukset hakukohde))
+            :name                                                        (localized-names (:hakukohteenNimet hakukohde))
+            :tarjoaja-name                                               (localized-names (:tarjoajaNimet hakukohde))
+            :tarjoaja-oids                                               (:tarjoajaOids hakukohde)
+            :ryhmaliitokset                                              (some->> (:ryhmaliitokset hakukohde)
+                                                                                  (map :ryhmaOid)
+                                                                                  (distinct))
+            :kaytetaan-hakukohdekohtaista-hakuaikaa?                     kaytetaan-hakukohdekohtaista-hakuaikaa?
+            :hakukelpoisuusvaatimus-uris                                 (:hakukelpoisuusvaatimusUris hakukohde)
+            :ylioppilastutkinto-antaa-hakukelpoisuuden?                  (boolean (:ylioppilastutkintoAntaaHakukelpoisuuden hakukohde))
+            :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (:josYoEiMuitaLiitepyyntoja hakukohde))}
            (if kaytetaan-hakukohdekohtaista-hakuaikaa?
              (merge {:hakuaika-alku (:hakuaikaAlkuPvm hakukohde)}
                     (when (some? (:hakuaikaLoppuPvm hakukohde))
