@@ -2,6 +2,7 @@
   (:require [ataru.application.application-states :as application-states]
             [cheshire.core :as json]
             [ataru.application.review-states :refer [incomplete-states] :as application-review-states]
+            [ataru.component-data.higher-education-base-education-module :refer [excluded-attachment-ids-when-yo-and-jyemp]]
             [ataru.db.db :as db]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             [ataru.dob :as dob]
@@ -100,7 +101,7 @@
   (not-empty (clojure.set/intersection set1 set2)))
 
 (defn hakukohde-oids-for-attachment-review
-  [attachment-field hakutoiveet fields-by-id]
+  [attachment-field hakutoiveet fields-by-id ylioppilastutkinto?]
   (let [belongs-tos (loop [field       attachment-field
                            belongs-tos []]
                       (if (some? field)
@@ -111,19 +112,22 @@
                                (conj belongs-tos
                                      (set (concat (:belongs-to-hakukohteet field)
                                                   (:belongs-to-hakukohderyhma field)))))
-                        belongs-tos))]
+                        belongs-tos))
+        jyemp?      (and ylioppilastutkinto?
+                         (contains? excluded-attachment-ids-when-yo-and-jyemp (:id attachment-field)))]
     (if (not-empty hakutoiveet)
       (->> hakutoiveet
-           (filter #(every? (fn [belongs-to]
-                              (or (empty? belongs-to)
-                                  (contains? belongs-to (:oid %))
-                                  (intersect? belongs-to (set (:hakukohderyhmat %)))))
-                            belongs-tos))
+           (filter #(and (not (and jyemp? (:jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? %)))
+                         (every? (fn [belongs-to]
+                                   (or (empty? belongs-to)
+                                       (contains? belongs-to (:oid %))
+                                       (intersect? belongs-to (set (:hakukohderyhmat %)))))
+                                 belongs-tos)))
            (map :oid))
       ["form"])))
 
 (defn- create-attachment-reviews
-  [attachment-field answer old-answer update? application-key hakutoiveet fields-by-id]
+  [attachment-field answer old-answer update? application-key hakutoiveet fields-by-id ylioppilastutkinto?]
   (let [value-changed? (and update?
                             (not= old-answer answer))
         review-base    {:application_key application-key
@@ -133,7 +137,7 @@
                                            "not-checked")
                         :updated?        value-changed?}]
     (map #(assoc review-base :hakukohde %)
-         (hakukohde-oids-for-attachment-review attachment-field hakutoiveet fields-by-id))))
+         (hakukohde-oids-for-attachment-review attachment-field hakutoiveet fields-by-id ylioppilastutkinto?))))
 
 (defn- followup-option-selected?
   [field answers]
@@ -154,20 +158,29 @@
                      (followup-option-selected? field answers))))
           fields))
 
+(defn- ylioppilastutkinto? [answers-by-key]
+  (boolean (some #(or (= "pohjakoulutus_yo" %)
+                      (= "pohjakoulutus_yo_ammatillinen" %)
+                      (= "pohjakoulutus_yo_kansainvalinen_suomessa" %)
+                      (= "pohjakoulutus_yo_ulkomainen" %))
+                 (get-in answers-by-key [:higher-completed-base-education :value]))))
+
 (defn create-application-attachment-reviews
   [application-key visible-attachments answers-by-key old-answers applied-hakukohteet update? fields-by-id]
-  (mapcat (fn [attachment]
-            (let [attachment-key (-> attachment :id keyword)
-                  answer         (-> answers-by-key attachment-key :value)
-                  old-answer     (-> old-answers attachment-key :value)]
-              (create-attachment-reviews attachment
-                                         answer
-                                         old-answer
-                                         update?
-                                         application-key
-                                         applied-hakukohteet
-                                         fields-by-id)))
-          visible-attachments))
+  (let [ylioppilastutkinto? (ylioppilastutkinto? answers-by-key)]
+    (mapcat (fn [attachment]
+              (let [attachment-key (-> attachment :id keyword)
+                    answer         (-> answers-by-key attachment-key :value)
+                    old-answer     (-> old-answers attachment-key :value)]
+                (create-attachment-reviews attachment
+                                           answer
+                                           old-answer
+                                           update?
+                                           application-key
+                                           applied-hakukohteet
+                                           fields-by-id
+                                           ylioppilastutkinto?)))
+            visible-attachments)))
 
 (defn delete-orphan-attachment-reviews
   [application-key reviews connection]

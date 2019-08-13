@@ -164,7 +164,7 @@
                           {:oid :hb :hakukohderyhmat [:rb]}
                           {:oid :ha :hakukohderyhmat [:rb]}]
             result       (store/hakukohde-oids-for-attachment-review
-                           (:g fields-by-id) hakutoiveet fields-by-id)]
+                           (:g fields-by-id) hakutoiveet fields-by-id false)]
         (should== [:ha] result)))
 
   (it "should create attachment reviews for new application without hakukohteet"

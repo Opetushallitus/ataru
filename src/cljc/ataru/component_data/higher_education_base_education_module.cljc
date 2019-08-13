@@ -1016,3 +1016,13 @@
        util/flatten-form-fields
        (map (comp name :id))
        set))
+
+(def excluded-attachment-ids-when-yo-and-jyemp
+  #{"pohjakoulutus_lk--attachment"
+    "pohjakoulutus_am--attachment"
+    "pohjakoulutus_amt--attachment"
+    "pohjakoulutus_kk--attachment"
+    "pohjakoulutus_ulk--attachment"
+    "pohjakoulutus_kk_ulk--attachement"
+    "pohjakoulutus_avoin--attachment"
+    "pohjakoulutus_muu--attachment"})
