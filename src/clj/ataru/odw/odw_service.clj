@@ -67,7 +67,8 @@
                                                    :a2bdac0a-e994-4fda-aa59-4ab4af2384a2
                                                    :6e2ad9bf-5f3a-41de-aada-a939aeda3e87
                                                    :c643447c-b667-42ab-9fd6-66b40a722a3c]))
-    "pohjakoulutus_yo_ammatillinen"            (mapv max
+    "pohjakoulutus_yo_ammatillinen"            (mapv #(when (and (some? %1) (some? %2))
+                                                        (max %1 %2))
                                                      (suoritusvuosi-one-of
                                                       application-key
                                                       answers
