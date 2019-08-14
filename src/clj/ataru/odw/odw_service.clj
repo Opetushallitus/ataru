@@ -22,35 +22,36 @@
     "not-obligated" "NOT_REQUIRED"))
 
 (defn- parse-year
-  [s]
+  [application-key s]
   (try
     (let [[_ _ vuosi] (re-matches #"(\d?\d\.\d?\d\.)?([12]\d{3})" s)]
       (Integer/valueOf vuosi))
     (catch Exception e
-      (throw (new RuntimeException
-                  (str "Failed to parse year of completion " s)
-                  e)))))
+      (log/warn "Failed to parse year of completion" s "in hakemus" application-key)
+      nil)))
 
 (defn- suoritusvuosi-one-of
-  [answers ids]
+  [application-key answers ids]
   (if-let [values (some #(let [v (get-in answers [% :value])]
                            (cond (string? v)
                                  [v]
                                  (some? v)
                                  (map first v)))
                         ids)]
-    (mapv parse-year values)
-    (throw (new RuntimeException
-                (str "No answers to questions " (clojure.string/join ", " ids))))))
+    (mapv (partial parse-year application-key) values)
+    (do (log/warn (str "No answers to questions " (clojure.string/join ", " ids)) "in hakemus" application-key)
+        [nil])))
 
 (defn- kk-pohjakoulutus-suoritusvuosi
-  [haku answers pohjakoulutus]
+  [haku answers pohjakoulutus application-key]
   (case pohjakoulutus
     "pohjakoulutus_yo"                         (suoritusvuosi-one-of
+                                                application-key
                                                 answers
                                                 [:pohjakoulutus_yo--no-year-of-completion
                                                  :pohjakoulutus_yo--yes-year-of-completion])
     "pohjakoulutus_lk"                         (suoritusvuosi-one-of
+                                                application-key
                                                 answers
                                                 [:pohjakoulutus_lk--year-of-completion
                                                  :c157cbde-3904-46b7-95e1-641fb8314a11])
@@ -60,6 +61,7 @@
                                                           :6b7119c9-42ec-467d-909c-6d1cc555b823])
                                                  [(:hakukausiVuosi haku)]
                                                  (suoritusvuosi-one-of
+                                                  application-key
                                                   answers
                                                   [:pohjakoulutus_yo_kansainvalinen_suomessa--year-of-completion
                                                    :a2bdac0a-e994-4fda-aa59-4ab4af2384a2
@@ -67,20 +69,25 @@
                                                    :c643447c-b667-42ab-9fd6-66b40a722a3c]))
     "pohjakoulutus_yo_ammatillinen"            (map max
                                                     (suoritusvuosi-one-of
+                                                     application-key
                                                      answers
                                                      [:pohjakoulutus_yo_ammatillinen--marticulation-year-of-completion])
                                                     (suoritusvuosi-one-of
+                                                     application-key
                                                      answers
                                                      [:pohjakoulutus_yo_ammatillinen--vocational-completion-year]))
     "pohjakoulutus_am"                         (suoritusvuosi-one-of
+                                                application-key
                                                 answers
                                                 [:pohjakoulutus_am--year-of-completion
                                                  :f3a87aa7-b782-4947-a4a0-0f126147f7b5])
     "pohjakoulutus_amt"                        (suoritusvuosi-one-of
+                                                application-key
                                                 answers
                                                 [:pohjakoulutus_amt--year-of-completion
                                                  :c8d351ad-cd95-4f40-a128-530585fa0c0d])
     "pohjakoulutus_kk"                         (suoritusvuosi-one-of
+                                                application-key
                                                 answers
                                                 [:pohjakoulutus_kk--completion-date
                                                  :124a0215-e358-47e1-ab02-f1cc7c831e0e])
@@ -90,30 +97,39 @@
                                                           :220c3b47-1ca6-47e7-8af2-2f6ff823e07b])
                                                  [(:hakukausiVuosi haku)]
                                                  (suoritusvuosi-one-of
+                                                  application-key
                                                   answers
                                                   [:pohjakoulutus_yo_ulkomainen--year-of-completion
                                                    :77ea3ff1-6c04-4b3f-87d2-72bbe7db12e2
                                                    :2c85ef9c-d6c2-448d-ac56-f8da4ca5c1fc
                                                    :e70041ff-e6f4-4dc5-a87f-3267543cced4]))
     "pohjakoulutus_kk_ulk"                     (suoritusvuosi-one-of
+                                                application-key
                                                 answers
                                                 [:pohjakoulutus_kk_ulk--year-of-completion])
     "pohjakoulutus_ulk"                        (suoritusvuosi-one-of
+                                                application-key
                                                 answers
                                                 [:pohjakoulutus_ulk--year-of-completion])
     "pohjakoulutus_muu"                        (suoritusvuosi-one-of
+                                                application-key
                                                 answers
-                                                [:pohjakoulutus_muu--year-of-completion])))
+                                                [:pohjakoulutus_muu--year-of-completion])
+    (do (log/warn "Form for haku" (:oid haku)
+                  "has the question higher-completed-base-education"
+                  "but the answer" pohjakoulutus "is unknown")
+        [])))
 
 (defn- get-kk-pohjakoulutus
-  [haku answers]
+  [haku answers application-key]
   (mapcat (fn [pohjakoulutus]
             (if (= "pohjakoulutus_avoin" pohjakoulutus)
               [{:pohjakoulutuskklomake pohjakoulutus}]
               (map (fn [suoritusvuosi]
-                     {:pohjakoulutuskklomake pohjakoulutus
-                      :suoritusvuosi         suoritusvuosi})
-                   (kk-pohjakoulutus-suoritusvuosi haku answers pohjakoulutus))))
+                     (merge {:pohjakoulutuskklomake pohjakoulutus}
+                            (when (some? suoritusvuosi)
+                              {:suoritusvuosi suoritusvuosi})))
+                   (kk-pohjakoulutus-suoritusvuosi haku answers pohjakoulutus application-key))))
           (get-in answers [:higher-completed-base-education :value])))
 
 (defn get-applications-for-odw [person-service tarjonta-service date limit offset]
@@ -154,7 +170,7 @@
                                              :state                            (if (= state "inactivated")
                                                                                  "PASSIVE"
                                                                                  "ACTIVE")
-                                             :kk_pohjakoulutus                 (get-kk-pohjakoulutus (get haut (:haku application)) answers)}
+                                             :kk_pohjakoulutus                 (get-kk-pohjakoulutus (get haut (:haku application)) answers (:key application))}
                                             (if foreign?
                                               {:Ulk_postiosoite (-> answers :address :value)
                                                :Ulk_postinumero (-> answers :postal-code :value)
