@@ -108,10 +108,10 @@
 
 (s/defn ^:always-validate get-hakukohde :- (s/maybe schema/Hakukohde)
   [hakukohde-oid :- s/Str]
-  (-> :tarjonta-service.hakukohde
-      (resolve-url hakukohde-oid)
-      get-result
-      parse-hakukohde))
+  (some-> :tarjonta-service.hakukohde
+          (resolve-url hakukohde-oid)
+          get-result
+          parse-hakukohde))
 
 (defn hakukohde-search
   [haku-oid organization-oid]
@@ -130,10 +130,10 @@
 
 (s/defn ^:always-validate get-koulutus :- (s/maybe schema/Koulutus)
   [koulutus-oid :- s/Str]
-  (-> :tarjonta-service.koulutus
-      (resolve-url koulutus-oid)
-      get-result
-      parse-koulutus))
+  (some-> :tarjonta-service.koulutus
+          (resolve-url koulutus-oid)
+          get-result
+          parse-koulutus))
 
 (defn get-forms-in-use
   [organization-oid]
