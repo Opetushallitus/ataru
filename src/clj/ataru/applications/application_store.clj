@@ -101,29 +101,24 @@
 
 (defn hakukohde-oids-for-attachment-review
   [attachment-field hakutoiveet fields-by-id]
-  (let [relatives                 (loop [field   attachment-field
-                                         parents [attachment-field]]
-                                    (if-let [parent-id (or (:followup-of field)
-                                                           (:children-of field))]
-                                      (let [parent (get fields-by-id (keyword parent-id))]
-                                        (recur parent (cons parent parents)))
-                                      parents))
-        belongs-to-hakukohteet    (->> relatives
-                                       (map :belongs-to-hakukohteet)
-                                       (remove empty?)
-                                       (map set))
-        belongs-to-hakukohderyhma (->> relatives
-                                       (map :belongs-to-hakukohderyhma)
-                                       (remove empty?)
-                                       (map set))]
+  (let [belongs-tos (loop [field       attachment-field
+                           belongs-tos []]
+                      (if (some? field)
+                        (recur (some->> (or (:followup-of field)
+                                            (:children-of field))
+                                        keyword
+                                        (get fields-by-id))
+                               (conj belongs-tos
+                                     (set (concat (:belongs-to-hakukohteet field)
+                                                  (:belongs-to-hakukohderyhma field)))))
+                        belongs-tos))]
     (if (not-empty hakutoiveet)
       (->> hakutoiveet
-           (filter #(and (every? (fn [kohteet]
-                                  (contains? kohteet (:oid %)))
-                                belongs-to-hakukohteet)
-                        (every? (fn [ryhmat]
-                                  (intersect? ryhmat (set (:hakukohderyhmat %))))
-                                belongs-to-hakukohderyhma)))
+           (filter #(every? (fn [belongs-to]
+                              (or (empty? belongs-to)
+                                  (contains? belongs-to (:oid %))
+                                  (intersect? belongs-to (set (:hakukohderyhmat %)))))
+                            belongs-tos))
            (map :oid))
       ["form"])))
 
