@@ -67,15 +67,15 @@
                                                    :a2bdac0a-e994-4fda-aa59-4ab4af2384a2
                                                    :6e2ad9bf-5f3a-41de-aada-a939aeda3e87
                                                    :c643447c-b667-42ab-9fd6-66b40a722a3c]))
-    "pohjakoulutus_yo_ammatillinen"            (map max
-                                                    (suoritusvuosi-one-of
-                                                     application-key
-                                                     answers
-                                                     [:pohjakoulutus_yo_ammatillinen--marticulation-year-of-completion])
-                                                    (suoritusvuosi-one-of
-                                                     application-key
-                                                     answers
-                                                     [:pohjakoulutus_yo_ammatillinen--vocational-completion-year]))
+    "pohjakoulutus_yo_ammatillinen"            (mapv max
+                                                     (suoritusvuosi-one-of
+                                                      application-key
+                                                      answers
+                                                      [:pohjakoulutus_yo_ammatillinen--marticulation-year-of-completion])
+                                                     (suoritusvuosi-one-of
+                                                      application-key
+                                                      answers
+                                                      [:pohjakoulutus_yo_ammatillinen--vocational-completion-year]))
     "pohjakoulutus_am"                         (suoritusvuosi-one-of
                                                 application-key
                                                 answers
@@ -122,15 +122,16 @@
 
 (defn- get-kk-pohjakoulutus
   [haku answers application-key]
-  (mapcat (fn [pohjakoulutus]
-            (if (= "pohjakoulutus_avoin" pohjakoulutus)
-              [{:pohjakoulutuskklomake pohjakoulutus}]
-              (map (fn [suoritusvuosi]
-                     (merge {:pohjakoulutuskklomake pohjakoulutus}
-                            (when (some? suoritusvuosi)
-                              {:suoritusvuosi suoritusvuosi})))
-                   (kk-pohjakoulutus-suoritusvuosi haku answers pohjakoulutus application-key))))
-          (get-in answers [:higher-completed-base-education :value])))
+  (vec
+   (mapcat (fn [pohjakoulutus]
+             (if (= "pohjakoulutus_avoin" pohjakoulutus)
+               [{:pohjakoulutuskklomake pohjakoulutus}]
+               (mapv (fn [suoritusvuosi]
+                       (merge {:pohjakoulutuskklomake pohjakoulutus}
+                              (when (some? suoritusvuosi)
+                                {:suoritusvuosi suoritusvuosi})))
+                     (kk-pohjakoulutus-suoritusvuosi haku answers pohjakoulutus application-key))))
+           (get-in answers [:higher-completed-base-education :value]))))
 
 (defn get-applications-for-odw [person-service tarjonta-service date limit offset]
   (let [applications (application-store/get-applications-newer-than date limit offset)
