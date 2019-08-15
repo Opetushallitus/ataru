@@ -466,7 +466,7 @@
            session
            [application-key]
            [:edit-applications])
-      (let [event-id (application-store/save-application-review review session)]
+      (when-let [event-id (application-store/save-application-review review session)]
         (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-review-state-changed-job
          job-runner
          event-id))
