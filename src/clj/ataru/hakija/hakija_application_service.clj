@@ -386,9 +386,9 @@
   (log/info "Saving feedback" feedback)
   (application-store/add-application-feedback feedback))
 
-(defn- attachment-metadata->answer [{:keys [fieldType] :as answer}]
+(defn- attachment-metadata->answer [{:keys [fieldType cannot-view] :as answer}]
   (cond-> answer
-          (= fieldType "attachment")
+          (and (= fieldType "attachment") (not cannot-view))
           (update :value (fn [value]
                            (if (and (vector? value)
                                     (not (empty? value))
