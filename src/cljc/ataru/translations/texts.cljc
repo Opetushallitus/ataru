@@ -788,6 +788,9 @@ You will receive a confirmation of your application to your email."}
    :mail-attachment-text                        {:fi "Postitettava liitepyyntö"
                                                  :sv "SV: Postitettava liitepyyntö"
                                                  :en "EN: Postitettava liitepyyntö"}
+   :sensitive-text                              {:fi "Arkaluontoinen"
+                                                 :sv "SV: Arkaluontoinen"
+                                                 :en "EN: Arkaluontoinen"}
    :attachment-name                             {:fi "Liitteen nimi"
                                                  :sv "Bilagans namn"
                                                  :en "Title of an attachment"}

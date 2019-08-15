@@ -1156,11 +1156,12 @@
          [belongs-to-hakukohteet path content]]]])))
 
 (defn attachment-textarea [path]
-  (let [checked?         (subscribe [:editor/get-component-value path :params :info-text :enabled?])
-        mail-attachment? (subscribe [:editor/get-component-value path :params :mail-attachment?])
-        collapse?        (subscribe [:editor/get-component-value path :params :info-text-collapse])
-        languages        (subscribe [:editor/languages])
-        component-locked?      (subscribe [:editor/component-locked? path])]
+  (let [checked?          (subscribe [:editor/get-component-value path :params :info-text :enabled?])
+        mail-attachment?  (subscribe [:editor/get-component-value path :params :mail-attachment?])
+        sensitive?        (subscribe [:editor/get-component-value path :params :sensitive?])
+        collapse?         (subscribe [:editor/get-component-value path :params :info-text-collapse])
+        languages         (subscribe [:editor/languages])
+        component-locked? (subscribe [:editor/component-locked? path])]
     (fn [path]
       [:div.editor-form__info-addon-wrapper
        (let [id (util/new-uuid)]
@@ -1177,6 +1178,20 @@
            {:for   id
             :class (when @component-locked? "editor-form__checkbox-label--disabled")}
            (get-virkailija-translation :mail-attachment-text)]])
+       (let [id (util/new-uuid)]
+         [:div.editor-form__info-addon-checkbox
+          [:input {:id        id
+                   :type      "checkbox"
+                   :checked   @sensitive?
+                   :disabled  @component-locked?
+                   :on-change (fn toggle-attachment-textarea [event]
+                                (.preventDefault event)
+                                (let [sensitive? (.. event -target -checked)]
+                                  (dispatch [:editor/update-sensitive sensitive? path])))}]
+          [:label
+           {:for   id
+            :class (when @component-locked? "editor-form__checkbox-label--disabled")}
+           (get-virkailija-translation :sensitive-text)]])
        (when-not @mail-attachment?
          (let [id (util/new-uuid)]
            [:div.editor-form__info-addon-checkbox

@@ -81,6 +81,7 @@
                      (s/optional-key :haku-oid)                         s/Str
                      (s/optional-key :placeholder)                      LocalizedString
                      (s/optional-key :mail-attachment?)                 (s/maybe s/Bool)
+                     (s/optional-key :sensitive?)                       s/Bool
                      (s/optional-key :info-text)                        (s/maybe InfoText)
                      (s/optional-key :info-text-collapse)               (s/maybe s/Bool)})
 

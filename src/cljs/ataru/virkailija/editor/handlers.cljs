@@ -284,6 +284,13 @@
           (update-in (current-form-content-path db [path]) flip-mail-attachment)
           (update-modified-by path)))))
 
+(reg-event-db
+  :editor/update-sensitive
+  (fn [db [_ sensitive? path]]
+    (-> db
+        (assoc-in (current-form-content-path db path :params :sensitive?) sensitive?)
+        (update-modified-by path))))
+
 (defn generate-component
   [db [_ generate-fn sub-path]]
   (let [yhteishaku?           (subscribe [:editor/yhteishaku?])
