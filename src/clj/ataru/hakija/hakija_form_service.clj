@@ -107,11 +107,20 @@
                           application-in-processing-state?))))))
 
 (defn flag-uneditable-and-unviewable-field
+  "NOTE: cannot-view is only supported on text fields and attachments.
+
+  As cannot-view is *not* inherited by child or followup fields, the presence
+  of those fields can leak the answer of a single or multiple choice field
+  even when this field is marked as cannot-view"
   [now hakuajat roles application-in-processing-state? field]
+  (assert (or (not (:sensitive? (:params field)))
+              (or (= "textField" (:fieldType field))
+                  (= "attachment" (:fieldType field)))))
   (if (= "formField" (:fieldClass field))
-    (let [cannot-view? (and (contains? viewing-forbidden-person-info-field-ids
-                                       (keyword (:id field)))
-                            (not (form-role/virkailija? roles)))
+    (let [cannot-view? (or (:sensitive? (:params field))
+                           (and (contains? viewing-forbidden-person-info-field-ids
+                                           (keyword (:id field)))
+                                (not (form-role/virkailija? roles))))
           cannot-edit? (or cannot-view?
                            (uneditable? now field hakuajat roles application-in-processing-state?))]
       (assoc field
