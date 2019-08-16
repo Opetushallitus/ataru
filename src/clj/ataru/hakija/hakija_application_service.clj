@@ -3,6 +3,7 @@
     [taoensso.timbre :as log]
     [clojure.core.async :as async]
     [clojure.core.match :refer [match]]
+    [ataru.applications.application-access-control :as aac]
     [ataru.applications.application-service :as application-service]
     [ataru.applications.automatic-eligibility :as automatic-eligibility]
     [ataru.background-job.job :as job]
@@ -483,15 +484,25 @@
                                                                    application-id)))
 
 (defn can-access-attachment?
-  [secret virkailija-secret attachment-key]
-  (when-let [application (cond (and (some? virkailija-secret) (virkailija-edit/virkailija-rewrite-secret-valid? virkailija-secret))
-                               (application-store/get-latest-application-for-virkailija-rewrite-edit virkailija-secret)
+  [form-by-haku-oid-and-id-cache
+   koodisto-cache
+   secret
+   virkailija-secret
+   attachment-key]
+  (let [[form-role application] (cond (and (some? virkailija-secret) (virkailija-edit/virkailija-rewrite-secret-valid? virkailija-secret))
+                                      [:virkailija (application-store/get-latest-application-for-virkailija-rewrite-edit virkailija-secret)]
 
-                               (and (some? virkailija-secret) (virkailija-edit/virkailija-update-secret-valid? virkailija-secret))
-                               (application-store/get-latest-application-for-virkailija-edit virkailija-secret)
+                                      (and (some? virkailija-secret) (virkailija-edit/virkailija-update-secret-valid? virkailija-secret))
+                                      [:virkailija (application-store/get-latest-application-for-virkailija-edit virkailija-secret)]
 
-                               (some? secret)
-                               (application-store/get-latest-application-by-secret secret))]
-    (some #(and (= "attachment" (:fieldType %))
-                (some #{attachment-key} (flatten (:value %))))
-          (:answers application))))
+                                      (some? secret)
+                                      [:hakija (application-store/get-latest-application-by-secret secret)])]
+    (if (some? application)
+      (boolean
+       ((aac/viewable-attachment-keys-of-application
+         form-by-haku-oid-and-id-cache
+         koodisto-cache
+         [form-role]
+         application)
+        attachment-key))
+      false)))

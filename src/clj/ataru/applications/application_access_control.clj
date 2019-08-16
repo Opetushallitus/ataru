@@ -1,12 +1,14 @@
 (ns ataru.applications.application-access-control
   (:require
+   [ataru.hakija.hakija-form-service :as hakija-form-service]
    [ataru.log.audit-log :as audit-log]
    [ataru.organization-service.session-organizations :as session-orgs]
    [ataru.forms.form-access-control :as form-access-control]
    [ataru.applications.application-store :as application-store]
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
    [ataru.odw.odw-service :as odw-service]
-   [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]))
+   [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
+   [ataru.util :as util]))
 
 (defn authorized-by-form?
   [authorized-organization-oids application]
@@ -231,3 +233,54 @@
    #(filter-authorized tarjonta-service
                        (constantly true)
                        (application-store/valinta-ui-applications query))))
+
+(defn viewable-attachment-keys-of-application
+  [form-by-haku-oid-and-id-cache
+   koodisto-cache
+   form-roles
+   application]
+  (let [form      (cond (some? (:haku application))
+                        (hakija-form-service/fetch-form-by-haku-oid-and-id-cached
+                         form-by-haku-oid-and-id-cache
+                         (:haku application)
+                         (:form application)
+                         false
+                         form-roles)
+                        (some? (:form application))
+                        (hakija-form-service/fetch-form-by-id
+                         (:form application)
+                         form-roles
+                         koodisto-cache
+                         nil
+                         false))
+        can-view? (->> (:content form)
+                       util/flatten-form-fields
+                       (filter #(= "attachment" (:fieldType %)))
+                       (remove :cannot-view)
+                       (map :id)
+                       set)]
+    (reduce (fn [viewable-attachment-keys answer]
+              (cond-> viewable-attachment-keys
+                      (can-view? (:key answer))
+                      (into (flatten (:value answer)))))
+            #{}
+            (:answers application))))
+
+(defn viewable-attachment-keys
+  [organization-service
+   tarjonta-service
+   form-by-haku-oid-and-id-cache
+   koodisto-cache
+   session
+   application-key]
+  (if-let [application (get-latest-application-by-key
+                        organization-service
+                        tarjonta-service
+                        session
+                        application-key)]
+    (viewable-attachment-keys-of-application
+     form-by-haku-oid-and-id-cache
+     koodisto-cache
+     [:virkailija]
+     application)
+    #{}))

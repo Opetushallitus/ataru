@@ -281,7 +281,11 @@
         :query-params [{secret :- s/Str nil}
                        {virkailija-secret :- s/Str nil}]
         (if (hakija-application-service/can-access-attachment?
-             secret virkailija-secret key)
+             form-by-haku-oid-and-id-cache
+             koodisto-cache
+             secret
+             virkailija-secret
+             key)
           (if-let [file (file-store/get-file key)]
             (-> (:body file)
                 response/ok

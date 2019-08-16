@@ -184,6 +184,7 @@
                           job-runner
                           ohjausparametrit-service
                           virkailija-tarjonta-service
+                          form-by-haku-oid-and-id-cache
                           localizations-cache
                           statistics-month-cache
                           statistics-week-cache
@@ -564,7 +565,45 @@
           (response/ok result)
           (response/unauthorized {:error (str "Hakemuksen "
                                               application-key
-                                              " käsittely ei ole sallittu")}))))
+                                              " käsittely ei ole sallittu")})))
+
+      (api/GET "/:application-key/attachments/:key" {session :session}
+        :path-params [application-key :- (api/describe s/Str "Application OID")
+                      key :- (api/describe s/Str "File key")]
+        :summary "Download an attachment"
+        (let [viewable-attachment-keys (access-controlled-application/viewable-attachment-keys
+                                        organization-service
+                                        tarjonta-service
+                                        form-by-haku-oid-and-id-cache
+                                        koodisto-cache
+                                        session
+                                        application-key)]
+          (if (viewable-attachment-keys key)
+            (if-let [file-response (file-store/get-file key)]
+              (header (ok (:body file-response))
+                      "Content-Disposition"
+                      (:content-disposition file-response))
+              (not-found))
+            (response/unauthorized "Unauthorized"))))
+
+      (api/POST "/:application-key/attachments/zip" {session :session}
+        :path-params [application-key :- (api/describe s/Str "Application OID")]
+        :form-params [keys :- s/Str]
+        :summary "Download attachments as a ZIP archive"
+        (let [viewable-attachment-keys (access-controlled-application/viewable-attachment-keys
+                                        organization-service
+                                        tarjonta-service
+                                        form-by-haku-oid-and-id-cache
+                                        koodisto-cache
+                                        session
+                                        application-key)
+              keys                     (json/parse-string keys)]
+          (if (every? viewable-attachment-keys keys)
+            (-> (ring-util/response
+                 (ring-io/piped-input-stream
+                  (fn [out] (file-store/get-file-zip keys out))))
+                (header "Content-Disposition" (str "attachment; filename=" "attachments.zip")))
+            (response/unauthorized "Unauthorized")))))
 
     (api/context "/cache" []
       (api/POST "/clear" {session :session}
