@@ -66,12 +66,17 @@
     (application-store/get-application-hakukohde-reviews application-key)))
 
 (defn- parse-application-attachment-reviews
-  [application-key]
-  (reduce
-   (fn [acc {:keys [attachment-key state hakukohde]}]
-     (assoc-in acc [hakukohde attachment-key] state))
-   {}
-   (application-store/get-application-attachment-reviews application-key)))
+  [form application]
+  (let [fields-by-key (->> (:content form)
+                           util/flatten-form-fields
+                           (util/group-by-first :id))]
+    (reduce
+     (fn [acc {:keys [attachment-key state hakukohde]}]
+       (cond-> acc
+               (not (get-in fields-by-key [attachment-key :cannot-view]))
+               (assoc-in [hakukohde attachment-key] state)))
+     {}
+     (application-store/get-application-attachment-reviews (:key application)))))
 
 (defn- person-info-from-application [application]
   (let [answers (util/answers-by-key (:answers application))]
@@ -214,7 +219,7 @@
                                        (assoc :content [])
                                        (dissoc :organization-oid))
           hakukohde-reviews    (future (parse-application-hakukohde-reviews application-key))
-          attachment-reviews   (future (parse-application-attachment-reviews application-key))
+          attachment-reviews   (future (parse-application-attachment-reviews form-in-application application))
           events               (future (application-store/get-application-events application-key))
           review               (future (application-store/get-application-review application-key))
           review-notes         (future (application-store/get-application-review-notes application-key))
