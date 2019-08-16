@@ -1652,13 +1652,13 @@
                 text]
                text)])]]))))
 
-(defn- attachment-review-area [reviews lang]
+(defn- attachment-review-area [application-key reviews lang]
   (let [all-keys         (->> (vals reviews)
                               (mapcat #(-> % ffirst :value flatten))
                               (keep :key)
                               set)
         selected-reviews (r/atom all-keys)]
-    (fn [reviews lang]
+    (fn [application-key reviews lang]
       [:div.application-handling__attachment-review-container.animated
        {:class (str (if @(subscribe [:state-query [:application :show-attachment-reviews?]])
                       " fadeInRight"
@@ -1687,7 +1687,8 @@
              (get-virkailija-translation :select-all)]
             [:div.application-handling__excel-request-row
              [:form#attachment-download-link
-              {:action "/lomake-editori/api/files/zip"
+              {:action (str "/lomake-editori/api/applications/" application-key
+                            "/attachments/zip")
                :method "POST"}
               [:input {:type  "hidden"
                        :name  "keys"
@@ -1710,7 +1711,8 @@
         superuser?              (subscribe [:state-query [:editor :user-info :superuser?]])
         show-attachment-review? (r/atom false)]
     (fn []
-      (let [selected-review-hakukohde        @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+      (let [application-key                  @(subscribe [:application/selected-application-key])
+            selected-review-hakukohde        @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
             attachment-reviews-for-hakukohde (group-by #(:key (first %))
                                                (mapcat (fn [oid]
                                                          (map (fn [attachments]
@@ -1733,7 +1735,7 @@
              [:span.application-handling__review-settings-header-text (get-virkailija-translation :settings)]]]
          [:div.application-handling__review
           (when @show-attachment-review?
-            [attachment-review-area attachment-reviews-for-hakukohde @lang])
+            [attachment-review-area application-key attachment-reviews-for-hakukohde @lang])
           [:div.application-handling__review-outer-container
            [application-hakukohde-selection]
            (when (not-empty selected-review-hakukohde)

@@ -88,15 +88,16 @@
             :else
             (render-paragraphs values))]]))
 
-(defn- attachment-item [file-key virus-scan-status virus-status-elem text are-you-sure? removing?]
+(defn- attachment-item [application-key file-key virus-scan-status virus-status-elem text are-you-sure? removing?]
   [:div.application__virkailija-readonly-attachment-area
    (if (= virus-scan-status "done")
-     [:a {:href (str "/lomake-editori/api/files/content/" file-key)}
+     [:a {:href (str "/lomake-editori/api/applications/" application-key
+                     "/attachments/" file-key)}
       text]
      text)
    virus-status-elem])
 
-(defn- attachment-list [attachments]
+(defn- attachment-list [application-key attachments]
   [:div.application-handling__nested-container
    (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size virus-scan-status :virus-scan-status}]
                   (let [text              (str filename " (" (util/size-bytes->str size) ")")
@@ -110,7 +111,7 @@
                                             (get-virkailija-translation :error))]
                     [:div.application__virkailija-readonly-attachment
                      {:key component-key}
-                     [attachment-item file-key virus-scan-status virus-status-elem text]]))
+                     [attachment-item application-key file-key virus-scan-status virus-status-elem text]]))
                 (filter identity attachments))])
 
 (defn attachment [field-descriptor application lang group-idx]
@@ -125,7 +126,7 @@
        (str (from-multi-lang (:label field-descriptor) lang)
             (required-hint field-descriptor))
        [copy-link id :shared-use-warning? false :include? exclude-always-included]]]
-     [attachment-list values]]))
+     [attachment-list (:key application) values]]))
 
 (declare field)
 
