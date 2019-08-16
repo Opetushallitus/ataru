@@ -5,6 +5,7 @@
     [ataru.applications.excel-export :as excel]
     [ataru.config.core :refer [config]]
     [ataru.email.application-email-confirmation :as email]
+    [ataru.files.file-store :as file-store]
     [ataru.forms.form-access-control :as form-access-control]
     [ataru.forms.form-store :as form-store]
     [ataru.hakija.hakija-form-service :as hakija-form-service]
@@ -180,6 +181,28 @@
                                    (:cannot-view (fields-by-key (:key answer)))
                                    (assoc :value nil :cannot-view true)))))))
 
+(defn- attachment-metadata->answer [{:keys [fieldType cannot-view] :as answer}]
+  (cond-> answer
+          (and (= fieldType "attachment") (not cannot-view))
+          (update :value (fn [value]
+                           (if (and (vector? value)
+                                    (not (empty? value))
+                                    (every? vector? value))
+                             (mapv file-store/get-metadata value)
+                             (file-store/get-metadata value))))))
+
+(defn attachments-metadata->answers [application]
+  (update application :answers (partial map attachment-metadata->answer)))
+
+(defn- try-attachments-metadata->answers [application]
+  (try
+    {:metadata-not-found false
+     :application        (attachments-metadata->answers application)}
+    (catch Exception e
+      (log/error e "Failed to fetch attachment metadata for application" (:key application))
+      {:metadata-not-found true
+       :application        application})))
+
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
@@ -224,19 +247,21 @@
           review               (future (application-store/get-application-review application-key))
           review-notes         (future (application-store/get-application-review-notes application-key))
           information-requests (future (information-request-store/get-information-requests application-key))]
-      (util/remove-nil-values {:application          (-> application
-                                                         (remove-unviewable-answers form-in-application)
-                                                         (dissoc :person-oid)
-                                                         (assoc :person (get-person application person-client))
-                                                         (merge tarjonta-info))
-                               :form                 form
-                               :latest-form          alternative-form
-                               :hakukohde-reviews    @hakukohde-reviews
-                               :attachment-reviews   @attachment-reviews
-                               :events               @events
-                               :review               @review
-                               :review-notes         @review-notes
-                               :information-requests @information-requests}))))
+      (util/remove-nil-values (merge
+                               (-> application
+                                   (remove-unviewable-answers form-in-application)
+                                   (dissoc :person-oid)
+                                   (assoc :person (get-person application person-client))
+                                   (merge tarjonta-info)
+                                   try-attachments-metadata->answers)
+                               {:form                 form
+                                :latest-form          alternative-form
+                                :hakukohde-reviews    @hakukohde-reviews
+                                :attachment-reviews   @attachment-reviews
+                                :events               @events
+                                :review               @review
+                                :review-notes         @review-notes
+                                :information-requests @information-requests})))))
 
 (defn ->form-query
   [key]

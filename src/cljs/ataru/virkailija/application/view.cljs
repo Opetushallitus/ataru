@@ -1598,7 +1598,7 @@
             review               (first all-reviews)
             selected-hakukohteet (map second all-similar-attachments)
             attachment-key       (-> review :key keyword)
-            files                (filter identity (-> review :values flatten))
+            files                (filter identity (-> review :value flatten))
             selected-state       (or (when multiple-values?
                                        "multiple-values")
                                      (:state review)
@@ -1645,7 +1645,7 @@
          [:ul.application__attachment-review-row-attachments
           (for [attachment-file files
                 :let            [text (str (:filename attachment-file) " (" (util/size-bytes->str (:size attachment-file)) ")")]]
-            ^{:key (:key (str "attachment-file-" attachment-file))}
+            ^{:key (:key attachment-file)}
             [:li
              (if (= (:virus-scan-status attachment-file) "done")
                [:a {:href (str "/lomake-editori/api/files/content/" (:key attachment-file))}
@@ -1654,7 +1654,7 @@
 
 (defn- attachment-review-area [reviews lang]
   (let [all-keys         (->> (vals reviews)
-                              (mapcat #(-> % ffirst :values flatten))
+                              (mapcat #(-> % ffirst :value flatten))
                               (keep :key)
                               set)
         selected-reviews (r/atom all-keys)]
@@ -1668,9 +1668,11 @@
           [:div.application-handling__attachment-review-header
            [:div
             (gstring/format "%s %s (%d)"
-              (if (= "form" (second (first (vals reviews)))) (get-virkailija-translation :of-form) (get-virkailija-translation :of-hakukohde))
-              (.toLowerCase (get-virkailija-translation :attachments))
-              (count (keys reviews)))]]
+                            (if (= "form" (second (first (vals reviews))))
+                              (get-virkailija-translation :of-form)
+                              (get-virkailija-translation :of-hakukohde))
+                            (.toLowerCase (get-virkailija-translation :attachments))
+                            (count (keys reviews)))]]
           [:div.application__attachment-review-row
            [:div.application__attachment-review-info-row
             [:input.application-handling__attachment-download-checkbox

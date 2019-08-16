@@ -376,19 +376,6 @@
   (log/info "Saving feedback" feedback)
   (application-store/add-application-feedback feedback))
 
-(defn- attachment-metadata->answer [{:keys [fieldType cannot-view] :as answer}]
-  (cond-> answer
-          (and (= fieldType "attachment") (not cannot-view))
-          (update :value (fn [value]
-                           (if (and (vector? value)
-                                    (not (empty? value))
-                                    (every? vector? value))
-                             (mapv file-store/get-metadata value)
-                             (file-store/get-metadata value))))))
-
-(defn attachments-metadata->answers [application]
-  (update application :answers (partial map attachment-metadata->answer)))
-
 (defn is-inactivated? [application]
   (cond (nil? application)
         false
@@ -448,7 +435,7 @@
                                              (dissoc :ssn :birth-date)))
         full-application           (merge (some-> application
                                                   (application-service/remove-unviewable-answers form)
-                                                  attachments-metadata->answers
+                                                  application-service/attachments-metadata->answers
                                                   (dissoc :person-oid :application-hakukohde-reviews)
                                                   (assoc :cannot-edit-because-in-processing (and
                                                                                              (not= actor-role :virkailija)

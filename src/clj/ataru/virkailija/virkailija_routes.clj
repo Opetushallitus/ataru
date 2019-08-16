@@ -361,15 +361,16 @@
         :path-params [application-key :- String]
         :query-params [{newest-form :- s/Bool false}]
         :summary "Return application details needed for application review, including events and review data"
-        :return {:application                       ataru-schema/ApplicationWithPerson
-                 :events                            [ataru-schema/Event]
-                 :review                            ataru-schema/Review
-                 :review-notes                      [ataru-schema/ReviewNote]
-                 :attachment-reviews                ataru-schema/AttachmentReviews
-                 :hakukohde-reviews                 ataru-schema/HakukohdeReviews
-                 :form                              ataru-schema/FormWithContent
+        :return {:application                  ataru-schema/ApplicationWithPerson
+                 :metadata-not-found           s/Bool
+                 :events                       [ataru-schema/Event]
+                 :review                       ataru-schema/Review
+                 :review-notes                 [ataru-schema/ReviewNote]
+                 :attachment-reviews           ataru-schema/AttachmentReviews
+                 :hakukohde-reviews            ataru-schema/HakukohdeReviews
+                 :form                         ataru-schema/FormWithContent
                  (s/optional-key :latest-form) ataru-schema/Form
-                 :information-requests              [ataru-schema/InformationRequest]}
+                 :information-requests         [ataru-schema/InformationRequest]}
         (if-let [application (application-service/get-application-with-human-readable-koodis
                               koodisto-cache
                               application-key

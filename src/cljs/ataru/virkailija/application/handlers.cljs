@@ -498,6 +498,7 @@
 (defn update-application-details [db {:keys [form
                                              latest-form
                                              application
+                                             metadata-not-found
                                              events
                                              review
                                              hakukohde-reviews
@@ -508,6 +509,7 @@
       (assoc-in [:application :selected-application-and-form]
         {:form        form
          :application (answers-indexed application)})
+      (assoc-in [:application :metadata-not-found] metadata-not-found)
       (assoc-in [:application :latest-form] latest-form)
       (assoc-in [:application :events] events)
       (assoc-in [:application :review] review)
@@ -557,55 +559,6 @@
                                                                                         :hakukohde-reviews
                                                                                         :attachment-reviews])}))})))
 
-(reg-event-fx
-  :application/handle-fetch-application-attachment-metadata
-  (fn [{:keys [db]} [_ response]]
-    (let [response-map       (group-by :key response)
-          file-key->metadata (fn file-key->metadata [file-key-or-keys]
-                               (if (vector? file-key-or-keys)
-                                 (mapv file-key->metadata file-key-or-keys)
-                                 (first (response-map file-key-or-keys))))
-          set-file-metadata  (fn [answer]
-                               (assoc answer :values (-> answer :value file-key->metadata)))
-          db                 (->> (get-in db [:application :selected-application-and-form :application :answers])
-                                  (map (fn [[_ {:keys [fieldType] :as answer}]]
-                                         (cond-> answer
-                                           (= fieldType "attachment")
-                                           (set-file-metadata))))
-                                  (reduce (fn [db {:keys [key] :as answer}]
-                                            (assoc-in db [:application :selected-application-and-form :application :answers (keyword key)] answer))
-                                          db))]
-      {:db       db
-       :dispatch [:application/start-autosave]})))
-
-(reg-event-fx
-  :application/handle-metadata-not-found
-  (fn [{:keys [db]} _]
-    {:db       (assoc-in db [:application :metadata-not-found] true)
-     :dispatch [:application/start-autosave]}))
-
-(reg-event-fx
-  :application/fetch-application-attachment-metadata
-  (fn [{:keys [db]} _]
-    (let [file-keys (->> (get-in db [:application :selected-application-and-form :application :answers])
-                         (filter (comp (partial = "attachment") :fieldType second))
-                         (map (comp :value second))
-                         (flatten))]
-      (if (empty? file-keys)
-        ; sanity check to ensure autosave starts if application has no attachments
-        {:db       db
-         :dispatch [:application/start-autosave]}
-        {:db   db
-         :http {:method              :post
-                :path                "/lomake-editori/api/files/metadata"
-                :params              {:keys file-keys}
-                :override-args {:error-handler #(dispatch [:application/handle-metadata-not-found file-keys])}
-                :handler-or-dispatch :application/handle-fetch-application-attachment-metadata}}))))
-
-(defn- application-has-attachments? [db]
-  (some (comp (partial = "attachment") :fieldType second)
-        (get-in db [:application :selected-application-and-form :application :answers])))
-
 (defn- parse-application-times
   [response]
   (let [answers           (-> response :application :answers)
@@ -629,9 +582,7 @@
                                          (update-application-details response-with-parsed-times)
                                          (assoc-in [:application :loading?] false))]
       {:db         db
-       :dispatch-n [(if (application-has-attachments? db)
-                      [:application/fetch-application-attachment-metadata]
-                      [:application/start-autosave])
+       :dispatch-n [[:application/start-autosave]
                     [:application/get-application-change-history (-> response :application :key)]]})))
 
 (reg-event-db

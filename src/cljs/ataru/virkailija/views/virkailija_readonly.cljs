@@ -116,7 +116,7 @@
 (defn attachment [field-descriptor application lang group-idx]
   (let [id         (:id field-descriptor)
         answer-key (keyword (answer-key field-descriptor))
-        values     (cond-> (get-in application [:answers answer-key :values])
+        values     (cond-> (get-in application [:answers answer-key :value])
                            (some? group-idx)
                            (nth group-idx))]
     [:div.application__form-field
