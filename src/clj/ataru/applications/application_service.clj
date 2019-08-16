@@ -136,7 +136,7 @@
 
 (defn- populate-form-fields
   [form koodisto-cache tarjonta-info]
-  (-> (koodisto/populate-form-koodisto-fields koodisto-cache form)
+  (-> form
       (populate-hakukohde-answer-options tarjonta-info)
       (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)))
 
@@ -164,6 +164,17 @@
              fields-right   (sort-by :id (visible-fields form-right))]
          (not (fields-equal? (diff fields-left fields-right))))))
 
+(defn remove-unviewable-answers
+  [application form]
+  (let [fields-by-key (->> (:content form)
+                           util/flatten-form-fields
+                           (util/group-by-first :id))]
+    (update application :answers
+            (partial map (fn [answer]
+                           (cond-> answer
+                                   (:cannot-view (fields-by-key (:key answer)))
+                                   (assoc :value nil :cannot-view true)))))))
+
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
@@ -180,8 +191,18 @@
                                  ohjausparametrit-service
                                  (:haku application)
                                  (:hakukohde application))
-          form-in-application  (form-store/fetch-by-id (:form application))
-          newest-form          (form-store/fetch-by-key (:key form-in-application))
+          form-in-application  (hakija-form-service/fetch-form-by-id
+                                (:form application)
+                                [:virkailija]
+                                koodisto-cache
+                                nil
+                                false)
+          newest-form          (hakija-form-service/fetch-form-by-key
+                                (:key form-in-application)
+                                [:virkailija]
+                                koodisto-cache
+                                nil
+                                false)
           form                 (populate-form-fields (if with-newest-form?
                                                        newest-form
                                                        form-in-application) koodisto-cache tarjonta-info)
@@ -199,6 +220,7 @@
           review-notes         (future (application-store/get-application-review-notes application-key))
           information-requests (future (information-request-store/get-information-requests application-key))]
       (util/remove-nil-values {:application          (-> application
+                                                         (remove-unviewable-answers form-in-application)
                                                          (dissoc :person-oid)
                                                          (assoc :person (get-person application person-client))
                                                          (merge tarjonta-info))
