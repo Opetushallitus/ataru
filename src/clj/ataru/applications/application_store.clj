@@ -373,7 +373,7 @@
                                       :review_key               nil}
                                     {:connection conn})
 
-      (selection-limit/permanent-select-on-store-application key new-application selection-id form conn)
+      (selection-limit/permanent-select-on-store-application key new-application selection-id form {:connection conn})
 
       (audit-log/log {:new       (application->loggable-form new-application)
                       :old       (application->loggable-form old-application)
