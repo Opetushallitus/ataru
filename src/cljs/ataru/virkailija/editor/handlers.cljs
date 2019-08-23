@@ -286,7 +286,7 @@
 
 (reg-event-db
   :editor/update-sensitive
-  (fn [db [_ sensitive? path]]
+  (fn [db [_ sensitive? & path]]
     (-> db
         (assoc-in (current-form-content-path db path :params :sensitive?) sensitive?)
         (update-modified-by path))))

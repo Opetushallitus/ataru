@@ -386,7 +386,7 @@
         false))
 
 (defn get-latest-application-by-secret
-  [secret tarjonta-service form-by-haku-oid-and-id-cache koodisto-cache person-client]
+  [secret kayttooikeus-service tarjonta-service form-by-haku-oid-and-id-cache koodisto-cache person-client]
   (let [[actor-role secret] (match [secret]
                               [{:virkailija s}]
                               [:virkailija s]
@@ -405,9 +405,15 @@
 
                                      (and (= actor-role :hakija) (some? secret))
                                      (application-store/get-latest-application-by-secret secret))
+        sensitive-questions-access (when (= :virkailija actor-role)
+                                     (virkailija-edit/sensitive-questions-access kayttooikeus-service secret))
         form-roles                 (cond-> [actor-role]
-                                     (some? (:person-oid application))
-                                     (conj :with-henkilo))
+                                           (some? (:person-oid application))
+                                           (conj :with-henkilo)
+                                           (:can-view? sensitive-questions-access)
+                                           (conj :sensitive-questions-viewable)
+                                           (:can-edit? sensitive-questions-access)
+                                           (conj :sensitive-questions-editable))
         secret-expired?            (when (nil? application)
                                      (application-store/application-exists-with-secret? secret))
         lang-override              (when secret-expired? (application-store/get-application-language-by-secret secret))
@@ -460,7 +466,8 @@
                                                                    application-id)))
 
 (defn can-access-attachment?
-  [form-by-haku-oid-and-id-cache
+  [kayttooikeus-service
+   form-by-haku-oid-and-id-cache
    koodisto-cache
    secret
    virkailija-secret
@@ -472,13 +479,19 @@
                                       [:virkailija (application-store/get-latest-application-for-virkailija-edit virkailija-secret)]
 
                                       (some? secret)
-                                      [:hakija (application-store/get-latest-application-by-secret secret)])]
+                                      [:hakija (application-store/get-latest-application-by-secret secret)])
+        sensitive-questions-access (when (some? virkailija-secret)
+                                     (virkailija-edit/sensitive-questions-access kayttooikeus-service virkailija-secret))]
     (if (some? application)
       (boolean
        ((aac/viewable-attachment-keys-of-application
          form-by-haku-oid-and-id-cache
          koodisto-cache
-         [form-role]
+         (cond-> [form-role]
+                 (:can-view? sensitive-questions-access)
+                 (conj :sensitive-questions-viewable)
+                 (:can-edit? sensitive-questions-access)
+                 (conj :sensitive-questions-editable))
          application)
         attachment-key))
       false)))

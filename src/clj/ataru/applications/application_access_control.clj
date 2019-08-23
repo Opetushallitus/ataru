@@ -278,9 +278,15 @@
                         tarjonta-service
                         session
                         application-key)]
-    (viewable-attachment-keys-of-application
-     form-by-haku-oid-and-id-cache
-     koodisto-cache
-     [:virkailija]
-     application)
+    (let [view-sensitive? (contains? (get-in session [:identity :user-right-organizations]) :view-sensitive)
+          edit-sensitive? (contains? (get-in session [:identity :user-right-organizations]) :edit-sensitive)]
+      (viewable-attachment-keys-of-application
+       form-by-haku-oid-and-id-cache
+       koodisto-cache
+       (cond-> [:virkailija]
+               view-sensitive?
+               (conj :sensitive-questions-viewable)
+               edit-sensitive?
+               (conj :sensitive-questions-editable))
+       application))
     #{}))

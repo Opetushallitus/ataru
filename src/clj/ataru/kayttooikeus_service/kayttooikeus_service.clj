@@ -5,7 +5,8 @@
             [com.stuartsierra.component :as component]))
 
 (defprotocol KayttooikeusService
-  (virkailija-by-username [this username]))
+  (virkailija-by-username [this username])
+  (virkailija-by-oid [this oid]))
 
 (defrecord HttpKayttooikeusService [kayttooikeus-cas-client]
   component/Lifecycle
@@ -24,6 +25,19 @@
                       (str "No virkailija found by username " username))))
         (throw (new RuntimeException
                     (str "Could not get virkailija by username " username
+                         ", status: " status
+                         ", body: " body))))))
+  (virkailija-by-oid [_ oid]
+    (let [url                   (url/resolve-url :kayttooikeus-service.kayttooikeus.kayttaja
+                                                 {"oidHenkilo" oid})
+          {:keys [status body]} (cas/cas-authenticated-get kayttooikeus-cas-client url)]
+      (if (= 200 status)
+        (if-let [virkailija (first (json/parse-string body true))]
+          virkailija
+          (throw (new RuntimeException
+                      (str "No virkailija found by oid " oid))))
+        (throw (new RuntimeException
+                    (str "Could not get virkailija by oid " oid
                          ", status: " status
                          ", body: " body)))))))
 
@@ -56,4 +70,6 @@
 (defrecord FakeKayttooikeusService []
   KayttooikeusService
   (virkailija-by-username [_ username]
-    (get fake-virkailija-value username (get fake-virkailija-value "1.2.246.562.11.11111111111"))))
+    (get fake-virkailija-value username (get fake-virkailija-value "1.2.246.562.11.11111111111")))
+  (virkailija-by-oid [_ oid]
+    (get fake-virkailija-value oid)))

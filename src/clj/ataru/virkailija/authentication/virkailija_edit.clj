@@ -2,6 +2,8 @@
   (:require [ataru.db.db :as db]
             [yesql.core :as sql]
             [ataru.config.core :refer [config]]
+            [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
+            [ataru.organization-service.user-rights :as rights]
             [ataru.util :as u]
             [clojure.java.jdbc :as jdbc]
             [camel-snake-kebab.core :as t]
@@ -117,3 +119,23 @@
              (map :settings))
            (first))
       {:review {}}))
+
+;; FIXME introduce sessions for virkailija to hakija side
+(defn sensitive-questions-access [kayttooikeus-service secret]
+  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+    (if-let [oid (-> (jdbc/query connection ["(SELECT virkailija_oid
+                                               FROM virkailija_update_secrets
+                                               WHERE secret = ? AND valid @> now())
+                                              UNION
+                                              (SELECT virkailija_oid
+                                               FROM virkailija_rewrite_secrets
+                                               WHERE secret = ? AND valid @> now())"
+                                             secret secret])
+                     first
+                     :virkailija_oid)]
+      (let [virkailija              (kayttooikeus-service/virkailija-by-oid kayttooikeus-service oid)
+            right-organization-oids (rights/virkailija->right-organization-oids virkailija rights/right-names)]
+        {:can-view? (contains? right-organization-oids :view-sensitive)
+         :can-edit? (contains? right-organization-oids :edit-sensitive)})
+      {:can-view? false
+       :can-edit? false})))

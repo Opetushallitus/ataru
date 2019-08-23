@@ -117,11 +117,14 @@
               (or (= "textField" (:fieldType field))
                   (= "attachment" (:fieldType field)))))
   (if (= "formField" (:fieldClass field))
-    (let [cannot-view? (or (:sensitive? (:params field))
+    (let [cannot-view? (or (and (:sensitive? (:params field))
+                                (not (form-role/sensitive-questions-viewable? roles)))
                            (and (contains? viewing-forbidden-person-info-field-ids
                                            (keyword (:id field)))
                                 (not (form-role/virkailija? roles))))
           cannot-edit? (or cannot-view?
+                           (and (:sensitive? (:params field))
+                                (not (form-role/sensitive-questions-editable? roles)))
                            (uneditable? now field hakuajat roles application-in-processing-state?))]
       (assoc field
              :cannot-view cannot-view?

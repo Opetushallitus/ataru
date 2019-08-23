@@ -219,15 +219,22 @@
                                  ohjausparametrit-service
                                  (:haku application)
                                  (:hakukohde application))
+          view-sensitive?      (contains? (get-in session [:identity :user-right-organizations]) :view-sensitive)
+          edit-sensitive?      (contains? (get-in session [:identity :user-right-organizations]) :edit-sensitive)
+          form-roles           (cond-> [:virkailija]
+                                       view-sensitive?
+                                       (conj :sensitive-questions-viewable)
+                                       edit-sensitive?
+                                       (conj :sensitive-questions-editable))
           form-in-application  (hakija-form-service/fetch-form-by-id
                                 (:form application)
-                                [:virkailija]
+                                form-roles
                                 koodisto-cache
                                 nil
                                 false)
           newest-form          (hakija-form-service/fetch-form-by-key
                                 (:key form-in-application)
-                                [:virkailija]
+                                form-roles
                                 koodisto-cache
                                 nil
                                 false)

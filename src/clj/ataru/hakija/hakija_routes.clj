@@ -43,9 +43,10 @@
   (true? deleted))
 
 (defn- get-application
-  [secret tarjonta-service form-by-haku-oid-and-id-cache koodisto-cache person-client session]
+  [secret kayttooikeus-service tarjonta-service form-by-haku-oid-and-id-cache koodisto-cache person-client session]
   (let [[application-form-and-person secret-expired? lang-override inactivated?]
         (hakija-application-service/get-latest-application-by-secret secret
+                                                                     kayttooikeus-service
                                                                      tarjonta-service
                                                                      form-by-haku-oid-and-id-cache
                                                                      koodisto-cache
@@ -132,6 +133,7 @@
                           organization-service
                           ohjausparametrit-service
                           person-service
+                          kayttooikeus-service
                           koodisto-cache
                           form-by-haku-oid-and-id-cache
                           form-by-haku-oid-str-cache
@@ -219,6 +221,7 @@
       :return ataru-schema/ApplicationWithPersonAndForm
       (cond (not-blank? secret)
             (get-application {:hakija secret}
+                             kayttooikeus-service
                              tarjonta-service
                              form-by-haku-oid-and-id-cache
                              koodisto-cache
@@ -227,6 +230,7 @@
 
             (not-blank? virkailija-secret)
             (get-application {:virkailija virkailija-secret}
+                             kayttooikeus-service
                              tarjonta-service
                              form-by-haku-oid-and-id-cache
                              koodisto-cache
@@ -281,6 +285,7 @@
         :query-params [{secret :- s/Str nil}
                        {virkailija-secret :- s/Str nil}]
         (if (hakija-application-service/can-access-attachment?
+             kayttooikeus-service
              form-by-haku-oid-and-id-cache
              koodisto-cache
              secret

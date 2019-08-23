@@ -4,9 +4,11 @@
 
 (def ^:private
   oikeus-to-right
-  {{:palvelu "ATARU_EDITORI" :oikeus "CRUD"} :form-edit
-   {:palvelu "ATARU_HAKEMUS" :oikeus "READ"} :view-applications
-   {:palvelu "ATARU_HAKEMUS" :oikeus "CRUD"} :edit-applications})
+  {{:palvelu "ATARU_EDITORI" :oikeus "CRUD"}                  :form-edit
+   {:palvelu "ATARU_HAKEMUS" :oikeus "READ"}                  :view-applications
+   {:palvelu "ATARU_HAKEMUS" :oikeus "CRUD"}                  :edit-applications
+   {:palvelu "ATARU_HAKEMUS" :oikeus "ARKALUONTOINEN_READ"}   :view-sensitive
+   {:palvelu "ATARU_HAKEMUS" :oikeus "ARKALUONTOINEN_UPDATE"} :edit-sensitive})
 
 (def right-names (vals oikeus-to-right))
 

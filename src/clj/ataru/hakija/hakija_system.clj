@@ -7,6 +7,7 @@
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.http.server :as server]
+            [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.person-service.person-service :as person-service]
             [ataru.person-service.person-client :as person-client]
             [environ.core :refer [env]]
@@ -85,6 +86,14 @@
                         [:s3-client])
                        (filesystem-temp-file-store/new-store))
 
+    :kayttooikeus-cas-client (cas/new-client "/kayttooikeus-service" "j_spring_cas_security_check" "JSESSIONID")
+
+    :kayttooikeus-service (if (-> config :dev :fake-dependencies)
+                            (kayttooikeus-service/->FakeKayttooikeusService)
+                            (component/using
+                             (kayttooikeus-service/->HttpKayttooikeusService nil)
+                             [:kayttooikeus-cas-client]))
+
     :handler (component/using
                (handler/new-handler)
                (into [:tarjonta-service
@@ -92,6 +101,7 @@
                       :organization-service
                       :ohjausparametrit-service
                       :person-service
+                      :kayttooikeus-service
                       :temp-file-store]
                      (map first caches)))
 
