@@ -1193,8 +1193,19 @@ WHERE la.key IS NULL\n"
       (dissoc :virkailija_oid :removed)
       (->kebab-case-kw)))
 
+(defn- unwrap-tilastokeskus-application
+  [{:keys [haku-oid hakemus-oid henkilo-oid hakukohde-oids content]}]
+  (let [answers (answers-by-key (:answers content))]
+    {:hakemus_oid     hakemus-oid
+     :haku_oid        haku-oid
+     :henkilo_oid     henkilo-oid
+     :hakukohde_oids  hakukohde-oids
+     :kotikunta       (-> answers :home-town :value)
+     :asuinmaa        (-> answers :country-of-residence :value)}))
+
 (defn get-application-info-for-tilastokeskus [haku-oid hakukohde-oid]
-  (exec-db :db yesql-tilastokeskus-applications {:haku_oid haku-oid :hakukohde_oid hakukohde-oid}))
+  (->> (exec-db :db yesql-tilastokeskus-applications {:haku_oid haku-oid :hakukohde_oid hakukohde-oid})
+       (map unwrap-tilastokeskus-application)))
 
 (defn- get-application-eligibilities-by-hakutoive [application]
   (let [eligibilities-by-hakukohde (:application_hakukohde_reviews application)]

@@ -531,7 +531,9 @@
   {:hakemus_oid    s/Str
    :haku_oid       s/Str
    :henkilo_oid    s/Str
-   :hakukohde_oids [s/Str]})
+   :hakukohde_oids [s/Str]
+   :kotikunta      (s/maybe s/Str)
+   :asuinmaa       (s/maybe s/Str)})
 
 (s/defschema ValintaApplication
   {:hakemusOid          s/Str
