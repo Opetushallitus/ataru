@@ -104,8 +104,7 @@ SELECT
   ae.hakukohde,
   ae.review_key,
   v.first_name,
-  v.last_name,
-  ae.virkailija_organizations
+  v.last_name
 FROM application_events ae
 LEFT JOIN virkailija v ON ae.virkailija_oid = v.oid
 WHERE ae.application_key = :application_key
@@ -132,14 +131,14 @@ FROM application_reviews
 WHERE application_key IN (:application_keys);
 
 -- name: yesql-get-application-review-notes
-SELECT rn.id, rn.created_time, rn.application_key, rn.notes, rn.hakukohde, rn.state_name, rn.virkailija_organizations, v.first_name, v.last_name
+SELECT rn.id, rn.created_time, rn.application_key, rn.notes, rn.hakukohde, rn.state_name, v.first_name, v.last_name
 FROM application_review_notes rn
 LEFT JOIN virkailija v ON rn.virkailija_oid = v.oid
 WHERE rn.application_key = :application_key AND (removed IS NULL OR removed > NOW())
 ORDER BY rn.created_time DESC;
 
 -- name: yesql-get-application-review-notes-by-keys
-SELECT rn.id, rn.created_time, rn.application_key, rn.notes, rn.hakukohde, rn.state_name, rn.virkailija_organizations, v.first_name, v.last_name
+SELECT rn.id, rn.created_time, rn.application_key, rn.notes, rn.hakukohde, rn.state_name, v.first_name, v.last_name
 FROM application_review_notes rn
   LEFT JOIN virkailija v ON rn.virkailija_oid = v.oid
 WHERE rn.application_key IN (:application_keys) AND (rn.removed IS NULL OR rn.removed > NOW())
@@ -495,8 +494,8 @@ FOR UPDATE;
 
 -- name: yesql-add-application-event<!
 -- Add application event
-INSERT INTO application_events (application_key, event_type, new_review_state, virkailija_oid, hakukohde, review_key, virkailija_organizations)
-VALUES (:application_key, :event_type, :new_review_state, :virkailija_oid, :hakukohde, :review_key, :virkailija_organizations::jsonb);
+INSERT INTO application_events (application_key, event_type, new_review_state, virkailija_oid, hakukohde, review_key)
+VALUES (:application_key, :event_type, :new_review_state, :virkailija_oid, :hakukohde, :review_key);
 
 -- name: yesql-add-application-review!
 -- Add application review, initially it doesn't have all fields. This is just a "skeleton"
@@ -897,8 +896,8 @@ WHERE a.person_oid = :person_oid
 ORDER BY a.created_time DESC;
 
 --name: yesql-add-review-note<!
-INSERT INTO application_review_notes (application_key, notes, virkailija_oid, hakukohde, state_name, virkailija_organizations)
-VALUES (:application_key, :notes, :virkailija_oid, :hakukohde, :state_name, :virkailija_organizations::jsonb);
+INSERT INTO application_review_notes (application_key, notes, virkailija_oid, hakukohde, state_name)
+VALUES (:application_key, :notes, :virkailija_oid, :hakukohde, :state_name);
 
 -- name: yesql-remove-review-note!
 UPDATE application_review_notes SET removed = NOW() WHERE id = :id;

@@ -705,7 +705,10 @@ and (max-width: 1000px) {
   .unselectable;
   display: inline;
 }
-
+.application-handling__review-note--hakutoive {
+  .unselectable;
+  cursor: help;
+}
 .application-handling__review-checkbox + label {
   font-weight: lighter;
 }
@@ -938,27 +941,12 @@ and (max-width: 1000px) {
   white-space: nowrap;
 }
 
-.application-handling__review-note-summary-row {
+.application-handling__review-note-details-row {
   color: @gray-of-the-beast;
   display: flex;
   font-size: 14px;
   justify-content: space-between;
   flex-flow: row nowrap;
-}
-
-.application-handling__review-note-summary-text {
-  cursor: pointer;
-}
-
-.application-handling__review-note-details-row {
-  color: @gray-of-the-beast;
-  font-size: 14px;
-}
-
-.application-handling__review-note-organizations-list {
-  list-style: none;
-  padding: 0px;
-  margin: 0px;
 }
 
 .application-handling__review-note-remove-link {
@@ -1143,7 +1131,7 @@ and (max-width: 1000px) {
   font-size: 14px;
   border: none;
   display: flex;
-  flex-flow: column;
+  flex-flow: row nowrap;
   align-items: center;
   justify-content: center;
 }
@@ -1472,6 +1460,12 @@ and (max-width: 1000px) {
   margin-bottom: 0;
 }
 
+.application-handling__review-state-initials {
+  color: @sg-color-gray-2;
+  cursor: inherit;
+  font-weight: lighter;
+}
+
 .application-handling__event-list {
   padding: 9px 0;
   margin-bottom: 50px;
@@ -1585,32 +1579,41 @@ and (max-width: 1000px) {
 }
 
 .application-handling__event-timestamp {
-  margin-right: 1em;
+  flex: 0 0 125px;
+  color: #999;
 }
 
-.application-handling__event-row-fold-container {
-  width: 1em;
-}
-
-.application-handling__event-row-header {
+.application-handling__event-row--header {
   display: flex;
 }
 
-.application-handling__event-row-header--clickable {
+.application-handling__event-caption {
+  flex: 0 0 100%;
+  max-width: 240px;
+}
+
+.application-handling__event-caption-modify-event {
   cursor: pointer;
+  font-weight: 400;
+}
+
+.application-handling__event-caption-chevron {
+  font-size: 20px;
+  line-height: 0;
+  position: relative;
+  top: 3px;
+  padding: 0 5px;
+}
+
+.application-handling__event-caption-compare {
+  padding-left: 5px;
+}
+
+.application-handling__event-caption--extra-info {
+  color: @gray;
 }
 
 .application-handling__event-row-details {
-  margin-left: 1em;
-}
-
-.application-handling__event-row-organization-list {
-  list-style: none;
-  padding: 0px;
-  margin: 0px;
-}
-
-.application-handling__event-row-update-list {
   list-style: none;
   padding: 0;
   margin: 0px 0px 0px 125px;
