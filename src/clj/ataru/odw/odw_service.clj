@@ -56,7 +56,10 @@
                                                 [:pohjakoulutus_lk--year-of-completion
                                                  :c157cbde-3904-46b7-95e1-641fb8314a11])
     "pohjakoulutus_yo_kansainvalinen_suomessa" (if (some #(= "0" (get-in answers [% :value]))
-                                                         [:32b5f6a9-1ccb-4227-8c68-3c0a82fb0a73
+                                                         [:pohjakoulutus_yo_kansainvalinen_suomessa--ib--year-of-completion-this-year
+                                                          :pohjakoulutus_yo_kansainvalinen_suomessa--eb--year-of-completion-this-year
+                                                          :pohjakoulutus_yo_kansainvalinen_suomessa--rb--year-of-completion-this-year
+                                                          :32b5f6a9-1ccb-4227-8c68-3c0a82fb0a73
                                                           :64d561e2-20f7-4143-9ad8-b6fa9a8f6fed
                                                           :6b7119c9-42ec-467d-909c-6d1cc555b823])
                                                  [(:hakukausiVuosi haku)]
@@ -64,6 +67,9 @@
                                                   application-key
                                                   answers
                                                   [:pohjakoulutus_yo_kansainvalinen_suomessa--year-of-completion
+                                                   :pohjakoulutus_yo_kansainvalinen_suomessa--ib--year-of-completion
+                                                   :pohjakoulutus_yo_kansainvalinen_suomessa--eb--year-of-completion
+                                                   :pohjakoulutus_yo_kansainvalinen_suomessa--rb--year-of-completion
                                                    :a2bdac0a-e994-4fda-aa59-4ab4af2384a2
                                                    :6e2ad9bf-5f3a-41de-aada-a939aeda3e87
                                                    :c643447c-b667-42ab-9fd6-66b40a722a3c]))
@@ -93,7 +99,10 @@
                                                 [:pohjakoulutus_kk--completion-date
                                                  :124a0215-e358-47e1-ab02-f1cc7c831e0e])
     "pohjakoulutus_yo_ulkomainen"              (if (some #(= "0" (get-in answers [% :value]))
-                                                         [:d037fa56-6354-44fc-87d6-8b774b95dcdf
+                                                         [:pohjakoulutus_yo_ulkomainen--ib--year-of-completion-this-year
+                                                          :pohjakoulutus_yo_ulkomainen--eb--year-of-completion-this-year
+                                                          :pohjakoulutus_yo_ulkomainen--rb--year-of-completion-this-year
+                                                          :d037fa56-6354-44fc-87d6-8b774b95dcdf
                                                           :6e980e4d-257a-49ba-a5e6-5424220e6f08
                                                           :220c3b47-1ca6-47e7-8af2-2f6ff823e07b])
                                                  [(:hakukausiVuosi haku)]
@@ -101,6 +110,9 @@
                                                   application-key
                                                   answers
                                                   [:pohjakoulutus_yo_ulkomainen--year-of-completion
+                                                   :pohjakoulutus_yo_ulkomainen--ib--year-of-completion
+                                                   :pohjakoulutus_yo_ulkomainen--eb--year-of-completion
+                                                   :pohjakoulutus_yo_ulkomainen--rb--year-of-completion
                                                    :77ea3ff1-6c04-4b3f-87d2-72bbe7db12e2
                                                    :2c85ef9c-d6c2-448d-ac56-f8da4ca5c1fc
                                                    :e70041ff-e6f4-4dc5-a87f-3267543cced4]))

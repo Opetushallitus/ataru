@@ -142,20 +142,29 @@
                                nil
                                nil)
                           :b (create-field :b :a
-                               [:ha :hc]
+                               [:ha]
                                [:rb])
                           :c (create-field :c :b
-                               [:ha :hb]
+                               [:ha]
                                [])
                           :d (create-field :d :c
                                []
-                               [:rb :ra])}
+                               [:rb])
+                          :e (create-field :e :d
+                               [:ha]
+                               [:ra])
+                          :f (create-field :f :e
+                               [:hc]
+                               [:rb])
+                          :g (create-field :g :f
+                               [:ha :hb :hc :hd]
+                               [:ra :rb])}
             hakutoiveet  [{:oid :hd :hakukohderyhmat [:rb :ra]}
                           {:oid :hc :hakukohderyhmat [:ra]}
                           {:oid :hb :hakukohderyhmat [:rb]}
                           {:oid :ha :hakukohderyhmat [:rb]}]
             result       (store/hakukohde-oids-for-attachment-review
-                           (:d fields-by-id) hakutoiveet fields-by-id)]
+                           (:g fields-by-id) hakutoiveet fields-by-id false)]
         (should== [:ha] result)))
 
   (it "should create attachment reviews for new application without hakukohteet"

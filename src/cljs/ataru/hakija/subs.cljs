@@ -3,6 +3,7 @@
   (:require [re-frame.core :as re-frame]
             [ataru.util :as util]
             [ataru.application-common.application-field-common :as afc]
+            [ataru.component-data.higher-education-base-education-module :refer [excluded-attachment-ids-when-yo-and-jyemp]]
             [ataru.hakija.application-validators :as validators]
             [ataru.hakija.person-info-fields :as person-info-fields]
             [cemerick.url :as url]))
@@ -73,11 +74,10 @@
   :application/visible-options
   (fn [db [_ field-description]]
     (let [visibility (get-in db [:application :ui (keyword (:id field-description))])]
-      (->> (:options field-description)
-           (map-indexed (fn [index option]
-                          (when-not (get-in visibility [index :hide?])
-                            option)))
-           (remove nil?)))))
+      (keep-indexed (fn [index option]
+                      (when (get-in visibility [index :visible?] true)
+                        option))
+                    (:options field-description)))))
 
 (re-frame/reg-sub
   :application/answer
@@ -230,19 +230,35 @@
     (map :value (:values hakukohteet-answer))))
 
 (re-frame/reg-sub
+  :application/ylioppilastutkinto?
+  (fn [_ _]
+    (re-frame/subscribe [:application/answer :higher-completed-base-education nil nil]))
+  (fn [pohjakoulutus-answer _]
+    (boolean (some #(or (= "pohjakoulutus_yo" %)
+                        (= "pohjakoulutus_yo_ammatillinen" %)
+                        (= "pohjakoulutus_yo_kansainvalinen_suomessa" %)
+                        (= "pohjakoulutus_yo_ulkomainen" %))
+                   (:value pohjakoulutus-answer)))))
+
+(re-frame/reg-sub
   :application/selected-hakukohteet-for-field
   (fn [_ _]
     [(re-frame/subscribe [:application/tarjonta-hakukohteet-by-oid])
-     (re-frame/subscribe [:application/selected-hakukohteet])])
-  (fn [[hakukohteet selected-hakukohteet] [_ field]]
+     (re-frame/subscribe [:application/selected-hakukohteet])
+     (re-frame/subscribe [:application/ylioppilastutkinto?])])
+  (fn [[hakukohteet selected-hakukohteet ylioppilastutkinto?] [_ field]]
     (when-let [ids (some-> (concat (get field :belongs-to-hakukohderyhma)
                                    (get field :belongs-to-hakukohteet))
                            seq
                            set)]
-      (->> (map hakukohteet selected-hakukohteet)
-           (remove #(empty? (clojure.set/intersection
-                             ids
-                             (conj (set (:hakukohderyhmat %)) (:oid %)))))))))
+      (let [jyemp? (and ylioppilastutkinto?
+                        (contains? excluded-attachment-ids-when-yo-and-jyemp (:id field)))]
+        (->> (cond->> (map hakukohteet selected-hakukohteet)
+                      jyemp?
+                      (remove :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja?))
+             (remove #(empty? (clojure.set/intersection
+                               ids
+                               (conj (set (:hakukohderyhmat %)) (:oid %))))))))))
 
 (re-frame/reg-sub
   :application/cannot-view?

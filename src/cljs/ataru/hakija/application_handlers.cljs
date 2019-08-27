@@ -1,5 +1,6 @@
 (ns ataru.hakija.application-handlers
   (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch subscribe]]
+            [ataru.component-data.higher-education-base-education-module :refer [excluded-attachment-ids-when-yo-and-jyemp]]
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
             [ataru.util :as autil]
@@ -185,81 +186,106 @@
     (fn [languages]
       (mapv keyword languages))))
 
+(defn- ylioppilastutkinto? [db]
+  (boolean (some #(or (= "pohjakoulutus_yo" %)
+                      (= "pohjakoulutus_yo_ammatillinen" %)
+                      (= "pohjakoulutus_yo_kansainvalinen_suomessa" %)
+                      (= "pohjakoulutus_yo_ulkomainen" %))
+                 (get-in db [:application :answers :higher-completed-base-education :value]))))
+
 (defn- selected-hakukohteet [db]
   (map :value (get-in db [:application :answers :hakukohteet :values] [])))
 
 (defn selected-hakukohteet-and-ryhmat [db]
-  (let [selected-hakukohteet     (set (selected-hakukohteet db))
-        selected-hakukohderyhmat (->> (when (not-empty selected-hakukohteet)
-                                        (get-in db [:form :tarjonta :hakukohteet]))
-                                      (filter #(contains? selected-hakukohteet (:oid %)))
-                                      (mapcat :hakukohderyhmat)
-                                      set)]
-    (clojure.set/union selected-hakukohteet selected-hakukohderyhmat)))
+  (let [selected-hakukohteet                   (set (selected-hakukohteet db))
+        selected-hakukohteet-tarjonta          (when (not-empty selected-hakukohteet)
+                                                 (filter #(contains? selected-hakukohteet (:oid %))
+                                                         (get-in db [:form :tarjonta :hakukohteet])))
+        selected-hakukohderyhmat               (set (mapcat :hakukohderyhmat selected-hakukohteet-tarjonta))
+        selected-ei-jyemp-hakukohteet-tarjonta (set (remove :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja?
+                                                            selected-hakukohteet-tarjonta))
+        selected-ei-jyemp-hakukohderyhmat      (set (mapcat :hakukohderyhmat selected-ei-jyemp-hakukohteet-tarjonta))
+        selected-ei-jyemp-hakukohteet          (set (map :oid selected-ei-jyemp-hakukohteet-tarjonta))]
+    [(clojure.set/union selected-hakukohteet selected-hakukohderyhmat)
+     (clojure.set/union selected-ei-jyemp-hakukohteet selected-ei-jyemp-hakukohderyhmat)]))
 
 (declare set-field-visibility)
 
 (defn- set-followups-visibility
-  [db selected-hakukohteet-and-ryhmat field-descriptor option-selected?]
-  (let [visible? (get-in db [:application :ui (keyword (:id field-descriptor)) :visible?] true)]
-    (reduce (fn [db option]
-              (let [selected? (option-selected? option)]
-                (reduce #(set-field-visibility %1 %2 (and visible? selected?) selected-hakukohteet-and-ryhmat)
-                        db
-                        (:followups option))))
-            db
-            (:options field-descriptor))))
+  [db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat option-selected?]
+  (reduce (fn [db option]
+            (let [selected? (option-selected? option)]
+              (reduce #(set-field-visibility %1 %2 (and visible? selected?) ylioppilastutkinto? hakukohteet-and-ryhmat)
+                      db
+                      (:followups option))))
+          db
+          (:options field-descriptor)))
 
 (defn- set-single-choice-followups-visibility
-  [db field-descriptor selected-hakukohteet-and-ryhmat]
+  [db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat]
   (let [value (get-in db [:application :answers (keyword (:id field-descriptor)) :value])]
-    (set-followups-visibility db selected-hakukohteet-and-ryhmat field-descriptor #(= value (:value %)))))
+    (set-followups-visibility db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat  #(= value (:value %)))))
 
 (defn- set-multi-choice-followups-visibility
-  [db field-descriptor selected-hakukohteet-and-ryhmat]
+  [db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat]
   (let [options (get-in db [:application :answers (keyword (:id field-descriptor)) :options])]
-    (set-followups-visibility db selected-hakukohteet-and-ryhmat field-descriptor #(get options (:value %)))))
+    (set-followups-visibility db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat #(get options (:value %)))))
 
 
-(defn- set-option-visibility [db [index option] field-descriptor selected-hakukohteet-and-ryhmat]
-  (if-let [belongs-to (seq (concat (:belongs-to-hakukohderyhma option)
-                                   (:belongs-to-hakukohteet option)))]
-    (assoc-in db [:application :ui (keyword (:id field-descriptor)) index :hide?] (empty? (clojure.set/intersection
-                                                                                                (set belongs-to)
-                                                                                                selected-hakukohteet-and-ryhmat)))
-    db))
+(defn- set-option-visibility [db [index option] visible? id selected-hakukohteet-and-ryhmat]
+  (let [belongs-to (set (concat (:belongs-to-hakukohderyhma option)
+                                (:belongs-to-hakukohteet option)))]
+    (assoc-in db [:application :ui id index :visible?]
+              (and visible?
+                   (or (empty? belongs-to)
+                       (not-empty (clojure.set/intersection
+                                   belongs-to
+                                   selected-hakukohteet-and-ryhmat)))))))
 
 (defn- set-field-visibility
   ([db field-descriptor]
-   (set-field-visibility db field-descriptor true))
-  ([db field-descriptor visible?]
-   (set-field-visibility db field-descriptor visible? (selected-hakukohteet-and-ryhmat db)))
-  ([db field-descriptor visible? selected-hakukohteet-and-ryhmat]
-   (let [id                (keyword (:id field-descriptor))
-         belongs-to        (set (concat (:belongs-to-hakukohderyhma field-descriptor)
-                                        (:belongs-to-hakukohteet field-descriptor)))
-         visible?          (and (not (get-in field-descriptor [:params :hidden] false))
-                                visible?
-                                (or (empty? belongs-to)
-                                    (not-empty (clojure.set/intersection
-                                                belongs-to
-                                                selected-hakukohteet-and-ryhmat))))
-         child-visibility  (fn [db]
-                             (reduce #(set-field-visibility %1 %2 visible? selected-hakukohteet-and-ryhmat)
-                               db
-                               (:children field-descriptor)))
-         option-visibility (fn [db]
-                             (reduce #(set-option-visibility %1 %2 field-descriptor selected-hakukohteet-and-ryhmat)
-                               db
-                               (map-indexed vector (:options field-descriptor))))]
+   (set-field-visibility
+    db
+    field-descriptor
+    true
+    (ylioppilastutkinto? db)
+    (selected-hakukohteet-and-ryhmat db)))
+  ([db
+    field-descriptor
+    visible?
+    ylioppilastutkinto?
+    [selected-hakukohteet-and-ryhmat selected-ei-jyemp-hakukohteet-and-ryhmat]]
+   (let [hakukohteet-and-ryhmat [selected-hakukohteet-and-ryhmat selected-ei-jyemp-hakukohteet-and-ryhmat]
+         id                     (keyword (:id field-descriptor))
+         belongs-to             (set (concat (:belongs-to-hakukohderyhma field-descriptor)
+                                             (:belongs-to-hakukohteet field-descriptor)))
+         jyemp?                 (and ylioppilastutkinto?
+                                     (contains? excluded-attachment-ids-when-yo-and-jyemp (:id field-descriptor)))
+         visible?               (and (not (get-in field-descriptor [:params :hidden] false))
+                                     visible?
+                                     (or (not jyemp?) (not-empty selected-ei-jyemp-hakukohteet-and-ryhmat))
+                                     (or (empty? belongs-to)
+                                         (not-empty (clojure.set/intersection
+                                                     belongs-to
+                                                     (if jyemp?
+                                                       selected-ei-jyemp-hakukohteet-and-ryhmat
+                                                       selected-hakukohteet-and-ryhmat)))))
+         child-visibility       (fn [db]
+                                  (reduce #(set-field-visibility %1 %2 visible? ylioppilastutkinto? hakukohteet-and-ryhmat)
+                                          db
+                                          (:children field-descriptor)))
+         option-visibility      (fn [db]
+                                  (reduce #(set-option-visibility %1 %2 visible? id selected-hakukohteet-and-ryhmat)
+                                          db
+                                          (map-indexed vector (:options field-descriptor))))]
      (cond-> (-> (assoc-in db [:application :ui id :visible?] visible?)
                  (child-visibility)
                  (option-visibility))
              (or (= "dropdown" (:fieldType field-descriptor))
                  (= "singleChoice" (:fieldType field-descriptor)))
-             (set-single-choice-followups-visibility field-descriptor selected-hakukohteet-and-ryhmat)
+             (set-single-choice-followups-visibility field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat)
              (= "multipleChoice" (:fieldType field-descriptor))
-             (set-multi-choice-followups-visibility field-descriptor selected-hakukohteet-and-ryhmat)))))
+             (set-multi-choice-followups-visibility field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat)))))
 
 (defn set-field-visibilities
   [db]
