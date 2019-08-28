@@ -187,9 +187,7 @@
              application-hakukohde-reviews)))
 
 (defn remove-nil-values [m]
-  (->> m
-       (filter second)
-       (into {})))
+  (into {} (remove (comp nil? second) m)))
 
 (def ^:private email-pred (comp (partial = "email") :key))
 
