@@ -1081,6 +1081,9 @@ WHERE la.key IS NULL\n"
          (map #(select-keys % [:oid
                                :haku-oid
                                :person-oid
+                               :etunimet
+                               :kutsumanimi
+                               :sukunimi
                                :lahiosoite
                                :postinumero
                                :hakukohde

@@ -493,6 +493,9 @@
   {:oid         s/Str
    :hakuOid     s/Str
    :personOid   s/Str
+   :etunimet    s/Str
+   :kutsumanimi s/Str
+   :sukunimi    s/Str
    :lahiosoite  s/Str
    :postinumero s/Str
    :hakutoiveet [Hakutoive]})
