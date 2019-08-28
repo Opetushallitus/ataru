@@ -490,15 +490,16 @@
    :email            (s/maybe s/Str)})
 
 (s/defschema ValintaUiApplication
-  {:oid         s/Str
-   :hakuOid     s/Str
-   :personOid   s/Str
-   :etunimet    s/Str
-   :kutsumanimi s/Str
-   :sukunimi    s/Str
-   :lahiosoite  s/Str
-   :postinumero s/Str
-   :hakutoiveet [Hakutoive]})
+  {:oid           s/Str
+   :hakuOid       s/Str
+   :personOid     s/Str
+   :sukunimi      s/Str
+   :etunimet      s/Str
+   :asiointikieli s/Str
+   :henkilotunnus (s/maybe s/Str)
+   :lahiosoite    s/Str
+   :postinumero   s/Str
+   :hakutoiveet   [Hakutoive]})
 
 (s/defschema HakurekisteriApplication
   {:oid                         s/Str
