@@ -717,6 +717,15 @@ SELECT
   hakukohde AS hakukohde,
   (SELECT answers->>'value'
    FROM jsonb_array_elements(a.content->'answers') AS answers
+   WHERE answers->>'key' = 'first-name') AS etunimet,
+  (SELECT answers->>'value'
+   FROM jsonb_array_elements(a.content->'answers') AS answers
+   WHERE answers->>'key' = 'preferred-name') AS kutsumanimi,
+  (SELECT answers->>'value'
+   FROM jsonb_array_elements(a.content->'answers') AS answers
+   WHERE answers->>'key' = 'last-name') AS sukunimi,
+  (SELECT answers->>'value'
+   FROM jsonb_array_elements(a.content->'answers') AS answers
    WHERE answers->>'key' = 'address') AS lahiosoite,
   (SELECT answers->>'value'
    FROM jsonb_array_elements(a.content->'answers') AS answers
