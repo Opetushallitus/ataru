@@ -65,7 +65,18 @@
                      :kayttooikeudet  [{:palvelu "ATARU_EDITORI"
                                         :oikeus  "CRUD"}
                                        {:palvelu "ATARU_HAKEMUS"
-                                        :oikeus  "CRUD"}]}]}})
+                                        :oikeus  "CRUD"}]}]}
+   "1.2.246.562.11.11111111013"
+   {:oidHenkilo    "1.2.246.562.11.11111111013"
+    :organisaatiot [{:organisaatioOid "1.2.246.562.10.0439846"
+                     :kayttooikeudet  [{:palvelu "ATARU_EDITORI"
+                                        :oikeus  "CRUD"}
+                                       {:palvelu "ATARU_HAKEMUS"
+                                        :oikeus  "CRUD"}
+                                       {:palvelu "ATARU_HAKEMUS"
+                                        :oikeus  "ARKALUONTOINEN_READ"}
+                                       {:palvelu "ATARU_HAKEMUS"
+                                        :oikeus  "ARKALUONTOINEN_UPDATE"}]}]}})
 
 (defrecord FakeKayttooikeusService []
   KayttooikeusService

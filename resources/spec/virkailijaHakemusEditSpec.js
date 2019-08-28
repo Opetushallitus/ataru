@@ -10,13 +10,17 @@
     describe('shows application with secret', function () {
       before(
         wait.until(function () {
-          return formSections().length == 2 && formFields().length == 32
+          return formSections().length == 2
         })
       )
       it('with complete form', function () {
-        expect(formFields().length).to.equal(32)
+        expect(formFields().length).to.equal(34)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(submitButton().prop('disabled')).to.equal(true)
+      })
+      it('with one editable attachment and one editable sensitive attachment', function() {
+        expect(testFrame().find('.application__form-field span:contains("Liitepyyntö")').parent().siblings().find('input').prop('disabled')).to.equal(false)
+        expect(testFrame().find('.application__form-field span:contains("Arkaluontoinen liitepyyntö")').parent().siblings().find('input').prop('disabled')).to.equal(false)
       })
     });
 

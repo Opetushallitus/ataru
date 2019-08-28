@@ -16,7 +16,7 @@
         })
       )
       it('with complete form', function () {
-        expect(formFields().length).to.equal(34)
+        expect(formFields().length).to.equal(36)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(submitButton().prop('disabled')).to.equal(true)
       })
@@ -87,6 +87,10 @@
         expect(dropdownInputValues).to.eql(expectedDropdownInputValues)
         expect(_.map(testFrame().find('input.application__form-checkbox:checked + label'), function (e) { return $(e).text() }))
           .to.eql(["Toinen vaihtoehto", "Arkkitehti", "Jatkokysymys A", "Jatkokysymys B"])
+      })
+      it('with one editable attachment and one non-viewable attachment', function() {
+        expect(testFrame().find('.application__form-field span:contains("Liitepyyntö")').parent().siblings().find('input').prop('disabled')).to.equal(false)
+        expect(testFrame().find('.application__form-field span:contains("Arkaluontoinen liitepyyntö")').parent().siblings().find('input').length).to.equal(0)
       })
     })
 

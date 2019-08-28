@@ -499,6 +499,28 @@
                 })
             });
 
+            describe('attachment', function() {
+                before(
+                    clickComponentMenuItem('Liitepyyntö'),
+                    setTextFieldValue(function() { return formComponents().eq(18).find('.editor-form__text-field'); }, 'Liitepyyntö')
+                );
+                it('was created', function() {
+                    expect(formComponents()).to.have.length(19);
+                });
+            });
+
+            describe('sensitive attachment', function() {
+                before(
+                    clickComponentMenuItem('Liitepyyntö'),
+                    setTextFieldValue(function() { return formComponents().eq(19).find('.editor-form__text-field'); }, 'Arkaluontoinen liitepyyntö'),
+                    clickElement(function() { return formComponents().eq(19).find('.editor-form__info-addon-checkbox > label:contains("Arkaluontoinen")'); })
+                );
+                it('was created', function() {
+                    expect(formComponents()).to.have.length(20);
+                    expect(formComponents().eq(19).find('.editor-form__info-addon-checkbox > label:contains("Arkaluontoinen")').siblings().prop('checked')).to.equal(true);
+                });
+            });
+
             describe('locking form', function() {
                 before(
                     wait.forMilliseconds(1000), // wait abit since
