@@ -1250,25 +1250,26 @@
         (s/format deadline-format day month year hours minutes)))))
 
 (defn attachment [content path]
-  (let [component        (subscribe [:editor/get-component-value path])
-        languages        (subscribe [:editor/languages])
-        deadline-value   (r/atom (get-in @component [:params :deadline]))
-        valid            (r/atom true)
-        mail-attachment? (subscribe [:editor/get-component-value path :params :mail-attachment?])
-        format-deadline  (fn [event]
-                           (some->> (deadline-date (-> event .-target .-value))
-                                    (reset! deadline-value)))
-        update-value     (fn [unformatted-value value valid?]
-                           (reset! deadline-value unformatted-value)
-                           (reset! valid valid?)
-                           (dispatch-sync [:editor/set-component-value value path :params :deadline]))
-        update-deadline  (fn [event]
-                           (let [value    (-> event .-target .-value)
-                                 deadline (deadline-date value)]
-                             (cond
-                              (clojure.string/blank? value) (update-value value nil true)
-                              (and value deadline) (update-value value deadline true)
-                              :else (update-value value nil false))))]
+  (let [component         (subscribe [:editor/get-component-value path])
+        languages         (subscribe [:editor/languages])
+        deadline-value    (r/atom (get-in @component [:params :deadline]))
+        valid             (r/atom true)
+        mail-attachment?  (subscribe [:editor/get-component-value path :params :mail-attachment?])
+        component-locked? (subscribe [:editor/component-locked? path])
+        format-deadline   (fn [event]
+                            (some->> (deadline-date (-> event .-target .-value))
+                                     (reset! deadline-value)))
+        update-value      (fn [unformatted-value value valid?]
+                            (reset! deadline-value unformatted-value)
+                            (reset! valid valid?)
+                            (dispatch-sync [:editor/set-component-value value path :params :deadline]))
+        update-deadline   (fn [event]
+                            (let [value    (-> event .-target .-value)
+                                  deadline (deadline-date value)]
+                              (cond
+                                (clojure.string/blank? value) (update-value value nil true)
+                                (and value deadline)          (update-value value deadline true)
+                                :else                         (update-value value nil false))))]
     (fn [content path]
       [:div.editor-form__component-wrapper
        [text-header (:id content) (get-virkailija-translation :attachment) path (:metadata content)
@@ -1290,6 +1291,7 @@
            [:input.editor-form__attachment-deadline-field
             {:type        "text"
              :class       (when-not @valid "editor-form__text-field--invalid")
+             :disabled    @component-locked?
              :value       @deadline-value
              :on-blur     format-deadline
              :placeholder "pp.kk.vvvv hh:mm"
