@@ -35,122 +35,151 @@
      {:loader        (cache/->FunctionCacheLoader lokalisointi-service/get-localizations)
       :expires-after [3 TimeUnit/DAYS]
       :refresh-after [5 TimeUnit/MINUTES]})]
+   [:hakukohde-redis-cache
+    (component/using
+     (redis/map->Cache
+      {:name          "hakukohde"
+       :ttl           [3 TimeUnit/DAYS]
+       :refresh-after [15 TimeUnit/MINUTES]
+       :lock-timeout  [10000 TimeUnit/MILLISECONDS]
+       :loader        (cache/->FunctionCacheLoader tarjonta-client/get-hakukohde
+                                                   tarjonta-client/hakukohde-checker)})
+     [:redis])]
    [:hakukohde-cache
     (component/using
      (two-layer/map->Cache
-      {:name                   "hakukohde"
-       :size                   6000
-       :loader                 (cache/->FunctionCacheLoader tarjonta-client/get-hakukohde
-                                                            tarjonta-client/hakukohde-checker)
-       :expires-after          [3 TimeUnit/DAYS]
-       :refresh-off-heap-after [15 TimeUnit/MINUTES]
-       :refresh-on-heap-after  [7 TimeUnit/MINUTES]})
-     [:redis])]
+      {:name                "in-memory-hakukohde"
+       :size                6000
+       :expire-after-access [3 TimeUnit/DAYS]
+       :refresh-after       [5 TimeUnit/MINUTES]})
+     {:redis-cache :hakukohde-redis-cache})]
    [:haku-cache
     (component/using
      (redis/map->Cache
-      {:name            "haku"
-       :loader          (cache/->FunctionCacheLoader tarjonta-client/get-haku)
-       :ttl-after-read  [3 TimeUnit/DAYS]
-       :ttl-after-write [3 TimeUnit/DAYS]
-       :update-period   [15 TimeUnit/MINUTES]})
+      {:name          "haku"
+       :ttl           [3 TimeUnit/DAYS]
+       :refresh-after [15 TimeUnit/MINUTES]
+       :lock-timeout  [10000 TimeUnit/MILLISECONDS]
+       :loader        (cache/->FunctionCacheLoader tarjonta-client/get-haku)})
      [:redis])]
    [:forms-in-use-cache
     (component/using
      (redis/map->Cache
-      {:name            "forms-in-use"
-       :loader          (cache/->FunctionCacheLoader tarjonta-client/get-forms-in-use)
-       :ttl-after-read  [3 TimeUnit/DAYS]
-       :ttl-after-write [3 TimeUnit/DAYS]
-       :update-period   [15 TimeUnit/MINUTES]})
+      {:name          "forms-in-use"
+       :ttl           [3 TimeUnit/DAYS]
+       :refresh-after [15 TimeUnit/MINUTES]
+       :lock-timeout  [10000 TimeUnit/MILLISECONDS]
+       :loader        (cache/->FunctionCacheLoader tarjonta-client/get-forms-in-use)})
      [:redis])]
    [:ohjausparametrit-cache
     (component/using
      (redis/map->Cache
-      {:name            "ohjausparametrit"
-       :loader          (cache/->FunctionCacheLoader ohjausparametrit-client/get-ohjausparametrit)
-       :ttl-after-read  [3 TimeUnit/DAYS]
-       :ttl-after-write [3 TimeUnit/DAYS]
-       :update-period   [15 TimeUnit/MINUTES]})
+      {:name          "ohjausparametrit"
+       :ttl           [3 TimeUnit/DAYS]
+       :refresh-after [15 TimeUnit/MINUTES]
+       :lock-timeout  [10000 TimeUnit/MILLISECONDS]
+       :loader        (cache/->FunctionCacheLoader ohjausparametrit-client/get-ohjausparametrit)})
+     [:redis])]
+   [:koulutus-redis-cache
+    (component/using
+     (redis/map->Cache
+      {:name          "koulutus"
+       :ttl           [3 TimeUnit/DAYS]
+       :refresh-after [15 TimeUnit/MINUTES]
+       :lock-timeout  [10000 TimeUnit/MILLISECONDS]
+       :loader        (cache/->FunctionCacheLoader tarjonta-client/get-koulutus
+                                                   tarjonta-client/koulutus-checker)})
      [:redis])]
    [:koulutus-cache
     (component/using
      (two-layer/map->Cache
-      {:name                   "koulutus"
-       :size                   6000
-       :loader                 (cache/->FunctionCacheLoader tarjonta-client/get-koulutus
-                                                            tarjonta-client/koulutus-checker)
-       :expires-after          [3 TimeUnit/DAYS]
-       :refresh-off-heap-after [15 TimeUnit/MINUTES]
-       :refresh-on-heap-after  [7 TimeUnit/MINUTES]})
-     [:redis])]
+      {:name                "in-memory-koulutus"
+       :size                6000
+       :expire-after-access [3 TimeUnit/DAYS]
+       :refresh-after       [7 TimeUnit/MINUTES]})
+     {:redis-cache :koulutus-redis-cache})]
+   [:henkilo-redis-cache
+    (component/using
+     (redis/map->Cache
+      {:name          "henkilo"
+       :ttl           [3 TimeUnit/DAYS]
+       :refresh-after [1 TimeUnit/DAYS]
+       :lock-timeout  [10000 TimeUnit/MILLISECONDS]})
+     {:redis  :redis
+      :loader :henkilo-cache-loader})]
    [:henkilo-cache
     (component/using
      (two-layer/map->Cache
-      {:name                   "henkilo"
-       :size                   200000
-       :expires-after          [3 TimeUnit/DAYS]
-       :refresh-off-heap-after [1 TimeUnit/DAYS]
-       :refresh-on-heap-after  [10 TimeUnit/SECONDS]})
-     {:redis  :redis
-      :loader :henkilo-cache-loader})]
+      {:name                "in-memory-henkilo"
+       :size                200000
+       :expire-after-access [3 TimeUnit/DAYS]
+       :refresh-after       [1 TimeUnit/SECONDS]})
+     {:redis-cache :henkilo-redis-cache})]
    [:hakukohde-search-cache
     (component/using
      (redis/map->Cache
-      {:name            "hakukohde-search"
-       :loader          (cache/->FunctionCacheLoader tarjonta-service/hakukohde-search-cache-loader-fn)
-       :ttl-after-read  [3 TimeUnit/DAYS]
-       :ttl-after-write [3 TimeUnit/DAYS]
-       :update-period   [15 TimeUnit/MINUTES]})
+      {:name          "hakukohde-search"
+       :ttl           [3 TimeUnit/DAYS]
+       :refresh-after [15 TimeUnit/MINUTES]
+       :lock-timeout  [10000 TimeUnit/MILLISECONDS]
+       :loader        (cache/->FunctionCacheLoader tarjonta-service/hakukohde-search-cache-loader-fn)})
      [:redis])]
    [:statistics-month-cache
     (component/using
      (redis/map->Cache
-      {:name            "statistics-month"
-       :loader          (cache/->FunctionCacheLoader s/get-and-parse-application-stats)
-       :ttl-after-write [10 TimeUnit/HOURS]})
+      {:name         "statistics-month"
+       :ttl          [10 TimeUnit/HOURS]
+       :lock-timeout [10000 TimeUnit/MILLISECONDS]
+       :loader       (cache/->FunctionCacheLoader s/get-and-parse-application-stats)})
      [:redis])]
    [:statistics-week-cache
     (component/using
      (redis/map->Cache
-      {:name            "statistics-week"
-       :loader          (cache/->FunctionCacheLoader s/get-and-parse-application-stats)
-       :ttl-after-write [1 TimeUnit/HOURS]})
+      {:name         "statistics-week"
+       :ttl          [1 TimeUnit/HOURS]
+       :lock-timeout [10000 TimeUnit/MILLISECONDS]
+       :loader       (cache/->FunctionCacheLoader s/get-and-parse-application-stats)})
      [:redis])]
    [:statistics-day-cache
     (component/using
      (redis/map->Cache
-      {:name            "statistics-day"
-       :loader          (cache/->FunctionCacheLoader s/get-and-parse-application-stats)
-       :ttl-after-write [5 TimeUnit/MINUTES]})
+      {:name         "statistics-day"
+       :ttl          [5 TimeUnit/MINUTES]
+       :lock-timeout [10000 TimeUnit/MILLISECONDS]
+       :loader       (cache/->FunctionCacheLoader s/get-and-parse-application-stats)})
+     [:redis])]
+   [:koodisto-redis-cache
+    (component/using
+     (redis/map->Cache
+      {:name          "koodisto"
+       :ttl           [3 TimeUnit/DAYS]
+       :refresh-after [15 TimeUnit/MINUTES]
+       :lock-timeout  [10000 TimeUnit/MILLISECONDS]
+       :loader        (cache/->FunctionCacheLoader koodisto-cache/get-koodi-options
+                                                   koodisto-cache/koodisto-checker)})
      [:redis])]
    [:koodisto-cache
     (component/using
      (two-layer/map->Cache
-      {:name                   "koodisto"
-       :loader                 (cache/->FunctionCacheLoader koodisto-cache/get-koodi-options
-                                                            koodisto-cache/koodisto-checker)
-       :expires-after          [3 TimeUnit/DAYS]
-       :refresh-off-heap-after [15 TimeUnit/MINUTES]
-       :refresh-on-heap-after  [7 TimeUnit/MINUTES]})
-     [:redis])]
+      {:name                "in-memory-koodisto"
+       :expire-after-access [3 TimeUnit/DAYS]
+       :refresh-after       [7 TimeUnit/MINUTES]})
+     {:redis-cache :koodisto-redis-cache})]
    [:form-by-haku-oid-and-id-cache
     (component/using
      (redis/map->Cache
-      {:name               "form-by-haku-oid-and-id"
-       :ttl-after-read     [1 TimeUnit/HOURS]
-       :ttl-after-write    [1 TimeUnit/HOURS]
-       :update-period      [1 TimeUnit/MINUTES]
-       :update-after-read? true})
+      {:name          "form-by-haku-oid-and-id"
+       :ttl           [1 TimeUnit/HOURS]
+       :refresh-after [5 TimeUnit/SECONDS]
+       :lock-timeout  [10000 TimeUnit/MILLISECONDS]})
      {:redis  :redis
       :loader :form-by-haku-oid-and-id-cache-loader})]
    [:form-by-haku-oid-str-cache
     (component/using
      (redis/map->Cache
-      {:name               "form-by-haku-oid-str"
-       :ttl-after-read     [3 TimeUnit/DAYS]
-       :ttl-after-write    [3 TimeUnit/DAYS]
-       :update-period      [1 TimeUnit/MINUTES]
-       :update-after-read? true})
+      {:name          "form-by-haku-oid-str"
+       :ttl           [3 TimeUnit/DAYS]
+       :refresh-after [5 TimeUnit/SECONDS]
+       :lock-timeout  [10000 TimeUnit/MILLISECONDS]})
      {:redis  :redis
       :loader :form-by-haku-oid-str-cache-loader})]])

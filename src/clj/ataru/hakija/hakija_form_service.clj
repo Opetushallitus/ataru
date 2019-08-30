@@ -302,6 +302,7 @@
                                      (map keyword roles))))
   (load-many [this keys]
     (into {} (keep #(when-let [v (cache/load this %)] [% v]) keys)))
+  (load-many-size [_] 1)
   (check-schema [_ _] nil))
 
 (def form-coercer (sc/coercer! form-schema/FormWithContentAndTarjontaMetadata
@@ -320,4 +321,5 @@
         (json/generate-string (form-coercer form)))))
   (load-many [this keys]
     (into {} (keep #(when-let [v (cache/load this %)] [% v]) keys)))
+  (load-many-size [_] 1)
   (check-schema [_ _] nil))
