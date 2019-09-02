@@ -1060,9 +1060,9 @@ WHERE la.key IS NULL\n"
 
 (defn convert-asiointikieli [kielikoodi]
       (cond
-        "1" {:kielikoodi "fi", :kielityyppi "suomi"}
-        "2" {:kielikoodi "sv", :kielityyppi "ruotsi"}
-        "3" {:kielikoodi "en", :kielityyppi "englanti"}
+        (= "1" kielikoodi) {:kieliKoodi "fi", :kieliTyyppi "suomi"}
+        (= "2" kielikoodi) {:kieliKoodi "sv", :kieliTyyppi "ruotsi"}
+        (= "3" kielikoodi) {:kieliKoodi "en", :kieliTyyppi "englanti"}
         :else nil))
 
 (defn valinta-ui-applications
