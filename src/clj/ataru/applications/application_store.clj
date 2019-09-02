@@ -1063,7 +1063,7 @@ WHERE la.key IS NULL\n"
         (= "1" kielikoodi) {:kieliKoodi "fi", :kieliTyyppi "suomi"}
         (= "2" kielikoodi) {:kieliKoodi "sv", :kieliTyyppi "ruotsi"}
         (= "3" kielikoodi) {:kieliKoodi "en", :kieliTyyppi "englanti"}
-        :else nil))
+        :else {:kieliKoodi "", :kieliTyyppi ""}))
 
 (defn valinta-ui-applications
   [query]
