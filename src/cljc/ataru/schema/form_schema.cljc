@@ -495,7 +495,7 @@
    :personOid     s/Str
    :sukunimi      s/Str
    :etunimet      s/Str
-   :asiointikieli s/Str
+   :asiointikieli (s/maybe s/Str)
    :henkilotunnus (s/maybe s/Str)
    :lahiosoite    s/Str
    :postinumero   s/Str

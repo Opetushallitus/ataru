@@ -1058,6 +1058,13 @@ WHERE la.key IS NULL\n"
            (when-let [a (first (drop 999 as))]
              {:offset (:oid a)}))))
 
+(defn convert-asiointikieli [kielikoodi]
+      (cond
+        "1" {:kielikoodi "fi", :kielityyppi "suomi"}
+        "2" {:kielikoodi "sv", :kielityyppi "ruotsi"}
+        "3" {:kielikoodi "en", :kielityyppi "englanti"}
+        :else nil))
+
 (defn valinta-ui-applications
   [query]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
@@ -1084,7 +1091,7 @@ WHERE la.key IS NULL\n"
                                :henkilotunnus
                                :sukunimi
                                :etunimet
-                               :asiointikieli
+                               (convert-asiointikieli :asiointikieli)
                                :lahiosoite
                                :postinumero
                                :hakukohde
