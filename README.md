@@ -40,6 +40,12 @@ this container.
 docker build -t ataru-test-ftpd -t ataru-dev-ftpd ./test-ftpd
 ```
 
+Stop the dev-container (if running) to avoid port collision.
+
+```
+docker stop ataru-dev-ftpd
+```
+
 Then to run a local test FTP server:
 
 ```
@@ -87,6 +93,8 @@ lein figwheel virkailija-dev
 lein figwheel hakija-dev
 ```
 
+Note: currently it is not possible to run both figwheel commands above simultaneously.
+
 #### Using remote resources
 
 Secrets requiret for accessing remote resources are stored in a separate
@@ -133,11 +141,13 @@ docker run --name ataru-test-redis -p 6380:6379 -d redis
 docker run -d --name ataru-test-ftpd -p 2221:21 -p 30000-30009:30000-30009 ataru-test-ftpd
 ```
 
+The tests also require the `lftp` command to be available.
+
 Tests assume some fixtures in the db. To clear the test db, run migrations and
 insert the required fixtures by running:
 
 ```
-./bin/ci-build reset-test-database-with-fixture
+./bin/cibuild.sh reset-test-database-with-fixture
 ```
 
 For Travis CI the ataru-test-db and ataru-test-ftpd images have to be
@@ -169,7 +179,8 @@ To build and run all the tests in the system:
 ### Backend unit tests
 
 ```
-lein spec -t unit
+APP=virkailija lein spec -t unit
+APP=hakija lein spec -t unit
 ```
 
 ### ClojureScript unit tests
