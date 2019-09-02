@@ -496,7 +496,7 @@
    :sukunimi      s/Str
    :etunimet      s/Str
    :asiointikieli {:kieliKoodi  s/Str
-                  :kieliTyyppi s/Str}
+                   :kieliTyyppi s/Str}
    :henkilotunnus (s/maybe s/Str)
    :lahiosoite    s/Str
    :postinumero   s/Str

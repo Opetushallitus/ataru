@@ -730,8 +730,12 @@ SELECT
   (SELECT answers->>'value'
    FROM jsonb_array_elements(a.content->'answers') AS answers
    WHERE answers->>'key' = 'postal-code') AS postinumero,
-  (SELECT answers->>'value'
-   FROM jsonb_array_elements(a.content->'answers') AS answers
+  (SELECT CASE answers->>'value'
+              WHEN '1' THEN 'fi'
+              WHEN '2' THEN 'sv'
+              WHEN '3' THEN 'en'
+              END AS value
+  FROM jsonb_array_elements(a.content->'answers') AS answers
    WHERE answers->>'key' = 'asiointikieli') AS asiointikieli,
   (SELECT json_agg(json_build_object('requirement', requirement,
                                      'state', state,
