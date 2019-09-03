@@ -5,7 +5,7 @@
    [ataru.schema.form-schema :as form-schema]
    [ataru.virkailija.editor.form-diff :as form-diff]
    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
-   [ataru.tarjonta-service.tarjonta-service :refer [yhteishaku?]]
+   [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
    [ataru.organization-service.session-organizations :as session-orgs]
    [ataru.organization-service.organization-client :refer [oph-organization]]
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
@@ -43,7 +43,7 @@
     (let [haut        (keys (get (tarjonta-protocol/get-forms-in-use virkailija-tarjonta-service session) key))
           yhteishaut? (->> haut
                            (map #(tarjonta-protocol/get-haku tarjonta-service %))
-                           (filter yhteishaku?))]
+                           (filter tarjonta-service/yhteishaku?))]
       (when (first yhteishaut?)
             (throw (user-feedback-exception
                      (format "Lukitseminen ja avaaminen yhteishaussa vain rekisterinpitäjän oikeuksilla!")))))))
