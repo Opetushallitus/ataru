@@ -130,7 +130,7 @@
                                                                :options         [{:label {:fi "", :sv ""}, :value ""}]
                                                                :fieldType       "dropdown"
                                                                :fieldClass      "formField"
-                                                               :koodisto-source {:uri "maatjavaltiot2", :title "Maat ja valtiot", :version 1}}]
+                                                               :koodisto-source {:uri "maatjavaltiot2", :title "Maat ja valtiot", :version 2}}]
                                                  :fieldType  "fieldset"
                                                  :fieldClass "questionGroup"}]}
                                    {:label     (:other-eligibility base-education-module-texts)
@@ -172,7 +172,7 @@
                                                         :fieldType       "dropdown",
                                                         :fieldClass      "formField",
                                                         :validators      ["required"]
-                                                        :koodisto-source {:uri "maatjavaltiot2", :title "Maat ja valtiot", :version 1}}]}
+                                                        :koodisto-source {:uri "maatjavaltiot2", :title "Maat ja valtiot", :version 2}}]}
                                           {:label (:have-not general-texts), :value "Nej"}],
                              :validators ["required"]})]}))
 

@@ -4,7 +4,7 @@
                          {:uri "tutkinto" :version 1 :title "Tutkinto"}
                          {:uri "koulutus" :version 6 :title "Koulutus"}
                          {:uri "tutkintonimikkeet" :version 2 :title "Tutkintonimikkeet"}
-                         {:uri "maatjavaltiot2" :version 1 :title "Maat ja valtiot"}
+                         {:uri "maatjavaltiot2" :version 2 :title "Maat ja valtiot"}
                          {:uri "kktutkinnot" :version 1 :title "Kk-tutkinnot"}
                          {:uri "pohjakoulutuskklomake" :version 1 :title "Kk-pohjakoulutusvaihtoehdot"}
                          {:uri "kunta" :version 1 :title "Kunta"}
