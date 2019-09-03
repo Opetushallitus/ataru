@@ -1058,13 +1058,12 @@ WHERE la.key IS NULL\n"
            (when-let [a (first (drop 999 as))]
              {:offset (:oid a)}))))
 
-(defn convert-asiointikieli [kielikoodi]
+(defn- convert-asiointikieli [kielikoodi]
       (cond
-        (= "fi" kielikoodi) {:asiointiKieli {:kieliKoodi "fi" :kieliTyyppi "suomi"}}
-        (= "sv" kielikoodi) {:asiointiKieli {:kieliKoodi "sv" :kieliTyyppi "svenska"}}
-        (= "en" kielikoodi) {:asiointiKieli {:kieliKoodi "en" :kieliTyyppi "english"}}
-        :else {:asiointiKieli {:kieliKoodi "", :kieliTyyppi ""}})
-      )
+        (= "fi" kielikoodi) {:kieliKoodi "fi" :kieliTyyppi "suomi"}
+        (= "sv" kielikoodi) {:kieliKoodi "sv" :kieliTyyppi "svenska"}
+        (= "en" kielikoodi) {:kieliKoodi "en" :kieliTyyppi "english"}
+        :else {:kieliKoodi "" :kieliTyyppi ""}))
 
 (defn valinta-ui-applications
   [query]
@@ -1092,11 +1091,12 @@ WHERE la.key IS NULL\n"
                                :henkilotunnus
                                :sukunimi
                                :etunimet
-                               (convert-asiointikieli :asiointikieli)
+                               :asiointikieli
                                :lahiosoite
                                :postinumero
                                :hakukohde
-                               :hakutoiveet])))))
+                               :hakutoiveet]))
+         (map #(assoc % :asiointikieli (convert-asiointikieli (get % :asiointikieli)))))))
 
 (defn- unwrap-person-and-hakemus-oid
   [{:keys [key person_oid]}]
