@@ -63,7 +63,7 @@
                                  :rules           (if gender?
                                                     {:toggle-ssn-based-fields nil}
                                                     {:toggle-ssn-based-fields-without-gender nil})
-                                 :koodisto-source {:uri "maatjavaltiot2" :version 1 :default-option "Suomi"}})]})))
+                                 :koodisto-source {:uri "maatjavaltiot2" :version 2 :default-option "Suomi"}})]})))
 
 (defn- country-of-residence-component
   [metadata]
@@ -72,7 +72,7 @@
               :validators [:required]
               :rules {:change-country-of-residence nil}
               :id :country-of-residence
-              :koodisto-source {:uri "maatjavaltiot2" :version 1 :default-option "Suomi"}})))
+              :koodisto-source {:uri "maatjavaltiot2" :version 2 :default-option "Suomi"}})))
 
 (defn- have-finnish-ssn-component
   [metadata gender?]

@@ -312,7 +312,7 @@
                {:fieldClass      "formField"
                 :fieldType       "dropdown"
                 :id              "pohjakoulutus_yo_ulkomainen--country-of-completion"
-                :koodisto-source {:title "Maat ja valtiot" :uri "maatjavaltiot2" :version 1}
+                :koodisto-source {:title "Maat ja valtiot" :uri "maatjavaltiot2" :version 2}
                 :label           {:en "Country of completion"
                                   :fi "Suoritusmaa"
                                   :sv "Land där examen är avlagd"}
@@ -735,7 +735,7 @@
                                :fieldClass             "formField"
                                :fieldType              "dropdown"
                                :id                     "pohjakoulutus_ulk--country-of-completion"
-                               :koodisto-source        {:title "Maat ja valtiot" :uri "maatjavaltiot2" :version 1}
+                               :koodisto-source        {:title "Maat ja valtiot" :uri "maatjavaltiot2" :version 2}
                                :label                  {:en "Country of completion"
                                                         :fi "Suoritusmaa"
                                                         :sv "Land där examen är avlagd"}
@@ -801,7 +801,7 @@
                                :fieldClass             "formField"
                                :fieldType              "dropdown"
                                :id                     "pohjakoulutus_kk_ulk--country"
-                               :koodisto-source        {:title "Maat ja valtiot" :uri "maatjavaltiot2" :version 1}
+                               :koodisto-source        {:title "Maat ja valtiot" :uri "maatjavaltiot2" :version 2}
                                :label                  {:en "Country of completion"
                                                         :fi "Suoritusmaa"
                                                         :sv "Land där examen är avlagd"}
@@ -934,7 +934,7 @@
                          :options    [{:followups [{:fieldClass      "formField"
                                                     :fieldType       "dropdown"
                                                     :id              "secondary-completed-base-education--country"
-                                                    :koodisto-source {:title "Maat ja valtiot" :uri "maatjavaltiot2" :version 1}
+                                                    :koodisto-source {:title "Maat ja valtiot" :uri "maatjavaltiot2" :version 2}
                                                     :label           {:en "Choose country"
                                                                       :fi "Valitse suoritusmaa"
                                                                       :sv " Välj land där du avlagt examen"}
