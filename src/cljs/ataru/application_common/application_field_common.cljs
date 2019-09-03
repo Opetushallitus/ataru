@@ -100,9 +100,9 @@
        (fn []
          (let [sanitized-html (as-> md-text v
                                 (md->html v
-                                          :replacement-transformers (cons (partial application-identifier-block application-identifier)
-                                                                          transformer-vector)
-                                          :custom-transformers [add-link-target-prop])
+                                          :replacement-transformers (concat [(partial application-identifier-block application-identifier)]
+                                                                            transformer-vector
+                                                                            [add-link-target-prop]))
                                 (.sanitize html-sanitizer v)
                                 (.getTypedStringValue v))
                collapsable?   (and collapse-enabled? (< 140 (or @scroll-height 0)))]
