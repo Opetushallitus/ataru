@@ -112,6 +112,11 @@
                haut)))
 
 (re-frame/reg-sub
+  :editor/superuser?
+  (fn [db _]
+    (get-in db [:editor :user-info :superuser?])))
+
+(re-frame/reg-sub
   :editor/used-by-haut-haut
   (fn [db _]
     (get-in db [:editor :used-by-haut :haut])))
@@ -274,8 +279,7 @@
   (fn [_ _]
     (re-frame/subscribe [:editor/selected-form]))
   (fn form-locked-info [form _]
-    (when (some? (:locked form))
-      (select-keys form [:locked :locked-by]))))
+    (select-keys form [:locked :locked-by :lock-state])))
 
 (re-frame/reg-sub
   :editor/form-locked?

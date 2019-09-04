@@ -155,9 +155,14 @@
     (clojure.string/upper-case (name lang-kwd))]])
 
 (defn- lock-form-editing []
-  (let [form-locked-info @(subscribe [:editor/form-locked-info])]
+  (let [form-locked-info @(subscribe [:editor/form-locked-info])
+        lock-state       (:lock-state form-locked-info)
+        enabled?         (and (not (some #{:opening :closing}
+                                         [lock-state]))
+                              (or (not @(subscribe [:editor/yhteishaku?]))
+                                  @(subscribe [:editor/superuser?])))]
     [:div.editor-form__preview-buttons
-     (when (some? form-locked-info)
+     (when (not= lock-state :open)
        [:div.editor-form__form-editing-locked
         (get-virkailija-translation :form-locked)
         [:i.zmdi.zmdi-lock.editor-form__form-editing-lock-icon]
@@ -167,9 +172,11 @@
               " "
               (-> form-locked-info :locked temporal/str->googdate temporal/time->short-str)
               ")")]])
-     [:div#lock-form.editor-form__fold-clickable-text
-      {:on-click #(dispatch [:editor/toggle-form-editing-lock])}
-      (if (some? form-locked-info)
+     [:a#lock-form.editor-form__fold-clickable-text
+      (if enabled?
+        {:on-click #(dispatch [:editor/toggle-form-editing-lock])}
+        {:disabled true})
+      (if (= lock-state :locked)
         (get-virkailija-translation :remove-lock)
         (get-virkailija-translation :lock-form))]]))
 
@@ -201,23 +208,21 @@
                                     :sv :swedish
                                     :en :english))]]))
 
-(defn- form-toolbar [form]
-  (let [languages @(subscribe [:editor/languages])
-        lang      (subscribe [:editor/virkailija-lang])]
-    [:div.editor-form__toolbar
-     [:div.editor-form__toolbar-left
-      [:div.editor-form__language-controls
-       [lang-checkbox :fi]
-       [lang-checkbox :sv]
-       [lang-checkbox :en]]
-      [:div.editor-form__preview-buttons
-       [:a.editor-form__email-template-editor-link
-        {:on-click #(dispatch [:editor/toggle-email-template-editor])}
-        (get-virkailija-translation :edit-email-templates)]]
-      [lock-form-editing]
-      [disable-autosave]]
-     [:div.editor-form__toolbar-right
-      [fold-all]]]))
+(defn- form-toolbar []
+  [:div.editor-form__toolbar
+   [:div.editor-form__toolbar-left
+    [:div.editor-form__language-controls
+     [lang-checkbox :fi]
+     [lang-checkbox :sv]
+     [lang-checkbox :en]]
+    [:div.editor-form__preview-buttons
+     [:a.editor-form__email-template-editor-link
+      {:on-click #(dispatch [:editor/toggle-email-template-editor])}
+      (get-virkailija-translation :edit-email-templates)]]
+    [lock-form-editing]
+    [disable-autosave]]
+   [:div.editor-form__toolbar-right
+    [fold-all]]])
 
 (defn form-in-use-warning
   [form]
@@ -297,4 +302,4 @@
        [editor-panel form])
      (when form
        ^{:key "form-toolbar"}
-       [form-toolbar form])]))
+       [form-toolbar])]))

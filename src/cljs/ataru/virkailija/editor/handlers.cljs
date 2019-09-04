@@ -505,6 +505,11 @@
                             :handler             (fn [form _]
                                                    (dispatch [:editor/save-form form (or last-autosaved-form initial-form)]))})))
 
+(defn- set-form-lock-state [form]
+  (assoc form :lock-state (if (:locked form)
+                            :locked
+                            :open)))
+
 (reg-event-db
   :editor/handle-fetch-form
   (fn [db [_ {:keys [key deleted] :as response} _]]
@@ -519,7 +524,8 @@
           (assoc-in [:editor :selected-form-key] key)
           (fold-all)
           (assoc-in [:editor :save-snapshot] new-form)
-          (assoc-in [:editor :autosave] (create-autosave-loop new-form)))))))
+          (assoc-in [:editor :autosave] (create-autosave-loop new-form))
+          (update-in [:editor :forms key] set-form-lock-state))))))
 
 (defn- fetch-form-content-fx
   [form-id]
@@ -976,17 +982,26 @@
       (-> db
           (assoc-in [:editor :forms form-key :locked] (:locked response))
           (assoc-in [:editor :forms form-key :locked-by] (-> db :editor :user-info :name))
-          (assoc-in [:editor :forms form-key :id] (:id response))))))
+          (assoc-in [:editor :forms form-key :id] (:id response))
+          (assoc-in [:editor :forms form-key :lock-state] (if (:locked response)
+                                                            :locked
+                                                            :open))))))
 
 (reg-event-fx
   :editor/toggle-form-editing-lock
   (fn [{db :db} _]
-    (let [form-key  (-> db :editor :selected-form-key)
-          form      (get-in db [:editor :forms form-key])
-          operation (if (some? (get-in db [:editor :forms form-key :locked]))
-                      "open"
-                      "close")]
-      {:http {:method              :put
+    (let [form-key         (-> db :editor :selected-form-key)
+          form             (get-in db [:editor :forms form-key])
+          operation        (if (= (get-in db [:editor :forms form-key :lock-state]) :locked)
+                             "open"
+                             "close")
+          transition-state (case operation
+                             "open" :opening
+                             "close" :closing)]
+      {:db   (assoc-in db
+                       [:editor :forms form-key :lock-state]
+                       transition-state)
+       :http {:method              :put
               :path                (str "/lomake-editori/api/forms/" (:id form) "/lock/" operation)
               :handler-or-dispatch :editor/update-form-lock
               :handler-args        {:form-key form-key}}})))

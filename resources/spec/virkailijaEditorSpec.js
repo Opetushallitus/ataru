@@ -95,11 +95,7 @@
     }
 
     function clickLockForm() {
-        return function() {
-            return testFrame()
-                .find("#lock-form")
-                .click();
-        }
+        return clickElement(() => testFrame().find('#lock-form'))
     }
 
     function getInputs(pseudoClass) {
