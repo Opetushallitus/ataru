@@ -205,23 +205,21 @@
                                     :sv :swedish
                                     :en :english))]]))
 
-(defn- form-toolbar [form]
-  (let [languages @(subscribe [:editor/languages])
-        lang      (subscribe [:editor/virkailija-lang])]
-    [:div.editor-form__toolbar
-     [:div.editor-form__toolbar-left
-      [:div.editor-form__language-controls
-       [lang-checkbox :fi]
-       [lang-checkbox :sv]
-       [lang-checkbox :en]]
-      [:div.editor-form__preview-buttons
-       [:a.editor-form__email-template-editor-link
-        {:on-click #(dispatch [:editor/toggle-email-template-editor])}
-        (get-virkailija-translation :edit-email-templates)]]
-      [lock-form-editing]
-      [disable-autosave]]
-     [:div.editor-form__toolbar-right
-      [fold-all]]]))
+(defn- form-toolbar []
+  [:div.editor-form__toolbar
+   [:div.editor-form__toolbar-left
+    [:div.editor-form__language-controls
+     [lang-checkbox :fi]
+     [lang-checkbox :sv]
+     [lang-checkbox :en]]
+    [:div.editor-form__preview-buttons
+     [:a.editor-form__email-template-editor-link
+      {:on-click #(dispatch [:editor/toggle-email-template-editor])}
+      (get-virkailija-translation :edit-email-templates)]]
+    [lock-form-editing]
+    [disable-autosave]]
+   [:div.editor-form__toolbar-right
+    [fold-all]]])
 
 (defn form-in-use-warning
   [form]
@@ -301,4 +299,4 @@
        [editor-panel form])
      (when form
        ^{:key "form-toolbar"}
-       [form-toolbar form])]))
+       [form-toolbar])]))
