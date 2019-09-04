@@ -172,10 +172,10 @@
               " "
               (-> form-locked-info :locked temporal/str->googdate temporal/time->short-str)
               ")")]])
-     [:div#lock-form.editor-form__fold-clickable-text
+     [:a#lock-form.editor-form__fold-clickable-text
       (if enabled?
         {:on-click #(dispatch [:editor/toggle-form-editing-lock])}
-        {:class "editor-form__fold-clickable-text--disabled"})
+        {:disabled true})
       (if (= lock-state :locked)
         (get-virkailija-translation :remove-lock)
         (get-virkailija-translation :lock-form))]]))
