@@ -156,10 +156,13 @@
 
 (defn- lock-form-editing []
   (let [form-locked-info @(subscribe [:editor/form-locked-info])
-        enabled?         (or (not @(subscribe [:editor/yhteishaku?]))
-                             @(subscribe [:editor/superuser?]))]
+        lock-state       (:lock-state form-locked-info)
+        enabled?         (and (not (some #{:opening :closing}
+                                         [lock-state]))
+                              (or (not @(subscribe [:editor/yhteishaku?]))
+                                  @(subscribe [:editor/superuser?])))]
     [:div.editor-form__preview-buttons
-     (when (some? form-locked-info)
+     (when (not= lock-state :open)
        [:div.editor-form__form-editing-locked
         (get-virkailija-translation :form-locked)
         [:i.zmdi.zmdi-lock.editor-form__form-editing-lock-icon]
@@ -173,7 +176,7 @@
       (if enabled?
         {:on-click #(dispatch [:editor/toggle-form-editing-lock])}
         {:class "editor-form__fold-clickable-text--disabled"})
-      (if (some? form-locked-info)
+      (if (= lock-state :locked)
         (get-virkailija-translation :remove-lock)
         (get-virkailija-translation :lock-form))]]))
 
