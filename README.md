@@ -87,13 +87,8 @@ lein virkailija-dev
 lein hakija-dev
 ```
 ```
-lein figwheel virkailija-dev
+lein figwheel virkailija-dev hakija-dev
 ```
-```
-lein figwheel hakija-dev
-```
-
-Note: currently it is not possible to run both figwheel commands above simultaneously.
 
 #### Using remote resources
 
