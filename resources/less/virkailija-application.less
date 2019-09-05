@@ -548,7 +548,6 @@ and (max-width: 1000px) {
 
 .application-handling__review-outer {
   position: relative;
-  margin-left: 35px;
 }
 
 .application-handling__review-outer-floating {
@@ -627,19 +626,19 @@ and (max-width: 1000px) {
   .application-handling-webkit-scrollbar-mixin;
   position: relative;
   visibility: visible;
+  border-top: solid @review-separator-color 1px;
 }
 
 .application-handling__attachment-review-container {
   background-color: @very-light-gray;
   border-bottom: solid @review-separator-color 1px;
   border-left: 3px solid @link-color;
-  border-top: solid @review-separator-color 1px;
   //left: 25px;
   padding: 10px;
   position: absolute;
   //transform: translateX(-100%);
-  min-width: 448px;
-  right: 424px;
+  min-width: 672px;
+  right: 418px;
   animation-duration: 0.5s;
 }
 
@@ -676,6 +675,7 @@ and (max-width: 1000px) {
 .application__attachment-review-info-row {
   display: flex;
   align-items: flex-start;
+  margin-bottom: 10px;
 }
 
 .application__attachment-review-row-attachments {
@@ -694,7 +694,6 @@ and (max-width: 1000px) {
 
 .application-handling__review-outer-container {
   position: relative;
-  border-top: solid @review-separator-color 1px;
   padding-top: 15px;
   background-color: @very-light-gray;
   padding-left: 15px;
@@ -1366,7 +1365,7 @@ and (max-width: 1000px) {
   box-shadow: @modal-shadow;
   color: @link-color;
   cursor: inherit;
-  width: 219px;
+  min-width: 219px;
   display: flex;
   flex-flow: row nowrap;
   align-items: center;
@@ -1647,6 +1646,7 @@ and (max-width: 1000px) {
   margin-left: 107px;
   border: 1px solid @section-gray-border;
   border-radius: 2px;
+  min-width: 219px;
 }
 
 /*
