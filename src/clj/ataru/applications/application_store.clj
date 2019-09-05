@@ -710,6 +710,11 @@ WHERE la.key IS NULL\n"
                   :session   session
                   :operation audit-log/operation-modify}))
 
+(defn- edit-application-right-organizations->json [session]
+  (->> (-> session :identity :user-right-organizations :edit-applications)
+       (map :oid)
+       (json/generate-string)))
+
 (defn save-application-review [review session]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection      {:connection conn}
@@ -729,9 +734,7 @@ WHERE la.key IS NULL\n"
                      :event_type               "review-state-change"
                      :new_review_state         (:state review-to-store)
                      :virkailija_oid           (-> session :identity :oid)
-                     :virkailija_organizations (->> (-> session :identity :organizations keys)
-                                                    (map name)
-                                                    (json/generate-string))
+                     :virkailija_organizations (edit-application-right-organizations->json session)
                      :hakukohde                nil
                      :review_key               nil}]
           (:id (yesql-add-application-event<! event connection)))))))
@@ -755,9 +758,7 @@ WHERE la.key IS NULL\n"
                                              :review_key               hakukohde-review-requirement
                                              :hakukohde                (:hakukohde review-to-store)
                                              :virkailija_oid           (-> session :identity :oid)
-                                             :virkailija_organizations (->> (-> session :identity :organizations keys)
-                                                                            (map name)
-                                                                            (json/generate-string))}]
+                                             :virkailija_organizations (edit-application-right-organizations->json session)}]
                                   (yesql-add-application-event<! event connection))))))
 
 (defn save-payment-obligation-automatically-changed
@@ -807,9 +808,7 @@ WHERE la.key IS NULL\n"
                        :review_key               attachment-key
                        :hakukohde                (:hakukohde review-to-store)
                        :virkailija_oid           (-> session :identity :oid)
-                       :virkailija_organizations (->> (-> session :identity :organizations keys)
-                                                      (map name)
-                                                      (json/generate-string))}]
+                       :virkailija_organizations (edit-application-right-organizations->json session)}]
             (yesql-add-application-event<! event connection)))
         (throw (new IllegalStateException (str "No existing attahcment review found for " review-to-store)))))))
 
@@ -1125,9 +1124,7 @@ WHERE la.key IS NULL\n"
                           :event_type               "hakukohde-review-state-change"
                           :new_review_state         to-state
                           :virkailija_oid           (-> session :identity :oid)
-                          :virkailija_organizations (->> (-> session :identity :organizations keys)
-                                                         (map name)
-                                                         (json/generate-string))
+                          :virkailija_organizations (edit-application-right-organizations->json session)
                           :first_name               (:first-name session)
                           :last_name                (:last-name session)
                           :review_key               "processing-state"}]
@@ -1171,9 +1168,7 @@ WHERE la.key IS NULL\n"
       (-> {:event_type               nil
            :new_review_state         nil
            :virkailija_oid           (-> session :identity :oid)
-           :virkailija_organizations (->> (-> session :identity :organizations keys)
-                                          (map name)
-                                          (json/generate-string))
+           :virkailija_organizations (edit-application-right-organizations->json session)
            :hakukohde                nil
            :review_key               nil}
           (merge (transform-keys ->snake_case event))
@@ -1192,9 +1187,7 @@ WHERE la.key IS NULL\n"
                                             :notes                    (:notes note)
                                             :virkailija_oid           (-> session :identity :oid)
                                             :hakukohde                (:hakukohde note)
-                                            :virkailija_organizations (->> (-> session :identity :organizations keys)
-                                                                           (map name)
-                                                                           (json/generate-string))
+                                            :virkailija_organizations (edit-application-right-organizations->json session)
                                             :state_name               (:state-name note)})
       util/remove-nil-values
       (merge (select-keys (:identity session) [:first-name :last-name]))
