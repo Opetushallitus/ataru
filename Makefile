@@ -5,6 +5,9 @@ check-tools:
 	$(foreach exec,$(EXECUTABLES),\
 		$(if $(shell which $(exec)),$(info .. $(exec) found),$(error No $(exec) in PATH)))
 
+build-docker-images:
+	docker-compose build
+
 install-npm:
 	npm install
 
@@ -14,16 +17,10 @@ start-pm2:
 stop-pm2:
 	npx pm2 stop pm2.config.js
 
-docker-images:
-	docker build -t ataru-test-db -t ataru-dev-db ./test-postgres
-	docker build -t ataru-test-ftpd -t ataru-dev-ftpd ./test-ftpd
-
-start: install-npm docker-images
+start: install-npm build-docker-images start-pm2
 
 stop: stop-pm2
 
-kill:
+kill: stop-pm2
 	npx pm2 kill
 
-source-to-image:
-	LEIN_ROOT=true ./bin/cibuild.sh create-uberjar
