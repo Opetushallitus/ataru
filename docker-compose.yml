@@ -1,29 +1,19 @@
-version: '2'
-volumes:
-  oph-production-dump: {}
+version: "3"
 services:
-  db:
-    image: postgres
-    volumes:
-      - oph-production-dump:/var/lib/postgresql/data
+  ataru-test-db:
+    build: ./test-postgres
     environment:
+      - POSTGRES_DB=ataru-dev
       - POSTGRES_PASSWORD=oph
       - POSTGRES_USER=oph
     ports:
-      - "3000:5432"
-  virkailija:
-    image: lomake-editori/master
-    command: virkailija
-    links:
-      - db:oph
+      - "5432:5432"
+  ataru-dev-ftpd:
+    build: ./test-ftpd
     ports:
-      - "8350:8350"
-    environment:
-      - DEV?=true
-  hakija:
-    image: lomake-editori/master
-    command: hakija
-    links:
-      - db:oph
+      - "2221:21"
+      - "30000-30009:30000-30009"
+  ataru-dev-redis:
+    image: "redis:latest"
     ports:
-      - "8351:8351"
+      - "6379:6379"
