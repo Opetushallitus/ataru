@@ -5,19 +5,19 @@ check-tools:
 	$(foreach exec,$(EXECUTABLES),\
 		$(if $(shell which $(exec)),$(info .. $(exec) found),$(error No $(exec) in PATH)))
 
-build-docker-images:
+build-docker-images: check-tools
 	docker-compose build
 
-install-npm:
+install-node-modules: check-tools
 	npm install
 
-start-pm2:
+start-pm2: build-docker-images
 	npx pm2 start pm2.config.js
 
-stop-pm2:
+stop-pm2: install-node-modules
 	npx pm2 stop pm2.config.js
 
-start: install-npm build-docker-images start-pm2
+start: start-pm2
 
 stop: stop-pm2
 
