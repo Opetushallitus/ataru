@@ -1,166 +1,214 @@
-(function () {
-  before(function () {
+;(function() {
+  before(function() {
     if (!testFormApplicationSecret) {
-      console.log("Test application secret undefined (no application found). Did you run virkailija and hakija-form tests first?");
+      console.log(
+        'Test application secret undefined (no application found). Did you run virkailija and hakija-form tests first?'
+      )
     } else {
-      console.log("secret", testFormApplicationSecret);
+      console.log('secret', testFormApplicationSecret)
       loadInFrame('/hakemus?modify=' + testFormApplicationSecret)
     }
   })
 
-  describe('hakemus edit', function () {
-    describe('form loads', function () {
+  describe('hakemus edit', function() {
+    describe('form loads', function() {
       before(
-        wait.until(function () {
+        wait.until(function() {
           return formSections().length == 2
         })
       )
-      it('with complete form', function () {
+      it('with complete form', function() {
         expect(formFields().length).to.equal(34)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(submitButton().prop('disabled')).to.equal(true)
       })
 
-      it('with correct existing answers', function () {
-        var textInputValues = _.map(testFrame().find('.application__form-text-input'), function (e) {
-          return $(e).val()
-        })
+      it('with correct existing answers', function() {
+        var textInputValues = _.map(
+          testFrame().find('.application__form-text-input'),
+          function(e) {
+            return $(e).val()
+          }
+        )
         var expectedTestInputValues = [
-          "Etunimi Tokanimi",
-          "Etunimi",
-          "Sukunimi",
-          "***********",
-          "test@example.com",
-          "test@example.com",
-          "0123456789",
-          "Katutie 12 B",
-          "40100",
-          "JYVÄSKYLÄ",
-          "Tekstikentän vastaus",
-          "Toistuva vastaus 1",
-          "Toistuva vastaus 2",
-          "Toistuva vastaus 3",
-          "",
-          "Pakollisen tekstialueen vastaus",
-          "Jatkokysymyksen vastaus",
-          "A1",
-          "B1",
-          "C1",
-          "A2",
-          "",
-          "C2",
-          "Toisen pakollisen tekstialueen vastaus",
-          "",
-          "A1",
-          "B1",
-          "C1",
-          "A2",
-          "",
-          "C2",
-          "Vasen vierekkäinen",
-          "Oikea vierekkäinen",
-          "A1",
-          "B1",
-          "C1",
-          "A2",
-          "",
-          "C2",
-          "1,323"
+          'Etunimi Tokanimi',
+          'Etunimi',
+          'Sukunimi',
+          '***********',
+          'test@example.com',
+          'test@example.com',
+          '0123456789',
+          'Katutie 12 B',
+          '40100',
+          'JYVÄSKYLÄ',
+          'Tekstikentän vastaus',
+          'Toistuva vastaus 1',
+          'Toistuva vastaus 2',
+          'Toistuva vastaus 3',
+          '',
+          'Pakollisen tekstialueen vastaus',
+          'Jatkokysymyksen vastaus',
+          'A1',
+          'B1',
+          'C1',
+          'A2',
+          '',
+          'C2',
+          'Toisen pakollisen tekstialueen vastaus',
+          '',
+          'A1',
+          'B1',
+          'C1',
+          'A2',
+          '',
+          'C2',
+          'Vasen vierekkäinen',
+          'Oikea vierekkäinen',
+          'A1',
+          'B1',
+          'C1',
+          'A2',
+          '',
+          'C2',
+          '1,323',
         ]
 
-        var dropdownInputValues = _.map(testFrame().find('select.application__form-select option:selected'), function (e) {
-          return $(e).text()
-        })
+        var dropdownInputValues = _.map(
+          testFrame().find('select.application__form-select option:selected'),
+          function(e) {
+            return $(e).text()
+          }
+        )
         var expectedDropdownInputValues = [
-          "Suomi",
-          "Suomi",
-          "Jyväskylä",
-          "suomi",
-          "Kolmas vaihtoehto",
-          "Lisensiaatin tutkinto",
-          "",
-          "Pudotusvalikon 1. kysymys",
-          "Entinen Neuvostoliitto"
+          'Suomi',
+          'Suomi',
+          'Jyväskylä',
+          'suomi',
+          'Kolmas vaihtoehto',
+          'Lisensiaatin tutkinto',
+          '',
+          'Pudotusvalikon 1. kysymys',
+          'Entinen Neuvostoliitto',
         ]
 
         expect(textInputValues).to.eql(expectedTestInputValues)
         expect(dropdownInputValues).to.eql(expectedDropdownInputValues)
-        expect(_.map(testFrame().find('input.application__form-checkbox:checked + label'), function (e) { return $(e).text() }))
-          .to.eql(["Toinen vaihtoehto", "Arkkitehti", "Jatkokysymys A", "Jatkokysymys B"])
+        expect(
+          _.map(
+            testFrame().find(
+              'input.application__form-checkbox:checked + label'
+            ),
+            function(e) {
+              return $(e).text()
+            }
+          )
+        ).to.eql([
+          'Toinen vaihtoehto',
+          'Arkkitehti',
+          'Jatkokysymys A',
+          'Jatkokysymys B',
+        ])
       })
     })
 
-    describe('changing values to be invalid', function () {
+    describe('changing values to be invalid', function() {
       before(
         setNthFieldInputValue(1, '420noscope'),
         setNthFieldValue(23, 'textarea', ''),
         clickNthFieldRadio(26, 'Ensimmäinen vaihtoehto'),
         clickElement(invalidFieldsStatus),
         wait.until(submitButtonDisabled),
-        wait.until(function () {
+        wait.until(function() {
           return invalidFieldsStatus().text() === 'Tarkista 2 tietoa'
         })
       )
 
-      it('shows invalidity errors', function () {
-        expect(invalidFieldNames().join(";")).to.equal("Osiokysymys;Lyhyen listan kysymys")
+      it('shows invalidity errors', function() {
+        expect(invalidFieldNames().join(';')).to.equal(
+          'Osiokysymys;Lyhyen listan kysymys'
+        )
       })
     })
 
-    describe('change values and save', function () {
+    describe('change values and save', function() {
       before(
         setNthFieldInputValue(1, 'Etunimi'),
         setNthFieldValue(23, 'textarea', 'Muokattu vastaus'),
         clickNthFieldRadio(26, 'Toinen vaihtoehto'),
-        wait.until(function () {
+        wait.until(function() {
           return !submitButton().prop('disabled')
         }),
         clickElement(submitButton),
-        wait.until(function () {
-          return testFrame().find('.application__sent-placeholder-text').length == 1
+        wait.until(function() {
+          return (
+            testFrame().find('.application__sent-placeholder-text').length == 1
+          )
         })
       )
 
-      it('shows submitted form', function () {
-        var displayedValues = _.map(testFrame().find('.application__text-field-paragraph'), function(e) { return $(e).text() });
-        console.log("values");
-        console.log(displayedValues);
+      it('shows submitted form', function() {
+        var displayedValues = _.map(
+          testFrame().find('.application__text-field-paragraph'),
+          function(e) {
+            return $(e).text()
+          }
+        )
+        console.log('values')
+        console.log(displayedValues)
         var expectedValues = [
-          "Etunimi Tokanimi",
-          "Etunimi",
-          "Sukunimi",
-          "Suomi",
-          "***********",
-          "test@example.com",
-          "0123456789",
-          "Suomi",
-          "Katutie 12 B",
-          "40100",
-          "JYVÄSKYLÄ",
-          "Jyväskylä",
-          "suomi",
-          "Tekstikentän vastaus",
-          "Toistuva vastaus 1",
-          "Toistuva vastaus 2",
-          "Toistuva vastaus 3",
-          "Pakollisen tekstialueen vastaus",
-          "Kolmas vaihtoehto",
-          "Jatkokysymyksen vastaus",
-          "Lisensiaatin tutkinto",
-          "Toinen vaihtoehto",
-          "En",
-          "Arkkitehti",
-          "Muokattu vastaus",
-          "Toinen vaihtoehto",
-          "Pudotusvalikon 1. kysymys",
-          "1,323",
-          "Entinen Neuvostoliitto"
-        ];
+          'Etunimi Tokanimi',
+          'Etunimi',
+          'Sukunimi',
+          'Suomi',
+          '***********',
+          'test@example.com',
+          '0123456789',
+          'Suomi',
+          'Katutie 12 B',
+          '40100',
+          'JYVÄSKYLÄ',
+          'Jyväskylä',
+          'suomi',
+          'Tekstikentän vastaus',
+          'Toistuva vastaus 1',
+          'Toistuva vastaus 2',
+          'Toistuva vastaus 3',
+          'Pakollisen tekstialueen vastaus',
+          'Kolmas vaihtoehto',
+          'Jatkokysymyksen vastaus',
+          'Lisensiaatin tutkinto',
+          'Toinen vaihtoehto',
+          'En',
+          'Arkkitehti',
+          'Muokattu vastaus',
+          'Toinen vaihtoehto',
+          'Pudotusvalikon 1. kysymys',
+          '1,323',
+          'Entinen Neuvostoliitto',
+        ]
 
-        var tabularValues = _.map(testFrame().find('.application__form-field table td'), function (e) {
-          return $(e).text()
-        })
-        var expectedTabularValues = ["A1", "B1", "C1", "A2", "", "C2", "Vasen vierekkäinen", "Oikea vierekkäinen", "A1", "B1", "C1", "A2", "", "C2"]
+        var tabularValues = _.map(
+          testFrame().find('.application__form-field table td'),
+          function(e) {
+            return $(e).text()
+          }
+        )
+        var expectedTabularValues = [
+          'A1',
+          'B1',
+          'C1',
+          'A2',
+          '',
+          'C2',
+          'Vasen vierekkäinen',
+          'Oikea vierekkäinen',
+          'A1',
+          'B1',
+          'C1',
+          'A2',
+          '',
+          'C2',
+        ]
 
         expect(displayedValues).to.eql(expectedValues)
         expect(tabularValues).to.eql(expectedTabularValues)

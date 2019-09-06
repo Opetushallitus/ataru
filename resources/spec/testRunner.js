@@ -1,7 +1,7 @@
 var runner = mocha.run()
 var failed = 0
 
-$(document).keyup(function (e) {
+$(document).keyup(function(e) {
   if (e.keyCode == 27) {
     runner._abort = true
   }
@@ -10,7 +10,7 @@ $(document).keyup(function (e) {
 function parseTitle(test) {
   var titleArr = []
   var thisTest = test
-  while(thisTest && thisTest.title) {
+  while (thisTest && thisTest.title) {
     titleArr.unshift(thisTest.title)
     thisTest = thisTest.parent
   }
@@ -18,19 +18,19 @@ function parseTitle(test) {
 }
 
 runner.on('test end', function(t) {
-  console.log("Completed:", parseTitle(t));
+  console.log('Completed:', parseTitle(t))
 })
 
 runner.on('fail', function(t, err) {
-  console.log("Failed:", parseTitle(t))
+  console.log('Failed:', parseTitle(t))
   console.log(err)
   failed++
 })
 
 runner.on('end', function() {
   if (failed > 0) {
-    console.log("*** TEST FAIL", failed)
+    console.log('*** TEST FAIL', failed)
   } else {
-    console.log("*** TEST SUCCESS")
+    console.log('*** TEST SUCCESS')
   }
 })
