@@ -1,4 +1,4 @@
-EXECUTABLES = lein docker docker-compose npm
+EXECUTABLES = lein docker docker-compose npm lftp
 
 check-tools:
 	$(info Checking commands in path: $(EXECUTABLES) ...)
