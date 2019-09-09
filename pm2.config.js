@@ -4,6 +4,20 @@ var path = require('path')
 module.exports = {
   apps: [
     {
+      name: 'Ataru docker images',
+      script: 'docker-compose',
+      interpreter: '/bin/sh',
+      args: ['up'],
+      cwd: __dirname,
+      log_file: 'docker-compose.log',
+      pid_file: '.docker-compose.pid',
+      restart_delay: 4000,
+      wait_ready: true,
+      watch: false,
+      exec_interpreter: "none",
+      exec_mode: "fork"
+    },
+    {
       name: 'Ataru CSS compilation',
       script: 'lein',
       interpreter: '/bin/sh',
