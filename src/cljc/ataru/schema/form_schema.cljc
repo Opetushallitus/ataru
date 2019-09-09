@@ -573,15 +573,20 @@
                          "modification-link-sent"))
 
 (s/defschema Event
-  {:event-type                        event-types
-   :time                              org.joda.time.DateTime
-   :id                                s/Int
-   :application-key                   s/Str
-   (s/optional-key :new-review-state) (s/maybe s/Str)
-   (s/optional-key :hakukohde)        (s/maybe s/Str)
-   (s/optional-key :review-key)       (s/maybe s/Str)
-   :first-name                        (s/maybe s/Str)
-   :last-name                         (s/maybe s/Str)})
+  {:event-type                                event-types
+   :time                                      org.joda.time.DateTime
+   :id                                        s/Int
+   :application-key                           s/Str
+   (s/optional-key :new-review-state)         (s/maybe s/Str)
+   (s/optional-key :hakukohde)                (s/maybe s/Str)
+   (s/optional-key :review-key)               (s/maybe s/Str)
+   :first-name                                (s/maybe s/Str)
+   :last-name                                 (s/maybe s/Str)
+   (s/optional-key :virkailija-organizations) [{:oid                              s/Str
+                                                :name                             LocalizedStringOptional
+                                                :type                             (s/enum :organization :group)
+                                                (s/optional-key :hakukohderyhma?) s/Bool
+                                                (s/optional-key :active?)         s/Bool}]})
 
 (def hakukohde-review-types-schema
   (reduce (fn [acc [kw _ states]]
@@ -596,14 +601,19 @@
   {s/Keyword {s/Keyword (apply s/enum review-states/attachment-review-type-names)}})
 
 (s/defschema ReviewNote
-  {:id                            s/Int
-   :application-key               s/Str
-   :notes                         s/Str
-   :first-name                    (s/maybe s/Str)
-   :last-name                     (s/maybe s/Str)
-   (s/optional-key :hakukohde)    s/Str
-   (s/optional-key :state-name)   HakukohdeReviewTypeNames
-   (s/optional-key :created-time) org.joda.time.DateTime})
+  {:id                                        s/Int
+   :application-key                           s/Str
+   :notes                                     s/Str
+   :first-name                                (s/maybe s/Str)
+   :last-name                                 (s/maybe s/Str)
+   (s/optional-key :virkailija-organizations) [{:oid                              s/Str
+                                                :name                             LocalizedStringOptional
+                                                :type                             (s/enum :organization :group)
+                                                (s/optional-key :hakukohderyhma?) s/Bool
+                                                (s/optional-key :active?)         s/Bool}]
+   (s/optional-key :hakukohde)                s/Str
+   (s/optional-key :state-name)               HakukohdeReviewTypeNames
+   (s/optional-key :created-time)             org.joda.time.DateTime})
 
 (s/defschema Review
   {:id                                  s/Int

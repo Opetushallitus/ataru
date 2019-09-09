@@ -41,9 +41,9 @@
         expect(applicationHeader().text()).to.equal('Selaintestilomake1')
         expect(downloadLink().text()).to.equal('Lataa Excel')
       })
-      it('stores an event for review state change', () => {
+      it('stores an event for review state change', function() {
         const firstEventNow = testFrame()
-          .find('.application-handling__event-caption')
+          .find('.application-handling__event-row-header > span')
           .first()
           .text()
         expect(firstEventNow).to.equal('Käsittelyvaihe: Käsittelyssä (TI)')
@@ -55,20 +55,18 @@
 
         setTextFieldValue(reviewNotes, 'Reipas kaveri')()
           .then(
-            wait.until(() => {
-              return reviewNotesSubmitButton().attr('disabled') !== 'disabled'
-            })
+            wait.until(
+              () => reviewNotesSubmitButton().attr('disabled') !== 'disabled'
+            )
           )
           .then(clickElement(reviewNotesSubmitButton))
           .then(
-            wait.until(() => {
-              return testFrame()
-                .find(
-                  '.application-handling__review-note-details-row > div:eq(0)'
-                )
+            wait.until(() =>
+              testFrame()
+                .find('.application-handling__review-note-summary-text')
                 .text()
-                .startsWith('Testi Ihminen')
-            })
+                .endsWith('Testi Ihminen')
+            )
           )
           .then(setTextFieldValue(score, scoreForVatanen))
           .then(clickElement(secondApplication))
@@ -86,11 +84,9 @@
           .then(() => {
             expect(
               testFrame()
-                .find(
-                  '.application-handling__review-note-details-row > div:eq(0)'
-                )
+                .find('.application-handling__review-note-summary-text')
                 .text()
-                .startsWith('Testi Ihminen')
+                .endsWith('Testi Ihminen')
             ).to.equal(true)
             expect(score().val()).to.equal(scoreForVatanen + '')
           })
@@ -236,8 +232,10 @@
         loadInFrame('http://localhost:8350/lomake-editori/applications/')
       }
 
-      const eventCaptions = () => {
-        return testFrame().find('.application-handling__event-caption')
+      function eventCaptions() {
+        return testFrame().find(
+          '.application-handling__event-row-header > span'
+        )
       }
 
       const applicationRow = () => {
