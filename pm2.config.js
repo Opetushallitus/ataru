@@ -32,7 +32,7 @@ module.exports = {
       exec_mode: "fork"
     },
     {
-      name: 'Ataru Virkailija frontend compilation',
+      name: 'Ataru Virkailija frontend compilation (8350)',
       script: 'lein',
       interpreter: '/bin/sh',
       args: ['cljsbuild', 'auto', 'virkailija-dev'],
@@ -46,7 +46,7 @@ module.exports = {
       exec_mode: "fork"
     },
     {
-      name: 'Ataru Hakija frontend compilation',
+      name: 'Ataru Hakija frontend compilation (8351)',
       script: 'lein',
       interpreter: '/bin/sh',
       args: ['cljsbuild', 'auto', 'hakija-dev'],
@@ -60,7 +60,7 @@ module.exports = {
       exec_mode: "fork"
     },
     {
-      name: 'Ataru Hakija backend',
+      name: 'Ataru Hakija backend (8351)',
       script: 'lein',
       interpreter: '/bin/sh',
       args: ['hakija-dev'],
@@ -74,7 +74,7 @@ module.exports = {
       exec_mode: "fork"
     },
     {
-      name: 'Ataru Virkailija backend',
+      name: 'Ataru Virkailija backend (8350)',
       script: 'lein',
       interpreter: '/bin/sh',
       args: ['virkailija-dev'],
@@ -88,18 +88,19 @@ module.exports = {
       exec_mode: "fork"
     },
     {
-      name: 'Ataru docker images',
-      script: 'docker-compose',
+      name: 'Ataru Figheel',
+      script: 'lein',
       interpreter: '/bin/sh',
-      args: ['up'],
+      args: ['figwheel', 'virkailija-dev', 'hakija-dev'],
       cwd: __dirname,
-      log_file: 'docker-compose.log',
-      pid_file: '.docker-compose.pid',
+      log_file: 'lein-virkailija-dev.log',
+      pid_file: '.lein-virkailija-dev.pid',
       restart_delay: 4000,
       wait_ready: true,
       watch: false,
       exec_interpreter: "none",
       exec_mode: "fork"
-    }
+    },
+
   ]
 }

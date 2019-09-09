@@ -1,5 +1,16 @@
 EXECUTABLES = lein docker docker-compose npm lftp
 
+VIRKAILIJA_DEV_CONFIG=../ataru-secrets/virkailija-local-dev.edn
+HAKIJA_DEV_CONFIG=../ataru-secrets/hakija-local-dev.edn
+
+ifeq ("$(wildcard $(VIRKAILIJA_DEV_CONFIG))","")
+    $(error $(VIRKAILIJA_DEV_CONFIG) not found, clone/update ataru-secrets alongside ataru since configs are stored there)
+endif
+
+ifeq ("$(wildcard $(HAKIJA_DEV_CONFIG))","")
+    $(error $(HAKIJA_DEV_CONFIG) not found, clone/update ataru-secrets alongside ataru since configs are stored there)
+endif
+
 check-tools:
 	$(info Checking commands in path: $(EXECUTABLES) ...)
 	$(foreach exec,$(EXECUTABLES),\
