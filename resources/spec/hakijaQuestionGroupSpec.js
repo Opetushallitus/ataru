@@ -1,17 +1,17 @@
-;(function() {
-  afterEach(function() {
+;(() => {
+  afterEach(() => {
     expect(window.uiError || null).to.be.null
   })
 
-  describe('hakemus', function() {
-    describe('form loads', function() {
+  describe('hakemus', () => {
+    describe('form loads', () => {
       before(
         newForm('testQuestionGroupForm'),
-        wait.until(function() {
+        wait.until(() => {
           return formSections().length == 1
         })
       )
-      it('loads form with question groups', function() {
+      it('loads form with question groups', () => {
         expect(formFields().length).to.equal(14)
         expect(submitButton().prop('disabled')).to.equal(true)
         expect(formHeader().text()).to.equal('Kysymysryhmä: testilomake')
@@ -19,10 +19,10 @@
       })
     })
 
-    describe('person info module', function() {
+    describe('person info module', () => {
       before(
         setNthFieldInputValue(0, 'Etunimi Tokanimi'),
-        blurField(function() {
+        blurField(() => {
           return formFields()
             .eq(0)
             .find('input')
@@ -35,7 +35,7 @@
         setNthFieldInputValue(8, 'Katutie 12 B'),
         setNthFieldInputValue(9, '40100'),
         setNthFieldOption(11, '179'),
-        wait.until(function() {
+        wait.until(() => {
           return (
             formFields()
               .eq(10)
@@ -44,17 +44,17 @@
           )
         })
       )
-      it('is filled with valid answers', function() {
+      it('is filled with valid answers', () => {
         // person info module intentionally not verified in detail in this test
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 1 tietoa')
       })
     })
 
-    describe('question group', function() {
-      describe('selecting dropdown element having question group as a followup question', function() {
+    describe('question group', () => {
+      describe('selecting dropdown element having question group as a followup question', () => {
         before(
           setNthFieldOption(13, '1'),
-          wait.until(function() {
+          wait.until(() => {
             return (
               formFields().find(
                 '.application__form-dropdown-followups .application__question-group-row'
@@ -63,27 +63,27 @@
             )
           })
         )
-        it('shows the question group as a followup element', function() {
+        it('shows the question group as a followup element', () => {
           expect(invalidFieldsStatus().text()).to.equal('Tarkista 10 tietoa')
         })
       })
 
-      describe('adding new question group row', function() {
+      describe('adding new question group row', () => {
         before(
-          clickElement(function() {
+          clickElement(() => {
             return testFrame().find(
               '.application__editable-content > .application__form-field .application__add-question-group-row a:contains("Lisää")'
             )
           })
         )
-        it('adds new set of answers to the question group', function() {
+        it('adds new set of answers to the question group', () => {
           expect(invalidFieldsStatus().text()).to.equal('Tarkista 10 tietoa')
         })
       })
 
-      describe('answering to a dropdown question inside a question group', function() {
+      describe('answering to a dropdown question inside a question group', () => {
         before(setNthFieldOption(14, '0'), setNthFieldOption(22, '1'))
-        it('selects correct options', function() {
+        it('selects correct options', () => {
           expect(
             formFields()
               .eq(14)
@@ -99,15 +99,15 @@
         })
       })
 
-      describe('answering to a single-choice button inside a question group', function() {
+      describe('answering to a single-choice button inside a question group', () => {
         before(
           clickNthFieldRadio(15, 'Painikkeet, yksi valittavissa: A'),
           clickNthFieldRadio(23, 'Painikkeet, yksi valittavissa: B'),
-          wait.until(function() {
+          wait.until(() => {
             return invalidFieldsStatus().text() == 'Tarkista 8 tietoa'
           })
         )
-        it('shows the single-choice question as answered', function() {
+        it('shows the single-choice question as answered', () => {
           expect(
             formFields()
               .eq(15)
@@ -123,16 +123,16 @@
         })
       })
 
-      describe('answering to a multi-choice button inside a question group', function() {
+      describe('answering to a multi-choice button inside a question group', () => {
         before(
           clickNthFieldRadio(16, 'Lista, monta valittavissa: A'),
           clickNthFieldRadio(16, 'Lista, monta valittavissa: B'),
           clickNthFieldRadio(24, 'Lista, monta valittavissa: B'),
-          wait.until(function() {
+          wait.until(() => {
             return invalidFieldsStatus().text() == 'Tarkista 7 tietoa'
           })
         )
-        it('shows the multi-choice question as answered', function() {
+        it('shows the multi-choice question as answered', () => {
           expect(
             formFields()
               .eq(16)
@@ -154,15 +154,15 @@
         })
       })
 
-      describe('answering to a single-answer text field inside a question group', function() {
+      describe('answering to a single-answer text field inside a question group', () => {
         before(
           setNthFieldInputValue(17, 'Tekstikenttä, yksi vastaus: A'),
           setNthFieldInputValue(25, 'Tekstikenttä, yksi vastaus: B'),
-          wait.until(function() {
+          wait.until(() => {
             return invalidFieldsStatus().text() == 'Tarkista 6 tietoa'
           })
         )
-        it('shows the single-answer text field as answered', function() {
+        it('shows the single-answer text field as answered', () => {
           expect(
             formFields()
               .eq(17)
@@ -178,17 +178,17 @@
         })
       })
 
-      describe('answering to a multi-value text field inside a question group', function() {
+      describe('answering to a multi-value text field inside a question group', () => {
         before(
           setNthFieldSubInputValue(18, 0, 'Tekstikenttä, monta vastausta: A'),
           setNthFieldSubInputValue(18, 1, 'Tekstikenttä, monta vastausta: B'),
           setNthFieldSubInputValue(26, 0, 'Tekstikenttä, monta vastausta: C'),
           setNthFieldSubInputValue(26, 1, 'Tekstikenttä, monta vastausta: D'),
-          wait.until(function() {
+          wait.until(() => {
             return invalidFieldsStatus().text() == 'Tarkista 5 tietoa'
           })
         )
-        it('shows the multi-value text field inside a question group as answered', function() {
+        it('shows the multi-value text field inside a question group as answered', () => {
           expect(
             formFields()
               .eq(18)
@@ -216,15 +216,15 @@
         })
       })
 
-      describe('answering to a text area inside a question group', function() {
+      describe('answering to a text area inside a question group', () => {
         before(
           setNthFieldValue(19, 'textarea', 'Tekstialue: AAAAA'),
           setNthFieldValue(27, 'textarea', 'Tekstialue: BBBBB'),
-          wait.until(function() {
+          wait.until(() => {
             return invalidFieldsStatus().text() == 'Tarkista 4 tietoa'
           })
         )
-        it('shows the text area inside a question group as answered', function() {
+        it('shows the text area inside a question group as answered', () => {
           expect(
             formFields()
               .eq(19)
@@ -240,7 +240,7 @@
         })
       })
 
-      describe('answering to a single-answer adjacent text field inside a question group', function() {
+      describe('answering to a single-answer adjacent text field inside a question group', () => {
         before(
           setNthFieldSubInputValue(
             20,
@@ -262,11 +262,11 @@
             1,
             'Vierekkäiset tekstikentät, yksi vastaus: vastaus D'
           ),
-          wait.until(function() {
+          wait.until(() => {
             return invalidFieldsStatus().text() == 'Tarkista 2 tietoa'
           })
         )
-        it('shows the single-answer adjacent text field inside a question group as answered', function() {
+        it('shows the single-answer adjacent text field inside a question group as answered', () => {
           expect(
             formFields()
               .eq(20)
@@ -294,7 +294,7 @@
         })
       })
 
-      describe('answering to a multi-answer adjacent text field inside a question group', function() {
+      describe('answering to a multi-answer adjacent text field inside a question group', () => {
         before(
           setNthFieldSubInputValue(
             21,
@@ -306,7 +306,7 @@
             1,
             'Vierekkäiset tekstikentät, monta vastausta: vastaus B1'
           ),
-          clickElement(function() {
+          clickElement(() => {
             return formFields()
               .eq(21)
               .find('a.application__form-add-new-row:contains("Lisää rivi")')
@@ -331,7 +331,7 @@
             1,
             'Vierekkäiset tekstikentät, monta vastausta: vastaus D1'
           ),
-          clickElement(function() {
+          clickElement(() => {
             return formFields()
               .eq(29)
               .find('a.application__form-add-new-row:contains("Lisää rivi")')
@@ -346,11 +346,11 @@
             3,
             'Vierekkäiset tekstikentät, monta vastausta: vastaus D2'
           ),
-          wait.until(function() {
+          wait.until(() => {
             return !submitButton().prop('disabled')
           })
         )
-        it('shows the multi-answer adjacent text field inside a question group as answered', function() {
+        it('shows the multi-answer adjacent text field inside a question group as answered', () => {
           expect(
             formFields()
               .eq(21)
@@ -404,10 +404,10 @@
         })
       })
 
-      describe('submitting the application', function() {
+      describe('submitting the application', () => {
         before(
           clickElement(submitButton),
-          wait.until(function() {
+          wait.until(() => {
             return (
               testFrame()
                 .find(
@@ -417,20 +417,20 @@
             )
           })
         )
-        it('submits the application and shows the feedback form', function() {
+        it('submits the application and shows the feedback form', () => {
           expect(
             testFrame().find('.application-feedback-form').length
           ).to.equal(1)
         })
       })
 
-      describe('closing the feedback form', function() {
+      describe('closing the feedback form', () => {
         before(
-          clickElement(function() {
+          clickElement(() => {
             return testFrame().find('.application-feedback-form__close-button')
           })
         )
-        it('closes the feedback form and shows the read-only view', function() {
+        it('closes the feedback form and shows the read-only view', () => {
           expect(
             testFrame().find('.application-feedback-form').length
           ).to.equal(0)

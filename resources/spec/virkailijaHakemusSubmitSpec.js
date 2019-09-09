@@ -1,7 +1,7 @@
-;(function() {
-  var hakuOid = '1.2.246.562.29.65950024189'
+;(() => {
+  const hakuOid = '1.2.246.562.29.65950024189'
 
-  before(function() {
+  before(() => {
     loadInFrame(
       '/hakemus/haku/' +
         hakuOid +
@@ -10,18 +10,14 @@
     )
   })
 
-  afterEach(function() {
+  afterEach(() => {
     expect(window.uiError || null).to.be.null
   })
 
-  describe('hakemus as virkailija', function() {
-    describe('form loads', function() {
-      before(
-        wait.until(function() {
-          return formSections().length == 3
-        }, 10000)
-      )
-      it('with complete form and virkailijatäyttö ribbon', function() {
+  describe('hakemus as virkailija', () => {
+    describe('form loads', () => {
+      before(wait.until(() => formSections().length == 3, 10000))
+      it('with complete form and virkailijatäyttö ribbon', () => {
         expect(
           testFrame()
             .find('.application__virkailija-fill-ribbon')
@@ -36,7 +32,7 @@
       })
     })
 
-    describe('filling form', function() {
+    describe('filling form', () => {
       before(
         setNthFieldInputValue(1, 'Virkailijan'),
         setNthFieldInputValue(3, 'Täyttämä'),
@@ -48,39 +44,31 @@
         setNthFieldInputValue(10, '00100'),
         setNthFieldOption(12, '091'),
         setNthFieldInputValue(14, '55cm'),
-        wait.until(function() {
-          return (
+        wait.until(
+          () =>
             formFields()
               .eq(11)
               .find('input')
               .val() !== ''
-          )
-        }),
-        wait.until(function() {
-          return !submitButton().prop('disabled')
-        })
+        ),
+        wait.until(() => !submitButton().prop('disabled'))
       )
-      it('validates and shows form correctly', function() {
+      it('validates and shows form correctly', () => {
         expect(selectedHakukohteet().length).to.equal(1)
         expect(invalidFieldsStatus().length).to.equal(0)
       })
     })
 
-    describe('submitting form and viewing results', function() {
+    describe('submitting form and viewing results', () => {
       before(
-        wait.until(function() {
-          return !submitButton().prop('disabled')
-        }),
-        clickElement(function() {
-          return submitButton()
-        }),
-        wait.until(function() {
-          return (
+        wait.until(() => !submitButton().prop('disabled')),
+        clickElement(() => submitButton()),
+        wait.until(
+          () =>
             testFrame().find('.application__sent-placeholder-text').length == 1
-          )
-        })
+        )
       )
-      it('shows readonly application with selected data', function() {
+      it('shows readonly application with selected data', () => {
         expect(
           testFrame()
             .find('.application__hakukohde-selected-list')
@@ -96,13 +84,11 @@
           'Testihakukohde – Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie'
         )
 
-        var otherValues = _.map(
+        const otherValues = _.map(
           testFrame().find('.application__text-field-paragraph'),
-          function(e) {
-            return $(e).text()
-          }
+          e => $(e).text()
         )
-        var expectedOtherValues = [
+        const expectedOtherValues = [
           'Virkailijan',
           'Virkailijan',
           'Täyttämä',

@@ -1,5 +1,5 @@
-;(function() {
-  before(function() {
+;(() => {
+  before(() => {
     if (!testFormApplicationSecret) {
       console.log(
         'Test application secret undefined (no application found). Did you run virkailija and hakija-form tests first?'
@@ -10,27 +10,27 @@
     }
   })
 
-  describe('hakemus edit', function() {
-    describe('form loads', function() {
+  describe('hakemus edit', () => {
+    describe('form loads', () => {
       before(
-        wait.until(function() {
+        wait.until(() => {
           return formSections().length == 2
         })
       )
-      it('with complete form', function() {
+      it('with complete form', () => {
         expect(formFields().length).to.equal(34)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(submitButton().prop('disabled')).to.equal(true)
       })
 
-      it('with correct existing answers', function() {
-        var textInputValues = _.map(
+      it('with correct existing answers', () => {
+        const textInputValues = _.map(
           testFrame().find('.application__form-text-input'),
-          function(e) {
+          e => {
             return $(e).val()
           }
         )
-        var expectedTestInputValues = [
+        const expectedTestInputValues = [
           'Etunimi Tokanimi',
           'Etunimi',
           'Sukunimi',
@@ -73,13 +73,13 @@
           '1,323',
         ]
 
-        var dropdownInputValues = _.map(
+        const dropdownInputValues = _.map(
           testFrame().find('select.application__form-select option:selected'),
-          function(e) {
+          e => {
             return $(e).text()
           }
         )
-        var expectedDropdownInputValues = [
+        const expectedDropdownInputValues = [
           'Suomi',
           'Suomi',
           'Jyväskylä',
@@ -98,7 +98,7 @@
             testFrame().find(
               'input.application__form-checkbox:checked + label'
             ),
-            function(e) {
+            e => {
               return $(e).text()
             }
           )
@@ -111,51 +111,51 @@
       })
     })
 
-    describe('changing values to be invalid', function() {
+    describe('changing values to be invalid', () => {
       before(
         setNthFieldInputValue(1, '420noscope'),
         setNthFieldValue(23, 'textarea', ''),
         clickNthFieldRadio(26, 'Ensimmäinen vaihtoehto'),
         clickElement(invalidFieldsStatus),
         wait.until(submitButtonDisabled),
-        wait.until(function() {
+        wait.until(() => {
           return invalidFieldsStatus().text() === 'Tarkista 2 tietoa'
         })
       )
 
-      it('shows invalidity errors', function() {
+      it('shows invalidity errors', () => {
         expect(invalidFieldNames().join(';')).to.equal(
           'Osiokysymys;Lyhyen listan kysymys'
         )
       })
     })
 
-    describe('change values and save', function() {
+    describe('change values and save', () => {
       before(
         setNthFieldInputValue(1, 'Etunimi'),
         setNthFieldValue(23, 'textarea', 'Muokattu vastaus'),
         clickNthFieldRadio(26, 'Toinen vaihtoehto'),
-        wait.until(function() {
+        wait.until(() => {
           return !submitButton().prop('disabled')
         }),
         clickElement(submitButton),
-        wait.until(function() {
+        wait.until(() => {
           return (
             testFrame().find('.application__sent-placeholder-text').length == 1
           )
         })
       )
 
-      it('shows submitted form', function() {
-        var displayedValues = _.map(
+      it('shows submitted form', () => {
+        const displayedValues = _.map(
           testFrame().find('.application__text-field-paragraph'),
-          function(e) {
+          e => {
             return $(e).text()
           }
         )
         console.log('values')
         console.log(displayedValues)
-        var expectedValues = [
+        const expectedValues = [
           'Etunimi Tokanimi',
           'Etunimi',
           'Sukunimi',
@@ -187,13 +187,13 @@
           'Entinen Neuvostoliitto',
         ]
 
-        var tabularValues = _.map(
+        const tabularValues = _.map(
           testFrame().find('.application__form-field table td'),
-          function(e) {
+          e => {
             return $(e).text()
           }
         )
-        var expectedTabularValues = [
+        const expectedTabularValues = [
           'A1',
           'B1',
           'C1',

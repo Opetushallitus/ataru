@@ -1,6 +1,6 @@
 ;(function() {
-  var singleHakukohdeHakuOid = '1.2.246.562.29.65950024185'
-  var multipleHakukohdeHakuOid = '1.2.246.562.29.65950024186'
+  const singleHakukohdeHakuOid = '1.2.246.562.29.65950024185'
+  const multipleHakukohdeHakuOid = '1.2.246.562.29.65950024186'
 
   before(function() {
     loadInFrame('/hakemus/haku/' + singleHakukohdeHakuOid)
@@ -196,20 +196,20 @@
         })
       )
       it('shows readonly application with selected data', function() {
-        var hakukohdeValues = testFrame()
+        const hakukohdeValues = testFrame()
           .find('.application__hakukohde-selected-list')
           .text()
         expect(hakukohdeValues).to.equal(
           '1Testihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieKoulutuskoodi A | Tutkintonimike A | Tarkenne A2Testihakukohde 2 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieKoulutuskoodi B | Tutkintonimike B | Tarkenne B'
         )
 
-        var otherValues = _.map(
+        const otherValues = _.map(
           testFrame().find('.application__text-field-paragraph'),
           function(e) {
             return $(e).text()
           }
         )
-        var expectedOtherValues = [
+        const expectedOtherValues = [
           'Etunimi Tokanimi',
           'Etunimi',
           'Sukunimi',

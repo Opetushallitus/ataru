@@ -1,17 +1,17 @@
-;(function() {
-  afterEach(function() {
+;(() => {
+  afterEach(() => {
     expect(window.uiError || null).to.be.null
   })
 
-  describe('hakemus', function() {
-    describe('form loads', function() {
+  describe('hakemus', () => {
+    describe('form loads', () => {
       before(
         newForm('testForm'),
-        wait.until(function() {
+        wait.until(() => {
           return formSections().length == 2
         })
       )
-      it('with complete form', function() {
+      it('with complete form', () => {
         expect(formFields().length).to.equal(28)
         expect(submitButton().prop('disabled')).to.equal(true)
         expect(formHeader().text()).to.equal('Testilomake')
@@ -25,13 +25,13 @@
       })
     })
 
-    describe('person info module', function() {
-      describe('structure', function() {
-        it('has the correct fields', function() {
-          var labels = _.map(personInfoModule().find('label'), function(e) {
+    describe('person info module', () => {
+      describe('structure', () => {
+        it('has the correct fields', () => {
+          const labels = _.map(personInfoModule().find('label'), e => {
             return $(e).text()
           })
-          var expectedLabels = [
+          const expectedLabels = [
             'Etunimet *.',
             'Kutsumanimi *.',
             'Sukunimi *.',
@@ -54,16 +54,16 @@
               .text()
           ).to.equal('Henkilötiedot')
 
-          expectedLabels.every(function(e, i) {
+          expectedLabels.every((e, i) => {
             expect(e).to.equal(labels[i])
           })
         })
       })
 
-      describe('filling out', function() {
+      describe('filling out', () => {
         before(
           setNthFieldInputValue(0, 'Etunimi Tokanimi'),
-          blurField(function() {
+          blurField(() => {
             return formFields()
               .eq(0)
               .find('input')
@@ -76,7 +76,7 @@
           setNthFieldInputValue(8, 'Katutie 12 B'),
           setNthFieldInputValue(9, '40100'),
           setNthFieldOption(11, '179'),
-          wait.until(function() {
+          wait.until(() => {
             return (
               formFields()
                 .eq(10)
@@ -87,7 +87,7 @@
           wait.forMilliseconds(600),
           clickElement(invalidFieldsStatus)
         )
-        it('works and validates correctly', function() {
+        it('works and validates correctly', () => {
           expect(
             formFields()
               .eq(1)
@@ -120,13 +120,13 @@
       })
     })
 
-    describe('user-defined fields', function() {
+    describe('user-defined fields', () => {
       before(
         setNthFieldInputValue(13, 'Tekstikentän vastaus'),
         setNthFieldInputValue(14, 'Toistuva vastaus 1'),
         setNthFieldSubInputValue(14, 1, 'Toistuva vastaus 2'),
         setNthFieldSubInputValue(14, 2, 'Toistuva vastaus 3'),
-        clickElement(function() {
+        clickElement(() => {
           return formFields()
             .eq(14)
             .find('a.application__form-repeatable-text--addremove')
@@ -140,7 +140,7 @@
         clickNthFieldRadio(20, 'En'),
         setNthFieldSubInputValue(21, 0, 'A1'),
         setNthFieldSubInputValue(21, 1, 'B1'),
-        clickElement(function() {
+        clickElement(() => {
           return formFields()
             .eq(21)
             .find('.application__form-add-new-row')
@@ -160,7 +160,7 @@
         setNthFieldSubInputValue(28, 0, 'A1'),
         setNthFieldSubInputValue(28, 1, 'B1'),
         setNthFieldSubInputValue(28, 2, 'C1'),
-        clickElement(function() {
+        clickElement(() => {
           return formFields()
             .eq(28)
             .find('.application__form-add-new-row')
@@ -173,7 +173,7 @@
         setNthFieldSubInputValue(31, 0, 'A1'),
         setNthFieldSubInputValue(31, 1, 'B1'),
         setNthFieldSubInputValue(31, 2, 'C1'),
-        clickElement(function() {
+        clickElement(() => {
           return formFields()
             .eq(31)
             .find('.application__form-add-new-row')
@@ -182,39 +182,39 @@
         setNthFieldSubInputValue(31, 5, 'C2'),
         setNthFieldInputValue(32, '1,323'),
         setNthFieldOption(33, '810'),
-        wait.until(function() {
+        wait.until(() => {
           return !submitButton().prop('disabled')
         })
       )
-      it('works and validates correctly', function() {
+      it('works and validates correctly', () => {
         expect(invalidFieldNames().join(';')).to.equal('')
         expect(invalidFieldsStatus().length).to.equal(0)
         expect(submitButton().prop('disabled')).to.equal(false)
       })
     })
 
-    describe('submitting', function() {
+    describe('submitting', () => {
       before(
-        clickElement(function() {
+        clickElement(() => {
           return submitButton()
         }),
-        wait.until(function() {
+        wait.until(() => {
           return (
             testFrame().find('.application__sent-placeholder-text').length == 1
           )
         })
       )
 
-      it('shows submitted form', function() {
-        var displayedValues = _.map(
+      it('shows submitted form', () => {
+        const displayedValues = _.map(
           testFrame().find('.application__text-field-paragraph'),
-          function(e) {
+          e => {
             return $(e).text()
           }
         )
         console.log('values')
         console.log(displayedValues)
-        var expectedValues = [
+        const expectedValues = [
           'Etunimi Tokanimi',
           'Etunimi',
           'Sukunimi',
@@ -248,13 +248,13 @@
           'Entinen Neuvostoliitto',
         ]
 
-        var tabularValues = _.map(
+        const tabularValues = _.map(
           testFrame().find('.application__form-field table td'),
-          function(e) {
+          e => {
             return $(e).text()
           }
         )
-        var expectedTabularValues = [
+        const expectedTabularValues = [
           'A1',
           'B1',
           'C1',

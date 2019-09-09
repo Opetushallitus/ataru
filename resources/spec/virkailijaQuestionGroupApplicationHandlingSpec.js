@@ -1,11 +1,11 @@
-;(function() {
-  function answer(index) {
+;(() => {
+  const answer = index => {
     return testFrame()
       .find('.application__text-field-paragraph:eq(' + index + ')')
       .text()
   }
 
-  function adjacentAnswer(formFieldIndex, answerIndex) {
+  const adjacentAnswer = (formFieldIndex, answerIndex) => {
     return testFrame()
       .find(
         '.application__readonly-adjacent:eq(' +
@@ -17,30 +17,30 @@
       .text()
   }
 
-  function navigateToApplicationHandling() {
-    var src =
+  const navigateToApplicationHandling = () => {
+    const src =
       'http://localhost:8350/lomake-editori/applications/' + config['form-key']
     console.log(src)
     loadInFrame(src)
   }
 
-  function personInfoHeader() {
+  const personInfoHeader = () => {
     return testFrame().find(
       '.application__wrapper-heading h2:contains("Henkilötiedot")'
     )
   }
 
-  function personInfoHeaderExists() {
+  const personInfoHeaderExists = () => {
     return elementExists(personInfoHeader())
   }
 
-  afterEach(function() {
+  afterEach(() => {
     expect(window.uiError || null).to.be.null
   })
 
-  describe('Virkailija application handling for form with a question group', function() {
+  describe('Virkailija application handling for form with a question group', () => {
     before(navigateToApplicationHandling, wait.until(personInfoHeaderExists))
-    it('automatically shows the only application belonging to the form', function() {
+    it('automatically shows the only application belonging to the form', () => {
       expect(answer(0)).to.equal('Etunimi Tokanimi')
       expect(answer(1)).to.equal('Etunimi')
       expect(answer(2)).to.equal('Sukunimi')
@@ -111,47 +111,47 @@
     })
   })
 
-  function reviewStateButton() {
+  const reviewStateButton = () => {
     return testFrame().find('.application-handling__review-state-row--selected')
   }
 
-  function informationRequestStateButton() {
+  const informationRequestStateButton = () => {
     return testFrame().find(
       '.application-handling__review-state-row:contains("Täydennyspyyntö")'
     )
   }
 
-  function informationRequestStateButtonExists() {
+  const informationRequestStateButtonExists = () => {
     return elementExists(informationRequestStateButton())
   }
 
-  function submitInformationRequestButton() {
+  const submitInformationRequestButton = () => {
     return testFrame().find(
       '.application-handling__send-information-request-button'
     )
   }
 
-  function submitInformationRequestButtonIsDisabled() {
+  const submitInformationRequestButtonIsDisabled = () => {
     return submitInformationRequestButton().prop('disabled') === true
   }
 
-  function submitInformationRequestButtonIsEnabled() {
+  const submitInformationRequestButtonIsEnabled = () => {
     return submitInformationRequestButton().prop('disabled') === false
   }
 
-  function informationRequestSubject() {
+  const informationRequestSubject = () => {
     return testFrame().find(
       '.application-handling__information-request-text-input'
     )
   }
 
-  function submitInformationRequestMessage() {
+  const submitInformationRequestMessage = () => {
     return testFrame().find(
       '.application-handling__information-request-message-area'
     )
   }
 
-  function informationRequestConfirmationIsDisplayed() {
+  const informationRequestConfirmationIsDisplayed = () => {
     return elementExists(
       testFrame().find(
         '.application-handling__information-request-submitted-text:contains("Täydennyspyyntö lähetetty")'
@@ -159,7 +159,7 @@
     )
   }
 
-  function showInformationRequestFormLinkIsDisplayed() {
+  const showInformationRequestFormLinkIsDisplayed = () => {
     return elementExists(
       testFrame().find(
         '.application-handling__information-request-show-container-link a:contains("Lähetä täydennyspyyntö hakijalle")'
@@ -167,20 +167,20 @@
     )
   }
 
-  describe('Sending information requests to the applicant', function() {
+  describe('Sending information requests to the applicant', () => {
     before(
       clickElement(reviewStateButton),
       wait.until(informationRequestStateButtonExists),
       clickElement(informationRequestStateButton),
-      wait.until(function() {
-        return elementExists(
+      wait.until(() =>
+        elementExists(
           testFrame().find(
             '.application-handling__information-request-container'
           )
         )
-      })
+      )
     )
-    it('shows the information request form to the user', function(done) {
+    it('shows the information request form to the user', done => {
       expect(submitInformationRequestButtonIsDisabled()).to.equal(true)
       setTextFieldValue(informationRequestSubject, 'Täydennyspyyntö: otsikko')()
         .then(wait.until(submitInformationRequestButtonIsDisabled))

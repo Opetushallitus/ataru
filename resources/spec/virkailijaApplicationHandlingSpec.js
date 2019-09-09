@@ -1,67 +1,67 @@
-;(function() {
-  afterEach(function() {
+;(() => {
+  afterEach(() => {
     expect(window.uiError || null).to.be.null
   })
 
-  describe('Application handling', function() {
-    describe('for first form', function() {
-      var firstNotSelected = null
+  describe('Application handling', () => {
+    describe('for first form', () => {
+      let firstNotSelected = null
       before(
         navigateToApplicationHandling,
         wait.until(directFormHakuListExists),
-        function() {
+        () => {
           //clickElement doesn't work for a href here:
           form1OnList()[0].click()
         },
-        wait.until(function() {
+        wait.until(() => {
           return applicationHeader().text() === 'Selaintestilomake1'
         }),
         clickElement(applicationRow),
-        wait.until(function() {
+        wait.until(() => {
           return reviewHeader().length > 0
         }),
-        clickElement(function() {
+        clickElement(() => {
           return selectedState().first()
         }),
-        wait.until(function() {
+        wait.until(() => {
           return notSelectedStates().length === 6
         }),
-        wait.until(function() {
+        wait.until(() => {
           firstNotSelected = notSelectedStates().first()
           return eventCaptions().length === 1
         }),
-        clickElement(function() {
+        clickElement(() => {
           return firstNotSelected
         }),
-        wait.until(function() {
+        wait.until(() => {
           return eventCaptions().length === 2
         })
       )
-      it('has applications', function() {
+      it('has applications', () => {
         expect(applicationHeader().text()).to.equal('Selaintestilomake1')
         expect(downloadLink().text()).to.equal('Lataa Excel')
       })
-      it('stores an event for review state change', function() {
-        var firstEventNow = testFrame()
+      it('stores an event for review state change', () => {
+        const firstEventNow = testFrame()
           .find('.application-handling__event-caption')
           .first()
           .text()
         expect(firstEventNow).to.equal('Käsittelyvaihe: Käsittelyssä (TI)')
       })
-      it('Successfully stores notes and score for an application', function(done) {
-        var scoreForVatanen = Math.floor(Math.random() * 50 + 1)
-        var scoreForKuikeloinen = scoreForVatanen + 5
-        var scoreForTyrni = scoreForKuikeloinen - 10
+      it('Successfully stores notes and score for an application', done => {
+        const scoreForVatanen = Math.floor(Math.random() * 50 + 1)
+        const scoreForKuikeloinen = scoreForVatanen + 5
+        const scoreForTyrni = scoreForKuikeloinen - 10
 
         setTextFieldValue(reviewNotes, 'Reipas kaveri')()
           .then(
-            wait.until(function() {
+            wait.until(() => {
               return reviewNotesSubmitButton().attr('disabled') !== 'disabled'
             })
           )
           .then(clickElement(reviewNotesSubmitButton))
           .then(
-            wait.until(function() {
+            wait.until(() => {
               return testFrame()
                 .find(
                   '.application-handling__review-note-details-row > div:eq(0)'
@@ -77,13 +77,13 @@
               applicationHeadingIs('Kuikeloinen, Seija Susanna — 020202A0202')
             )
           )
-          .then(function() {
+          .then(() => {
             expect(reviewNotes().val()).to.equal('')
           })
           .then(setTextFieldValue(score, scoreForKuikeloinen))
           .then(clickElement(firstApplication))
           .then(wait.until(applicationHeadingIs('Vatanen, Ari — 141196-933S')))
-          .then(function() {
+          .then(() => {
             expect(
               testFrame()
                 .find(
@@ -105,10 +105,10 @@
           .fail(done)
       })
 
-      it('shows yksilointitieto for application', function(done) {
+      it('shows yksilointitieto for application', done => {
         clickElement(firstApplication)()
           .then(wait.until(applicationHeadingIs('Vatanen, Ari — 141196-933S')))
-          .then(function() {
+          .then(() => {
             expect(
               elementExists(
                 testFrame().find(
@@ -124,7 +124,7 @@
             )
           )
           .then(
-            wait.until(function() {
+            wait.until(() => {
               return elementExists(
                 testFrame().find(
                   'span:contains("Tee yksilöinti henkilöpalvelussa.")'
@@ -136,21 +136,21 @@
           .fail(done)
       })
 
-      describe('successfully changes selection state', function() {
+      describe('successfully changes selection state', () => {
         before(
-          wait.until(function() {
+          wait.until(() => {
             return selectionStateSelected().text() === 'Kesken'
           }),
           clickElement(selectionStateSelected),
-          wait.until(function() {
+          wait.until(() => {
             return selectionStateOpened().is(':visible')
           }),
-          clickElement(function() {
+          clickElement(() => {
             return selectionStateOpened().find(
               '.application-handling__review-state-row:contains("Hyväksytty")'
             )
           }),
-          wait.until(function() {
+          wait.until(() => {
             return (
               selectionStateOpened().length === 0 &&
               selectionStateSelected().text() === 'Hyväksytty'
@@ -163,7 +163,7 @@
             applicationHeadingIs('Tyrni, Johanna Irmeli — 020202A0202')
           )
         )
-        it('selects new state correctly', function() {
+        it('selects new state correctly', () => {
           expect(selectionStateSelected().text()).to.equal('Hyväksytty')
           expect(
             thirdApplication()
@@ -173,19 +173,18 @@
         })
       })
 
-      function selectionStateSelected() {
-        return testFrame().find(
+      const selectionStateSelected = () =>
+        testFrame().find(
           '.application-handling__review-state-container-selection-state .application-handling__review-state-row--selected'
         )
-      }
 
-      function selectionStateOpened() {
+      const selectionStateOpened = () => {
         return testFrame().find(
           '.application-handling__review-state-container-selection-state .application-handling__review-state-list--opened'
         )
       }
 
-      function firstApplication() {
+      const firstApplication = () => {
         return testFrame()
           .find(
             '.application-handling__list-row--applicant-name:contains(Vatanen)'
@@ -193,7 +192,7 @@
           .closest('.application-handling__list-row')
       }
 
-      function secondApplication() {
+      const secondApplication = () => {
         return testFrame()
           .find(
             '.application-handling__list-row--applicant-name:contains(Kuikeloinen)'
@@ -201,7 +200,7 @@
           .closest('.application-handling__list-row')
       }
 
-      function thirdApplication() {
+      const thirdApplication = () => {
         return testFrame()
           .find(
             '.application-handling__list-row--applicant-name:contains(Tyrni)'
@@ -209,80 +208,80 @@
           .closest('.application-handling__list-row')
       }
 
-      function reviewNotes() {
+      const reviewNotes = () => {
         return testFrame().find('.application-handling__review-note-input')
       }
 
-      function reviewNotesSubmitButton() {
+      const reviewNotesSubmitButton = () => {
         return testFrame().find(
           '.application-handling__review-note-submit-button'
         )
       }
 
-      function score() {
+      const score = () => {
         return testFrame().find('.application-handling__score-input')
       }
 
-      function form1OnList() {
+      const form1OnList = () => {
         return testFrame().find(
           '.application__search-control-direct-form-haku a:contains(Selaintestilomake1)'
         )
       }
 
-      function directFormHakuListExists() {
+      const directFormHakuListExists = () => {
         return elementExists(directFormHakuList())
       }
 
-      function navigateToApplicationHandling() {
+      const navigateToApplicationHandling = () => {
         loadInFrame('http://localhost:8350/lomake-editori/applications/')
       }
 
-      function eventCaptions() {
+      const eventCaptions = () => {
         return testFrame().find('.application-handling__event-caption')
       }
 
-      function applicationRow() {
+      const applicationRow = () => {
         return testFrame().find(
           '.application-handling__list-row:not(.application-handling__list-header) .application-handling__list-row--applicant-name:contains(Vatanen)'
         )
       }
 
-      function selectedState() {
+      const selectedState = () => {
         return testFrame().find(
           '.application-handling__review-state-row--selected'
         )
       }
 
-      function notSelectedStates() {
+      const notSelectedStates = () => {
         return testFrame().find(
           '.application-handling__review-state-row:not(.application-handling__review-state-row--selected)'
         )
       }
 
-      function reviewHeader() {
+      const reviewHeader = () => {
         return testFrame().find('.application-handling__review-header')
       }
 
-      function downloadLink() {
+      const downloadLink = () => {
         return testFrame().find('.application-handling__excel-download-link')
       }
     })
 
-    describe('Application sorting', function() {
+    describe('Application sorting', () => {
       before(
         navigateToApplicationHandling,
         wait.until(directFormHakuListExists),
-        function() {
+        () => {
           //clickElement doesn't work for a href here:
           form1OnList()[0].click()
         },
-        wait.until(function() {
+        wait.until(() => {
           return applicationHeader().text() === 'Selaintestilomake1'
         })
       )
-      describe('Default sort', function() {
+      describe('Default sort', () => {
         before(wait.until(applicantNamesExist))
-        it('Descending by applicant name', function() {
+        it('Descending by applicant name', () => {
           expectApplicants([
             'Kuikeloinen, Seija Susanna',
             'Tyrni, Johanna Irmeli',
@@ -290,12 +289,12 @@
           ])
         })
       })
-      describe('Ascending sort by modification time', function() {
+      describe('Ascending sort by modification time', () => {
         before(
           clickElement(timeColumn),
           wait.until(firstApplicantNameIs('Kuikeloinen, Seija Susanna'))
         )
-        it('works', function() {
+        it('works', () => {
           expectApplicants([
             'Kuikeloinen, Seija Susanna',
             'Vatanen, Ari',
@@ -303,13 +302,13 @@
           ])
         })
       })
-      describe('Sort by applicant name', function() {
+      describe('Sort by applicant name', () => {
         before(
           clickElement(applicantColumn),
           clickElement(applicantColumn),
           wait.until(firstApplicantNameIs('Vatanen, Ari'))
         )
-        it('works', function() {
+        it('works', () => {
           expectApplicants([
             'Vatanen, Ari',
             'Tyrni, Johanna Irmeli',
@@ -317,12 +316,12 @@
           ])
         })
       })
-      describe('Ascending sort by applicant name', function() {
+      describe('Ascending sort by applicant name', () => {
         before(
           clickElement(applicantColumn),
           wait.until(firstApplicantNameIs('Kuikeloinen, Seija Susanna'))
         )
-        it('works', function() {
+        it('works', () => {
           expectApplicants([
             'Kuikeloinen, Seija Susanna',
             'Tyrni, Johanna Irmeli',
@@ -331,81 +330,77 @@
         })
       })
 
-      function expectApplicants(expected) {
+      const expectApplicants = expected => {
         expect(applicantNames()).to.eql(expected)
       }
 
-      function firstApplicantName() {
+      const firstApplicantName = () => {
         return applicantNames()[0]
       }
 
-      function firstApplicantNameIs(expected) {
-        return function() {
+      const firstApplicantNameIs = expected => {
+        return () => {
           return firstApplicantName() === expected
         }
       }
 
-      function applicantNamesExist() {
-        return function() {
+      const applicantNamesExist = () => {
+        return () => {
           return applicantNames().length > 0
         }
       }
 
-      function applicantNames() {
-        var scoreColumnObjects = testFrame().find(
+      const applicantNames = () => {
+        const scoreColumnObjects = testFrame().find(
           '.application-handling__list-row--applicant-name'
         )
         return _(scoreColumnObjects)
-          .map(function(obj) {
-            return $(obj).text()
-          })
-          .filter(function(val) {
-            return val !== 'Hakija'
-          })
+          .map(obj => $(obj).text())
+          .filter(val => val !== 'Hakija')
           .value()
       }
 
-      function applicantColumn() {
+      const applicantColumn = () => {
         return testFrame().find(
           '.application-handling__list-row--applicant > span'
         )
       }
 
-      function timeColumn() {
+      const timeColumn = () => {
         return testFrame().find(
           '.application-handling__list-row--created-time i'
         )
       }
     })
 
-    describe('application filtering on hakukohde processing state', function() {
+    describe('application filtering on hakukohde processing state', () => {
       before(clickElement(hakukohdeProcessingFilterLink))
-      it('reduces application list', function(done) {
+      it('reduces application list', done => {
         expect(includedHakukohdeProcessingStateFilters()).to.equal(8)
         expect(filteredApplicationsCount()).to.equal(3)
 
-        var stateOfFirstApplicationHakukohde = applicationHakukohdeProcessingStates()
+        const stateOfFirstApplicationHakukohde = applicationHakukohdeProcessingStates()
           .eq(0)
           .text()
-        var stateOfSecondApplicationHakukohde = applicationHakukohdeProcessingStates()
+        const stateOfSecondApplicationHakukohde = applicationHakukohdeProcessingStates()
           .eq(2)
           .text()
 
         filterOutBasedOnFirstApplicationState(stateOfFirstApplicationHakukohde)
         wait
-          .until(function() {
-            var expectedFilteredCount =
+          .until(() => {
+            const expectedFilteredCount =
               stateOfFirstApplicationHakukohde ===
               stateOfSecondApplicationHakukohde
                 ? 0
                 : 1
             return filteredApplicationsCount() === expectedFilteredCount
           })()
-          .then(function() {
+          .then(() => {
             filterInBasedOnFirstApplicationState(
               stateOfFirstApplicationHakukohde
             )
-            return wait.until(function() {
+            return wait.until(() => {
               return filteredApplicationsCount() === 3
             })()
           })
@@ -414,7 +409,7 @@
           .fail(done)
       })
 
-      function filterOutBasedOnFirstApplicationState(stateOfFirstApplication) {
+      const filterOutBasedOnFirstApplicationState = stateOfFirstApplication => {
         testFrame()
           .find(
             '.application-handling__list-row--state .application-handling__filter-state-selected-row span:contains(' +
@@ -424,7 +419,7 @@
           .click()
       }
 
-      function filterInBasedOnFirstApplicationState(stateOfFirstApplication) {
+      const filterInBasedOnFirstApplicationState = stateOfFirstApplication => {
         testFrame()
           .find(
             '.application-handling__list-row--state .application-handling__filter-state-selection-row span:contains(' +
@@ -434,28 +429,28 @@
           .click()
       }
 
-      function applicationHakukohdeProcessingStates() {
+      const applicationHakukohdeProcessingStates = () => {
         return testFrame().find(
           '.application-handling__list .application-handling__hakukohde-state'
         )
       }
 
-      function filteredApplicationsCount() {
+      const filteredApplicationsCount = () => {
         return applicationHakukohdeProcessingStates().length
       }
     })
 
-    describe('application filtering on selection state', function() {
-      describe('adding filters', function() {
+    describe('application filtering on selection state', () => {
+      describe('adding filters', () => {
         before(
           clickElement(selectionStateFilterLink),
-          wait.until(function() {
+          wait.until(() => {
             return (
               includedSelectionStateFilters() === 6 &&
               filteredApplicationsCount() === 3
             )
           }),
-          function() {
+          () => {
             // clickElement doesn't work here..?
             testFrame()
               .find(
@@ -463,14 +458,14 @@
               )
               .click()
           },
-          wait.until(function() {
+          wait.until(() => {
             return (
               includedSelectionStateFilters() === 4 &&
               filteredApplicationsCount() === 1
             )
           })
         )
-        it('reduces application list', function() {
+        it('reduces application list', () => {
           expect(
             testFrame()
               .find('.application-handling__list-row--applicant-name:eq(0)')
@@ -479,9 +474,9 @@
         })
       })
 
-      describe('removing filters', function() {
+      describe('removing filters', () => {
         before(
-          function() {
+          () => {
             // clickElement doesn't work here either..?
             testFrame()
               .find(
@@ -489,7 +484,7 @@
               )
               .click()
           },
-          wait.until(function() {
+          wait.until(() => {
             return (
               includedSelectionStateFilters() === 6 &&
               filteredApplicationsCount() === 3
@@ -497,7 +492,7 @@
           }),
           clickElement(selectionStateFilterLink)
         )
-        it('grows application list', function() {
+        it('grows application list', () => {
           expect(
             testFrame()
               .find('.application-handling__list-row--applicant-name:eq(0)')
@@ -507,18 +502,18 @@
       })
     })
 
-    describe('finding all applications belonging to a given ssn', function() {
+    describe('finding all applications belonging to a given ssn', () => {
       before(clickElement(multipleApplicationsApplicant))
 
-      it('shows link to all applications belonging to a given ssn', function(done) {
+      it('shows link to all applications belonging to a given ssn', done => {
         wait
-          .until(function() {
+          .until(() => {
             return searchApplicationsBySsnLink()
           })()
           .then(clickElement(searchApplicationsBySsnLink))
           .then(wait.until(ssnSearchFieldHasValue('020202A0202')))
           .then(
-            wait.until(function() {
+            wait.until(() => {
               return _.isEqual(applicantNames(), [
                 'Kuikeloinen, Seija Susanna',
                 'Tyrni, Johanna Irmeli',
@@ -529,59 +524,57 @@
           .fail(done)
       })
 
-      function multipleApplicationsApplicant() {
+      const multipleApplicationsApplicant = () => {
         return testFrame().find(
           '.application-handling__list-row--applicant-name:contains(Kuikeloinen)'
         )
       }
 
-      function searchApplicationsBySsnLink() {
+      const searchApplicationsBySsnLink = () => {
         return testFrame().find(
           '.application-handling__review-area-main-heading-applications-link'
         )
       }
 
-      function ssnSearchField() {
+      const ssnSearchField = () => {
         return testFrame().find(
           '.application__search-control-search-term-input'
         )
       }
 
-      function ssnSearchFieldHasValue(value) {
-        return function() {
+      const ssnSearchFieldHasValue = value => {
+        return () => {
           return ssnSearchField().val() === value
         }
       }
 
-      function applicantNames() {
-        var scoreColumnObjects = testFrame().find(
+      const applicantNames = () => {
+        const scoreColumnObjects = testFrame().find(
           '.application-handling__list-row--applicant-name'
         )
-        return _.map(scoreColumnObjects, function(obj) {
-          return $(obj).text()
-        })
+        return _.map(scoreColumnObjects, obj => $(obj).text())
       }
     })
 
-    describe('Virkailija hakemus edit', function() {
-      describe('shows correct link', function() {
+    describe('Virkailija hakemus edit', () => {
+      describe('shows correct link', () => {
         before(
           navigateToApplicationHandling,
           wait.until(directFormHakuListExists),
-          function() {
+          () => {
             //clickElement doesn't work for a href here:
             form1OnList()[0].click()
           },
-          wait.until(function() {
+          wait.until(() => {
             return applicationHeader().text() === 'Selaintestilomake1'
           }),
           clickElement(applicationRow),
-          wait.until(function() {
+          wait.until(() => {
             return reviewHeader().length > 0
           })
         )
 
-        it('shows virkailija edit link', function() {
+        it('shows virkailija edit link', () => {
           expect(editLink().attr('href')).to.equal(
             '/lomake-editori/api/applications/1.2.246.562.11.00000000000000000002/modify'
           )
@@ -589,11 +582,11 @@
       })
     })
 
-    describe('Virkailija link share', function() {
-      describe('Shows application and correct filters', function() {
+    describe('Virkailija link share', () => {
+      describe('Shows application and correct filters', () => {
         before(
           navigateToApplicationHandlingWithUrlParams,
-          wait.until(function() {
+          wait.until(() => {
             return applicationHeader().text() === 'Selaintestilomake1'
           }),
           wait.until(
@@ -602,27 +595,27 @@
           clickElement(hakukohdeProcessingFilterLink)
         )
 
-        it('has correct filters selected', function() {
+        it('has correct filters selected', () => {
           expect(includedHakukohdeProcessingStateFilters()).to.equal(5)
         })
       })
     })
 
-    describe('Mass application update', function() {
-      describe('popup box', function() {
+    describe('Mass application update', () => {
+      describe('popup box', () => {
         before(
           navigateToApplicationHandlingForForm,
-          clickElement(function() {
+          clickElement(() => {
             return testFrame().find(
               '.application-handling__mass-edit-review-states-link'
             )
           }),
-          wait.until(function() {
+          wait.until(() => {
             return massUpdatePopup().is(':visible')
           })
         )
 
-        it('has expected data in applications and popup', function() {
+        it('has expected data in applications and popup', () => {
           expect(applicationHakukohdeStates()).to.eql([
             'Käsittelemättä',
             'Käsittelemättä',
@@ -637,13 +630,13 @@
         })
       })
 
-      describe('state selection boxes', function() {
+      describe('state selection boxes', () => {
         before(
           clickElement(massUpdateFromStateSelectionClosed),
           clickElement(massUpdateToStateSelectionClosed)
         )
 
-        it('have the correct contents', function() {
+        it('have the correct contents', () => {
           expect(
             massUpdateFromStateSelectionOpened().find(
               '.application-handling__review-state-row'
@@ -680,39 +673,39 @@
         })
       })
 
-      describe('selecting to-state and submitting', function() {
+      describe('selecting to-state and submitting', () => {
         before(
-          clickElement(function() {
+          clickElement(() => {
             return massUpdateFromStateSelectionOpened().find(
               '.application-handling__review-state-row--mass-update:contains("Käsittelemättä")'
             )
           }),
-          clickElement(function() {
+          clickElement(() => {
             return massUpdateToStateSelectionOpened().find(
               '.application-handling__review-state-row--mass-update:contains("Käsitelty")'
             )
           }),
-          wait.until(function() {
+          wait.until(() => {
             return massUpdateSubmitButton().attr('disabled') !== 'disabled'
           }),
           clickElement(massUpdateSubmitButton),
-          wait.until(function() {
+          wait.until(() => {
             return massUpdateSubmitButton().text() === 'Vahvista muutos'
           }),
           clickElement(massUpdateSubmitButton)
         )
-        it('closes popup', function() {
+        it('closes popup', () => {
           expect(massUpdatePopup().is(':visible')).to.equal(false)
         })
       })
 
-      describe('updates applications', function() {
+      describe('updates applications', () => {
         before(
-          wait.until(function() {
+          wait.until(() => {
             return applicationHakukohdeStates().length > 0
           })
         )
-        it('to selected state', function() {
+        it('to selected state', () => {
           expect(applicationHakukohdeStates()).to.eql([
             'Käsitelty',
             'Käsitelty',
@@ -722,21 +715,21 @@
       })
     })
 
-    describe('Mass send information requests', function() {
-      describe('popup', function() {
+    describe('Mass send information requests', () => {
+      describe('popup', () => {
         before(
           navigateToApplicationHandlingForForm,
-          clickElement(function() {
+          clickElement(() => {
             return testFrame().find(
               '.application-handling__mass-information-request-link'
             )
           }),
-          wait.until(function() {
+          wait.until(() => {
             return massInformationRequestPopup().is(':visible')
           })
         )
 
-        it('has expected default data', function() {
+        it('has expected default data', () => {
           expect(massInformationRequestText()).to.eql(
             'Lähetä sähköposti 3 hakijalle:'
           )
@@ -749,12 +742,12 @@
         })
       })
 
-      describe('updating inputs', function() {
+      describe('updating inputs', () => {
         before(
           setTextFieldValue(massInformationRequestSubject, 'Otsikko!'),
           setTextFieldValue(massInformationRequestContent, 'Sisältöä')
         )
-        it('enables button', function() {
+        it('enables button', () => {
           expect(massInformationRequestSendButton().text()).to.eql('Lähetä')
           expect(massInformationRequestSendButton().attr('disabled')).to.be.an(
             'undefined'
@@ -762,38 +755,38 @@
         })
       })
 
-      describe('recipient filtering', function() {
+      describe('recipient filtering', () => {
         before(
           clickElement(selectionStateFilterLink),
-          wait.until(function() {
+          wait.until(() => {
             return (
               includedSelectionStateFilters() === 6 &&
               filteredApplicationsCount() === 3
             )
           }),
-          function() {
+          () => {
             testFrame()
               .find(
                 '.application-handling__list-row--selection .application-handling__filter-state-selected-row span:contains("Hyväksytty")'
               )
               .click()
           },
-          wait.until(function() {
+          wait.until(() => {
             return (
               includedSelectionStateFilters() === 4 &&
               filteredApplicationsCount() === 2
             )
           }),
-          clickElement(function() {
+          clickElement(() => {
             return testFrame().find(
               '.application-handling__mass-information-request-link'
             )
           }),
-          wait.until(function() {
+          wait.until(() => {
             return massInformationRequestPopup().is(':visible')
           })
         )
-        it('reduces application list and recipient count', function() {
+        it('reduces application list and recipient count', () => {
           expect(
             testFrame()
               .find('.application-handling__list-row--applicant-name:eq(0)')
@@ -810,43 +803,43 @@
         })
       })
 
-      describe('sending messages', function() {
-        describe('first click', function() {
+      describe('sending messages', () => {
+        describe('first click', () => {
           before(
             clickElement(massInformationRequestSendButton),
-            wait.until(function() {
+            wait.until(() => {
               return massInformationRequestSendButton().hasClass(
                 'application-handling__send-information-request-button--confirm'
               )
             })
           )
-          it('requests confirmation', function() {
+          it('requests confirmation', () => {
             expect(massInformationRequestSendButton().text()).to.equal(
               'Vahvista 2 viestin lähetys'
             )
           })
         })
-        describe('second click', function() {
+        describe('second click', () => {
           before(
             clickElement(massInformationRequestSendButton),
-            wait.until(function() {
+            wait.until(() => {
               return massInformationRequestSendButton().length === 0
             })
           )
-          it('removes button', function() {
+          it('removes button', () => {
             expect(massInformationRequestStatusText()).to.be.oneOf([
               'Lähetetään viestejä...',
               'Viestit lisätty lähetysjonoon!',
             ])
           })
         })
-        describe('after success', function() {
+        describe('after success', () => {
           before(
-            wait.until(function() {
+            wait.until(() => {
               return massInformationRequestSendButton().length === 1
             })
           )
-          it('resets form', function() {
+          it('resets form', () => {
             expect(massInformationRequestText()).to.eql(
               'Lähetä sähköposti 2 hakijalle:'
             )
@@ -861,148 +854,146 @@
       })
     })
 
-    function massInformationRequestPopup() {
+    const massInformationRequestPopup = () => {
       return testFrame().find(
         '.application-handling__mass-information-request-popup'
       )
     }
 
-    function massInformationRequestText() {
+    const massInformationRequestText = () => {
       return massInformationRequestPopup()
         .find('p')
         .first()
         .text()
     }
 
-    function massInformationRequestSubject() {
+    const massInformationRequestSubject = () => {
       return massInformationRequestPopup().find(
         'input.application-handling__information-request-text-input'
       )
     }
 
-    function massInformationRequestContent() {
+    const massInformationRequestContent = () => {
       return massInformationRequestPopup().find(
         'textarea.application-handling__information-request-message-area'
       )
     }
 
-    function massInformationRequestSendButton() {
+    const massInformationRequestSendButton = () => {
       return massInformationRequestPopup().find(
         'button.application-handling__send-information-request-button'
       )
     }
 
-    function massInformationRequestStatusText() {
+    const massInformationRequestStatusText = () => {
       return massInformationRequestPopup()
         .find('.application-handling__information-request-status')
         .text()
     }
 
-    function massUpdateSubmitButton() {
+    const massUpdateSubmitButton = () => {
       return massUpdatePopup().find('.application-handling__link-button')
     }
 
-    function massUpdateFromState() {
+    const massUpdateFromState = () => {
       return massUpdatePopup()
         .children('div')
         .eq(1)
     }
 
-    function massUpdateFromStateSelectionOpened() {
+    const massUpdateFromStateSelectionOpened = () => {
       return massUpdateFromState()
     }
 
-    function massUpdateFromStateSelectionClosed() {
-      var sel = '.application-handling__review-state-row--mass-update'
+    const massUpdateFromStateSelectionClosed = () => {
+      const sel = '.application-handling__review-state-row--mass-update'
       return massUpdateFromState()
         .find(sel)
         .addBack(sel)
     }
 
-    function massUpdateToState() {
+    const massUpdateToState = () => {
       return massUpdatePopup()
         .children('div')
         .eq(2)
     }
 
-    function massUpdateToStateSelectionOpened() {
+    const massUpdateToStateSelectionOpened = () => {
       return massUpdateToState()
     }
 
-    function massUpdateToStateSelectionClosed() {
-      var sel = '.application-handling__review-state-row--mass-update'
+    const massUpdateToStateSelectionClosed = () => {
+      const sel = '.application-handling__review-state-row--mass-update'
       return massUpdateToState()
         .find(sel)
         .addBack(sel)
     }
 
-    function massUpdatePopup() {
+    const massUpdatePopup = () => {
       return testFrame().find(
         '.application-handling__mass-edit-review-states-popup'
       )
     }
 
-    function applicationHakukohdeStates() {
+    const applicationHakukohdeStates = () => {
       return _.map(
         testFrame().find('.application-handling__hakukohde-state'),
-        function(o) {
-          return $(o).text()
-        }
+        o => $(o).text()
       )
     }
 
-    function editLink() {
+    const editLink = () => {
       return testFrame().find(
         '.application-handling__link-button.application-handling__button:contains("Muokkaa hakemusta")'
       )
     }
 
-    function directFormHakuList() {
+    const directFormHakuList = () => {
       return testFrame().find('.application__search-control-direct-form-haku')
     }
 
-    function applicationHeader() {
+    const applicationHeader = () => {
       return testFrame().find('.application-handling__header-haku')
     }
 
-    function form1OnList() {
+    const form1OnList = () => {
       return testFrame().find(
         '.application__search-control-direct-form-haku a:contains(Selaintestilomake1)'
       )
     }
 
-    function directFormHakuListExists() {
+    const directFormHakuListExists = () => {
       return elementExists(directFormHakuList())
     }
 
-    function navigateToApplicationHandling() {
+    const navigateToApplicationHandling = () => {
       loadInFrame('http://localhost:8350/lomake-editori/applications/')
     }
 
-    function navigateToApplicationHandlingWithUrlParams() {
+    const navigateToApplicationHandlingWithUrlParams = () => {
       loadInFrame(
         'http://localhost:8350/lomake-editori/applications/foobar1?application-key=1.2.246.562.11.00000000000000000001&processing-state-filter=processing,invited-to-interview'
       )
     }
 
-    function navigateToApplicationHandlingForForm() {
+    const navigateToApplicationHandlingForForm = () => {
       loadInFrame('http://localhost:8350/lomake-editori/applications/foobar1')
     }
 
-    function includedHakukohdeProcessingStateFilters() {
+    const includedHakukohdeProcessingStateFilters = () => {
       return testFrame().find(
         '.application-handling__filter-state:eq(1) .application-handling__filter-state-selected-row'
       ).length
     }
 
-    function includedSelectionStateFilters() {
+    const includedSelectionStateFilters = () => {
       return testFrame().find(
         '.application-handling__filter-state:eq(2) .application-handling__filter-state-selected-row'
       ).length
     }
 
-    function applicationHeadingIs(expected) {
-      return function() {
+    const applicationHeadingIs = expected => {
+      return () => {
         return (
           testFrame()
             .find('.application-handling__review-area-main-heading')
@@ -1011,35 +1002,35 @@
       }
     }
 
-    function hakukohdeProcessingFilterLink() {
+    const hakukohdeProcessingFilterLink = () => {
       return testFrame()
         .find('.application-handling__filter-state a')
         .eq(1)
     }
 
-    function selectionStateFilterLink() {
+    const selectionStateFilterLink = () => {
       return testFrame()
         .find('.application-handling__filter-state a')
         .eq(2)
     }
 
-    function applicationRow() {
+    const applicationRow = () => {
       return testFrame().find(
         '.application-handling__list-row:not(.application-handling__list-header) .application-handling__list-row--applicant-name:contains(Vatanen)'
       )
     }
 
-    function reviewHeader() {
+    const reviewHeader = () => {
       return testFrame().find('.application-handling__review-header')
     }
 
-    function selectionStates() {
+    const selectionStates = () => {
       return testFrame().find(
         '.application-handling__list .application-handling__hakukohde-selection'
       )
     }
 
-    function filteredApplicationsCount() {
+    const filteredApplicationsCount = () => {
       return testFrame()
         .find('.application-handling__list-row')
         .not('.application-handling__list-header').length

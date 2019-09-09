@@ -1,13 +1,13 @@
-var testFormApplicationSecret = '{{test-form-application-secret}}'
-var virkailijaSecret = '{{virkailija-secret}}'
-var virkailijaCreateSecret = '{{virkailija-create-secret}}'
+const testFormApplicationSecret = '{{test-form-application-secret}}'
+const virkailijaSecret = '{{virkailija-secret}}'
+const virkailijaCreateSecret = '{{virkailija-create-secret}}'
 
-function newForm(formName) {
-  var testFormKey = '{{test-form-key}}'
-  var testQuestionGroupFormKey = '{{test-question-group-form-key}}'
-  var testSelectionLimitFormKey = '{{test-selection-limit-form-key}}'
-  var ssnFormKey = '{{ssn-form-key}}'
-  var formKey
+const newForm = formName => {
+  const testFormKey = '{{test-form-key}}'
+  const testQuestionGroupFormKey = '{{test-question-group-form-key}}'
+  const testSelectionLimitFormKey = '{{test-selection-limit-form-key}}'
+  const ssnFormKey = '{{ssn-form-key}}'
+  let formKey
 
   switch (formName) {
     case 'testForm':
@@ -32,118 +32,105 @@ function newForm(formName) {
     )
   } else {
     console.log('form key', formKey)
-    return function() {
+    return () => {
       loadInFrame('/hakemus/' + formKey)
     }
   }
 }
 
-function formHeader() {
-  return testFrame().find('.application__header')
-}
+const formHeader = () => testFrame().find('.application__header')
 
-function submitButton() {
-  return testFrame().find('.application__send-application-button')
-}
+const submitButton = () =>
+  testFrame().find('.application__send-application-button')
 
-function formSections() {
-  return testFrame().find(
+const formSections = () =>
+  testFrame().find(
     '.application__form-content-area .application__wrapper-element'
   )
-}
 
-function formFields() {
-  return testFrame().find(
-    '.application__form-content-area .application__form-field'
+const formFields = () =>
+  testFrame().find('.application__form-content-area .application__form-field')
+
+const invalidFieldsStatus = () =>
+  testFrame().find('.application__invalid-field-status-title')
+
+const invalidFieldNames = () =>
+  _.map(testFrame().find('.application__invalid-fields > a > div'), e =>
+    $(e).text()
   )
-}
 
-function invalidFieldsStatus() {
-  return testFrame().find('.application__invalid-field-status-title')
-}
-
-function invalidFieldNames() {
-  return _.map(
-    testFrame().find('.application__invalid-fields > a > div'),
-    function(e) {
-      return $(e).text()
-    }
-  )
-}
-
-function selectedHakukohteet() {
-  return testFrame()
+const selectedHakukohteet = () =>
+  testFrame()
     .find('.application__hakukohde-selected-list')
     .find('.application__selected-hakukohde-row')
-}
 
-function hakukohdeSearchInput() {
-  return testFrame().find(
-    '.application__hakukohde-selection-search-input input'
-  )
-}
+const hakukohdeSearchInput = () =>
+  testFrame().find('.application__hakukohde-selection-search-input input')
 
-function personInfoModule() {
-  return formSections().eq(0)
-}
+const personInfoModule = () => formSections().eq(0)
 
-function selectedHakukohdeName(hakukohdeRow) {
-  return $(hakukohdeRow)
+const selectedHakukohdeName = hakukohdeRow =>
+  $(hakukohdeRow)
     .find('.application__hakukohde-header')
     .first()
     .text()
-}
 
-function hasFormField(fieldId) {
-  return testFrame().find('#scroll-to-' + fieldId).length === 1
-}
-function setFieldInputValue(id, value) {
-  return setTextFieldValue(function() {
-    return testFrame()
-      .find(id)
-      .focus()
-  }, value)
-}
-function setNthFieldInputValue(n, value) {
-  return setTextFieldValue(function() {
-    return formFields()
+const hasFormField = fieldId =>
+  testFrame().find('#scroll-to-' + fieldId).length === 1
+
+const setFieldInputValue = (id, value) =>
+  setTextFieldValue(
+    () =>
+      testFrame()
+        .find(id)
+        .focus(),
+    value
+  )
+
+const setNthFieldInputValue = (n, value) =>
+  setTextFieldValue(
+    () =>
+      formFields()
+        .eq(n)
+        .find('input')
+        .focus(),
+    value
+  )
+
+const selectNthField = n =>
+  clickElement(() =>
+    formFields()
       .eq(n)
       .find('input')
       .focus()
-  }, value)
-}
-function selectNthField(n) {
-  return clickElement(function() {
-    return formFields()
-      .eq(n)
-      .find('input')
-      .focus()
-  })
-}
-function setNthFieldValue(n, selector, value) {
-  return setTextFieldValue(function() {
-    return formFields()
-      .eq(n)
-      .find(selector)
-  }, value)
-}
+  )
 
-function setNthFieldSubInputValue(n, sub, value) {
-  return setTextFieldValue(function() {
-    return formFields()
-      .eq(n)
-      .find('input')
-      .eq(sub)
-      .focus()
-  }, value)
-}
+const setNthFieldValue = (n, selector, value) =>
+  setTextFieldValue(
+    () =>
+      formFields()
+        .eq(n)
+        .find(selector),
+    value
+  )
 
-function setNthFieldOption(n, value) {
-  return wait.until(function() {
-    var $option = formFields()
+const setNthFieldSubInputValue = (n, sub, value) =>
+  setTextFieldValue(
+    () =>
+      formFields()
+        .eq(n)
+        .find('input')
+        .eq(sub)
+        .focus(),
+    value
+  )
+
+const setNthFieldOption = (n, value) =>
+  wait.until(() => {
+    const $option = formFields()
       .eq(n)
       .find('option[value="' + value + '"]')
-    var $select = formFields()
+    const $select = formFields()
       .eq(n)
       .find('select')
     if (elementExists($option) && elementExists($select)) {
@@ -152,52 +139,43 @@ function setNthFieldOption(n, value) {
       return true
     }
   })
+
+const clickNthFieldRadio = (n, value) => () => {
+  formFields()
+    .eq(n)
+    .find('label:contains(' + value + ')')
+    .click()
 }
 
-function clickNthFieldRadio(n, value) {
-  return function() {
-    formFields()
-      .eq(n)
-      .find('label:contains(' + value + ')')
-      .click()
-  }
-}
+const addHakukohdeLink = () =>
+  testFrame().find('.application__hakukohde-selection-open-search')
 
-function addHakukohdeLink() {
-  return testFrame().find('.application__hakukohde-selection-open-search')
-}
+const hakukohdeSearchHits = () =>
+  testFrame().find('.application__search-hit-hakukohde-row')
 
-function hakukohdeSearchHits() {
-  return testFrame().find('.application__search-hit-hakukohde-row')
-}
-
-function nthHakukohdeSearchResultButton(n) {
-  return hakukohdeSearchHits()
+const nthHakukohdeSearchResultButton = n =>
+  hakukohdeSearchHits()
     .eq(n)
     .find('button')
-}
 
-function nthHakukohdePriorityUp(n) {
-  return testFrame()
+const nthHakukohdePriorityUp = n =>
+  testFrame()
     .find('.application__selected-hakukohde-row')
     .eq(n)
     .find('.application__selected-hakukohde-row--priority-increase')
-}
 
-function nthHakukohdePriorityDown(n) {
-  return testFrame()
+const nthHakukohdePriorityDown = n =>
+  testFrame()
     .find('.application__selected-hakukohde-row')
     .eq(n)
     .find('.application__selected-hakukohde-row--priority-decrease')
-}
 
-function selectedHakukohdeTexts() {
-  return testFrame()
+const selectedHakukohdeTexts = () =>
+  testFrame()
     .find('.application__selected-hakukohde-row--content')
     .text()
-}
 
-function assertOnlyFinnishSsn() {
+const assertOnlyFinnishSsn = () => {
   expect(hasFormField('ssn')).to.equal(true)
   expect(hasFormField('have-finnish-ssn')).to.equal(false)
   expect(hasFormField('gender')).to.equal(false)
@@ -208,7 +186,7 @@ function assertOnlyFinnishSsn() {
   expect(hasFormField('birthplace')).to.equal(false)
 }
 
-function assertHaveFinnishSsn() {
+const assertHaveFinnishSsn = () => {
   expect(hasFormField('ssn')).to.equal(true)
   expect(hasFormField('have-finnish-ssn')).to.equal(true)
   // should not display non-ssn fields!
@@ -220,7 +198,7 @@ function assertHaveFinnishSsn() {
   expect(hasFormField('birthplace')).to.equal(false)
 }
 
-function assertNonFinnishSsnFields() {
+const assertNonFinnishSsnFields = () => {
   expect(hasFormField('ssn')).to.equal(false)
   expect(hasFormField('gender')).to.equal(true)
   expect(hasFormField('birth-date')).to.equal(true)
@@ -230,13 +208,13 @@ function assertNonFinnishSsnFields() {
   expect(hasFormField('birthplace')).to.equal(true)
 }
 
-function assertInvalidFieldCount(count) {
+const assertInvalidFieldCount = count => {
   if (count === 0) {
-    return function() {
+    return () => {
       expect(invalidFieldsStatus().length).to.equal(0)
     }
   } else {
-    return function() {
+    return () => {
       expect(invalidFieldsStatus().text()).to.equal(
         'Tarkista ' + count + ' tietoa'
       )
@@ -244,31 +222,23 @@ function assertInvalidFieldCount(count) {
   }
 }
 
-function focusInput(index) {
-  return function() {
-    formFields()
-      .eq(index)
-      .find('input')
-      .focus()
-  }
+const focusInput = index => () => {
+  formFields()
+    .eq(index)
+    .find('input')
+    .focus()
 }
 
-function readonlyAnswer(index) {
-  return testFrame()
+const readonlyAnswer = index =>
+  testFrame()
     .find('.application__text-field-paragraph:eq(' + index + ')')
     .text()
-}
 
-function adjacentReadonlyAnswer(index) {
-  return testFrame()
+const adjacentReadonlyAnswer = index =>
+  testFrame()
     .find('.application__readonly-adjacent-cell:eq(' + index + ')')
     .text()
-}
 
-function submitButtonEnabled() {
-  return !submitButton().prop('disabled')
-}
+const submitButtonEnabled = () => !submitButton().prop('disabled')
 
-function submitButtonDisabled() {
-  return !submitButtonEnabled()
-}
+const submitButtonDisabled = () => !submitButtonEnabled()

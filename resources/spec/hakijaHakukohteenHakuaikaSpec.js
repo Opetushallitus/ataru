@@ -1,20 +1,20 @@
-;(function() {
-  before(function() {
+;(() => {
+  before(() => {
     loadInFrame('/hakemus/hakukohde/1.2.246.562.20.49028100003')
   })
 
-  afterEach(function() {
+  afterEach(() => {
     expect(window.uiError || null).to.be.null
   })
 
-  describe('hakutoiveita eri hakuajoilla', function() {
-    describe('form loads', function() {
+  describe('hakutoiveita eri hakuajoilla', () => {
+    describe('form loads', () => {
       before(
-        wait.until(function() {
+        wait.until(() => {
           return formSections().length == 2
         }, 10000),
         clickElement(addHakukohdeLink, 'hakukohdeLink'),
-        clickElement(function() {
+        clickElement(() => {
           return nthHakukohdeSearchResultButton(0)
         }, 'searchResult1'),
         setNthFieldInputValue(1, 'Etunimi Tokanimi'),
@@ -29,7 +29,7 @@
         setNthFieldOption(12, '179'),
         setNthFieldOption(13, 'FI'),
         setNthFieldInputValue(14, 'Jee'),
-        wait.until(function() {
+        wait.until(() => {
           return (
             formFields()
               .eq(11)
@@ -38,36 +38,34 @@
           )
         }),
         wait.until(submitButtonEnabled),
-        clickElement(function() {
+        clickElement(() => {
           return submitButton()
         }),
-        wait.until(function() {
+        wait.until(() => {
           return (
             testFrame().find('.application__sent-placeholder-text').length == 1
           )
         })
       )
-      var reloadEditPage = function() {
-        return httpGet('/hakemus/latest-application-secret').then(function(
-          newSecret
-        ) {
+      const reloadEditPage = () => {
+        return httpGet('/hakemus/latest-application-secret').then(newSecret => {
           console.log('Updated secret is ' + newSecret)
           return httpGet(
             '/hakemus/alter-application-to-hakuaikaloppu-for-secret/' +
               newSecret
-          ).then(function(response) {
+          ).then(response => {
             loadInFrame('/hakemus?modify=' + newSecret)
           })
         })
       }
       before(
         reloadEditPage,
-        wait.until(function() {
+        wait.until(() => {
           return formSections().length == 2
         }, 10000)
       )
 
-      it('check that components are disabled when hakuaika is over (and enabled when some hakuaika is on going)', function() {
+      it('check that components are disabled when hakuaika is over (and enabled when some hakuaika is on going)', () => {
         expect(
           testFrame().find('.application__selected-hakukohde-row--remove')
             .length
@@ -99,7 +97,7 @@
             .prop('disabled')
         ).to.equal(false)
 
-        var kysymysKoskeeHakukohteitaFinder = function(id) {
+        const kysymysKoskeeHakukohteitaFinder = id => {
           return testFrame()
             .find(id)
             .parent()
@@ -122,23 +120,23 @@
       })
     })
 
-    describe('priorisoivat hakukohderyhmat', function() {
+    describe('priorisoivat hakukohderyhmat', () => {
       before(
-        wait.until(function() {
+        wait.until(() => {
           return addHakukohdeLink().length == 1
         }, 10000),
         clickElement(addHakukohdeLink, 'hakukohdeLink'),
-        clickElement(function() {
+        clickElement(() => {
           return nthHakukohdeSearchResultButton(1)
         }, 'searchResult2'),
         clickElement(invalidFieldsStatus),
         wait.until(submitButtonDisabled),
-        wait.until(function() {
+        wait.until(() => {
           return invalidFieldsStatus().text() === 'Tarkista 1 tietoa'
         })
       )
 
-      it('doesnt allow to add hakutoive in wrong priority order', function() {
+      it('doesnt allow to add hakutoive in wrong priority order', () => {
         expect(
           testFrame().find(
             '.application__selected-hakukohde-row--offending-priorization'
@@ -146,7 +144,7 @@
         ).to.equal(2)
         expect(invalidFieldNames().join(';')).to.equal('Hakukohteet')
       })
-      it('doesnt allow adding hakutoive when limit is reached', function() {
+      it('doesnt allow adding hakutoive when limit is reached', () => {
         expect(
           testFrame().find(
             '.application__search-hit-hakukohde-row--limit-reached'

@@ -25,6 +25,11 @@ npm-dependencies() {
     export CHROME_BIN=$(node -e "console.log(require('puppeteer').executablePath());")
 }
 
+eslint() {
+    echo "Running ESLint"
+    npx eslint .
+}
+
 process-resources() {
     echo "Processing resources"
     time ./bin/lein resource
@@ -95,6 +100,7 @@ run-tests() {
     echo "Starting test run"
     clean
     npm-dependencies
+    eslint
     test-clojurescript
     nuke-test-db
     run-migrations
@@ -129,6 +135,9 @@ case "$command" in
         ;;
     "npm-dependencies" )
         npm-dependencies
+        ;;
+    "eslint" )
+        eslint
         ;;
     "process-resources" )
         process-resources
@@ -183,6 +192,7 @@ case "$command" in
 * clean
 * compile-less
 * npm-dependencies
+* eslint
 * process-resources
 * build-clojurescript
 * test-clojure

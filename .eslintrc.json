@@ -1,0 +1,15 @@
+{
+  "extends": ["prettier", "plugin:prettier/recommended"],
+  "plugins": ["prettier"],
+  "rules": {
+    "prettier/prettier": ["error"],
+    "prefer-const": "error",
+    "no-var": "error"
+  },
+  "env": {
+    "browser": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 6
+  }
+}

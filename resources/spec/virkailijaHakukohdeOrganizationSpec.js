@@ -1,21 +1,21 @@
-;(function() {
-  function addNewFormLink() {
+;(() => {
+  const addNewFormLink = () => {
     return testFrame().find('.editor-form__control-button--enabled')
   }
 
-  function formTitleField() {
+  const formTitleField = () => {
     return testFrame().find('.editor-form__form-name-input')
   }
 
-  function formList() {
+  const formList = () => {
     return testFrame().find('.editor-form__list')
   }
 
-  function editorPageIsLoaded() {
+  const editorPageIsLoaded = () => {
     return elementExists(formList().find('a'))
   }
 
-  function formListItems(n) {
+  const formListItems = n => {
     if ($.isNumeric(n)) {
       return formList()
         .find('a')
@@ -25,13 +25,13 @@
     }
   }
 
-  function personInfoModule() {
+  const personInfoModule = () => {
     return testFrame().find(
       ".editor-form__component-wrapper header:contains('Henkilötiedot')"
     )
   }
 
-  function formComponents() {
+  const formComponents = () => {
     return (
       testFrame()
         .find('.editor-form__component-wrapper')
@@ -40,26 +40,27 @@
           '.editor-form__followup-question-overlay .editor-form__component-wrapper'
         )
         // exclude hakukohteet
-        .not(function(i, node) {
-          return $(node).find("header:contains('Hakukohteet')").length > 0
-        })
+        .not(
+          (i, node) => $(node).find("header:contains('Hakukohteet')").length > 0
+        )
         // exclude henkilötiedot
-        .not(function(i, node) {
-          return $(node).find("header:contains('Henkilötiedot')").length > 0
-        })
+        .not(
+          (i, node) =>
+            $(node).find("header:contains('Henkilötiedot')").length > 0
+        )
     )
   }
 
-  function formSections() {
+  const formSections = () => {
     return testFrame()
       .find('.editor-form__component-wrapper')
-      .filter(function(i, node) {
-        return $(node).find("header:contains('Lomakeosio')").length > 0
-      })
+      .filter(
+        (i, node) => $(node).find("header:contains('Lomakeosio')").length > 0
+      )
   }
 
   function clickComponentMenuItem(title) {
-    function menuItem() {
+    const menuItem = () => {
       triggerEvent(
         testFrame().find('.editor-form > .editor-form__add-component-toolbar'),
         'mouseover'
@@ -73,9 +74,9 @@
     return clickElement(menuItem)
   }
 
-  function clickRepeatingAnswers(question) {
-    return function() {
-      return testFrame()
+  const clickRepeatingAnswers = question => {
+    return () =>
+      testFrame()
         .find('input.editor-form__text-field')
         .filter(function() {
           return this.value === question
@@ -86,12 +87,11 @@
         .find(".editor-form__checkbox-wrapper label:contains('Vastaaja voi')")
         .prev()
         .click()
-    }
   }
 
-  function clickNumericAnswer(question) {
-    return function() {
-      return testFrame()
+  const clickNumericAnswer = question => {
+    return () =>
+      testFrame()
         .find('input.editor-form__text-field')
         .filter(function() {
           return this.value === question
@@ -104,52 +104,52 @@
         )
         .prev()
         .click()
-    }
   }
 
-  function clickInfoTextCheckbox(selector) {
-    return function() {
-      return selector()
+  const clickInfoTextCheckbox = selector => {
+    return () =>
+      selector()
         .find('.editor-form__info-addon-checkbox > input')
         .click()
-    }
   }
 
-  before(function() {
+  before(() => {
     loadInFrame(
       'http://localhost:8350/lomake-editori/auth/cas?ticket=USER-WITH-HAKUKOHDE-ORGANIZATION'
     )
   })
 
-  afterEach(function() {
+  afterEach(() => {
     expect(window.uiError || null).to.be.null
   })
 
-  describe('Editor when user associated by hakukohteen organization', function() {
+  describe('Editor when user associated by hakukohteen organization', () => {
     before(
       wait.until(editorPageIsLoaded, 10000),
-      clickElement(function() {
-        return formListItems(0)
-      }),
+      clickElement(() => formListItems(0)),
       wait.forMilliseconds(1000), // TODO: fix form refresh in frontend so that this isn't required (or check that no AJAX requests are ongoing)
       clickComponentMenuItem('Tekstikenttä'),
-      setTextFieldValue(function() {
-        return formComponents()
-          .eq(0)
-          .find('.editor-form__text-field')
-      }, 'Ensimmäinen kysymys'),
-      clickElement(function() {
-        return formComponents()
+      setTextFieldValue(
+        () =>
+          formComponents()
+            .eq(0)
+            .find('.editor-form__text-field'),
+        'Ensimmäinen kysymys'
+      ),
+      clickElement(() =>
+        formComponents()
           .eq(0)
           .find('.editor-form__info-addon-checkbox label')
-      }),
-      setTextFieldValue(function() {
-        return formComponents()
-          .eq(0)
-          .find('.editor-form__info-addon-inputs textarea')
-      }, 'Ensimmäisen kysymyksen ohjeteksti')
+      ),
+      setTextFieldValue(
+        () =>
+          formComponents()
+            .eq(0)
+            .find('.editor-form__info-addon-inputs textarea'),
+        'Ensimmäisen kysymyksen ohjeteksti'
+      )
     )
-    it('has 1 fixture forms', function() {
+    it('has 1 fixture forms', () => {
       expect(formListItems()).to.have.length(1)
       expect(formComponents()).to.have.length(1)
     })

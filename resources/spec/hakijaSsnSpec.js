@@ -1,23 +1,23 @@
-;(function() {
-  afterEach(function() {
+;(() => {
+  afterEach(() => {
     expect(window.uiError || null).to.be.null
   })
 
-  describe('SSN tests', function() {
+  describe('SSN tests', () => {
     before(
       newForm('ssnTestForm'),
-      wait.until(function() {
+      wait.until(() => {
         return formSections().length === 1
       })
     )
 
-    it('should open a new empty form', function() {
+    it('should open a new empty form', () => {
       expect(formFields().length).to.equal(13)
       expect(submitButton().prop('disabled')).to.equal(true)
       expect(formHeader().text()).to.equal('SSN_testilomake')
     })
 
-    describe('SSN fields visibility', function() {
+    describe('SSN fields visibility', () => {
       it(
         'should not have non-Finnish ssn fields visible initially',
         assertOnlyFinnishSsn
@@ -27,10 +27,10 @@
         assertInvalidFieldCount(10)
       )
 
-      describe('Select non-Finnish ssn nationality', function() {
+      describe('Select non-Finnish ssn nationality', () => {
         before(
           setNthFieldOption(3, '740'),
-          wait.until(function() {
+          wait.until(() => {
             return hasFormField('have-finnish-ssn')
           })
         )
@@ -42,10 +42,10 @@
         )
       })
 
-      describe('Select "I don\'t have a Finnish ssn"', function() {
+      describe('Select "I don\'t have a Finnish ssn"', () => {
         before(
           setNthFieldOption(4, 'false'),
-          wait.until(function() {
+          wait.until(() => {
             return !hasFormField('ssn')
           })
         )
@@ -60,10 +60,10 @@
         )
       })
 
-      describe('Back to "I have a Finnish ssn"', function() {
+      describe('Back to "I have a Finnish ssn"', () => {
         before(
           setNthFieldOption(4, 'true'),
-          wait.until(function() {
+          wait.until(() => {
             return hasFormField('ssn')
           })
         )
@@ -75,10 +75,10 @@
         )
       })
 
-      describe('Back to Finnish nationality', function() {
+      describe('Back to Finnish nationality', () => {
         before(
           setNthFieldOption(3, '246'),
-          wait.until(function() {
+          wait.until(() => {
             return !hasFormField('have-finnish-ssn')
           })
         )
@@ -94,16 +94,16 @@
       })
     })
 
-    describe('Filling out non-Finnish ssn info', function() {
+    describe('Filling out non-Finnish ssn info', () => {
       before(
         setNthFieldInputValue(0, 'Etunimi Tokanimi'),
-        blurField(function() {
+        blurField(() => {
           return formFields()
             .eq(0)
             .find('input')
         }),
         focusInput(2),
-        wait.until(function() {
+        wait.until(() => {
           return (
             formFields()
               .eq(1)
@@ -113,7 +113,7 @@
         }),
         setNthFieldInputValue(2, 'Sukunimi'),
         setNthFieldOption(3, '740'),
-        wait.until(function() {
+        wait.until(() => {
           return (
             formFields()
               .eq(4)
@@ -122,7 +122,7 @@
           )
         }),
         setNthFieldOption(4, 'false'),
-        wait.until(function() {
+        wait.until(() => {
           return (
             formFields()
               .eq(5)
@@ -140,7 +140,7 @@
         setNthFieldInputValue(11, '0123456789'),
         setNthFieldInputValue(13, 'Katutie 12 B'),
         setNthFieldInputValue(14, '40100'),
-        wait.until(function() {
+        wait.until(() => {
           return (
             formFields()
               .eq(15)
@@ -152,31 +152,31 @@
         wait.until(submitButtonEnabled)
       )
 
-      it('works and validates correctly', function() {
+      it('works and validates correctly', () => {
         assertInvalidFieldCount(0)()
       })
     })
 
-    describe('Submitting', function() {
+    describe('Submitting', () => {
       before(
-        clickElement(function() {
+        clickElement(() => {
           return submitButton()
         }),
-        wait.until(function() {
+        wait.until(() => {
           return (
             testFrame().find('.application__sent-placeholder-text').length == 1
           )
         })
       )
 
-      it('has submitted the form', function() {
-        var displayedValues = _.map(
+      it('has submitted the form', () => {
+        const displayedValues = _.map(
           testFrame().find('.application__text-field-paragraph'),
-          function(e) {
+          e => {
             return $(e).text()
           }
         )
-        var expectedValues = [
+        const expectedValues = [
           'Etunimi Tokanimi',
           'Etunimi',
           'Sukunimi',
