@@ -64,6 +64,9 @@ module.exports = {
       script: 'lein',
       interpreter: '/bin/sh',
       args: ['hakija-dev'],
+      env: {
+          "CONFIG": "../ataru-secrets/hakija-local-dev.edn"
+      },
       cwd: __dirname,
       log_file: 'lein-hakija-dev.log',
       pid_file: '.lein-hakija-dev.pid',
@@ -78,6 +81,9 @@ module.exports = {
       script: 'lein',
       interpreter: '/bin/sh',
       args: ['virkailija-dev'],
+      env: {
+          "CONFIG": "../ataru-secrets/virkailija-local-dev.edn"
+      },
       cwd: __dirname,
       log_file: 'lein-virkailija-dev.log',
       pid_file: '.lein-virkailija-dev.pid',
