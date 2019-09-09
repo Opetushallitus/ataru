@@ -1,36 +1,36 @@
-var runner = mocha.run()
-var failed = 0
+const runner = mocha.run()
+let failed = 0
 
-$(document).keyup(function (e) {
+$(document).keyup(e => {
   if (e.keyCode == 27) {
     runner._abort = true
   }
 })
 
-function parseTitle(test) {
-  var titleArr = []
-  var thisTest = test
-  while(thisTest && thisTest.title) {
+const parseTitle = test => {
+  const titleArr = []
+  let thisTest = test
+  while (thisTest && thisTest.title) {
     titleArr.unshift(thisTest.title)
     thisTest = thisTest.parent
   }
   return titleArr.join(' / ')
 }
 
-runner.on('test end', function(t) {
-  console.log("Completed:", parseTitle(t));
+runner.on('test end', t => {
+  console.log('Completed:', parseTitle(t))
 })
 
-runner.on('fail', function(t, err) {
-  console.log("Failed:", parseTitle(t))
+runner.on('fail', (t, err) => {
+  console.log('Failed:', parseTitle(t))
   console.log(err)
   failed++
 })
 
-runner.on('end', function() {
+runner.on('end', () => {
   if (failed > 0) {
-    console.log("*** TEST FAIL", failed)
+    console.log('*** TEST FAIL', failed)
   } else {
-    console.log("*** TEST SUCCESS")
+    console.log('*** TEST SUCCESS')
   }
 })
