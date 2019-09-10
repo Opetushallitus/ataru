@@ -39,6 +39,7 @@ start: start-pm2
 stop: stop-pm2
 
 clean: lein-clean docker-clean
+	rm *.log
 
 kill: stop-pm2
 	npx pm2 kill
