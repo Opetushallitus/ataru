@@ -7,13 +7,13 @@ services:
       - POSTGRES_PASSWORD=oph
       - POSTGRES_USER=oph
     ports:
-      - "25432:5432"
+      - "15432:5432"
   ataru-dev-ftpd:
     build: ./test-ftpd
     ports:
-      - "2221:21"
+      - "1221:21"
       - "30000-30009:30000-30009"
   ataru-dev-redis:
     image: "redis:latest"
     ports:
-      - "26379:6379"
+      - "16379:6379"
