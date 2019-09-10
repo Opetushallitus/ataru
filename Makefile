@@ -34,9 +34,43 @@ start-pm2: build-docker-images
 stop-pm2: install-node-modules
 	npx pm2 stop pm2.config.js
 
+watch-stop:
+	pm2 stop "Ataru Hakija frontend compilation" "Ataru Virkailija frontend compilation" "Ataru Figwheel" "Ataru CSS compilation"
+
+watch-start:
+	pm2 start "Ataru Hakija frontend compilation" "Ataru Virkailija frontend compilation" "Ataru Figwheel" "Ataru CSS compilation"
+
+watch-restart: watch-start
+
+docker-stop:
+	pm2 stop "Ataru docker images"
+
+docker-start: build-docker-images
+	pm2 start "Ataru docker images"
+
+docker-restart: docker-start
+
+hakija-stop:
+	pm2 stop "Ataru Hakija backend (8351)"
+
+hakija-start:
+	pm2 start "Ataru Hakija backend (8351)"
+
+hakija-restart: hakija-start
+
+virkailija-stop:
+	pm2 stop "Ataru Virkailija backend (8350)"
+
+virkailija-start:
+	pm2 start "Ataru Virkailija backend (8350)"
+
+virkailija-restart: virkailija-start
+
 start: start-pm2
 
 stop: stop-pm2
+
+restart: stop-pm2 start-pm2
 
 clean: lein-clean docker-clean
 	rm *.log

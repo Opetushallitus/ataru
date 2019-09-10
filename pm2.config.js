@@ -34,7 +34,7 @@ module.exports = {
       exec_mode: "fork"
     },
     {
-      name: 'Ataru Virkailija frontend compilation (8350)',
+      name: 'Ataru Virkailija frontend compilation',
       script: 'lein',
       interpreter: '/bin/sh',
       args: ['cljsbuild', 'auto', 'virkailija-dev'],
@@ -49,7 +49,7 @@ module.exports = {
       exec_mode: "fork"
     },
     {
-      name: 'Ataru Hakija frontend compilation (8351)',
+      name: 'Ataru Hakija frontend compilation',
       script: 'lein',
       interpreter: '/bin/sh',
       args: ['cljsbuild', 'auto', 'hakija-dev'],
@@ -100,7 +100,7 @@ module.exports = {
       exec_mode: "fork"
     },
     {
-      name: 'Ataru Figheel',
+      name: 'Ataru Figwheel',
       script: 'lein',
       interpreter: '/bin/sh',
       args: ['figwheel', 'virkailija-dev', 'hakija-dev'],
