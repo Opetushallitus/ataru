@@ -16,6 +16,12 @@ check-tools:
 	$(foreach exec,$(EXECUTABLES),\
 		$(if $(shell which $(exec)),$(info .. $(exec) found),$(error No $(exec) in PATH)))
 
+docker-clean:
+	docker system prune -f
+
+lein-clean:
+	lein clean
+
 build-docker-images: check-tools
 	docker-compose build
 
@@ -31,6 +37,8 @@ stop-pm2: install-node-modules
 start: start-pm2
 
 stop: stop-pm2
+
+clean: lein-clean docker-clean
 
 kill: stop-pm2
 	npx pm2 kill
