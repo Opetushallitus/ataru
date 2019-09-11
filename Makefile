@@ -99,6 +99,9 @@ restart: stop-pm2 start-pm2
 clean: clean-lein clean-docker
 	rm *.log
 
+status:
+	pm2 status
+
 # ----------------
 # Kill PM2 and all apps managed by it (= everything)
 # ----------------
