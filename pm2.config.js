@@ -4,7 +4,7 @@ var path = require('path')
 module.exports = {
   apps: [
     {
-      name: 'Ataru docker images',
+      name: 'ataru-docker-images',
       script: 'docker-compose',
       interpreter: '/bin/sh',
       args: ['up'],
@@ -19,7 +19,7 @@ module.exports = {
       exec_mode: "fork"
     },
     {
-      name: 'Ataru CSS compilation',
+      name: 'ataru-css-compilation',
       script: 'lein',
       interpreter: '/bin/sh',
       args: ['less', 'auto'],
@@ -34,7 +34,7 @@ module.exports = {
       exec_mode: "fork"
     },
     {
-      name: 'Ataru Virkailija frontend compilation',
+      name: 'ataru-virkailija-frontend-compilation',
       script: 'lein',
       interpreter: '/bin/sh',
       args: ['cljsbuild', 'auto', 'virkailija-dev'],
@@ -49,7 +49,7 @@ module.exports = {
       exec_mode: "fork"
     },
     {
-      name: 'Ataru Hakija frontend compilation',
+      name: 'ataru-hakija-frontend-compilation',
       script: 'lein',
       interpreter: '/bin/sh',
       args: ['cljsbuild', 'auto', 'hakija-dev'],
@@ -64,7 +64,7 @@ module.exports = {
       exec_mode: "fork"
     },
     {
-      name: 'Ataru Hakija backend (8351)',
+      name: 'ataru-hakija-backend-8351',
       script: 'lein',
       interpreter: '/bin/sh',
       args: ['hakija-dev'],
@@ -82,7 +82,7 @@ module.exports = {
       exec_mode: "fork"
     },
     {
-      name: 'Ataru Virkailija backend (8350)',
+      name: 'ataru-virkailija-backend-8350',
       script: 'lein',
       interpreter: '/bin/sh',
       args: ['virkailija-dev'],
@@ -100,7 +100,7 @@ module.exports = {
       exec_mode: "fork"
     },
     {
-      name: 'Ataru Figwheel',
+      name: 'ataru-figwheel',
       script: 'lein',
       interpreter: '/bin/sh',
       args: ['figwheel', 'virkailija-dev', 'hakija-dev'],

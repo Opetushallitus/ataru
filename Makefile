@@ -3,6 +3,18 @@ EXECUTABLES = lein docker docker-compose npm lftp
 VIRKAILIJA_DEV_CONFIG=../ataru-secrets/virkailija-local-dev.edn
 HAKIJA_DEV_CONFIG=../ataru-secrets/hakija-local-dev.edn
 
+HAKIJA_FRONTEND_COMPILER="ataru-hakija-frontend-compilation"
+VIRKAILIJA_FRONTEND_COMPILER="ataru-virkailija-frontend-compilation"
+FIGWHEEL="ataru-figwheel"
+CSS_COMPILER="ataru-css-compilation"
+DOCKER_IMAGES="ataru-docker-images"
+HAKIJA_BACKEND="ataru-hakija-backend-8351"
+VIRKAILIJA_BACKEND="ataru-virkailija-backend-8350"
+
+PM2=npx pm2
+START_ONLY=start pm2.config.js --only
+STOP_ONLY=stop pm2.config.js --only
+
 # ----------------
 # Check ataru-secrets existence and config files
 # ----------------
@@ -35,49 +47,51 @@ install-node-modules: check-tools
 # Start apps
 # ----------------
 start-pm2: build-docker-images
-	npx pm2 start pm2.config.js
+	$(PM2) start pm2.config.js
 
 start-hakija-frontend-compilation: install-node-modules
-	pm2 start "Ataru Hakija frontend compilation"
+	$(PM2) $(START_ONLY) $(HAKIJA_FRONTEND_COMPILER)
 
 start-virkailija-frontend-compilation: install-node-modules
-	pm2 start "Ataru Virkailija frontend compilation"
+	$(PM2) $(START_ONLY) $(VIRKAILIJA_FRONTEND_COMPILER)
 
 start-watch: install-node-modules start-hakija-frontend-compilation start-virkailija-frontend-compilation
-	pm2 start "Ataru Figwheel" "Ataru CSS compilation"
+	$(PM2) $(START_ONLY) $(FIGWHEEL)
+	$(PM2) $(START_ONLY) $(CSS_COMPILER)
 
 start-docker: build-docker-images
-	pm2 start "Ataru docker images"
+	$(PM2) $(START_ONLY) $(DOCKER_IMAGES)
 
 start-hakija: start-hakija-frontend-compilation start-docker
-	pm2 start "Ataru Hakija backend (8351)"
+	$(PM2) $(START_ONLY) $(HAKIJA_BACKEND)
 
 start-virkailija: start-virkailija-frontend-compilation start-docker
-	pm2 start "Ataru Virkailija backend (8350)"
+	$(PM2) $(START_ONLY) $(VIRKAILIJA_BACKEND)
 
 # ----------------
 # Stop apps
 # ----------------
 stop-pm2: install-node-modules
-	npx pm2 stop pm2.config.js
+	$(PM2) stop pm2.config.js
 
 stop-hakija-frontend-compilation:
-	pm2 stop "Ataru Hakija frontend compilation"
+	$(PM2) $(STOP_ONLY) $(HAKIJA_FRONTEND_COMPILER)
 
 stop-virkailija-frontend-compilation:
-	pm2 stop "Ataru Virkailija frontend compilation"
+	$(PM2) $(STOP_ONLY) $(VIRKAILIJA_FRONTEND_COMPILER)
 
 stop-watch: stop-hakija-frontend-compilation stop-virkailija-frontend-compilation
-	pm2 stop "Ataru Figwheel" "Ataru CSS compilation"
+	$(PM2) $(STOP_ONLY) $(FIGWHEEL)
+	$(PM2) $(STOP_ONLY) $(CSS_COMPILER)
 
 stop-docker:
-	pm2 stop "Ataru docker images"
+	$(PM2) $(STOP_ONLY) $(DOCKER_IMAGES)
 
 stop-hakija:
-	pm2 stop "Ataru Hakija backend (8351)"
+	$(PM2) $(STOP_ONLY) $(HAKIJA_BACKEND)
 
 stop-virkailija:
-	pm2 stop "Ataru Virkailija backend (8350)"
+	$(PM2) $(STOP_ONLY) $(VIRKAILIJA_BACKEND)
 
 # ----------------
 # Restart apps
@@ -113,11 +127,11 @@ clean: stop clean-lein clean-docker
 	rm *.log
 
 status:
-	pm2 status
+	$(PM2) status
 
 # ----------------
 # Kill PM2 and all apps managed by it (= everything)
 # ----------------
 kill: stop-pm2
-	npx pm2 kill
+	$(PM2) kill
 
