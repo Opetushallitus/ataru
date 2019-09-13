@@ -3,13 +3,13 @@ EXECUTABLES = lein docker docker-compose npm lftp
 VIRKAILIJA_DEV_CONFIG=../ataru-secrets/virkailija-local-dev.edn
 HAKIJA_DEV_CONFIG=../ataru-secrets/hakija-local-dev.edn
 
-HAKIJA_FRONTEND_COMPILER="ataru-hakija-frontend-compilation"
-VIRKAILIJA_FRONTEND_COMPILER="ataru-virkailija-frontend-compilation"
-FIGWHEEL="ataru-figwheel"
-CSS_COMPILER="ataru-css-compilation"
-DOCKER_IMAGES="ataru-docker-images"
-HAKIJA_BACKEND="ataru-hakija-backend-8351"
-VIRKAILIJA_BACKEND="ataru-virkailija-backend-8350"
+HAKIJA_FRONTEND_COMPILER=ataru-hakija-frontend-compilation
+VIRKAILIJA_FRONTEND_COMPILER=ataru-virkailija-frontend-compilation
+FIGWHEEL=ataru-figwheel
+CSS_COMPILER=ataru-css-compilation
+DOCKER_IMAGES=ataru-docker-images
+HAKIJA_BACKEND=ataru-hakija-backend-8351
+VIRKAILIJA_BACKEND=ataru-virkailija-backend-8350
 
 PM2=npx pm2
 START_ONLY=start pm2.config.js --only
