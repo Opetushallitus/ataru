@@ -665,6 +665,8 @@
 (defn- single-choice-option [option parent-id field-descriptor question-group-idx languages use-multi-choice-style? verifying?]
   (let [cannot-edit?   (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])
         label          (util/non-blank-val (:label option) @languages)
+        uncertain?     (and (-> field-descriptor :params :selection-group-id)
+                            @(subscribe [:state-query [:application :selection-over-network-uncertain?]]))
         option-value   (:value option)
         option-id      (util/component-id)
         limit-reached? (subscribe [:application/limit-reached? parent-id option-value])
@@ -682,7 +684,7 @@
          [:input
           (merge {:id        option-id
                   :type      "checkbox"
-                  :checked   (and (not @verifying?) (not unselectable?) @checked?)
+                  :checked   (and (not @verifying?) (not unselectable?) (not uncertain?) @checked?)
                   :value     option-value
                   :on-change on-change
                   :role      "radio"

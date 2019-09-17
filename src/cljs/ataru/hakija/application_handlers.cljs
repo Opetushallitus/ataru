@@ -629,6 +629,13 @@
       db)))
 
 (reg-event-db
+  :application/handle-selection-over-network-uncertain
+  (fn [db [_ uncertain?]]
+    (if uncertain?
+      (assoc-in db [:application :selection-over-network-uncertain?] true)
+      (update db :application dissoc :selection-over-network-uncertain?))))
+
+(reg-event-db
   :application/network-offline
   (fn [db [_ flash]]
     (if (get db :error)
@@ -969,6 +976,8 @@
                             :field-idx                    0
                             :virkailija?                  (contains? (:application db) :virkailija-secret)
                             :on-validated                 (fn [[valid? errors selection-limit]]
+                                                            (dispatch [:application/handle-selection-over-network-uncertain
+                                                                       (and (not valid?) (not-empty errors))])
                                                             (when (and selection-limit (not-empty selection-limit))
                                                               (dispatch [:application/handle-update-selection-limits
                                                                          (first selection-limit) valid? id new-value]))
