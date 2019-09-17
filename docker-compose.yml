@@ -17,3 +17,20 @@ services:
     image: "redis:latest"
     ports:
       - "16379:6379"
+  ataru-test-db:
+    build: ./test-postgres
+    environment:
+      - POSTGRES_DB=ataru-test
+      - POSTGRES_PASSWORD=oph
+      - POSTGRES_USER=oph
+    ports:
+      - "15433:5432"
+  ataru-test-ftpd:
+    build: ./test-ftpd
+    ports:
+      - "1222:21"
+      - "40000-40009:30000-30009"
+  ataru-dev-redis:
+    image: "redis:latest"
+    ports:
+      - "16380:6379"

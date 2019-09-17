@@ -135,6 +135,13 @@ status: $(NODE_MODULES)
 	$(PM2) status
 
 # ----------------
+# Test db management
+# ----------------
+
+test: start-docker
+	CONFIG=config/test.edn ./bin/cibuild.sh run-tests	
+
+# ----------------
 # Kill PM2 and all apps managed by it (= everything)
 # ----------------
 kill: stop-pm2 stop-docker
