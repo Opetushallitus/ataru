@@ -15,6 +15,8 @@ PM2=npx pm2
 START_ONLY=start pm2.config.js --only
 STOP_ONLY=stop pm2.config.js --only
 
+NODE_MODULES=node_modules/pm2/bin/pm2
+
 # ----------------
 # Check ataru-secrets existence and config files
 # ----------------
@@ -40,22 +42,26 @@ check-tools:
 build-docker-images: check-tools
 	docker-compose build
 
-install-node-modules: check-tools
+
+# ----------------
+# Npm installation
+# ----------------
+$(NODE_MODULES):
 	npm install
 
 # ----------------
 # Start apps
 # ----------------
-start-pm2: build-docker-images
+start-pm2: $(NODE_MODULES) build-docker-images
 	$(PM2) start pm2.config.js
 
-start-hakija-frontend-compilation: install-node-modules
+start-hakija-frontend-compilation: $(NODE_MODULES)
 	$(PM2) $(START_ONLY) $(HAKIJA_FRONTEND_COMPILER)
 
-start-virkailija-frontend-compilation: install-node-modules
+start-virkailija-frontend-compilation: $(NODE_MODULES)
 	$(PM2) $(START_ONLY) $(VIRKAILIJA_FRONTEND_COMPILER)
 
-start-watch: install-node-modules start-hakija-frontend-compilation start-virkailija-frontend-compilation
+start-watch: $(NODE_MODULES) start-hakija-frontend-compilation start-virkailija-frontend-compilation
 	$(PM2) $(START_ONLY) $(FIGWHEEL)
 	$(PM2) $(START_ONLY) $(CSS_COMPILER)
 
@@ -71,7 +77,7 @@ start-virkailija: start-virkailija-frontend-compilation start-docker
 # ----------------
 # Stop apps
 # ----------------
-stop-pm2: install-node-modules
+stop-pm2: $(NODE_MODULES)
 	$(PM2) stop pm2.config.js
 
 stop-hakija-frontend-compilation:
@@ -126,7 +132,7 @@ clean: stop clean-lein clean-docker
 	rm -rf node_modules
 	rm *.log
 
-status:
+status: $(NODE_MODULES)
 	$(PM2) status
 
 # ----------------
