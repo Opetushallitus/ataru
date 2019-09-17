@@ -4,21 +4,6 @@ var path = require('path')
 module.exports = {
   apps: [
     {
-      name: 'ataru-docker-images',
-      script: 'docker-compose',
-      interpreter: '/bin/sh',
-      args: ['up'],
-      cwd: __dirname,
-      log_file: 'docker-compose.log',
-      pid_file: '.docker-compose.pid',
-      combine_logs: true,
-      restart_delay: 4000,
-      wait_ready: true,
-      watch: false,
-      exec_interpreter: "none",
-      exec_mode: "fork"
-    },
-    {
       name: 'ataru-css-compilation',
       script: 'lein',
       interpreter: '/bin/sh',

@@ -7,7 +7,6 @@ HAKIJA_FRONTEND_COMPILER=ataru-hakija-frontend-compilation
 VIRKAILIJA_FRONTEND_COMPILER=ataru-virkailija-frontend-compilation
 FIGWHEEL=ataru-figwheel
 CSS_COMPILER=ataru-css-compilation
-DOCKER_IMAGES=ataru-docker-images
 HAKIJA_BACKEND=ataru-hakija-backend-8351
 VIRKAILIJA_BACKEND=ataru-virkailija-backend-8350
 
@@ -42,7 +41,6 @@ check-tools:
 build-docker-images: check-tools
 	docker-compose build
 
-
 # ----------------
 # Npm installation
 # ----------------
@@ -52,7 +50,10 @@ $(NODE_MODULES):
 # ----------------
 # Start apps
 # ----------------
-start-pm2: $(NODE_MODULES) build-docker-images
+start-docker: build-docker-images
+	docker-compose up -d
+
+start-pm2: $(NODE_MODULES) start-docker
 	$(PM2) start pm2.config.js
 
 start-hakija-frontend-compilation: $(NODE_MODULES)
@@ -64,9 +65,6 @@ start-virkailija-frontend-compilation: $(NODE_MODULES)
 start-watch: $(NODE_MODULES) start-hakija-frontend-compilation start-virkailija-frontend-compilation
 	$(PM2) $(START_ONLY) $(FIGWHEEL)
 	$(PM2) $(START_ONLY) $(CSS_COMPILER)
-
-start-docker: build-docker-images
-	$(PM2) $(START_ONLY) $(DOCKER_IMAGES)
 
 start-hakija: start-hakija-frontend-compilation start-docker
 	$(PM2) $(START_ONLY) $(HAKIJA_BACKEND)
@@ -91,7 +89,7 @@ stop-watch: stop-hakija-frontend-compilation stop-virkailija-frontend-compilatio
 	$(PM2) $(STOP_ONLY) $(CSS_COMPILER)
 
 stop-docker:
-	$(PM2) $(STOP_ONLY) $(DOCKER_IMAGES)
+	docker-compose down
 
 stop-hakija:
 	$(PM2) $(STOP_ONLY) $(HAKIJA_BACKEND)
@@ -106,7 +104,7 @@ restart-hakija: start-hakija
 
 restart-virkailija: start-virkailija
 
-restart-docker: start-docker
+restart-docker: stop-docker start-docker
 
 restart-watch: start-watch
 
@@ -133,11 +131,12 @@ clean: stop clean-lein clean-docker
 	rm *.log
 
 status: $(NODE_MODULES)
+	docker ps
 	$(PM2) status
 
 # ----------------
 # Kill PM2 and all apps managed by it (= everything)
 # ----------------
-kill: stop-pm2
+kill: stop-pm2 stop-docker
 	$(PM2) kill
 
