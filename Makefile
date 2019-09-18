@@ -134,6 +134,12 @@ status: $(NODE_MODULES)
 	docker ps
 	$(PM2) status
 
+log: $(NODE_MODULES)
+	$(PM2) logs
+
+help:
+	@cat Makefile.md
+
 # ----------------
 # Test db management
 # ----------------
