@@ -1,6 +1,6 @@
 'use strict'
 
-var path = require('path')
+const path = require('path')
 module.exports = {
   apps: [
     {
@@ -15,8 +15,8 @@ module.exports = {
       restart_delay: 4000,
       wait_ready: true,
       watch: false,
-      exec_interpreter: "none",
-      exec_mode: "fork"
+      exec_interpreter: 'none',
+      exec_mode: 'fork',
     },
     {
       name: 'ataru-virkailija-frontend-compilation',
@@ -30,8 +30,8 @@ module.exports = {
       restart_delay: 4000,
       wait_ready: true,
       watch: false,
-      exec_interpreter: "none",
-      exec_mode: "fork"
+      exec_interpreter: 'none',
+      exec_mode: 'fork',
     },
     {
       name: 'ataru-hakija-frontend-compilation',
@@ -45,8 +45,8 @@ module.exports = {
       restart_delay: 4000,
       wait_ready: true,
       watch: false,
-      exec_interpreter: "none",
-      exec_mode: "fork"
+      exec_interpreter: 'none',
+      exec_mode: 'fork',
     },
     {
       name: 'ataru-hakija-backend-8351',
@@ -54,7 +54,7 @@ module.exports = {
       interpreter: '/bin/sh',
       args: ['hakija-dev'],
       env: {
-          "CONFIG": "../ataru-secrets/hakija-local-dev.edn"
+        CONFIG: '../ataru-secrets/hakija-local-dev.edn',
       },
       cwd: __dirname,
       log_file: 'hakija-dev.log',
@@ -63,8 +63,8 @@ module.exports = {
       restart_delay: 4000,
       wait_ready: true,
       watch: false,
-      exec_interpreter: "none",
-      exec_mode: "fork"
+      exec_interpreter: 'none',
+      exec_mode: 'fork',
     },
     {
       name: 'ataru-virkailija-backend-8350',
@@ -72,7 +72,7 @@ module.exports = {
       interpreter: '/bin/sh',
       args: ['virkailija-dev'],
       env: {
-          "CONFIG": "../ataru-secrets/virkailija-local-dev.edn"
+        CONFIG: '../ataru-secrets/virkailija-local-dev.edn',
       },
       cwd: __dirname,
       log_file: 'virkailija-dev.log',
@@ -81,8 +81,8 @@ module.exports = {
       restart_delay: 4000,
       wait_ready: true,
       watch: false,
-      exec_interpreter: "none",
-      exec_mode: "fork"
+      exec_interpreter: 'none',
+      exec_mode: 'fork',
     },
     {
       name: 'ataru-figwheel',
@@ -96,9 +96,8 @@ module.exports = {
       restart_delay: 4000,
       wait_ready: true,
       watch: false,
-      exec_interpreter: "none",
-      exec_mode: "fork"
+      exec_interpreter: 'none',
+      exec_mode: 'fork',
     },
-
-  ]
+  ],
 }
