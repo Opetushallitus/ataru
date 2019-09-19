@@ -20,6 +20,9 @@ make kill
 make check-tools
 	Verifies that all necessary tools are in path. Is called by most targets
 
+make build-docker-images
+	Build docker images using docker-compose. Is called by many other targets
+
 make status
 	Shows status of applications and docker containers
 
