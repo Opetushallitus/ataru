@@ -6,7 +6,7 @@ make start
 	Starts all applications and docker containers
 
 make stop
-	Stop all applications and docker containes
+	Stop all applications and docker containers
 
 make restart
 	Restart all applications and docker containers
