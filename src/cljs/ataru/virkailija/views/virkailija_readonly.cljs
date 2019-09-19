@@ -214,7 +214,7 @@
       [copy-link (:id content) :shared-use-warning? false :include? exclude-always-included]]]
     (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
                                        (some? question-group-idx)
-                                       (nth question-group-idx))
+                                       (nth question-group-idx nil))
                                vector
                                flatten
                                set)
