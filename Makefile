@@ -10,9 +10,11 @@ CSS_COMPILER=ataru-css-compilation
 HAKIJA_BACKEND=ataru-hakija-backend-8351
 VIRKAILIJA_BACKEND=ataru-virkailija-backend-8350
 
-PM2=npx pm2
+PM2=npx pm2 --no-autorestart
 START_ONLY=start pm2.config.js --only
 STOP_ONLY=stop pm2.config.js --only
+
+DOCKER_COMPOSE=COMPOSE_PARALLEL_LIMIT=8 docker-compose
 
 NODE_MODULES=node_modules/pm2/bin/pm2
 
@@ -39,7 +41,7 @@ check-tools:
 # Docker build
 # ----------------
 build-docker-images: check-tools
-	docker-compose build
+	$(DOCKER_COMPOSE) build
 
 # ----------------
 # Npm installation
@@ -51,7 +53,7 @@ $(NODE_MODULES):
 # Start apps
 # ----------------
 start-docker: build-docker-images
-	docker-compose up -d
+	$(DOCKER_COMPOSE) up -d
 
 start-pm2: $(NODE_MODULES) start-docker
 	$(PM2) start pm2.config.js
