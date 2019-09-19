@@ -171,7 +171,7 @@
       {:name          "form-by-haku-oid-and-id"
        :ttl           [1 TimeUnit/HOURS]
        :refresh-after [5 TimeUnit/SECONDS]
-       :lock-timeout  [10000 TimeUnit/MILLISECONDS]})
+       :lock-timeout  [1 TimeUnit/MINUTES]})
      {:redis  :redis
       :loader :form-by-haku-oid-and-id-cache-loader})]
    [:form-by-haku-oid-str-cache
@@ -180,6 +180,6 @@
       {:name          "form-by-haku-oid-str"
        :ttl           [3 TimeUnit/DAYS]
        :refresh-after [5 TimeUnit/SECONDS]
-       :lock-timeout  [10000 TimeUnit/MILLISECONDS]})
+       :lock-timeout  [1 TimeUnit/MINUTES]})
      {:redis  :redis
       :loader :form-by-haku-oid-str-cache-loader})]])
