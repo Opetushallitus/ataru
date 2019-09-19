@@ -140,7 +140,9 @@
         (map #(preview-submit-email (:lang %) (:subject %) (:content %) (:content-ending %)) x)))
 
 (defn- attachment-with-deadline [application lang field]
-  (let [attachment {:label (-> field :label lang)}]
+  (let [attachment {:label (-> field
+                               :label
+                               (util/non-blank-val [lang :fi :sv :en]))}]
     (assoc attachment :deadline (-> field :params :deadline-label lang))))
 
 (defn- create-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id]
