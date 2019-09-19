@@ -160,7 +160,7 @@
   (if-let [value (:value answer)]
     (cond-> value
       (some? group-idx)
-      (nth group-idx))
+      (nth group-idx nil))
     (map :value (cond-> (:values answer)
                   (some? group-idx)
                   (nth group-idx)))))
