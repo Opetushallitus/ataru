@@ -2,7 +2,23 @@
 
 A system for creating custom forms, applying to education and handling applications.
 
-## Development setups
+## How to start
+
+Start all Ataru processes and docker containers using command
+
+    make start
+
+Stop all Ataru processes and docker containers using command
+
+    make stop
+
+See `make help` for details
+
+## Starting things manually
+
+This section explains how you can start different Ataru services by hand.
+Preferred way to start local development environment is via `make` command.
+This section is left here as a reference.
 
 ### Create database
 
