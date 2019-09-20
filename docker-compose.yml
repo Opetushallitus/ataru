@@ -8,11 +8,6 @@ services:
       - POSTGRES_USER=oph
     ports:
       - "15432:5432"
-  ataru-dev-ftpd:
-    build: ./test-ftpd
-    ports:
-      - "1221:21"
-      - "30000-30009:30000-30009"
   ataru-dev-redis:
     image: "redis:latest"
     ports:
@@ -28,8 +23,8 @@ services:
   ataru-test-ftpd:
     build: ./test-ftpd
     ports:
-      - "1222:21"
-      - "40000-40009:30000-30009"
+      - "1221:21"
+      - "30000-30009:30000-30009"
   ataru-dev-redis:
     image: "redis:latest"
     ports:

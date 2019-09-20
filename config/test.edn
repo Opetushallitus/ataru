@@ -15,7 +15,7 @@
                              :country-question-id         "testi-country-question-id"
                              :attachment-total-size-limit 10485760
                              :ftp                         {:host               "localhost"
-                                                           :port               1222
+                                                           :port               1221
                                                            :user               "oph"
                                                            :password           "oph"
                                                            :verify-certificate false
