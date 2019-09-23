@@ -2,107 +2,17 @@
 
 A system for creating custom forms, applying to education and handling applications.
 
-## Development setups
+## How to start
 
-### Create database
+Start all Ataru processes and docker containers using command
 
-./test-postgres contains a Dockerfile for a Postgres 10 based image with fi_FI
-locale. To build the image:
+    make start
 
-```
-docker build -t ataru-test-db -t ataru-dev-db ./test-postgres
-```
+Stop all Ataru processes and docker containers using command
 
-Then to run a local development db:
+    make stop
 
-```
-docker run -d --name ataru-dev-db -p 5432:5432 -e POSTGRES_DB=ataru-dev -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph ataru-dev-db
-```
-
-### Create Redis for caches
-
-```
-docker run --name ataru-dev-redis -p 6379:6379 -d redis
-```
-
-### Create a FTPS server for mocked ASHA integration
-
-Ataru has an integration to ASHA for tutkintojen tunnustaminen process.
-Certain actions (submiting an application, modifying it and changing the state
-to inactivated) start background jobs that create an XML message and transfer
-it to a FTP server for processing by ASHA.
-
-For testing and local development a docker container running a FTP server is
-used. Directory test-ftpd contains a Dockerfile and certificates for building
-this container.
-
-```
-docker build -t ataru-test-ftpd -t ataru-dev-ftpd ./test-ftpd
-```
-
-Stop the dev-container (if running) to avoid port collision.
-
-```
-docker stop ataru-dev-ftpd
-```
-
-Then to run a local test FTP server:
-
-```
-docker run -d --name ataru-dev-ftpd -p 2221:21 -p 30000-30009:30000-30009 ataru-dev-ftpd
-```
-
-### Compile css:
-
-```
-lein less once
-```
-
-or
-
-```
-lein less auto
-```
-
-### Compile frontend code:
-
-```
-lein cljsbuild once virkailija-dev
-```
-```
-lein cljsbuild once hakija-dev
-```
-
-### Run application:
-
-This will also allow you to connect to the nREPL servers of the jvm processes
-individually and change running code without restarting the JVM.
-
-#### Local setup with mocked remote resources and using the local db
-
-```
-lein virkailija-dev
-```
-```
-lein hakija-dev
-```
-```
-lein figwheel virkailija-dev hakija-dev
-```
-
-#### Using remote resources
-
-Secrets requiret for accessing remote resources are stored in a separate
-private repository `https://github.com/Opetushallitus/ataru-secrets`. After
-checking out the repository you can start the application using one of the
-existing configurations.
-
-```
-CONFIG=../ataru-secrets/virkailija-<env>.edn lein virkailija-dev
-```
-```
-CONFIG=../ataru-secrets/hakija-<env>.edn lein hakija-dev
-```
+See `make help` for details
 
 ### AWS service integration
 

@@ -27,3 +27,4 @@ config/ui-test.edn
 .oracle_jre_usage
 npm-debug.log*
 package-lock.json
+*.pid
