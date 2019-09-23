@@ -257,7 +257,8 @@
             "figwheel-hakija"     ["with-profile" "hakija-dev" "figwheel" "hakija-dev"]
             "export-locales"      ["with-profile" "dev" "run" "-m" "ataru.scripts.export-locales"]
             "anonymize-data"      ["with-profile" "dev" "run" "-m" "ataru.anonymizer.core/anonymize-data"]
-            "db-schema"           ["with-profile" "dev" "run" "-m" "ataru.scripts.generate-schema-diagram"]})
+            "db-schema"           ["with-profile" "dev" "run" "-m" "ataru.scripts.generate-schema-diagram"]
+            "generate-secrets"    ["with-profile" "dev" "run" "-m" "ataru.util.secrets-generator"]})
 
 
 
