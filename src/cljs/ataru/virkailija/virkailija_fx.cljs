@@ -59,3 +59,25 @@
     (organization/fetch-hakukohderyhmat c)))
 
 (re-frame/reg-fx :http-abort http/abort)
+
+(re-frame/reg-fx
+  :virkailija/scroll-y
+  (fn scroll-y [target-y]
+    (let [target-x (.-scrollX js/window)]
+      (.scrollTo js/window
+                 target-x
+                 target-y))))
+
+(re-frame/reg-fx
+  :virkailija/setup-keypress-event-listener
+  (fn setup-keypress-event-listener [listener]
+    (.addEventListener js/document
+                       "keydown"
+                       listener)))
+
+(re-frame/reg-fx
+  :virkailija/remove-keypress-event-listener
+  (fn remove-keypress-event-listener [listener]
+    (.removeEventListener js/document
+                          "keydown"
+                          listener)))

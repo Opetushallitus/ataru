@@ -6,6 +6,7 @@
             [ataru.virkailija.subs]
             [ataru.cljs-util :refer [set-global-error-handler!]]
             [ataru.virkailija.virkailija-fx] ; don't remove this, this is used to register all virkailija fx handlers
+            [ataru.virkailija.virkailija-cofx]
             [ataru.virkailija.virkailija-ajax :refer [post]]
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.views :as views]
@@ -13,7 +14,6 @@
             [ataru.virkailija.editor.handlers]
             [taoensso.timbre :refer-macros [spy info]]
             [ataru.application-common.fx] ; ataru.application-common.fx must be required to have common fx handlers enabled
-            [ataru.virkailija.virkailija-fx] ; virkailija specific fx handlers
             [ataru.virkailija.views.banner :as banner]
             [ataru.virkailija.application.view :as app-handling-view]))
 
