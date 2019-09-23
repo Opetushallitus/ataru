@@ -1685,8 +1685,10 @@
                 :let [text (str (:filename attachment-file) " (" (util/size-bytes->str (:size attachment-file)) ")")]]
             ^{:key (:key (str "attachment-file-" attachment-file))}
             [:li
-             (if (= (:virus-scan-status attachment-file) "done")
-               [:a {:href (str "/lomake-editori/api/files/content/" (:key attachment-file))}
+             (if (and (= (:virus-scan-status attachment-file) "done")
+                      (contains? selected-attachment-keys (:key attachment-file)))
+               [:a
+                {:on-click #(dispatch [:virkailija-attachments/open-attachment-preview (:key attachment-file)])}
                 text]
                text)])]]))))
 
