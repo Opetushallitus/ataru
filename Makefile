@@ -114,6 +114,8 @@ restart-watch: start-watch
 # Clean commands
 # ----------------
 clean-docker:
+	docker-compose stop
+	docker-compose rm
 	docker system prune -f
 
 clean-lein:
