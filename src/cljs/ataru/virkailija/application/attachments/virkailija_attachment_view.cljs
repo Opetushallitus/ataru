@@ -77,6 +77,7 @@
     (fn [liitepyynto-for-selected-hakukohteet]
       (let [lang                         @(re-frame/subscribe [:editor/virkailija-lang])
             all-liitepyynto-states       (map :state liitepyynto-for-selected-hakukohteet)
+            all-hakukohde-oids           (map :hakukohde-oid liitepyynto-for-selected-hakukohteet)
             multiple-liitepyynto-states? (->> all-liitepyynto-states
                                               (count)
                                               (< 1))
@@ -90,19 +91,23 @@
                                            review-states/attachment-hakukohde-review-types)
             can-edit?                    @(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
         [:div.application-review-dropdown
-         (when can-edit?
-           {:on-click #(swap! list-opened? not)})
          [:div.application-review-dropdown__list
           (if @list-opened?
             (for [[state labels] review-types]
               (let [label-i18n (-> labels lang)]
+                ^{:key state}
                 [:div.application-review-dropdown__list-item
+                 {:on-click (fn []
+                              (doseq [hakukohde-oid all-hakukohde-oids]
+                                (re-frame/dispatch [:application/update-attachment-review (:key effective-liitepyynto) hakukohde-oid state]))
+                              (swap! list-opened? not))}
                  (when (= state effective-liitepyynto-state)
                    [:i.zmdi.zmdi-check.attachment-review-dropdown__checkmark])
                  [:span.attachment-review-dropdown__label
                   (str label-i18n)]]))
             [:div.application-review-dropdown__list-item
-             (when-not can-edit?
+             (if can-edit?
+               {:on-click #(swap! list-opened? not)}
                {:class "application-review-dropdown--disabled"})
              [:i.zmdi.zmdi-check.attachment-review-dropdown__checkmark]
              [:span.attachment-review-dropdown__label
@@ -117,7 +122,9 @@
 (defn attachment-preview []
   (let [selected-hakukohde-oids               @(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
         liitepyynnot-for-selected-hakukohteet (map (fn [selected-hakukohde-oid]
-                                                     @(re-frame/subscribe [:application/get-attachment-reviews-for-selected-hakukohde selected-hakukohde-oid]))
+                                                     (map (fn [liitepyynto]
+                                                            (assoc liitepyynto :hakukohde-oid selected-hakukohde-oid))
+                                                          @(re-frame/subscribe [:application/get-attachment-reviews-for-selected-hakukohde selected-hakukohde-oid])))
                                                    selected-hakukohde-oids)
         selected-attachment-key               @(re-frame/subscribe [:state-query [:application :attachment-preview :selected-attachment-key]])
         selected-attachment-and-liitepyynto   (->> liitepyynnot-for-selected-hakukohteet
