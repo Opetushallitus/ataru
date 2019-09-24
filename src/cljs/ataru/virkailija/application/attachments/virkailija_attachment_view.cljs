@@ -2,7 +2,6 @@
   (:require [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]
             [ataru.util :as u]
-            [ataru.virkailija.application.virkailija-application-shared-components :as ac]
             [reagent.core :as reagent]
             [re-frame.core :as re-frame]))
 
