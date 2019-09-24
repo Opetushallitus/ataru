@@ -1683,7 +1683,7 @@
          [:ul.application__attachment-review-row-attachments
           (for [attachment-file files
                 :let [text (str (:filename attachment-file) " (" (util/size-bytes->str (:size attachment-file)) ")")]]
-            ^{:key (:key (str "attachment-file-" attachment-file))}
+            ^{:key (str "attachment-file-" attachment-file)}
             [:li
              (if (and (= (:virus-scan-status attachment-file) "done")
                       (contains? selected-attachment-keys (:key attachment-file)))
