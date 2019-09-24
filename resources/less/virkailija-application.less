@@ -1961,6 +1961,15 @@ and (max-width: 1000px) {
   width: 252px;
 }
 
+.application-review-dropdown--disabled {
+  color: @disabled-font-gray;
+  cursor: default;
+
+  &:hover {
+    background-color: @very-light-gray;
+  }
+}
+
 .application-review-dropdown__list {
   background-color: @white;
   border-radius: 3px;
@@ -1970,14 +1979,16 @@ and (max-width: 1000px) {
 
 .application-review-dropdown__list-item {
   align-items: center;
-  cursor: pointer;
   display: flex;
   height: 52px;
   position: relative;
 
-  &:hover {
-    color: @selected-blue;
-    background-color: @application-form-list-background-color;
+  &:not(.application-review-dropdown--disabled) {
+    cursor: pointer;
+    &:hover {
+      color: @selected-blue;
+      background-color: @application-form-list-background-color;
+    }
   }
 }
 
