@@ -87,9 +87,11 @@
                                              "not-checked")
             review-types                 (if multiple-liitepyynto-states?
                                            review-states/attachment-hakukohde-review-types-with-multiple-values
-                                           review-states/attachment-hakukohde-review-types)]
+                                           review-states/attachment-hakukohde-review-types)
+            can-edit?                    @(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
         [:div.application-review-dropdown
-         {:on-click #(swap! list-opened? not)}
+         (when can-edit?
+           {:on-click #(swap! list-opened? not)})
          [:div.application-review-dropdown__list
           (if @list-opened?
             (for [[state labels] review-types]
@@ -100,6 +102,8 @@
                  [:span.attachment-review-dropdown__label
                   (str label-i18n)]]))
             [:div.application-review-dropdown__list-item
+             (when-not can-edit?
+               {:class "application-review-dropdown--disabled"})
              [:i.zmdi.zmdi-check.attachment-review-dropdown__checkmark]
              [:span.attachment-review-dropdown__label
               (application-states/get-review-state-label-by-name review-types effective-liitepyynto-state lang)]])]]))))
