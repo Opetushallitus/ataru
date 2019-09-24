@@ -722,14 +722,15 @@
      (re-frame/subscribe [:application/selected-application])
      (re-frame/subscribe [:application/hakukohde-attachment-reviews hakukohde])])
   (fn get-attachment-reviews-for-selected-hakukohde
-    [[form-fields application attachment-reviews] _]
+    [[form-fields application attachment-reviews] [_ hakukohde-oid]]
     (for [[key state] attachment-reviews
           :let        [answer (get-in application [:answers (keyword key)])
                        field  ((keyword key) form-fields)]]
       {:key    key
        :state  state
        :values (:values answer)
-       :label  (:label field)})))
+       :label  (:label field)
+       :hakukohde-oid hakukohde-oid})))
 
 (re-frame.core/reg-sub
   :application/lang

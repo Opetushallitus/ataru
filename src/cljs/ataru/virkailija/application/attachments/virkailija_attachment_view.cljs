@@ -72,8 +72,39 @@
        [:a {:href download-url}
         download-label]]]]))
 
-(defn- attachment-preview-state-list []
-  [:div.application-review-dropdown])
+(defn- attachment-preview-state-list [liitepyynto-for-selected-hakukohteet]
+  (let [list-opened? (reagent/atom false)]
+    (fn [liitepyynto-for-selected-hakukohteet]
+      (let [lang                         @(re-frame/subscribe [:editor/virkailija-lang])
+            all-liitepyynto-states       (map :state liitepyynto-for-selected-hakukohteet)
+            multiple-liitepyynto-states? (->> all-liitepyynto-states
+                                              (count)
+                                              (< 1))
+            effective-liitepyynto        (first liitepyynto-for-selected-hakukohteet)
+            effective-liitepyynto-state  (or (when multiple-liitepyynto-states?
+                                               "multiple-values")
+                                             (:state effective-liitepyynto)
+                                             "not-checked")
+            review-types                 (if multiple-liitepyynto-states?
+                                           review-states/attachment-hakukohde-review-types-with-multiple-values
+                                           review-states/attachment-hakukohde-review-types)]
+        [:div.application-review-dropdown
+         {:on-click #(swap! list-opened? not)}
+         [:div.application-review-dropdown__list
+          (if @list-opened?
+            (for [[state labels] review-types]
+              (let [label-i18n (-> labels lang)]
+                [:div.application-review-dropdown__list-item
+                 (when (= state effective-liitepyynto-state)
+                   [:i.zmdi.zmdi-check.attachment-review-dropdown__checkmark])
+                 [:span.attachment-review-dropdown__label
+                  (str label-i18n)]]))
+            [:div.application-review-dropdown__list-item
+             [:i.zmdi.zmdi-check.attachment-review-dropdown__checkmark]
+             [:span.attachment-review-dropdown__label
+              (application-states/get-review-state-label-by-name review-types effective-liitepyynto-state lang)]])]]))))
+
+
 
 (defn- attachment-preview-image-view [selected-attachment]
   (let [download-url (download-url selected-attachment)]
@@ -110,12 +141,16 @@
                                                                     (map first))
                                                               conj)
                                                    (first))
-        max-index                             (-> selected-attachment-keys count dec)]
+        max-index                             (-> selected-attachment-keys count dec)
+        liitepyynto-for-selected-hakukohteet  (->> liitepyynnot-for-selected-hakukohteet
+                                                   (flatten)
+                                                   (filter (comp (partial = (:key selected-liitepyynto))
+                                                                 :key)))]
     [:div.attachment-preview
      [:div.attachment-preview-header
       [attachment-header selected-liitepyynto]
       [:div.attachment-preview-header-section.attachment-preview-header-control-buttons-section
-       [attachment-preview-state-list]
+       [attachment-preview-state-list liitepyynto-for-selected-hakukohteet]
        [attachment-preview-navigation-button :left current-index max-index selected-attachment-keys]
        [attachment-preview-index-text current-index max-index]
        [attachment-preview-navigation-button :right current-index max-index selected-attachment-keys]]

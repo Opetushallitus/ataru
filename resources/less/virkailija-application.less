@@ -1852,7 +1852,7 @@ and (max-width: 1000px) {
 }
 
 .attachment-preview-header-section:not(:first-of-type) {
-  border-left: 1px solid @gray-of-the-beast;
+  border-left: 1px solid @attachment-review-header-separator-color;
   padding-left: 30px;
 }
 
@@ -1954,12 +1954,41 @@ and (max-width: 1000px) {
 }
 
 .application-review-dropdown {
-  border-radius: 3px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  color: @link-color;
+  font-size: 17px;
   height: 52px;
+  position: relative;
   width: 252px;
 }
 
+.application-review-dropdown__list {
+  background-color: @white;
+  border-radius: 3px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  width: 252px;
+}
+
+.application-review-dropdown__list-item {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  height: 52px;
+  position: relative;
+
+  &:hover {
+    color: @selected-blue;
+    background-color: @application-form-list-background-color;
+  }
+}
+
+.attachment-review-dropdown__checkmark {
+  left: 30px;
+  position: absolute;
+}
+
+.attachment-review-dropdown__label {
+  margin-left: 55px;
+}
 
 @media only screen
 and (max-width: @desktop-content-width) {
