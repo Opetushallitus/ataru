@@ -16,7 +16,7 @@
         liitepyynto-text     (-> selected-liitepyynto :label lang)]
     [:div.attachment-preview-header-section.attachment-preview-header-details-section
      [:span.attachment-preview-header__text name-and-ssn-text]
-     [:span.attachment-preview-header__text.attachment-preview-header__text--bold
+     [:span.attachment-preview-header__text.attachment-preview-header__text--bold.attachment-preview-header__text--no-overflow
       liitepyynto-text]]))
 
 (defn- attachment-preview-navigation-button [direction current-index max-index selected-attachment-keys]
@@ -57,8 +57,7 @@
                                                          @(re-frame/subscribe [:virkailija-attachments/attachment-selected? attachment-key])))))
 
 (defn- attachment-preview-index-text [current-index max-index]
-  [:div.attachment-preview-index-text__container
-   [:span.attachment-preview-index-text (str (inc current-index) " / " (inc max-index))]])
+  [:span.attachment-preview-index-text (str (inc current-index) " / " (inc max-index))])
 
 (defn- download-url [attachment]
   (str "/lomake-editori/api/files/content/" (:key attachment)))
