@@ -77,7 +77,7 @@
        [:a {:href download-url}
         download-label]]]]))
 
-(defn- attachment-preview-state-list [liitepyynto-for-selected-hakukohteet]
+(defn- attachment-preview-state-list []
   (let [list-opened? (reagent/atom false)]
     (fn [liitepyynto-for-selected-hakukohteet]
       (let [lang                         @(re-frame/subscribe [:editor/virkailija-lang])
