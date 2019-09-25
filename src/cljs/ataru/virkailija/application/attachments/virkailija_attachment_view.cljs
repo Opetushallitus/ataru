@@ -84,6 +84,7 @@
             all-liitepyynto-states       (map :state liitepyynto-for-selected-hakukohteet)
             all-hakukohde-oids           (map :hakukohde-oid liitepyynto-for-selected-hakukohteet)
             multiple-liitepyynto-states? (->> all-liitepyynto-states
+                                              (distinct)
                                               (count)
                                               (< 1))
             effective-liitepyynto        (first liitepyynto-for-selected-hakukohteet)
