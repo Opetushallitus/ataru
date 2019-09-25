@@ -109,14 +109,20 @@
                                   (re-frame/dispatch [:application/update-attachment-review (:key effective-liitepyynto) hakukohde-oid state])))
                               (swap! list-opened? not))}
                  (when (= state effective-liitepyynto-state)
-                   [:i.zmdi.zmdi-check.attachment-review-dropdown__checkmark])
+                   [:i.zmdi.attachment-review-dropdown__checkmark
+                    {:class (if (= state "multiple-values")
+                              "zmdi-check-all"
+                              "zmdi-check")}])
                  [:span.attachment-review-dropdown__label
                   (str label-i18n)]]))
             [:div.application-review-dropdown__list-item
              (if can-edit?
                {:on-click #(swap! list-opened? not)}
                {:class "application-review-dropdown--disabled"})
-             [:i.zmdi.zmdi-check.attachment-review-dropdown__checkmark]
+             [:i.zmdi.attachment-review-dropdown__checkmark
+              {:class (if (= effective-liitepyynto-state "multiple-values")
+                        "zmdi-check-all"
+                        "zmdi-check")}]
              [:span.attachment-review-dropdown__label
               (application-states/get-review-state-label-by-name review-types effective-liitepyynto-state lang)]])]]))))
 
