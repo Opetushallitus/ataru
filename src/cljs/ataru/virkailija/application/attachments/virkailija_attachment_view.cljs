@@ -104,8 +104,9 @@
                 ^{:key state}
                 [:div.application-review-dropdown__list-item
                  {:on-click (fn []
-                              (doseq [hakukohde-oid all-hakukohde-oids]
-                                (re-frame/dispatch [:application/update-attachment-review (:key effective-liitepyynto) hakukohde-oid state]))
+                              (when-not (= state effective-liitepyynto-state)
+                                (doseq [hakukohde-oid all-hakukohde-oids]
+                                  (re-frame/dispatch [:application/update-attachment-review (:key effective-liitepyynto) hakukohde-oid state])))
                               (swap! list-opened? not))}
                  (when (= state effective-liitepyynto-state)
                    [:i.zmdi.zmdi-check.attachment-review-dropdown__checkmark])
