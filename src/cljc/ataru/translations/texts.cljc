@@ -1599,7 +1599,10 @@ You will receive a confirmation of your application to your email."}
                             :en "Overdue"}
    :attachmentless         {:fi "Liitteettömät"
                             :sv "Utan bilagor"
-                            :en "No attachments"}})
+                            :en "No attachments"}
+   :multiple-values        {:fi "Monta arvoa"
+                            :sv "Multipla värden"
+                            :en "Multiple values"}})
 
 (def excel-texts
   {:name                     {:fi "Nimi"
