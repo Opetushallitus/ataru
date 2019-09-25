@@ -126,11 +126,17 @@
              [:span.attachment-review-dropdown__label
               (application-states/get-review-state-label-by-name review-types effective-liitepyynto-state lang)]])]]))))
 
-
+(def allowed-files-matcher #"(?i)\.(jpg|jpeg|png)$")
 
 (defn- attachment-preview-image-view [selected-attachment]
   (let [download-url (download-url selected-attachment)]
-    [:img.attachment-preview-image-view__image {:src download-url}]))
+    [:div.attachment-preview-image-view
+     (if (->> selected-attachment
+              :filename
+              (re-find allowed-files-matcher))
+       [:img.attachment-preview-image-view__image {:src download-url}]
+       [:div.attachment-preview-image-view-no-preview
+        [:span.attachment-preview-image-view-no-preview__text "?"]])]))
 
 (defn attachment-preview []
   (let [selected-hakukohde-oids               @(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
@@ -186,5 +192,4 @@
        [attachment-preview-close-button]]]
      [:div.attachment-preview-naming-bar
       [attachment-preview-filename selected-attachment]]
-     [:div.attachment-preview-image-view
-      [attachment-preview-image-view selected-attachment]]]))
+     [attachment-preview-image-view selected-attachment]]))

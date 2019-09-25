@@ -1840,15 +1840,12 @@ and (max-width: 1000px) {
   z-index: 101;
 }
 
-.attachment-preview > * {
-  width: 100%;
-}
-
 .attachment-preview-header {
   background-color: @white;
   display: flex;
   flex-flow: row nowrap;
   padding: 20px;
+  width: 100%;
 }
 
 .attachment-preview-header-section:not(:first-of-type) {
@@ -1936,6 +1933,7 @@ and (max-width: 1000px) {
   display: flex;
   justify-content: space-between;
   margin: 24px 0;
+  width: 100%;
 }
 
 .attachment-preview-naming-bar > :last-child {
@@ -1957,10 +1955,26 @@ and (max-width: 1000px) {
 .attachment-preview-image-view {
   display: flex;
   justify-content: center;
+  width: 100%;
 }
 
 .attachment-preview-image-view__image {
   max-width: 80%;
+}
+
+.attachment-preview-image-view-no-preview {
+  border: 1px dashed @attachment-review-image-view-border-color;
+  width: 80%;
+  max-width: 1000px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.attachment-preview-image-view-no-preview__text {
+  color: @attachment-review-image-view-text-color;
+  font-size: 586px;
+  font-weight: 600;
 }
 
 .application-review-dropdown {
