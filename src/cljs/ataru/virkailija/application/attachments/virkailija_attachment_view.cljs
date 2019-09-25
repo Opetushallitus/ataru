@@ -64,18 +64,24 @@
   (str "/lomake-editori/api/files/content/" (:key attachment)))
 
 (defn- attachment-preview-filename [selected-attachment]
-  (let [download-label (str "lataa ("
-                            (-> selected-attachment :size u/size-bytes->str)
-                            ")")
-        download-url   (download-url selected-attachment)
-        filename       (-> selected-attachment :filename)]
+  (let [download-label    (str "lataa ("
+                               (-> selected-attachment :size u/size-bytes->str)
+                               ")")
+        download-url      (download-url selected-attachment)
+        filename          (-> selected-attachment :filename)
+        can-display-file? @(re-frame/subscribe [:state-query [:application :attachment-preview :can-display-selected-file?]])]
     [:<>
      [:div]
      [:span.attachment-preview-header__text filename]
      [:div.attachment-preview-header__naming-bar-right-element-container
       [:span.attachment-preview-header__text.attachment-preview-header__naming-bar-right-element
        [:a {:href download-url}
-        download-label]]]]))
+        download-label]
+       (when-not
+         can-display-file?
+         [:div.attachment-preview-header__cannot-display-text
+          [:div.attachment-preview-header__cannot-display-text-indicator]
+          [:span "Tätä liitettä ei valitettavasti voida näyttää esikatselussa, mutta voit ladata sen tästä tiedostona."]])]]]))
 
 (defn- attachment-preview-state-list []
   (let [list-opened? (reagent/atom false)]
@@ -129,12 +135,19 @@
 (def allowed-files-matcher #"(?i)\.(jpg|jpeg|png)$")
 
 (defn- attachment-preview-image-view [selected-attachment]
-  (let [download-url (download-url selected-attachment)]
+  (let [download-url             (download-url selected-attachment)
+        stored-can-display-file? @(re-frame/subscribe [:state-query [:application :attachment-preview :can-display-selected-file?]])
+        can-display-file?        (->> selected-attachment
+                                      :filename
+                                      (re-find allowed-files-matcher)
+                                      boolean)]
+    (when-not
+      (= can-display-file? stored-can-display-file?)
+      (re-frame/dispatch [:virkailija-attachments/set-can-display-file can-display-file?]))
     [:div.attachment-preview-image-view
-     (if (->> selected-attachment
-              :filename
-              (re-find allowed-files-matcher))
-       [:img.attachment-preview-image-view__image {:src download-url}]
+     (if can-display-file?
+       [:img.attachment-preview-image-view__image
+        {:src download-url}]
        [:div.attachment-preview-image-view-no-preview
         [:span.attachment-preview-image-view-no-preview__text "?"]])]))
 
