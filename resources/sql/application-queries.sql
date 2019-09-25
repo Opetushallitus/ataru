@@ -717,10 +717,26 @@ SELECT
   hakukohde AS hakukohde,
   (SELECT answers->>'value'
    FROM jsonb_array_elements(a.content->'answers') AS answers
+   WHERE answers->>'key' = 'ssn') AS henkilotunnus,
+  (SELECT answers->>'value'
+   FROM jsonb_array_elements(a.content->'answers') AS answers
+   WHERE answers->>'key' = 'first-name') AS etunimet,
+  (SELECT answers->>'value'
+   FROM jsonb_array_elements(a.content->'answers') AS answers
+   WHERE answers->>'key' = 'last-name') AS sukunimi,
+  (SELECT answers->>'value'
+   FROM jsonb_array_elements(a.content->'answers') AS answers
    WHERE answers->>'key' = 'address') AS lahiosoite,
   (SELECT answers->>'value'
    FROM jsonb_array_elements(a.content->'answers') AS answers
    WHERE answers->>'key' = 'postal-code') AS postinumero,
+  (SELECT CASE answers->>'value'
+              WHEN '1' THEN 'fi'
+              WHEN '2' THEN 'sv'
+              WHEN '3' THEN 'en'
+              END AS value
+  FROM jsonb_array_elements(a.content->'answers') AS answers
+   WHERE answers->>'key' = 'asiointikieli') AS asiointikieli,
   (SELECT json_agg(json_build_object('requirement', requirement,
                                      'state', state,
                                      'hakukohde', hakukohde))
