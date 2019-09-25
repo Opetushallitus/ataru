@@ -45,9 +45,14 @@
    {:on-click #(re-frame/dispatch [:virkailija-attachments/close-attachment-preview])}
    [:i.zmdi.zmdi-close]])
 
-(def liitepyynnot->attachment-keys-xform (comp (mapcat (partial map :values))
+(def liitepyynnot->attachment-keys-xform (comp (mapcat (partial map (fn [liitepyynto]
+                                                                      (let [values (:values liitepyynto)]
+                                                                        (cond->> values
+                                                                                 (every? vector? values)
+                                                                                 (flatten))))))
                                                (mapcat identity)
                                                (map :key)
+                                               (distinct)
                                                (filter (fn [attachment-key]
                                                          @(re-frame/subscribe [:virkailija-attachments/attachment-selected? attachment-key])))))
 
@@ -130,10 +135,14 @@
         selected-attachment-and-liitepyynto   (->> liitepyynnot-for-selected-hakukohteet
                                                    (transduce (comp (mapcat identity)
                                                                     (mapcat (fn [liitepyynto]
-                                                                              (map (fn [attachment]
-                                                                                     {:liitepyynto (dissoc liitepyynto :values)
-                                                                                      :attachment  attachment})
-                                                                                   (:values liitepyynto))))
+                                                                              (let [values      (:values liitepyynto)
+                                                                                    attachments (cond->> values
+                                                                                                         (every? vector? values)
+                                                                                                         (flatten))]
+                                                                                (map (fn [attachment]
+                                                                                       {:liitepyynto (dissoc liitepyynto :values)
+                                                                                        :attachment  attachment})
+                                                                                     attachments))))
                                                                     (filter (comp (partial = selected-attachment-key)
                                                                                   :key
                                                                                   :attachment)))
