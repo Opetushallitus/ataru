@@ -25,7 +25,7 @@ services:
     ports:
       - "1221:21"
       - "30000-30009:30000-30009"
-  ataru-dev-redis:
+  ataru-test-redis:
     image: "redis:latest"
     ports:
       - "16380:6379"
