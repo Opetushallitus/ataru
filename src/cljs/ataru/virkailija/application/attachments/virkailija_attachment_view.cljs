@@ -16,7 +16,7 @@
         liitepyynto-text     (-> selected-liitepyynto :label lang)]
     [:div.attachment-preview-header-section.attachment-preview-header-details-section
      [:span.attachment-preview-header__text name-and-ssn-text]
-     [:span.attachment-preview-header__text.attachment-preview-header__text--bold.attachment-preview-header__text--no-overflow
+     [:span.attachment-preview-header__text.attachment-preview-header__text--bold.attachment-preview-header__text--no-overflow.animated.fadeIn
       liitepyynto-text]]))
 
 (defn- attachment-preview-navigation-button [direction current-index max-index selected-attachment-keys]
