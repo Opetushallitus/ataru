@@ -52,7 +52,8 @@
                                                          @(re-frame/subscribe [:virkailija-attachments/attachment-selected? attachment-key])))))
 
 (defn- attachment-preview-index-text [current-index max-index]
-  [:span.attachment-preview-index-text (str (inc current-index) " / " (inc max-index))])
+  [:div.attachment-preview-index-text__container
+   [:span.attachment-preview-index-text (str (inc current-index) " / " (inc max-index))]])
 
 (defn- download-url [attachment]
   (str "/lomake-editori/api/files/content/" (:key attachment)))
