@@ -1861,9 +1861,11 @@ and (max-width: 1000px) {
 }
 
 .attachment-preview-header-control-buttons-section {
-  align-items: center;
+  align-items: flex-start;
   display: flex;
+  flex-basis: 520px;
   flex-flow: row nowrap;
+  flex-shrink: 0;
 }
 
 .attachment-preview-header-control-buttons-section > :not(:first-child) {
@@ -1875,7 +1877,7 @@ and (max-width: 1000px) {
 }
 
 .attachment-preview-header-close-button-section {
-  align-items: center;
+  align-items: flex-start;
   display: flex;
   margin-right: 15px;
 }
@@ -1884,6 +1886,7 @@ and (max-width: 1000px) {
   display: flex;
   flex-flow: column nowrap;
   flex-grow: 2;
+  justify-content: flex-start;
 }
 
 .attachment-preview-header-details-section > .attachment-preview-header__text:not(:last-of-type) {
@@ -1902,6 +1905,13 @@ and (max-width: 1000px) {
 .attachment-preview-index-text {
   color: @link-color;
   font-weight: 600;
+}
+
+.attachment-preview-index-text__container {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  height: 52px;
 }
 
 .attachment-preview-control-button {
