@@ -713,9 +713,9 @@
         :path-params [key :- (api/describe s/Str "File key")]
         :summary "Download a file"
         (if-let [file-response (file-store/get-file key)]
-          (header (ok (:body file-response))
-            "Content-Disposition"
-            (:content-disposition file-response))
+          (-> (ok (:body file-response))
+              (header "Content-Disposition" (:content-disposition file-response))
+              (header "Cache-Control" "public, max-age=31536000"))
           (not-found)))
       (api/POST "/zip" []
         :form-params [keys :- s/Str
