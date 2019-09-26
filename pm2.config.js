@@ -1,6 +1,13 @@
 'use strict'
 
 const path = require('path')
+
+// Allow local overriding of hakija and virkailija configs via environment variables
+const virkailijaConfig = process.env["VIRKAILIJA_CONFIG"] || '../ataru-secrets/virkailija-local-dev.edn'
+const hakijaConfig = process.env["HAKIJA_CONFIG"] || '../ataru-secrets/hakija-local-dev.edn'
+console.log("Virkailija config:", virkailijaConfig)
+console.log("Hakija config:", hakijaConfig)
+
 module.exports = {
   apps: [
     {
@@ -60,7 +67,7 @@ module.exports = {
       interpreter: '/bin/sh',
       args: ['hakija-dev'],
       env: {
-        CONFIG: '../ataru-secrets/hakija-local-dev.edn',
+        CONFIG: hakijaConfig,
       },
       cwd: __dirname,
       log_file: 'hakija-dev.log',
@@ -80,7 +87,7 @@ module.exports = {
       interpreter: '/bin/sh',
       args: ['virkailija-dev'],
       env: {
-        CONFIG: '../ataru-secrets/virkailija-local-dev.edn',
+        CONFIG: virkailijaConfig,
       },
       cwd: __dirname,
       log_file: 'virkailija-dev.log',

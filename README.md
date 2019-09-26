@@ -14,6 +14,24 @@ Stop all Ataru processes and docker containers using command
 
 See `make help` for details
 
+## Running custom configurations
+
+If you need to run your custom configuration, you may configure the
+configuration files the makefile system uses to start the services.
+
+First, you must kill existing pm2 instance, since it caches the environment
+variables.
+
+    make kill
+
+Then, you can start the system using your own configuration files.
+
+    export VIRKAILIJA_CONFIG=../ataru-secrets/virkailija-my-config.edn
+    export HAKIJA_CONFIG=../ataru-secrets/hakija-my-config.edn
+    make start
+
+Now your local instances are running using your custom configuration.
+
 ### AWS service integration
 
 Currently S3 integration is used in non-dev environments for storage of
