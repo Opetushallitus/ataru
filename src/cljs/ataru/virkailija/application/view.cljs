@@ -1750,66 +1750,71 @@
   (let [settings-visible        (subscribe [:state-query [:application :review-settings :visible?]])
         superuser?              (subscribe [:state-query [:editor :user-info :superuser?]])
         show-attachment-review? (r/atom false)]
-    (fn []
-      (let [selected-review-hakukohde        @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-            attachment-reviews-for-hakukohde (group-by #(:key (first %))
-                                               (mapcat (fn [oid]
-                                                         (map (fn [attachments]
-                                                                [attachments oid])
-                                                           @(subscribe [:application/get-attachment-reviews-for-selected-hakukohde oid]))) selected-review-hakukohde))
-            lang                             (subscribe [:application/lang])]
-        [:div.application-handling__review-outer
-         [:a.application-handling__review-area-settings-link
-          {:on-click (fn [event]
-                       (.preventDefault event)
-                       (dispatch [:application/toggle-review-area-settings-visibility]))}
-          [:i.application-handling__review-area-settings-button.zmdi.zmdi-settings]]
-         [:div.application-handling__review-settings
-          {:style (when-not @settings-visible
-                    {:visibility "hidden"})}
-          [:div.application-handling__review-settings-indicator-outer
-           [:div.application-handling__review-settings-indicator-inner]]
-          [:div.application-handling__review-settings-header
-             [:i.zmdi.zmdi-account.application-handling__review-settings-header-icon]
-             [:span.application-handling__review-settings-header-text (get-virkailija-translation :settings)]]]
-         [:div.application-handling__review
-          (when @show-attachment-review?
-            [attachment-review-area attachment-reviews-for-hakukohde @lang])
-          [:div.application-handling__review-outer-container
-           [application-hakukohde-selection]
-           (when (not-empty selected-review-hakukohde)
-             [:div
-              (when (not-empty attachment-reviews-for-hakukohde)
-                [:div.application-handling__attachment-review-toggle-container
-                 (when @settings-visible
-                   [review-settings-checkbox :attachment-handling])
-                 [:span.application-handling__attachment-review-toggle-container-link
-                  {:on-click (fn []
-                               (when-not @settings-visible
-                                 (let [show? (not @show-attachment-review?)]
-                                   (dispatch [:state-update #(assoc-in % [:application :show-attachment-reviews?] show?)])
-                                   (if show?
-                                     (reset! show-attachment-review? show?)
-                                     (js/setTimeout #(reset! show-attachment-review? show?) 500)))))}
-                  [:span.application-handling__attachment-review-toggle
-                   (if @show-attachment-review?
-                     [:span [:i.zmdi.zmdi-chevron-right] [:i.zmdi.zmdi-chevron-right]]
-                     [:span [:i.zmdi.zmdi-chevron-left] [:i.zmdi.zmdi-chevron-left]])]
-                  (gstring/format "%s (%d)"
-                    (get-virkailija-translation :attachments)
-                    (count (keys attachment-reviews-for-hakukohde)))]])
-              [application-hakukohde-review-inputs review-states/hakukohde-review-types]])
-           (when @(subscribe [:application/show-info-request-ui?])
-             [application-information-request])
-           [application-review-inputs]
-           [application-review-notes]
-           [application-modify-link false]
-           (when @superuser?
-             [application-modify-link true])
-           [application-resend-modify-link]
-           [application-resend-modify-link-confirmation]
-           [application-deactivate-toggle]
-           [application-review-events]]]]))))
+    (r/create-class
+      {:component-did-mount
+       (fn []
+         (dispatch [:virkailija-attachments/restore-attachment-view-scroll-position]))
+       :reagent-render
+       (fn []
+         (let [selected-review-hakukohde        @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+               attachment-reviews-for-hakukohde (group-by #(:key (first %))
+                                                          (mapcat (fn [oid]
+                                                                    (map (fn [attachments]
+                                                                           [attachments oid])
+                                                                         @(subscribe [:application/get-attachment-reviews-for-selected-hakukohde oid]))) selected-review-hakukohde))
+               lang                             (subscribe [:application/lang])]
+           [:div.application-handling__review-outer
+            [:a.application-handling__review-area-settings-link
+             {:on-click (fn [event]
+                          (.preventDefault event)
+                          (dispatch [:application/toggle-review-area-settings-visibility]))}
+             [:i.application-handling__review-area-settings-button.zmdi.zmdi-settings]]
+            [:div.application-handling__review-settings
+             {:style (when-not @settings-visible
+                       {:visibility "hidden"})}
+             [:div.application-handling__review-settings-indicator-outer
+              [:div.application-handling__review-settings-indicator-inner]]
+             [:div.application-handling__review-settings-header
+              [:i.zmdi.zmdi-account.application-handling__review-settings-header-icon]
+              [:span.application-handling__review-settings-header-text (get-virkailija-translation :settings)]]]
+            [:div.application-handling__review
+             (when @show-attachment-review?
+               [attachment-review-area attachment-reviews-for-hakukohde @lang])
+             [:div.application-handling__review-outer-container
+              [application-hakukohde-selection]
+              (when (not-empty selected-review-hakukohde)
+                [:div
+                 (when (not-empty attachment-reviews-for-hakukohde)
+                   [:div.application-handling__attachment-review-toggle-container
+                    (when @settings-visible
+                      [review-settings-checkbox :attachment-handling])
+                    [:span.application-handling__attachment-review-toggle-container-link
+                     {:on-click (fn []
+                                  (when-not @settings-visible
+                                    (let [show? (not @show-attachment-review?)]
+                                      (dispatch [:state-update #(assoc-in % [:application :show-attachment-reviews?] show?)])
+                                      (if show?
+                                        (reset! show-attachment-review? show?)
+                                        (js/setTimeout #(reset! show-attachment-review? show?) 500)))))}
+                     [:span.application-handling__attachment-review-toggle
+                      (if @show-attachment-review?
+                        [:span [:i.zmdi.zmdi-chevron-right] [:i.zmdi.zmdi-chevron-right]]
+                        [:span [:i.zmdi.zmdi-chevron-left] [:i.zmdi.zmdi-chevron-left]])]
+                     (gstring/format "%s (%d)"
+                                     (get-virkailija-translation :attachments)
+                                     (count (keys attachment-reviews-for-hakukohde)))]])
+                 [application-hakukohde-review-inputs review-states/hakukohde-review-types]])
+              (when @(subscribe [:application/show-info-request-ui?])
+                [application-information-request])
+              [application-review-inputs]
+              [application-review-notes]
+              [application-modify-link false]
+              (when @superuser?
+                [application-modify-link true])
+              [application-resend-modify-link]
+              [application-resend-modify-link-confirmation]
+              [application-deactivate-toggle]
+              [application-review-events]]]]))})))
 
 (defn notification [link-params]
   (fn [{:keys [text link-text href on-click]}]
