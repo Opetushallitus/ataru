@@ -64,10 +64,3 @@
   :virkailija-attachments/remove-esc-keypress-event-listener
   (fn []
     {:virkailija/remove-keypress-event-listener esc-keypress-event-listener}))
-
-(defn- attachment-idx [attachment-key attachment-keys-indexed]
-  (->> attachment-keys-indexed
-       (filter (fn [attachment]
-                 (= (:key attachment) attachment-key)))
-       (map :ui-idx)
-       (first)))
