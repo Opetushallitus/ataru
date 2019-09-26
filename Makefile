@@ -1,7 +1,7 @@
 EXECUTABLES = lein docker docker-compose npm lftp
 
-VIRKAILIJA_DEV_CONFIG=../ataru-secrets/virkailija-local-dev.edn
-HAKIJA_DEV_CONFIG=../ataru-secrets/hakija-local-dev.edn
+VIRKAILIJA_CONFIG ?= ../ataru-secrets/virkailija-local-dev.edn
+HAKIJA_CONFIG ?= ../ataru-secrets/hakija-local-dev.edn
 
 HAKIJA_FRONTEND_COMPILER=ataru-hakija-frontend-compilation
 VIRKAILIJA_FRONTEND_COMPILER=ataru-virkailija-frontend-compilation
@@ -21,12 +21,12 @@ NODE_MODULES=node_modules/pm2/bin/pm2
 # ----------------
 # Check ataru-secrets existence and config files
 # ----------------
-ifeq ("$(wildcard $(VIRKAILIJA_DEV_CONFIG))","")
-    $(error $(VIRKAILIJA_DEV_CONFIG) not found, clone/update ataru-secrets alongside ataru since configs are stored there)
+ifeq ("$(wildcard $(VIRKAILIJA_CONFIG))","")
+    $(error $(VIRKAILIJA_CONFIG) not found, clone/update ataru-secrets alongside ataru since configs are stored there)
 endif
 
-ifeq ("$(wildcard $(HAKIJA_DEV_CONFIG))","")
-    $(error $(HAKIJA_DEV_CONFIG) not found, clone/update ataru-secrets alongside ataru since configs are stored there)
+ifeq ("$(wildcard $(HAKIJA_CONFIG))","")
+    $(error $(HAKIJA_CONFIG) not found, clone/update ataru-secrets alongside ataru since configs are stored there)
 endif
 
 # ----------------
