@@ -52,15 +52,24 @@
 (re-frame/reg-event-fx
   :virkailija-attachments/close-attachment-preview
   (fn [{db :db}]
-    (let [previous-scroll-y (-> db :application :attachment-preview :previous-scroll-y)]
-      {:db                                        (update-in db
-                                                             [:application :attachment-preview]
-                                                             (comp (partial assoc {:visible? false} :selected-attachments)
-                                                                   :selected-attachments))
-       :virkailija/remove-keypress-event-listener esc-keypress-event-listener
-       :virkailija/scroll-y                       previous-scroll-y})))
+    {:db                                        (update-in db
+                                                           [:application :attachment-preview]
+                                                           (fn [attachment-preview]
+                                                             (-> attachment-preview
+                                                                 (select-keys [:selected-attachments :previous-scroll-y])
+                                                                 (assoc :visible? false))))
+     :virkailija/remove-keypress-event-listener esc-keypress-event-listener}))
 
 (re-frame/reg-event-fx
   :virkailija-attachments/remove-esc-keypress-event-listener
   (fn []
     {:virkailija/remove-keypress-event-listener esc-keypress-event-listener}))
+
+(re-frame/reg-event-fx :virkailija-attachments/restore-attachment-view-scroll-position
+  (fn [{db :db}]
+    (let [previous-scroll-y (-> db :application :attachment-preview :previous-scroll-y)]
+      {:db                  (update-in db
+                                       [:application :attachment-preview]
+                                       dissoc
+                                       :previous-scroll-y)
+       :virkailija/scroll-y previous-scroll-y})))
