@@ -946,8 +946,8 @@
                                      (conj :value))
           current-value      (get-in db value-path)
           new-value          (when (not= value current-value) value)
-          form-key (get-in db [:form :key])
-          selection-id (get-in db [:application :selection-id])
+          form-key           (get-in db [:form :key])
+          selection-id       (get-in db [:application :selection-id])
           selection-group-id (get-in field-descriptor [:params :selection-group-id])
           db                 (if (some? question-group-idx)
                                (-> db
@@ -976,11 +976,12 @@
                             :field-idx                    0
                             :virkailija?                  (contains? (:application db) :virkailija-secret)
                             :on-validated                 (fn [[valid? errors selection-limit]]
-                                                            (dispatch [:application/handle-selection-over-network-uncertain
-                                                                       (and (not valid?) (not-empty errors))])
-                                                            (when (and selection-limit (not-empty selection-limit))
-                                                              (dispatch [:application/handle-update-selection-limits
-                                                                         (first selection-limit) valid? id new-value]))
+                                                            (when selection-limit
+                                                              (dispatch [:application/handle-selection-over-network-uncertain
+                                                                         (and (not valid?) (not-empty errors))])
+                                                              (when (not-empty selection-limit)
+                                                                (dispatch [:application/handle-update-selection-limits
+                                                                           (first selection-limit) valid? id new-value])))
                                                             (dispatch [:application/set-repeatable-application-field-valid
                                                                        field-descriptor
                                                                        question-group-idx
