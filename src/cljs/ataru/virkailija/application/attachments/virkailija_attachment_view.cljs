@@ -102,13 +102,13 @@
                                            review-states/attachment-hakukohde-review-types-with-multiple-values
                                            review-states/attachment-hakukohde-review-types)
             can-edit?                    @(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
-        [:div.application-review-dropdown
-         [:div.application-review-dropdown__list
+        [:div.attachment-preview-review-dropdown
+         [:div.attachment-preview-review-dropdown__list
           (if @list-opened?
             (for [[state labels] review-types]
               (let [label-i18n (-> labels lang)]
                 ^{:key state}
-                [:div.application-review-dropdown__list-item
+                [:div.attachment-preview-review-dropdown__list-item
                  {:on-click (fn []
                               (when-not (= state effective-liitepyynto-state)
                                 (doseq [hakukohde-oid all-hakukohde-oids]
@@ -121,10 +121,10 @@
                               "zmdi-check")}])
                  [:span.attachment-review-dropdown__label
                   (str label-i18n)]]))
-            [:div.application-review-dropdown__list-item
+            [:div.attachment-preview-review-dropdown__list-item
              (if can-edit?
                {:on-click #(swap! list-opened? not)}
-               {:class "application-review-dropdown--disabled"})
+               {:class "attachment-preview-review-dropdown--disabled"})
              [:i.zmdi.attachment-review-dropdown__checkmark
               {:class (if (= effective-liitepyynto-state "multiple-values")
                         "zmdi-check-all"
