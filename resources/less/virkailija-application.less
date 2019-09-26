@@ -1826,6 +1826,8 @@ and (max-width: 1000px) {
   margin-bottom: 6px;
 }
 
+@attachment-preview-header-height: 44px;
+
 .attachment-preview {
   background-color: @attachment-review-background-color;
   font-size: 19px;
@@ -1846,13 +1848,13 @@ and (max-width: 1000px) {
   background-color: @white;
   display: flex;
   flex-flow: row nowrap;
-  padding: 20px;
+  padding: 10px 20px;
   width: 100%;
 }
 
 .attachment-preview-header-section:not(:first-of-type) {
   border-left: 1px solid @attachment-review-header-separator-color;
-  padding-left: 30px;
+  padding: 20px 0 20px 30px;
 }
 
 .attachment-preview-header-section:not(:last-of-type) {
@@ -1885,7 +1887,7 @@ and (max-width: 1000px) {
   display: flex;
   flex-flow: column nowrap;
   flex-grow: 2;
-  justify-content: flex-start;
+  justify-content: center;
   overflow-x: hidden;
 }
 
@@ -1919,10 +1921,10 @@ and (max-width: 1000px) {
   border-radius: 50%;
   color: @white;
   display: flex;
-  font-size: 42px;
-  height: 52px;
+  font-size: 32px;
+  height: @attachment-preview-header-height;
   justify-content: center;
-  width: 52px;
+  width: @attachment-preview-header-height;
 
   &:hover {
     background: @editor-control-button-hover-blue;
@@ -2009,7 +2011,7 @@ and (max-width: 1000px) {
 .application-review-dropdown {
   color: @link-color;
   font-size: 17px;
-  height: 52px;
+  height: @attachment-preview-header-height;
   position: relative;
   width: 252px;
 }
@@ -2033,7 +2035,7 @@ and (max-width: 1000px) {
 .application-review-dropdown__list-item {
   align-items: center;
   display: flex;
-  height: 52px;
+  height: @attachment-preview-header-height;
   position: relative;
 
   &:not(.application-review-dropdown--disabled) {
