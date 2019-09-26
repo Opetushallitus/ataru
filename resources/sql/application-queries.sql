@@ -813,7 +813,7 @@ SELECT
   a.haku,
   a.hakukohde,
   a.person_oid,
-  a.lang,
+  coalesce(a.lang, asiointikieli.value),
   a.email,
   a.content,
   coalesce(ahr.payment_obligations, '{}') AS "payment-obligations",
@@ -839,7 +839,15 @@ LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) FILTER (WHERE requi
                           jsonb_object_agg(hakukohde, state) FILTER (WHERE requirement = 'eligibility-state') AS eligibilities
                    FROM application_hakukohde_reviews
                    WHERE application_key = a.key) AS ahr
-  ON true
+LEFT JOIN LATERAL (SELECT CASE value->>'value'
+                              WHEN '1' THEN 'fi'
+                              WHEN '2' THEN 'sv'
+                              WHEN '3' THEN 'en'
+                              END AS value
+                   FROM jsonb_array_elements(a.content->'answers')
+                   WHERE value->>'key' = 'asiointikieli'
+                   LIMIT 1) AS asiointikieli ON true
+          ON true
 WHERE a.person_oid IS NOT NULL AND
       a.haku IS NOT NULL AND
       (:haku_oid::text IS NULL OR a.haku = :haku_oid) AND
