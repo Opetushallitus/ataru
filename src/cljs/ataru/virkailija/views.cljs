@@ -48,6 +48,6 @@
           (when @template-editor-visible?
             [email-template-editor])]
          [top-banner]
-         (when @attachment-preview-mode?
-           [attachments/attachment-preview])
-         [:div (panels @active-panel)]]))))
+         (if @attachment-preview-mode?
+           [attachments/attachment-preview]
+           [:div (panels @active-panel)])]))))
