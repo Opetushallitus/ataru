@@ -1648,13 +1648,13 @@
                          (let [attachment-keys-of-liitepyynto          (->> files
                                                                             (map :key)
                                                                             (set))
-                               attachments-with-incosistent-visibility (clojure.set/difference attachment-keys-of-liitepyynto
+                               attachments-with-inconsistent-visibility (clojure.set/difference attachment-keys-of-liitepyynto
                                                                                                selected-attachment-keys)
-                               attachments-to-toggle                   (if (-> attachments-with-incosistent-visibility
+                               attachments-to-toggle                   (if (-> attachments-with-inconsistent-visibility
                                                                                (count)
                                                                                (= 0))
                                                                          attachment-keys-of-liitepyynto
-                                                                         attachments-with-incosistent-visibility)]
+                                                                         attachments-with-inconsistent-visibility)]
                            (dispatch [:virkailija-attachments/toggle-attachment-selection attachments-to-toggle])))}]
           [:p.application__attachment-review-row-label (some #(-> review :label % not-empty) [lang :fi :sv :en])]
           (if @list-opened
