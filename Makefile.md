@@ -11,6 +11,12 @@ make stop
 make restart
 	Restart all applications and docker containers
 
+make test
+	Run all tests
+
+make lint
+	Run linters
+
 Advanced targets:
 -----------------
 
@@ -31,9 +37,6 @@ make log
 
 make clean
 	Clean project. Removes unused docker containers and cleans compiled classes
-
-make test
-	Run all tests
 
 Makefile targets are provided for restarting certain applications. Examples:
 

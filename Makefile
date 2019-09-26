@@ -141,6 +141,9 @@ status: $(NODE_MODULES)
 log: $(NODE_MODULES)
 	$(PM2) logs
 
+lint: $(NODE_MODULES)
+	npx eslint .
+
 help:
 	@cat Makefile.md
 
