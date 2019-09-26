@@ -79,7 +79,7 @@
         download-label]
        (when-not
          can-display-file?
-         [:div.attachment-preview-header__cannot-display-text
+         [:div.attachment-preview-header__cannot-display-text.animated.fadeIn
           [:div.attachment-preview-header__cannot-display-text-indicator]
           [:span "Tätä liitettä ei valitettavasti voida näyttää esikatselussa, mutta voit ladata sen tästä tiedostona."]])]]]))
 
