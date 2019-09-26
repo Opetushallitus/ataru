@@ -194,15 +194,16 @@
                                                    (filter (comp (partial = (:key selected-liitepyynto))
                                                                  :key)))]
     [:div.attachment-preview
-     [:div.attachment-preview-header
-      [attachment-header selected-liitepyynto]
-      [:div.attachment-preview-header-section.attachment-preview-header-control-buttons-section
-       [attachment-preview-state-list liitepyynto-for-selected-hakukohteet]
-       [attachment-preview-navigation-button :left current-index max-index selected-attachment-keys]
-       [attachment-preview-index-text current-index max-index]
-       [attachment-preview-navigation-button :right current-index max-index selected-attachment-keys]]
-      [:div.attachment-preview-header-section.attachment-preview-header-close-button-section
-       [attachment-preview-close-button]]]
-     [:div.attachment-preview-naming-bar
-      [attachment-preview-filename selected-attachment]]
+     [:div.attachment-preview-fixed-headers
+      [:div.attachment-preview-header
+       [attachment-header selected-liitepyynto]
+       [:div.attachment-preview-header-section.attachment-preview-header-control-buttons-section
+        [attachment-preview-state-list liitepyynto-for-selected-hakukohteet]
+        [attachment-preview-navigation-button :left current-index max-index selected-attachment-keys]
+        [attachment-preview-index-text current-index max-index]
+        [attachment-preview-navigation-button :right current-index max-index selected-attachment-keys]]
+       [:div.attachment-preview-header-section.attachment-preview-header-close-button-section
+        [attachment-preview-close-button]]]
+      [:div.attachment-preview-naming-bar
+       [attachment-preview-filename selected-attachment]]]
      [attachment-preview-image-view selected-attachment]]))
