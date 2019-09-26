@@ -1831,7 +1831,7 @@ and (max-width: 1000px) {
 .attachment-preview {
   background-color: @attachment-review-background-color;
   font-size: 19px;
-  height: 100%;
+  min-height: 100vh;
   left: 0;
   position: absolute;
   top: 0;
@@ -1982,9 +1982,11 @@ and (max-width: 1000px) {
 }
 
 .attachment-preview-image-view {
+  background-color: @attachment-review-background-color;
   display: flex;
   justify-content: center;
   margin-top: 188px;
+  padding-bottom: 150px;
   width: 100%;
 }
 
