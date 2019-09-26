@@ -1837,6 +1837,11 @@ and (max-width: 1000px) {
   z-index: 101;
 }
 
+.attachment-preview-fixed-headers {
+  position: fixed;
+  width: 100%;
+}
+
 .attachment-preview-header {
   background-color: @white;
   display: flex;
@@ -1927,9 +1932,10 @@ and (max-width: 1000px) {
 
 .attachment-preview-naming-bar {
   align-items: center;
+  background-color: @attachment-review-background-color;
   display: flex;
   justify-content: space-between;
-  margin: 30px 0;
+  padding: 30px 0;
   width: 100%;
 }
 
@@ -1976,6 +1982,7 @@ and (max-width: 1000px) {
 .attachment-preview-image-view {
   display: flex;
   justify-content: center;
+  margin-top: 188px;
   width: 100%;
 }
 
