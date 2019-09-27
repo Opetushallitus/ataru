@@ -37,6 +37,10 @@
     (should= 1 (.getHorizontalSplitTopRow info))
     (should= 0 (.getVerticalSplitLeftColumn info))))
 
+(defn- format-included-ids [id-string]
+  (not-empty (set (remove clojure.string/blank? (clojure.string/split id-string #"\s+"))))
+  )
+
 (defmacro with-excel [skip-answers? bindings & body]
   `(let [~(first bindings) (File/createTempFile (str "excel-" (UUID/randomUUID)) ".xlsx")]
      (try
@@ -49,7 +53,7 @@
                                         nil
                                         nil
                                         ~skip-answers?
-                                        (constantly true)
+                                        (format-included-ids "ovela-kysymys")
                                         :fi
                                         (tarjonta-service/new-tarjonta-service)
                                         koodisto-cache
