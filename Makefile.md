@@ -32,7 +32,7 @@ make build-docker-images
 make status
 	Shows status of applications and docker containers
 
-make log
+make log, make logs
 	Follow logs via PM2
 
 make clean
