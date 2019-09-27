@@ -3,8 +3,6 @@ EXECUTABLES = lein docker docker-compose npm lftp
 VIRKAILIJA_CONFIG ?= ../ataru-secrets/virkailija-local-dev.edn
 HAKIJA_CONFIG ?= ../ataru-secrets/hakija-local-dev.edn
 
-HAKIJA_FRONTEND_COMPILER=ataru-hakija-frontend-compilation
-VIRKAILIJA_FRONTEND_COMPILER=ataru-virkailija-frontend-compilation
 FIGWHEEL=ataru-figwheel
 CSS_COMPILER=ataru-css-compilation
 HAKIJA_BACKEND=ataru-hakija-backend-8351
@@ -58,20 +56,14 @@ start-docker: build-docker-images
 start-pm2: $(NODE_MODULES) start-docker
 	$(PM2) start pm2.config.js
 
-start-hakija-frontend-compilation: $(NODE_MODULES)
-	$(PM2) $(START_ONLY) $(HAKIJA_FRONTEND_COMPILER)
-
-start-virkailija-frontend-compilation: $(NODE_MODULES)
-	$(PM2) $(START_ONLY) $(VIRKAILIJA_FRONTEND_COMPILER)
-
-start-watch: $(NODE_MODULES) start-hakija-frontend-compilation start-virkailija-frontend-compilation
+start-watch: $(NODE_MODULES)
 	$(PM2) $(START_ONLY) $(FIGWHEEL)
 	$(PM2) $(START_ONLY) $(CSS_COMPILER)
 
-start-hakija: start-hakija-frontend-compilation start-docker
+start-hakija: start-watch start-docker
 	$(PM2) $(START_ONLY) $(HAKIJA_BACKEND)
 
-start-virkailija: start-virkailija-frontend-compilation start-docker
+start-virkailija: start-watch start-docker
 	$(PM2) $(START_ONLY) $(VIRKAILIJA_BACKEND)
 
 # ----------------
@@ -80,13 +72,7 @@ start-virkailija: start-virkailija-frontend-compilation start-docker
 stop-pm2: $(NODE_MODULES)
 	$(PM2) stop pm2.config.js
 
-stop-hakija-frontend-compilation:
-	$(PM2) $(STOP_ONLY) $(HAKIJA_FRONTEND_COMPILER)
-
-stop-virkailija-frontend-compilation:
-	$(PM2) $(STOP_ONLY) $(VIRKAILIJA_FRONTEND_COMPILER)
-
-stop-watch: stop-hakija-frontend-compilation stop-virkailija-frontend-compilation
+stop-watch:
 	$(PM2) $(STOP_ONLY) $(FIGWHEEL)
 	$(PM2) $(STOP_ONLY) $(CSS_COMPILER)
 
