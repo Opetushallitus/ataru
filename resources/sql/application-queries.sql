@@ -813,7 +813,7 @@ SELECT
   a.haku,
   a.hakukohde,
   a.person_oid,
-  coalesce(a.lang, asiointikieli.value),
+  coalesce(a.lang, asiointikieli.value) AS "lang",
   a.email,
   a.content,
   coalesce(ahr.payment_obligations, '{}') AS "payment-obligations",
