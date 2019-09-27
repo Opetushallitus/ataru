@@ -1601,12 +1601,13 @@ You will receive a confirmation of your application to your email."}
    :overdue                {:fi "Myöhässä"
                             :sv "Försenad"
                             :en "Overdue"}
-   :attachmentless         {:fi "Liitteettömät"
-                            :sv "Utan bilagor"
-                            :en "No attachments"}
+   :no-attachment-required {:fi "Ei liitepyyntöä"
+                            :sv "Ei liitepyyntöä (sv) TODO"
+                            :en "Ei liitepyyntöä (en) TODO"}
    :multiple-values        {:fi "Monta arvoa"
                             :sv "Multipla värden"
                             :en "Multiple values"}})
+
 
 (def excel-texts
   {:name                     {:fi "Nimi"

@@ -78,7 +78,7 @@
 
 (def attachment-hakukohde-review-types-with-no-requirements
   (concat attachment-hakukohde-review-types
-          [[no-attachment-requirements (:attachmentless state-translations)]]))
+          [[no-attachment-requirements (:no-attachment-required state-translations)]]))
 
 (def attachment-review-type-names
   (map first attachment-hakukohde-review-types))
