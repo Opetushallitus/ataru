@@ -127,6 +127,9 @@ status: $(NODE_MODULES)
 log: $(NODE_MODULES)
 	$(PM2) logs
 
+# Alias for log
+logs: log
+
 lint: $(NODE_MODULES)
 	npx eslint .
 
