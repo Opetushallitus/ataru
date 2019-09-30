@@ -95,9 +95,14 @@
                      (->
                       (assoc-in [:application :selected-application-and-form] nil)
                       (assoc-in [:application :latest-form] nil)))}
-        (if-let [dispatches (when different-application?
-                              [[:application/stop-autosave]
-                               [:application/fetch-application application-key with-newest-form?]])]
+        (if-let [dispatches (cond
+                             different-application?
+                             [[:application/stop-autosave]
+                              [:application/fetch-application application-key with-newest-form?]]
+
+                             with-newest-form?
+                             [[:application/select-review-hakukohde selected-hakukohde-oid]
+                              [:application/fetch-application application-key true]])]
           {:dispatch-n dispatches})))))
 
 (defn close-application [db]
