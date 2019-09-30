@@ -10,13 +10,13 @@
                      (not (clojure.string/blank? answer-id)) (str "&answer-id=" answer-id)
                      selection-id (str "&selection-id=" selection-id))
         c    (async/chan 1)
-        send (fn [selection]
-               (async/put! c [(boolean (:selection-id selection)) [] [selection]] (fn [_] (async/close! c))))]
+        send (fn [selection errors]
+               (async/put! c [(boolean (:selection-id selection)) errors [selection]] (fn [_] (async/close! c))))]
     (PUT url
-      {:handler         #(send %)
+      {:handler         #(send % [])
        :error-handler   (fn [response]
                           (let [selection (:response response)]
-                            (send selection)))
+                            (send selection [:server-error])))
        :format          :json
        :response-format :json
        :keywords?       true})
