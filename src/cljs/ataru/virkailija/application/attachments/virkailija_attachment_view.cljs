@@ -137,10 +137,12 @@
 (defn- attachment-preview-image-view [selected-attachment]
   (let [download-url             (download-url selected-attachment)
         stored-can-display-file? @(re-frame/subscribe [:state-query [:application :attachment-preview :can-display-selected-file?]])
-        can-display-file?        (->> selected-attachment
-                                      :filename
-                                      (re-find allowed-files-matcher)
-                                      boolean)]
+        can-display-file?        (boolean
+                                   (when selected-attachment
+                                     (->> selected-attachment
+                                          :filename
+                                          (re-find allowed-files-matcher)
+                                          boolean)))]
     (when-not
       (= can-display-file? stored-can-display-file?)
       (re-frame/dispatch [:virkailija-attachments/set-can-display-file can-display-file?]))
