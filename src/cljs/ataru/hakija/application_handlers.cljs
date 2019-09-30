@@ -976,10 +976,10 @@
                             :field-idx                    0
                             :virkailija?                  (contains? (:application db) :virkailija-secret)
                             :on-validated                 (fn [[valid? errors selection-limit]]
-                                                            (when selection-limit
+                                                            (when selection-group-id
                                                               (dispatch [:application/handle-selection-over-network-uncertain
                                                                          (and (not valid?) (not-empty errors))])
-                                                              (when (not-empty selection-limit)
+                                                              (when (-> (first selection-limit) :limit-reached)
                                                                 (dispatch [:application/handle-update-selection-limits
                                                                            (first selection-limit) valid? id new-value])))
                                                             (dispatch [:application/set-repeatable-application-field-valid

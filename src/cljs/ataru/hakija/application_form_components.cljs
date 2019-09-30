@@ -665,8 +665,7 @@
 (defn- single-choice-option [option parent-id field-descriptor question-group-idx languages use-multi-choice-style? verifying?]
   (let [cannot-edit?   (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])
         label          (util/non-blank-val (:label option) @languages)
-        uncertain?     (and @(subscribe [:state-query [:application :selection-over-network-uncertain?]])
-                            (-> field-descriptor :params :selection-group-id))
+        uncertain?     (subscribe [:state-query [:application :selection-over-network-uncertain?]])
         option-value   (:value option)
         option-id      (util/component-id)
         limit-reached? (subscribe [:application/limit-reached? parent-id option-value])
@@ -675,16 +674,18 @@
         on-change      (fn [event]
                          (let [value (.. event -target -value)]
                            (dispatch [:application/select-single-choice-button value field-descriptor question-group-idx])))]
-    (fn [option parent-id field-descriptor question-group-idx lang use-multi-choice-style?]
-      (let [unselectable? (and (or (not @checked?)
-                                   (not @valid?))
-                               @limit-reached?)
-            disabled?     (or @verifying? @cannot-edit? unselectable?)]
+    (fn [option parent-id field-descriptor question-group-idx lang use-multi-choice-style? verifying?]
+      (let [unselectable?        (and (or (not @checked?)
+                                          (not @valid?))
+                                      @limit-reached?)
+            disabled?            (or @verifying? @cannot-edit? unselectable?)
+            selection-uncertain? @uncertain?
+            unsure-if-selected?  (and (-> field-descriptor :params :selection-group-id) (not selection-uncertain?))]
         [:div.application__form-single-choice-button-inner-container {:key option-id}
          [:input
           (merge {:id        option-id
                   :type      "checkbox"
-                  :checked   (and (not @verifying?) (not unselectable?) (not uncertain?) @checked?)
+                  :checked   (and (not @verifying?) (not unselectable?) unsure-if-selected? @checked?)
                   :value     option-value
                   :on-change on-change
                   :role      "radio"
