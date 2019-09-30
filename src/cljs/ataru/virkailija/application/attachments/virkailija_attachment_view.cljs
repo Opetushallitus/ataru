@@ -49,8 +49,8 @@
 (def liitepyynnot->attachment-keys-xform (comp (mapcat (partial map (fn [liitepyynto]
                                                                       (let [values (:values liitepyynto)]
                                                                         (cond->> values
-                                                                                 (every? vector? values)
-                                                                                 (flatten))))))
+                                                                          (every? vector? values)
+                                                                          (flatten))))))
                                                (mapcat identity)
                                                (map :key)
                                                (distinct)
@@ -155,8 +155,8 @@
                                                                     (mapcat (fn [liitepyynto]
                                                                               (let [values      (:values liitepyynto)
                                                                                     attachments (cond->> values
-                                                                                                         (every? vector? values)
-                                                                                                         (flatten))]
+                                                                                                  (every? vector? values)
+                                                                                                  (flatten))]
                                                                                 (map (fn [attachment]
                                                                                        {:liitepyynto (dissoc liitepyynto :values)
                                                                                         :attachment  attachment})
