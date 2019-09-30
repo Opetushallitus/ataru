@@ -24,13 +24,6 @@
               [:application :attachment-preview :selected-attachment-key]
               attachment-key)))
 
-(re-frame/reg-event-db
-  :virkailija-attachments/set-can-display-file
-  (fn [db [_ can-display?]]
-    (assoc-in db
-              [:application :attachment-preview :can-display-selected-file?]
-              can-display?)))
-
 (defn esc-keypress-event-listener [event]
   (let [key-code (.-keyCode event)]
     (when (= key-code 27)
