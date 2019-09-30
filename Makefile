@@ -106,6 +106,9 @@ clean-docker:
 
 clean-lein:
 	lein clean
+	# Remove clojurescript generated files
+	rm -rf resources/public/js/compiled/*
+	rm -rf resources/public/js/test/*
 
 # ----------------
 # Top-level commands (all apps)
@@ -141,7 +144,7 @@ help:
 # ----------------
 
 test: start-docker
-	CONFIG=config/test.edn ./bin/cibuild.sh run-tests	
+	CONFIG=config/test.edn ./bin/cibuild.sh run-tests
 
 # ----------------
 # Kill PM2 and all apps managed by it (= everything)
