@@ -1604,6 +1604,9 @@ You will receive a confirmation of your application to your email."}
    :no-attachment-required {:fi "Ei liitepyyntöä"
                             :sv "Ei liitepyyntöä (sv) TODO"
                             :en "Ei liitepyyntöä (en) TODO"}
+   :incomplete-attachment  {:fi "Puutteellinen liite"
+                            :sv "Puutteellinen liite (sv) TODO"
+                            :en "Puutteellinen liite (en) TODO"}
    :attachment-missing     {:fi "Liite puuttuu"
                             :sv "Liite puuttuu (sv) TODO"
                             :en "Liite puuttuu (en) TODO"}
