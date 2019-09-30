@@ -69,7 +69,7 @@
                                ")")
         download-url      (download-url selected-attachment)
         filename          (-> selected-attachment :filename)
-        can-display-file? @(re-frame/subscribe [:state-query [:application :attachment-preview :can-display-selected-file?]])]
+        can-display-file? @(re-frame/subscribe [:virkailija-attachments/can-display-file? (:key selected-attachment)])]
     [:<>
      [:div]
      [:span.attachment-preview-header__text filename]
@@ -132,20 +132,9 @@
              [:span.attachment-review-dropdown__label
               (application-states/get-review-state-label-by-name review-types effective-liitepyynto-state lang)]])]]))))
 
-(def allowed-files-matcher #"(?i)\.(jpg|jpeg|png)$")
-
 (defn- attachment-preview-image-view [selected-attachment]
-  (let [download-url             (download-url selected-attachment)
-        stored-can-display-file? @(re-frame/subscribe [:state-query [:application :attachment-preview :can-display-selected-file?]])
-        can-display-file?        (boolean
-                                   (when selected-attachment
-                                     (->> selected-attachment
-                                          :filename
-                                          (re-find allowed-files-matcher)
-                                          boolean)))]
-    (when-not
-      (= can-display-file? stored-can-display-file?)
-      (re-frame/dispatch [:virkailija-attachments/set-can-display-file can-display-file?]))
+  (let [download-url      (download-url selected-attachment)
+        can-display-file? @(re-frame/subscribe [:virkailija-attachments/can-display-file? (:key selected-attachment)])]
     [:div.attachment-preview-image-view
      (if can-display-file?
        [:img.attachment-preview-image-view__image
