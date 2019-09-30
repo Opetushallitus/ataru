@@ -106,9 +106,6 @@ clean-docker:
 
 clean-lein:
 	lein clean
-	# Remove clojurescript generated files
-	rm -rf resources/public/js/compiled/*
-	rm -rf resources/public/js/test/*
 
 # ----------------
 # Top-level commands (all apps)
