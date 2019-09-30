@@ -133,7 +133,7 @@
         review-base    {:application_key application-key
                         :attachment_key  (:id attachment-field)
                         :state           (if (empty? answer)
-                                           "incomplete"
+                                           "attachment-missing"
                                            "not-checked")
                         :updated?        value-changed?}]
     (map #(assoc review-base :hakukohde %)

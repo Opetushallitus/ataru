@@ -179,7 +179,7 @@
                   :hakukohde       "form"}
                  {:application_key "attachments"
                   :attachment_key  "att__2"
-                  :state           "incomplete"
+                  :state           "attachment-missing"
                   :updated?        false
                   :hakukohde       "form"}]
                 (store/create-application-attachment-reviews
@@ -209,12 +209,12 @@
                   :hakukohde       "hakukohde2"}
                  {:application_key "attachments"
                   :attachment_key  "att__2"
-                  :state           "incomplete"
+                  :state           "attachment-missing"
                   :updated?        false
                   :hakukohde       "hakukohde1"}
                  {:application_key "attachments"
                   :attachment_key  "att__2"
-                  :state           "incomplete"
+                  :state           "attachment-missing"
                   :updated?        false
                   :hakukohde       "hakukohde2"}]
                 (store/create-application-attachment-reviews
@@ -239,7 +239,7 @@
                   :hakukohde       "form"}
                  {:application_key "attachments"
                   :attachment_key  "att__2"
-                  :state           "incomplete"
+                  :state           "attachment-missing"
                   :updated?        true
                   :hakukohde       "form"}]
                 (store/create-application-attachment-reviews

@@ -66,7 +66,7 @@
 (def attachment-hakukohde-review-types
   [["not-checked" (:not-checked state-translations)]
    ["checked" (:checked state-translations)]
-   ["incomplete" (:incomplete-answer state-translations)]
+   ["attachment-missing" (:attachment-missing state-translations)]
    ["overdue" (:overdue state-translations)]])
 
 (def attachment-hakukohde-review-types-with-multiple-values
