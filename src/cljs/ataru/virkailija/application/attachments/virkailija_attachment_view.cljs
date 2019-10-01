@@ -1,6 +1,7 @@
 (ns ataru.virkailija.application.attachments.virkailija-attachment-view
   (:require [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]
+            [ataru.cljs-util :as cu]
             [ataru.util :as u]
             [reagent.core :as reagent]
             [re-frame.core :as re-frame]))
@@ -70,7 +71,7 @@
          can-display-file?
          [:div.attachment-skimming-header__cannot-display-text.animated.fadeIn
           [:div.attachment-skimming-header__cannot-display-text-indicator]
-          [:span "Tätä liitettä ei valitettavasti voida näyttää esikatselussa, mutta voit ladata sen tästä tiedostona."]])]]]))
+          [:span (cu/get-virkailija-translation :cannot-display-file-type-in-attachment-skimming)]])]]]))
 
 (defn- attachment-skimming-state-list []
   (let [list-opened? (reagent/atom false)]
