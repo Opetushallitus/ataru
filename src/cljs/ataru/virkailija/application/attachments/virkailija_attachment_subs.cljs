@@ -67,3 +67,25 @@
                      (mapcat identity))
                conj
                selected-hakukohde-oids)))
+
+(re-frame/reg-sub
+  :virkailija-attachments/selected-attachment-and-liitepyynto
+  (fn []
+    [(re-frame/subscribe [:virkailija-attachments/liitepyynnot-for-selected-hakukohteet])
+     (re-frame/subscribe [:state-query [:application :attachment-preview :selected-attachment-key]])])
+  (fn [[liitepyynnot-for-selected-hakukohteet selected-attachment-key]]
+    (->> liitepyynnot-for-selected-hakukohteet
+         (transduce (comp (mapcat (fn [liitepyynto]
+                                    (let [values      (:values liitepyynto)
+                                          attachments (cond->> values
+                                                        (every? vector? values)
+                                                        (flatten))]
+                                      (map (fn [attachment]
+                                             {:liitepyynto (dissoc liitepyynto :values)
+                                              :attachment  attachment})
+                                           attachments))))
+                          (filter (comp (partial = selected-attachment-key)
+                                        :key
+                                        :attachment)))
+                    conj)
+         (first))))
