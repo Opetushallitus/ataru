@@ -145,21 +145,7 @@
 (defn attachment-preview []
   (let [liitepyynnot-for-selected-hakukohteet @(re-frame/subscribe [:virkailija-attachments/liitepyynnot-for-selected-hakukohteet])
         selected-attachment-key               @(re-frame/subscribe [:state-query [:application :attachment-preview :selected-attachment-key]])
-        selected-attachment-and-liitepyynto   (->> liitepyynnot-for-selected-hakukohteet
-                                                   (transduce (comp (mapcat (fn [liitepyynto]
-                                                                              (let [values      (:values liitepyynto)
-                                                                                    attachments (cond->> values
-                                                                                                  (every? vector? values)
-                                                                                                  (flatten))]
-                                                                                (map (fn [attachment]
-                                                                                       {:liitepyynto (dissoc liitepyynto :values)
-                                                                                        :attachment  attachment})
-                                                                                     attachments))))
-                                                                    (filter (comp (partial = selected-attachment-key)
-                                                                                  :key
-                                                                                  :attachment)))
-                                                              conj)
-                                                   (first))
+        selected-attachment-and-liitepyynto   @(re-frame/subscribe [:virkailija-attachments/selected-attachment-and-liitepyynto])
         selected-liitepyynto                  (:liitepyynto selected-attachment-and-liitepyynto)
         selected-attachment                   (:attachment selected-attachment-and-liitepyynto)
         selected-attachment-keys              (transduce liitepyynnot->attachment-keys-xform
