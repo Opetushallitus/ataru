@@ -46,17 +46,6 @@
    {:on-click #(re-frame/dispatch [:virkailija-attachments/close-attachment-skimming])}
    [:i.zmdi.zmdi-close]])
 
-(def liitepyynnot->attachment-keys-xform (comp (map (fn [liitepyynto]
-                                                      (let [values (:values liitepyynto)]
-                                                        (cond->> values
-                                                          (every? vector? values)
-                                                          (flatten)))))
-                                               (mapcat identity)
-                                               (map :key)
-                                               (distinct)
-                                               (filter (fn [attachment-key]
-                                                         @(re-frame/subscribe [:virkailija-attachments/attachment-selected? attachment-key])))))
-
 (defn- attachment-skimming-index-text [current-index max-index]
   [:span.attachment-skimming-index-text (str (inc current-index) " / " (inc max-index))])
 
@@ -141,6 +130,17 @@
         {:src download-url}]
        [:div.attachment-skimming-image-view-no-preview
         [:span.attachment-skimming-image-view-no-preview__text "?"]])]))
+
+(def liitepyynnot->attachment-keys-xform (comp (map (fn [liitepyynto]
+                                                      (let [values (:values liitepyynto)]
+                                                        (cond->> values
+                                                          (every? vector? values)
+                                                          (flatten)))))
+                                               (mapcat identity)
+                                               (map :key)
+                                               (distinct)
+                                               (filter (fn [attachment-key]
+                                                         (re-frame/subscribe [:virkailija-attachments/attachment-selected? attachment-key])))))
 
 (defn attachment-skimming []
   (let [liitepyynnot-for-selected-hakukohteet @(re-frame/subscribe [:virkailija-attachments/liitepyynnot-for-selected-hakukohteet])
