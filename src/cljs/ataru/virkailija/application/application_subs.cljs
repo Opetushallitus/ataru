@@ -23,11 +23,6 @@
     (get-in db [:application :selected-application-and-form :application])))
 
 (re-frame/reg-sub
-  :application/hakukohde-attachment-reviews
-  (fn hakukohde-attachment-reviews [db [_ hakukohde]]
-    (get-in db [:application :review :attachment-reviews (keyword hakukohde)])))
-
-(re-frame/reg-sub
   :application/selected-form-fields-by-id
   (fn [_ _]
     (re-frame/subscribe [:application/selected-form]))
@@ -714,23 +709,6 @@
                                                      :processing-state]))]
       (and selected-hakukohde-oids
            (every? #(= "information-request" %) (map get-processing-state selected-hakukohde-oids))))))
-
-(re-frame.core/reg-sub
-  :application/get-attachment-reviews-for-selected-hakukohde
-  (fn [[_ hakukohde] _]
-    [(re-frame/subscribe [:application/selected-form-fields-by-id])
-     (re-frame/subscribe [:application/selected-application])
-     (re-frame/subscribe [:application/hakukohde-attachment-reviews hakukohde])])
-  (fn get-attachment-reviews-for-selected-hakukohde
-    [[form-fields application attachment-reviews] [_ hakukohde-oid]]
-    (for [[key state] attachment-reviews
-          :let        [answer (get-in application [:answers (keyword key)])
-                       field  ((keyword key) form-fields)]]
-      {:key    key
-       :state  state
-       :values (:values answer)
-       :label  (:label field)
-       :hakukohde-oid hakukohde-oid})))
 
 (re-frame.core/reg-sub
   :application/lang
