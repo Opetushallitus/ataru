@@ -14,13 +14,13 @@
                                   " - "
                                   (-> selected-application :person :ssn))
         liitepyynto-text     (-> selected-liitepyynto :label lang)]
-    [:div.attachment-preview-header-section.attachment-preview-header-details-section
-     [:span.attachment-preview-header__text name-and-ssn-text]
-     [:span.attachment-preview-header__text.attachment-preview-header__text--bold.attachment-preview-header__text--no-overflow.animated.fadeIn
+    [:div.attachment-skimming-header-section.attachment-skimming-header-details-section
+     [:span.attachment-skimming-header__text name-and-ssn-text]
+     [:span.attachment-skimming-header__text.attachment-skimming-header__text--bold.attachment-skimming-header__text--no-overflow.animated.fadeIn
       {:title liitepyynto-text}
       liitepyynto-text]]))
 
-(defn- attachment-preview-navigation-button [direction current-index max-index selected-attachment-keys]
+(defn- attachment-skimming-navigation-button [direction current-index max-index selected-attachment-keys]
   (let [new-index                   (cond (and (= direction :left)
                                                (= current-index 0))
                                           max-index
@@ -35,15 +35,15 @@
                                           (= direction :right)
                                           (inc current-index))
         new-selected-attachment-key (nth selected-attachment-keys new-index)]
-    [:a.attachment-preview-control-button
+    [:a.attachment-skimming-control-button
      {:on-click #(re-frame/dispatch [:virkailija-attachments/select-attachment new-selected-attachment-key])}
      (case direction
-       :left [:i.zmdi.zmdi-chevron-left.attachment-preview-control-button__icon--offset-left]
-       :right [:i.zmdi.zmdi-chevron-right.attachment-preview-control-button__icon--offset-right])]))
+       :left [:i.zmdi.zmdi-chevron-left.attachment-skimming-control-button__icon--offset-left]
+       :right [:i.zmdi.zmdi-chevron-right.attachment-skimming-control-button__icon--offset-right])]))
 
-(defn- attachment-preview-close-button []
-  [:a.attachment-preview-control-button
-   {:on-click #(re-frame/dispatch [:virkailija-attachments/close-attachment-preview])}
+(defn- attachment-skimming-close-button []
+  [:a.attachment-skimming-control-button
+   {:on-click #(re-frame/dispatch [:virkailija-attachments/close-attachment-skimming])}
    [:i.zmdi.zmdi-close]])
 
 (def liitepyynnot->attachment-keys-xform (comp (map (fn [liitepyynto]
@@ -57,13 +57,13 @@
                                                (filter (fn [attachment-key]
                                                          @(re-frame/subscribe [:virkailija-attachments/attachment-selected? attachment-key])))))
 
-(defn- attachment-preview-index-text [current-index max-index]
-  [:span.attachment-preview-index-text (str (inc current-index) " / " (inc max-index))])
+(defn- attachment-skimming-index-text [current-index max-index]
+  [:span.attachment-skimming-index-text (str (inc current-index) " / " (inc max-index))])
 
 (defn- download-url [attachment]
   (str "/lomake-editori/api/files/content/" (:key attachment)))
 
-(defn- attachment-preview-filename [selected-attachment]
+(defn- attachment-skimming-filename [selected-attachment]
   (let [download-label    (str "lataa ("
                                (-> selected-attachment :size u/size-bytes->str)
                                ")")
@@ -72,18 +72,18 @@
         can-display-file? @(re-frame/subscribe [:virkailija-attachments/can-display-file? (:key selected-attachment)])]
     [:<>
      [:div]
-     [:span.attachment-preview-header__text filename]
-     [:div.attachment-preview-header__naming-bar-right-element-container
-      [:span.attachment-preview-header__text.attachment-preview-header__naming-bar-right-element
+     [:span.attachment-skimming-header__text filename]
+     [:div.attachment-skimming-header__naming-bar-right-element-container
+      [:span.attachment-skimming-header__text.attachment-skimming-header__naming-bar-right-element
        [:a {:href download-url}
         download-label]
        (when-not
          can-display-file?
-         [:div.attachment-preview-header__cannot-display-text.animated.fadeIn
-          [:div.attachment-preview-header__cannot-display-text-indicator]
+         [:div.attachment-skimming-header__cannot-display-text.animated.fadeIn
+          [:div.attachment-skimming-header__cannot-display-text-indicator]
           [:span "Tätä liitettä ei valitettavasti voida näyttää esikatselussa, mutta voit ladata sen tästä tiedostona."]])]]]))
 
-(defn- attachment-preview-state-list []
+(defn- attachment-skimming-state-list []
   (let [list-opened? (reagent/atom false)]
     (fn [liitepyynto-for-selected-hakukohteet]
       (let [lang                         @(re-frame/subscribe [:editor/virkailija-lang])
@@ -102,13 +102,13 @@
                                            review-states/attachment-hakukohde-review-types-with-multiple-values
                                            review-states/attachment-hakukohde-review-types)
             can-edit?                    @(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
-        [:div.attachment-preview-review-dropdown
-         [:div.attachment-preview-review-dropdown__list
+        [:div.attachment-skimming-review-dropdown
+         [:div.attachment-skimming-review-dropdown__list
           (if @list-opened?
             (for [[state labels] review-types]
               (let [label-i18n (-> labels lang)]
                 ^{:key state}
-                [:div.attachment-preview-review-dropdown__list-item
+                [:div.attachment-skimming-review-dropdown__list-item
                  {:on-click (fn []
                               (when-not (= state effective-liitepyynto-state)
                                 (doseq [hakukohde-oid all-hakukohde-oids]
@@ -121,10 +121,10 @@
                               "zmdi-check")}])
                  [:span.attachment-review-dropdown__label
                   (str label-i18n)]]))
-            [:div.attachment-preview-review-dropdown__list-item
+            [:div.attachment-skimming-review-dropdown__list-item
              (if can-edit?
                {:on-click #(swap! list-opened? not)}
-               {:class "attachment-preview-review-dropdown--disabled"})
+               {:class "attachment-skimming-review-dropdown--disabled"})
              [:i.zmdi.attachment-review-dropdown__checkmark
               {:class (if (= effective-liitepyynto-state "multiple-values")
                         "zmdi-check-all"
@@ -132,19 +132,19 @@
              [:span.attachment-review-dropdown__label
               (application-states/get-review-state-label-by-name review-types effective-liitepyynto-state lang)]])]]))))
 
-(defn- attachment-preview-image-view [selected-attachment]
+(defn- attachment-skimming-image-view [selected-attachment]
   (let [download-url      (download-url selected-attachment)
         can-display-file? @(re-frame/subscribe [:virkailija-attachments/can-display-file? (:key selected-attachment)])]
-    [:div.attachment-preview-image-view
+    [:div.attachment-skimming-image-view
      (if can-display-file?
-       [:img.attachment-preview-image-view__image
+       [:img.attachment-skimming-image-view__image
         {:src download-url}]
-       [:div.attachment-preview-image-view-no-preview
-        [:span.attachment-preview-image-view-no-preview__text "?"]])]))
+       [:div.attachment-skimming-image-view-no-preview
+        [:span.attachment-skimming-image-view-no-preview__text "?"]])]))
 
-(defn attachment-preview []
+(defn attachment-skimming []
   (let [liitepyynnot-for-selected-hakukohteet @(re-frame/subscribe [:virkailija-attachments/liitepyynnot-for-selected-hakukohteet])
-        selected-attachment-key               @(re-frame/subscribe [:state-query [:application :attachment-preview :selected-attachment-key]])
+        selected-attachment-key               @(re-frame/subscribe [:state-query [:application :attachment-skimming :selected-attachment-key]])
         selected-attachment-and-liitepyynto   @(re-frame/subscribe [:virkailija-attachments/selected-attachment-and-liitepyynto])
         selected-liitepyynto                  (:liitepyynto selected-attachment-and-liitepyynto)
         selected-attachment                   (:attachment selected-attachment-and-liitepyynto)
@@ -163,17 +163,17 @@
         liitepyynto-for-selected-hakukohteet  (->> liitepyynnot-for-selected-hakukohteet
                                                    (filter (comp (partial = (:key selected-liitepyynto))
                                                                  :key)))]
-    [:div.attachment-preview
-     [:div.attachment-preview-fixed-headers
-      [:div.attachment-preview-header
+    [:div.attachment-skimming
+     [:div.attachment-skimming-fixed-headers
+      [:div.attachment-skimming-header
        [attachment-header selected-liitepyynto]
-       [:div.attachment-preview-header-section.attachment-preview-header-control-buttons-section
-        [attachment-preview-state-list liitepyynto-for-selected-hakukohteet]
-        [attachment-preview-navigation-button :left current-index max-index selected-attachment-keys]
-        [attachment-preview-index-text current-index max-index]
-        [attachment-preview-navigation-button :right current-index max-index selected-attachment-keys]]
-       [:div.attachment-preview-header-section.attachment-preview-header-close-button-section
-        [attachment-preview-close-button]]]
-      [:div.attachment-preview-naming-bar
-       [attachment-preview-filename selected-attachment]]]
-     [attachment-preview-image-view selected-attachment]]))
+       [:div.attachment-skimming-header-section.attachment-skimming-header-control-buttons-section
+        [attachment-skimming-state-list liitepyynto-for-selected-hakukohteet]
+        [attachment-skimming-navigation-button :left current-index max-index selected-attachment-keys]
+        [attachment-skimming-index-text current-index max-index]
+        [attachment-skimming-navigation-button :right current-index max-index selected-attachment-keys]]
+       [:div.attachment-skimming-header-section.attachment-skimming-header-close-button-section
+        [attachment-skimming-close-button]]]
+      [:div.attachment-skimming-naming-bar
+       [attachment-skimming-filename selected-attachment]]]
+     [attachment-skimming-image-view selected-attachment]]))

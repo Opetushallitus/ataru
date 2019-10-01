@@ -36,7 +36,7 @@
   (let [active-panel             (re-frame/subscribe [:active-panel])
         template-editor-visible? (re-frame/subscribe [:state-query [:editor :ui :template-editor-visible?]])
         texts                    (re-frame/subscribe [:editor/virkailija-texts])
-        attachment-preview-mode? (re-frame/subscribe [:state-query [:application :attachment-preview :visible?]])]
+        attachment-skimming-mode? (re-frame/subscribe [:state-query [:application :attachment-skimming :visible?]])]
     (fn []
       (when (not-empty @texts)
         [:div.main-container
@@ -48,6 +48,6 @@
           (when @template-editor-visible?
             [email-template-editor])]
          [top-banner]
-         (if @attachment-preview-mode?
-           [attachments/attachment-preview]
+         (if @attachment-skimming-mode?
+           [attachments/attachment-skimming]
            [:div (panels @active-panel)])]))))

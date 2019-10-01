@@ -1688,7 +1688,7 @@
              (if (and (= (:virus-scan-status attachment-file) "done")
                       (contains? selected-attachment-keys (:key attachment-file)))
                [:a
-                {:on-click #(dispatch [:virkailija-attachments/open-attachment-preview (:key attachment-file)])}
+                {:on-click #(dispatch [:virkailija-attachments/open-attachment-skimming (:key attachment-file)])}
                 text]
                text)])]]))))
 

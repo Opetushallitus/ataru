@@ -4,7 +4,7 @@
 (re-frame/reg-sub
   :virkailija-attachments/attachment-selected?
   (fn [db [_ attachment-key]]
-    (let [attachment-selected? (-> db :application :attachment-preview :selected-attachments (get (keyword attachment-key)))]
+    (let [attachment-selected? (-> db :application :attachment-skimming :selected-attachments (get (keyword attachment-key)))]
       (if (nil? attachment-selected?)
         true
         attachment-selected?))))
@@ -72,7 +72,7 @@
   :virkailija-attachments/selected-attachment-and-liitepyynto
   (fn []
     [(re-frame/subscribe [:virkailija-attachments/liitepyynnot-for-selected-hakukohteet])
-     (re-frame/subscribe [:state-query [:application :attachment-preview :selected-attachment-key]])])
+     (re-frame/subscribe [:state-query [:application :attachment-skimming :selected-attachment-key]])])
   (fn [[liitepyynnot-for-selected-hakukohteet selected-attachment-key]]
     (->> liitepyynnot-for-selected-hakukohteet
          (transduce (comp (mapcat (fn [liitepyynto]

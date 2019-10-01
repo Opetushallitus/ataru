@@ -5,7 +5,7 @@
   :virkailija-attachments/toggle-attachment-selection
   (fn [db [_ attachment-keys]]
     (update-in db
-               [:application :attachment-preview :selected-attachments]
+               [:application :attachment-skimming :selected-attachments]
                (fn [selected-attachments]
                  (reduce (fn [acc attachment-key]
                            (let [attachment-key      (keyword attachment-key)
@@ -21,20 +21,20 @@
   :virkailija-attachments/select-attachment
   (fn [db [_ attachment-key]]
     (assoc-in db
-              [:application :attachment-preview :selected-attachment-key]
+              [:application :attachment-skimming :selected-attachment-key]
               attachment-key)))
 
 (defn esc-keypress-event-listener [event]
   (let [key-code (.-keyCode event)]
     (when (= key-code 27)
-      (re-frame/dispatch [:virkailija-attachments/close-attachment-preview]))))
+      (re-frame/dispatch [:virkailija-attachments/close-attachment-skimming]))))
 
 (re-frame/reg-event-fx
-  :virkailija-attachments/open-attachment-preview
+  :virkailija-attachments/open-attachment-skimming
   [(re-frame/inject-cofx :virkailija/scroll-y)]
   (fn [{db :db scroll-y :scroll-y} [_ attachment-key]]
     {:db                                       (update-in db
-                                                          [:application :attachment-preview]
+                                                          [:application :attachment-skimming]
                                                           merge
                                                           {:visible?                true
                                                            :selected-attachment-key attachment-key
@@ -43,12 +43,12 @@
      :virkailija/scroll-y                      0}))
 
 (re-frame/reg-event-fx
-  :virkailija-attachments/close-attachment-preview
+  :virkailija-attachments/close-attachment-skimming
   (fn [{db :db}]
     {:db                                        (update-in db
-                                                           [:application :attachment-preview]
-                                                           (fn [attachment-preview]
-                                                             (-> attachment-preview
+                                                           [:application :attachment-skimming]
+                                                           (fn [attachment-skimming]
+                                                             (-> attachment-skimming
                                                                  (select-keys [:selected-attachments :previous-scroll-y])
                                                                  (assoc :visible? false))))
      :virkailija/remove-keypress-event-listener esc-keypress-event-listener}))
@@ -60,9 +60,9 @@
 
 (re-frame/reg-event-fx :virkailija-attachments/restore-attachment-view-scroll-position
   (fn [{db :db}]
-    (let [previous-scroll-y (-> db :application :attachment-preview :previous-scroll-y)]
+    (let [previous-scroll-y (-> db :application :attachment-skimming :previous-scroll-y)]
       {:db                  (update-in db
-                                       [:application :attachment-preview]
+                                       [:application :attachment-skimming]
                                        dissoc
                                        :previous-scroll-y)
        :virkailija/scroll-y previous-scroll-y})))
