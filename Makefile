@@ -121,6 +121,15 @@ clean-lein:
 	lein clean
 
 # ----------------
+# Database initialization
+# ----------------
+init-test-db:
+	APP=virkailija lein with-profile test run -m ataru.db.migrations/migrate
+
+nuke-test-db:
+	APP=virkailija lein with-profile test run -m ataru.fixtures.db.unit-test-db/clear-database
+
+# ----------------
 # Top-level commands (all apps)
 # ----------------
 start: start-pm2
@@ -129,7 +138,7 @@ stop: stop-pm2 stop-docker
 
 restart: stop-pm2 start-pm2
 
-clean: stop clean-lein clean-docker
+clean: stop clean-lein clean-docker nuke-test-db
 	rm -rf node_modules
 	rm *.log
 
@@ -156,8 +165,16 @@ help:
 # Test db management
 # ----------------
 
-test: start-docker
-	CONFIG=config/test.edn ./bin/cibuild.sh run-tests
+test-clojurescript:
+	APP=virkailija lein with-profile test doo chrome-headless test once
+
+test-browser:
+	APP=virkailija lein with-profile test spec -t ui
+
+test-clojure: nuke-test-db init-test-db
+	APP=virkailija lein with-profile test spec -t ~ui
+
+test: start-docker test-clojurescript test-clojure test-browser
 
 # ----------------
 # Kill PM2 and all apps managed by it (= everything)

@@ -44,6 +44,15 @@ make log, make logs
 make clean
 	Clean project. Removes unused docker containers and cleans compiled classes
 
+make nuke-test-db, clear-test-db
+        These targets manage test database. Typical run order is nuke, clear since
+        clear runs the migrations.
+
+make test-clojurescript, test-browser, test-clojure
+        Test targets. These targets DO NOT clear the database between runs in order
+        to speed up execution, so use with care.
+	
+
 Makefile targets are provided for restarting certain applications. Examples:
 
 make stop-hakija	Stops hakija application
