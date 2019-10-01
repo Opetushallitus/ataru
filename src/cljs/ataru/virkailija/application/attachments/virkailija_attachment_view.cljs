@@ -46,11 +46,11 @@
    {:on-click #(re-frame/dispatch [:virkailija-attachments/close-attachment-preview])}
    [:i.zmdi.zmdi-close]])
 
-(def liitepyynnot->attachment-keys-xform (comp (mapcat (partial map (fn [liitepyynto]
-                                                                      (let [values (:values liitepyynto)]
-                                                                        (cond->> values
-                                                                          (every? vector? values)
-                                                                          (flatten))))))
+(def liitepyynnot->attachment-keys-xform (comp (map (fn [liitepyynto]
+                                                      (let [values (:values liitepyynto)]
+                                                        (cond->> values
+                                                          (every? vector? values)
+                                                          (flatten)))))
                                                (mapcat identity)
                                                (map :key)
                                                (distinct)
@@ -143,16 +143,10 @@
         [:span.attachment-preview-image-view-no-preview__text "?"]])]))
 
 (defn attachment-preview []
-  (let [selected-hakukohde-oids               @(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-        liitepyynnot-for-selected-hakukohteet (map (fn [selected-hakukohde-oid]
-                                                     (map (fn [liitepyynto]
-                                                            (assoc liitepyynto :hakukohde-oid selected-hakukohde-oid))
-                                                          @(re-frame/subscribe [:application/get-attachment-reviews-for-selected-hakukohde selected-hakukohde-oid])))
-                                                   selected-hakukohde-oids)
+  (let [liitepyynnot-for-selected-hakukohteet @(re-frame/subscribe [:virkailija-attachments/liitepyynnot-for-selected-hakukohteet])
         selected-attachment-key               @(re-frame/subscribe [:state-query [:application :attachment-preview :selected-attachment-key]])
         selected-attachment-and-liitepyynto   (->> liitepyynnot-for-selected-hakukohteet
-                                                   (transduce (comp (mapcat identity)
-                                                                    (mapcat (fn [liitepyynto]
+                                                   (transduce (comp (mapcat (fn [liitepyynto]
                                                                               (let [values      (:values liitepyynto)
                                                                                     attachments (cond->> values
                                                                                                   (every? vector? values)
@@ -181,7 +175,6 @@
                                                    (first))
         max-index                             (-> selected-attachment-keys count dec)
         liitepyynto-for-selected-hakukohteet  (->> liitepyynnot-for-selected-hakukohteet
-                                                   (flatten)
                                                    (filter (comp (partial = (:key selected-liitepyynto))
                                                                  :key)))]
     [:div.attachment-preview
