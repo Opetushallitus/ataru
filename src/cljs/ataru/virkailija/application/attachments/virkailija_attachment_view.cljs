@@ -38,8 +38,8 @@
     [:a.attachment-preview-control-button
      {:on-click #(re-frame/dispatch [:virkailija-attachments/select-attachment new-selected-attachment-key])}
      (case direction
-       :left [:i.zmdi.zmdi-chevron-left]
-       :right [:i.zmdi.zmdi-chevron-right])]))
+       :left [:i.zmdi.zmdi-chevron-left.attachment-preview-control-button__icon--offset-left]
+       :right [:i.zmdi.zmdi-chevron-right.attachment-preview-control-button__icon--offset-right])]))
 
 (defn- attachment-preview-close-button []
   [:a.attachment-preview-control-button
