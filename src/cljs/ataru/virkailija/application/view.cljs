@@ -1756,13 +1756,12 @@
          (dispatch [:virkailija-attachments/restore-attachment-view-scroll-position]))
        :reagent-render
        (fn []
-         (let [selected-review-hakukohde        @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-               attachment-reviews-for-hakukohde (group-by #(:key (first %))
-                                                          (mapcat (fn [oid]
-                                                                    (map (fn [attachments]
-                                                                           [attachments oid])
-                                                                         @(subscribe [:application/get-attachment-reviews-for-selected-hakukohde oid]))) selected-review-hakukohde))
-               lang                             (subscribe [:application/lang])]
+         (let [selected-review-hakukohde         @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+               attachment-reviews-for-hakukohde (->> @(subscribe [:virkailija-attachments/liitepyynnot-for-selected-hakukohteet])
+                                                      (map (fn [liitepyynto]
+                                                             [liitepyynto (:hakukohde-oid liitepyynto)]))
+                                                      (group-by (comp :key first)))
+               lang                              (subscribe [:application/lang])]
            [:div.application-handling__review-outer
             [:a.application-handling__review-area-settings-link
              {:on-click (fn [event]
