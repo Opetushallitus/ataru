@@ -17,7 +17,8 @@
             [clojure.java.io :refer [input-stream]]
             [taoensso.timbre :refer [spy debug]]
             [ataru.application.review-states :as review-states]
-            [ataru.application.application-states :as application-states]))
+            [ataru.application.application-states :as application-states]
+            [taoensso.timbre :as log]))
 
 
 (def max-value-length 5000)
@@ -344,10 +345,10 @@
   [form-fields form-fields-by-id skip-answers? included-ids selected-oids]
   (->> form-fields
        (remove #(or (:exclude-from-answers %)
-                    (and (or skip-answers?
-                             (not (included-ids (:id %))))
-                         (not (answer-to-always-include? (:id %))))
-                    (belongs-to-other-hakukohde? selected-oids %)))
+                    (and (not (included-ids (:id %)))
+                         (or (and skip-answers?
+                                  (not (answer-to-always-include? (:id %))))
+                             (belongs-to-other-hakukohde? selected-oids %)))))
        (map #(vector (:id %) (pick-header form-fields-by-id %)))))
 
 (defn- headers-from-applications
