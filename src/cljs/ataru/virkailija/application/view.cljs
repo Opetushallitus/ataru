@@ -6,6 +6,8 @@
             [ataru.util :as util]
             [ataru.virkailija.application.application-search-control :refer [application-search-control]]
             [ataru.virkailija.application.application-subs]
+            [ataru.virkailija.application.attachments.virkailija-attachment-handlers]
+            [ataru.virkailija.application.attachments.virkailija-attachment-subs]
             [ataru.virkailija.application.handlers]
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :as t]
@@ -1618,9 +1620,9 @@
        [:div.application-handling__resend-modify-link-confirmation-indicator]
        (get-virkailija-translation :send-edit-link-to-applicant)])))
 
-(defn- attachment-review-row [selected-reviews all-similar-attachments lang]
+(defn- attachment-review-row [selected-attachment-keys all-similar-attachments lang]
   (let [list-opened (r/atom false)]
-    (fn [selected-reviews all-similar-attachments lang]
+    (fn [selected-attachment-keys all-similar-attachments lang]
       (let [all-reviews          (map first all-similar-attachments)
             all-states           (set (map :state all-reviews))
             multiple-values?     (seq (rest all-states))
@@ -1641,29 +1643,36 @@
          [:div.application__attachment-review-info-row
           [:input.application-handling__attachment-download-checkbox
            {:type      "checkbox"
-            :checked   (every? #(contains? @selected-reviews (:key %)) files)
+            :checked   (every? #(contains? selected-attachment-keys (:key %)) files)
             :on-change (fn [_]
-                         (swap! selected-reviews (fn [s]
-                                                   (if (every? #(contains? @selected-reviews (:key %)) files)
-                                                     (reduce disj s (map :key files))
-                                                     (reduce conj s (map :key files))))))}]
+                         (let [attachment-keys-of-liitepyynto          (->> files
+                                                                            (map :key)
+                                                                            (set))
+                               attachments-with-inconsistent-visibility (clojure.set/difference attachment-keys-of-liitepyynto
+                                                                                               selected-attachment-keys)
+                               attachments-to-toggle                   (if (-> attachments-with-inconsistent-visibility
+                                                                               (count)
+                                                                               (= 0))
+                                                                         attachment-keys-of-liitepyynto
+                                                                         attachments-with-inconsistent-visibility)]
+                           (dispatch [:virkailija-attachments/toggle-attachment-selection attachments-to-toggle])))}]
           [:p.application__attachment-review-row-label (some #(-> review :label % not-empty) [lang :fi :sv :en])]
           (if @list-opened
             [:div.application-handling__review-state-list
              (doall
-              (for [[state labels]
-                    review-types]
-                (let [label (get labels @virkailija-lang)]
-                  [:div.application-handling__review-state-row
-                   {:class    (when (= state selected-state) "application-handling__review-state-row--selected application-handling__review-state-row--enabled")
-                    :on-click (if (= state selected-state)
-                                #(swap! list-opened not)
-                                (fn []
-                                  (swap! list-opened not)
-                                  (doall (map #(dispatch [:application/update-attachment-review attachment-key % state]) selected-hakukohteet))))
-                    :key      (str attachment-key label)}
-                   (if (= state selected-state) [icon-check]
-                       [icon-unselected]) label])))]
+               (for [[state labels]
+                     review-types]
+                 (let [label (get labels @virkailija-lang)]
+                   [:div.application-handling__review-state-row
+                    {:class    (when (= state selected-state) "application-handling__review-state-row--selected application-handling__review-state-row--enabled")
+                     :on-click (if (= state selected-state)
+                                 #(swap! list-opened not)
+                                 (fn []
+                                   (swap! list-opened not)
+                                   (doall (map #(dispatch [:application/update-attachment-review attachment-key % state]) selected-hakukohteet))))
+                     :key      (str attachment-key label)}
+                    (if (= state selected-state) [icon-check]
+                                                 [icon-unselected]) label])))]
             [:div.application-handling__review-state-row.application-handling__review-state-row--selected
              {:class    (if @can-edit?
                           "application-handling__review-state-row--enabled"
@@ -1673,129 +1682,134 @@
              (application-states/get-review-state-label-by-name review-types selected-state @virkailija-lang)])]
          [:ul.application__attachment-review-row-attachments
           (for [attachment-file files
-                :let            [text (str (:filename attachment-file) " (" (util/size-bytes->str (:size attachment-file)) ")")]]
-            ^{:key (:key (str "attachment-file-" attachment-file))}
+                :let [text (str (:filename attachment-file) " (" (util/size-bytes->str (:size attachment-file)) ")")]]
+            ^{:key (str "attachment-file-" attachment-file)}
             [:li
-             (if (= (:virus-scan-status attachment-file) "done")
-               [:a {:href (str "/lomake-editori/api/files/content/" (:key attachment-file))}
+             (if (and (= (:virus-scan-status attachment-file) "done")
+                      (contains? selected-attachment-keys (:key attachment-file)))
+               [:a
+                {:on-click #(dispatch [:virkailija-attachments/open-attachment-skimming (:key attachment-file)])}
                 text]
                text)])]]))))
 
 (defn- attachment-review-area [reviews lang]
-  (let [all-keys         (->> (vals reviews)
-                              (mapcat #(-> % ffirst :values flatten))
-                              (keep :key)
-                              set)
-        selected-reviews (r/atom all-keys)]
-    (fn [reviews lang]
-      [:div.application-handling__attachment-review-container.animated
-       {:class (str (if @(subscribe [:state-query [:application :show-attachment-reviews?]])
-                      " fadeInRight"
-                      " fadeOutRight"))}
-       (when (not-empty reviews)
+  (let [all-keys                 (->> (vals reviews)
+                                      (mapcat #(-> % ffirst :values flatten))
+                                      (keep :key)
+                                      set)
+        selected-attachment-keys (->> all-keys
+                                      (filter (fn [attachment-key]
+                                                @(subscribe [:virkailija-attachments/attachment-selected? attachment-key])))
+                                      (set))]
+    [:div.application-handling__attachment-review-container.animated
+     {:class (str (if @(subscribe [:state-query [:application :show-attachment-reviews?]])
+                    " fadeInRight"
+                    " fadeOutRight"))}
+     (when (not-empty reviews)
+       [:div
+        [:div.application-handling__attachment-review-header
          [:div
-          [:div.application-handling__attachment-review-header
-           [:div
-            (gstring/format "%s %s (%d)"
-              (if (= "form" (second (first (vals reviews)))) (get-virkailija-translation :of-form) (get-virkailija-translation :of-hakukohde))
-              (.toLowerCase (get-virkailija-translation :attachments))
-              (count (keys reviews)))]]
-          [:div.application__attachment-review-row
-           [:div.application__attachment-review-info-row
-            [:input.application-handling__attachment-download-checkbox
-             {:type      "checkbox"
-              :checked   (= all-keys @selected-reviews)
-              :on-change (fn [_]
-                           (swap! selected-reviews (fn [s]
-                                                     (if (= all-keys s)
-                                                       #{}
-                                                       all-keys))))}]
-            [:p.application__attachment-review-row-label
-             (get-virkailija-translation :select-all)]
-            [:div.application-handling__excel-request-row
-             [:form#attachment-download-link
-              {:action "/lomake-editori/api/files/zip"
-               :method "POST"}
+          (gstring/format "%s %s (%d)"
+                          (if (= "form" (second (first (vals reviews)))) (get-virkailija-translation :of-form) (get-virkailija-translation :of-hakukohde))
+                          (.toLowerCase (get-virkailija-translation :attachments))
+                          (count (keys reviews)))]]
+        [:div.application__attachment-review-row
+         [:div.application__attachment-review-info-row
+          [:input.application-handling__attachment-download-checkbox
+           {:type      "checkbox"
+            :checked   (= all-keys selected-attachment-keys)
+            :on-change (fn [_]
+                         (let [attachments-to-toggle (if (or (empty? selected-attachment-keys)
+                                                             (= all-keys selected-attachment-keys))
+                                                       all-keys
+                                                       selected-attachment-keys)]
+                           (dispatch [:virkailija-attachments/toggle-attachment-selection attachments-to-toggle])))}]
+          [:p.application__attachment-review-row-label
+           (get-virkailija-translation :select-all)]
+          [:div.application-handling__excel-request-row
+           [:form#attachment-download-link
+            {:action "/lomake-editori/api/files/zip"
+             :method "POST"}
+            [:input {:type  "hidden"
+                     :name  "keys"
+                     :value (.stringify js/JSON (clj->js selected-attachment-keys))}]
+            (when-let [csrf-token (cljs-util/csrf-token)]
               [:input {:type  "hidden"
-                       :name  "keys"
-                       :value (.stringify js/JSON (clj->js @selected-reviews))}]
-              (when-let [csrf-token (cljs-util/csrf-token)]
-                [:input {:type  "hidden"
-                         :name  "CSRF"
-                         :value csrf-token}])]
-             [:button.application-handling__download-attachments-button
-              {:disabled (empty? @selected-reviews)
-               :on-click (fn [e]
-                           (.submit (.getElementById js/document "attachment-download-link")))}
-              (get-virkailija-translation :load-attachments)]]]]
-          (doall (for [all-similar-attachments (vals reviews)]
-                   ^{:key (:key (ffirst all-similar-attachments))}
-                   [attachment-review-row selected-reviews all-similar-attachments lang]))])])))
+                       :name  "CSRF"
+                       :value csrf-token}])]
+           [:button.application-handling__download-attachments-button
+            {:disabled (empty? selected-attachment-keys)
+             :on-click (fn [e]
+                         (.submit (.getElementById js/document "attachment-download-link")))}
+            (get-virkailija-translation :load-attachments)]]]]
+        (doall (for [all-similar-attachments (vals reviews)]
+                 ^{:key (:key (ffirst all-similar-attachments))}
+                 [attachment-review-row selected-attachment-keys all-similar-attachments lang]))])]))
 
 (defn application-review []
   (let [settings-visible        (subscribe [:state-query [:application :review-settings :visible?]])
-        superuser?              (subscribe [:state-query [:editor :user-info :superuser?]])
-        show-attachment-review? (r/atom false)]
-    (fn []
-      (let [selected-review-hakukohde        @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-            attachment-reviews-for-hakukohde (group-by #(:key (first %))
-                                               (mapcat (fn [oid]
-                                                         (map (fn [attachments]
-                                                                [attachments oid])
-                                                           @(subscribe [:application/get-attachment-reviews-for-selected-hakukohde oid]))) selected-review-hakukohde))
-            lang                             (subscribe [:application/lang])]
-        [:div.application-handling__review-outer
-         [:a.application-handling__review-area-settings-link
-          {:on-click (fn [event]
-                       (.preventDefault event)
-                       (dispatch [:application/toggle-review-area-settings-visibility]))}
-          [:i.application-handling__review-area-settings-button.zmdi.zmdi-settings]]
-         [:div.application-handling__review-settings
-          {:style (when-not @settings-visible
-                    {:visibility "hidden"})}
-          [:div.application-handling__review-settings-indicator-outer
-           [:div.application-handling__review-settings-indicator-inner]]
-          [:div.application-handling__review-settings-header
-             [:i.zmdi.zmdi-account.application-handling__review-settings-header-icon]
-             [:span.application-handling__review-settings-header-text (get-virkailija-translation :settings)]]]
-         [:div.application-handling__review
-          (when @show-attachment-review?
-            [attachment-review-area attachment-reviews-for-hakukohde @lang])
-          [:div.application-handling__review-outer-container
-           [application-hakukohde-selection]
-           (when (not-empty selected-review-hakukohde)
-             [:div
-              (when (not-empty attachment-reviews-for-hakukohde)
-                [:div.application-handling__attachment-review-toggle-container
-                 (when @settings-visible
-                   [review-settings-checkbox :attachment-handling])
-                 [:span.application-handling__attachment-review-toggle-container-link
-                  {:on-click (fn []
-                               (when-not @settings-visible
-                                 (let [show? (not @show-attachment-review?)]
-                                   (dispatch [:state-update #(assoc-in % [:application :show-attachment-reviews?] show?)])
-                                   (if show?
-                                     (reset! show-attachment-review? show?)
-                                     (js/setTimeout #(reset! show-attachment-review? show?) 500)))))}
-                  [:span.application-handling__attachment-review-toggle
-                   (if @show-attachment-review?
-                     [:span [:i.zmdi.zmdi-chevron-right] [:i.zmdi.zmdi-chevron-right]]
-                     [:span [:i.zmdi.zmdi-chevron-left] [:i.zmdi.zmdi-chevron-left]])]
-                  (gstring/format "%s (%d)"
-                    (get-virkailija-translation :attachments)
-                    (count (keys attachment-reviews-for-hakukohde)))]])
-              [application-hakukohde-review-inputs review-states/hakukohde-review-types]])
-           (when @(subscribe [:application/show-info-request-ui?])
-             [application-information-request])
-           [application-review-inputs]
-           [application-review-notes]
-           [application-modify-link false]
-           (when @superuser?
-             [application-modify-link true])
-           [application-resend-modify-link]
-           [application-resend-modify-link-confirmation]
-           [application-deactivate-toggle]
-           [application-review-events]]]]))))
+        superuser?              (subscribe [:state-query [:editor :user-info :superuser?]])]
+    (r/create-class
+      {:component-did-mount
+       (fn []
+         (dispatch [:virkailija-attachments/restore-attachment-view-scroll-position]))
+       :reagent-render
+       (fn []
+         (let [selected-review-hakukohde        @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+               attachment-reviews-for-hakukohde (->> @(subscribe [:virkailija-attachments/liitepyynnot-for-selected-hakukohteet])
+                                                     (map (fn [liitepyynto]
+                                                            [liitepyynto (:hakukohde-oid liitepyynto)]))
+                                                     (group-by (comp :key first)))
+               lang                             (subscribe [:application/lang])
+               show-attachment-review?          @(subscribe [:state-query [:application :show-attachment-reviews?]])]
+           [:div.application-handling__review-outer
+            [:a.application-handling__review-area-settings-link
+             {:on-click (fn [event]
+                          (.preventDefault event)
+                          (dispatch [:application/toggle-review-area-settings-visibility]))}
+             [:i.application-handling__review-area-settings-button.zmdi.zmdi-settings]]
+            [:div.application-handling__review-settings
+             {:style (when-not @settings-visible
+                       {:visibility "hidden"})}
+             [:div.application-handling__review-settings-indicator-outer
+              [:div.application-handling__review-settings-indicator-inner]]
+             [:div.application-handling__review-settings-header
+              [:i.zmdi.zmdi-account.application-handling__review-settings-header-icon]
+              [:span.application-handling__review-settings-header-text (get-virkailija-translation :settings)]]]
+            [:div.application-handling__review
+             (when show-attachment-review?
+               [attachment-review-area attachment-reviews-for-hakukohde @lang])
+             [:div.application-handling__review-outer-container
+              [application-hakukohde-selection]
+              (when (not-empty selected-review-hakukohde)
+                [:div
+                 (when (not-empty attachment-reviews-for-hakukohde)
+                   [:div.application-handling__attachment-review-toggle-container
+                    (when @settings-visible
+                      [review-settings-checkbox :attachment-handling])
+                    [:span.application-handling__attachment-review-toggle-container-link
+                     {:on-click (fn []
+                                  (when-not @settings-visible
+                                    (dispatch [:state-update #(assoc-in % [:application :show-attachment-reviews?] (not show-attachment-review?))])))}
+                     [:span.application-handling__attachment-review-toggle
+                      (if show-attachment-review?
+                        [:span [:i.zmdi.zmdi-chevron-right] [:i.zmdi.zmdi-chevron-right]]
+                        [:span [:i.zmdi.zmdi-chevron-left] [:i.zmdi.zmdi-chevron-left]])]
+                     (gstring/format "%s (%d)"
+                                     (get-virkailija-translation :attachments)
+                                     (count (keys attachment-reviews-for-hakukohde)))]])
+                 [application-hakukohde-review-inputs review-states/hakukohde-review-types]])
+              (when @(subscribe [:application/show-info-request-ui?])
+                [application-information-request])
+              [application-review-inputs]
+              [application-review-notes]
+              [application-modify-link false]
+              (when @superuser?
+                [application-modify-link true])
+              [application-resend-modify-link]
+              [application-resend-modify-link-confirmation]
+              [application-deactivate-toggle]
+              [application-review-events]]]]))})))
 
 (defn notification [link-params]
   (fn [{:keys [text link-text href on-click]}]

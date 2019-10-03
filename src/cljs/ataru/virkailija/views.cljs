@@ -3,6 +3,7 @@
               [reagent.core :as r]
               [ataru.virkailija.views.banner :refer [snackbar top-banner]]
               [ataru.virkailija.application.view :refer [application application-version-changes]]
+              [ataru.virkailija.application.attachments.virkailija-attachment-view :as attachments]
               [ataru.virkailija.views.template-editor :refer [email-template-editor]]
               [ataru.virkailija.dev.lomake :as l]
               [ataru.virkailija.editor.view :refer [editor]]
@@ -34,7 +35,8 @@
 (defn main-panel []
   (let [active-panel             (re-frame/subscribe [:active-panel])
         template-editor-visible? (re-frame/subscribe [:state-query [:editor :ui :template-editor-visible?]])
-        texts                    (re-frame/subscribe [:editor/virkailija-texts])]
+        texts                    (re-frame/subscribe [:editor/virkailija-texts])
+        attachment-skimming-mode? (re-frame/subscribe [:state-query [:application :attachment-skimming :visible?]])]
     (fn []
       (when (not-empty @texts)
         [:div.main-container
@@ -46,4 +48,6 @@
           (when @template-editor-visible?
             [email-template-editor])]
          [top-banner]
-         [:div (panels @active-panel)]]))))
+         (if @attachment-skimming-mode?
+           [attachments/attachment-skimming]
+           [:div (panels @active-panel)])]))))
