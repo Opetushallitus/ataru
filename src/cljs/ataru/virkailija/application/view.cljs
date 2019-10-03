@@ -1748,20 +1748,20 @@
 
 (defn application-review []
   (let [settings-visible        (subscribe [:state-query [:application :review-settings :visible?]])
-        superuser?              (subscribe [:state-query [:editor :user-info :superuser?]])
-        show-attachment-review? (r/atom false)]
+        superuser?              (subscribe [:state-query [:editor :user-info :superuser?]])]
     (r/create-class
       {:component-did-mount
        (fn []
          (dispatch [:virkailija-attachments/restore-attachment-view-scroll-position]))
        :reagent-render
        (fn []
-         (let [selected-review-hakukohde         @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+         (let [selected-review-hakukohde        @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
                attachment-reviews-for-hakukohde (->> @(subscribe [:virkailija-attachments/liitepyynnot-for-selected-hakukohteet])
-                                                      (map (fn [liitepyynto]
-                                                             [liitepyynto (:hakukohde-oid liitepyynto)]))
-                                                      (group-by (comp :key first)))
-               lang                              (subscribe [:application/lang])]
+                                                     (map (fn [liitepyynto]
+                                                            [liitepyynto (:hakukohde-oid liitepyynto)]))
+                                                     (group-by (comp :key first)))
+               lang                             (subscribe [:application/lang])
+               show-attachment-review?          @(subscribe [:state-query [:application :show-attachment-reviews?]])]
            [:div.application-handling__review-outer
             [:a.application-handling__review-area-settings-link
              {:on-click (fn [event]
@@ -1777,7 +1777,7 @@
               [:i.zmdi.zmdi-account.application-handling__review-settings-header-icon]
               [:span.application-handling__review-settings-header-text (get-virkailija-translation :settings)]]]
             [:div.application-handling__review
-             (when @show-attachment-review?
+             (when show-attachment-review?
                [attachment-review-area attachment-reviews-for-hakukohde @lang])
              [:div.application-handling__review-outer-container
               [application-hakukohde-selection]
@@ -1790,13 +1790,9 @@
                     [:span.application-handling__attachment-review-toggle-container-link
                      {:on-click (fn []
                                   (when-not @settings-visible
-                                    (let [show? (not @show-attachment-review?)]
-                                      (dispatch [:state-update #(assoc-in % [:application :show-attachment-reviews?] show?)])
-                                      (if show?
-                                        (reset! show-attachment-review? show?)
-                                        (js/setTimeout #(reset! show-attachment-review? show?) 500)))))}
+                                    (dispatch [:state-update #(assoc-in % [:application :show-attachment-reviews?] (not show-attachment-review?))])))}
                      [:span.application-handling__attachment-review-toggle
-                      (if @show-attachment-review?
+                      (if show-attachment-review?
                         [:span [:i.zmdi.zmdi-chevron-right] [:i.zmdi.zmdi-chevron-right]]
                         [:span [:i.zmdi.zmdi-chevron-left] [:i.zmdi.zmdi-chevron-left]])]
                      (gstring/format "%s (%d)"
