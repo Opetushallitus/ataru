@@ -483,10 +483,12 @@
    :hakukohteet [s/Str]})
 
 (s/defschema Hakutoive
-  {:processingState   s/Str
-   :eligibilityState  s/Str
-   :paymentObligation s/Str
-   :hakukohdeOid      s/Str})
+  {:processingState     s/Str
+   :eligibilityState    s/Str
+   :paymentObligation   s/Str
+   :hakukohdeOid        s/Str
+   :languageRequirement s/Str
+   :degreeRequirement   s/Str})
 
 (s/defschema VtsApplication
   {:oid              s/Str ; (:key application)
@@ -560,7 +562,7 @@
    :personOid           s/Str
    :hakuOid             s/Str
    :asiointikieli       (s/enum "fi" "sv" "en")
-   :hakutoiveet         [s/Str]
+   :hakutoiveet         [Hakutoive]
    :maksuvelvollisuus   {s/Str s/Str}
    :keyValues           {s/Str Value}})
 

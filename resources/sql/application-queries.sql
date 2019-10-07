@@ -941,12 +941,13 @@ SELECT
   lang as asiointikieli,
   person_oid,
   haku,
-  hakukohde AS hakutoiveet,
+  hakukohde,
   content,
-  (SELECT json_object_agg(hakukohde, state)
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
    FROM application_hakukohde_reviews AS ahr
-   WHERE ahr.application_key = key
-         AND ahr.requirement = 'eligibility-state') AS application_hakukohde_reviews,
+   WHERE ahr.application_key = key) AS application_hakukohde_reviews,
   coalesce((SELECT jsonb_object_agg(hakukohde, state)
             FROM application_hakukohde_reviews AS ahr
             WHERE ahr.application_key = key AND
