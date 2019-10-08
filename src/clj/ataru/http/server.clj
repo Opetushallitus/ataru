@@ -29,10 +29,7 @@
           repl-port    (:repl-port server-setup)
           handler      (cond-> (get-in this [:handler :routes])
                                (:dev? env) (wrap-reload))
-          executor     (flow/utilization-executor 0.9 512
-                                                  {:metrics (EnumSet/of Stats$Metric/UTILIZATION)
-                                                   :stats-callback (fn [stats]
-                                                                     (info "[HTTP server executor stats]" stats))})
+          executor     (flow/utilization-executor 0.9 512)
           server       (http/start-server handler {:port port
                                                    :executor executor})]
       (start-repl! repl-port)
