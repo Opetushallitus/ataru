@@ -1,5 +1,6 @@
 (ns ataru.translations.texts
-  #?(:cljs (:require [goog.string :refer [format]])))
+  (:require [clojure.string :as string]
+            #?(:cljs [goog.string :refer [format]])))
 
 (def translation-mapping
   {:add                                         {:fi "Lisää"
@@ -1663,7 +1664,7 @@ You will receive a confirmation of your application to your email."}
 (defn email-applied-error
   [email preferred-name]
   {:fi [:div
-        [:p (if (not (clojure.string/blank? preferred-name))
+        [:p (if (not (string/blank? preferred-name))
               (str "Hei " preferred-name "!")
               "Hei!")]
         [:p "Huomasimme, että "
@@ -1678,7 +1679,7 @@ You will receive a confirmation of your application to your email."}
          " on varmasti oikein."]
         [:p "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."]]
    :sv [:div
-        [:p (if (not (clojure.string/blank? preferred-name))
+        [:p (if (not (string/blank? preferred-name))
               (str "Hej " preferred-name "!")
               "Hej!")]
         [:p "Vi märkte att "
@@ -1695,7 +1696,7 @@ You will receive a confirmation of your application to your email."}
         [:p "Vid eventuella problemsituationer kontakta den läroanstalt du
          söker till."]]
    :en [:div
-        [:p (if (not (clojure.string/blank? preferred-name))
+        [:p (if (not (string/blank? preferred-name))
               (str "Dear " preferred-name ",")
               "Dear applicant,")]
         [:p "we noticed that "
@@ -1716,7 +1717,7 @@ You will receive a confirmation of your application to your email."}
 (defn email-applied-error-when-modifying
   [email preferred-name]
   {:fi [:div
-        [:p (if (not (clojure.string/blank? preferred-name))
+        [:p (if (not (string/blank? preferred-name))
               (str "Hei " preferred-name "!")
               "Hei!")]
         [:p "Antamallasi sähköpostiosoitteella "
@@ -1724,7 +1725,7 @@ You will receive a confirmation of your application to your email."}
          " on jo jätetty hakemus. Tarkista, että syöttämäsi sähköpostiosoite
           on varmasti oikein."]]
    :sv [:div
-        [:p (if (not (clojure.string/blank? preferred-name))
+        [:p (if (not (string/blank? preferred-name))
               (str "Hej " preferred-name "!")
               "Hej!")]
         [:p "En ansökning med den e-postadress du angett "
@@ -1732,7 +1733,7 @@ You will receive a confirmation of your application to your email."}
          " har redan gjorts. Kontrollera att e-postadressen du har angett
           säkert är korrekt."]]
    :en [:div
-        [:p (if (not (clojure.string/blank? preferred-name))
+        [:p (if (not (string/blank? preferred-name))
               (str "Dear " preferred-name ",")
               "Dear applicant,")]
         [:p "the email address "
@@ -1744,7 +1745,7 @@ You will receive a confirmation of your application to your email."}
 (defn ssn-applied-error
   [preferred-name]
   {:fi [:div
-        [:p (if (not (clojure.string/blank? preferred-name))
+        [:p (if (not (string/blank? preferred-name))
               (str "Hei " preferred-name "!")
               "Hei!")]
         [:p "Huomasimme, että "
@@ -1756,7 +1757,7 @@ You will receive a confirmation of your application to your email."}
            jättäessäsi edellisen hakemuksen."]
         [:p "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."]]
    :sv [:div
-        [:p (if (not (clojure.string/blank? preferred-name))
+        [:p (if (not (string/blank? preferred-name))
               (str "Hej " preferred-name "!")
               "Hej!")]
         [:p "Vi märkte att "
@@ -1770,7 +1771,7 @@ You will receive a confirmation of your application to your email."}
         [:p "Vid eventuella problemsituationer kontakta den läroanstalt du
          söker till."]]
    :en [:div
-        [:p (if (not (clojure.string/blank? preferred-name))
+        [:p (if (not (string/blank? preferred-name))
               (str "Dear " preferred-name ",")
               "Dear applicant,")]
         [:p "we noticed that "
