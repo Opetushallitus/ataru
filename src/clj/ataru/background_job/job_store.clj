@@ -72,8 +72,9 @@
       ;; stop execution for a short period
       (boolean raw-job))))
 
-(defn get-status []
+
+(defn get-status [period]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
     (reduce #(assoc %1 (:job_type %2) (dissoc %2 :job_type))
             {}
-            (yesql-status {} {:connection connection}))))
+            (yesql-status {:period period} {:connection connection}))))

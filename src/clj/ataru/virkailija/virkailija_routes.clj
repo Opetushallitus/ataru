@@ -1281,7 +1281,7 @@
                       :fail    s/Int
                       :error   s/Int
                       :waiting s/Int}}
-      (let [status (job/status)]
+      (let [status (job/status 24)]
         (cond-> (dissoc status :ok)
                 (:ok status)       response/ok
                 (not (:ok status)) response/internal-server-error)))
