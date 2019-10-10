@@ -680,12 +680,13 @@
                                       @limit-reached?)
             disabled?            (or @verifying? @cannot-edit? unselectable?)
             selection-uncertain? @uncertain?
-            unsure-if-selected?  (and (-> field-descriptor :params :selection-group-id) (not selection-uncertain?))]
+            has-selection-limit? (:selection-limit option)
+            sure-if-selected?  (or (not has-selection-limit?) (and (-> field-descriptor :params :selection-group-id) (not selection-uncertain?)))]
         [:div.application__form-single-choice-button-inner-container {:key option-id}
          [:input
           (merge {:id        option-id
                   :type      "checkbox"
-                  :checked   (and (not @verifying?) (not unselectable?) unsure-if-selected? @checked?)
+                  :checked   (and (not @verifying?) (not unselectable?) sure-if-selected? @checked?)
                   :value     option-value
                   :on-change on-change
                   :role      "radio"
