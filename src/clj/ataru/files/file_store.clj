@@ -53,7 +53,7 @@
     (doseq [key keys]
       (if-let [file (get-file key)]
         (let [[_ filename] (re-matches #"attachment; filename=\"(.*)\"" (:content-disposition file))]
-          (.putNextEntry zout (new ZipEntry (str (butlast (str/split filename #"\.")) "_" key "." (butlast (str/split filename #"\.")))))
+          (.putNextEntry zout (new ZipEntry (str (apply str (butlast (str/split filename #"\."))) "_" key "." (last (str/split filename #"\.")))))
           (with-open [fin (:body file)]
             (io/copy fin zout))
           (.closeEntry zout)
