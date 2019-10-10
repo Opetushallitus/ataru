@@ -6,7 +6,7 @@
             [cheshire.core :as json]
             [clojure.java.io :as io]
             [taoensso.timbre :as log]
-            [cuerdas.core :as str])
+            [clojure.string :as str])
   (:import [java.text Normalizer Normalizer$Form]
            [java.util.zip ZipOutputStream ZipEntry]))
 
@@ -53,7 +53,7 @@
     (doseq [key keys]
       (if-let [file (get-file key)]
         (let [[_ filename] (re-matches #"attachment; filename=\"(.*)\"" (:content-disposition file))]
-          (.putNextEntry zout (new ZipEntry (str (butlast (str/split filename)) "_" key "." (butlast (str/split filename)))))
+          (.putNextEntry zout (new ZipEntry (str (butlast (str/split filename #"\.")) "_" key "." (butlast (str/split filename #"\.")))))
           (with-open [fin (:body file)]
             (io/copy fin zout))
           (.closeEntry zout)
