@@ -47,15 +47,17 @@
       {:body                (:body resp)
        :content-disposition (-> resp :headers :content-disposition)})))
 
+(defn- generate-filename [filename key]
+  (let [name (str (str/join "." (butlast (str/split filename #"\."))) "_" key)
+        extension (last (str/split filename #"\."))]
+    (str (apply str (take 240 name)) "." extension)))
+
 (defn get-file-zip [keys out]
   (with-open [zout (ZipOutputStream. out)]
-    ;(def files #{})
     (doseq [key keys]
       (if-let [file (get-file key)]
         (let [[_ filename] (re-matches #"attachment; filename=\"(.*)\"" (:content-disposition file))]
-          (.putNextEntry zout (new ZipEntry
-                                   (str (subs (str (str/join "." (butlast (str/split filename #"\."))) "_" key) 0 250)
-                                     "." (last (str/split filename #"\.")))))
+          (.putNextEntry zout (new ZipEntry (generate-filename filename key)))
           (with-open [fin (:body file)]
             (io/copy fin zout))
           (.closeEntry zout)
