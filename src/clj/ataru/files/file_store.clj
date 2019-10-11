@@ -47,19 +47,26 @@
       {:body                (:body resp)
        :content-disposition (-> resp :headers :content-disposition)})))
 
-(defn- generate-filename [filename key]
-  (let [name (str (str/join "." (butlast (str/split filename #"\."))) "_" key)
+(defn- generate-filename [filename counter]
+  (let [name (str (str/join "." (butlast (str/split filename #"\."))))
         extension (last (str/split filename #"\."))]
-    (str (apply str (take 240 name)) "." extension)))
+    (str (apply str (take 240 name)) counter "." extension)))
 
 (defn get-file-zip [keys out]
   (with-open [zout (ZipOutputStream. out)]
-    (doseq [key keys]
-      (if-let [file (get-file key)]
-        (let [[_ filename] (re-matches #"attachment; filename=\"(.*)\"" (:content-disposition file))]
-          (.putNextEntry zout (new ZipEntry (generate-filename filename key)))
-          (with-open [fin (:body file)]
-            (io/copy fin zout))
-          (.closeEntry zout)
-          (.flush zout))
-        (log/error "Could not get file" key)))))
+    (let [filenames #{}
+          counter 0]
+      (doseq [key keys]
+        (if-let [file (get-file key)]
+          (let [[_ filename] (re-matches #"attachment; filename=\"(.*)\"" (:content-disposition file))]
+            (conj filenames filename)
+            (.putNextEntry zout (new ZipEntry
+                                     (conj filename
+                                           (if
+                                             (contains? filenames (generate-filename filename ""))
+                                             (generate-filename filename (inc counter)) filename))))
+            (with-open [fin (:body file)]
+              (io/copy fin zout))
+            (.closeEntry zout)
+            (.flush zout))
+          (log/error "Could not get file" key))))))
