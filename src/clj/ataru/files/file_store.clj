@@ -59,8 +59,9 @@
       (doseq [key keys]
         (if-let [file (get-file key)]
           (let [[_ filename] (re-matches #"attachment; filename=\"(.*)\"" (:content-disposition file))]
-            (.putNextEntry zout (new ZipEntry
-                                     (conj filenames (if (contains? filenames (generate-filename filename "")) (generate-filename filename (inc counter)) (generate-filename filename "")))))
+            (var-set filename (if (contains? filenames (generate-filename filename "")) (generate-filename filename (inc counter)) (generate-filename filename "")))
+            (conj filenames filename)
+            (.putNextEntry zout (new ZipEntry filename))
             (with-open [fin (:body file)]
               (io/copy fin zout))
             (.closeEntry zout)
