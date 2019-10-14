@@ -53,21 +53,7 @@
         extension (last (str/split filename #"\."))]
     (str (apply str (take 240 name)) counter "." extension)))
 
-
-(defn get-file-zip [keys out]
-  (with-open [zout (ZipOutputStream. out)]
-    (doseq [key keys]
-      (if-let [file (get-file key)]
-        (let [[_ filename] (re-matches #"attachment; filename=\"(.*)\"" (:content-disposition file))]
-          (.putNextEntry zout (new ZipEntry (str filename)))
-          (with-open [fin (:body file)]
-            (io/copy fin zout))
-          (.closeEntry zout)
-          (.flush zout))
-        (log/error "Could not get file" key)))))
-
-
-(comment defn get-file-zip [keys out]
+( defn get-file-zip [keys out]
   (with-open [zout (ZipOutputStream. out)]
     (let [filenames #{}
           counter 0]
