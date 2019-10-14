@@ -24,9 +24,9 @@
    :allow-publishing-of-results-online          {:fi "Opiskelijavalinnan tulokseni saa julkaista internetissä?"
                                                  :sv "Mitt antagningsresultat får publiceras på internet?"
                                                  :en "Opiskelijavalinnan tulokseni saa julkaista internetissä?"}
-   :allow-use-of-contact-information            {:fi "Yhteystietojani saa käyttää koulutusmarkkinoinnissa?"
+   :allow-use-of-contact-information            {:fi "Annan suostumuksen yhteystietojeni luovuttamiseen koulutusta koskevaa suoramarkkinointia varten."
                                                  :sv "Min kontaktinformation får användas för utbildningsmarknadsföring?"
-                                                 :en "Yhteystietojani saa käyttää koulutusmarkkinoinnissa?"}
+                                                 :en "My contact information can be given to third parties for the purpose of direct education marketing."}
    :application-can-be-found-here               {:fi "Hakemuksesi löytyy täältä"
                                                  :sv "Din ansökan kan hittas här"
                                                  :en "You can find your application here"}
