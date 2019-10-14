@@ -69,5 +69,5 @@
             (conj filenames (.getName zout))
             (log/info "file-zip filename: " (.getName filename))
             (log/info "file-zip filenames: " filenames)
-            (.getName zout))
+            )
           (log/error "Could not get file" key))))))
