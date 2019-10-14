@@ -56,18 +56,19 @@
 ( defn get-file-zip [keys out]
   (with-open [zout (ZipOutputStream. out)]
     (let [filenames (atom #{})
-          counter 0]
+          counter (atom 0)]
       (doseq [key keys]
         (if-let [file (get-file key)]
           (let [[_ filename] (re-matches #"attachment; filename=\"(.*)\"" (:content-disposition file))]
-            (.putNextEntry zout (new ZipEntry (if (contains? @filenames (generate-filename filename "")) (generate-filename filename (inc counter)) (generate-filename filename ""))))
+            (.putNextEntry zout (new ZipEntry (if (contains? @filenames (generate-filename filename "")) (generate-filename filename (swap! counter inc)) (generate-filename filename ""))))
             (with-open [fin (:body file)]
               (io/copy fin zout))
             (swap! filenames conj (.getName zout))
+            (log/info "file-zip filename: " (.getName zout))
+            (log/info "file-zip filenames: " filenames)
             (.closeEntry zout)
             (.flush zout)
 
-            (log/info "file-zip filename: " (.getName filename))
-            (log/info "file-zip filenames: " filenames)
+
             )
           (log/error "Could not get file" key))))))
