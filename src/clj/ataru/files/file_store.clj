@@ -51,7 +51,7 @@
   (log/info "filename: " filename " counter: " counter)
   (let [name (str (str/join "." (butlast (str/split filename #"\."))))
         extension (last (str/split filename #"\."))]
-    (str (apply str (take 240 name)) @counter "." extension)))
+    (str (apply str (take 240 name)) counter "." extension)))
 
 ( defn get-file-zip [keys out]
   (with-open [zout (ZipOutputStream. out)]
@@ -64,8 +64,8 @@
             (.putNextEntry zout (new ZipEntry generated-filename))
             (with-open [fin (:body file)]
               (io/copy fin zout))
-            (swap! filenames conj (.getName zout))
-            (log/info "file-zip filename: " (.getName zout))
+            (swap! filenames conj generated-filename)
+            (log/info "file-zip filename: " generated-filename)
             (log/info "file-zip filenames: " filenames)
             (.closeEntry zout)
             (.flush zout))
