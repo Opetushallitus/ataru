@@ -59,9 +59,9 @@
           counter (atom 0)]
       (doseq [key keys]
         (if-let [file (get-file key)]
-          (let [[_ (atom filename)] (re-matches #"attachment; filename=\"(.*)\"" (:content-disposition file))]
-          (swap! filename (if (contains? @filenames (generate-filename @filename "")) (generate-filename @filename (swap! counter inc)) (generate-filename @filename "")))
-            (.putNextEntry zout (new ZipEntry @filename))
+          (let [[_ filename] (re-matches #"attachment; filename=\"(.*)\"" (:content-disposition file))
+                generated-filename (if (contains? @filenames (generate-filename filename "")) (generate-filename filename (swap! counter inc)) (generate-filename filename ""))]
+            (.putNextEntry zout (new ZipEntry generated-filename))
             (with-open [fin (:body file)]
               (io/copy fin zout))
             (swap! filenames conj (.getName zout))
