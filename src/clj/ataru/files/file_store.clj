@@ -48,6 +48,7 @@
        :content-disposition (-> resp :headers :content-disposition)})))
 
 (defn- generate-filename [filename counter]
+  (log/info "filename: " filename " counter: " counter)
   (let [name (str (str/join "." (butlast (str/split filename #"\."))))
         extension (last (str/split filename #"\."))]
     (str (apply str (take 240 name)) counter "." extension)))
@@ -60,7 +61,10 @@
         (if-let [file (get-file key)]
           (let [[_ filename] (re-matches #"attachment; filename=\"(.*)\"" (:content-disposition file))]
             (var-set filename (if (contains? filenames (generate-filename filename "")) (generate-filename filename (inc counter)) (generate-filename filename "")))
+
+            (log/info "file-zip filename: " filename)
             (conj filenames filename)
+            (log/info "file-zip filenames: " filenames)
             (.putNextEntry zout (new ZipEntry filename))
             (with-open [fin (:body file)]
               (io/copy fin zout))
