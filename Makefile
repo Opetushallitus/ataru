@@ -12,7 +12,9 @@ PM2=npx pm2 --no-autorestart
 START_ONLY=start pm2.config.js --only
 STOP_ONLY=stop pm2.config.js --only
 
-DOCKER_COMPOSE=COMPOSE_PARALLEL_LIMIT=8 docker-compose
+DOCKER_SUDO ?=
+DOCKER=$(if $(DOCKER_SUDO),sudo )docker
+DOCKER_COMPOSE=COMPOSE_PARALLEL_LIMIT=8 $(if $(DOCKER_SUDO),sudo )docker-compose
 
 NODE_MODULES=node_modules/pm2/bin/pm2
 
@@ -77,7 +79,7 @@ stop-watch:
 	$(PM2) $(STOP_ONLY) $(CSS_COMPILER)
 
 stop-docker:
-	docker-compose down
+	$(DOCKER_COMPOSE) down
 
 stop-hakija:
 	$(PM2) $(STOP_ONLY) $(HAKIJA_BACKEND)
@@ -100,9 +102,9 @@ restart-watch: start-watch
 # Clean commands
 # ----------------
 clean-docker:
-	docker-compose stop
-	docker-compose rm
-	docker system prune -f
+	$(DOCKER_COMPOSE) stop
+	$(DOCKER_COMPOSE) rm
+	$(DOCKER) system prune -f
 
 clean-lein:
 	lein clean
