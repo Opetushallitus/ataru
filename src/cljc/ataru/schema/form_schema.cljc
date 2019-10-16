@@ -678,6 +678,7 @@
                                   :form-name  s/Str
                                   :user-agent s/Str
                                   :rating     s/Int
+                                  :haku-oid   (s/maybe s/Str)
                                   :feedback   (s/maybe s/Str)})
 
 (s/defschema PermissionCheckDto {:personOidsForSamePerson          [s/Str]

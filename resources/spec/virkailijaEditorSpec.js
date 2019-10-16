@@ -1634,8 +1634,11 @@
         clickElement(() =>
           component().find('.belongs-to-hakukohteet__modal-toggle')
         ),
+        wait.forMilliseconds(1000),
         clickElement(() =>
-          component().find('.hakukohde-and-hakukohderyhma-category-list-item')
+          component().find(
+            '.hakukohde-and-hakukohderyhma-category-list-item:first'
+          )
         )
       )
       it('shows the selected hakukohde', () => {

@@ -4,6 +4,7 @@
             [ataru.cas.client :as cas]
             [ataru.hakija.hakija-routes :as handler]
             [ataru.background-job.job :as job]
+            [ataru.aws.sqs :as sqs]
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.http.server :as server]
@@ -47,6 +48,12 @@
 
     :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service" "j_spring_cas_security_check" "JSESSIONID")
 
+    :credentials-provider (aws-auth/map->CredentialsProvider {})
+
+    :amazon-sqs (component/using
+                 (sqs/map->AmazonSQS {})
+                 [:credentials-provider])
+
     :henkilo-cache-loader (component/using
                            (person-client/map->PersonCacheLoader {})
                            [:oppijanumerorekisteri-cas-client])
@@ -69,8 +76,6 @@
                        (suoritus-service/new-suoritus-service)
                        [:suoritusrekisteri-cas-client])
 
-    :credentials-provider (aws-auth/map->CredentialsProvider {})
-
     :s3-client (component/using
                 (s3-client/new-client)
                 [:credentials-provider])
@@ -88,7 +93,8 @@
                       :organization-service
                       :ohjausparametrit-service
                       :person-service
-                      :temp-file-store]
+                      :temp-file-store
+                      :amazon-sqs]
                      (map first caches)))
 
     :server-setup {:port      http-port

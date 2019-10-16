@@ -1,0 +1,32 @@
+(ns ataru.palaute.palaute-client
+  (:require [ataru.config.core :refer [config]]
+            [ataru.util.http-util :as http-util]
+            [cheshire.core :as json]
+            [ataru.cas.client :as cas]
+            [ataru.aws.sqs :as sqs]
+            [taoensso.timbre :as log])
+  (:import [java.util UUID]))
+
+(defn- build-palaute-request
+  [feedback]
+  {:stars      (:stars feedback)
+   :feedback   (:feedback feedback)
+   :user-agent (:user-agent feedback)
+   :created-at (.getTime (java.util.Date.))
+   :data       {}
+   :key        (if (:haku-oid feedback)
+                 (str "https://" (get-in config [:urls :hakija-host]) "/hakemus/haku/" (:haku-oid feedback))
+                 (str "https://" (get-in config [:urls :hakija-host]) "/hakemus/" (:form-key feedback)))})
+
+(defn send-application-feedback
+  [amazon-sqs feedback]
+  (try
+    (log/info "Sending feedback to Palautepalvelu" feedback)
+    (sqs/send-message amazon-sqs
+                      (-> config :aws :feedback-queue :queue-url)
+                      (-> feedback
+                          (build-palaute-request)
+                          (json/generate-string)))
+    (catch Exception e
+      (log/warn (str "Feedback didn't go through: " (str (type e)) (str e) (.getMessage e))))))
+

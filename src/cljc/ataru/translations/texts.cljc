@@ -1095,6 +1095,9 @@ You will receive a confirmation of your application to your email."}
    :link-to-form                                    {:fi "Linkki lomakkeeseen"
                                                      :sv "Länk till blanketten"
                                                      :en "Link to the form"}
+   :link-to-feedback                                {:fi "Linkki palautteeseen"
+                                                     :sv "Länk till responsen"
+                                                     :en "Link to the feedback"}
    :load-excel                                      {:fi "Lataa Excel"
                                                      :sv "Ladda ner Excel"
                                                      :en "Load excel"}

@@ -31,6 +31,7 @@
             [cheshire.core :as json]
             [ataru.config.core :refer [config]]
             [ataru.flowdock.flowdock-client :as flowdock-client]
+            [ataru.palaute.palaute-client :as palaute-client]
             [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret alter-application-to-hakuaikaloppu-for-secret]]
             [ataru.hakija.resumable-file-transfer :as resumable-file]
             [taoensso.timbre :as log])
@@ -144,7 +145,8 @@
                           koodisto-cache
                           form-by-id-cache
                           form-by-haku-oid-str-cache
-                          temp-file-store]}]
+                          temp-file-store
+                          amazon-sqs]}]
   (api/context "/api" []
     :tags ["application-api"]
     (api/GET ["/haku/:haku-oid" :haku-oid #"[0-9\.]+"] []
@@ -183,6 +185,7 @@
       (if-let [saved-application (hakija-application-service/save-application-feedback feedback)]
         (do
           (flowdock-client/send-application-feedback saved-application)
+          (palaute-client/send-application-feedback amazon-sqs saved-application)
           (response/ok {:id (:id saved-application)}))
         (response/bad-request {})))
     (api/POST "/application" {session :session}

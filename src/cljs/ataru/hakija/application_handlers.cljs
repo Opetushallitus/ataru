@@ -1331,6 +1331,7 @@
                      :form-name  (autil/non-blank-val (-> db :form :name) [lang-kw :fi :sv :en])
                      :user-agent (.-userAgent js/navigator)
                      :rating     (:stars feedback)
+                     :haku-oid   (-> db :application :selected-haku)
                      :feedback   (when text
                                    (subs text 0 2000))}]
       {:db   new-db

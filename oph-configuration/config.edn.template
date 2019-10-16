@@ -25,6 +25,7 @@
  :redis {:uri "{{ataru_redis_uri}}"}
  :aws {:region "{{aws_region}}"
        :temp-files {:bucket "{{ataru_temp_file_bucket_name}}"}
+       :feedback-queue {:queue-url "{{palaute_queue_url}}"}
        :henkilo-modified-queue {:enabled?      {{ataru_henkilo_modified_queue_enabled}}
                                 :drain-failed? {{ataru_henkilo_modified_queue_drain_failed}}
                                 :queue-url     "{{ataru_henkilo_modified_queue_url}}"}}

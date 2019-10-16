@@ -154,6 +154,15 @@
    [:span.editor-form__preview-button-text
     (clojure.string/upper-case (name lang-kwd))]])
 
+(defn- link-to-feedback [path]
+  [:span
+   [:span " | "]
+   [:a.editor-form__form-admin-preview-link
+    {:href   (str "/palaute/"
+                  "?q=" (str js/config.applicant.service_url path))
+     :target "_blank"}
+    (get-virkailija-translation :link-to-feedback)]])
+
 (defn- lock-form-editing []
   (let [form-locked-info @(subscribe [:editor/form-locked-info])
         lock-state       (:lock-state form-locked-info)
@@ -227,7 +236,8 @@
 (defn form-in-use-warning
   [form]
   (let [forms-in-use (subscribe [:state-query [:editor :forms-in-use]])
-        languages    (subscribe [:editor/languages])]
+        languages    (subscribe [:editor/languages])
+        user-info    (subscribe [:state-query [:editor :user-info]])]
     (fn [form]
       (if-let [form-used-in-hakus (get @forms-in-use (keyword (:key form)))]
         [:div.editor-form__form-link-container.animated.flash
@@ -235,33 +245,37 @@
           [:i.zmdi.zmdi-alert-circle-o]
           (str " "
                (if (empty? (rest (vals form-used-in-hakus)))
-            (get-virkailija-translation :used-by-haku)
-            (get-virkailija-translation :used-by-haut)))]
+                 (get-virkailija-translation :used-by-haku)
+                 (get-virkailija-translation :used-by-haut)))]
          [:ul.editor-form__used-in-haku-list
           (doall
-            (for [haku (vals form-used-in-hakus)]
-            ^{:key (str "haku-" (:haku-oid haku))}
-            [:li
-             [:div.editor-form__used-in-haku-list-haku-name
-              [:span
-               (str (some #(get (:haku-name haku) %) [:fi :sv :en]) " ")
-               [:a.editor-form__haku-admin-link
-                {:href   (str "/tarjonta-app/index.html#/haku/"
-                           (:haku-oid haku))
+           (for [haku (vals form-used-in-hakus)]
+             ^{:key (str "haku-" (:haku-oid haku))}
+             [:li
+              [:div.editor-form__used-in-haku-list-haku-name
+               [:span
+                (str (some #(get (:haku-name haku) %) [:fi :sv :en]) " ")
+                [:a.editor-form__haku-admin-link
+                 {:href   (str "/tarjonta-app/index.html#/haku/"
+                               (:haku-oid haku))
+                  :target "_blank"}
+                 [:i.zmdi.zmdi-open-in-new]]]]
+              [:div.editor-form__haku-preview-link
+               [:a
+                {:href   (str "/lomake-editori/api/preview/haku/"
+                              (:haku-oid haku)
+                              "?lang=fi")
                  :target "_blank"}
-                [:i.zmdi.zmdi-open-in-new]]]]
-             [:div.editor-form__haku-preview-link
-              [:a {:href   (str "/lomake-editori/api/preview/haku/"
-                                (:haku-oid haku)
-                                "?lang=fi")
-                   :target "_blank"}
-               (get-virkailija-translation :test-application)]
-              [:span " | "]
-              [:a {:href   (str js/config.applicant.service_url
-                                "/hakemus/haku/" (:haku-oid haku)
-                                "?lang=fi")
-                   :target "_blank"}
-               (get-virkailija-translation :form)]]]))]]
+                (get-virkailija-translation :test-application)]
+               [:span " | "]
+               [:a
+                {:href   (str js/config.applicant.service_url
+                              "/hakemus/haku/" (:haku-oid haku)
+                              "?lang=fi")
+                 :target "_blank"}
+                (get-virkailija-translation :form)]
+               (when (:superuser? @user-info)
+                 (link-to-feedback (str "/hakemus/haku/" (:haku-oid haku))))]]))]]
         [:div.editor-form__form-link-container
          [:h3.editor-form__form-link-heading
           [:i.zmdi.zmdi-alert-circle-o]
@@ -273,8 +287,11 @@
            :target "_blank"}
           (get-virkailija-translation :form)]
          [:span " | "]
-         [:a.editor-form__form-admin-preview-link (get-virkailija-translation :test-application)]
-         (map (partial preview-link (:key form)) @languages)]))))
+         [:a.editor-form__form-admin-preview-link
+          (get-virkailija-translation :test-application)]
+         (map (partial preview-link (:key form)) @languages)
+         (when (:superuser? @user-info)
+           (link-to-feedback (str "/hakemus/" (:key form))))]))))
 
 (defn- close-form []
   [:a {:on-click (fn [event]
