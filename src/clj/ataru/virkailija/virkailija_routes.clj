@@ -1272,25 +1272,25 @@
     (api/GET "/dashboard" []
       (selmer/render-file "templates/dashboard.html" {}))))
 
-(defn- combine-statuses [statuses]
-  (taoensso.timbre/info "-------combine-statuses--------" (pr-str statuses))
-  (clojure.pprint/pprint "-------pprint--------" (pr-str statuses))
-  statuses)
-
 (defn status-routes
   [system]
   (api/context "/status" []
     :tags ["status-api"]
     (api/GET "/background-jobs" []
-      :return {s/Str {:total   s/Int
-                      :fail    s/Int
-                      :error   s/Int
-                      :waiting s/Int}}
-      ; PITÄISKÖ TÄSSÄ HAKEE ENSIN VIIKKO, SIT PÄIVÄ JA SIT TUNTI?!?
-      ; TEHÄÄN ENSIN NIIN JA SIT VAIKKA KÄÄNNETÄÄN VALUET JOS TARTTEE.
-      (let [status (combine-statuses (apply map #(job/status %) [168, 24, 1]))]
-      ;(let [status (job/status 168)]
-      ;  (taoensso.timbre/info "---------------" status)
+      :return {s/Str {:total    {s/Str {:week s/Int
+                                        :day s/Int
+                                        :hour s/Int}}
+                      :fail     {s/Str {:week s/Int
+                                        :day s/Int
+                                        :hour s/Int}}
+                      :error    {s/Str {:week s/Int
+                                        :day s/Int
+                                        :hour s/Int}}
+                      :waiting  {s/Str {:week s/Int
+                                        :day s/Int
+                                        :hour s/Int}}}}
+
+      (let [status (job/status)]
         (cond-> (dissoc status :ok)
                 (:ok status)       response/ok
                 (not (:ok status)) response/internal-server-error)))

@@ -7,8 +7,8 @@
    [ataru.background-job.job-execution :as execution]
    [ataru.background-job.job-store :as job-store]))
 
-(defn status [period]
-  (let [status (job-store/get-status period)]
+(defn status []
+  (let [status (job-store/get-status)]
     (if (and
          (= 1 (get-in status ["start-automatic-eligibility-if-ylioppilas-job-job"
                               :total]))

@@ -72,9 +72,24 @@
       ;; stop execution for a short period
       (boolean raw-job))))
 
-
-(defn get-status [period]
+(comment defn get-status []
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-    (reduce #(assoc %1 (:job_type %2) (dissoc %2 :job_type))
-            {}
-            (yesql-status {:period period} {:connection connection}))))
+                           (reduce #(assoc %1 (:job_type %2) (dissoc %2 :job_type))
+                                   {}
+                                   (yesql-status {} {:connection connection}))))
+(comment defn combine-results [results]
+  (reduce (fn [x y] (merge-with
+                      (fn [val1 val2]
+                        (if (vector? val1) (conj val1 val2) [val1 val2])) x y)) results)
+  )
+
+(defn get-status []
+  (let [periods [168, 24, 1]]
+   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+                            (log/info "----------------")
+                            (log/info (pr-str (yesql-status {:period 168} {:connection connection})))
+                            (log/info "----------------")
+                            (clojure.pprint/pprint (map #(yesql-status {:period %} {:connection connection}) periods))
+                            (reduce #(assoc %1 (:job_type %2) (dissoc %2 :job_type))
+                                    {}
+                                    (map #(yesql-status {:period %} {:connection connection}) periods)))))
