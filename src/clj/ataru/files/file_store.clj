@@ -5,7 +5,8 @@
             [ataru.util.http-util :as http-util]
             [cheshire.core :as json]
             [clojure.java.io :as io]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [clojure.string :as str])
   (:import [java.text Normalizer Normalizer$Form]
            [java.util.zip ZipOutputStream ZipEntry]))
 
@@ -46,14 +47,25 @@
       {:body                (:body resp)
        :content-disposition (-> resp :headers :content-disposition)})))
 
-(defn get-file-zip [keys out]
+(defn- generate-filename [filename counter]
+  (let [name (str (str/join "." (butlast (str/split filename #"\."))))
+        extension (last (str/split filename #"\."))]
+    (str (apply str (take 240 name)) counter "." extension)))
+
+( defn get-file-zip [keys out]
   (with-open [zout (ZipOutputStream. out)]
-    (doseq [key keys]
-      (if-let [file (get-file key)]
-        (let [[_ filename] (re-matches #"attachment; filename=\"(.*)\"" (:content-disposition file))]
-          (.putNextEntry zout (new ZipEntry (str filename)))
-          (with-open [fin (:body file)]
-            (io/copy fin zout))
-          (.closeEntry zout)
-          (.flush zout))
-        (log/error "Could not get file" key)))))
+    (let [filenames (atom #{})
+          counter (atom 0)]
+      (doseq [key keys]
+        (if-let [file (get-file key)]
+          (let [[_ filename] (re-matches #"attachment; filename=\"(.*)\"" (:content-disposition file))
+                generated-filename (if (contains? @filenames (generate-filename filename ""))
+                                     (generate-filename filename (swap! counter inc))
+                                     (generate-filename filename ""))]
+            (.putNextEntry zout (new ZipEntry generated-filename))
+            (with-open [fin (:body file)]
+              (io/copy fin zout))
+            (swap! filenames conj generated-filename)
+            (.closeEntry zout)
+            (.flush zout))
+          (log/error "Could not get file" key))))))
