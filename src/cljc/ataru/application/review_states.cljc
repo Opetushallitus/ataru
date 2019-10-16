@@ -66,7 +66,8 @@
 (def attachment-hakukohde-review-types
   [["not-checked" (:not-checked state-translations)]
    ["checked" (:checked state-translations)]
-   ["incomplete" (:incomplete-answer state-translations)]
+   ["incomplete-attachment" (:incomplete-attachment state-translations)]
+   ["attachment-missing" (:attachment-missing state-translations)]
    ["overdue" (:overdue state-translations)]])
 
 (def attachment-hakukohde-review-types-with-multiple-values
@@ -78,7 +79,7 @@
 
 (def attachment-hakukohde-review-types-with-no-requirements
   (concat attachment-hakukohde-review-types
-          [[no-attachment-requirements (:attachmentless state-translations)]]))
+          [[no-attachment-requirements (:no-attachment-required state-translations)]]))
 
 (def attachment-review-type-names
   (map first attachment-hakukohde-review-types))
