@@ -647,7 +647,7 @@ You will receive a confirmation of your application to your email."}
                           :sv "Medborgarskap"
                           :en "Nationality"}
    :country-of-residence {:fi "Asuinmaa"
-                          :sv "Boningsland"
+                          :sv "Bosättningsland"
                           :en "Country of residence"}
    :have-finnish-ssn     {:fi "Onko sinulla suomalainen henkilötunnus?"
                           :sv "Har du en finländsk personbeteckning?"
