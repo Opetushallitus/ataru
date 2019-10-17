@@ -54,12 +54,13 @@
   (str "/lomake-editori/api/files/content/" (:key attachment)))
 
 (defn- attachment-skimming-filename [selected-attachment]
-  (let [download-label    (str "lataa ("
-                               (-> selected-attachment :size u/size-bytes->str)
-                               ")")
-        download-url      (download-url selected-attachment)
-        filename          (-> selected-attachment :filename)
-        can-display-file? @(re-frame/subscribe [:virkailija-attachments/can-display-file? (:key selected-attachment)])]
+  (let [download-label     (str "lataa ("
+                                (-> selected-attachment :size u/size-bytes->str)
+                                ")")
+        download-url       (download-url selected-attachment)
+        filename           (-> selected-attachment :filename)
+        display-capability @(re-frame/subscribe [:virkailija-attachments/file-display-capability (:key selected-attachment)])
+        can-display-file?  (= :show-in-browser display-capability)]
     [:<>
      [:div]
      [:span.attachment-skimming-header__text filename]
@@ -123,8 +124,9 @@
               (application-states/get-review-state-label-by-name review-types effective-liitepyynto-state lang)]])]]))))
 
 (defn- attachment-skimming-image-view [selected-attachment]
-  (let [download-url      (download-url selected-attachment)
-        can-display-file? @(re-frame/subscribe [:virkailija-attachments/can-display-file? (:key selected-attachment)])]
+  (let [download-url       (download-url selected-attachment)
+        display-capability @(re-frame/subscribe [:virkailija-attachments/file-display-capability (:key selected-attachment)])
+        can-display-file?  (= :show-in-browser display-capability)]
     [:div.attachment-skimming-image-view
      (if can-display-file?
        [:img.attachment-skimming-image-view__image

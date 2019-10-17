@@ -11,15 +11,17 @@
 
 (def allowed-files-matcher #"(?i)\.(jpg|jpeg|png)$")
 
-(defn- can-display-file? [filename]
-  (if filename
-    (->> filename
-         (re-find allowed-files-matcher)
-         (boolean))
-    false))
+(defn- file-display-capability [metadata]
+  (if-let [found-match (->> (or metadata [])
+                            :filename
+                            (re-find allowed-files-matcher))]
+    (if found-match
+      :show-in-browser
+      :download-only)
+    :download-only))
 
 (re-frame/reg-sub
-  :virkailija-attachments/can-display-file?
+  :virkailija-attachments/file-display-capability
   (fn []
     [(re-frame/subscribe [:application/selected-application])])
   (fn [[application] [_ attachment-key]]
@@ -34,11 +36,10 @@
                                       (every? vector? values)
                                       (flatten))))
                           (filter (fn [attachment]
-                                    (= (:key attachment) attachment-key)))
-                          (map :filename))
+                                    (= (:key attachment) attachment-key))))
                     conj)
          (first)
-         (can-display-file?))))
+         (file-display-capability))))
 
 (re-frame/reg-sub
   :virkailija-attachments/liitepyynnot-for-selected-hakukohteet
