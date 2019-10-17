@@ -629,7 +629,8 @@
 (reg-event-fx
   :application/handle-fetch-application
   (fn [{:keys [db]} [_ response]]
-    (let [response-with-parsed-times (parse-application-times response)
+    (let [application-key            (-> response :application :key)
+          response-with-parsed-times (parse-application-times response)
           db                         (-> db
                                          (update-application-details response-with-parsed-times)
                                          (assoc-in [:application :loading?] false))]
@@ -637,7 +638,8 @@
        :dispatch-n [(if (application-has-attachments? db)
                       [:application/fetch-application-attachment-metadata]
                       [:application/start-autosave])
-                    [:application/get-application-change-history (-> response :application :key)]]})))
+                    [:liitepyynto-information-request/get-deadlines application-key]
+                    [:application/get-application-change-history application-key]]})))
 
 (reg-event-db
   :application/handle-fetch-application-error

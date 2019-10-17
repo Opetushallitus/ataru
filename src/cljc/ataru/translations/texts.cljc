@@ -1317,6 +1317,12 @@ You will receive a confirmation of your application to your email."}
    :required                                        {:fi "Pakollinen tieto"
                                                      :sv "Obligatorisk uppgift"
                                                      :en "Mandatory information"}
+   :invalid-date-format                             {:fi "Päivämäärän tulee olla muotoa p.k.vvvv"
+                                                     :sv "SV: Päivämäärän tulee olla muotoa p.k.vvvv"
+                                                     :en "EN: Päivämäärän tulee olla muotoa d.m.yyyy"}
+   :invalid-time-format                             {:fi "Ajan tulee olla muotoa t.mm"
+                                                     :sv "SV: Ajan tulee olla muotoa h.mm"
+                                                     :en "EN: Ajan tulee olla muotoa h.mm"}
    :reset-organization                              {:fi "Palauta oletusorganisaatio"
                                                      :sv "Återställ utgångsorganisation"
                                                      :en "Reset the organization"}
@@ -1362,6 +1368,24 @@ You will receive a confirmation of your application to your email."}
    :set-haku-to-form                                {:fi "Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."
                                                      :sv "Ställ först blanketten för användning i ansökan för att kunna bilda innehåll för ansökningsmålet."
                                                      :en "EN: Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."}
+   :liitepyynto-deadline                            {:fi "Hakijakohtainen aikaraja"
+                                                     :sv "SV: Hakijakohtainen aikaraja"
+                                                     :en "EN: Hakijakohtainen aikaraja"}
+   :liitepyynto-deadline-date                       {:fi "Viimeinen palautusajankohta"
+                                                     :sv "SV: Viimeinen palautusajankohta"
+                                                     :en "EN: Viimeinen palautusajankohta"}
+   :liitepyynto-deadline-time                       {:fi "klo"
+                                                     :sv "SV: klo"
+                                                     :en "EN: klo"}
+   :liitepyynto-deadline-error                      {:fi "Aikarajan tallennus epäonnistui"
+                                                     :sv "SV: Aikarajan tallennus epäonnistui"
+                                                     :en "EN: Aikarajan tallennus epäonnistui"}
+   :liitepyynto-deadline-set                        {:fi "Hakijakohtainen aikaraja asetettu"
+                                                     :sv "SV: Hakijakohtainen aikaraja asetettu"
+                                                     :en "EN: Hakijakohtainen aikaraja asetettu"}
+   :liitepyynto-deadline-unset                      {:fi "Hakijakohtainen aikaraja poistettu"
+                                                     :sv "SV: Hakijakohtainen aikaraja poistettu"
+                                                     :en "EN: Hakijakohtainen aikaraja poistettu"}
    :settings                                        {:fi "Asetukset"
                                                      :sv "Inställningar"
                                                      :en "EN: Asetukset"}

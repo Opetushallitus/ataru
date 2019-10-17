@@ -1,10 +1,43 @@
 (ns ataru.application-common.fx
-  (:require [re-frame.core :as re-frame]
+  (:require [ajax.core :as ajax]
+            [re-frame.core :as re-frame]
             [reagent.core :as reagent]
             [cljs.core.async :as async]
             [ataru.hakija.has-applied :refer [has-applied]]
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]))
+
+(defn http [caller-id
+            {:keys [method
+                    url
+                    post-data
+                    headers
+                    handler
+                    progress-handler
+                    error-handler
+                    started-handler]}]
+  (cond-> ((case method
+             :get    ajax/GET
+             :post   ajax/POST
+             :put    ajax/PUT
+             :delete ajax/DELETE)
+           url
+           (merge {:response-format (ajax/ring-response-format
+                                     {:format (ajax/json-response-format
+                                               {:keywords? true})})
+                   :headers         (merge headers
+                                           {"Caller-Id" caller-id}
+                                           (when (util/include-csrf-header? method)
+                                             {"CSRF" (util/csrf-token)}))
+                   :handler         (fn [response] (re-frame/dispatch (conj handler response)))
+                   :error-handler   (fn [response] (re-frame/dispatch (conj error-handler (:response response))))}
+                  (when (some? progress-handler)
+                    {:progress-handler (fn [event] (re-frame/dispatch (conj progress-handler event)))})
+                  (when (some? post-data))
+                  {:format :json
+                   :params post-data}))
+          (some? started-handler)
+          started-handler))
 
 (re-frame/reg-fx :delayed-dispatch
   (fn [{:keys [dispatch-vec timeout]}]
