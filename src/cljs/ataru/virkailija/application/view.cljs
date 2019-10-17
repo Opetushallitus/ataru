@@ -6,6 +6,8 @@
             [ataru.util :as util]
             [ataru.virkailija.application.application-search-control :refer [application-search-control]]
             [ataru.virkailija.application.application-subs]
+            ataru.virkailija.application.attachments.liitepyynto-information-request-subs
+            [ataru.virkailija.application.attachments.liitepyynto-information-request-view :as lir]
             [ataru.virkailija.application.attachments.virkailija-attachment-handlers]
             [ataru.virkailija.application.attachments.virkailija-attachment-subs]
             [ataru.virkailija.application.handlers]
@@ -1345,6 +1347,27 @@
     [[:span (get-virkailija-translation :confirmation-sent)]
      nil]
 
+    {:event-type "field-deadline-set"}
+    [[:span (str (get-virkailija-translation :liitepyynto-deadline-set) " ")
+      (virkailija-initials-span event)]
+     [:div
+      [:div
+       [:span (str (get-virkailija-translation :attachment) ": ")]
+       [:span @(subscribe [:application/field-label (:review-key event)])]]
+      [:div
+       [:span (str (get-virkailija-translation :liitepyynto-deadline-date) ": ")]
+       [:span (t/time->short-str (:new-review-state event))]]
+      (event-organizations-list event lang)]]
+
+    {:event-type "field-deadline-unset"}
+    [[:span (str (get-virkailija-translation :liitepyynto-deadline-unset) " ")
+      (virkailija-initials-span event)]
+     [:div
+      [:div
+       [:span (str (get-virkailija-translation :attachment) ": ")]
+       [:span @(subscribe [:application/field-label (:review-key event)])]]
+      (event-organizations-list event lang)]]
+
     {:subject _ :message _ :message-type message-type}
     [[:span
       (if (= message-type "mass-information-request")
@@ -1634,6 +1657,7 @@
                                        "multiple-values")
                                      (:state review)
                                      "not-checked")
+            application-key      @(subscribe [:state-query [:application :selected-key]])
             can-edit?            (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])
             virkailija-lang      (subscribe [:editor/virkailija-lang])
             review-types         (if multiple-values?
@@ -1660,19 +1684,19 @@
           (if @list-opened
             [:div.application-handling__review-state-list
              (doall
-               (for [[state labels]
-                     review-types]
-                 (let [label (get labels @virkailija-lang)]
-                   [:div.application-handling__review-state-row
-                    {:class    (when (= state selected-state) "application-handling__review-state-row--selected application-handling__review-state-row--enabled")
-                     :on-click (if (= state selected-state)
-                                 #(swap! list-opened not)
-                                 (fn []
-                                   (swap! list-opened not)
-                                   (doall (map #(dispatch [:application/update-attachment-review attachment-key % state]) selected-hakukohteet))))
-                     :key      (str attachment-key label)}
-                    (if (= state selected-state) [icon-check]
-                                                 [icon-unselected]) label])))]
+              (for [[state labels]
+                    review-types]
+                (let [label (get labels @virkailija-lang)]
+                  [:div.application-handling__review-state-row
+                   {:class    (when (= state selected-state) "application-handling__review-state-row--selected application-handling__review-state-row--enabled")
+                    :on-click (if (= state selected-state)
+                                #(swap! list-opened not)
+                                (fn []
+                                  (swap! list-opened not)
+                                  (doall (map #(dispatch [:application/update-attachment-review attachment-key % state]) selected-hakukohteet))))
+                    :key      (str attachment-key label)}
+                   (if (= state selected-state) [icon-check]
+                       [icon-unselected]) label])))]
             [:div.application-handling__review-state-row.application-handling__review-state-row--selected
              {:class    (if @can-edit?
                           "application-handling__review-state-row--enabled"
@@ -1680,6 +1704,24 @@
               :on-click #(when @can-edit? (swap! list-opened not))}
              [icon-check]
              (application-states/get-review-state-label-by-name review-types selected-state @virkailija-lang)])]
+         [:div.application__attachment-review-deadline-row
+          (when (or (= "incomplete-attachment" selected-state)
+                    @(subscribe [:liitepyynto-information-request/send? application-key attachment-key]))
+            [:div.application__attachment-review-deadline-row__send-toggle
+             [lir/send-toggle-lable application-key attachment-key]
+             [:div.application__attachment-review-deadline-row__send-toggle-input
+              [lir/send-toggle application-key attachment-key]]])
+          (when @(subscribe [:liitepyynto-information-request/send? application-key attachment-key])
+            [:div.application__attachment-review-deadline-row__deadline
+             [lir/deadline-date-label application-key attachment-key]
+             [:div.application__attachment-review-deadline-row__deadline-date
+              [lir/deadline-date-input application-key attachment-key]]
+             [lir/deadline-time-label application-key attachment-key]
+             [:div.application__attachment-review-deadline-row__deadline-time
+              [lir/deadline-time-input application-key attachment-key]]])
+          (when @(subscribe [:liitepyynto-information-requets/deadline-error? application-key attachment-key])
+            [:div.application__attachment-review-deadline-row__deadline-error
+             [lir/deadline-error]])]
          [:ul.application__attachment-review-row-attachments
           (for [attachment-file files
                 :let [text (str (:filename attachment-file) " (" (util/size-bytes->str (:size attachment-file)) ")")]]
