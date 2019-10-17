@@ -11,14 +11,17 @@
 
 (def allowed-files-matcher #"(?i)\.(jpg|jpeg|png)$")
 
-(defn- file-display-capability [metadata]
-  (if-let [found-match (->> (or metadata [])
-                            :filename
-                            (re-find allowed-files-matcher))]
-    (if found-match
-      :show-in-browser
-      :download-only)
+(defn- file-previewability [metadata]
+  (if (= "finished" (:preview-status metadata))
+    :provide-preview
     :download-only))
+
+(defn- file-display-capability [metadata]
+  (if (->> (or metadata [])
+           :filename
+           (re-find allowed-files-matcher))
+    :show-in-browser
+    (file-previewability metadata)))
 
 (re-frame/reg-sub
   :virkailija-attachments/file-display-capability
