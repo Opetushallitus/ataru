@@ -975,7 +975,7 @@
                                                      :fieldClass      "formField"
                                                      :fieldType       "dropdown"
                                                      :id              "finnish-vocational-before-1995--degree"
-                                                     :koodisto-source {:title "Tutkinto" :uri "tutkinto" :version 1}
+                                                     :koodisto-source {:title "Tutkinto" :uri "tutkinto" :version 2}
                                                      :label           {:en "Name of the degree"
                                                                        :fi "Tutkinnon nimi"
                                                                        :sv "Examens namn"}
