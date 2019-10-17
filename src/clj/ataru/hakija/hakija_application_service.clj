@@ -5,6 +5,7 @@
     [clojure.core.match :refer [match]]
     [ataru.applications.application-service :as application-service]
     [ataru.applications.automatic-eligibility :as automatic-eligibility]
+    [ataru.applications.field-deadline :as field-deadline]
     [ataru.background-job.job :as job]
     [ataru.db.db :as db]
     [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
@@ -183,6 +184,12 @@
         application-hakukohde-reviews (some-> latest-application
                                               :key
                                               application-store/get-application-hakukohde-reviews)
+        field-deadlines               (or (some->> latest-application
+                                                   :key
+                                                   field-deadline/get-field-deadlines
+                                                   (map #(dissoc % :last-modified))
+                                                   (util/group-by-first :field-id))
+                                          {})
         form                          (cond (some? (:haku application))
                                             (hakija-form-service/fetch-form-by-haku-oid-and-id
                                              form-by-id-cache
@@ -193,6 +200,7 @@
                                              (:haku application)
                                              (:form application)
                                              (util/application-in-processing? application-hakukohde-reviews)
+                                             field-deadlines
                                              form-roles)
                                             (some? (:form application))
                                             (hakija-form-service/fetch-form-by-id
@@ -201,7 +209,8 @@
                                              form-by-id-cache
                                              koodisto-cache
                                              nil
-                                             (util/application-in-processing? application-hakukohde-reviews)))
+                                             (util/application-in-processing? application-hakukohde-reviews)
+                                             field-deadlines))
         final-application             (if is-modify?
                                         (-> application
                                             (merge-unviewable-answers-from-previous
@@ -447,6 +456,12 @@
         lang-override              (when secret-expired? (application-store/get-application-language-by-secret secret))
         application-in-processing? (util/application-in-processing? (:application-hakukohde-reviews application))
         inactivated?               (is-inactivated? application)
+        field-deadlines            (or (some->> application
+                                                :key
+                                                field-deadline/get-field-deadlines
+                                                (map #(dissoc % :last-modified))
+                                                (util/group-by-first :field-id))
+                                       {})
         form                       (cond (some? (:haku application)) (hakija-form-service/fetch-form-by-haku-oid
                                                                       form-by-id-cache
                                                                       tarjonta-service
@@ -455,17 +470,19 @@
                                                                       ohjausparametrit-service
                                                                       (:haku application)
                                                                       application-in-processing?
+                                                                      field-deadlines
                                                                       form-roles)
                                          (some? (:form application)) (hakija-form-service/fetch-form-by-key
-                                                                       (->> application
-                                                                            :form
-                                                                            form-store/fetch-by-id
-                                                                            :key)
-                                                                       form-roles
-                                                                       form-by-id-cache
-                                                                       koodisto-cache
-                                                                       nil
-                                                                       application-in-processing?))
+                                                                      (->> application
+                                                                           :form
+                                                                           form-store/fetch-by-id
+                                                                           :key)
+                                                                      form-roles
+                                                                      form-by-id-cache
+                                                                      koodisto-cache
+                                                                      nil
+                                                                      application-in-processing?
+                                                                      field-deadlines))
         person                     (if (= actor-role :virkailija)
                                      (application-service/get-person application person-client)
                                      (some-> application
