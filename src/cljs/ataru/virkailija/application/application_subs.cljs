@@ -396,6 +396,20 @@
          first)))
 
 (re-frame/reg-sub
+  :application/field-label
+  (fn [_ _]
+    [(re-frame/subscribe [:application/selected-form])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn [[form lang] [_ field-id]]
+    (u/non-blank-val
+     (->> (:content form)
+          u/flatten-form-fields
+          (filter #(= field-id (:id %)))
+          first
+          :label)
+     [lang :fi :sv :en])))
+
+(re-frame/reg-sub
   :application/hakukohde-options-by-oid
   (fn [_ _]
     (re-frame/subscribe [:application/hakukohteet-field]))

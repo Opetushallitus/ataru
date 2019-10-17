@@ -675,12 +675,18 @@ and (max-width: 1000px) {
 .application__attachment-review-info-row {
   display: flex;
   align-items: flex-start;
-  margin-bottom: 10px;
+}
+
+.application__attachment-review-deadline-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-top: 20px;
 }
 
 .application__attachment-review-row-attachments {
   padding: 0px;
-  margin: 0px;
+  margin: 20px 0px 0px 0px;
   font-weight: lighter;
   list-style: none;
   word-break:break-all;
@@ -691,6 +697,34 @@ and (max-width: 1000px) {
   align-self: flex-start;
   font-weight: lighter;
   margin: 0 10px 0 0;
+}
+
+.application__attachment-review-deadline-row__send-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.application__attachment-review-deadline-row__send-toggle-input {
+  margin-left: 10px;
+}
+
+.application__attachment-review-deadline-row__deadline {
+  margin-top: 10px;
+}
+
+.application__attachment-review-deadline-row__deadline-date {
+  display: inline-block;
+  margin-left: 6px;
+  margin-right: 6px;
+}
+
+.application__attachment-review-deadline-row__deadline-time {
+  display: inline-block;
+  margin-left: 6px;
+}
+
+.application__attachment-review-deadline-row__deadline-error {
+  margin-top: 10px;
 }
 
 .application-handling__review-outer-container {
@@ -1812,6 +1846,72 @@ and (max-width: 1000px) {
 .application__person-info-wrapper .application__form-field {
   flex-direction: row;
   margin-bottom: 6px;
+}
+
+.send-liitepyynto-information-request-toggle {
+  height: 26px;
+  width: 52px;
+  overflow: hidden;
+  border-radius: 26px;
+}
+
+.send-liitepyynto-information-request-toggle__slider {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 26px;
+  width: 78px;
+  cursor: pointer;
+  transition: transform 0.1s, background-color 0.1s;
+}
+
+.send-liitepyynto-information-request-toggle__slider--on {
+  transform: translateX(0px);
+  background-color: @sg-color-green;
+
+  &:hover {
+    background-color: @button-green;
+  }
+}
+
+.send-liitepyynto-information-request-toggle__slider--off {
+  transform: translateX(-26px);
+  background-color: @disabled-list-item-color;
+}
+
+.send-liitepyynto-information-request-toggle__divider {
+  height: 24px;
+  width: 24px;
+  background-color: white;
+  border-radius: 50%;
+}
+
+.liitepyynto-deadline__date-label {
+  .light;
+}
+
+.liitepyynto-deadline__time-label {
+  .light;
+}
+
+.liitepyynto-deadline__date-input {
+  font-size: 14px;
+  .light;
+  padding: 6px;
+  border: 1px solid @section-gray-border;
+  border-radius: 2px;
+}
+
+.liitepyynto-deadline__time-input {
+  font-size: 14px;
+  .light;
+  padding: 6px;
+  border: 1px solid @section-gray-border;
+  border-radius: 2px;
+}
+
+.liitepyynto-deadline__error {
+  color: @sg-color-red;
 }
 
 @attachment-skimming-header-height: 44px;

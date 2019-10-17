@@ -1317,6 +1317,12 @@ You will receive a confirmation of your application to your email."}
    :required                                        {:fi "Pakollinen tieto"
                                                      :sv "Obligatorisk uppgift"
                                                      :en "Mandatory information"}
+   :invalid-date-format                             {:fi "Päivämäärän tulee olla muotoa p.k.vvvv"
+                                                     :sv "SV: Päivämäärän tulee olla muotoa p.k.vvvv"
+                                                     :en "EN: Päivämäärän tulee olla muotoa d.m.yyyy"}
+   :invalid-time-format                             {:fi "Ajan tulee olla muotoa t.mm"
+                                                     :sv "SV: Ajan tulee olla muotoa h.mm"
+                                                     :en "EN: Ajan tulee olla muotoa h.mm"}
    :reset-organization                              {:fi "Palauta oletusorganisaatio"
                                                      :sv "Återställ utgångsorganisation"
                                                      :en "Reset the organization"}
@@ -1362,6 +1368,24 @@ You will receive a confirmation of your application to your email."}
    :set-haku-to-form                                {:fi "Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."
                                                      :sv "Ställ först blanketten för användning i ansökan för att kunna bilda innehåll för ansökningsmålet."
                                                      :en "EN: Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."}
+   :liitepyynto-deadline                            {:fi "Liitepyyntökohtainen aikaraja"
+                                                     :sv "SV: Liitepyyntökohtainen aikaraja"
+                                                     :en "EN: Liitepyyntökohtainen aikaraja"}
+   :liitepyynto-deadline-date                       {:fi "Viimeinen palautusajankohta"
+                                                     :sv "SV: Viimeinen palautusajankohta"
+                                                     :en "EN: Viimeinen palautusajankohta"}
+   :liitepyynto-deadline-time                       {:fi "klo"
+                                                     :sv "SV: klo"
+                                                     :en "EN: klo"}
+   :liitepyynto-deadline-error                      {:fi "Aikarajan tallennus epäonnistui"
+                                                     :sv "SV: Aikarajan tallennus epäonnistui"
+                                                     :en "EN: Aikarajan tallennus epäonnistui"}
+   :liitepyynto-deadline-set                        {:fi "Liitepyyntökohtainen aikaraja asetettu"
+                                                     :sv "SV: Liitepyyntökohtainen aikaraja asetettu"
+                                                     :en "EN: Liitepyyntökohtainen aikaraja asetettu"}
+   :liitepyynto-deadline-unset                      {:fi "Liitepyyntökohtainen aikaraja poistettu"
+                                                     :sv "SV: Liitepyyntökohtainen aikaraja poistettu"
+                                                     :en "EN: Liitepyyntökohtainen aikaraja poistettu"}
    :settings                                        {:fi "Asetukset"
                                                      :sv "Inställningar"
                                                      :en "EN: Asetukset"}
@@ -1673,6 +1697,23 @@ You will receive a confirmation of your application to your email."}
    :notes                    {:fi "Muistiinpanot"
                               :sv "Anteckningar"
                               :en "EN: Muistiinpanot"}})
+
+(defn liitepyynto-deadline-input [date-picker time-picker]
+  {:fi [[:span "Täydennys on tehtävä viimeistään "]
+        date-picker
+        [:span " klo "]
+        time-picker
+        [:span " mennessä jonka jälkeen täydennyksiä ei voi enää tehdä."]]
+   :sv [[:span "Täydennys on tehtävä viimeistään "]
+        date-picker
+        [:span " klo "]
+        time-picker
+        [:span " mennessä jonka jälkeen täydennyksiä ei voi enää tehdä."]]
+   :en [[:span "Täydennys on tehtävä viimeistään "]
+        date-picker
+        [:span " klo "]
+        time-picker
+        [:span " mennessä jonka jälkeen täydennyksiä ei voi enää tehdä."]]})
 
 (defn email-applied-error
   [email preferred-name]

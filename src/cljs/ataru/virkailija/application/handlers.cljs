@@ -213,21 +213,34 @@
       (assoc application :application-attachment-reviews (conj reviews-with-existing-removed new-review)))
     application))
 
-(reg-event-db
+(defn- some-incomplete-attachment? [attachment-reviews attachment-key]
+  (boolean
+   (some #(= "incomplete-attachment" (get % attachment-key))
+         (vals attachment-reviews))))
+
+(reg-event-fx
   :application/update-attachment-review
-  (fn [db [_ attachment-key hakukohde-oid state]]
-    (let [selected-key           (get-in db [:application :selected-key])
-          application-list       (get-in db [:application :applications])
-          updated-applications   (mapv
-                                   #(update-attachment-hakukohde-review-field-of-selected-application-in-list
-                                     % selected-key hakukohde-oid (name attachment-key) state)
-                                   application-list)]
-      (-> db
-          (assoc-in [:application :review :attachment-reviews (keyword hakukohde-oid) attachment-key] state)
-          (assoc-in [:application :applications] updated-applications)
-          (assoc-in [:application :attachment-state-counts] (attachment-state-counts
-                                                              updated-applications
-                                                              @(subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])))))))
+  (fn [{db :db} [_ attachment-key hakukohde-oid state]]
+    (let [selected-key               (get-in db [:application :selected-key])
+          application-list           (get-in db [:application :applications])
+          updated-applications       (mapv
+                                      #(update-attachment-hakukohde-review-field-of-selected-application-in-list
+                                        % selected-key hakukohde-oid (name attachment-key) state)
+                                      application-list)
+          previous-state             (get-in db [:application :review :attachment-reviews (keyword hakukohde-oid) attachment-key])
+          updated-attachment-reviews (assoc-in (get-in db [:application :review :attachment-reviews])
+                                               [(keyword hakukohde-oid) attachment-key]
+                                               state)]
+      (merge
+       {:db (-> db
+                (assoc-in [:application :review :attachment-reviews] updated-attachment-reviews)
+                (assoc-in [:application :applications] updated-applications)
+                (assoc-in [:application :attachment-state-counts] (attachment-state-counts
+                                                                   updated-applications
+                                                                   @(subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma]))))}
+       (when (and (= "incomplete-attachment" previous-state)
+                  (not (some-incomplete-attachment? updated-attachment-reviews attachment-key)))
+         {:dispatch [:liitepyynto-information-request/delete-deadline selected-key attachment-key]})))))
 
 (reg-event-db
   :application/toggle-filter
@@ -629,7 +642,8 @@
 (reg-event-fx
   :application/handle-fetch-application
   (fn [{:keys [db]} [_ response]]
-    (let [response-with-parsed-times (parse-application-times response)
+    (let [application-key (-> response :application :key)
+          response-with-parsed-times (parse-application-times response)
           db                         (-> db
                                          (update-application-details response-with-parsed-times)
                                          (assoc-in [:application :loading?] false))]
@@ -637,7 +651,8 @@
        :dispatch-n [(if (application-has-attachments? db)
                       [:application/fetch-application-attachment-metadata]
                       [:application/start-autosave])
-                    [:application/get-application-change-history (-> response :application :key)]]})))
+                    [:liitepyynto-information-request/get-deadlines application-key]
+                    [:application/get-application-change-history application-key]]})))
 
 (reg-event-db
   :application/handle-fetch-application-error
