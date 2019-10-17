@@ -77,19 +77,26 @@
                            (reduce #(assoc %1 (:job_type %2) (dissoc %2 :job_type))
                                    {}
                                    (yesql-status {} {:connection connection}))))
+
 (comment defn combine-results [results]
   (reduce (fn [x y] (merge-with
                       (fn [val1 val2]
                         (if (vector? val1) (conj val1 val2) [val1 val2])) x y)) results)
   )
 
+(defn enrich-status-result [result period]
+  (map #(assoc % :total {period (get % :total)}
+                 :fail {period (get % :fail)}
+                 :error {period (get % :error)}
+                 :waiting {period (get % :waiting)}) result))
+
 (defn get-status []
-  (let [periods [168, 24, 1]]
+  (let [periods {:week 168 :day 24 :hour 1}]
    (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-                            (log/info "----------------")
-                            (log/info (pr-str (yesql-status {:period 168} {:connection connection})))
-                            (log/info "----------------")
-                            (clojure.pprint/pprint (map #(yesql-status {:period %} {:connection connection}) periods))
-                            (reduce #(assoc %1 (:job_type %2) (dissoc %2 :job_type))
+                            (log/info "---START")
+                            (clojure.pprint/pprint (flatten (for [period periods] (enrich-status-result (yesql-status {:period (val period)} {:connection connection}) (key period)))))
+                            (log/info "---END")
+                            (reduce #(assoc %1 (:job_type %2) (dissoc %2 :job_type)
+                                               )
                                     {}
-                                    (map #(yesql-status {:period %} {:connection connection}) periods)))))
+                                     (flatten (for [period periods] (enrich-status-result (yesql-status {:period (val period)} {:connection connection}) (key period))))))))
