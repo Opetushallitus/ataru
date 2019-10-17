@@ -116,6 +116,9 @@
   {:pre [(or (and (or (string? new)
                       (map-or-vec? new))
                   (nil? old))
+             (and (or (string? old)
+                      (map-or-vec? old))
+                  (nil? new))
              (and (map-or-vec? old)
                   (map-or-vec? new)))
          (some #{operation} [operation-failed
