@@ -1,6 +1,7 @@
 (ns ataru.email.application-email-confirmation
   "Application-specific email confirmation init logic"
   (:require [ataru.applications.application-store :as application-store]
+            [ataru.applications.field-deadline :as field-deadline]
             [ataru.background-job.email-job :as email-job]
             [ataru.background-job.job :as job]
             [ataru.config.core :refer [config]]
@@ -157,8 +158,13 @@
                                           (:haku application)
                                           (:hakukohde application)))
         answers-by-key                  (-> application :answers util/answers-by-key)
+        hakuajat                        (tarjonta-hakuaika/index-hakuajat (:hakukohteet tarjonta-info))
+        field-deadlines                 (->> (:key application)
+                                             field-deadline/get-field-deadlines
+                                             (map #(dissoc % :last-modified))
+                                             (util/group-by-first :field-id))
         form                            (-> (forms/fetch-by-id (:form application))
-                                            (hakukohde/populate-attachment-deadlines now (:hakukohteet tarjonta-info)))
+                                            (hakukohde/populate-attachment-deadlines now hakuajat field-deadlines))
         lang                            (keyword (:lang application))
         attachment-keys-without-answers (->> (application-store/get-application-attachment-reviews (:key application))
                                              (map :attachment-key)

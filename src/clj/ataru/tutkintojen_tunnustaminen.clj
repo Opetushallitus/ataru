@@ -164,7 +164,8 @@
               [:hakija]
               koodisto-cache
               nil
-              false)]
+              false
+              {})]
     (when (nil? form)
       (throw (new RuntimeException (str "Form " (:form-id application)
                                         " not found"))))

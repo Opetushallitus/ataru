@@ -94,26 +94,35 @@
                         (keyword (:id field)))))))))
 
 (defn- uneditable?
-  [now field hakuajat roles application-in-processing-state?]
+  [now field hakuajat roles application-in-processing-state? field-deadline]
   (not (and (or (and (form-role/virkailija? roles)
                      (not (form-role/with-henkilo? roles)))
                 (not (contains? editing-forbidden-person-info-field-ids (keyword (:id field)))))
             (or (form-role/virkailija? roles)
-                (if (custom-deadline field)
-                  (editing-allowed-by-custom-deadline? now field)
-                  (editing-allowed-by-hakuaika? now field hakuajat application-in-processing-state?)))
+                (cond (some? field-deadline)
+                      (time/before? now (:deadline field-deadline))
+                      (custom-deadline field)
+                      (editing-allowed-by-custom-deadline? now field)
+                      :else
+                      (editing-allowed-by-hakuaika? now field hakuajat application-in-processing-state?)))
             (or (form-role/virkailija? roles)
                 (not (and (empty? (:uniques hakuajat))
                           application-in-processing-state?))))))
 
 (defn flag-uneditable-and-unviewable-field
-  [now hakuajat roles application-in-processing-state? field]
+  [now hakuajat roles application-in-processing-state? field-deadlines field]
   (if (= "formField" (:fieldClass field))
     (let [cannot-view? (and (contains? viewing-forbidden-person-info-field-ids
                                        (keyword (:id field)))
                             (not (form-role/virkailija? roles)))
           cannot-edit? (or cannot-view?
-                           (uneditable? now field hakuajat roles application-in-processing-state?))]
+                           (uneditable?
+                            now
+                            field
+                            hakuajat
+                            roles
+                            application-in-processing-state?
+                            (get field-deadlines (:id field))))]
       (assoc field
              :cannot-view cannot-view?
              :cannot-edit cannot-edit?))
@@ -122,16 +131,17 @@
 (s/defn ^:always-validate flag-uneditable-and-unviewable-fields :- s/Any
   [form :- s/Any
    now :- s/Any
-   hakukohteet :- s/Any
+   hakuajat :- s/Any
    roles :- [form-role/FormRole]
-   application-in-processing-state? :- s/Bool]
-  (let [hakuajat (hakuaika/index-hakuajat hakukohteet)]
-    (update form :content (partial util/map-form-fields
-                                   (partial flag-uneditable-and-unviewable-field
-                                            now
-                                            hakuajat
-                                            roles
-                                            application-in-processing-state?)))))
+   application-in-processing-state? :- s/Bool
+   field-deadlines :- {s/Str form-schema/FieldDeadline}]
+  (update form :content (partial util/map-form-fields
+                                 (partial flag-uneditable-and-unviewable-field
+                                          now
+                                          hakuajat
+                                          roles
+                                          application-in-processing-state?
+                                          field-deadlines))))
 
 (s/defn ^:always-validate remove-required-hakija-validator-if-virkailija :- s/Any
   [form :- s/Any
@@ -152,27 +162,31 @@
    roles :- [form-role/FormRole]
    koodisto-cache :- s/Any
    hakukohteet :- s/Any
-   application-in-processing-state? :- s/Bool]
-  (let [now (time/now)]
+   application-in-processing-state? :- s/Bool
+   field-deadlines :- {s/Str form-schema/FieldDeadline}]
+  (let [now      (time/now)
+        hakuajat (hakuaika/index-hakuajat hakukohteet)]
     (when-let [form (form-store/fetch-by-id id)]
       (when (not (:deleted form))
         (-> (koodisto/populate-form-koodisto-fields koodisto-cache form)
             (remove-required-hakija-validator-if-virkailija roles)
-            (populate-attachment-deadlines now hakukohteet)
-            (flag-uneditable-and-unviewable-fields now hakukohteet roles application-in-processing-state?))))))
+            (populate-attachment-deadlines now hakuajat field-deadlines)
+            (flag-uneditable-and-unviewable-fields now hakuajat roles application-in-processing-state? field-deadlines))))))
 
 (s/defn ^:always-validate fetch-form-by-key :- s/Any
   [key :- s/Any
    roles :- [form-role/FormRole]
    koodisto-cache :- s/Any
    hakukohteet :- s/Any
-   application-in-processing-state? :- s/Bool]
+   application-in-processing-state? :- s/Bool
+   field-deadlines :- {s/Str form-schema/FieldDeadline}]
   (when-let [latest-id (form-store/latest-id-by-key key)]
     (fetch-form-by-id latest-id
                       roles
                       koodisto-cache
                       hakukohteet
-                      application-in-processing-state?)))
+                      application-in-processing-state?
+                      field-deadlines)))
 
 (s/defn ^:always-validate fetch-form-by-haku-oid-and-id :- s/Any
   [tarjonta-service :- s/Any
@@ -182,12 +196,19 @@
    haku-oid :- s/Any
    id :- s/Int
    application-in-processing-state? :- s/Bool
+   field-deadlines :- {s/Str form-schema/FieldDeadline}
    roles :- [form-role/FormRole]]
   (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku koodisto-cache tarjonta-service organization-service ohjausparametrit-service haku-oid)
         hakukohteet   (get-in tarjonta-info [:tarjonta :hakukohteet])
         priorisoivat  (:ryhmat (hakukohderyhmat/priorisoivat-hakukohderyhmat tarjonta-service haku-oid))
         rajaavat      (:ryhmat (hakukohderyhmat/rajaavat-hakukohderyhmat haku-oid))
-        form          (fetch-form-by-id id roles koodisto-cache hakukohteet application-in-processing-state?)]
+        form          (fetch-form-by-id
+                       id
+                       roles
+                       koodisto-cache
+                       hakukohteet
+                       application-in-processing-state?
+                       field-deadlines)]
     (when (and (some? form) (some? tarjonta-info))
       (-> form
           (merge tarjonta-info)
@@ -204,6 +225,7 @@
    ohjausparametrit-service :- s/Any
    haku-oid :- s/Any
    application-in-processing-state? :- s/Bool
+   field-deadlines :- {s/Str form-schema/FieldDeadline}
    roles :- [form-role/FormRole]]
   (when-let [latest-id (some-> (tarjonta/get-haku tarjonta-service haku-oid)
                                :ataruLomakeAvain
@@ -215,52 +237,8 @@
                                    haku-oid
                                    latest-id
                                    application-in-processing-state?
+                                   field-deadlines
                                    roles)))
-
-(s/defn ^:always-validate fetch-form-by-hakukohde-oid :- s/Any
-  [tarjonta-service :- s/Any
-   koodisto-cache :- s/Any
-   organization-service :- s/Any
-   ohjausparametrit-service :- s/Any
-   hakukohde-oid :- s/Any
-   application-in-processing-state? :- s/Bool
-   roles :- [form-role/FormRole]]
-  (when-let [hakukohde (tarjonta/get-hakukohde tarjonta-service hakukohde-oid)]
-    (fetch-form-by-haku-oid tarjonta-service
-                            koodisto-cache
-                            organization-service
-                            ohjausparametrit-service
-                            (:haku-oid hakukohde)
-                            false
-                            roles)))
-
-(s/defn ^:always-validate fetch-form-by-haku-oid-and-id-cached :- s/Any
-  [form-by-haku-oid-and-id-cache :- s/Any
-   haku-oid :- s/Str
-   id :- s/Int
-   application-in-processing-state? :- s/Bool
-   roles :- [form-role/FormRole]]
-  (cache/get-from form-by-haku-oid-and-id-cache
-                  (apply str
-                         haku-oid
-                         "#" id
-                         "#" application-in-processing-state?
-                         (sort (map #(str "#" (name %)) roles)))))
-
-(s/defn ^:always-validate fetch-form-by-haku-oid-cached :- s/Any
-  [tarjonta-service
-   form-by-haku-oid-and-id-cache
-   haku-oid :- s/Any
-   application-in-processing-state? :- s/Bool
-   roles :- [form-role/FormRole]]
-  (when-let [latest-id (some-> (tarjonta/get-haku tarjonta-service haku-oid)
-                               :ataruLomakeAvain
-                               form-store/latest-id-by-key)]
-    (fetch-form-by-haku-oid-and-id-cached form-by-haku-oid-and-id-cache
-                                          haku-oid
-                                          latest-id
-                                          application-in-processing-state?
-                                          roles)))
 
 (s/defn ^:always-validate fetch-form-by-haku-oid-str-cached :- s/Any
   [form-by-haku-oid-str-cache :- s/Any
@@ -285,39 +263,24 @@
                                        false
                                        roles)))
 
-(defrecord FormByHakuOidAndIdCacheLoader [tarjonta-service
-                                          koodisto-cache
-                                          organization-service
-                                          ohjausparametrit-service]
-  cache/CacheLoader
-  (load [_ key]
-    (let [[haku-oid id aips? & roles] (clojure.string/split key #"#")]
-      (fetch-form-by-haku-oid-and-id tarjonta-service
-                                     koodisto-cache
-                                     organization-service
-                                     ohjausparametrit-service
-                                     haku-oid
-                                     (Integer/valueOf id)
-                                     (Boolean/valueOf aips?)
-                                     (map keyword roles))))
-  (load-many [this keys]
-    (into {} (keep #(when-let [v (cache/load this %)] [% v]) keys)))
-  (load-many-size [_] 1)
-  (check-schema [_ _] nil))
-
 (def form-coercer (sc/coercer! form-schema/FormWithContentAndTarjontaMetadata
                                coerce/json-schema-coercion-matcher))
 
 (defrecord FormByHakuOidStrCacheLoader [tarjonta-service
-                                        form-by-haku-oid-and-id-cache]
+                                        koodisto-cache
+                                        organization-service
+                                        ohjausparametrit-service]
   cache/CacheLoader
   (load [_ key]
     (let [[haku-oid aips? & roles] (clojure.string/split key #"#")]
-      (when-let [form (fetch-form-by-haku-oid-cached tarjonta-service
-                                                     form-by-haku-oid-and-id-cache
-                                                     haku-oid
-                                                     (Boolean/valueOf aips?)
-                                                     (map keyword roles))]
+      (when-let [form (fetch-form-by-haku-oid tarjonta-service
+                                              koodisto-cache
+                                              organization-service
+                                              ohjausparametrit-service
+                                              haku-oid
+                                              (Boolean/valueOf aips?)
+                                              {}
+                                              (map keyword roles))]
         (json/generate-string (form-coercer form)))))
   (load-many [this keys]
     (into {} (keep #(when-let [v (cache/load this %)] [% v]) keys)))
