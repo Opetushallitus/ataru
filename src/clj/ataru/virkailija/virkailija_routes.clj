@@ -6,6 +6,7 @@
             [ataru.applications.application-access-control :as access-controlled-application]
             [ataru.applications.application-service :as application-service]
             [ataru.applications.application-store :as application-store]
+            [ataru.applications.field-deadline :as field-deadline]
             [ataru.applications.excel-export :as excel]
             [ataru.applications.permission-check :as permission-check]
             [ataru.background-job.job :as job]
@@ -73,6 +74,7 @@
             [ataru.util :as util])
   (:import java.util.Locale
            java.time.ZonedDateTime
+           org.joda.time.DateTime
            org.joda.time.format.DateTimeFormat
            java.time.format.DateTimeFormatter))
 
@@ -231,7 +233,7 @@
     (api/PUT "/forms/:id/lock/:operation" {session :session}
       :path-params [id :- Long
                     operation :- (s/enum "open" "close")]
-      :return {:locked    (s/maybe org.joda.time.DateTime)
+      :return {:locked    (s/maybe DateTime)
                :id        Long}
       :summary "Toggle form locked state"
       (ok (access-controlled-form/update-form-lock id operation session tarjonta-service virkailija-tarjonta-service organization-service)))
@@ -433,6 +435,88 @@
                                 job-runner)]
           (response/ok resend-event)
           (response/bad-request)))
+
+      (api/GET "/:application-key/field-deadline" {session :session}
+        :path-params [application-key :- s/Str]
+        :return [ataru-schema/FieldDeadline]
+        (let [response (field-deadline/get-field-deadlines
+                        organization-service
+                        tarjonta-service
+                        session
+                        application-key)]
+          (case response
+            :unauthorized (response/unauthorized {:error "Unauthorized"})
+            nil           (response/not-found {:error "Not found"})
+            (cond-> (response/ok (map #(dissoc % :last-modified) response))
+                    (not-empty response)
+                    (response/header
+                     "Last-Modified"
+                     (->> response
+                          (map :last-modified)
+                          (apply max)
+                          format-last-modified))))))
+
+      (api/GET "/:application-key/field-deadline/:field-id" {session :session}
+        :path-params [application-key :- s/Str
+                      field-id :- s/Str]
+        :return ataru-schema/FieldDeadline
+        (let [response (field-deadline/get-field-deadline
+                        organization-service
+                        tarjonta-service
+                        session
+                        application-key
+                        field-id)]
+          (case response
+            :unauthorized (response/unauthorized {:error "Unauthorized"})
+            nil           (response/not-found {:error "Not found"})
+            (-> (response/ok (dissoc response :last-modified))
+                (response/header
+                 "Last-Modified"
+                 (format-last-modified (:last-modified response)))))))
+
+      (api/PUT "/:application-key/field-deadline/:field-id" {session :session}
+        :path-params [application-key :- s/Str
+                      field-id :- s/Str]
+        :body [body {:deadline DateTime}]
+        :header-params [{if-unmodified-since :- s/Str nil}
+                        {if-none-match :- s/Str nil}]
+        :return ataru-schema/FieldDeadline
+        (let [if-unmodified-since (when (not= "*" if-none-match)
+                                    (parse-if-unmodified-since if-unmodified-since))
+              response            (field-deadline/put-field-deadline
+                                   organization-service
+                                   tarjonta-service
+                                   session
+                                   application-key
+                                   field-id
+                                   (:deadline body)
+                                   if-unmodified-since)]
+          (case response
+            :unauthorized (response/unauthorized {:error "Unauthorized"})
+            nil           (response/conflict {:error (if (some? if-unmodified-since)
+                                                       (str "Field deadline modified since " if-unmodified-since)
+                                                       "Field deadline exists")})
+            (-> (response/ok (dissoc response :last-modified))
+                (response/header
+                 "Last-Modified"
+                 (format-last-modified (:last-modified response)))))))
+
+      (api/DELETE "/:application-key/field-deadline/:field-id" {session :session}
+        :path-params [application-key :- s/Str
+                      field-id :- s/Str]
+        :header-params [if-unmodified-since :- s/Str]
+        :return ataru-schema/FieldDeadline
+        (let [response (field-deadline/delete-field-deadline
+                        organization-service
+                        tarjonta-service
+                        session
+                        application-key
+                        field-id
+                        (parse-if-unmodified-since if-unmodified-since))]
+          (case response
+            :unauthorized (response/unauthorized {:error "Unauthorized"})
+            nil           (response/conflict {:error (str "Field deadline modified since " if-unmodified-since)})
+            (response/no-content))))
 
       (api/POST "/notes" {session :session}
         :summary "Add new review note for the application"
