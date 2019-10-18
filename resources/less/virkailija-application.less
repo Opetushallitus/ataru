@@ -1989,6 +1989,32 @@ w
   top: -14px;
 }
 
+// TODO : Should this be combined with attachment-skimming-header__cannot-display-text ?
+.attachment-skimming-header__partial-preview-text {
+  align-items: center;
+  background-color: @banner-blue;
+  color: white;
+  display: flex;
+  left: -240px;
+  height: 106px;
+  justify-content: center;
+  padding: 0 30px;
+  position: relative;
+  text-align: left;
+  top: 14px;
+  width: 350px;
+}
+
+// TODO : Should this be combined with attachment-skimming-header__cannot-display-text-indicator ?
+.attachment-skimming-header__partial-preview-text-indicator {
+  position: absolute;
+  border-left: 14px solid transparent;
+  border-right: 14px solid transparent;
+  border-bottom: 14px solid @banner-blue;
+  right: 23px;
+  top: -14px;
+}
+
 .attachment-skimming-image-view {
   background-color: @attachment-skimming-background-color;
   display: flex;

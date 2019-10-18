@@ -807,6 +807,9 @@ You will receive a confirmation of your application to your email."}
    :cannot-display-file-type-in-attachment-skimming {:fi "Tätä liitettä ei valitettavasti voida näyttää esikatselussa, mutta voit ladata sen tästä tiedostona."
                                                      :sv "Denna bilaga kan tyvärr inte visas i förhandsgranskningen, men du kan ladda ner bilagan som en fil."
                                                      :en "This attachment can't unfortunately be shown but you can download it here."}
+   :partial-preview-in-attachment-skimming          {:fi "Voit ladata koko liitteen tästä. Esikatselussa näytetään sivut "
+                                                     :sv "Voit ladata koko liitteen tästä. Esikatselussa näytetään sivut (sv) "
+                                                     :en "Voit ladata koko liitteen tästä. Esikatselussa näytetään sivut (en) "}
    :change                                          {:fi "Muuta"
                                                      :sv "Byt"
                                                      :en "Change"}
