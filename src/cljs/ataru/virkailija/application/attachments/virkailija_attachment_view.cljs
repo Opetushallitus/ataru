@@ -6,6 +6,9 @@
             [reagent.core :as reagent]
             [re-frame.core :as re-frame]))
 
+(defonce attachment-preview-pages-to-display
+         (get (js->clj js/config) "attachment-preview-pages-to-display" 15))
+
 (defn- attachment-header [selected-liitepyynto]
   (let [selected-application @(re-frame/subscribe [:application/selected-application])
         lang                 @(re-frame/subscribe [:editor/virkailija-lang])
@@ -53,10 +56,13 @@
 (defn- download-url [attachment]
   (str "/lomake-editori/api/files/content/" (:key attachment)))
 
-(defn- preview-url [attachment] ; TODO : show more preview pages
-  (str "/lomake-editori/api/files/content/" (-> (:previews attachment)
-                                                first
-                                                :key)))
+(defn- preview-urls [attachment]
+  (if-let [previews (:previews attachment)]
+    (->> previews
+         (map :key)
+         (map #(str "/lomake-editori/api/files/content/" %))
+         (take attachment-preview-pages-to-display))
+    []))
 
 (defn- attachment-skimming-filename [selected-attachment]
   (let [download-label     (str "lataa ("
@@ -78,10 +84,12 @@
               [:div.attachment-skimming-header__cannot-display-text-indicator]
               [:span (cu/get-virkailija-translation :cannot-display-file-type-in-attachment-skimming)]]
              (and (= :provide-preview display-capability)
-                  (> page-count 1)) ; TODO: Use real page limit here and in text below
+                  (> page-count attachment-preview-pages-to-display))
              [:div.attachment-skimming-header__partial-preview-text.animated.fadeIn
               [:div.attachment-skimming-header__partial-preview-text-indicator]
-              [:span (cu/get-virkailija-translation :partial-preview-in-attachment-skimming) (str "1–" 1 "/" page-count)]])]]]))
+              [:span
+               (cu/get-virkailija-translation :partial-preview-in-attachment-skimming)
+               (str "1–" attachment-preview-pages-to-display "/" page-count)]])]]]))
 
 (defn- attachment-skimming-state-list []
   (let [list-opened? (reagent/atom false)]
@@ -132,20 +140,26 @@
              [:span.attachment-review-dropdown__label
               (application-states/get-review-state-label-by-name review-types effective-liitepyynto-state lang)]])]]))))
 
+(defn- preview-page-image-view [preview-src-url]
+  ^{:key (str "attachment-preview-" preview-src-url)}
+  [:img.attachment-skimming-preview-page__image
+   {:src preview-src-url}])
+
 (defn- attachment-skimming-image-view [selected-attachment]
   (let [attachment-src-url (download-url selected-attachment)
-        preview-src-url    (preview-url selected-attachment)
+        preview-src-urls   (preview-urls selected-attachment)
         display-capability @(re-frame/subscribe [:virkailija-attachments/file-display-capability (:key selected-attachment)])]
-    [:div.attachment-skimming-image-view
-     (cond (= :show-in-browser display-capability)
+    (cond (= :show-in-browser display-capability)
+          [:div.attachment-skimming-single-image-view
            [:img.attachment-skimming-image-view__image
-            {:src attachment-src-url}]
-           (= :provide-preview display-capability)
-           [:img.attachment-skimming-image-view__image
-            {:src preview-src-url}]
-           (= :download-only display-capability)
+            {:src attachment-src-url}]]
+          (= :provide-preview display-capability)
+          [:div.attachment-skimming-preview-images-view
+           (map preview-page-image-view preview-src-urls)]
+          (= :download-only display-capability)
+          [:div.attachment-skimming-single-image-view
            [:div.attachment-skimming-image-view-no-preview
-            [:span.attachment-skimming-image-view-no-preview__text "?"]])]))
+            [:span.attachment-skimming-image-view-no-preview__text "?"]]])))
 
 (def liitepyynnot->attachment-keys-xform (comp (map (fn [liitepyynto]
                                                       (let [values (:values liitepyynto)]

@@ -2015,7 +2015,7 @@ w
   top: -14px;
 }
 
-.attachment-skimming-image-view {
+.attachment-skimming-single-image-view {
   background-color: @attachment-skimming-background-color;
   display: flex;
   justify-content: center;
@@ -2024,8 +2024,23 @@ w
   width: 100%;
 }
 
+.attachment-skimming-preview-images-view {
+  background-color: @attachment-skimming-background-color;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 188px;
+  padding-bottom: 150px;
+  width: 100%;
+}
+
 .attachment-skimming-image-view__image {
   max-width: 80%;
+}
+
+.attachment-skimming-preview-page__image {
+  max-width: 80%;
+  margin-bottom: 30px;
 }
 
 .attachment-skimming-image-view-no-preview {
