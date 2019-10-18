@@ -219,7 +219,7 @@
          (map remove-organization-oid))))
 
 (defn valinta-ui-applications
-  [organization-service tarjonta-service session query]
+  [organization-service tarjonta-service person-service session query]
   (session-orgs/run-org-authorized
    session
    organization-service
@@ -227,7 +227,7 @@
    (constantly nil)
    #(filter-authorized tarjonta-service
                        (partial authorized-by-tarjoajat? %)
-                       (application-store/valinta-ui-applications query))
+                       (application-store/valinta-ui-applications query person-service))
    #(filter-authorized tarjonta-service
                        (constantly true)
-                       (application-store/valinta-ui-applications query))))
+                       (application-store/valinta-ui-applications query person-service))))

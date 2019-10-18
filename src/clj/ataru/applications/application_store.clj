@@ -11,6 +11,7 @@
             [ataru.log.audit-log :as audit-log]
             [ataru.schema.form-schema :as schema]
             [ataru.util :refer [answers-by-key] :as util]
+            [ataru.person-service.person-service :as person-service]
             [ataru.selection-limit.selection-limit-service :as selection-limit]
             [ataru.util.language-label :as label]
             [ataru.util.random :as crypto]
@@ -1066,7 +1067,7 @@ WHERE la.key IS NULL\n"
         :else {:kieliKoodi "" :kieliTyyppi ""}))
 
 (defn valinta-ui-applications
-  [query]
+  [query person-service]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
     (->> {:connection connection}
          (yesql-valinta-ui-applications (-> (merge {:application_oids nil
@@ -1096,6 +1097,8 @@ WHERE la.key IS NULL\n"
                                :postinumero
                                :hakukohde
                                :hakutoiveet]))
+         (map #(let [person (person-service/get-person person-service (get % :person-oid))]
+                 (assoc % :sukunimi (get person :sukunimi)  :etunimet (get person :etunimet))))
          (map #(assoc % :asiointikieli (convert-asiointikieli (get % :asiointikieli)))))))
 
 (defn- unwrap-person-and-hakemus-oid
