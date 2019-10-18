@@ -806,7 +806,7 @@
         filename-parts (split filename #"\.")
         short-filename (if (< (count filename) max-filename-length)
                          filename
-                         (str (subs (first filename-parts) 0 max-filename-length) "[...]." (second filename-parts)))]
+                         (str (subs (first filename-parts) 0 max-filename-length) "[...]." (last filename-parts)))]
     [:div
      (if (:final file)
        [:a.application__form-attachment-filename
