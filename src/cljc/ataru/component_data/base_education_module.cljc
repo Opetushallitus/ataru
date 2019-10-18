@@ -40,7 +40,7 @@
                                                                :fieldType       "dropdown"
                                                                :validators      ["required"]
                                                                :fieldClass      "formField"
-                                                               :koodisto-source {:uri "tutkinto", :title "Tutkinto", :version 1}}
+                                                               :koodisto-source {:uri "tutkinto", :title "Tutkinto", :version 2}}
                                                               {:id         "higher-education-qualification-in-finland-institution"
                                                                :label      (:institution base-education-module-texts)
                                                                :params     {}
