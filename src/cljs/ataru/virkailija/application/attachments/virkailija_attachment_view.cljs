@@ -56,14 +56,6 @@
 (defn- download-url [attachment]
   (str "/lomake-editori/api/files/content/" (:key attachment)))
 
-(defn- preview-urls [attachment]
-  (if-let [previews (:previews attachment)]
-    (->> previews
-         (map :key)
-         (map #(str "/lomake-editori/api/files/content/" %))
-         (take attachment-preview-pages-to-display))
-    []))
-
 (defn- attachment-skimming-filename [selected-attachment]
   (let [download-label     (str "lataa ("
                                 (-> selected-attachment :size u/size-bytes->str)
@@ -147,8 +139,8 @@
 
 (defn- attachment-skimming-image-view [selected-attachment]
   (let [attachment-src-url (download-url selected-attachment)
-        preview-src-urls   (preview-urls selected-attachment)
-        display-capability @(re-frame/subscribe [:virkailija-attachments/file-display-capability (:key selected-attachment)])]
+        display-capability @(re-frame/subscribe [:virkailija-attachments/file-display-capability (:key selected-attachment)])
+        preview-src-urls   @(re-frame/subscribe [:virkailija-attachments/attachment-preview-urls (:key selected-attachment)])]
     (cond (= :show-in-browser display-capability)
           [:div.attachment-skimming-single-image-view
            [:img.attachment-skimming-image-view__image

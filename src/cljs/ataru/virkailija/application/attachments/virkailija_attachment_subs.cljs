@@ -1,6 +1,9 @@
 (ns ataru.virkailija.application.attachments.virkailija-attachment-subs
   (:require [re-frame.core :as re-frame]))
 
+(defonce attachment-preview-pages-to-display                ; TODO : Duplicated from virkailija-attachment-view.cljs . Which would be a suitable place?
+         (get (js->clj js/config) "attachment-preview-pages-to-display" 15))
+
 (re-frame/reg-sub
   :virkailija-attachments/attachment-selected?
   (fn [db [_ attachment-key]]
@@ -46,6 +49,22 @@
   (fn [[application] [_ attachment-key]]
     (-> (attachment-metadata application attachment-key)
         (file-display-capability))))
+
+(defn- preview-urls [metadata]
+  (if-let [previews (:previews metadata)]
+    (->> previews
+         (map :key)
+         (map #(str "/lomake-editori/api/files/content/" %))
+         (take attachment-preview-pages-to-display))
+    []))
+
+(re-frame/reg-sub
+  :virkailija-attachments/attachment-preview-urls
+  (fn []
+    [(re-frame/subscribe [:application/selected-application])])
+  (fn [[application] [_ attachment-key]]
+    (-> (attachment-metadata application attachment-key)
+        (preview-urls))))
 
 (re-frame/reg-sub
   :virkailija-attachments/liitepyynnot-for-selected-hakukohteet
