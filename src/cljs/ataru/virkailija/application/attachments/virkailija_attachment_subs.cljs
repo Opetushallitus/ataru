@@ -9,6 +9,22 @@
         true
         attachment-selected?))))
 
+(defn- attachment-metadata [application attachment-key]
+  (->> application
+       :answers
+       (vals)
+       (transduce (comp (filter (fn [answer]
+                                  (= (:fieldType answer) "attachment")))
+                        (map :values)
+                        (mapcat (fn [values]
+                                  (cond-> values
+                                          (every? vector? values)
+                                          (flatten))))
+                        (filter (fn [attachment]
+                                  (= (:key attachment) attachment-key))))
+                  conj)
+       (first)))
+
 (def allowed-files-matcher #"(?i)\.(jpg|jpeg|png)$")
 
 (defn- file-previewability [metadata]
@@ -28,21 +44,8 @@
   (fn []
     [(re-frame/subscribe [:application/selected-application])])
   (fn [[application] [_ attachment-key]]
-    (->> application
-         :answers
-         (vals)
-         (transduce (comp (filter (fn [answer]
-                                    (= (:fieldType answer) "attachment")))
-                          (map :values)
-                          (mapcat (fn [values]
-                                    (cond-> values
-                                      (every? vector? values)
-                                      (flatten))))
-                          (filter (fn [attachment]
-                                    (= (:key attachment) attachment-key))))
-                    conj)
-         (first)
-         (file-display-capability))))
+    (-> (attachment-metadata application attachment-key)
+        (file-display-capability))))
 
 (re-frame/reg-sub
   :virkailija-attachments/liitepyynnot-for-selected-hakukohteet
