@@ -82,7 +82,7 @@
               [:div.attachment-skimming-header__partial-preview-text-indicator]
               [:span
                (cu/get-virkailija-translation :partial-preview-in-attachment-skimming)
-               (str "1–" attachment-preview-pages-to-display "/" page-count)]])]]]))
+               (str "1\u2013\u2060" attachment-preview-pages-to-display "/" page-count)]])]]]))
 
 (defn- attachment-skimming-state-list []
   (let [list-opened? (reagent/atom false)]
