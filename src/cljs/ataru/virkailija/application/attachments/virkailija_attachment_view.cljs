@@ -57,7 +57,8 @@
   (str "/lomake-editori/api/files/content/" (:key attachment)))
 
 (defn- attachment-skimming-filename [selected-attachment]
-  (let [download-label     (str "lataa ("
+  (let [download-label     (str (cu/get-virkailija-translation :load-attachment-in-skimming)
+                                " ("
                                 (-> selected-attachment :size u/size-bytes->str)
                                 ")")
         download-url       (download-url selected-attachment)

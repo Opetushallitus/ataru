@@ -1101,6 +1101,9 @@ You will receive a confirmation of your application to your email."}
    :load-attachments                                {:fi "Lataa liitteet"
                                                      :sv "Ladda ner bilagor"
                                                      :en "Load attachments"}
+   :load-attachment-in-skimming                     {:fi "lataa"
+                                                     :sv "ladda"
+                                                     :en "download"}
    :select-all                                      {:fi "Valitse kaikki"
                                                      :sv "Valitse kaikki"
                                                      :en "Select all"}
