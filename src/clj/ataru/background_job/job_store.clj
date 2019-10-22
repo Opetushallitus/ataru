@@ -72,13 +72,7 @@
       ;; stop execution for a short period
       (boolean raw-job))))
 
-(comment defn get-status []
-  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-                           (reduce #(assoc %1 (:job_type %2) (dissoc %2 :job_type))
-                                   {}
-                                   (yesql-status {} {:connection connection}))))
-
-(defn enrich-status-result [result period]
+(defn add-period-to-result [result period]
   (map #(assoc % :total {period (get % :total)}
                  :fail {period (get % :fail)}
                  :error {period (get % :error)}
@@ -97,7 +91,7 @@
     (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
                              (let [period-results (flatten
                                                     (for [period periods]
-                                                      (enrich-status-result
+                                                      (add-period-to-result
                                                         (yesql-status {:period (val period)} {:connection connection}) (key period))))
                                    grouped-results (vals (group-by :job_type period-results))]
                                (combine-results grouped-results)))))
