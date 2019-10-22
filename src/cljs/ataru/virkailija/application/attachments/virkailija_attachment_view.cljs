@@ -9,17 +9,21 @@
 (defonce attachment-preview-pages-to-display
          (get (js->clj js/config) "attachment-preview-pages-to-display" 15))
 
+(defn- person-details-text [person]
+  (str (:preferred-name person)
+       " "
+       (:last-name person)
+       " - "
+       (or (:ssn person)
+           (:birth-date person))))
+
 (defn- attachment-header [selected-liitepyynto]
   (let [selected-application @(re-frame/subscribe [:application/selected-application])
         lang                 @(re-frame/subscribe [:editor/virkailija-lang])
-        name-and-ssn-text    (str (-> selected-application :person :preferred-name)
-                                  " "
-                                  (-> selected-application :person :last-name)
-                                  " - "
-                                  (-> selected-application :person :ssn))
+        person-details       (person-details-text (-> selected-application :person))
         liitepyynto-text     (-> selected-liitepyynto :label lang)]
     [:div.attachment-skimming-header-section.attachment-skimming-header-details-section
-     [:span.attachment-skimming-header__text name-and-ssn-text]
+     [:span.attachment-skimming-header__text person-details]
      [:span.attachment-skimming-header__text.attachment-skimming-header__text--bold.attachment-skimming-header__text--no-overflow.animated.fadeIn
       {:title liitepyynto-text}
       liitepyynto-text]]))
