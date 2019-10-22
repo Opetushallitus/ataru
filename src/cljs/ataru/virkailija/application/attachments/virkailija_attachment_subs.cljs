@@ -28,7 +28,10 @@
                   conj)
        (first)))
 
-(def allowed-files-matcher #"(?i)\.(jpg|jpeg|png)$")
+(def browser-supported-imagetypes ["image/jpeg" "image/gif" "image/png"])
+
+(defn- can-display-in-browser [content-type]
+  (some #(= content-type %) browser-supported-imagetypes))
 
 (defn- file-previewability [metadata]
   (if (= "finished" (:preview-status metadata))
@@ -37,8 +40,8 @@
 
 (defn- file-display-capability [metadata]
   (if (->> (or metadata [])
-           :filename
-           (re-find allowed-files-matcher))
+           :content-type
+           can-display-in-browser)
     :show-in-browser
     (file-previewability metadata)))
 
