@@ -157,7 +157,7 @@
                                    role)]
         (response/content-type (response/ok form-with-tarjonta)
                                "application/json")
-        (response/not-found)))
+        (response/not-found {})))
     (api/GET ["/hakukohde/:hakukohde-oid", :hakukohde-oid #"[0-9\.]+"] []
       :summary "Gets form for hakukohde"
       :path-params [hakukohde-oid :- s/Str]
@@ -169,14 +169,14 @@
                                    role)]
         (response/content-type (response/ok form-with-tarjonta)
                                "application/json")
-        (response/not-found)))
+        (response/not-found {})))
     (api/GET "/form/:key" []
       :path-params [key :- s/Str]
       :query-params [role :- [form-role/FormRole]]
       :return ataru-schema/FormWithContent
       (if-let [form (form-service/fetch-form-by-key key role form-by-id-cache koodisto-cache nil false)]
         (response/ok form)
-        (response/not-found)))
+        (response/not-found {})))
     (api/POST "/feedback" []
       :summary "Add feedback sent by applicant"
       :body [feedback ataru-schema/ApplicationFeedback]
@@ -184,7 +184,7 @@
         (do
           (flowdock-client/send-application-feedback saved-application)
           (response/ok {:id (:id saved-application)}))
-        (response/bad-request)))
+        (response/bad-request {})))
     (api/POST "/application" {session :session}
       :summary "Submit application"
       :body [application ataru-schema/Application]
@@ -298,8 +298,8 @@
                 response/ok
                 (response/header "Content-Disposition"
                                  (:content-disposition file)))
-            (response/not-found))
-          (response/unauthorized)))
+            (response/not-found {}))
+          (response/unauthorized {})))
       (api/DELETE "/:key" []
         :summary "Delete a file"
         :path-params [key :- s/Str]
@@ -316,7 +316,7 @@
       (let [code (koodisto/get-postal-office-by-postal-code koodisto-cache postal-code)]
         (if-let [labels (:label code)]
           (response/ok labels)
-          (response/not-found))))
+          (response/not-found {}))))
     (api/GET "/has-applied" []
       :summary "Check if a person has already applied"
       :query-params [hakuOid :- (api/describe s/Str "Haku OID")

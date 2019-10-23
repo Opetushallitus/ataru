@@ -4,7 +4,7 @@
             [re-frisk.core :as re-frisk]
             [taoensso.timbre :refer-macros [spy info]]
             [ataru.cljs-util :as cljs-util]
-            [ataru.hakija.hakija-ajax :refer [post]]
+            [ataru.hakija.hakija-ajax :as ajax]
             [ataru.hakija.application-view :refer [form-view]]
             [ataru.hakija.application-handlers] ;; required although no explicit dependency
             [ataru.hakija.application-hakukohde-handlers] ;; required although no explicit dependency
@@ -65,8 +65,15 @@
   (.addEventListener js/window "online" (fn [] (re-frame/dispatch [:application/network-online])))
   (.addEventListener js/window "offline" (fn [] (re-frame/dispatch [:application/network-offline]))))
 
+(re-frame/reg-event-db
+  :application/handle-client-error
+  (fn [db _] db))
+
 (defn ^:export init []
-  (cljs-util/set-global-error-handler! #(post "/hakemus/api/client-error" %))
+  (cljs-util/set-global-error-handler! #(ajax/http {:method    :post
+                                                    :post-data %
+                                                    :url       "/hakemus/api/client-error"
+                                                    :handler   [:application/handle-client-error]}))
   (network-listener)
   (mount-root)
   (re-frame/dispatch-sync [:application/initialize-db])
