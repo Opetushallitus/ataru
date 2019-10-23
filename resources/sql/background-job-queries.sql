@@ -35,58 +35,43 @@ SET executed = TRUE, execution_time = now()
 WHERE id = :id;
 
 --name: yesql-status
-WITH all_jobs AS (SELECT DISTINCT ON (job_id) *
+WITH all_jobs AS (SELECT DISTINCT ON (job_id) job_id, transition, executed, final, next_activation
                   FROM job_iterations
                   WHERE job_id IN (SELECT job_id
                                    FROM job_iterations
                                    WHERE execution_time > now() - (:period || ' HOUR')::INTERVAL)
                   ORDER BY job_id DESC, id DESC)
-SELECT jobs_executed.job_type,
-       jobs_executed.n     AS total,
-       coalesce(fail.n, 0) AS fail,
-       coalesce(0, 0)      AS error,
-       coalesce(0, 0)      AS waiting
+SELECT total_jobs.job_type,
+       total_jobs.n           AS total,
+       coalesce(fail.n, 0)    AS fail,
+       coalesce(error.n, 0)   AS error,
+       coalesce(waiting.n, 0) AS waiting
 FROM (SELECT job_type, count(*) AS n
-      FROM all_jobs AS total_jobs
-               JOIN jobs AS j ON j.id = total_jobs.job_id
+      FROM all_jobs
+               JOIN jobs AS j ON j.id = all_jobs.job_id
       GROUP BY job_type
-      ORDER BY job_type) AS jobs_executed
+      ORDER BY job_type) AS total_jobs
          LEFT JOIN (SELECT job_type, count(*) AS n
                     FROM all_jobs AS aj
                              JOIN jobs AS j ON j.id = aj.job_id
                     WHERE transition = 'fail'
                     GROUP BY job_type) AS fail
-                   ON fail.job_type = jobs_executed.job_type;
-
-
-
--- WITH queue AS (
---   SELECT j.job_type, ji.transition, count(*) AS n
---   FROM job_iterations AS ji
---   JOIN jobs AS j ON j.id = ji.job_id
---   WHERE NOT ji.executed AND
---         NOT ji.final AND
---         ji.next_activation < now()
---   GROUP BY j.job_type, ji.transition)
--- SELECT jt.job_type,
---        jt.n AS total,
---        coalesce(fail.n, 0) AS fail,
---        coalesce(error.n, 0) AS error,
---        coalesce(waiting.n, 0) AS waiting
--- FROM (SELECT job_type, count(*) AS n
---       FROM jobs
---       GROUP BY job_type) AS jt
--- LEFT JOIN (SELECT j.job_type, count(*) AS n
---            FROM job_iterations AS ji
---            JOIN jobs AS j ON j.id = ji.job_id
---            WHERE transition = 'fail'
---            GROUP BY j.job_type) AS fail
---   ON fail.job_type = jt.job_type
--- LEFT JOIN (SELECT job_type, n
---            FROM queue
---            WHERE transition = 'error-retry') AS error
---   ON error.job_type = jt.job_type
--- LEFT JOIN (SELECT job_type, n
---            FROM queue
---            WHERE transition = 'start') AS waiting
---   ON error.job_type = jt.job_type;
+                   ON fail.job_type = total_jobs.job_type
+         LEFT JOIN (SELECT job_type, count(*) AS n
+                    FROM all_jobs AS aj
+                             JOIN jobs AS j ON j.id = aj.job_id
+                    WHERE transition = 'error-retry'
+                      AND NOT executed
+                      AND NOT final
+                      AND next_activation > now()
+                    GROUP BY job_type) AS error
+                   ON error.job_type = total_jobs.job_type
+         LEFT JOIN (SELECT job_type, count(*) AS n
+                    FROM all_jobs AS aj
+                             JOIN jobs AS j ON j.id = aj.job_id
+                    WHERE transition = 'start'
+                      AND NOT executed
+                      AND NOT final
+                      AND next_activation > now()
+                    GROUP BY job_type) AS waiting
+                   ON error.job_type = total_jobs.job_type;
