@@ -362,8 +362,7 @@
    (s/optional-key :previews)       [Preview]})
 
 (s/defschema FormWithContentAndTarjontaMetadata
-  (merge FormWithContent {:tarjonta FormTarjontaMetadata
-                          :load-time s/Int}))
+  (merge FormWithContent {:tarjonta FormTarjontaMetadata}))
 
 (s/defschema Value
   (s/cond-pre s/Str

@@ -17,7 +17,8 @@
             [clojure.data :as d]
             [ataru.component-data.value-transformers :as value-transformers]
             [cljs-time.core :as c]
-            [cljs-time.coerce :refer [from-long]]))
+            [cljs-time.format :as f]
+            [cljs-time.coerce :refer [from-long to-long]]))
 
 (defn initialize-db [_ _]
   {:form        nil
@@ -493,7 +494,7 @@
        (contains? field :options)
        (update :options (partial map update-followups))))))
 
-(defn- handle-form [db answers form]
+(defn- handle-form [db answers server-date form]
   (let [form                       (-> (languages->kwd form)
                                        (set-form-language)
                                        (update :content (partial map set-question-group-id))
@@ -503,7 +504,13 @@
                                                                  (sort-by :end >)
                                                                  first
                                                                  :end))
-                                       (assoc :time-delta-from-server (- (-> form :load-time) (.getTime (js/Date.)))))
+                                       (assoc :time-delta-from-server
+                                              (if (some? server-date)
+                                                (- (->> (clojure.string/replace server-date " GMT" "")
+                                                        (f/parse (f/formatter "EEE, dd MMM yyyy HH:mm:ss"))
+                                                        to-long)
+                                                   (.getTime (js/Date.)))
+                                                0)))
         valid-hakukohde-oids       (set (->> form :tarjonta :hakukohteet
                                              (filter #(get-in % [:hakuaika :on]))
                                              (map :oid)))
@@ -608,7 +615,7 @@
                    (assoc-in [:application :person] person)
                    (assoc-in [:application :cannot-edit-because-in-processing] (:cannot-edit-because-in-processing application))
                    (assoc-in [:form :selected-language] (or (keyword (:lang application)) :fi))
-                   (handle-form (:answers application) form))
+                   (handle-form (:answers application) (get-in response [:headers "date"]) form))
      :dispatch [:application/post-handle-form-dispatches]}))
 
 (reg-event-fx
@@ -623,7 +630,7 @@
 (reg-event-fx
   :application/handle-form
   (fn [{:keys [db]} [_ response]]
-    {:db         (handle-form db nil (:body response))
+    {:db       (handle-form db nil (get-in response [:headers "date"]) (:body response))
      :dispatch [:application/post-handle-form-dispatches]}))
 
 (reg-event-db

@@ -197,7 +197,6 @@
           (merge tarjonta-info)
           (assoc? :priorisoivat-hakukohderyhmat priorisoivat)
           (assoc? :rajaavat-hakukohderyhmat rajaavat)
-          (assoc :load-time (System/currentTimeMillis))
           (populate-hakukohde-answer-options tarjonta-info)
           (populate-can-submit-multiple-applications tarjonta-info)))))
 
