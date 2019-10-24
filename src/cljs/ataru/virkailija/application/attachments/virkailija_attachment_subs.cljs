@@ -1,7 +1,7 @@
 (ns ataru.virkailija.application.attachments.virkailija-attachment-subs
   (:require [re-frame.core :as re-frame]))
 
-(defonce attachment-preview-pages-to-display                ; TODO : Duplicated from virkailija-attachment-view.cljs . Which would be a suitable place?
+(defonce attachment-preview-pages-to-display
          (get (js->clj js/config) "attachment-preview-pages-to-display" 15))
 
 (re-frame/reg-sub

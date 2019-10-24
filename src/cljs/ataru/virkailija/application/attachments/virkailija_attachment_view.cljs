@@ -1,13 +1,11 @@
 (ns ataru.virkailija.application.attachments.virkailija-attachment-view
   (:require [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]
+            [ataru.virkailija.application.attachments.virkailija-attachment-subs :as attachment-subs]
             [ataru.cljs-util :as cu]
             [ataru.util :as u]
             [reagent.core :as reagent]
             [re-frame.core :as re-frame]))
-
-(defonce attachment-preview-pages-to-display
-         (get (js->clj js/config) "attachment-preview-pages-to-display" 15))
 
 (defn- person-details-text [person]
   (str (:preferred-name person)
@@ -68,7 +66,8 @@
         download-url       (download-url selected-attachment)
         filename           (-> selected-attachment :filename)
         display-capability @(re-frame/subscribe [:virkailija-attachments/file-display-capability (:key selected-attachment)])
-        page-count         (:page-count selected-attachment)]
+        page-count         (:page-count selected-attachment)
+        pages-to-display   attachment-subs/attachment-preview-pages-to-display]
     [:<>
      [:div]
      [:span.attachment-skimming-header__text filename]
@@ -81,12 +80,12 @@
               [:div.attachment-skimming-header__cannot-display-text-indicator]
               [:span (cu/get-virkailija-translation :cannot-display-file-type-in-attachment-skimming)]]
              (and (= :provide-preview display-capability)
-                  (> page-count attachment-preview-pages-to-display))
+                  (> page-count pages-to-display))
              [:div.attachment-skimming-header__partial-preview-text.animated.fadeIn
               [:div.attachment-skimming-header__partial-preview-text-indicator]
               [:span
                (cu/get-virkailija-translation :partial-preview-in-attachment-skimming)
-               (str "1\u2013\u2060" attachment-preview-pages-to-display "/" page-count)]])]]]))
+               (str "1\u2013\u2060" pages-to-display "/" page-count)]])]]]))
 
 (defn- attachment-skimming-state-list []
   (let [list-opened? (reagent/atom false)]
