@@ -15,7 +15,7 @@
 (defn- attachment-metadata [application attachment-key]
   (->> application
        :answers
-       (vals)
+       vals
        (transduce (comp (filter (fn [answer]
                                   (= (:fieldType answer) "attachment")))
                         (map :values)
@@ -26,7 +26,7 @@
                         (filter (fn [attachment]
                                   (= (:key attachment) attachment-key))))
                   conj)
-       (first)))
+       first))
 
 (def browser-supported-imagetypes ["image/jpeg" "image/gif" "image/png"])
 
