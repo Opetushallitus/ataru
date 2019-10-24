@@ -30,19 +30,19 @@
 
 (def browser-supported-imagetypes ["image/jpeg" "image/gif" "image/png"])
 
-(defn- can-display-in-browser [content-type]
+(defn- can-display-in-browser? [content-type]
   (some #(= content-type %) browser-supported-imagetypes))
 
-(defn- file-previewability [metadata]
-  (if (= "finished" (:preview-status metadata))
-    :provide-preview
-    :download-only))
+(defn- has-preview? [metadata]
+  (= "finished" (:preview-status metadata)))
 
 (defn- file-display-capability [metadata]
   (if (->> (:content-type metadata)
-           can-display-in-browser)
+           can-display-in-browser?)
     :show-in-browser
-    (file-previewability metadata)))
+    (if (has-preview? metadata)
+      :provide-preview
+      :download-only)))
 
 (re-frame/reg-sub
   :virkailija-attachments/file-display-capability
