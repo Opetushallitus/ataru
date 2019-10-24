@@ -43,13 +43,20 @@
   (true? deleted))
 
 (defn- get-application
-  [secret tarjonta-service form-by-haku-oid-and-id-cache koodisto-cache person-client session]
+  [koodisto-cache
+   ohjausparametrit-service
+   organization-service
+   person-client
+   tarjonta-service
+   session
+   secret]
   (let [[application-form-and-person secret-expired? lang-override inactivated?]
-        (hakija-application-service/get-latest-application-by-secret secret
+        (hakija-application-service/get-latest-application-by-secret koodisto-cache
+                                                                     ohjausparametrit-service
+                                                                     organization-service
+                                                                     person-client
                                                                      tarjonta-service
-                                                                     form-by-haku-oid-and-id-cache
-                                                                     koodisto-cache
-                                                                     person-client)]
+                                                                     secret)]
     (cond inactivated?
           (response/bad-request {:code :inactivated :error "Inactivated"})
 
@@ -133,7 +140,6 @@
                           ohjausparametrit-service
                           person-service
                           koodisto-cache
-                          form-by-haku-oid-and-id-cache
                           form-by-haku-oid-str-cache
                           temp-file-store]}]
   (api/context "/api" []
@@ -187,7 +193,6 @@
               job-runner
               organization-service
               ohjausparametrit-service
-              form-by-haku-oid-and-id-cache
               application
               session)
              {:passed? false :failures failures :code code}
@@ -204,7 +209,6 @@
               job-runner
               organization-service
               ohjausparametrit-service
-              form-by-haku-oid-and-id-cache
               application
               session)
              {:passed? false :failures failures :code code}
@@ -218,20 +222,22 @@
                      {virkailija-secret :- s/Str nil}]
       :return ataru-schema/ApplicationWithPersonAndForm
       (cond (not-blank? secret)
-            (get-application {:hakija secret}
-                             tarjonta-service
-                             form-by-haku-oid-and-id-cache
-                             koodisto-cache
+            (get-application koodisto-cache
+                             ohjausparametrit-service
+                             organization-service
                              person-service
-                             session)
+                             tarjonta-service
+                             session
+                             {:hakija secret})
 
             (not-blank? virkailija-secret)
-            (get-application {:virkailija virkailija-secret}
-                             tarjonta-service
-                             form-by-haku-oid-and-id-cache
-                             koodisto-cache
+            (get-application koodisto-cache
+                             ohjausparametrit-service
+                             organization-service
                              person-service
-                             session)
+                             tarjonta-service
+                             session
+                             {:virkailija virkailija-secret})
 
             :else
             (response/bad-request {:code :secret-expired

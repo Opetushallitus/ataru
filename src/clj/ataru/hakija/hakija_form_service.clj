@@ -234,34 +234,6 @@
                             false
                             roles)))
 
-(s/defn ^:always-validate fetch-form-by-haku-oid-and-id-cached :- s/Any
-  [form-by-haku-oid-and-id-cache :- s/Any
-   haku-oid :- s/Str
-   id :- s/Int
-   application-in-processing-state? :- s/Bool
-   roles :- [form-role/FormRole]]
-  (cache/get-from form-by-haku-oid-and-id-cache
-                  (apply str
-                         haku-oid
-                         "#" id
-                         "#" application-in-processing-state?
-                         (sort (map #(str "#" (name %)) roles)))))
-
-(s/defn ^:always-validate fetch-form-by-haku-oid-cached :- s/Any
-  [tarjonta-service
-   form-by-haku-oid-and-id-cache
-   haku-oid :- s/Any
-   application-in-processing-state? :- s/Bool
-   roles :- [form-role/FormRole]]
-  (when-let [latest-id (some-> (tarjonta/get-haku tarjonta-service haku-oid)
-                               :ataruLomakeAvain
-                               form-store/latest-id-by-key)]
-    (fetch-form-by-haku-oid-and-id-cached form-by-haku-oid-and-id-cache
-                                          haku-oid
-                                          latest-id
-                                          application-in-processing-state?
-                                          roles)))
-
 (s/defn ^:always-validate fetch-form-by-haku-oid-str-cached :- s/Any
   [form-by-haku-oid-str-cache :- s/Any
    haku-oid :- s/Str
@@ -285,39 +257,23 @@
                                        false
                                        roles)))
 
-(defrecord FormByHakuOidAndIdCacheLoader [tarjonta-service
-                                          koodisto-cache
-                                          organization-service
-                                          ohjausparametrit-service]
-  cache/CacheLoader
-  (load [_ key]
-    (let [[haku-oid id aips? & roles] (clojure.string/split key #"#")]
-      (fetch-form-by-haku-oid-and-id tarjonta-service
-                                     koodisto-cache
-                                     organization-service
-                                     ohjausparametrit-service
-                                     haku-oid
-                                     (Integer/valueOf id)
-                                     (Boolean/valueOf aips?)
-                                     (map keyword roles))))
-  (load-many [this keys]
-    (into {} (keep #(when-let [v (cache/load this %)] [% v]) keys)))
-  (load-many-size [_] 1)
-  (check-schema [_ _] nil))
-
 (def form-coercer (sc/coercer! form-schema/FormWithContentAndTarjontaMetadata
                                coerce/json-schema-coercion-matcher))
 
-(defrecord FormByHakuOidStrCacheLoader [tarjonta-service
-                                        form-by-haku-oid-and-id-cache]
+(defrecord FormByHakuOidStrCacheLoader [koodisto-cache
+                                        ohjausparametrit-service
+                                        organization-service
+                                        tarjonta-service]
   cache/CacheLoader
   (load [_ key]
     (let [[haku-oid aips? & roles] (clojure.string/split key #"#")]
-      (when-let [form (fetch-form-by-haku-oid-cached tarjonta-service
-                                                     form-by-haku-oid-and-id-cache
-                                                     haku-oid
-                                                     (Boolean/valueOf aips?)
-                                                     (map keyword roles))]
+      (when-let [form (fetch-form-by-haku-oid tarjonta-service
+                                              koodisto-cache
+                                              organization-service
+                                              ohjausparametrit-service
+                                              haku-oid
+                                              (Boolean/valueOf aips?)
+                                              (map keyword roles))]
         (json/generate-string (form-coercer form)))))
   (load-many [this keys]
     (into {} (keep #(when-let [v (cache/load this %)] [% v]) keys)))
