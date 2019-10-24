@@ -5,15 +5,15 @@
             [ataru.cljs-util :as cu]
             [ataru.util :as u]
             [reagent.core :as reagent]
-            [re-frame.core :as re-frame]))
+            [re-frame.core :as re-frame]
+            [goog.string :as gstring]))
 
 (defn- person-details-text [person]
-  (str (:preferred-name person)
-       " "
-       (:last-name person)
-       " - "
-       (or (:ssn person)
-           (:birth-date person))))
+  (gstring/format "%s %s - %s"
+          (:preferred-name person)
+          (:last-name person)
+          (or (:ssn person)
+              (:birth-date person))))
 
 (defn- attachment-header [selected-liitepyynto]
   (let [selected-application @(re-frame/subscribe [:application/selected-application])
