@@ -78,12 +78,11 @@
     (assoc-in field [:params :deadline-label] label)
     field))
 
-(defn populate-attachment-deadlines [form now hakukohteet]
-  (let [hakuajat (hakuaika/index-hakuajat hakukohteet)]
-    (update form :content (partial util/map-form-fields
-                                   (partial populate-attachment-deadline
-                                            now
-                                            hakuajat)))))
+(defn populate-attachment-deadlines [form now hakuajat]
+  (update form :content (partial util/map-form-fields
+                                 (partial populate-attachment-deadline
+                                          now
+                                          hakuajat))))
 
 (defn populate-hakukohde-answer-options [form tarjonta-info]
   ; walking through entire content is very slow for large forms, so try a naive optimization first

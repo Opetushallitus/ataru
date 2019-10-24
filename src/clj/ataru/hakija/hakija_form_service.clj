@@ -122,16 +122,15 @@
 (s/defn ^:always-validate flag-uneditable-and-unviewable-fields :- s/Any
   [form :- s/Any
    now :- s/Any
-   hakukohteet :- s/Any
+   hakuajat :- s/Any
    roles :- [form-role/FormRole]
    application-in-processing-state? :- s/Bool]
-  (let [hakuajat (hakuaika/index-hakuajat hakukohteet)]
-    (update form :content (partial util/map-form-fields
-                                   (partial flag-uneditable-and-unviewable-field
-                                            now
-                                            hakuajat
-                                            roles
-                                            application-in-processing-state?)))))
+  (update form :content (partial util/map-form-fields
+                                 (partial flag-uneditable-and-unviewable-field
+                                          now
+                                          hakuajat
+                                          roles
+                                          application-in-processing-state?))))
 
 (s/defn ^:always-validate remove-required-hakija-validator-if-virkailija :- s/Any
   [form :- s/Any
@@ -153,13 +152,14 @@
    koodisto-cache :- s/Any
    hakukohteet :- s/Any
    application-in-processing-state? :- s/Bool]
-  (let [now (time/now)]
+  (let [now      (time/now)
+        hakuajat (hakuaika/index-hakuajat hakukohteet)]
     (when-let [form (form-store/fetch-by-id id)]
       (when (not (:deleted form))
         (-> (koodisto/populate-form-koodisto-fields koodisto-cache form)
             (remove-required-hakija-validator-if-virkailija roles)
-            (populate-attachment-deadlines now hakukohteet)
-            (flag-uneditable-and-unviewable-fields now hakukohteet roles application-in-processing-state?))))))
+            (populate-attachment-deadlines now hakuajat)
+            (flag-uneditable-and-unviewable-fields now hakuajat roles application-in-processing-state?))))))
 
 (s/defn ^:always-validate fetch-form-by-key :- s/Any
   [key :- s/Any
