@@ -217,23 +217,6 @@
                                    application-in-processing-state?
                                    roles)))
 
-(s/defn ^:always-validate fetch-form-by-hakukohde-oid :- s/Any
-  [tarjonta-service :- s/Any
-   koodisto-cache :- s/Any
-   organization-service :- s/Any
-   ohjausparametrit-service :- s/Any
-   hakukohde-oid :- s/Any
-   application-in-processing-state? :- s/Bool
-   roles :- [form-role/FormRole]]
-  (when-let [hakukohde (tarjonta/get-hakukohde tarjonta-service hakukohde-oid)]
-    (fetch-form-by-haku-oid tarjonta-service
-                            koodisto-cache
-                            organization-service
-                            ohjausparametrit-service
-                            (:haku-oid hakukohde)
-                            false
-                            roles)))
-
 (s/defn ^:always-validate fetch-form-by-haku-oid-str-cached :- s/Any
   [form-by-haku-oid-str-cache :- s/Any
    haku-oid :- s/Str
