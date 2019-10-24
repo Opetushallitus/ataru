@@ -39,8 +39,7 @@
     :download-only))
 
 (defn- file-display-capability [metadata]
-  (if (->> (or metadata [])
-           :content-type
+  (if (->> (:content-type metadata)
            can-display-in-browser)
     :show-in-browser
     (file-previewability metadata)))
@@ -54,12 +53,10 @@
         (file-display-capability))))
 
 (defn- preview-urls [metadata]
-  (if-let [previews (:previews metadata)]
-    (->> previews
-         (map :key)
-         (map #(str "/lomake-editori/api/files/content/" %))
-         (take attachment-preview-pages-to-display))
-    []))
+  (->> (:previews metadata)
+       (map :key)
+       (map #(str "/lomake-editori/api/files/content/" %))
+       (take attachment-preview-pages-to-display)))
 
 (re-frame/reg-sub
   :virkailija-attachments/attachment-preview-urls
