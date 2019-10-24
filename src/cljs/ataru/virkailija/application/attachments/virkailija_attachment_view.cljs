@@ -70,7 +70,7 @@
         pages-to-display   attachment-subs/attachment-preview-pages-to-display]
     [:<>
      [:div]
-     [:span.attachment-skimming-header__text filename]
+     [:span.attachment-skimming-filename__text--no-overflow  {:title filename} filename]
      [:div.attachment-skimming-header__naming-bar-right-element-container
       [:span.attachment-skimming-header__text.attachment-skimming-header__naming-bar-right-element
        [:a {:href download-url}
