@@ -1,5 +1,5 @@
 (ns ataru.hakija.application-form-components
-  (:require [clojure.string :refer [trim split]]
+  (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [reagent.ratom :refer-macros [reaction]]
             [markdown.core :refer [md->html]]
@@ -800,20 +800,14 @@
                                   id
                                   question-group-idx
                                   attachment-idx]))
-        link @(subscribe [:application/attachment-download-link (:key file)])
-        filename (:filename file)
-        max-filename-length 78
-        filename-parts (split filename #"\.")
-        short-filename (if (< (count filename) max-filename-length)
-                         filename
-                         (str (subs (first filename-parts) 0 max-filename-length) "[...]." (last filename-parts)))]
+        link @(subscribe [:application/attachment-download-link (:key file)])]
     [:div
      (if (:final file)
        [:a.application__form-attachment-filename
         {:href link}
-        short-filename]
+        (:filename file)]
        [:span.application__form-attachment-filename
-        short-filename])
+        (:filename file)])
      (when (and (some? (:size file)) show-size?)
        [:span (str " (" (util/size-bytes->str (:size file)) ")")])]))
 
