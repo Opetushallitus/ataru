@@ -58,6 +58,8 @@
 (defn- download-url [attachment]
   (str "/lomake-editori/api/files/content/" (:key attachment)))
 
+(def non-breaking-range-dash "\u2013\u2060")
+
 (defn- attachment-skimming-filename [selected-attachment]
   (let [download-label     (gstring/format "%s (%s)"
                                            (cu/get-virkailija-translation :load-attachment-in-skimming)
@@ -84,7 +86,7 @@
               [:div.attachment-skimming-header__partial-preview-text-indicator]
               [:span
                (cu/get-virkailija-translation :partial-preview-in-attachment-skimming)
-               (str "1\u2013\u2060" pages-to-display "/" page-count)]])]]]))
+               (gstring/format "1%s%s/%s" non-breaking-range-dash pages-to-display page-count)]])]]]))
 
 (defn- attachment-skimming-state-list []
   (let [list-opened? (reagent/atom false)]
