@@ -25,7 +25,7 @@
         superuser?    (-> session :identity :superuser (boolean))
         organizations (->> (if superuser?
                              (all-organizations organization-service)
-                             (-> session :identity :organizations (vals)))
+                             (-> session :identity :organizations vals))
                            (filter (partial filter-org-by-type include-organizations? include-hakukohde-groups?))
                            (sort-by #(some (fn [lang] (-> % :name lang not-empty)) [:fi :sv :en])))]
     (take (inc (* page-size (inc page-num)))

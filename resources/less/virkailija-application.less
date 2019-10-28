@@ -1905,6 +1905,13 @@ and (max-width: 1000px) {
   overflow: hidden;
 }
 
+.attachment-skimming-filename__text--no-overflow {
+  max-width: 45%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 .attachment-skimming-state-dropdown {
   font-size: 17px;
   height: 55px;
@@ -1973,11 +1980,11 @@ w
   left: -240px;
   height: 106px;
   justify-content: center;
-  padding: 0 30px;
+  padding: 0 20px;
   position: relative;
   text-align: left;
   top: 14px;
-  width: 350px;
+  width: 340px;
 }
 
 .attachment-skimming-header__cannot-display-text-indicator {
@@ -1989,7 +1996,31 @@ w
   top: -14px;
 }
 
-.attachment-skimming-image-view {
+.attachment-skimming-header__partial-preview-text {
+  align-items: center;
+  background-color: @banner-blue;
+  color: white;
+  display: flex;
+  left: -240px;
+  height: 106px;
+  justify-content: center;
+  padding: 0 20px;
+  position: relative;
+  text-align: left;
+  top: 14px;
+  width: 340px;
+}
+
+.attachment-skimming-header__partial-preview-text-indicator {
+  position: absolute;
+  border-left: 14px solid transparent;
+  border-right: 14px solid transparent;
+  border-bottom: 14px solid @banner-blue;
+  right: 23px;
+  top: -14px;
+}
+
+.attachment-skimming-single-image-view {
   background-color: @attachment-skimming-background-color;
   display: flex;
   justify-content: center;
@@ -1998,13 +2029,31 @@ w
   width: 100%;
 }
 
+.attachment-skimming-preview-images-view {
+  background-color: @attachment-skimming-background-color;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 188px;
+  padding-bottom: 150px;
+  width: 100%;
+}
+
 .attachment-skimming-image-view__image {
   max-width: 80%;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+}
+
+.attachment-skimming-preview-page__image {
+  max-width: 80%;
+  margin-top: 3px;
+  margin-bottom: 27px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
 }
 
 .attachment-skimming-image-view-no-preview {
   align-items: center;
-  border: 1px dashed @attachment-skimming-image-view-border-color;
+  border: 2px dashed @attachment-skimming-image-view-border-color;
   display: flex;
   justify-content: center;
   max-width: 1000px;

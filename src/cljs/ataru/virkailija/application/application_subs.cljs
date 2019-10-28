@@ -275,12 +275,12 @@
   (= (:processed haku) (:application-count haku)))
 
 (defn- filter-haut-all-not-processed [haut]
-  {:direct-form-haut (remove haku-completely-processed? (-> haut :direct-form-haut (vals)))
-   :tarjonta-haut    (remove haku-completely-processed? (-> haut :tarjonta-haut (vals)))})
+  {:direct-form-haut (remove haku-completely-processed? (-> haut :direct-form-haut vals))
+   :tarjonta-haut    (remove haku-completely-processed? (-> haut :tarjonta-haut vals))})
 
 (defn- filter-haut-all-processed [haut]
-  {:direct-form-haut (filter haku-completely-processed? (-> haut :direct-form-haut (vals)))
-   :tarjonta-haut    (filter haku-completely-processed? (-> haut :tarjonta-haut (vals)))})
+  {:direct-form-haut (filter haku-completely-processed? (-> haut :direct-form-haut vals))
+   :tarjonta-haut    (filter haku-completely-processed? (-> haut :tarjonta-haut vals))})
 
 (defn sort-by-unprocessed [xs]
   (->> xs (sort-by :application-count >) (sort-by :unprocessed >)))
@@ -760,7 +760,7 @@
   :application/all-pohjakoulutus-filters-selected?
   (fn [db _]
     (->> (-> db :application :filters-checkboxes :base-education)
-         (vals)
+         vals
          (every? true?))))
 
 (re-frame/reg-sub

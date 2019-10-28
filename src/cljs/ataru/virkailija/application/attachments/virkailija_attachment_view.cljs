@@ -1,22 +1,27 @@
 (ns ataru.virkailija.application.attachments.virkailija-attachment-view
   (:require [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]
+            [ataru.virkailija.application.attachments.virkailija-attachment-subs :as attachment-subs]
             [ataru.cljs-util :as cu]
             [ataru.util :as u]
             [reagent.core :as reagent]
-            [re-frame.core :as re-frame]))
+            [re-frame.core :as re-frame]
+            [goog.string :as gstring]))
+
+(defn- person-details-text [person]
+  (gstring/format "%s %s - %s"
+          (:preferred-name person)
+          (:last-name person)
+          (or (:ssn person)
+              (:birth-date person))))
 
 (defn- attachment-header [selected-liitepyynto]
   (let [selected-application @(re-frame/subscribe [:application/selected-application])
         lang                 @(re-frame/subscribe [:editor/virkailija-lang])
-        name-and-ssn-text    (str (-> selected-application :person :preferred-name)
-                                  " "
-                                  (-> selected-application :person :last-name)
-                                  " - "
-                                  (-> selected-application :person :ssn))
+        person-details       (person-details-text (-> selected-application :person))
         liitepyynto-text     (-> selected-liitepyynto :label lang)]
     [:div.attachment-skimming-header-section.attachment-skimming-header-details-section
-     [:span.attachment-skimming-header__text name-and-ssn-text]
+     [:span.attachment-skimming-header__text person-details]
      [:span.attachment-skimming-header__text.attachment-skimming-header__text--bold.attachment-skimming-header__text--no-overflow.animated.fadeIn
       {:title liitepyynto-text}
       liitepyynto-text]]))
@@ -53,25 +58,35 @@
 (defn- download-url [attachment]
   (str "/lomake-editori/api/files/content/" (:key attachment)))
 
+(def non-breaking-range-dash "\u2013\u2060")
+
 (defn- attachment-skimming-filename [selected-attachment]
-  (let [download-label    (str "lataa ("
-                               (-> selected-attachment :size u/size-bytes->str)
-                               ")")
-        download-url      (download-url selected-attachment)
-        filename          (-> selected-attachment :filename)
-        can-display-file? @(re-frame/subscribe [:virkailija-attachments/can-display-file? (:key selected-attachment)])]
+  (let [download-label     (gstring/format "%s (%s)"
+                                           (cu/get-virkailija-translation :load-attachment-in-skimming)
+                                           (-> selected-attachment :size u/size-bytes->str))
+        download-url       (download-url selected-attachment)
+        filename           (-> selected-attachment :filename)
+        display-capability @(re-frame/subscribe [:virkailija-attachments/file-display-capability (:key selected-attachment)])
+        page-count         (:page-count selected-attachment)
+        pages-to-display   attachment-subs/attachment-preview-pages-to-display]
     [:<>
      [:div]
-     [:span.attachment-skimming-header__text filename]
+     [:span.attachment-skimming-filename__text--no-overflow  {:title filename} filename]
      [:div.attachment-skimming-header__naming-bar-right-element-container
       [:span.attachment-skimming-header__text.attachment-skimming-header__naming-bar-right-element
        [:a {:href download-url}
         download-label]
-       (when-not
-         can-display-file?
-         [:div.attachment-skimming-header__cannot-display-text.animated.fadeIn
-          [:div.attachment-skimming-header__cannot-display-text-indicator]
-          [:span (cu/get-virkailija-translation :cannot-display-file-type-in-attachment-skimming)]])]]]))
+       (cond (= :download-only display-capability)
+             [:div.attachment-skimming-header__cannot-display-text.animated.fadeIn
+              [:div.attachment-skimming-header__cannot-display-text-indicator]
+              [:span (cu/get-virkailija-translation :cannot-display-file-type-in-attachment-skimming)]]
+             (and (= :provide-preview display-capability)
+                  (> page-count pages-to-display))
+             [:div.attachment-skimming-header__partial-preview-text.animated.fadeIn
+              [:div.attachment-skimming-header__partial-preview-text-indicator]
+              [:span
+               (cu/get-virkailija-translation :partial-preview-in-attachment-skimming)
+               (gstring/format "1%s%s/%s" non-breaking-range-dash pages-to-display page-count)]])]]]))
 
 (defn- attachment-skimming-state-list []
   (let [list-opened? (reagent/atom false)]
@@ -122,15 +137,26 @@
              [:span.attachment-review-dropdown__label
               (application-states/get-review-state-label-by-name review-types effective-liitepyynto-state lang)]])]]))))
 
+(defn- preview-page-image-view [preview-src-url]
+  ^{:key (str "attachment-preview-" preview-src-url)}
+  [:img.attachment-skimming-preview-page__image
+   {:src preview-src-url}])
+
 (defn- attachment-skimming-image-view [selected-attachment]
-  (let [download-url      (download-url selected-attachment)
-        can-display-file? @(re-frame/subscribe [:virkailija-attachments/can-display-file? (:key selected-attachment)])]
-    [:div.attachment-skimming-image-view
-     (if can-display-file?
-       [:img.attachment-skimming-image-view__image
-        {:src download-url}]
-       [:div.attachment-skimming-image-view-no-preview
-        [:span.attachment-skimming-image-view-no-preview__text "?"]])]))
+  (let [attachment-src-url (download-url selected-attachment)
+        display-capability @(re-frame/subscribe [:virkailija-attachments/file-display-capability (:key selected-attachment)])
+        preview-src-urls   @(re-frame/subscribe [:virkailija-attachments/attachment-preview-urls (:key selected-attachment)])]
+    (cond (= :show-in-browser display-capability)
+          [:div.attachment-skimming-single-image-view
+           [:img.attachment-skimming-image-view__image
+            {:src attachment-src-url}]]
+          (= :provide-preview display-capability)
+          [:div.attachment-skimming-preview-images-view
+           (map preview-page-image-view preview-src-urls)]
+          (= :download-only display-capability)
+          [:div.attachment-skimming-single-image-view
+           [:div.attachment-skimming-image-view-no-preview
+            [:span.attachment-skimming-image-view-no-preview__text "?"]]])))
 
 (def liitepyynnot->attachment-keys-xform (comp (map (fn [liitepyynto]
                                                       (let [values (:values liitepyynto)]

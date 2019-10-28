@@ -1037,7 +1037,7 @@
 (defn- preview-map-to-list
   [previews]
   (let [contents              (->> previews
-                                   (vals)
+                                   vals
                                    (map #(select-keys % [:lang :content :content-ending :subject])))
         contents-changed      @(subscribe [:editor/email-templates-altered])
         only-changed-contents (filter #(get contents-changed (:lang %)) contents)]

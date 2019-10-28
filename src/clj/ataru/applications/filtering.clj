@@ -125,7 +125,7 @@
         active?                          (-> filters :active-status :active)
         passive?                         (-> filters :active-status :passive)
         all-base-educations-enabled?     (->> (-> filters :base-education)
-                                              (vals)
+                                              vals
                                               (every? true?))]
     (filter
       (fn [application]

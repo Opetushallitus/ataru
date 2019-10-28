@@ -101,11 +101,11 @@
             [:complete (dissoc (json/parse-string body true) :version :deleted)])
           (= status 400)
           (do
-            (log/info "Error uploading file to liiteri:" file-name status error body)
+            (log/info "Error uploading file to liiteri at " url " :" file-name status error body)
             [:bad-request nil])
           :else
           (do
-            (log/error "Error uploading file to liiteri:" file-name status error body)
+            (log/error "Error uploading file to liiteri at " url " :" file-name status error body)
             [:liiteri-error nil]))))
 
 (defn store-file-part!
