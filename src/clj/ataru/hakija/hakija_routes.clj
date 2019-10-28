@@ -151,7 +151,6 @@
       (if-let [form-with-tarjonta (form-service/fetch-form-by-haku-oid-str-cached
                                    form-by-haku-oid-str-cache
                                    haku-oid
-                                   false
                                    role)]
         (response/content-type (response/ok form-with-tarjonta)
                                "application/json")
@@ -164,7 +163,6 @@
                                    tarjonta-service
                                    form-by-haku-oid-str-cache
                                    hakukohde-oid
-                                   false
                                    role)]
         (response/content-type (response/ok form-with-tarjonta)
                                "application/json")
