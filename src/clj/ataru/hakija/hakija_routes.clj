@@ -43,7 +43,8 @@
   (true? deleted))
 
 (defn- get-application
-  [koodisto-cache
+  [form-by-id-cache
+   koodisto-cache
    ohjausparametrit-service
    organization-service
    person-client
@@ -51,7 +52,8 @@
    session
    secret]
   (let [[application-form-and-person secret-expired? lang-override inactivated?]
-        (hakija-application-service/get-latest-application-by-secret koodisto-cache
+        (hakija-application-service/get-latest-application-by-secret form-by-id-cache
+                                                                     koodisto-cache
                                                                      ohjausparametrit-service
                                                                      organization-service
                                                                      person-client
@@ -140,6 +142,7 @@
                           ohjausparametrit-service
                           person-service
                           koodisto-cache
+                          form-by-id-cache
                           form-by-haku-oid-str-cache
                           temp-file-store]}]
   (api/context "/api" []
@@ -171,7 +174,7 @@
       :path-params [key :- s/Str]
       :query-params [role :- [form-role/FormRole]]
       :return ataru-schema/FormWithContent
-      (if-let [form (form-service/fetch-form-by-key key role koodisto-cache nil false)]
+      (if-let [form (form-service/fetch-form-by-key key role form-by-id-cache koodisto-cache nil false)]
         (response/ok form)
         (response/not-found)))
     (api/POST "/feedback" []
@@ -186,6 +189,7 @@
       :summary "Submit application"
       :body [application ataru-schema/Application]
       (match (hakija-application-service/handle-application-submit
+              form-by-id-cache
               koodisto-cache
               tarjonta-service
               job-runner
@@ -202,6 +206,7 @@
       :summary "Edit application"
       :body [application ataru-schema/Application]
       (match (hakija-application-service/handle-application-edit
+              form-by-id-cache
               koodisto-cache
               tarjonta-service
               job-runner
@@ -220,7 +225,8 @@
                      {virkailija-secret :- s/Str nil}]
       :return ataru-schema/ApplicationWithPersonAndForm
       (cond (not-blank? secret)
-            (get-application koodisto-cache
+            (get-application form-by-id-cache
+                             koodisto-cache
                              ohjausparametrit-service
                              organization-service
                              person-service
@@ -229,7 +235,8 @@
                              {:hakija secret})
 
             (not-blank? virkailija-secret)
-            (get-application koodisto-cache
+            (get-application form-by-id-cache
+                             koodisto-cache
                              ohjausparametrit-service
                              organization-service
                              person-service
