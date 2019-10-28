@@ -86,7 +86,7 @@ body {
 
 .application__wrapper-contents {
   margin-top: 13px;
-  width: 100%;
+  width: 75%;
 }
 .application__form-field {
   display: flex;
@@ -174,7 +174,8 @@ body {
   font-weight: 300;
   margin: 0 0 0 10px;
   padding: 0;
-  display: table;
+  display: flex;
+  word-break: break-all;
 }
 .application__form-field-list li {
   display: table-row;
@@ -731,6 +732,7 @@ textarea.application__form-text-area__size-large {
   padding: 2px 8px 2px 8px;
   border-radius: 3px;
   background-color: #DEF2FF;
+  max-width: fit-content;
   &__success {
     background-color: @sg-color-green-lighten-1;
   }
@@ -741,7 +743,7 @@ textarea.application__form-text-area__size-large {
 }
 
 .application__form-attachment-check-mark-container {
-  flex: auto;
+  flex: inherit;
 }
 
 .application__form-attachment-check-mark {
@@ -793,6 +795,8 @@ textarea.application__form-text-area__size-large {
 
 .application__form-attachment-filename {
   font-size: 14px;
+  display: flex;
+  word-break: break-all;
 }
 
 .application__form-attachment-error {

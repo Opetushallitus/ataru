@@ -638,6 +638,7 @@ and (max-width: 1000px) {
   //transform: translateX(-100%);
   min-width: 672px;
   right: 436px;
+  left: -672px;
   animation-duration: 0.5s;
 }
 
@@ -682,6 +683,7 @@ and (max-width: 1000px) {
   margin: 0px;
   font-weight: lighter;
   list-style: none;
+  word-break:break-all;
 }
 
 .application__attachment-review-row-label {
@@ -1658,28 +1660,14 @@ and (max-width: 1000px) {
   font-size: 14px;
   font-weight: 300;
   line-height: 150%;
+  word-break:break-all;
 }
 
 .application__virkailija-readonly-attachment-area {
   margin-top: 5px;
   display: flex;
+  word-break: break-all;
   align-items: center;
-}
-
-.application__virkailija-readonly-attachment-delete {
-  .arrow(left, @pale-blue, 8px, 8px);
-  align-items: center;
-  background: @pale-blue;
-  border-radius: 3px;
-  color: white;
-  display: flex;
-  font-size: 13px;
-  margin-left: 20px;
-  padding: 4px 7px 4px 4px;
-}
-.application__virkailija-readonly-attachment-delete--confirm {
-  .arrow(left, @sg-color-red, 8px, 8px);
-  background-color: @sg-color-red;
 }
 
 .application__virkailija-readonly-attachment-virus-status-not-started {
