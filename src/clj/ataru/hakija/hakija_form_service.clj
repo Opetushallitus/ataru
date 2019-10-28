@@ -220,24 +220,21 @@
 (s/defn ^:always-validate fetch-form-by-haku-oid-str-cached :- s/Any
   [form-by-haku-oid-str-cache :- s/Any
    haku-oid :- s/Str
-   application-in-processing-state? :- s/Bool
    roles :- [form-role/FormRole]]
   (cache/get-from form-by-haku-oid-str-cache
                   (apply str
                          haku-oid
-                         "#" application-in-processing-state?
+                         "#" false ;; TODO remove with care, keys linger in Redis
                          (sort (map #(str "#" (name %)) roles)))))
 
 (s/defn ^:always-validate fetch-form-by-hakukohde-oid-str-cached :- s/Any
   [tarjonta-service :- s/Any
    form-by-haku-oid-str-cache :- s/Any
    hakukohde-oid :- s/Str
-   application-in-processing-state? :- s/Bool
    roles :- [form-role/FormRole]]
   (when-let [hakukohde (tarjonta/get-hakukohde tarjonta-service hakukohde-oid)]
     (fetch-form-by-haku-oid-str-cached form-by-haku-oid-str-cache
                                        (:haku-oid hakukohde)
-                                       false
                                        roles)))
 
 (def form-coercer (sc/coercer! form-schema/FormWithContentAndTarjontaMetadata
@@ -249,13 +246,13 @@
                                         tarjonta-service]
   cache/CacheLoader
   (load [_ key]
-    (let [[haku-oid aips? & roles] (clojure.string/split key #"#")]
+    (let [[haku-oid aips? & roles] (clojure.string/split key #"#")] ;; TODO remove aips? with care, keys linger in Redis
       (when-let [form (fetch-form-by-haku-oid tarjonta-service
                                               koodisto-cache
                                               organization-service
                                               ohjausparametrit-service
                                               haku-oid
-                                              (Boolean/valueOf aips?)
+                                              false
                                               (map keyword roles))]
         (json/generate-string (form-coercer form)))))
   (load-many [this keys]
