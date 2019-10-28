@@ -67,7 +67,8 @@
 
     :form-by-haku-oid-str-cache-loader (component/using
                                         (hakija-form-service/map->FormByHakuOidStrCacheLoader {})
-                                        [:koodisto-cache
+                                        [:form-by-id-cache
+                                         :koodisto-cache
                                          :ohjausparametrit-service
                                          :organization-service
                                          :tarjonta-service])
@@ -105,7 +106,8 @@
 
     :job-runner (component/using
                  (job/new-job-runner virkailija-jobs/job-definitions)
-                 [:ohjausparametrit-service
+                 [:form-by-id-cache
+                  :ohjausparametrit-service
                   :henkilo-cache
                   :koodisto-cache
                   :person-service

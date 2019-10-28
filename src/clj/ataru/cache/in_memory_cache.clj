@@ -7,6 +7,7 @@
             LoadingCache]))
 
 (defrecord InMemoryCache [loader
+                          size
                           expires-after
                           refresh-after
                           ^LoadingCache caffeine]
@@ -15,6 +16,8 @@
     (if (nil? caffeine)
       (assoc this :caffeine
              (cond-> (Caffeine/newBuilder)
+                     (some? size)
+                     (.maximumSize size)
                      (some? expires-after)
                      (.expireAfterWrite (first expires-after) (second expires-after))
                      (some? refresh-after)

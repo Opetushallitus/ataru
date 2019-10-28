@@ -149,12 +149,13 @@
 (s/defn ^:always-validate fetch-form-by-id :- s/Any
   [id :- s/Any
    roles :- [form-role/FormRole]
+   form-by-id-cache :- s/Any
    koodisto-cache :- s/Any
    hakukohteet :- s/Any
    application-in-processing-state? :- s/Bool]
   (let [now      (time/now)
         hakuajat (hakuaika/index-hakuajat hakukohteet)]
-    (when-let [form (form-store/fetch-by-id id)]
+    (when-let [form (cache/get-from form-by-id-cache (str id))]
       (when (not (:deleted form))
         (-> (koodisto/populate-form-koodisto-fields koodisto-cache form)
             (remove-required-hakija-validator-if-virkailija roles)
@@ -164,18 +165,21 @@
 (s/defn ^:always-validate fetch-form-by-key :- s/Any
   [key :- s/Any
    roles :- [form-role/FormRole]
+   form-by-id-cache :- s/Any
    koodisto-cache :- s/Any
    hakukohteet :- s/Any
    application-in-processing-state? :- s/Bool]
   (when-let [latest-id (form-store/latest-id-by-key key)]
     (fetch-form-by-id latest-id
                       roles
+                      form-by-id-cache
                       koodisto-cache
                       hakukohteet
                       application-in-processing-state?)))
 
 (s/defn ^:always-validate fetch-form-by-haku-oid-and-id :- s/Any
-  [tarjonta-service :- s/Any
+  [form-by-id-cache :- s/Any
+   tarjonta-service :- s/Any
    koodisto-cache :- s/Any
    organization-service :- s/Any
    ohjausparametrit-service :- s/Any
@@ -187,7 +191,7 @@
         hakukohteet   (get-in tarjonta-info [:tarjonta :hakukohteet])
         priorisoivat  (:ryhmat (hakukohderyhmat/priorisoivat-hakukohderyhmat tarjonta-service haku-oid))
         rajaavat      (:ryhmat (hakukohderyhmat/rajaavat-hakukohderyhmat haku-oid))
-        form          (fetch-form-by-id id roles koodisto-cache hakukohteet application-in-processing-state?)]
+        form          (fetch-form-by-id id roles form-by-id-cache koodisto-cache hakukohteet application-in-processing-state?)]
     (when (and (some? form) (some? tarjonta-info))
       (-> form
           (merge tarjonta-info)
@@ -198,7 +202,8 @@
           (populate-can-submit-multiple-applications tarjonta-info)))))
 
 (s/defn ^:always-validate fetch-form-by-haku-oid :- s/Any
-  [tarjonta-service :- s/Any
+  [form-by-id-cache :- s/Any
+   tarjonta-service :- s/Any
    koodisto-cache :- s/Any
    organization-service :- s/Any
    ohjausparametrit-service :- s/Any
@@ -208,7 +213,8 @@
   (when-let [latest-id (some-> (tarjonta/get-haku tarjonta-service haku-oid)
                                :ataruLomakeAvain
                                form-store/latest-id-by-key)]
-    (fetch-form-by-haku-oid-and-id tarjonta-service
+    (fetch-form-by-haku-oid-and-id form-by-id-cache
+                                   tarjonta-service
                                    koodisto-cache
                                    organization-service
                                    ohjausparametrit-service
@@ -240,14 +246,16 @@
 (def form-coercer (sc/coercer! form-schema/FormWithContentAndTarjontaMetadata
                                coerce/json-schema-coercion-matcher))
 
-(defrecord FormByHakuOidStrCacheLoader [koodisto-cache
+(defrecord FormByHakuOidStrCacheLoader [form-by-id-cache
+                                        koodisto-cache
                                         ohjausparametrit-service
                                         organization-service
                                         tarjonta-service]
   cache/CacheLoader
   (load [_ key]
     (let [[haku-oid aips? & roles] (clojure.string/split key #"#")] ;; TODO remove aips? with care, keys linger in Redis
-      (when-let [form (fetch-form-by-haku-oid tarjonta-service
+      (when-let [form (fetch-form-by-haku-oid form-by-id-cache
+                                              tarjonta-service
                                               koodisto-cache
                                               organization-service
                                               ohjausparametrit-service
