@@ -18,6 +18,8 @@ DOCKER_COMPOSE=COMPOSE_PARALLEL_LIMIT=8 $(if $(DOCKER_SUDO),sudo )docker-compose
 
 NODE_MODULES=node_modules/pm2/bin/pm2
 
+PORTS=15432 16379 15433 1221 16380 8350 8351
+
 # ----------------
 # Check ataru-secrets existence and config files
 # ----------------
@@ -134,6 +136,9 @@ logs: log
 
 lint: $(NODE_MODULES)
 	npx eslint .
+
+check-ports:
+	for PORT in $(PORTS); do sudo lsof -i :$$PORT -sTCP:LISTEN; done
 
 help:
 	@cat Makefile.md

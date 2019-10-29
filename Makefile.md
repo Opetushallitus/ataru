@@ -17,6 +17,12 @@ make test
 make lint
 	Run linters
 
+make check-ports
+	With this target, you can check if some other application is already
+        listening to a port that is used. If everything is ok, you get no
+        output, otherwise you get the list of processes that use conflicting
+        ports.
+
 Advanced targets:
 -----------------
 
