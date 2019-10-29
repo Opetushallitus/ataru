@@ -122,7 +122,7 @@
                        (selmer/render-file {:lang            lang
                                             :hakukohteet     ["Hakukohde 1" "Hakukohde 2" "Hakukohde 3"]
                                             :attachments-without-answer [{:label "Liite 1"
-                                                                          :deadline (get (hakuaika/millis->localized-date-time 1540295947420) (keyword lang))}
+                                                                          :deadline (get (hakuaika/date-time->localized-date-time (t/date-time 2000 12 31)) (keyword lang))}
                                                                          {:label "Liite 2"
                                                                           :deadline ""}
                                                                          {:label "Liite 3"
