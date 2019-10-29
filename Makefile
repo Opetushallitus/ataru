@@ -138,7 +138,7 @@ lint: $(NODE_MODULES)
 	npx eslint .
 
 check-ports:
-	for PORT in $(PORTS); do sudo lsof -i :$$PORT -sTCP:LISTEN; done
+	@-(for PORT in $(PORTS); do sudo lsof -i :$$PORT -sTCP:LISTEN; done) || echo "All ports available!"
 
 help:
 	@cat Makefile.md
