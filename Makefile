@@ -116,7 +116,7 @@ clean-lein:
 # ----------------
 start: start-pm2
 
-stop: stop-pm2
+stop: stop-pm2 stop-docker
 
 restart: stop-pm2 start-pm2
 
