@@ -1,4 +1,7 @@
+# Project-specific configuration
 EXECUTABLES = lein docker docker-compose npm lftp
+PORTS=15432 16379 15433 1221 16380 8350 8351
+TOOL_VERSIONS := node:8.11 npm:6.11 docker-compose:1.21 lein:2.9
 
 VIRKAILIJA_CONFIG ?= ../ataru-secrets/virkailija-local-dev.edn
 HAKIJA_CONFIG ?= ../ataru-secrets/hakija-local-dev.edn
@@ -8,6 +11,7 @@ CSS_COMPILER=ataru-css-compilation
 HAKIJA_BACKEND=ataru-hakija-backend-8351
 VIRKAILIJA_BACKEND=ataru-virkailija-backend-8350
 
+# General options
 PM2=npx pm2 --no-autorestart
 START_ONLY=start pm2.config.js --only
 STOP_ONLY=stop pm2.config.js --only
@@ -17,8 +21,6 @@ DOCKER=$(if $(DOCKER_SUDO),sudo )docker
 DOCKER_COMPOSE=COMPOSE_PARALLEL_LIMIT=8 $(if $(DOCKER_SUDO),sudo )docker-compose
 
 NODE_MODULES=node_modules/pm2/bin/pm2
-
-PORTS=15432 16379 15433 1221 16380 8350 8351
 
 # ----------------
 # Check ataru-secrets existence and config files
@@ -32,17 +34,19 @@ ifeq ("$(wildcard $(HAKIJA_CONFIG))","")
 endif
 
 # ----------------
-# Check that all necessary tools are in path
+# Check that all necessary tools are in path and have new enough versions
 # ----------------
 check-tools:
 	$(info Checking commands in path: $(EXECUTABLES) ...)
 	$(foreach exec,$(EXECUTABLES),\
 		$(if $(shell which $(exec)),$(info .. $(exec) found),$(error No $(exec) in PATH)))
-	$(info Checking tool versions...)
-	@./bin/check-tool-version.sh node 8.11
-	@./bin/check-tool-version.sh npm 6.11
-	@./bin/check-tool-version.sh docker-compose 1.21
-	@./bin/check-tool-version.sh lein 2.9
+
+	$(info Checking tool versions ...)
+	@$(foreach TOOL_VERSION, $(TOOL_VERSIONS), \
+		$(eval TOOL = $(word 1,$(subst :, ,$(TOOL_VERSION)))) \
+		$(eval VERSION = $(word 2,$(subst :, ,$(TOOL_VERSION)))) \
+		\
+		./bin/check-tool-version.sh $(TOOL) $(VERSION) || exit 1; )
 
 # ----------------
 # Docker build
