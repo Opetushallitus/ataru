@@ -1,7 +1,7 @@
 # Project-specific configuration
 EXECUTABLES = lein docker docker-compose npm lftp
 PORTS=15432 16379 15433 1221 16380 8350 8351
-TOOL_VERSIONS := node:8.11 npm:6.11 docker-compose:1.21 lein:2.9
+TOOL_VERSIONS := node:8.11 npm:6 docker-compose:1.21 lein:2.9
 
 VIRKAILIJA_CONFIG ?= ../ataru-secrets/virkailija-local-dev.edn
 HAKIJA_CONFIG ?= ../ataru-secrets/hakija-local-dev.edn
