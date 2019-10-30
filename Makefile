@@ -38,6 +38,11 @@ check-tools:
 	$(info Checking commands in path: $(EXECUTABLES) ...)
 	$(foreach exec,$(EXECUTABLES),\
 		$(if $(shell which $(exec)),$(info .. $(exec) found),$(error No $(exec) in PATH)))
+	$(info Checking tool versions...)
+	@./bin/check-tool-version.sh node 8.11
+	@./bin/check-tool-version.sh npm 6.11
+	@./bin/check-tool-version.sh docker-compose 1.21
+	@./bin/check-tool-version.sh lein 2.9
 
 # ----------------
 # Docker build
