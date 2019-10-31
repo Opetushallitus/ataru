@@ -72,35 +72,6 @@
       ;; stop execution for a short period
       (boolean raw-job))))
 
-(defn- add-period-to-result [result period]
-  (map #(assoc % :total   {period (get % :total)}
-                 :fail    {period (get % :fail)}
-                 :error   {period (get % :error)}
-                 :waiting {period (get % :waiting)}) result))
-
-
-(defn- combine-job-counts [result]
-  (fn [key] {key
-             (apply merge
-                    (map #(get % key) result))}))
-
-(defn- combine-job-results [result]
-  (let [keys (keys (dissoc (first result) :job_type))]
-    {(get (first result) :job_type)
-     (apply merge
-            (map (combine-job-counts result) keys))}))
-
-(defn- combine-all-job-results [results]
-  (doall
-    (apply merge
-           (map combine-job-results results))))
-
 (defn get-status []
-  (let [periods {:week 168 :day 24 :hour 1}]
-    (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-                             (let [period-results (flatten
-                                                    (for [period periods]
-                                                      (add-period-to-result
-                                                        (yesql-status {:period (val period)} {:connection connection}) (key period))))
-                                   grouped-results (vals (group-by :job_type period-results))]
-                               (combine-all-job-results grouped-results)))))
+  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+    (:status (first (yesql-status {} {:connection connection})))))

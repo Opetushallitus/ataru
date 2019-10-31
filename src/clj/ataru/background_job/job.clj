@@ -10,15 +10,10 @@
 (defn status []
   (let [status (job-store/get-status)]
     (if (and
-         (= 1 (get-in status ["start-automatic-eligibility-if-ylioppilas-job-job"
-                              :total]))
-         (zero? (get-in status ["start-automatic-eligibility-if-ylioppilas-job-job"
-                                :fail]))
-         (every? (fn [[job status]]
-                   (if (= job "automatic-eligibility-if-ylioppilas-job")
-                     (> 10 (:error status))
-                     (= 0 (:error status))))
-                 status))
+         (= 1 (get-in status [:start-automatic-eligibility-if-ylioppilas-job-job :queued]))
+         (zero? (get-in status [:start-automatic-eligibility-if-ylioppilas-job-job :failed :hour]))
+         (every? #(zero? (get-in % [1 :failed :hour])) status)
+         (every? #(> 10 (get-in % [1 :errored :hour])) status))
       (assoc status :ok true)
       (assoc status :ok false))))
 
