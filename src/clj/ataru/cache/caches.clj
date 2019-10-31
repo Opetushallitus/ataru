@@ -4,6 +4,7 @@
             [ataru.cache.in-memory-cache :as in-memory]
             [ataru.cache.two-layer-cache :as two-layer]
             [ataru.cache.redis-cache :as redis]
+            [ataru.forms.form-store :as form-store]
             [ataru.lokalisointi-service.lokalisointi-service :as lokalisointi-service]
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
@@ -165,15 +166,13 @@
        :expire-after-access [3 TimeUnit/DAYS]
        :refresh-after       [7 TimeUnit/MINUTES]})
      {:redis-cache :koodisto-redis-cache})]
-   [:form-by-haku-oid-and-id-cache
-    (component/using
-     (redis/map->Cache
-      {:name          "form-by-haku-oid-and-id"
-       :ttl           [1 TimeUnit/HOURS]
-       :refresh-after [5 TimeUnit/SECONDS]
-       :lock-timeout  [1 TimeUnit/MINUTES]})
-     {:redis  :redis
-      :loader :form-by-haku-oid-and-id-cache-loader})]
+   [:form-by-id-cache
+    (in-memory/map->InMemoryCache
+     {:loader        (cache/->FunctionCacheLoader
+                      (fn [key] (form-store/fetch-by-id (Integer/valueOf key))))
+      :size          10
+      :expires-after [3 TimeUnit/DAYS]
+      :refresh-after [1 TimeUnit/DAYS]})]
    [:form-by-haku-oid-str-cache
     (component/using
      (redis/map->Cache

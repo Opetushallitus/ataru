@@ -28,7 +28,8 @@
        :henkilo-modified-queue {:enabled?      {{ataru_henkilo_modified_queue_enabled}}
                                 :drain-failed? {{ataru_henkilo_modified_queue_drain_failed}}
                                 :queue-url     "{{ataru_henkilo_modified_queue_url}}"}}
- :public-config {:applicant {:service_url "{{ataru_applicant_service_url}}"}
+ :public-config {:hakija-caller-id "{{ataru_hakija_frontend_caller_id | default('1.2.246.562.10.00000000001.ataru-hakija.frontend')}}"
+                 :applicant {:service_url "{{ataru_applicant_service_url}}"}
                  :virkailija {:service_url "https://{{host_virkailija}}/lomake-editori/"}
                  :environment-name "{{ataru_environment_name}}"
                  :features {}

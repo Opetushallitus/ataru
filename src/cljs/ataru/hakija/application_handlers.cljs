@@ -17,7 +17,8 @@
             [clojure.data :as d]
             [ataru.component-data.value-transformers :as value-transformers]
             [cljs-time.core :as c]
-            [cljs-time.coerce :refer [from-long]]))
+            [cljs-time.format :as f]
+            [cljs-time.coerce :refer [from-long to-long]]))
 
 (defn initialize-db [_ _]
   {:form        nil
@@ -35,18 +36,19 @@
 
 (reg-event-fx
   :application/handle-get-application-by-hakija-secret-error
-  (fn [{:keys [db]} [_ old-secret {:keys [status response] :as params}]]
-    (if (and (= status 401) (= "secret-expired" (:code response)))
+  (fn [{:keys [db]} [_ old-secret response]]
+    (if (and (= (:status response) 401)
+             (= "secret-expired" (get-in response [:body :code])))
       {:db (-> db
-               (assoc-in [:form :selected-language] (keyword (:lang response)))
+               (assoc-in [:form :selected-language] (keyword (get-in response [:body :lang])))
                (assoc-in [:application :secret-expired?] true)
                (assoc-in [:application :old-secret] old-secret))}
       {:db       db
-       :dispatch [:application/default-handle-error params]})))
+       :dispatch [:application/default-handle-error response]})))
 
 (reg-event-db
   :application/handle-send-new-secret
-  (fn [db]
+  (fn [db _]
     (assoc-in db [:application :secret-delivery-status] :completed)))
 
 (reg-event-fx
@@ -134,16 +136,16 @@
      :http {:method        method
             :url           "/hakemus/api/application"
             :post-data     (create-application-to-submit (:application db) (:form db) (get-in db [:form :selected-language]))
-            :handler       :application/handle-submit-response
-            :error-handler :application/handle-submit-error}}))
+            :handler       [:application/handle-submit-response]
+            :error-handler [:application/handle-submit-error]}}))
 
 (reg-event-db
   :application/handle-submit-response
   handle-submit)
 
 (defn response->error-message [db response]
-  (assoc db :error {:code    (keyword (get-in response [:response :code] :internal-server-error))
-                    :message "Tapahtui virhe "
+  (assoc db :error {:code    (keyword (get-in response [:body :code] "internal-server-error"))
+                    :message "Tapahtui virhe"
                     :detail  (str response)}))
 
 (reg-event-fx
@@ -492,7 +494,7 @@
        (contains? field :options)
        (update :options (partial map update-followups))))))
 
-(defn- handle-form [db answers form]
+(defn- handle-form [db answers server-date form]
   (let [form                       (-> (languages->kwd form)
                                        (set-form-language)
                                        (update :content (partial map set-question-group-id))
@@ -502,7 +504,13 @@
                                                                  (sort-by :end >)
                                                                  first
                                                                  :end))
-                                       (assoc :time-delta-from-server (- (-> form :load-time) (.getTime (js/Date.)))))
+                                       (assoc :time-delta-from-server
+                                              (if (some? server-date)
+                                                (- (->> (clojure.string/replace server-date " GMT" "")
+                                                        (f/parse (f/formatter "EEE, dd MMM yyyy HH:mm:ss"))
+                                                        to-long)
+                                                   (.getTime (js/Date.)))
+                                                0)))
         valid-hakukohde-oids       (set (->> form :tarjonta :hakukohteet
                                              (filter #(get-in % [:hakuaika :on]))
                                              (map :oid)))
@@ -568,6 +576,11 @@
                    (set-limit-reached selection)
                    (reset-other-selections question-id answer-id)))}))
 
+(reg-event-db
+  :application/handle-selection-limit
+  (fn [db [_ response]]
+    (set-limit-reached db (:body response))))
+
 (reg-event-fx
   :application/post-handle-form-dispatches
   (fn [{:keys [db]} _]
@@ -582,18 +595,17 @@
         (when selection-limited
           {:http {:method  :put
                   :url     (str "/hakemus/api/selection-limit?form-key=" (-> db :form :key))
-                  :handler [:application/handle-update-selection-limits]}})))))
+                  :handler [:application/handle-selection-limit]}})))))
 
 (defn- handle-get-application [{:keys [db]}
                                [_
                                 {:keys [secret virkailija-secret]}
-                                {:keys [application
-                                        person
-                                        form]}]]
-  (util/set-query-param "application-key" (:key application))
-  (let [[secret-kwd secret-val] (if-not (clojure.string/blank? secret)
-                                  [:secret secret]
-                                  [:virkailija-secret virkailija-secret])]
+                                response]]
+  (let [{:keys [application person form]} (:body response)
+        [secret-kwd secret-val]           (if-not (clojure.string/blank? secret)
+                                            [:secret secret]
+                                            [:virkailija-secret virkailija-secret])]
+    (util/set-query-param "application-key" (:key application))
     {:db       (-> db
                    (assoc-in [:application :application-identifier] (:application-identifier application))
                    (assoc-in [:application :editing?] true)
@@ -603,7 +615,7 @@
                    (assoc-in [:application :person] person)
                    (assoc-in [:application :cannot-edit-because-in-processing] (:cannot-edit-because-in-processing application))
                    (assoc-in [:form :selected-language] (or (keyword (:lang application)) :fi))
-                   (handle-form (:answers application) form))
+                   (handle-form (:answers application) (get-in response [:headers "date"]) form))
      :dispatch [:application/post-handle-form-dispatches]}))
 
 (reg-event-fx
@@ -617,8 +629,8 @@
 
 (reg-event-fx
   :application/handle-form
-  (fn [{:keys [db]} [_ form]]
-    {:db         (handle-form db nil form)
+  (fn [{:keys [db]} [_ response]]
+    {:db       (handle-form db nil (get-in response [:headers "date"]) (:body response))
      :dispatch [:application/post-handle-form-dispatches]}))
 
 (reg-event-db
@@ -872,9 +884,9 @@
 
 (reg-event-fx
   :application/handle-postal-code-input
-  (fn [{:keys [db]} [_ postal-office-name]]
+  (fn [{:keys [db]} [_ response]]
     {:db       (update-in db [:application :answers :postal-office]
-                          merge {:value (autil/non-blank-val postal-office-name [(-> db :form :selected-language) :fi])
+                          merge {:value (autil/non-blank-val (:body response) [(-> db :form :selected-language) :fi])
                                  :valid true})
      :dispatch [:application/update-answers-validity]}))
 
@@ -1303,6 +1315,10 @@
   (fn [db [_ feedback-text]]
     (assoc-in db [:application :feedback :text] feedback-text)))
 
+(reg-event-db
+  :application/handle-feedback-submit
+  (fn [db _] db))
+
 (reg-event-fx
   :application/rating-feedback-submit
   (fn [{:keys [db]}]
@@ -1320,7 +1336,8 @@
       {:db   new-db
        :http {:method    :post
               :post-data post-data
-              :url       "/hakemus/api/feedback"}})))
+              :url       "/hakemus/api/feedback"
+              :handler   [:application/handle-feedback-submit]}})))
 
 (reg-event-db
   :application/rating-form-toggle

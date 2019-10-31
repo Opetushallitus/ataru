@@ -6,11 +6,10 @@
             [ataru.config.core :refer [config]]
             [ataru.db.db :as db]
             [ataru.email.email-store :as email-store]
-            [ataru.tarjonta-service.hakuaika :refer [millis->localized-date-time]]
             [ataru.forms.form-store :as forms]
             [ataru.tarjonta-service.hakukohde :as hakukohde]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
-            [ataru.tarjonta-service.hakuaika :as tarjonta-hakuaika]
+            [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
             [ataru.translations.texts :refer [email-default-texts]]
@@ -123,7 +122,7 @@
                        (selmer/render-file {:lang            lang
                                             :hakukohteet     ["Hakukohde 1" "Hakukohde 2" "Hakukohde 3"]
                                             :attachments-without-answer [{:label "Liite 1"
-                                                                          :deadline (get (millis->localized-date-time 1540295947420) (keyword lang))}
+                                                                          :deadline (get (hakuaika/date-time->localized-date-time (t/date-time 2000 12 31)) (keyword lang))}
                                                                          {:label "Liite 2"
                                                                           :deadline ""}
                                                                          {:label "Liite 3"
@@ -157,8 +156,9 @@
                                           (:haku application)
                                           (:hakukohde application)))
         answers-by-key                  (-> application :answers util/answers-by-key)
+        hakuajat                        (hakuaika/index-hakuajat (:hakukohteet tarjonta-info))
         form                            (-> (forms/fetch-by-id (:form application))
-                                            (hakukohde/populate-attachment-deadlines now (:hakukohteet tarjonta-info)))
+                                            (hakukohde/populate-attachment-deadlines now hakuajat))
         lang                            (keyword (:lang application))
         attachment-keys-without-answers (->> (application-store/get-application-attachment-reviews (:key application))
                                              (map :attachment-key)

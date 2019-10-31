@@ -43,13 +43,22 @@
   (true? deleted))
 
 (defn- get-application
-  [secret tarjonta-service form-by-haku-oid-and-id-cache koodisto-cache person-client session]
+  [form-by-id-cache
+   koodisto-cache
+   ohjausparametrit-service
+   organization-service
+   person-client
+   tarjonta-service
+   session
+   secret]
   (let [[application-form-and-person secret-expired? lang-override inactivated?]
-        (hakija-application-service/get-latest-application-by-secret secret
-                                                                     tarjonta-service
-                                                                     form-by-haku-oid-and-id-cache
+        (hakija-application-service/get-latest-application-by-secret form-by-id-cache
                                                                      koodisto-cache
-                                                                     person-client)]
+                                                                     ohjausparametrit-service
+                                                                     organization-service
+                                                                     person-client
+                                                                     tarjonta-service
+                                                                     secret)]
     (cond inactivated?
           (response/bad-request {:code :inactivated :error "Inactivated"})
 
@@ -133,7 +142,7 @@
                           ohjausparametrit-service
                           person-service
                           koodisto-cache
-                          form-by-haku-oid-and-id-cache
+                          form-by-id-cache
                           form-by-haku-oid-str-cache
                           temp-file-store]}]
   (api/context "/api" []
@@ -145,11 +154,10 @@
       (if-let [form-with-tarjonta (form-service/fetch-form-by-haku-oid-str-cached
                                    form-by-haku-oid-str-cache
                                    haku-oid
-                                   false
                                    role)]
         (response/content-type (response/ok form-with-tarjonta)
                                "application/json")
-        (response/not-found)))
+        (response/not-found {})))
     (api/GET ["/hakukohde/:hakukohde-oid", :hakukohde-oid #"[0-9\.]+"] []
       :summary "Gets form for hakukohde"
       :path-params [hakukohde-oid :- s/Str]
@@ -158,18 +166,17 @@
                                    tarjonta-service
                                    form-by-haku-oid-str-cache
                                    hakukohde-oid
-                                   false
                                    role)]
         (response/content-type (response/ok form-with-tarjonta)
                                "application/json")
-        (response/not-found)))
+        (response/not-found {})))
     (api/GET "/form/:key" []
       :path-params [key :- s/Str]
       :query-params [role :- [form-role/FormRole]]
       :return ataru-schema/FormWithContent
-      (if-let [form (form-service/fetch-form-by-key key role koodisto-cache nil false)]
+      (if-let [form (form-service/fetch-form-by-key key role form-by-id-cache koodisto-cache nil false)]
         (response/ok form)
-        (response/not-found)))
+        (response/not-found {})))
     (api/POST "/feedback" []
       :summary "Add feedback sent by applicant"
       :body [feedback ataru-schema/ApplicationFeedback]
@@ -177,17 +184,17 @@
         (do
           (flowdock-client/send-application-feedback saved-application)
           (response/ok {:id (:id saved-application)}))
-        (response/bad-request)))
+        (response/bad-request {})))
     (api/POST "/application" {session :session}
       :summary "Submit application"
       :body [application ataru-schema/Application]
       (match (hakija-application-service/handle-application-submit
+              form-by-id-cache
               koodisto-cache
               tarjonta-service
               job-runner
               organization-service
               ohjausparametrit-service
-              form-by-haku-oid-and-id-cache
               application
               session)
              {:passed? false :failures failures :code code}
@@ -199,12 +206,12 @@
       :summary "Edit application"
       :body [application ataru-schema/Application]
       (match (hakija-application-service/handle-application-edit
+              form-by-id-cache
               koodisto-cache
               tarjonta-service
               job-runner
               organization-service
               ohjausparametrit-service
-              form-by-haku-oid-and-id-cache
               application
               session)
              {:passed? false :failures failures :code code}
@@ -218,20 +225,24 @@
                      {virkailija-secret :- s/Str nil}]
       :return ataru-schema/ApplicationWithPersonAndForm
       (cond (not-blank? secret)
-            (get-application {:hakija secret}
-                             tarjonta-service
-                             form-by-haku-oid-and-id-cache
+            (get-application form-by-id-cache
                              koodisto-cache
+                             ohjausparametrit-service
+                             organization-service
                              person-service
-                             session)
+                             tarjonta-service
+                             session
+                             {:hakija secret})
 
             (not-blank? virkailija-secret)
-            (get-application {:virkailija virkailija-secret}
-                             tarjonta-service
-                             form-by-haku-oid-and-id-cache
+            (get-application form-by-id-cache
                              koodisto-cache
+                             ohjausparametrit-service
+                             organization-service
                              person-service
-                             session)
+                             tarjonta-service
+                             session
+                             {:virkailija virkailija-secret})
 
             :else
             (response/bad-request {:code :secret-expired
@@ -287,8 +298,8 @@
                 response/ok
                 (response/header "Content-Disposition"
                                  (:content-disposition file)))
-            (response/not-found))
-          (response/unauthorized)))
+            (response/not-found {}))
+          (response/unauthorized {})))
       (api/DELETE "/:key" []
         :summary "Delete a file"
         :path-params [key :- s/Str]
@@ -305,7 +316,7 @@
       (let [code (koodisto/get-postal-office-by-postal-code koodisto-cache postal-code)]
         (if-let [labels (:label code)]
           (response/ok labels)
-          (response/not-found))))
+          (response/not-found {}))))
     (api/GET "/has-applied" []
       :summary "Check if a person has already applied"
       :query-params [hakuOid :- (api/describe s/Str "Haku OID")

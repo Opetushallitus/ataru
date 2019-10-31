@@ -6,6 +6,7 @@
             [ataru.files.file-store :as file-store]
             [ataru.fixtures.application :as application-fixtures]
             [ataru.fixtures.db.unit-test-db :as db]
+            [ataru.forms.form-store :as form-store]
             [ataru.email.application-email-confirmation :as application-email]
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.hakija.hakija-form-service :as hakija-form-service]
@@ -13,6 +14,7 @@
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.cache.cache-service :as cache-service]
+            [ataru.cache.in-memory-cache :as in-memory]
             [ataru.cache.redis-cache :as redis-cache]
             [ataru.hakija.hakija-routes :as routes]
             [ataru.hakija.hakija-application-service :as application-service]
@@ -26,7 +28,8 @@
             [yesql.core :as sql]
             [ataru.fixtures.form :as form-fixtures]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
-            [ataru.person-service.person-service :as person-service]))
+            [ataru.person-service.person-service :as person-service])
+  (:import java.util.concurrent.TimeUnit))
 
 (sql/defqueries "sql/application-queries.sql")
 
@@ -51,7 +54,13 @@
                                                           (assoc-in [:answers 17 :value] [ "1.2.246.562.20.49028196524" "1.2.246.562.20.49028196523"])))
 
 (def handler
-  (let [tarjonta-service                     (tarjonta-service/new-tarjonta-service)
+  (let [form-by-id-cache                     (reify cache-service/Cache
+                                               (get-from [this key]
+                                                 (form-store/fetch-by-id (Integer/valueOf key)))
+                                               (get-many-from [this keys])
+                                               (remove-from [this key])
+                                               (clear-all [this]))
+        tarjonta-service                     (tarjonta-service/new-tarjonta-service)
         organization-service                 (organization-service/new-organization-service)
         ohjausparametrit-service             (ohjausparametrit-service/new-ohjausparametrit-service)
         koodisto-cache                       (reify cache-service/Cache
@@ -59,27 +68,19 @@
                                                (get-many-from [this keys])
                                                (remove-from [this key])
                                                (clear-all [this]))
-        form-by-haku-oid-and-id-cache-loader (hakija-form-service/map->FormByHakuOidAndIdCacheLoader
-                                              {:tarjonta-service         tarjonta-service
-                                               :koodisto-cache           koodisto-cache
-                                               :organization-service     organization-service
-                                               :ohjausparametrit-service ohjausparametrit-service})
-        form-by-haku-oid-and-id-cache        (reify cache-service/Cache
-                                               (get-from [this key]
-                                                 (.load form-by-haku-oid-and-id-cache-loader key))
-                                               (get-many-from [this keys])
-                                               (remove-from [this key])
-                                               (clear-all [this]))
         form-by-haku-oid-str-cache-loader    (hakija-form-service/map->FormByHakuOidStrCacheLoader
-                                              {:tarjonta-service              tarjonta-service
-                                               :form-by-haku-oid-and-id-cache form-by-haku-oid-and-id-cache})]
+                                              {:form-by-id-cache         form-by-id-cache
+                                               :koodisto-cache           koodisto-cache
+                                               :ohjausparametrit-service ohjausparametrit-service
+                                               :organization-service     organization-service
+                                               :tarjonta-service         tarjonta-service})]
     (-> (routes/new-handler)
         (assoc :tarjonta-service tarjonta-service)
         (assoc :job-runner (job/new-job-runner hakija-jobs/job-definitions))
         (assoc :organization-service organization-service)
         (assoc :ohjausparametrit-service ohjausparametrit-service)
         (assoc :person-service (person-service/new-person-service))
-        (assoc :form-by-haku-oid-and-id-cache form-by-haku-oid-and-id-cache)
+        (assoc :form-by-id-cache form-by-id-cache)
         (assoc :form-by-haku-oid-str-cache (reify cache-service/Cache
                                              (get-from [this key]
                                                (.load form-by-haku-oid-str-cache-loader key))

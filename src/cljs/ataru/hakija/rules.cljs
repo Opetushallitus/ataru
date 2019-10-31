@@ -201,10 +201,10 @@
         auto-input? (and is-finland?
                          (= 5 (count (:value postal-code))))]
     (when auto-input?
-      (ajax/get (str "/hakemus/api/postal-codes/" (:value postal-code))
-                :application/handle-postal-code-input
-                nil
-                :application/handle-postal-code-error))
+      (ajax/http {:method        :get
+                  :url           (str "/hakemus/api/postal-codes/" (:value postal-code))
+                  :handler       [:application/handle-postal-code-input]
+                  :error-handler [:application/handle-postal-code-error]}))
     (-> db
         (update-in [:application :answers :postal-office]
                    merge {:valid (not is-finland?) :value ""})

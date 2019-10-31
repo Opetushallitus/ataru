@@ -158,10 +158,11 @@
     application))
 
 (defn- get-form
-  [koodisto-cache application]
+  [form-by-id-cache koodisto-cache application]
   (let [form (hakija-form-service/fetch-form-by-id
               (:form-id application)
               [:hakija]
+              form-by-id-cache
               koodisto-cache
               nil
               false)]
@@ -277,14 +278,14 @@
     cfg))
 
 (defn- application-job-step
-  [koodisto-cache application-id edit?]
+  [form-by-id-cache koodisto-cache application-id edit?]
   (let [{:keys [form-key
                 country-question-id
                 attachment-total-size-limit
                 ftp]} (get-configuration)
         application   (get-application country-question-id application-id)]
     (if (= form-key (:form-key application))
-      (let [form        (get-form koodisto-cache application)
+      (let [form        (get-form form-by-id-cache koodisto-cache application)
             attachments (get-attachments attachment-total-size-limit application)
             message     (if edit?
                           (->application-edited application form attachments)
@@ -304,12 +305,12 @@
       {:transition {:id :final}})))
 
 (defn tutkintojen-tunnustaminen-submit-job-step
-  [{:keys [application-id]} {:keys [koodisto-cache]}]
-  (application-job-step koodisto-cache application-id false))
+  [{:keys [application-id]} {:keys [form-by-id-cache koodisto-cache]}]
+  (application-job-step form-by-id-cache koodisto-cache application-id false))
 
 (defn tutkintojen-tunnustaminen-edit-job-step
-  [{:keys [application-id]} {:keys [koodisto-cache]}]
-  (application-job-step koodisto-cache application-id true))
+  [{:keys [application-id]} {:keys [form-by-id-cache koodisto-cache]}]
+  (application-job-step form-by-id-cache koodisto-cache application-id true))
 
 (defn tutkintojen-tunnustaminen-review-state-changed-job-step
   [{:keys [event-id]} _]

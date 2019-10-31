@@ -1,69 +1,45 @@
 (ns ataru.hakija.hakija-ajax
-  (:require [re-frame.core :refer [dispatch reg-fx]]
+  (:require [re-frame.core :as re-frame]
             [ataru.cljs-util :as util]
-            [cljs.core.match :refer-macros [match]]
-            [ajax.core :refer [GET POST PUT DELETE raw-response-format abort]])
-  (:refer-clojure :exclude [get]))
+            [ajax.core :as ajax]))
 
-(def ^:private json-params {:format :json :response-format :json :keywords? true})
+(defn http [{:keys [method
+                    url
+                    post-data
+                    headers
+                    handler
+                    progress-handler
+                    error-handler
+                    started-handler]}]
+  (cond-> ((case method
+             :get    ajax/GET
+             :post   ajax/POST
+             :put    ajax/PUT
+             :delete ajax/DELETE)
+           url
+           (merge {:response-format (ajax/ring-response-format
+                                     {:format (ajax/json-response-format
+                                               {:keywords? true})})
+                   :headers         (merge headers
+                                           {"Caller-Id" (aget js/config "hakija-caller-id")}
+                                           (when (util/include-csrf-header? method)
+                                             {"CSRF" (util/csrf-token)}))
+                   :handler         (fn [response] (re-frame/dispatch (conj handler response)))
+                   :error-handler   (fn [response] (re-frame/dispatch (conj (if (some? error-handler)
+                                                                              error-handler
+                                                                              [:application/default-handle-error])
+                                                                            (:response response))))}
+                  (when (some? progress-handler)
+                    {:progress-handler (fn [event] (re-frame/dispatch (conj progress-handler event)))})
+                  (when (some? post-data))
+                  {:format :json
+                   :params post-data}))
+          (some? started-handler)
+          started-handler))
 
-(defn- handler-fn [handler-kw & {:keys [default]}]
-  (fn [response]
-    (let [dispatch-vec (match handler-kw
-                         (_ :guard nil?)
-                         [default response]
+(re-frame/reg-fx
+  :http http)
 
-                         (handler-vec :guard vector?)
-                         (conj handler-vec response)
-
-                         :else
-                         [handler-kw response])]
-      (dispatch dispatch-vec))))
-
-(defn- params [handler-kw progress-handler-kw error-handler-kw]
-  {:handler          (handler-fn handler-kw :default :application/default-http-ok-handler)
-   :progress-handler (handler-fn progress-handler-kw :default :application/default-http-progress-handler)
-   :error-handler    (handler-fn error-handler-kw :default :application/default-handle-error)})
-
-(defn get [path & [handler-kw progress-handler-kw error-handler-kw]]
-  (GET path (merge (params handler-kw progress-handler-kw error-handler-kw) json-params)))
-
-(defn post [path post-data & [handler-kw progress-handler-kw error-handler-kw body]]
-  (let [params (cond-> (params handler-kw progress-handler-kw error-handler-kw)
-                 (some? body) (merge {:body body :response-format :json :keywords? true})
-                 (some? post-data) (merge {:params post-data} json-params)
-                 (util/include-csrf-header? :post) (assoc-in [:headers "CSRF"] (util/csrf-token)))]
-    (POST path params)))
-
-(defn put [path post-data & [handler-kw progress-handler-kw error-handler-kw body]]
-  (let [params (cond-> (params handler-kw progress-handler-kw error-handler-kw)
-                 (some? body) (merge {:body body :response-format :json :keywords? true})
-                 (some? post-data) (merge {:params post-data} json-params)
-                 (util/include-csrf-header? :put) (assoc-in [:headers "CSRF"] (util/csrf-token)))]
-    (PUT path params)))
-
-(defn delete [path & [handler-kw progress-handler-kw error-handler-kw]]
-  (DELETE path (merge (params handler-kw progress-handler-kw error-handler-kw) json-params)))
-
-(reg-fx
- :http
- (fn [{:keys [method
-              post-data
-              url
-              handler
-              progress-handler
-              error-handler
-              started-handler
-              body]}]
-   (let [f (case method
-             :post   (partial post url post-data)
-             :put    (partial put url post-data)
-             :get    (partial get url)
-             :delete (partial delete url))
-         r (f handler progress-handler error-handler body)]
-     (when (some? started-handler)
-       ((handler-fn started-handler) r)))))
-
-(reg-fx :http-abort abort)
+(re-frame/reg-fx :http-abort ajax/abort)
 
 

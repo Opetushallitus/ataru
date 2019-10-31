@@ -147,11 +147,11 @@
                   :session   session
                   :id        {:email (util/extract-email application)}}))
 
-(defn- validate-and-store [koodisto-cache
+(defn- validate-and-store [form-by-id-cache
+                           koodisto-cache
                            tarjonta-service
                            organization-service
                            ohjausparametrit-service
-                           form-by-haku-oid-and-id-cache
                            application
                            is-modify?
                            session]
@@ -184,8 +184,12 @@
                                               :key
                                               application-store/get-application-hakukohde-reviews)
         form                          (cond (some? (:haku application))
-                                            (hakija-form-service/fetch-form-by-haku-oid-and-id-cached
-                                             form-by-haku-oid-and-id-cache
+                                            (hakija-form-service/fetch-form-by-haku-oid-and-id
+                                             form-by-id-cache
+                                             tarjonta-service
+                                             koodisto-cache
+                                             organization-service
+                                             ohjausparametrit-service
                                              (:haku application)
                                              (:form application)
                                              (util/application-in-processing? application-hakukohde-reviews)
@@ -194,6 +198,7 @@
                                             (hakija-form-service/fetch-form-by-id
                                              (:form application)
                                              form-roles
+                                             form-by-id-cache
                                              koodisto-cache
                                              nil
                                              (util/application-in-processing? application-hakukohde-reviews)))
@@ -312,22 +317,22 @@
    application-id))
 
 (defn handle-application-submit
-  [koodisto-cache
+  [form-by-id-cache
+   koodisto-cache
    tarjonta-service
    job-runner
    organization-service
    ohjausparametrit-service
-   form-by-haku-oid-and-id-cache
    application
    session]
   (log/info "Application submitted:" application)
   (let [{:keys [passed? id]
          :as   result}
-        (validate-and-store koodisto-cache
+        (validate-and-store form-by-id-cache
+                            koodisto-cache
                             tarjonta-service
                             organization-service
                             ohjausparametrit-service
-                            form-by-haku-oid-and-id-cache
                             application
                             false
                             session)
@@ -346,22 +351,22 @@
     result))
 
 (defn handle-application-edit
-  [koodisto-cache
+  [form-by-id-cache
+   koodisto-cache
    tarjonta-service
    job-runner
    organization-service
    ohjausparametrit-service
-   form-by-haku-oid-and-id-cache
    input-application
    session]
   (log/info "Application edited:" input-application)
   (let [{:keys [passed? id application]
          :as   result}
-        (validate-and-store koodisto-cache
+        (validate-and-store form-by-id-cache
+                            koodisto-cache
                             tarjonta-service
                             organization-service
                             ohjausparametrit-service
-                            form-by-haku-oid-and-id-cache
                             input-application
                             true
                             session)
@@ -409,7 +414,13 @@
         false))
 
 (defn get-latest-application-by-secret
-  [secret tarjonta-service form-by-haku-oid-and-id-cache koodisto-cache person-client]
+  [form-by-id-cache
+   koodisto-cache
+   ohjausparametrit-service
+   organization-service
+   person-client
+   tarjonta-service
+   secret]
   (let [[actor-role secret] (match [secret]
                               [{:virkailija s}]
                               [:virkailija s]
@@ -436,18 +447,22 @@
         lang-override              (when secret-expired? (application-store/get-application-language-by-secret secret))
         application-in-processing? (util/application-in-processing? (:application-hakukohde-reviews application))
         inactivated?               (is-inactivated? application)
-        form                       (cond (some? (:haku application)) (hakija-form-service/fetch-form-by-haku-oid-cached
-                                                                       tarjonta-service
-                                                                       form-by-haku-oid-and-id-cache
-                                                                       (:haku application)
-                                                                       application-in-processing?
-                                                                       form-roles)
+        form                       (cond (some? (:haku application)) (hakija-form-service/fetch-form-by-haku-oid
+                                                                      form-by-id-cache
+                                                                      tarjonta-service
+                                                                      koodisto-cache
+                                                                      organization-service
+                                                                      ohjausparametrit-service
+                                                                      (:haku application)
+                                                                      application-in-processing?
+                                                                      form-roles)
                                          (some? (:form application)) (hakija-form-service/fetch-form-by-key
                                                                        (->> application
                                                                             :form
                                                                             form-store/fetch-by-id
                                                                             :key)
                                                                        form-roles
+                                                                       form-by-id-cache
                                                                        koodisto-cache
                                                                        nil
                                                                        application-in-processing?))

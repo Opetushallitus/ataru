@@ -1,13 +1,16 @@
 (ns ataru.tutkintojen-tunnustaminen
   (:require [ataru.cache.cache-service :as cache-service]
+            [ataru.cache.in-memory-cache :as in-memory]
             [ataru.config.core :refer [config]]
             [ataru.db.db :as db]
             [ataru.dob :as dob]
+            [ataru.forms.form-store :as form-store]
             [clojure.data.xml :as xml]
             [clojure.java.jdbc :as jdbc]
             [speclj.core :refer :all]
             [yesql.core :refer [defqueries]])
-  (:import java.io.ByteArrayInputStream))
+  (:import java.io.ByteArrayInputStream
+           java.util.concurrent.TimeUnit))
 
 (defqueries "sql/form-queries.sql")
 (defqueries "sql/application-queries.sql")
@@ -133,6 +136,14 @@
   (reify cache-service/Cache
     (get-from [this key]
       [maatjavaltiot2-024 maatjavaltiot2-028])
+    (get-many-from [this keys])
+    (remove-from [this key])
+    (clear-all [this])))
+
+(def form-by-id-cache-mock
+  (reify cache-service/Cache
+    (get-from [this key]
+      (form-store/fetch-by-id (Integer/valueOf key)))
     (get-many-from [this keys])
     (remove-from [this key])
     (clear-all [this])))
@@ -322,7 +333,8 @@
   (it "should send submit message to ASHA SFTP server"
     (let [r       (tutkintojen-tunnustaminen-submit-job-step
                    {:application-id *application-id*}
-                   {:koodisto-cache koodisto-cache-mock})
+                   {:form-by-id-cache form-by-id-cache-mock
+                    :koodisto-cache koodisto-cache-mock})
           message (xml/parse-str (get-file (str *application-key* "_" *application-id* ".xml")))]
       (should= {:transition {:id :final}} r)
       (should= :message (:tag message))
@@ -353,7 +365,8 @@
   (it "should send edit message to ASHA SFTP server"
     (let [r       (tutkintojen-tunnustaminen-edit-job-step
                    {:application-id *edited-application-id*}
-                   {:koodisto-cache koodisto-cache-mock})
+                   {:form-by-id-cache form-by-id-cache-mock
+                    :koodisto-cache koodisto-cache-mock})
           message (xml/parse-str (get-file (str *application-key* "_" *edited-application-id* ".xml")))]
       (should= {:transition {:id :final}} r)
       (should= :message (:tag message))
@@ -404,6 +417,7 @@
     (should= {:transition {:id :final}}
              (tutkintojen-tunnustaminen-submit-job-step
               {:application-id *in-wrong-form-application-id*}
-              {:koodisto-cache koodisto-cache-mock}))
+              {:form-by-id-cache form-by-id-cache-mock
+               :koodisto-cache koodisto-cache-mock}))
     (should= nil
              (get-file (str *application-key* "_" *in-wrong-form-application-id* ".xml")))))
