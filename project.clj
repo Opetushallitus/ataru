@@ -230,6 +230,17 @@
                               :resource-paths ["dev-resources"]
                               :env            {:dev? "true"}}
 
+             :test           {:dependencies   [[com.cemerick/piggieback "0.2.2"]
+                                               [figwheel-sidecar "0.5.18"]
+                                               [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
+                                               [reloaded.repl "0.2.4"]
+                                               [speclj-junit "0.0.11-20151116.130002-1"]
+                                               [criterium "0.4.4"]]
+                              :source-paths   ["dev/clj" "test/cljc/unit" "spec"]
+                              :resource-paths ["dev-resources"]
+                              :env            {:dev? "true"
+                                               :config "config/test.edn"}}
+
              :virkailija-dev [:dev {:figwheel    {:nrepl-port  3334
                                                   :server-port 3449}
                                     :target-path "target-virkailija"
@@ -237,6 +248,7 @@
                                     :jvm-opts    ^:replace ["-Dapp=virkailija"
                                                             "-Duser.home=."
                                                             "-XX:MaxJavaStackTraceDepth=10"]}]
+
              :hakija-dev     [:dev {:figwheel    {:nrepl-port  3336
                                                   :server-port 3450}
                                     :target-path "target-hakija"
