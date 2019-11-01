@@ -1066,6 +1066,14 @@ WHERE la.key IS NULL\n"
         (= "en" kielikoodi) {:kieliKoodi "en" :kieliTyyppi "english"}
         :else {:kieliKoodi "" :kieliTyyppi ""}))
 
+(defn- get-persons-from-onr [person-service applications]
+  (let [persons (person-service/get-persons person-service (map #(get % :person-oid) applications))]
+  (map #(let [person (second (find persons (get % :person-oid)))]
+          (assoc %
+            :sukunimi       (get person :sukunimi)
+            :etunimet       (get person :etunimet)
+            :henkilotunnus  (get person :hetu))) applications)))
+
 (defn valinta-ui-applications
   [query person-service]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
@@ -1089,16 +1097,12 @@ WHERE la.key IS NULL\n"
          (map #(select-keys % [:oid
                                :haku-oid
                                :person-oid
-                               :henkilotunnus
-                               :sukunimi
-                               :etunimet
                                :asiointikieli
                                :lahiosoite
                                :postinumero
                                :hakukohde
                                :hakutoiveet]))
-         (map #(let [person (person-service/get-person person-service (get % :person-oid))]
-                 (assoc % :sukunimi (get person :sukunimi)  :etunimet (get person :etunimet))))
+         (get-persons-from-onr person-service)
          (map #(assoc % :asiointikieli (convert-asiointikieli (get % :asiointikieli)))))))
 
 (defn- unwrap-person-and-hakemus-oid
