@@ -129,6 +129,9 @@ init-test-db:
 nuke-test-db:
 	APP=virkailija lein with-profile test run -m ataru.fixtures.db.unit-test-db/clear-database
 
+load-test-fixture: nuke-test-db init-test-db
+	APP=virkailija lein with-profile test run -m ataru.fixtures.db.browser-test-db/init-db-fixture
+
 # ----------------
 # Top-level commands (all apps)
 # ----------------
