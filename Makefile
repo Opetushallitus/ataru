@@ -165,10 +165,14 @@ help:
 # Test db management
 # ----------------
 
+compile-test-code:
+	APP=virkailija lein with-profile test less once
+	APP=virkailija lein with-profile test cljsbuild once virkailija-min hakija-min
+
 test-clojurescript:
 	APP=virkailija lein with-profile test doo chrome-headless test once
 
-test-browser:
+test-browser: compile-test-code
 	APP=virkailija lein with-profile test spec -t ui
 
 test-clojure: nuke-test-db init-test-db
