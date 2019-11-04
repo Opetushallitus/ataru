@@ -124,6 +124,18 @@
                       :yksiloity    false
                       :yksiloityVTJ false})
 
+(def fake-parsed-person {:preferred-name "Jyry",
+                         :last-name "Ihminen",
+                         :turvakielto false,
+                         :nationality [],
+                         :ssn "020202A0202",
+                         :first-name "Testi",
+                         :birth-date "02.02.2002",
+                         :oid "1.2.3.4.5.6",
+                         :yksiloity true,
+                         :language "FI",
+                         :gender "2"})
+
 (defrecord FakePersonService []
   component/Lifecycle
   PersonService
@@ -164,7 +176,7 @@
     {})
 
   (parse-person [this application person-from-onr]
-    {}))
+    fake-parsed-person))
 
 (defn new-person-service []
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode
