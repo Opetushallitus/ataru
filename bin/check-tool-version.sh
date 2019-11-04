@@ -35,7 +35,7 @@ vercomp () {
     return 0
 }
 
-VERSION=$($TOOL --version | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')
+VERSION=$($TOOL --version | sed -nEe 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')
 
 vercomp $VERSION $EXPECTED_VERSION
 RESULT=$?
