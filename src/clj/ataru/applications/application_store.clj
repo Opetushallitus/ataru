@@ -24,7 +24,8 @@
             [clojure.java.jdbc :as jdbc]
             [schema.core :as s]
             [taoensso.timbre :refer [info warn]]
-            [yesql.core :refer [defqueries]])
+            [yesql.core :refer [defqueries]]
+            [taoensso.timbre :as log])
   (:import [java.time
             LocalDateTime
             ZoneId]
@@ -1066,13 +1067,13 @@ WHERE la.key IS NULL\n"
         (= "en" kielikoodi) {:kieliKoodi "en" :kieliTyyppi "english"}
         :else {:kieliKoodi "" :kieliTyyppi ""}))
 
-(defn- get-persons-from-onr [person-service applications]
+(defn- enrich-persons-from-onr [person-service applications]
   (let [persons (person-service/get-persons person-service (map #(get % :person-oid) applications))]
-  (map #(let [person (second (find persons (get % :person-oid)))]
-          (assoc %
-            :sukunimi       (get person :sukunimi)
-            :etunimet       (get person :etunimet)
-            :henkilotunnus  (get person :hetu))) applications)))
+        (map #(let [person (second (find persons (get % :person-oid)))
+                    parsed-person (person-service/parse-person person-service % person)]
+                (assoc % :sukunimi      (get parsed-person :last-name)
+                         :etunimet      (get parsed-person :first-name)
+                         :henkilotunnus (get parsed-person :ssn))) applications)))
 
 (defn valinta-ui-applications
   [query person-service]
@@ -1102,7 +1103,7 @@ WHERE la.key IS NULL\n"
                                :postinumero
                                :hakukohde
                                :hakutoiveet]))
-         (get-persons-from-onr person-service)
+         (enrich-persons-from-onr person-service)
          (map #(assoc % :asiointikieli (convert-asiointikieli (get % :asiointikieli)))))))
 
 (defn- unwrap-person-and-hakemus-oid

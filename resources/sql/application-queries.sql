@@ -715,6 +715,7 @@ SELECT
   haku AS haku_oid,
   person_oid AS person_oid,
   hakukohde AS hakukohde,
+  (a.content->'answers') AS answers,
   (SELECT answers->>'value'
    FROM jsonb_array_elements(a.content->'answers') AS answers
    WHERE answers->>'key' = 'address') AS lahiosoite,
