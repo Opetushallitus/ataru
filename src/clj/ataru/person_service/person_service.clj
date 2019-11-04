@@ -124,12 +124,12 @@
                       :yksiloity    false
                       :yksiloityVTJ false})
 
-(def fake-parsed-person {:preferred-name "Jyry",
-                         :last-name "Ihminen",
+(def fake-parsed-person {:preferred-name "Etunimi",
+                         :last-name "Sukunimi",
                          :turvakielto false,
                          :nationality [],
                          :ssn "020202A0202",
-                         :first-name "Testi",
+                         :first-name "Etunimi Tokanimi",
                          :birth-date "02.02.2002",
                          :oid "1.2.3.4.5.6",
                          :yksiloity true,
