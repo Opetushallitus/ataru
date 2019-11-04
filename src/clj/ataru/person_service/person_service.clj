@@ -127,7 +127,7 @@
 (def fake-parsed-person {:preferred-name "Etunimi",
                          :last-name "Sukunimi",
                          :turvakielto false,
-                         :nationality [],
+                         :nationality [["246"]],
                          :ssn "020202A0202",
                          :first-name "Etunimi Tokanimi",
                          :birth-date "02.02.2002",
