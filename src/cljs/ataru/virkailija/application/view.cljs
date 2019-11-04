@@ -1196,10 +1196,10 @@
 
 (defn- application-hakukohde-review-inputs
   [review-types]
-  (into [:div.application-handling__review-hakukohde-inputs]
-        (mapv (fn [[kw label states]]
-                [application-hakukohde-review-input label kw states])
-              review-types)))
+  (->> review-types
+       (map (fn [[kw label states]]
+              [application-hakukohde-review-input label kw states]))
+       (into [:div.application-handling__review-hakukohde-inputs])))
 
 (defn- name-and-initials [{:keys [first-name last-name]}]
   (if (and first-name last-name)
