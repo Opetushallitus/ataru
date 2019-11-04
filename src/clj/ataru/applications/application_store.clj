@@ -24,8 +24,7 @@
             [clojure.java.jdbc :as jdbc]
             [schema.core :as s]
             [taoensso.timbre :refer [info warn]]
-            [yesql.core :refer [defqueries]]
-            [taoensso.timbre :as log])
+            [yesql.core :refer [defqueries]])
   (:import [java.time
             LocalDateTime
             ZoneId]

@@ -6,7 +6,6 @@
   },
   "license": "EUPL-1.1",
   "devDependencies": {
-    "babel-eslint": "^10.0.3",
     "chai": "^4.1.2",
     "eslint": "^6.3.0",
     "eslint-config-prettier": "^6.2.0",
