@@ -6,7 +6,8 @@
             [com.stuartsierra.component :as component]
             [ataru.config.core :refer [config]]
             [ataru.cache.cache-service :as cache]
-            [ataru.util :as util]))
+            [ataru.util :as util]
+            [ataru.person-service.birth-date-converter :as bd-converter]))
 
 (defprotocol PersonService
   (create-or-find-person [this person]
@@ -18,7 +19,15 @@
   (get-person [this oid]
     "Find a person from ONR.")
 
-  (linked-oids [this oids]))
+  (linked-oids [this oids])
+
+  (person-info-from-application [this application])
+
+  (parse-onr-aidinkieli [this person])
+
+  (person-info-from-onr-person [this person])
+
+  (parse-person [this application person-from-onr]))
 
 (defrecord IntegratedPersonService [henkilo-cache
                                     oppijanumerorekisteri-cas-client]
@@ -38,7 +47,61 @@
   (get-person [_ oid] (cache/get-from henkilo-cache oid))
 
   (linked-oids [_ oids]
-    (person-client/linked-oids oppijanumerorekisteri-cas-client oids)))
+    (person-client/linked-oids oppijanumerorekisteri-cas-client oids))
+
+  (person-info-from-application [_ application]
+    (let [answers (util/answers-by-key (:answers application))]
+      (merge {:first-name     (-> answers :first-name :value)
+              :preferred-name (-> answers :preferred-name :value)
+              :last-name      (-> answers :last-name :value)
+              :birth-date     (-> answers :birth-date :value)
+              :nationality    (-> answers :nationality :value)}
+             (when-not (clojure.string/blank? (-> answers :ssn :value))
+               {:ssn (-> answers :ssn :value)})
+             (when-not (clojure.string/blank? (-> answers :gender :value))
+               {:gender (-> answers :gender :value)})
+             (when-not (clojure.string/blank? (-> answers :language :value))
+               {:language (-> answers :language :value)}))))
+
+  (parse-onr-aidinkieli [_ person]
+    (try
+      (-> person :aidinkieli :kieliKoodi clojure.string/upper-case)
+      (catch Exception e
+        (throw (new RuntimeException
+                    (str "Could not parse aidinkieli "
+                         (:aidinkieli person)
+                         "of person "
+                         (:oidHenkilo person))
+                    e)))))
+
+  (person-info-from-onr-person [person-service person]
+    (merge {:first-name     (:etunimet person)
+            :preferred-name (:kutsumanimi person)
+            :last-name      (:sukunimi person)
+            :nationality    (->> (-> person :kansalaisuus)
+                                 (mapv #(vector (get % :kansalaisuusKoodi "999"))))}
+           (let [birth-date (:syntymaaika person)]
+             (when-not (clojure.string/blank? birth-date)
+               {:birth-date (bd-converter/convert-to-finnish-format birth-date)}))
+           (when-not (clojure.string/blank? (:hetu person))
+             {:ssn (:hetu person)})
+           (when-not (clojure.string/blank? (-> person :sukupuoli))
+             {:gender (-> person :sukupuoli)})
+           (let [aidinkieli (parse-onr-aidinkieli person-service person)]
+             (when-not (clojure.string/blank? aidinkieli)
+               {:language aidinkieli}))))
+
+  (parse-person [person-service application person-from-onr]
+    (let [yksiloity   (or (-> person-from-onr :yksiloity)
+                          (-> person-from-onr :yksiloityVTJ))
+          person-info (if yksiloity
+                        (person-info-from-onr-person person-service person-from-onr)
+                        (person-info-from-application person-service application))]
+      (merge person-info
+             (when (some? (:person-oid application))
+               {:oid         (:person-oid application)
+                :turvakielto (-> person-from-onr :turvakielto boolean)
+                :yksiloity   (boolean yksiloity)})))))
 
 (def fake-person-from-creation {:personOid    "1.2.3.4.5.6"
                   :firstName    "Foo"
@@ -89,6 +152,18 @@
              {:oidHenkilo oid})))
 
   (linked-oids [this oids]
+    {})
+
+  (person-info-from-application [this application]
+    {})
+
+  (parse-onr-aidinkieli [this person]
+    {})
+
+  (person-info-from-onr-person [this person]
+    {})
+
+  (parse-person [this application person-from-onr]
     {}))
 
 (defn new-person-service []
