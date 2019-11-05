@@ -66,7 +66,8 @@
    :prioritize-hakukohteet (:usePriority haku)
    :yhteishaku             (yhteishaku? haku)
    :hakuajat               (mapv parse-hakuaika (:hakuaikas haku))
-   :hakukohteet            (:hakukohdeOids haku)})
+   :hakukohteet            (:hakukohdeOids haku)
+   :sijoittelu             (:sijoittelu haku)})
 
 (defn- parse-search-result
   [search-result]
