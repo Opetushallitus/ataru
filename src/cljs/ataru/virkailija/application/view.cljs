@@ -2,6 +2,7 @@
   (:require [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]
             [ataru.cljs-util :as cljs-util :refer [get-virkailija-translation get-virkailija-label]]
+            [ataru.feature-config :as fc]
             [ataru.translations.texts :refer [state-translations general-texts]]
             [ataru.util :as util]
             [ataru.virkailija.application.application-search-control :refer [application-search-control]]
@@ -11,6 +12,7 @@
             [ataru.virkailija.application.attachments.virkailija-attachment-handlers]
             [ataru.virkailija.application.attachments.virkailija-attachment-subs]
             [ataru.virkailija.application.handlers]
+            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-view :as kv]
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :as t]
             [ataru.virkailija.temporal :as temporal]
@@ -1196,10 +1198,17 @@
 
 (defn- application-hakukohde-review-inputs
   [review-types]
-  (->> review-types
-       (map (fn [[kw label states]]
-              [application-hakukohde-review-input label kw states]))
-       (into [:div.application-handling__review-hakukohde-inputs])))
+  (let [kevyt-valinta-enabled?            (fc/feature-enabled? :kevyt-valinta)
+        hakukohde-review-input-components (->> review-types
+                                               (filter (fn [[kw]]
+                                                         (or (not kevyt-valinta-enabled?)
+                                                             (not= kw :selection-state))))
+                                               (map (fn [[kw label states]]
+                                                      [application-hakukohde-review-input label kw states]))
+                                               (into [:div.application-handling__review-hakukohde-inputs]))]
+    (cond-> hakukohde-review-input-components
+            kevyt-valinta-enabled?
+            (conj [kv/kevyt-valinta]))))
 
 (defn- name-and-initials [{:keys [first-name last-name]}]
   (if (and first-name last-name)
