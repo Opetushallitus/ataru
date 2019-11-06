@@ -8,6 +8,7 @@
    [ataru.organization-service.session-organizations :as session-orgs]
    [ataru.applications.application-store :as application-store]
    [ataru.forms.form-store :as form-store]
+   [ataru.hakukohde.hakukohde-service :as hakukohde-service]
    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
    [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
    [clj-time.core :as t]
@@ -129,7 +130,7 @@
                             (map tarjonta-service/parse-haku)
                             (util/group-by-first :oid))
      :hakukohteet      (->> (keys tarjonta-haut)
-                            (mapcat #(tarjonta/hakukohde-search tarjonta-service % nil))
+                            (mapcat #(hakukohde-service/get-hakukohteet tarjonta-service % nil))
                             (util/group-by-first :oid))
      :hakukohderyhmat  (util/group-by-first
                          :oid
