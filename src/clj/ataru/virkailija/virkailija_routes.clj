@@ -696,10 +696,11 @@
                :haut             {haku-oid (tarjonta-service/parse-haku
                                             (tarjonta/get-haku tarjonta-service
                                                                haku-oid))}
-               :hakukohteet      (util/group-by-first :oid (tarjonta/hakukohde-search
-                                                            tarjonta-service
-                                                            haku-oid
-                                                            nil))
+               :hakukohteet      (->> (tarjonta/hakukohde-search
+                                        tarjonta-service
+                                        haku-oid
+                                        nil)
+                                      (util/group-by-first :oid))
                :hakukohderyhmat  (util/group-by-first :oid (organization-service/get-hakukohde-groups organization-service))}
               response/ok
               (response/header "Cache-Control" "public, max-age=300"))
