@@ -119,6 +119,7 @@
                             :organization-service
                             :virkailija-tarjonta-service
                             :tarjonta-service
+                            :valintalaskentakoostepalvelu-service
                             :job-runner
                             :ohjausparametrit-service
                             :person-service

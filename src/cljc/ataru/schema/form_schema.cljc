@@ -761,3 +761,7 @@
 (s/defschema ApplicationQueryResponse
   {:sort         Sort
    :applications [ApplicationInfo]})
+
+(s/defschema KayttaaValintalaskentaaResponse
+  {:hakukohde-oid   s/Str
+   :valintalaskenta s/Bool})

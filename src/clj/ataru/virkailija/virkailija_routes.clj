@@ -45,6 +45,7 @@
             [ataru.organization-service.organization-selection :as organization-selection]
             [ataru.organization-service.organization-client :as organization-client]
             [ataru.organization-service.organization-service :as organization-service]
+            [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu]
             [cheshire.core :as json]
             [cheshire.generate :refer [add-encoder]]
             [clojure.core.match :refer [match]]
@@ -184,6 +185,7 @@
 
 (defn api-routes [{:keys [organization-service
                           tarjonta-service
+                          valintalaskentakoostepalvelu-service
                           job-runner
                           ohjausparametrit-service
                           virkailija-tarjonta-service
@@ -705,6 +707,17 @@
               response/ok
               (response/header "Cache-Control" "public, max-age=300"))
           (response/bad-request))))
+
+    (api/context "/valintalaskentakoostepalvelu" []
+      :tags ["valintalaskentakoostepalvelu-api"]
+      (api/GET "/valintaperusteet/hakukohde/:hakukohde-oid/kayttaa-valintalaskentaa" {session :session}
+        :path-params [hakukohde-oid :- s/Str]
+        :return ataru-schema/KayttaaValintalaskentaaResponse
+        (let [valintalaskenta-enabled? (:kayttaaValintalaskentaa
+                                         (valintalaskentakoostepalvelu/hakukohde-uses-valintalaskenta? valintalaskentakoostepalvelu-service
+                                                                                                       hakukohde-oid))]
+          (response/ok {:hakukohde-oid   hakukohde-oid
+                        :valintalaskenta valintalaskenta-enabled?}))))
 
     (api/context "/koodisto" []
       :tags ["koodisto-api"]
