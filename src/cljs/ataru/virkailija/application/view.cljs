@@ -11,6 +11,7 @@
             [ataru.virkailija.application.attachments.liitepyynto-information-request-view :as lir]
             [ataru.virkailija.application.attachments.virkailija-attachment-handlers]
             [ataru.virkailija.application.attachments.virkailija-attachment-subs]
+            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-handlers]
             [ataru.virkailija.application.handlers]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-view :as kv]
             [ataru.virkailija.routes :as routes]
@@ -1199,18 +1200,26 @@
 (defn- application-hakukohde-review-inputs
   [review-types]
   (let [haku-oid                          @(subscribe [:state-query [:application :selected-application-and-form :application :haku]])
-        haku-uses-sijoittelu?             @(subscribe [:state-query [:haut haku-oid :sijoittelu]])
-        kevyt-valinta-enabled?            (and (fc/feature-enabled? :kevyt-valinta)
-                                               (not haku-uses-sijoittelu?))
+        valintalaskenta-in-hakukohteet    (->> @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+                                               (map (fn [hakukohde-oid]
+                                                      @(subscribe [:state-query [:application :valintalaskentakoostepalvelu hakukohde-oid :valintalaskenta]]))))
+        sijoittelu?                       @(subscribe [:state-query [:haut haku-oid :sijoittelu]])
+        kevyt-valinta-feature-enabled?    (fc/feature-enabled? :kevyt-valinta)
+        display-kevyt-valinta?            (and (not sijoittelu?)
+                                               ;; false?, koska nil tarkoittaa ettei tietoa ole vielä ladattu backendiltä ja nil? palauttaisi väärän positiivisen tiedon
+                                               (every? false? valintalaskenta-in-hakukohteet))
+        show-selection-state-dropdown?    (and kevyt-valinta-feature-enabled?
+                                               (every? true? valintalaskenta-in-hakukohteet))
         hakukohde-review-input-components (->> review-types
                                                (filter (fn [[kw]]
-                                                         (or (not kevyt-valinta-enabled?)
-                                                             (not= kw :selection-state))))
+                                                         (or (not= kw :selection-state)
+                                                             show-selection-state-dropdown?)))
                                                (map (fn [[kw label states]]
                                                       [application-hakukohde-review-input label kw states]))
                                                (into [:div.application-handling__review-hakukohde-inputs]))]
     (cond-> hakukohde-review-input-components
-            kevyt-valinta-enabled?
+            (and kevyt-valinta-feature-enabled?
+                 display-kevyt-valinta?)
             (conj [kv/kevyt-valinta]))))
 
 (defn- name-and-initials [{:keys [first-name last-name]}]
