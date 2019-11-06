@@ -4,10 +4,14 @@
             [ataru.aws.sns :as sns]
             [ataru.aws.sqs :as sqs]
             [ataru.cas.client :as cas]
+            [ataru.cache.redis-cache :as redis-cache]
+            [ataru.cache.two-layer-cache :as two-layer-cache]
             [ataru.http.server :as server]
             [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.organization-service.organization-service :as organization-service]
+            [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-client :as koostepalvelu-client]
+            [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-service :as koostepalvelu-service]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.virkailija.virkailija-routes :as virkailija-routes]
             [ataru.cache.caches :refer [caches]]
@@ -21,7 +25,8 @@
             [ataru.person-service.person-integration :as person-integration]
             [ataru.suoritus.suoritus-service :as suoritus-service]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service])
-  (:import java.time.Duration))
+  (:import java.time.Duration
+           [java.util.concurrent TimeUnit]))
 
 (defn new-system
   ([]
@@ -46,6 +51,35 @@
                         :hakukohde-cache
                         :haku-cache
                         :hakukohde-search-cache])
+
+    :valintalaskentakoostepalvelu-hakukohde-valintalaskenta-redis-cache
+    (component/using
+      (redis-cache/map->Cache
+        {:name          "valintalaskentakoostepalvelu-hakukohde-valintalaskenta"
+         :ttl           [3 TimeUnit/DAYS]
+         :refresh-after [1 TimeUnit/DAYS]
+         :lock-timeout  [10000 TimeUnit/MILLISECONDS]})
+      {:redis  :redis
+       :loader :valintalaskentakoostepalvelu-hakukohde-valintalaskenta-cache-loader})
+
+    :valintalaskentakoostepalvelu-hakukohde-valintalaskenta-cache
+    (component/using
+      (two-layer-cache/map->Cache
+        {:name                "in-memory-valintalaskentakoostepalvelu-hakukohde-valintalaskenta"
+         :size                200000
+         :expire-after-access [3 TimeUnit/DAYS]
+         :refresh-after       [1 TimeUnit/SECONDS]})
+      {:redis-cache :valintalaskentakoostepalvelu-hakukohde-valintalaskenta-redis-cache})
+
+    :valintalaskentakoostepalvelu-cas-client (cas/new-client "/valintalaskentakoostepalvelu" "j_spring_cas_security_check" "JSESSIONID")
+
+    :valintalaskentakoostepalvelu-hakukohde-valintalaskenta-cache-loader (component/using
+                                                                           (koostepalvelu-client/map->HakukohdeValintalaskentaCacheLoader {})
+                                                                           [:valintalaskentakoostepalvelu-cas-client])
+
+    :valintalaskentakoostepalvelu-service (component/using
+                                            (koostepalvelu-service/new-valintalaskentakoostepalvelu-service)
+                                            [:valintalaskentakoostepalvelu-hakukohde-valintalaskenta-cache])
 
     :ohjausparametrit-service (component/using
                                (ohjausparametrit-service/new-ohjausparametrit-service)
