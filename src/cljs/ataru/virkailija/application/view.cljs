@@ -1198,7 +1198,10 @@
 
 (defn- application-hakukohde-review-inputs
   [review-types]
-  (let [kevyt-valinta-enabled?            (fc/feature-enabled? :kevyt-valinta)
+  (let [haku-oid                          @(subscribe [:state-query [:application :selected-application-and-form :application :haku]])
+        haku-uses-sijoittelu?             @(subscribe [:state-query [:haut haku-oid :sijoittelu]])
+        kevyt-valinta-enabled?            (and (fc/feature-enabled? :kevyt-valinta)
+                                               (not haku-uses-sijoittelu?))
         hakukohde-review-input-components (->> review-types
                                                (filter (fn [[kw]]
                                                          (or (not kevyt-valinta-enabled?)
