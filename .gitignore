@@ -28,3 +28,4 @@ config/ui-test.edn
 npm-debug.log*
 package-lock.json
 *.pid
+.gradle
