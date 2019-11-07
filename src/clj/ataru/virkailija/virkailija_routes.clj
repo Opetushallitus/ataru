@@ -713,6 +713,7 @@
       (api/GET "/valintaperusteet/hakukohde/:hakukohde-oid/kayttaa-valintalaskentaa" {session :session}
         :path-params [hakukohde-oid :- s/Str]
         :return ataru-schema/KayttaaValintalaskentaaResponse
+        :summary "Tarkistaa valintalaskentakoostepalvelusta käyttääkö annettu hakukohde valintalaskentaa"
         (let [valintalaskenta-enabled? (:kayttaaValintalaskentaa
                                          (valintalaskentakoostepalvelu/hakukohde-uses-valintalaskenta? valintalaskentakoostepalvelu-service
                                                                                                        hakukohde-oid))]
