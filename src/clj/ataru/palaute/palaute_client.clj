@@ -28,5 +28,5 @@
                           (build-palaute-request)
                           (json/generate-string)))
     (catch Exception e
-      (log/warn (str "Feedback didn't go through: " (str (type e)) (str e) (.getMessage e))))))
+      (log/warn e "Feedback didn't go through"))))
 

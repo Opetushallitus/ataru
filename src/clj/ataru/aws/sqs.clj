@@ -54,9 +54,6 @@
   {:pre [(some? amazon-sqs)
          (some? queue-url)
          (some? message-body)]}
-  (log/info (str "Sending feedback with:" (str (type amazon-sqs)) (str queue-url)))
-  (.sendMessage amazon-sqs
-                (doto
-                  (-> (new SendMessageRequest)
-                      (.withQueueUrl queue-url))
-                  (.setMessageBody (str message-body)))))
+  (.sendMessage amazon-sqs (-> (new SendMessageRequest)
+                               (.withQueueUrl queue-url)
+                               (.withMessageBody (str message-body)))))
