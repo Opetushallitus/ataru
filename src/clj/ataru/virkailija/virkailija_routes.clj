@@ -22,7 +22,6 @@
             [ataru.forms.form-store :as form-store]
             [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
             [ataru.haku.haku-service :as haku-service]
-            [ataru.hakukohde.hakukohde-service :as hakukohde-service]
             [ataru.information-request.information-request-service :as information-request]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.middleware.cache-control :as cache-control]
@@ -700,9 +699,10 @@
                                             (tarjonta/get-haku tarjonta-service
                                                                haku-oid))}
                :hakukohteet      (util/group-by-first :oid
-                                                      (hakukohde-service/get-hakukohteet tarjonta-service
-                                                                                         haku-oid
-                                                                                         nil))
+                                                      (tarjonta/hakukohde-search
+                                                        tarjonta-service
+                                                        haku-oid
+                                                        nil))
                :hakukohderyhmat  (util/group-by-first :oid (organization-service/get-hakukohde-groups organization-service))}
               response/ok
               (response/header "Cache-Control" "public, max-age=300"))
