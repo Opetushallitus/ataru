@@ -33,7 +33,7 @@
                  :applicant {:service_url "{{ataru_applicant_service_url}}"}
                  :virkailija {:service_url "https://{{host_virkailija}}/lomake-editori/"}
                  :environment-name "{{ataru_environment_name}}"
-                 :features {}
+                 :features {:kevyt-valinta {{ataru_kevyt_valinta_enabled | default('false')}}}
                  :attachment-modify-grace-period-days 14
                  :attachment-file-max-size-bytes {{ataru_attachment_file_max_size_bytes}}
                  :attachment-file-part-max-size-bytes {{ataru_attachment_file_part_max_size_bytes}}
