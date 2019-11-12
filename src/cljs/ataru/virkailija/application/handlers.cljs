@@ -791,18 +791,14 @@
     {:db       db
      :dispatch dispatch-vec}))
 
-(reg-event-fx
+(reg-event-db
   :application/select-review-hakukohde
-  (fn [{:keys [db]} [_ selected-hakukohde-oid]]
-    (let [db         (update-in db [:application :selected-review-hakukohde-oids]
-                                (fn [hakukohde-oids]
-                                  (if (contains? (set hakukohde-oids) selected-hakukohde-oid)
-                                    (filter #(not= selected-hakukohde-oid %) hakukohde-oids)
-                                    (cons selected-hakukohde-oid hakukohde-oids))))
-          dispatches (valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec db)]
-      (cond-> {:db db}
-              (not-empty dispatches)
-              (assoc :dispatch-n dispatches)))))
+  (fn [db [_ selected-hakukohde-oid]]
+    (update-in db [:application :selected-review-hakukohde-oids]
+               (fn [hakukohde-oids]
+                 (if (contains? (set hakukohde-oids) selected-hakukohde-oid)
+                   (filter #(not= selected-hakukohde-oid %) hakukohde-oids)
+                   (cons selected-hakukohde-oid hakukohde-oids))))))
 
 (reg-event-db
   :application/set-mass-information-request-form-state
