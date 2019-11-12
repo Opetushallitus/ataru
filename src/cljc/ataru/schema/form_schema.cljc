@@ -586,7 +586,9 @@
                          "eligibility-state-automatically-changed"
                          "payment-obligation-automatically-changed"
                          "attachment-review-state-change"
-                         "modification-link-sent"))
+                         "modification-link-sent"
+                         "field-deadline-set"
+                         "field-deadline-unset"))
 
 (s/defschema Event
   {:event-type                                event-types
@@ -615,6 +617,10 @@
 
 (s/defschema AttachmentReviews
   {s/Keyword {s/Keyword (apply s/enum review-states/attachment-review-type-names)}})
+
+(s/defschema FieldDeadline
+  {:field-id s/Str
+   :deadline org.joda.time.DateTime})
 
 (s/defschema ReviewNote
   {:id                                        s/Int

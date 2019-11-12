@@ -1,5 +1,6 @@
 (ns ataru.hakija.hakija-routes-spec
-  (:require [ataru.util :as util]
+  (:require [ataru.applications.field-deadline :as field-deadline]
+            [ataru.util :as util]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.application-store :as store]
             [ataru.background-job.job :as job]
@@ -29,7 +30,8 @@
             [ataru.fixtures.form :as form-fixtures]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
             [ataru.person-service.person-service :as person-service])
-  (:import java.util.concurrent.TimeUnit))
+  (:import java.util.concurrent.TimeUnit
+           org.joda.time.DateTime))
 
 (sql/defqueries "sql/application-queries.sql")
 
@@ -417,7 +419,33 @@
     (it "should get application with hakuaika ended but hakukierros ongoing"
       (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing]
         (with-get-response "12345" resp
-          (should= 200 (:status resp))))))
+          (should= 200 (:status resp)))))
+
+    (it "should get application with hakuaika ended but field deadline extended"
+      (with-redefs [hakuaika/get-hakuaika-info         hakuaika-ended-grace-period-passed-hakukierros-ongoing
+                    field-deadline/get-field-deadlines (fn [_]
+                                                         [{:field-id      "b0839467-a6e8-4294-b5cc-830756bbda8a"
+                                                           :deadline      (.plusDays (DateTime/now) 1)
+                                                           :last-modified (DateTime/now)}])]
+        (with-get-response "12345" resp
+          (should= 200 (:status resp))
+          (should-not (->> (get-in resp [:body :form :content])
+                           util/flatten-form-fields
+                           (some #(when (= "b0839467-a6e8-4294-b5cc-830756bbda8a" (:id %)) %))
+                           :cannot-edit)))))
+
+    (it "should get application with hakuaika ended and field deadline passed"
+      (with-redefs [hakuaika/get-hakuaika-info         hakuaika-ended-grace-period-passed-hakukierros-ongoing
+                    field-deadline/get-field-deadlines (fn [_]
+                                                         [{:field-id      "b0839467-a6e8-4294-b5cc-830756bbda8a"
+                                                           :deadline      (.minusDays (DateTime/now) 1)
+                                                           :last-modified (DateTime/now)}])]
+        (with-get-response "12345" resp
+          (should= 200 (:status resp))
+          (should (->> (get-in resp [:body :form :content])
+                       util/flatten-form-fields
+                       (some #(when (= "b0839467-a6e8-4294-b5cc-830756bbda8a" (:id %)) %))
+                       :cannot-edit))))))
 
   (describe "PUT application"
     (around [spec]
@@ -522,9 +550,33 @@
 
     (it "should disallow application edit after grace period to attachments"
       (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing
-                    crypto/url-part (constantly "0000000022")]
-        (with-response :put resp (merge application-fixtures/person-info-form-application-for-hakukohde {:secret "0000000021"})
-          (should= 400 (:status resp))))))
+                    crypto/url-part (constantly "0000000023")]
+        (with-response :put resp (merge application-fixtures/person-info-form-application-for-hakukohde {:secret "0000000022"})
+          (should= 400 (:status resp)))))
+
+    (it "should disallow application edit after grace period to attachment with extended field deadline that has passed"
+      (with-redefs [hakuaika/get-hakuaika-info         hakuaika-ended-grace-period-passed-hakukierros-ongoing
+                    field-deadline/get-field-deadlines (fn [_]
+                                                         [{:field-id      "164954b5-7b23-4774-bd44-dee14071316b"
+                                                           :deadline      (.minusDays (DateTime/now) 1)
+                                                           :last-modified (DateTime/now)}])
+                    crypto/url-part                    (constantly "0000000023")]
+        (with-response :put resp (merge application-fixtures/person-info-form-application-for-hakukohde {:secret "0000000022"})
+          (should= 400 (:status resp)))))
+
+    (it "should allow application edit after grace period to attachment with extended field deadline"
+      (with-redefs [hakuaika/get-hakuaika-info         hakuaika-ended-grace-period-passed-hakukierros-ongoing
+                    field-deadline/get-field-deadlines (fn [_]
+                                                         [{:field-id      "164954b5-7b23-4774-bd44-dee14071316b"
+                                                           :deadline      (.plusDays (DateTime/now) 1)
+                                                           :last-modified (DateTime/now)}])
+                    crypto/url-part                    (constantly "0000000023")]
+        (with-response :put resp (merge application-fixtures/person-info-form-application-for-hakukohde {:secret "0000000022"})
+          (should= 200 (:status resp))
+          (let [id          (-> resp :body :id)
+                application (get-application-by-id id)]
+            (should= ["57af9386-d80c-4321-ab4a-d53619c14a74"]
+                     (get-answer application "164954b5-7b23-4774-bd44-dee14071316b")))))))
 
   (describe "PUT application with empty answers"
     (it "should work"

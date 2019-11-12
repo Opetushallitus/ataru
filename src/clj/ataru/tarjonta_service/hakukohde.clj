@@ -67,9 +67,12 @@
       (assoc-in form [:content hakukohteet-field-idx] updated-field))))
 
 (defn- populate-attachment-deadline
-  [now hakuajat field]
+  [now hakuajat field-deadlines field]
   (if-let [label (and (= (:fieldType field) "attachment")
-                      (or (some-> (-> field :params :deadline)
+                      (or (some-> (get field-deadlines (:id field))
+                                  :deadline
+                                  hakuaika/date-time->localized-date-time)
+                          (some-> (-> field :params :deadline)
                                   (hakuaika/str->date-time)
                                   (hakuaika/date-time->localized-date-time))
                           (some-> (hakuaika/select-hakuaika-for-field now field hakuajat)
@@ -78,11 +81,12 @@
     (assoc-in field [:params :deadline-label] label)
     field))
 
-(defn populate-attachment-deadlines [form now hakuajat]
+(defn populate-attachment-deadlines [form now hakuajat field-deadlines]
   (update form :content (partial util/map-form-fields
                                  (partial populate-attachment-deadline
                                           now
-                                          hakuajat))))
+                                          hakuajat
+                                          field-deadlines))))
 
 (defn populate-hakukohde-answer-options [form tarjonta-info]
   ; walking through entire content is very slow for large forms, so try a naive optimization first
