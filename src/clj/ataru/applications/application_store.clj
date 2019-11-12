@@ -1103,8 +1103,10 @@ WHERE la.key IS NULL\n"
                                :lahiosoite
                                :postinumero
                                :hakukohde
-                               :hakutoiveet]))
+                               :hakutoiveet
+                               :answers]))
          (enrich-persons-from-onr person-service)
+         (map #(dissoc % :answers))
          (map #(assoc % :asiointikieli (convert-asiointikieli (get % :asiointikieli)))))))
 
 (defn- unwrap-person-and-hakemus-oid
