@@ -78,7 +78,7 @@
   [application person-client]
   (let [person-from-onr (some->> (:person-oid application)
                                  (person-service/get-person person-client))]
-    (person-service/parse-person person-client application person-from-onr)))
+    (person-service/parse-person application person-from-onr)))
 
 (defn- populate-form-fields
   [form koodisto-cache tarjonta-info]
@@ -357,7 +357,7 @@
                                                     (assoc application
                                                            :person (->> (:person-oid application)
                                                                         (get onr-persons)
-                                                                        (person-service/parse-person person-service application))))
+                                                                        (person-service/parse-person application))))
                                                 applications)
           skip-answers-to-preserve-memory? (if included-ids
                                              (<= 200000 (count applications))
