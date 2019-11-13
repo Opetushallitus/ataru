@@ -5,6 +5,7 @@
 (defn- valintalaskenta-in-hakukohteet
   [db]
   (->> (get-in db [:application :selected-review-hakukohde-oids])
+       (remove #(= "form" %))
        (map #(get-in db [:application :valintalaskentakoostepalvelu % :valintalaskenta]))))
 
 (re-frame/reg-sub
