@@ -74,6 +74,4 @@
 
 (defn get-status []
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-    (reduce #(assoc %1 (:job_type %2) (dissoc %2 :job_type))
-            {}
-            (yesql-status {} {:connection connection}))))
+    (:status (first (yesql-status {} {:connection connection})))))
