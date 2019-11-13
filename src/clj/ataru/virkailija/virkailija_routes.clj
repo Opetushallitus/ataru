@@ -71,7 +71,7 @@
             [schema.core :as s]
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [spy debug error warn info]]
-            [ataru.organization-service.user-rights :as user-rights]
+            [ataru.user-rights :as user-rights]
             [ataru.util :as util])
   (:import java.util.Locale
            java.time.ZonedDateTime

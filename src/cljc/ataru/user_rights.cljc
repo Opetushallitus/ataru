@@ -1,6 +1,5 @@
-(ns ataru.organization-service.user-rights
-  (:require [ataru.config.core :refer [config]]
-            [schema.core :as s]))
+(ns ataru.user-rights
+  (:require [schema.core :as s]))
 
 (def ^:private
   oikeus-to-right

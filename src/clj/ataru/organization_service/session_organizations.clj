@@ -2,7 +2,7 @@
   (:require
     [schema.core :as s]
     [ataru.organization-service.organization-client :as organization-client]
-    [ataru.organization-service.user-rights :refer [Right]]
+    [ataru.user-rights :refer [Right]]
     [ataru.organization-service.organization-service :as organization-service]))
 
 (defn- right-organizations

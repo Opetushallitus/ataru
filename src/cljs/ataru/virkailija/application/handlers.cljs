@@ -496,6 +496,14 @@
         answer-map (into {} (map (fn [answer] [(keyword (:key answer)) answer])) answers)]
     (assoc application :answers answer-map)))
 
+(defn- parse-rights-by-hakukohde
+  [application]
+  (assoc application
+         :rights-by-hakukohde
+         (into {} (map (fn [[key rights]]
+                         [(name key) (set (map keyword rights))])
+                       (:rights-by-hakukohde application)))))
+
 (defn- review-notes-by-hakukohde-and-state-name
   [review-notes]
   (let [notes-by-hakukohde (->> review-notes
@@ -524,7 +532,9 @@
   (-> db
       (assoc-in [:application :selected-application-and-form]
         {:form        form
-         :application (answers-indexed application)})
+         :application (-> application
+                          answers-indexed
+                          parse-rights-by-hakukohde)})
       (assoc-in [:application :latest-form] latest-form)
       (assoc-in [:application :events] events)
       (assoc-in [:application :review] review)

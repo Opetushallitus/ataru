@@ -2,6 +2,7 @@
   (:require [ataru.application.review-states :as review-states]
             [ataru.application.field-types :refer [form-fields]]
             [ataru.hakija.application-validators :as validator]
+            [ataru.user-rights :as user-rights]
             [schema.coerce :as c]
             [schema.core :as s]
             [schema.experimental.abstract-map :as abstract-map]
@@ -463,6 +464,7 @@
   (-> Application
       (st/dissoc :person-oid)
       (st/assoc :can-edit? s/Bool)
+      (st/assoc :rights-by-hakukohde {s/Str [user-rights/Right]})
       (st/assoc :person Person)))
 
 (s/defschema ApplicationWithPersonAndForm
