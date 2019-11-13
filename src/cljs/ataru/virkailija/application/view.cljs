@@ -1208,8 +1208,8 @@
         display-kevyt-valinta?            (and (not sijoittelu?)
                                                ;; false?, koska nil tarkoittaa ettei tietoa ole vielä ladattu backendiltä ja nil? palauttaisi väärän positiivisen tiedon
                                                (every? false? valintalaskenta-in-hakukohteet))
-        show-selection-state-dropdown?    (and kevyt-valinta-feature-enabled?
-                                               (every? true? valintalaskenta-in-hakukohteet))
+        show-selection-state-dropdown?    (or (not kevyt-valinta-feature-enabled?)
+                                              (every? true? valintalaskenta-in-hakukohteet))
         hakukohde-review-input-components (->> review-types
                                                (filter (fn [[kw]]
                                                          (or (not= kw :selection-state)
