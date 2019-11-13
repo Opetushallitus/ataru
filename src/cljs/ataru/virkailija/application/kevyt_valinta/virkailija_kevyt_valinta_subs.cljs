@@ -19,8 +19,14 @@
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/show-kevyt-valinta?
   (fn [db _]
-    (let [haku-oid (get-in db [:application :selected-application-and-form :application :haku])]
+    (let [haku-oid            (get-in db [:application :selected-application-and-form :application :haku])
+          hakukohde-oids      (get-in db [:application :selected-review-hakukohde-oids])
+          rights-by-hakukohde (get-in db [:application :selected-application-and-form :application :rights-by-hakukohde])]
       (and (fc/feature-enabled? :kevyt-valinta)
+           (->> hakukohde-oids
+                (map #(get rights-by-hakukohde %))
+                (every? #(or (contains? % :view-valinta)
+                             (contains? % :edit-valinta))))
            (not (get-in db [:haut haku-oid :sijoittelu]))
            ;; false?, koska nil tarkoittaa ettei tietoa ole vielä ladattu
            ;; backendiltä ja nil? palauttaisi väärän positiivisen tiedon
