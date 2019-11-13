@@ -2,6 +2,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]])
   (:require [ataru.cljs-util :as util :refer [get-virkailija-translation get-virkailija-label]]
+            [ataru.util :as autil]
             [ataru.virkailija.routes :as routes]
             [cljs.core.async :refer [<! timeout]]
             [cljs.core.match :refer-macros [match]]
@@ -15,9 +16,11 @@
   {:editor      {:text :forms-panel :href "/lomake-editori/editor/"}
    :application {:text :applications-panel :href "/lomake-editori/applications/"}})
 
-(def right-labels {:form-edit (get-virkailija-label :form-edit-rights-panel)
+(def right-labels {:form-edit         (get-virkailija-label :form-edit-rights-panel)
                    :view-applications (get-virkailija-label :view-applications-rights-panel)
-                   :edit-applications (get-virkailija-label :edit-applications-rights-panel)})
+                   :edit-applications (get-virkailija-label :edit-applications-rights-panel)
+                   :view-valinta      (get-virkailija-label :view-valinta-rights-panel)
+                   :edit-valinta      (get-virkailija-label :edit-valinta-rights-panel)})
 
 (def active-section-arrow [:i.active-section-arrow.zmdi.zmdi-chevron-down.zmdi-hc-lg])
 
@@ -60,20 +63,19 @@
       :else (-> organizations (first) :name (get-label)))))
 
 (defn- organization-rights-select []
-  (let [rights (subscribe [:state-query [:editor :user-info :selected-organization :rights]])]
+  (let [lang   @(subscribe [:editor/virkailija-lang])
+        rights (set @(subscribe [:state-query [:editor :user-info :selected-organization :rights]]))]
     [:div.profile__organization-rights-selector
      (get-virkailija-translation :choose-user-rights)
      (doall
-       (for [[right label] [["view-applications" (get-virkailija-translation :view-applications-rights-panel)]
-                            ["edit-applications" (get-virkailija-translation :edit-applications-rights-panel)]
-                            ["form-edit" (get-virkailija-translation :form-edit-rights-panel)]]]
-         ^{:key (str "org-right-selector-for-" (name right))}
-         [:label.profile__organization-select-right
-          [:input
-           {:type      "checkbox"
-            :checked   (contains? (set @rights) right)
-            :on-change #(dispatch [:editor/update-selected-organization-rights right (.. % -target -checked)])}]
-          label]))]))
+      (for [[right label] right-labels]
+        ^{:key (str "org-right-selector-for-" (name right))}
+        [:label.profile__organization-select-right
+         [:input
+          {:type      "checkbox"
+           :checked   (contains? rights (name right))
+           :on-change #(dispatch [:editor/update-selected-organization-rights right (.. % -target -checked)])}]
+         (autil/non-blank-val label [lang :fi :sv :en])]))]))
 
 (defn- organization-results-filter-checkbox
   [id label]
