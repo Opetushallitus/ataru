@@ -2,7 +2,6 @@
   (:require [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]
             [ataru.cljs-util :as cljs-util :refer [get-virkailija-translation get-virkailija-label]]
-            [ataru.feature-config :as fc]
             [ataru.translations.texts :refer [state-translations general-texts]]
             [ataru.util :as util]
             [ataru.virkailija.application.application-search-control :refer [application-search-control]]
@@ -11,8 +10,9 @@
             [ataru.virkailija.application.attachments.liitepyynto-information-request-view :as lir]
             [ataru.virkailija.application.attachments.virkailija-attachment-handlers]
             [ataru.virkailija.application.attachments.virkailija-attachment-subs]
-            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-handlers]
             [ataru.virkailija.application.handlers]
+            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-handlers]
+            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-view :as kv]
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :as t]
@@ -1199,17 +1199,8 @@
 
 (defn- application-hakukohde-review-inputs
   [review-types]
-  (let [haku-oid                          @(subscribe [:state-query [:application :selected-application-and-form :application :haku]])
-        valintalaskenta-in-hakukohteet    (->> @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-                                               (map (fn [hakukohde-oid]
-                                                      @(subscribe [:state-query [:application :valintalaskentakoostepalvelu hakukohde-oid :valintalaskenta]]))))
-        sijoittelu?                       @(subscribe [:state-query [:haut haku-oid :sijoittelu]])
-        kevyt-valinta-feature-enabled?    (fc/feature-enabled? :kevyt-valinta)
-        display-kevyt-valinta?            (and (not sijoittelu?)
-                                               ;; false?, koska nil tarkoittaa ettei tietoa ole vielä ladattu backendiltä ja nil? palauttaisi väärän positiivisen tiedon
-                                               (every? false? valintalaskenta-in-hakukohteet))
-        show-selection-state-dropdown?    (or (not kevyt-valinta-feature-enabled?)
-                                              (every? true? valintalaskenta-in-hakukohteet))
+  (let [show-kevyt-valinta?               @(subscribe [:virkailija-kevyt-valinta/show-kevyt-valinta?])
+        show-selection-state-dropdown?    @(subscribe [:virkailija-kevyt-valinta/show-selection-state-dropdown?])
         hakukohde-review-input-components (->> review-types
                                                (filter (fn [[kw]]
                                                          (or (not= kw :selection-state)
@@ -1218,8 +1209,7 @@
                                                       [application-hakukohde-review-input label kw states]))
                                                (into [:div.application-handling__review-hakukohde-inputs]))]
     (cond-> hakukohde-review-input-components
-            (and kevyt-valinta-feature-enabled?
-                 display-kevyt-valinta?)
+            show-kevyt-valinta?
             (conj [kv/kevyt-valinta]))))
 
 (defn- name-and-initials [{:keys [first-name last-name]}]
