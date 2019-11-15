@@ -133,7 +133,8 @@
   (let [config (json/generate-string (or (:public-config config) {}))]
     (-> (selmer/render-file "templates/virkailija.html"
                             {:cache-fingerprint cache-fingerprint
-                             :config            config})
+                             :config            config
+                             :front-properties  (url-helper/front-json)})
         (ok)
         (content-type "text/html"))))
 
