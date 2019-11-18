@@ -715,15 +715,7 @@ SELECT
   haku AS haku_oid,
   person_oid AS person_oid,
   hakukohde AS hakukohde,
-  (SELECT answers->>'value'
-   FROM jsonb_array_elements(a.content->'answers') AS answers
-   WHERE answers->>'key' = 'ssn') AS henkilotunnus,
-  (SELECT answers->>'value'
-   FROM jsonb_array_elements(a.content->'answers') AS answers
-   WHERE answers->>'key' = 'first-name') AS etunimet,
-  (SELECT answers->>'value'
-   FROM jsonb_array_elements(a.content->'answers') AS answers
-   WHERE answers->>'key' = 'last-name') AS sukunimi,
+  (a.content->'answers') AS answers,
   (SELECT answers->>'value'
    FROM jsonb_array_elements(a.content->'answers') AS answers
    WHERE answers->>'key' = 'address') AS lahiosoite,

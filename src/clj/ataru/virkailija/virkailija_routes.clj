@@ -1099,6 +1099,7 @@
           (if-let [applications (access-controlled-application/valinta-ui-applications
                                  organization-service
                                  tarjonta-service
+                                 person-service
                                  session
                                  (reduce application-service/->and-query queries))]
             (response/ok

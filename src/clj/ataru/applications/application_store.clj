@@ -11,6 +11,7 @@
             [ataru.log.audit-log :as audit-log]
             [ataru.schema.form-schema :as schema]
             [ataru.util :refer [answers-by-key] :as util]
+            [ataru.person-service.person-service :as person-service]
             [ataru.selection-limit.selection-limit-service :as selection-limit]
             [ataru.util.language-label :as label]
             [ataru.util.random :as crypto]
@@ -1065,8 +1066,18 @@ WHERE la.key IS NULL\n"
         (= "en" kielikoodi) {:kieliKoodi "en" :kieliTyyppi "english"}
         :else {:kieliKoodi "" :kieliTyyppi ""}))
 
+(defn- enrich-persons-from-onr [person-service applications]
+  (let [persons (person-service/get-persons person-service (map #(get % :person-oid) applications))]
+    (map #(let [person        (get persons (get % :person-oid))
+                parsed-person (person-service/parse-person % person)]
+            (assoc %
+                   :sukunimi      (get parsed-person :last-name)
+                   :etunimet      (get parsed-person :first-name)
+                   :henkilotunnus (get parsed-person :ssn)))
+         applications)))
+
 (defn valinta-ui-applications
-  [query]
+  [query person-service]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
     (->> {:connection connection}
          (yesql-valinta-ui-applications (-> (merge {:application_oids nil
@@ -1088,14 +1099,14 @@ WHERE la.key IS NULL\n"
          (map #(select-keys % [:oid
                                :haku-oid
                                :person-oid
-                               :henkilotunnus
-                               :sukunimi
-                               :etunimet
                                :asiointikieli
                                :lahiosoite
                                :postinumero
                                :hakukohde
-                               :hakutoiveet]))
+                               :hakutoiveet
+                               :answers]))
+         (enrich-persons-from-onr person-service)
+         (map #(dissoc % :answers))
          (map #(assoc % :asiointikieli (convert-asiointikieli (get % :asiointikieli)))))))
 
 (defn- unwrap-person-and-hakemus-oid

@@ -74,66 +74,11 @@
    {}
    (application-store/get-application-attachment-reviews application-key)))
 
-(defn- person-info-from-application [application]
-  (let [answers (util/answers-by-key (:answers application))]
-    (merge {:first-name     (-> answers :first-name :value)
-            :preferred-name (-> answers :preferred-name :value)
-            :last-name      (-> answers :last-name :value)
-            :birth-date     (-> answers :birth-date :value)
-            :nationality    (-> answers :nationality :value)}
-           (when-not (clojure.string/blank? (-> answers :ssn :value))
-             {:ssn (-> answers :ssn :value)})
-           (when-not (clojure.string/blank? (-> answers :gender :value))
-             {:gender (-> answers :gender :value)})
-           (when-not (clojure.string/blank? (-> answers :language :value))
-             {:language (-> answers :language :value)}))))
-
-(defn- parse-onr-aidinkieli
-  [person]
-  (try
-    (-> person :aidinkieli :kieliKoodi clojure.string/upper-case)
-    (catch Exception e
-      (throw (new RuntimeException
-                  (str "Could not parse aidinkieli "
-                       (:aidinkieli person)
-                       "of person "
-                       (:oidHenkilo person))
-                  e)))))
-
-(defn- person-info-from-onr-person [person]
-  (merge {:first-name     (:etunimet person)
-          :preferred-name (:kutsumanimi person)
-          :last-name      (:sukunimi person)
-          :nationality    (->> (-> person :kansalaisuus)
-                               (mapv #(vector (get % :kansalaisuusKoodi "999"))))}
-         (let [birth-date (:syntymaaika person)]
-           (when-not (clojure.string/blank? birth-date)
-             {:birth-date (bd-converter/convert-to-finnish-format birth-date)}))
-         (when-not (clojure.string/blank? (:hetu person))
-           {:ssn (:hetu person)})
-         (when-not (clojure.string/blank? (-> person :sukupuoli))
-           {:gender (-> person :sukupuoli)})
-         (let [aidinkieli (parse-onr-aidinkieli person)]
-           (when-not (clojure.string/blank? aidinkieli)
-             {:language aidinkieli}))))
-
-(defn parse-person [application person-from-onr]
-  (let [yksiloity   (or (-> person-from-onr :yksiloity)
-                        (-> person-from-onr :yksiloityVTJ))
-        person-info (if yksiloity
-                      (person-info-from-onr-person person-from-onr)
-                      (person-info-from-application application))]
-    (merge person-info
-           (when (some? (:person-oid application))
-             {:oid         (:person-oid application)
-              :turvakielto (-> person-from-onr :turvakielto boolean)
-              :yksiloity   (boolean yksiloity)}))))
-
 (defn get-person
   [application person-client]
   (let [person-from-onr (some->> (:person-oid application)
                                  (person-service/get-person person-client))]
-    (parse-person application person-from-onr)))
+    (person-service/parse-person application person-from-onr)))
 
 (defn- populate-form-fields
   [form koodisto-cache tarjonta-info]
@@ -412,7 +357,7 @@
                                                     (assoc application
                                                            :person (->> (:person-oid application)
                                                                         (get onr-persons)
-                                                                        (parse-person application))))
+                                                                        (person-service/parse-person application))))
                                                 applications)
           skip-answers-to-preserve-memory? (if included-ids
                                              (<= 200000 (count applications))
