@@ -12,6 +12,8 @@
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-client :as koostepalvelu-client]
             [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-service :as koostepalvelu-service]
+            [ataru.valintaperusteet.client :as valintaperusteet-client]
+            [ataru.valintaperusteet.service :as valintaperusteet-service]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.virkailija.virkailija-routes :as virkailija-routes]
             [ataru.cache.caches :refer [caches]]
@@ -81,6 +83,33 @@
                                             (koostepalvelu-service/new-valintalaskentakoostepalvelu-service)
                                             [:valintalaskentakoostepalvelu-hakukohde-valintalaskenta-cache])
 
+    :valintaperusteet-cas-client (cas/new-client "/valintaperusteet-service" "j_spring_cas_security_check" "JSESSIONID")
+
+    :valintatapajono-cache-loader (component/using
+                                   (valintaperusteet-client/map->ValintatapajonoCacheLoader {})
+                                   [:valintaperusteet-cas-client])
+
+    :valintatapajono-redis-cache (component/using
+                                  (redis-cache/map->Cache
+                                   {:name          "valintatapajono"
+                                    :ttl           [3 TimeUnit/DAYS]
+                                    :refresh-after [1 TimeUnit/DAYS]
+                                    :lock-timeout  [1 TimeUnit/SECONDS]})
+                                  {:redis  :redis
+                                   :loader :valintatapajono-cache-loader})
+
+    :valintatapajono-cache (component/using
+                            (two-layer-cache/map->Cache
+                             {:name                "in-memory-valintatapajono"
+                              :size                10000
+                              :expire-after-access [3 TimeUnit/DAYS]
+                              :refresh-after       [12 TimeUnit/HOURS]})
+                            {:redis-cache :valintatapajono-redis-cache})
+
+    :valintaperusteet-service (component/using
+                               (valintaperusteet-service/map->CachedValintaperusteetService {})
+                               [:valintatapajono-cache])
+
     :ohjausparametrit-service (component/using
                                (ohjausparametrit-service/new-ohjausparametrit-service)
                                [:ohjausparametrit-cache])
@@ -120,6 +149,7 @@
                             :virkailija-tarjonta-service
                             :tarjonta-service
                             :valintalaskentakoostepalvelu-service
+                            :valintaperusteet-service
                             :job-runner
                             :ohjausparametrit-service
                             :person-service
