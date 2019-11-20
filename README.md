@@ -102,14 +102,13 @@ To build and run all the tests in the system:
 ### Backend unit tests
 
 ```
-APP=virkailija lein spec -t unit
-APP=hakija lein spec -t unit
+make start-docker clojure-tests
 ```
 
 ### ClojureScript unit tests
 
 ```
-lein doo chrome-headless test once
+make test-clojurescript
 ```
 
 ### Browser tests
@@ -117,7 +116,7 @@ lein doo chrome-headless test once
 To run only browser tests (headless, using puppeteer):
 
 ```
-lein spec -t ui
+make start-docker test-browser
 ```
 
 To run browser tests using a real browser start both virkailija and hakija
