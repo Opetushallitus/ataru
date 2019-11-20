@@ -124,6 +124,36 @@ applications with `lein hakija-dev` and `lein virkailija-dev`.
 
 Then navigate to a test suite of your choosing, e.g. [http://localhost:8350/lomake-editori/virkailija-test.html](http://localhost:8350/lomake-editori/virkailija-test.html)
 
+### Running browser tests locally
+
+This process is highly fragile and the test running should be rewritten.
+
+First, stop all running systems:
+
+```
+make stop
+```
+
+Start the servers using following configuration overrides:
+
+```
+make start VIRKAILIJA_CONFIG=$PWD/config/test.edn HAKIJA_CONFIG=$PWD/config/test.edn
+```
+
+Then, load the test data fixture to database:
+
+```
+make load-test-fixture
+```
+
+After the service starts and fixture data is loaded, navigate to local URL to run the tests: http://localhost:8350/lomake-editori/virkailija-test.html
+
+**NOTE**: after each run you need to manually load the fixture data to test database using following command, otherwise the test will fail.
+
+```
+make load-test-fixture
+```
+
 ## API documentation
 
 Swagger specs for the APIs can be found at
