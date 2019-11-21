@@ -14,7 +14,7 @@
 (defn enrich-with-mandatory-headers [opts]
   (add-cookie (str "CSRF="csrf-value)
               (update opts :headers merge
-                      {"Caller-Id" "1.2.246.562.10.00000000001.ataru-editori.backend"}
+                      {"Caller-Id" "1.2.246.562.10.00000000001.ataru.backend"}
                       {"CSRF" csrf-value})))
 
 (defn do-request
