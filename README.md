@@ -148,10 +148,10 @@ make load-test-fixture
 
 After the service starts and fixture data is loaded, navigate to local URL to run the tests: http://localhost:8350/lomake-editori/virkailija-test.html
 
-**NOTE**: after each run you need to manually load the fixture data to test database using following command, otherwise the test will fail.
+**NOTE**: after each run you need to manually compile test code and load the fixture data to test database using following command, otherwise the test will fail.
 
 ```
-make load-test-fixture
+make compile-test-code load-test-fixture
 ```
 
 ## API documentation
