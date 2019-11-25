@@ -11,6 +11,7 @@
             [ataru.virkailija.application.attachments.virkailija-attachment-handlers]
             [ataru.virkailija.application.attachments.virkailija-attachment-subs]
             [ataru.virkailija.application.handlers]
+            [ataru.virkailija.application.hyvaksynnan-ehto.view :as hyvaksynnan-ehto]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-handlers]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-view :as kv]
@@ -1197,18 +1198,29 @@
                          (= "uneligible" review-state-for-current))
                 [review-state-comment kw])])])))))
 
+(defn- ehdollisesti-hyvaksyttavissa
+  []
+  (let [hakukohde-oids  @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+        application-key @(subscribe [:state-query [:application :selected-key]])]
+    [:div.application-handling__hyvaksynnan-ehto-container
+     [:div.application-handling__hyvaksynnan-ehto-container__right-column
+      [hyvaksynnan-ehto/hyvaksynnan-ehto application-key (first hakukohde-oids)]]]))
+
 (defn- application-hakukohde-review-inputs
   [review-types]
-  (let [show-kevyt-valinta?               @(subscribe [:virkailija-kevyt-valinta/show-kevyt-valinta?])
-        show-selection-state-dropdown?    @(subscribe [:virkailija-kevyt-valinta/show-selection-state-dropdown?])
-        hakukohde-review-input-components (->> review-types
-                                               (filter (fn [[kw]]
-                                                         (or (not= kw :selection-state)
-                                                             show-selection-state-dropdown?)))
-                                               (map (fn [[kw label states]]
-                                                      [application-hakukohde-review-input label kw states]))
-                                               (into [:div.application-handling__review-hakukohde-inputs]))]
+  (let [show-ehdollisesti-hyvaksyttavissa? @(subscribe [:hyvaksynnan-ehto/show?])
+        show-kevyt-valinta?                @(subscribe [:virkailija-kevyt-valinta/show-kevyt-valinta?])
+        show-selection-state-dropdown?     @(subscribe [:virkailija-kevyt-valinta/show-selection-state-dropdown?])
+        hakukohde-review-input-components  (->> review-types
+                                                (filter (fn [[kw]]
+                                                          (or (not= kw :selection-state)
+                                                              show-selection-state-dropdown?)))
+                                                (map (fn [[kw label states]]
+                                                       [application-hakukohde-review-input label kw states]))
+                                                (into [:div.application-handling__review-hakukohde-inputs]))]
     (cond-> hakukohde-review-input-components
+            show-ehdollisesti-hyvaksyttavissa?
+            (conj [ehdollisesti-hyvaksyttavissa])
             show-kevyt-valinta?
             (conj [kv/kevyt-valinta]))))
 

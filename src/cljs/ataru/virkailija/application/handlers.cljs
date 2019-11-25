@@ -87,6 +87,18 @@
                                [:virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use? hakukohde-oid])))
                   conj)))
 
+(defn- hyvaksynnan-ehto-dispatch-vec [db]
+  (let [application-key (get-in db [:application :selected-key])
+        hakukohde-oids  (get-in db [:application
+                                    :selected-application-and-form
+                                    :application
+                                    :hakukohde])]
+    (mapv (fn [hakukohde-oid]
+            [:hyvaksynnan-ehto/get-ehto-hakukohteessa
+             application-key
+             hakukohde-oid])
+          hakukohde-oids)))
+
 (reg-event-fx
   :application/select-application
   (fn [{:keys [db]} [_ application-key selected-hakukohde-oid with-newest-form?]]
@@ -656,12 +668,15 @@
           db                         (-> db
                                          (update-application-details response-with-parsed-times)
                                          (assoc-in [:application :loading?] false))
-          dispatches                 (into [(if (application-has-attachments? db)
-                                              [:application/fetch-application-attachment-metadata]
-                                              [:application/start-autosave])
-                                            [:liitepyynto-information-request/get-deadlines application-key]
-                                            [:application/get-application-change-history application-key]]
-                                           (valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec db))]
+          dispatches                 (vec
+                                      (concat
+                                       [(if (application-has-attachments? db)
+                                          [:application/fetch-application-attachment-metadata]
+                                          [:application/start-autosave])
+                                        [:liitepyynto-information-request/get-deadlines application-key]
+                                        [:application/get-application-change-history application-key]]
+                                       (valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec db)
+                                       (hyvaksynnan-ehto-dispatch-vec db)))]
       {:db         db
        :dispatch-n dispatches})))
 

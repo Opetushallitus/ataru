@@ -29,7 +29,12 @@
                                            {"Caller-Id" caller-id}
                                            (when (util/include-csrf-header? method)
                                              {"CSRF" (util/csrf-token)}))
-                   :handler         (fn [response] (re-frame/dispatch (conj handler response)))
+                   :handler         (fn [response]
+                                      ;; cljs-ajax calls this handler with nil
+                                      ;; if server responded with 204 or 205
+                                      (->> (or response {:status 204})
+                                           (conj handler)
+                                           re-frame/dispatch))
                    :error-handler   (fn [response] (re-frame/dispatch (conj error-handler (:response response))))}
                   (when (some? progress-handler)
                     {:progress-handler (fn [event] (re-frame/dispatch (conj progress-handler event)))})

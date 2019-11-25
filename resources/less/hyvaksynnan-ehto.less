@@ -1,0 +1,117 @@
+@import "vars";
+@import "mixins";
+
+.hyvaksynnan-ehto-ehdollisesti-hyvaksyttavissa {
+  display: flex;
+  align-items: center;
+}
+
+.hyvaksynnan-ehto-ehdollisesti-hyvaksyttavissa__checkbox {
+  margin: 0;
+}
+
+.hyvaksynnan-ehto-ehdollisesti-hyvaksyttavissa__label {
+  margin-left: 6px;
+  .light;
+}
+
+.hyvaksynnan-ehto-error {
+  height: 26px;
+  padding-left: 20px;
+  padding-bottom: 6px;
+}
+
+.hyvaksynnan-ehto-texts {
+  margin-top: 2px;
+  padding: 6px;
+  background-color: @popover-highlighted-gray;
+}
+
+.hyvaksynnan-ehto-texts__languages {
+  padding: 2px 0 10px 0;
+}
+
+.hyvaksynnan-ehto-texts__text-language {
+  padding: 0 6px 0 6px;
+  height: auto;
+  color: @link-color;
+  background-color: transparent;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 14px;
+  border: none;
+  border-right: 1px solid @section-gray-border;
+  cursor: pointer;
+  &:first-child {
+    padding-left: 0;
+  }
+  &:last-child {
+    padding-right: 0;
+    border-right: none;
+  }
+  &--selected {
+    color: @text-color;
+  }
+}
+
+.hyvaksynnan-ehto-texts__textarea-container {
+  position: relative;
+}
+
+.hyvaksynnan-ehto-texts__textarea {
+  font-size: 14px;
+  padding: 6px;
+  width: 100%;
+  resize: vertical;
+}
+
+.hyvaksynnan-ehto-texts__spinner-overlay {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.hyvaksynnan-ehto-valintatapajonoissa {
+  margin: 12px 0 0 0;
+  padding: 0;
+}
+
+.hyvaksynnan-ehto-valintatapajonoissa__jono-name {
+  border-left: 2px solid @section-gray-border;
+  margin: 12px 0 0 0;
+  padding: 0 0 0 12px;
+  font-size: 12px;
+  .semibold;
+}
+
+.hyvaksynnan-ehto-valintatapajonoissa__ehto-text {
+  border-left: 2px solid @section-gray-border;
+  margin: 0;
+  padding: 0 0 0 12px;
+  font-size: 12px;
+}
+
+.hyvaksynnan-ehto-error__text {
+  color: @sg-color-red;
+  animation: blinker 0.7s linear infinite;
+  opacity: 0;
+  .semibold;
+}
+
+@keyframes blinker {
+  10% {
+    opacity: 1;
+  }
+
+  40% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
