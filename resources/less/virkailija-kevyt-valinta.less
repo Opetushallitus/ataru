@@ -1,0 +1,54 @@
+@import "vars";
+
+.application-handling__kevyt-valinta {
+  display: flex;
+  flex-flow: column nowrap;
+  margin: 32px 0;
+}
+
+.application-handling__kevyt-valinta-row {
+  align-items: center;
+  display: flex;
+  flex-flow: row nowrap;
+}
+
+.application-handling__kevyt-valinta-row > :not(:last-child) {
+  margin-right: 10px;
+}
+
+.application-handling__kevyt-valinta-check {
+  border-radius: 50%;
+  height: 12px;
+  width: 12px;
+}
+
+.application-handling__kevyt-valinta-check--checked {
+  align-items: center;
+  background-color: @light-green;
+  color: @white;
+  display: flex;
+  font-size: 10px;
+  justify-content: center;
+}
+
+.application-handling__kevyt-valinta-check--bold {
+  font-weight: 600;
+}
+
+.application-handling__kevyt-valinta-label {
+  align-items: center;
+  display: flex;
+  width: 121px;
+}
+
+.application-handling__kevyt-valinta-hr {
+  background-color: @kevyt-valinta-grayed-out-color;
+  height: 1px;
+  margin-left: 10px;
+  width: 100%;
+}
+
+.application-handling__kevyt-valinta-value {
+  color: @button-blue;
+  font-weight: 800;
+}

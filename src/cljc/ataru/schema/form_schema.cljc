@@ -2,6 +2,7 @@
   (:require [ataru.application.review-states :as review-states]
             [ataru.application.field-types :refer [form-fields]]
             [ataru.hakija.application-validators :as validator]
+            [ataru.user-rights :as user-rights]
             [schema.coerce :as c]
             [schema.core :as s]
             [schema.experimental.abstract-map :as abstract-map]
@@ -299,7 +300,8 @@
    :prioritize-hakukohteet s/Bool
    :hakuajat               [{:start                java.time.ZonedDateTime
                              (s/optional-key :end) java.time.ZonedDateTime}]
-   :hakukohteet            [s/Str]})
+   :hakukohteet            [s/Str]
+   :sijoittelu             s/Bool})
 
 (s/defschema Hakukohderyhma
   {:oid             s/Str
@@ -462,6 +464,7 @@
   (-> Application
       (st/dissoc :person-oid)
       (st/assoc :can-edit? s/Bool)
+      (st/assoc :rights-by-hakukohde {s/Str [user-rights/Right]})
       (st/assoc :person Person)))
 
 (s/defschema ApplicationWithPersonAndForm
@@ -760,3 +763,7 @@
 (s/defschema ApplicationQueryResponse
   {:sort         Sort
    :applications [ApplicationInfo]})
+
+(s/defschema KayttaaValintalaskentaaResponse
+  {:hakukohde-oid   s/Str
+   :valintalaskenta s/Bool})

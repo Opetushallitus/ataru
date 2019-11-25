@@ -11,6 +11,9 @@
             [ataru.virkailija.application.attachments.virkailija-attachment-handlers]
             [ataru.virkailija.application.attachments.virkailija-attachment-subs]
             [ataru.virkailija.application.handlers]
+            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-handlers]
+            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs]
+            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-view :as kv]
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :as t]
             [ataru.virkailija.temporal :as temporal]
@@ -1196,10 +1199,18 @@
 
 (defn- application-hakukohde-review-inputs
   [review-types]
-  (into [:div.application-handling__review-hakukohde-inputs]
-        (mapv (fn [[kw label states]]
-                [application-hakukohde-review-input label kw states])
-              review-types)))
+  (let [show-kevyt-valinta?               @(subscribe [:virkailija-kevyt-valinta/show-kevyt-valinta?])
+        show-selection-state-dropdown?    @(subscribe [:virkailija-kevyt-valinta/show-selection-state-dropdown?])
+        hakukohde-review-input-components (->> review-types
+                                               (filter (fn [[kw]]
+                                                         (or (not= kw :selection-state)
+                                                             show-selection-state-dropdown?)))
+                                               (map (fn [[kw label states]]
+                                                      [application-hakukohde-review-input label kw states]))
+                                               (into [:div.application-handling__review-hakukohde-inputs]))]
+    (cond-> hakukohde-review-input-components
+            show-kevyt-valinta?
+            (conj [kv/kevyt-valinta]))))
 
 (defn- name-and-initials [{:keys [first-name last-name]}]
   (if (and first-name last-name)

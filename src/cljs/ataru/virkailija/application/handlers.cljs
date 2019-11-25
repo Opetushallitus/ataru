@@ -75,6 +75,18 @@
                "/hakukohderyhma/" (second selected-hakukohderyhma)
                query-params))))
 
+(defn- valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec [db]
+  (->> db
+       :application
+       :selected-application-and-form
+       :application
+       :hakukohde
+       (transduce (comp (filter (fn [hakukohde-oid]
+                                  (-> db :application :valintalaskentakoostepalvelu (get hakukohde-oid) :valintalaskenta nil?)))
+                        (map (fn [hakukohde-oid]
+                               [:virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use? hakukohde-oid])))
+                  conj)))
+
 (reg-event-fx
   :application/select-application
   (fn [{:keys [db]} [_ application-key selected-hakukohde-oid with-newest-form?]]
@@ -484,6 +496,14 @@
         answer-map (into {} (map (fn [answer] [(keyword (:key answer)) answer])) answers)]
     (assoc application :answers answer-map)))
 
+(defn- parse-rights-by-hakukohde
+  [application]
+  (assoc application
+         :rights-by-hakukohde
+         (into {} (map (fn [[key rights]]
+                         [(name key) (set (map keyword rights))])
+                       (:rights-by-hakukohde application)))))
+
 (defn- review-notes-by-hakukohde-and-state-name
   [review-notes]
   (let [notes-by-hakukohde (->> review-notes
@@ -512,7 +532,9 @@
   (-> db
       (assoc-in [:application :selected-application-and-form]
         {:form        form
-         :application (answers-indexed application)})
+         :application (-> application
+                          answers-indexed
+                          parse-rights-by-hakukohde)})
       (assoc-in [:application :latest-form] latest-form)
       (assoc-in [:application :events] events)
       (assoc-in [:application :review] review)
@@ -633,13 +655,15 @@
           response-with-parsed-times (parse-application-times response)
           db                         (-> db
                                          (update-application-details response-with-parsed-times)
-                                         (assoc-in [:application :loading?] false))]
+                                         (assoc-in [:application :loading?] false))
+          dispatches                 (into [(if (application-has-attachments? db)
+                                              [:application/fetch-application-attachment-metadata]
+                                              [:application/start-autosave])
+                                            [:liitepyynto-information-request/get-deadlines application-key]
+                                            [:application/get-application-change-history application-key]]
+                                           (valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec db))]
       {:db         db
-       :dispatch-n [(if (application-has-attachments? db)
-                      [:application/fetch-application-attachment-metadata]
-                      [:application/start-autosave])
-                    [:liitepyynto-information-request/get-deadlines application-key]
-                    [:application/get-application-change-history application-key]]})))
+       :dispatch-n dispatches})))
 
 (reg-event-db
   :application/handle-fetch-application-error
@@ -771,10 +795,10 @@
   :application/select-review-hakukohde
   (fn [db [_ selected-hakukohde-oid]]
     (update-in db [:application :selected-review-hakukohde-oids]
-      (fn [hakukohde-oids]
-        (if (contains? (set hakukohde-oids) selected-hakukohde-oid)
-          (filter #(not= selected-hakukohde-oid %) hakukohde-oids)
-          (cons selected-hakukohde-oid hakukohde-oids))))))
+               (fn [hakukohde-oids]
+                 (if (contains? (set hakukohde-oids) selected-hakukohde-oid)
+                   (filter #(not= selected-hakukohde-oid %) hakukohde-oids)
+                   (cons selected-hakukohde-oid hakukohde-oids))))))
 
 (reg-event-db
   :application/set-mass-information-request-form-state

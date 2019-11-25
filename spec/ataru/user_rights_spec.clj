@@ -1,5 +1,5 @@
-(ns ataru.organization-service.user-rights-spec
-  (:require [ataru.organization-service.user-rights :refer [virkailija->right-organization-oids]]
+(ns ataru.user-rights-spec
+  (:require [ataru.user-rights :refer [virkailija->right-organization-oids]]
             [speclj.core :refer [describe it should= tags]]))
 
 (def test-user1 {:oidHenkilo    "1.2.246.562.24.23424"

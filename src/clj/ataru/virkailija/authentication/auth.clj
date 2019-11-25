@@ -6,7 +6,7 @@
             [ataru.log.audit-log :as audit-log]
             [ataru.organization-service.organization-client :as organization-client]
             [ataru.organization-service.organization-service :as organization-service]
-            [ataru.organization-service.user-rights :as rights]
+            [ataru.user-rights :as rights]
             [ataru.person-service.person-service :as person-service]
             [ataru.virkailija.authentication.cas-ticketstore :as cas-store]
             [ataru.util :as util]

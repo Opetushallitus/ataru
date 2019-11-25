@@ -129,7 +129,10 @@
                             (map tarjonta-service/parse-haku)
                             (util/group-by-first :oid))
      :hakukohteet      (->> (keys tarjonta-haut)
-                            (mapcat #(tarjonta/hakukohde-search tarjonta-service % nil))
+                            (mapcat #(tarjonta/hakukohde-search
+                                       tarjonta-service
+                                       %
+                                       nil))
                             (util/group-by-first :oid))
      :hakukohderyhmat  (util/group-by-first
                          :oid

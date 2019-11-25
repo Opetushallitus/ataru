@@ -17,6 +17,7 @@
             [ataru.virkailija.routes :refer [set-history!]]
             [ataru.virkailija.virkailija-ajax :refer [http post put dispatch-flasher-error-msg]]
             [ataru.util :as util :refer [collect-ids assoc?]]
+            [ataru.user-rights :as user-rights]
             [ataru.cljs-util :as cu]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.virkailija.temporal :as temporal]
@@ -1150,9 +1151,9 @@
             :path                (str "/lomake-editori/api/organization/user-organization/"
                                       oid
                                       "?rights="
-                                      (clojure.string/join "&rights=" ["edit-applications" "view-applications" "form-edit"]))
+                                      (clojure.string/join "&rights=" (map name user-rights/right-names)))
             :handler-or-dispatch :editor/update-selected-organization}
-     :db   (assoc-in db [:editor :user-info :selected-organization :rights] [:edit-applications :view-applications :form-edit])}))
+     :db   (assoc-in db [:editor :user-info :selected-organization :rights] user-rights/right-names)}))
 
 (reg-event-fx
   :editor/increase-organization-result-page

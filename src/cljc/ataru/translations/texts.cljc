@@ -924,6 +924,9 @@ You will receive a confirmation of your application to your email."}
    :edit-applications-rights-panel                  {:fi "Hakemusten arviointi"
                                                      :sv "Utvärdering av ansökningar"
                                                      :en "Evaluation of applications"}
+   :edit-valinta-rights-panel                       {:fi "Valinnan tuloksen muokkaus"
+                                                     :sv "SV: Valinnan tuloksen muokkaus"
+                                                     :en "EN: Valinnan tuloksen muokkaus"}
    :edit-email-templates                            {:fi "Muokkaa sähköpostipohjia"
                                                      :sv "Bearbeta e-postmallar"
                                                      :en "Edit the email templates"}
@@ -1476,6 +1479,9 @@ You will receive a confirmation of your application to your email."}
    :view-applications-rights-panel                  {:fi "Hakemusten katselu"
                                                      :sv "Granskning av ansökningar"
                                                      :en "EN: Hakemusten katselu"}
+   :view-valinta-rights-panel                       {:fi "Valinnan tuloksen katselu"
+                                                     :sv "SV: Valinnan tuloksen katselu"
+                                                     :en "EN: Valinnan tuloksen katselu"}
    :virus-found                                     {:fi "Virus löytyi"
                                                      :sv "Ett virus hittades"
                                                      :en "Virus found"}

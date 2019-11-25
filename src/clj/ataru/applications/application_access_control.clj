@@ -2,26 +2,30 @@
   (:require
    [ataru.log.audit-log :as audit-log]
    [ataru.organization-service.session-organizations :as session-orgs]
+   [ataru.user-rights :as user-rights]
    [ataru.forms.form-access-control :as form-access-control]
    [ataru.applications.application-store :as application-store]
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
    [ataru.odw.odw-service :as odw-service]
-   [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]))
+   [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
+   [ataru.util :as util]))
 
 (defn authorized-by-form?
   [authorized-organization-oids application]
   (boolean (authorized-organization-oids (:organization-oid application))))
 
-(defn authorized-by-tarjoajat?
-  [authorized-organization-oids application]
-  (let [tarjoajat       (->> (:hakukohde application)
-                             (mapcat :tarjoaja-oids)
-                             set)
-        hakukohderyhmat (->> (:hakukohde application)
-                             (mapcat :ryhmaliitokset)
-                             set)]
+(defn- authorized-by-tarjoaja?
+  [authorized-organization-oids hakukohde]
+  (let [tarjoajat       (set (:tarjoaja-oids hakukohde))
+        hakukohderyhmat (set (:ryhmaliitokset hakukohde))]
     (boolean (some authorized-organization-oids
                    (concat tarjoajat hakukohderyhmat)))))
+
+(defn authorized-by-tarjoajat?
+  [authorized-organization-oids application]
+  (boolean
+   (some #(authorized-by-tarjoaja? authorized-organization-oids %)
+         (:hakukohde application))))
 
 (defn- populate-applications-hakukohteet
   [tarjonta-service applications]
@@ -61,46 +65,55 @@
                           (partial authorized-by-tarjoajat? %))))
    (constantly true)))
 
-(defn- can-edit-application?
+(defn- rights-by-hakukohde
   [organization-service session application]
-  (assoc application
-         :can-edit?
-         (session-orgs/run-org-authorized
-           session
-           organization-service
-           [:edit-applications]
-           (constantly false)
-           (fn [orgs]
-             (or (authorized-by-form? orgs application)
-                 (authorized-by-tarjoajat? orgs application)))
-           (constantly true))))
+  (let [authorized? (memoize
+                     (fn [right]
+                       (session-orgs/run-org-authorized
+                        session
+                        organization-service
+                        [right]
+                        (fn [] (fn [_] false))
+                        (fn [orgs]
+                          (fn [hakukohde]
+                            (and (authorized-by-form? orgs application)
+                                 (or (= "form" (:oid hakukohde))
+                                     (authorized-by-tarjoaja? orgs hakukohde)))))
+                        (fn [] (fn [_] true)))))]
+    (reduce (fn [acc hakukohde]
+              (->> user-rights/right-names
+                   (filter #((authorized? %) hakukohde))
+                   set
+                   (assoc acc (:oid hakukohde))))
+            {}
+            (or (seq (:hakukohde application))
+                [{:oid "form"}]))))
+
+(defn- can-edit-application?
+  [rights-by-hakukohde]
+  (some #(contains? (val %) :edit-applications) rights-by-hakukohde))
 
 (defn get-latest-application-by-key
   [organization-service tarjonta-service session application-key]
-  (let [application (session-orgs/run-org-authorized
-                     session
-                     organization-service
-                     [:view-applications :edit-applications]
-                     (constantly nil)
-                     #(some->> (application-store/get-latest-application-by-key application-key)
-                               vector
-                               (populate-applications-hakukohteet tarjonta-service)
-                               (filter (some-fn (partial authorized-by-form? %)
-                                                (partial authorized-by-tarjoajat? %)))
-                               (map (partial can-edit-application? organization-service session))
-                               (map depopulate-application-hakukohteet)
-                               (map remove-organization-oid)
-                               first)
-                     #(remove-organization-oid
-                       (can-edit-application? organization-service
-                                              session
-                                              (application-store/get-latest-application-by-key application-key))))]
-    (when (some? application)
+  (let [application         (application-store/get-latest-application-by-key application-key)
+        rights-by-hakukohde (some->> application
+                                     vector
+                                     (populate-applications-hakukohteet tarjonta-service)
+                                     first
+                                     (rights-by-hakukohde organization-service session))]
+    (when (some #(not-empty
+                  (clojure.set/intersection
+                   #{:view-applications :edit-applications}
+                   (val %)))
+                rights-by-hakukohde)
       (audit-log/log {:new       (dissoc application :answers)
                       :id        {:applicationOid application-key}
                       :session   session
-                      :operation audit-log/operation-read}))
-    application))
+                      :operation audit-log/operation-read})
+      (-> application
+          (assoc :can-edit? (can-edit-application? rights-by-hakukohde))
+          (assoc :rights-by-hakukohde (util/map-kv rights-by-hakukohde vec))
+          remove-organization-oid))))
 
 (defn- populate-hakukohde
   [external-application]

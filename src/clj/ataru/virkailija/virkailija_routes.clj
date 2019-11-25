@@ -44,6 +44,7 @@
             [ataru.organization-service.organization-selection :as organization-selection]
             [ataru.organization-service.organization-client :as organization-client]
             [ataru.organization-service.organization-service :as organization-service]
+            [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu]
             [cheshire.core :as json]
             [cheshire.generate :refer [add-encoder]]
             [clojure.core.match :refer [match]]
@@ -70,7 +71,7 @@
             [schema.core :as s]
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [spy debug error warn info]]
-            [ataru.organization-service.user-rights :as user-rights]
+            [ataru.user-rights :as user-rights]
             [ataru.util :as util])
   (:import java.util.Locale
            java.time.ZonedDateTime
@@ -183,6 +184,7 @@
 
 (defn api-routes [{:keys [organization-service
                           tarjonta-service
+                          valintalaskentakoostepalvelu-service
                           job-runner
                           ohjausparametrit-service
                           virkailija-tarjonta-service
@@ -696,14 +698,27 @@
                :haut             {haku-oid (tarjonta-service/parse-haku
                                             (tarjonta/get-haku tarjonta-service
                                                                haku-oid))}
-               :hakukohteet      (util/group-by-first :oid (tarjonta/hakukohde-search
-                                                            tarjonta-service
-                                                            haku-oid
-                                                            nil))
+               :hakukohteet      (util/group-by-first :oid
+                                                      (tarjonta/hakukohde-search
+                                                        tarjonta-service
+                                                        haku-oid
+                                                        nil))
                :hakukohderyhmat  (util/group-by-first :oid (organization-service/get-hakukohde-groups organization-service))}
               response/ok
               (response/header "Cache-Control" "public, max-age=300"))
           (response/bad-request))))
+
+    (api/context "/valintalaskentakoostepalvelu" []
+      :tags ["valintalaskentakoostepalvelu-api"]
+      (api/GET "/valintaperusteet/hakukohde/:hakukohde-oid/kayttaa-valintalaskentaa" {session :session}
+        :path-params [hakukohde-oid :- s/Str]
+        :return ataru-schema/KayttaaValintalaskentaaResponse
+        :summary "Tarkistaa valintalaskentakoostepalvelusta käyttääkö annettu hakukohde valintalaskentaa"
+        (let [valintalaskenta-enabled? (:kayttaaValintalaskentaa
+                                         (valintalaskentakoostepalvelu/hakukohde-uses-valintalaskenta? valintalaskentakoostepalvelu-service
+                                                                                                       hakukohde-oid))]
+          (response/ok {:hakukohde-oid   hakukohde-oid
+                        :valintalaskenta valintalaskenta-enabled?}))))
 
     (api/context "/koodisto" []
       :tags ["koodisto-api"]
