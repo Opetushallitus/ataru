@@ -13,7 +13,7 @@
 
 (defn- korkeakouluhaku? [tarjonta-service haku-oid]
   (clojure.string/starts-with?
-   (:kohdejoukkoUri (tarjonta/get-haku tarjonta-service haku-oid))
+   (:kohdejoukko-uri (tarjonta/get-haku tarjonta-service haku-oid))
    "haunkohdejoukko_12#"))
 
 (defn automatic-payment-obligation-job-step

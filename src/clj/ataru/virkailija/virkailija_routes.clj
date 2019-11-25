@@ -709,9 +709,7 @@
         (if (some? haku-oid)
           (-> {:tarjonta-haut    {}
                :direct-form-haut {}
-               :haut             {haku-oid (tarjonta-service/parse-haku
-                                            (tarjonta/get-haku tarjonta-service
-                                                               haku-oid))}
+               :haut             {haku-oid (tarjonta/get-haku tarjonta-service haku-oid)}
                :hakukohteet      (util/group-by-first :oid
                                                       (tarjonta/hakukohde-search
                                                         tarjonta-service
@@ -797,11 +795,8 @@
       (api/GET "/haku/:oid" []
         :path-params [oid :- (api/describe s/Str "Haku OID")]
         :return ataru-schema/Haku
-        (if-let [haku (tarjonta/get-haku
-                        tarjonta-service
-                        oid)]
-          (-> (tarjonta-service/parse-haku haku)
-              ok
+        (if-let [haku (tarjonta/get-haku tarjonta-service oid)]
+          (-> (response/ok haku)
               (header "Cache-Control" "public, max-age=300"))
           (internal-server-error {:error "Internal server error"})))
       (api/GET "/hakukohde" []

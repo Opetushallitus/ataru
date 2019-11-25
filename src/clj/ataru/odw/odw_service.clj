@@ -62,7 +62,7 @@
                                                           :32b5f6a9-1ccb-4227-8c68-3c0a82fb0a73
                                                           :64d561e2-20f7-4143-9ad8-b6fa9a8f6fed
                                                           :6b7119c9-42ec-467d-909c-6d1cc555b823])
-                                                 [(:hakukausiVuosi haku)]
+                                                 [(:hakukausi-vuosi haku)]
                                                  (suoritusvuosi-one-of
                                                   application-key
                                                   answers
@@ -105,7 +105,7 @@
                                                           :d037fa56-6354-44fc-87d6-8b774b95dcdf
                                                           :6e980e4d-257a-49ba-a5e6-5424220e6f08
                                                           :220c3b47-1ca6-47e7-8af2-2f6ff823e07b])
-                                                 [(:hakukausiVuosi haku)]
+                                                 [(:hakukausi-vuosi haku)]
                                                  (suoritusvuosi-one-of
                                                   application-key
                                                   answers

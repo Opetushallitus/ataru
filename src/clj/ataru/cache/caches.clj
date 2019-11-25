@@ -61,7 +61,8 @@
        :ttl           [3 TimeUnit/DAYS]
        :refresh-after [15 TimeUnit/MINUTES]
        :lock-timeout  [10000 TimeUnit/MILLISECONDS]
-       :loader        (cache/->FunctionCacheLoader tarjonta-client/get-haku)})
+       :loader        (cache/->FunctionCacheLoader tarjonta-client/get-haku
+                                                   tarjonta-client/haku-checker)})
      [:redis])]
    [:forms-in-use-cache
     (component/using

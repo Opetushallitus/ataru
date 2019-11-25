@@ -294,16 +294,22 @@
    :yhteishaku                         (s/maybe s/Bool)})
 
 (s/defschema Haku
-  {:oid                             s/Str
-   :name                            LocalizedStringOptional
-   :yhteishaku                      s/Bool
-   :kohdejoukko-uri                 s/Str
-   :prioritize-hakukohteet          s/Bool
-   :hakuajat                        [{:start                java.time.ZonedDateTime
-                                      (s/optional-key :end) java.time.ZonedDateTime}]
-   :hakukohteet                     [s/Str]
-   :sijoittelu                      s/Bool
-   (s/optional-key :ataru-form-key) s/Str})
+  {:oid                                        s/Str
+   :name                                       LocalizedStringOptional
+   :hakukohteet                                [s/Str]
+   :ylioppilastutkinto-antaa-hakukelpoisuuden? s/Bool
+   :kohdejoukko-uri                            s/Str
+   :hakutapa-uri                               s/Str
+   :hakukausi-vuosi                            s/Int
+   :yhteishaku                                 s/Bool
+   :prioritize-hakukohteet                     s/Bool
+   :can-submit-multiple-applications           s/Bool
+   :sijoittelu                                 s/Bool
+   :hakuajat                                   [{:hakuaika-id          s/Str
+                                                 :start                org.joda.time.DateTime
+                                                 (s/optional-key :end) org.joda.time.DateTime}]
+   (s/optional-key :ataru-form-key)            s/Str
+   (s/optional-key :max-hakukohteet)           s/Int})
 
 (s/defschema Hakukohderyhma
   {:oid             s/Str

@@ -43,36 +43,6 @@
        (mapcat (partial cache/get-from forms-in-use-cache))
        (reduce hakus-by-form-key {})))
 
-(defn- epoch-millis->zoned-date-time
-  [millis]
-  (java.time.ZonedDateTime/ofInstant
-   (.truncatedTo (java.time.Instant/ofEpochMilli millis)
-                 (java.time.temporal.ChronoUnit/SECONDS))
-   (java.time.ZoneId/of "Europe/Helsinki")))
-
-(defn- parse-hakuaika
-  [hakuaika]
-  (cond-> {:start (epoch-millis->zoned-date-time (:alkuPvm hakuaika))}
-    (contains? hakuaika :loppuPvm)
-    (assoc :end (epoch-millis->zoned-date-time (:loppuPvm hakuaika)))))
-
-(defn yhteishaku? [haku]
-  (= (:hakutapaUri haku) "hakutapa_01#1"))
-
-(defn parse-haku
-  [haku]
-  (merge
-   {:oid                    (:oid haku)
-    :name                   (parse-multi-lang-text (:nimi haku))
-    :prioritize-hakukohteet (:usePriority haku)
-    :kohdejoukko-uri        (:kohdejoukkoUri haku)
-    :yhteishaku             (yhteishaku? haku)
-    :hakuajat               (mapv parse-hakuaika (:hakuaikas haku))
-    :hakukohteet            (:hakukohdeOids haku)
-    :sijoittelu             (:sijoittelu haku)}
-   (when (not (clojure.string/blank? (:ataruLomakeAvain haku)))
-     {:ataru-form-key (:ataruLomakeAvain haku)})))
-
 (defn- parse-search-result
   [search-result]
   (mapcat :tulokset (:tulokset search-result)))
@@ -120,19 +90,10 @@
            (map #(assoc % :user-organization? (contains? filtered-hakukohde-oids (:oid %)))))))
 
   (get-haku [this haku-oid]
-    ;; Serialization breaks boxed booleans, as it doesn't return the
-    ;; canonical instance
-    (try
-      (some-> (cache/get-from haku-cache haku-oid)
-              (update :canSubmitMultipleApplications #(.booleanValue %))
-              (update :usePriority #(.booleanValue %)))
-      (catch Exception e
-        (println "O.o" haku-oid)
-        (throw e))))
+    (cache/get-from haku-cache haku-oid))
 
   (get-haku-name [this haku-oid]
-    (when-let [haku (.get-haku this haku-oid)]
-      (parse-multi-lang-text (:nimi haku))))
+    (:name (cache/get-from haku-cache haku-oid)))
 
   (get-koulutus [this koulutus-oid]
     (cache/get-from koulutus-cache koulutus-oid))

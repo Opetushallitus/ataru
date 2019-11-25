@@ -43,7 +43,7 @@
     (let [haut        (keys (get (tarjonta-protocol/get-forms-in-use virkailija-tarjonta-service session) key))
           yhteishaut? (->> haut
                            (map #(tarjonta-protocol/get-haku tarjonta-service %))
-                           (filter tarjonta-service/yhteishaku?))]
+                           (filter :yhteishaku))]
       (when (first yhteishaut?)
             (throw (user-feedback-exception
                      (format "Lukitseminen ja avaaminen yhteishaussa vain rekisterinpitäjän oikeuksilla!")))))))
