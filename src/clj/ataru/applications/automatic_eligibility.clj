@@ -44,7 +44,7 @@
 (defn- automatic-eligibility-if-ylioppilas-in-use?
   [haku ohjausparametrit now]
   (and (some? haku)
-       (:ylioppilastutkintoAntaaHakukelpoisuuden haku)
+       (:ylioppilastutkinto-antaa-hakukelpoisuuden? haku)
        (if-let [automatic-eligibility-ends
                 (some-> (get-in ohjausparametrit [:PH_AHP :date])
                         coerce/from-long)]

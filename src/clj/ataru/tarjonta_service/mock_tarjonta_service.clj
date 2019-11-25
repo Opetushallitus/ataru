@@ -308,7 +308,8 @@
                                 :1.2.246.562.20.49028196525]))))
 
   (get-haku [this haku-oid]
-    ((keyword haku-oid) haku))
+    (when-let [h ((keyword haku-oid) haku)]
+      (tarjonta-client/parse-haku h)))
 
   (get-haku-name [this haku-oid]
     (when (= haku-oid "1.2.246.562.29.65950024185")

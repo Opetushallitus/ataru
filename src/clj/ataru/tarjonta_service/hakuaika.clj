@@ -35,7 +35,7 @@
   (f/parse time-formatter str))
 
 (defn- jatkuva-haku? [haku]
-  (clojure.string/starts-with? (:hakutapaUri haku) "hakutapa_03#"))
+  (clojure.string/starts-with? (:hakutapa-uri haku) "hakutapa_03#"))
 
 (defn ended?
   [now end]
@@ -53,9 +53,9 @@
 
 (defn- hakukohteen-hakuaika [haku hakukohde]
   (some #(when (= (:hakuaika-id hakukohde)
-                  (:hakuaikaId %))
+                  (:hakuaika-id %))
            %)
-        (:hakuaikas haku)))
+        (:hakuajat haku)))
 
 (defn date-time->localized-date-time [date-time]
   (->> [:fi :sv :en]
@@ -137,8 +137,8 @@
                       [(:hakuaika-alku hakukohde)
                        (:hakuaika-loppu hakukohde)]
                       (let [hakuaika (hakukohteen-hakuaika haku hakukohde)]
-                        [(:alkuPvm hakuaika)
-                         (:loppuPvm hakuaika)]))]
+                        [(.getMillis (:start hakuaika))
+                         (.getMillis (:end hakuaika))]))]
     (hakuaika-with-label {:start                               start
                           :end                                 end
                           :on                                  (hakuaika-on now start end)
@@ -149,12 +149,12 @@
 (defn haun-hakuajat
   [now haku ohjausparametrit]
   (map (fn [hakuaika]
-         (let [start (:alkuPvm hakuaika)
-               end   (:loppuPvm hakuaika)]
+         (let [start (.getMillis (:start hakuaika))
+               end   (.getMillis (:end hakuaika))]
            (hakuaika-with-label {:start                               start
                                  :end                                 end
                                  :on                                  (hakuaika-on now start end)
                                  :attachment-modify-grace-period-days (-> ohjausparametrit :PH_LMT :value)
                                  :jatkuva-haku?                       (jatkuva-haku? haku)
                                  :hakukierros-end                     (-> ohjausparametrit :PH_HKP :date)})))
-       (:hakuaikas haku)))
+       (:hakuajat haku)))

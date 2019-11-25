@@ -6,10 +6,12 @@
    [cheshire.core :as json]
    [clojure.string :as string]
    [schema.core :as s]
-   [taoensso.timbre :refer [warn info]]))
+   [taoensso.timbre :refer [warn info]])
+  (:import [org.joda.time DateTime DateTimeZone]))
 
 (def koulutus-checker (s/checker schema/Koulutus))
 (def hakukohde-checker (s/checker schema/Hakukohde))
+(def haku-checker (s/checker schema/Haku))
 
 (defn- localized-names
   ([names]
@@ -92,6 +94,38 @@
                       {:hakuaika-loppu (:hakuaikaLoppuPvm hakukohde)}))
              {:hakuaika-id (:hakuaikaId hakukohde)}))))
 
+(defn- parse-hakuaika
+  [hakuaika]
+  (cond-> {:hakuaika-id (:hakuaikaId hakuaika)
+           :start       (new DateTime
+                             (:alkuPvm hakuaika)
+                             (DateTimeZone/forID "Europe/Helsinki"))}
+          (contains? hakuaika :loppuPvm)
+          (assoc :end (new DateTime
+                           (:loppuPvm hakuaika)
+                           (DateTimeZone/forID "Europe/Helsinki")))))
+
+(defn parse-haku
+  [haku]
+  (merge
+   {:oid                                        (:oid haku)
+    :name                                       (localized-names (:nimi haku))
+    :hakukohteet                                (:hakukohdeOids haku)
+    :ylioppilastutkinto-antaa-hakukelpoisuuden? (boolean (:ylioppilastutkintoAntaaHakukelpoisuuden haku))
+    :kohdejoukko-uri                            (:kohdejoukkoUri haku)
+    :hakutapa-uri                               (:hakutapaUri haku)
+    :hakukausi-vuosi                            (:hakukausiVuosi haku)
+    :yhteishaku                                 (= (:hakutapaUri haku) "hakutapa_01#1")
+    :prioritize-hakukohteet                     (boolean (:usePriority haku))
+    :can-submit-multiple-applications           (boolean (:canSubmitMultipleApplications haku))
+    :sijoittelu                                 (boolean (:sijoittelu haku))
+    :hakuajat                                   (mapv parse-hakuaika (:hakuaikas haku))}
+   (when (some? (:ataruLomakeAvain haku))
+     {:ataru-form-key (:ataruLomakeAvain haku)})
+   (when (and (some? (:maxHakukohdes haku))
+              (pos? (:maxHakukohdes haku)))
+     {:max-hakukohteet (:maxHakukohdes haku)})))
+
 (defn- get-result
   [url]
   (let [{:keys [status body]} (http-util/do-get url)]
@@ -123,11 +157,12 @@
                            (assoc "organisationOid" organization-oid)))
       get-result))
 
-(defn get-haku
-  [haku-oid]
-  (-> :tarjonta-service.haku
-      (resolve-url haku-oid)
-      get-result))
+(s/defn ^:always-validate get-haku :- (s/maybe schema/Haku)
+  [haku-oid :- s/Str]
+  (some-> :tarjonta-service.haku
+          (resolve-url haku-oid)
+          get-result
+          parse-haku))
 
 (s/defn ^:always-validate get-koulutus :- (s/maybe schema/Koulutus)
   [koulutus-oid :- s/Str]

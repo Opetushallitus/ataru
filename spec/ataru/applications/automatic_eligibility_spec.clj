@@ -28,7 +28,7 @@
   (gen/let [haku (gen/one-of [(gen/return nil)
                               (gen/hash-map
                                :oid (gen/return "haku-oid")
-                               :ylioppilastutkintoAntaaHakukelpoisuuden gen/boolean)])
+                               :ylioppilastutkinto-antaa-hakukelpoisuuden? gen/boolean)])
             hakukohde-oids (if (nil? haku)
                              (gen/return [])
                              (gen/fmap (fn [i]
@@ -45,7 +45,7 @@
      :ohjausparametrit (->ohjausparametrit-gen haku)
      :now              (gen/fmap coerce/from-long (gen/choose 1 3))
      :hakukohteet      (gen/return (map #(hash-map :oid %1
-                                                   :ylioppilastutkintoAntaaHakukelpoisuuden %2)
+                                                   :ylioppilastutkinto-antaa-hakukelpoisuuden? %2)
                                         hakukohde-oids
                                         yah?))
      :suoritus?        gen/boolean)))
@@ -78,13 +78,13 @@
 
   (it "returns no updates when automatic eligibility if ylioppilas not in use"
     (check 100 (prop/for-all [inputs input-gen]
-                 (if (false? (get-in inputs [:haku :ylioppilastutkintoAntaaHakukelpoisuuden]))
+                 (if (false? (get-in inputs [:haku :ylioppilastutkinto-antaa-hakukelpoisuuden?]))
                    (empty? (call-ae inputs))
                    true))))
 
   (it "returns updates only for hakukohteet where automatic eligibility if ylioppilas is in use"
     (check 100 (prop/for-all [inputs input-gen]
-                 (every? #(:ylioppilastutkintoAntaaHakukelpoisuuden (:hakukohde %))
+                 (every? #(:ylioppilastutkinto-antaa-hakukelpoisuuden? (:hakukohde %))
                          (call-ae inputs)))))
 
   (it "returns no updates when now is pass PH_AHP"

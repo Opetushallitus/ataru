@@ -233,7 +233,7 @@
    field-deadlines :- {s/Str form-schema/FieldDeadline}
    roles :- [form-role/FormRole]]
   (when-let [latest-id (some-> (tarjonta/get-haku tarjonta-service haku-oid)
-                               :ataruLomakeAvain
+                               :ataru-form-key
                                form-store/latest-id-by-key)]
     (fetch-form-by-haku-oid-and-id form-by-id-cache
                                    tarjonta-service
