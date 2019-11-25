@@ -987,7 +987,7 @@ WHERE la.key IS NULL\n"
 (defn- hakutoiveet-to-list
   [hakutoiveet]
   (map (fn [[hakukohde-oid requirements]]
-         (merge (dissoc requirements :languageRequirement :selectionState :degreeRequirement)
+         (merge (dissoc requirements :selectionState)
                 {:hakukohdeOid hakukohde-oid}))
        hakutoiveet))
 
@@ -1299,6 +1299,8 @@ WHERE la.key IS NULL\n"
         (dissoc :content :application_hakukohde_reviews)
         (assoc :maksuvelvollisuus (reduce-kv #(assoc %1 (name %2) %3) {} (:maksuvelvollisuus application)))
         (assoc :keyValues (merge keyword-values eligibilities-by-hakutoive))
+        (assoc :hakutoiveet (unwrap-external-application-hakutoiveet application))
+        (dissoc :hakukohde)
         (clojure.set/rename-keys {:key :hakemusOid :person_oid :personOid :haku :hakuOid}))))
 
 (defn get-applications-for-valintalaskenta [hakukohde-oid application-keys]
