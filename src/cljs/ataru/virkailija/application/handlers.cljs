@@ -20,7 +20,8 @@
             [re-frame.core :as re-frame]
             [clojure.core.match :refer [match]]
             [ataru.application.review-states :as review-states]
-            [ataru.application.application-states :as application-states]))
+            [ataru.application.application-states :as application-states]
+            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-rights :as kvr]))
 
 (defn- state-filter->query-param
   [db filter all-states]
@@ -664,7 +665,19 @@
                                            dispatches'
 
                                            (into dispatches'
-                                                 (valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec db)))]
+                                                 (valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec db))
+
+                                           (cond-> dispatches'
+                                                   (kvr/kevyt-valinta-rights-for-hakukohteet?
+                                                     (-> db
+                                                         :application
+                                                         :selected-review-hakukohde-oids)
+                                                     (-> db
+                                                         :application
+                                                         :selected-application-and-form
+                                                         :application
+                                                         :rights-by-hakukohde))
+                                                   (conj [:virkailija-kevyt-valinta/fetch-valinnan-tulos application-key])))]
       {:db         db
        :dispatch-n dispatches})))
 

@@ -1,6 +1,7 @@
 (ns ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs
   (:require [re-frame.core :as re-frame]
-            [ataru.feature-config :as fc]))
+            [ataru.feature-config :as fc]
+            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-rights :as kvr]))
 
 (defn- valintalaskenta-in-hakukohteet
   [db]
@@ -23,10 +24,7 @@
           hakukohde-oids      (get-in db [:application :selected-review-hakukohde-oids])
           rights-by-hakukohde (get-in db [:application :selected-application-and-form :application :rights-by-hakukohde])]
       (and (fc/feature-enabled? :kevyt-valinta)
-           (->> hakukohde-oids
-                (map #(get rights-by-hakukohde %))
-                (every? #(or (contains? % :view-valinta)
-                             (contains? % :edit-valinta))))
+           (kvr/kevyt-valinta-rights-for-hakukohteet? hakukohde-oids rights-by-hakukohde)
            (not (get-in db [:haut haku-oid :sijoittelu]))
            ;; false?, koska nil tarkoittaa ettei tietoa ole vielä ladattu
            ;; backendiltä ja nil? palauttaisi väärän positiivisen tiedon
