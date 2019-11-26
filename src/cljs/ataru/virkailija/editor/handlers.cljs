@@ -780,7 +780,7 @@
 (reg-event-db :editor/paste-component paste-component)
 
 (reg-event-db
-  :editor/copy-component
+  :editor/copy-component                                    ; petar da li je ovo akcija na "copy"?
   (fn copy-component [db [_ path cut?]]
     (assoc-in db [:editor :copy-component] {:copy-component-form-key   (-> db :editor :selected-form-key)
                                             :copy-component-path       path

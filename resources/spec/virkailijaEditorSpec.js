@@ -59,6 +59,43 @@
       )
   }
 
+  function clickLomakeForEdit(name) {
+    return clickElement(() =>
+        formListItems().find(
+            '.editor-form__list-form-name:contains("' + name + '")'
+        )
+    );
+  }
+
+  function clickCopyFormComponent(n) {
+    return () => {
+        testFrame()
+            .find('.editor-form__component-wrapper')
+            .eq(n)
+            .find('.editor-form__component-button:contains("Kopioi")')
+            .click()
+      }
+  }
+
+  function clickPasteFormComponent(n) {
+    return () => {
+      triggerEvent(
+          testFrame()
+              .find('.editor-form__drag_n_drop_spacer_container_for_component')
+              .eq(n),
+          'mouseover'
+      )
+      const selector = '.editor-form__drag_n_drop_spacer_container_for_component button.editor-form__component-button:visible:enabled:contains("Liitä")';
+      return wait.until(
+          () => {
+            const b = testFrame().find(selector).length !== 0;
+            console.log(`DEBUG: ${b}`)
+            return b;
+          }
+      )().then(() => testFrame().find(selector).click())
+    }
+  }
+
   function clickComponentMenuItem(title) {
     const menuItem = () => {
       triggerEvent(
@@ -1548,6 +1585,20 @@
         })
       })
 
+      describe('PETAR copy from this form and paste into another 16', () => {
+        before(
+            clickLomakeForEdit("Testilomake"),
+            wait.forMilliseconds(1000),
+            clickCopyFormComponent(7),
+            wait.forMilliseconds(1000),
+            clickLomakeForEdit("Selaintestilomake2"),
+            wait.forMilliseconds(1000),
+            clickPasteFormComponent(0)
+        )
+        it('creates the copy in another form', () => {
+        })
+      })
+
       describe('locking form', () => {
         before(
           wait.forMilliseconds(1000), // wait abit since
@@ -1622,11 +1673,7 @@
     describe('hakukohde specific question', () => {
       const component = () => formComponents().eq(0)
       before(
-        clickElement(() =>
-          formListItems().find(
-            '.editor-form__list-form-name:contains("belongs-to-hakukohteet-test-form")'
-          )
-        ),
+        clickLomakeForEdit("belongs-to-hakukohteet-test-form"),
         wait.forMilliseconds(1000),
         clickElement(() =>
           component().find('.editor-form__component-fold-button')
