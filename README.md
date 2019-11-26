@@ -102,7 +102,7 @@ To build and run all the tests in the system:
 ### Backend unit tests
 
 ```
-make start-docker clojure-tests
+make start-docker test-clojure
 ```
 
 ### ClojureScript unit tests
