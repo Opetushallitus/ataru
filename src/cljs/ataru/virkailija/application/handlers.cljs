@@ -656,12 +656,15 @@
           db                         (-> db
                                          (update-application-details response-with-parsed-times)
                                          (assoc-in [:application :loading?] false))
-          dispatches                 (into [(if (application-has-attachments? db)
+          dispatches                 (as-> [(if (application-has-attachments? db)
                                               [:application/fetch-application-attachment-metadata]
                                               [:application/start-autosave])
                                             [:liitepyynto-information-request/get-deadlines application-key]
                                             [:application/get-application-change-history application-key]]
-                                           (valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec db))]
+                                           dispatches'
+
+                                           (into dispatches'
+                                                 (valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec db)))]
       {:db         db
        :dispatch-n dispatches})))
 
