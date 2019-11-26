@@ -24,6 +24,8 @@
           hakukohde-oids      (get-in db [:application :selected-review-hakukohde-oids])
           rights-by-hakukohde (get-in db [:application :selected-application-and-form :application :rights-by-hakukohde])]
       (and (fc/feature-enabled? :kevyt-valinta)
+           ;; On päätetty, että kevyt valinta näkyy ainoastaan kun on yksi hakukohde valittavissa, muuten moni asia on todella epätriviaaleja toteuttaa
+           (= (count hakukohde-oids) 1)
            (kvr/kevyt-valinta-rights-for-hakukohteet? hakukohde-oids rights-by-hakukohde)
            (not (get-in db [:haut haku-oid :sijoittelu]))
            ;; false?, koska nil tarkoittaa ettei tietoa ole vielä ladattu
