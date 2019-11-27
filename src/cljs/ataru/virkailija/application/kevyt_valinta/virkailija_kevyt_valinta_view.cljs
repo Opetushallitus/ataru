@@ -2,7 +2,7 @@
   (:require [ataru.application.review-states :as review-states]
             [re-frame.core :as re-frame]))
 
-(defn- kevyt-valinta-valinnan-tila-label []
+(defn- kevyt-valinta-valinnan-tila-selection []
   (let [application-key    @(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :key]])
         valinnan-tila      @(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tila application-key])
         lang               @(re-frame/subscribe [:editor/virkailija-lang])
@@ -43,6 +43,16 @@
                               :grayed-out)]
     [kevyt-valinta-checkmark kind]))
 
+(defn- kevyt-valinta-row [checkmark-component
+                          label
+                          selection-component]
+  [:div.application-handling__kevyt-valinta-row
+   [checkmark-component]
+   [:div.application-handling__kevyt-valinta-label
+    [:span label]
+    [:div.application-handling__kevyt-valinta-hr]]
+   [selection-component]])
+
 (defn- kevyt-valinta-selection-state-row []
   (let [lang                  @(re-frame/subscribe [:editor/virkailija-lang])
         selection-state-label (->> review-states/hakukohde-review-types
@@ -51,12 +61,10 @@
                                    (map (fn [[_ label-i18n]]
                                           label-i18n))
                                    (map lang))]
-    [:div.application-handling__kevyt-valinta-row
-     [kevyt-valinta-valinnan-tila-checkmark]
-     [:div.application-handling__kevyt-valinta-label
-      [:span selection-state-label]
-      [:div.application-handling__kevyt-valinta-hr]]
-     [kevyt-valinta-valinnan-tila-label]]))
+    [kevyt-valinta-row
+     kevyt-valinta-valinnan-tila-checkmark
+     selection-state-label
+     kevyt-valinta-valinnan-tila-selection]))
 
 (defn kevyt-valinta []
   [:div.application-handling__kevyt-valinta
