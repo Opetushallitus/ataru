@@ -16,22 +16,30 @@
   margin-right: 10px;
 }
 
-.application-handling__kevyt-valinta-check {
+.application-handling__kevyt-valinta-checkmark {
+  align-items: center;
   border-radius: 50%;
+  display: flex;
+  font-size: 10px;
   height: 12px;
+  justify-content: center;
   width: 12px;
 }
 
-.application-handling__kevyt-valinta-check--checked {
-  align-items: center;
+.application-handling__kevyt-valinta-checkmark--checked {
   background-color: @light-green;
   color: @white;
-  display: flex;
-  font-size: 10px;
-  justify-content: center;
 }
 
-.application-handling__kevyt-valinta-check--bold {
+.application-handling__kevyt-valinta-checkmark--unchecked {
+  background-color: @kevyt-valinta-unchecked-color;
+}
+
+.application-handling__kevyt-valinta-checkmark--grayed-out {
+  background-color: @kevyt-valinta-grayed-out-color;
+}
+
+.application-handling__kevyt-valinta-checkmark--bold {
   font-weight: 600;
 }
 
