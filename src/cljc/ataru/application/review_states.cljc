@@ -1,5 +1,6 @@
 (ns ataru.application.review-states
-  (:require [ataru.translations.texts :refer [state-translations]]
+  (:require [ataru.translations.texts :refer [state-translations
+                                              kevyt-valinta-state-translations]]
             [ataru.util :as util]
             [clojure.set :refer [difference]]))
 
@@ -26,6 +27,15 @@
    ["reserve" (:reserve state-translations)]
    ["selected" (:selected state-translations)]
    ["rejected" (:rejected state-translations)]])
+
+(def kevyt-valinta-selection-state
+  {"HYLATTY"                (:kevyt-valinta/hylatty kevyt-valinta-state-translations)
+   "VARALLA"                (:kevyt-valinta/varalla kevyt-valinta-state-translations)
+   "PERUUNTUNUT"            (:kevyt-valinta/peruuntunut kevyt-valinta-state-translations)
+   "VARASIJALTA_HYVAKSYTTY" (:kevyt-valinta/varasijalta-hyvaksytty kevyt-valinta-state-translations)
+   "HYVAKSYTTY"             (:kevyt-valinta/hyvaksytty kevyt-valinta-state-translations)
+   "PERUNUT"                (:kevyt-valinta/perunut kevyt-valinta-state-translations)
+   "PERUUTETTU"             (:kevyt-valinta/peruutettu kevyt-valinta-state-translations)})
 
 (def application-hakukohde-review-states
   [["unreviewed" (:unreviewed state-translations)]

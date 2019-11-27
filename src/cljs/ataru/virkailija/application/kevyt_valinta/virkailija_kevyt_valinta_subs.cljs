@@ -31,3 +31,16 @@
            ;; false?, koska nil tarkoittaa ettei tietoa ole vielä ladattu
            ;; backendiltä ja nil? palauttaisi väärän positiivisen tiedon
            (every? false? (valintalaskenta-in-hakukohteet db))))))
+
+(re-frame/reg-sub
+  :virkailija-kevyt-valinta/valinnan-tila
+  (fn [[_ application-key]]
+    [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+     (re-frame/subscribe [:state-query [:application :valinta-tulos-service application-key]])])
+  (fn [[hakukohde-oids valinnan-tulokset-for-application]]
+    ;; Koska kevyt valinta näkyy ainoastaan yhdelle hakukohteelle, voidaan olettaa, että listassa on vain yksi alkio
+    (let [hakukohde-oid (first hakukohde-oids)]
+      (-> valinnan-tulokset-for-application
+          (get hakukohde-oid)
+          :valinnantulos
+          :valinnantila))))
