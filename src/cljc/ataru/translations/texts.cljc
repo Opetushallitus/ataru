@@ -1546,6 +1546,21 @@ You will receive a confirmation of your application to your email."}
                                                      :sv "Automatspar: av"
                                                      :en "Auto-save: disabled"}})
 
+(def kevyt-valinta-state-translations
+  {:kevyt-valinta/hylatty                {:fi "Hylätty"
+                                          :sv "Underkänd"
+                                          :en "Rejected"}
+   :kevyt-valinta/varalla                {:fi "Varalla"
+                                          :sv "På reserv"
+                                          :en "On reserve place"}
+   :kevyt-valinta/peruuntunut            {:fi "Peruuntunut"}
+   :kevyt-valinta/varasijalta-hyvaksytty {:fi "Varasijalta hyväksytty"}
+   :kevyt-valinta/hyvaksytty             {:fi "Hyväksytty"
+                                          :sv "Godkänd"
+                                          :en "Selected"}
+   :kevyt-valinta/perunut                {:fi "Perunut"}
+   :kevyt-valinta/peruutettu             {:fi "Peruutettu"}})
+
 (def state-translations
   {:active                 {:fi "Aktiivinen"
                             :sv "Aktiv"
