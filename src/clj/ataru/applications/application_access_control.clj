@@ -90,7 +90,9 @@
 
 (defn- can-edit-application?
   [rights-by-hakukohde]
-  (some #(contains? (val %) :edit-applications) rights-by-hakukohde))
+  (->> rights-by-hakukohde
+       (some #(contains? (val %) :edit-applications))
+       (true?)))
 
 (defn get-latest-application-by-key
   [organization-service tarjonta-service session application-key]
