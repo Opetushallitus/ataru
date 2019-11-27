@@ -53,14 +53,19 @@
     [:div.application-handling__kevyt-valinta-hr]]
    [selection-component]])
 
+(defn- review-type-label [review-type lang]
+  (->> review-states/hakukohde-review-types
+       (transduce (comp (filter (fn [[kw]]
+                                  (= kw review-type)))
+                        (map (fn [[_ label-i18n]]
+                               label-i18n))
+                        (map lang))
+                  conj)
+       (first)))
+
 (defn- kevyt-valinta-selection-state-row []
   (let [lang                  @(re-frame/subscribe [:editor/virkailija-lang])
-        selection-state-label (->> review-states/hakukohde-review-types
-                                   (filter (fn [[kw]]
-                                             (= kw :selection-state)))
-                                   (map (fn [[_ label-i18n]]
-                                          label-i18n))
-                                   (map lang))]
+        selection-state-label (review-type-label :selection-state lang)]
     [kevyt-valinta-row
      kevyt-valinta-valinnan-tila-checkmark
      selection-state-label
