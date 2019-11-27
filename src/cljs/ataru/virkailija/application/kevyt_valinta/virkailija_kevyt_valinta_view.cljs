@@ -63,14 +63,14 @@
                   conj)
        (first)))
 
-(defn- kevyt-valinta-selection-state-row []
-  (let [lang                  @(re-frame/subscribe [:editor/virkailija-lang])
-        selection-state-label (review-type-label :selection-state lang)]
+(defn- kevyt-valinta-valinnan-tila-row []
+  (let [lang                @(re-frame/subscribe [:editor/virkailija-lang])
+        valinnan-tila-label (review-type-label :selection-state lang)]
     [kevyt-valinta-row
      kevyt-valinta-valinnan-tila-checkmark
-     selection-state-label
+     valinnan-tila-label
      kevyt-valinta-valinnan-tila-selection]))
 
 (defn kevyt-valinta []
   [:div.application-handling__kevyt-valinta
-   [kevyt-valinta-selection-state-row]])
+   [kevyt-valinta-valinnan-tila-row]])
