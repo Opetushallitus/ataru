@@ -76,9 +76,8 @@
                         (fn [] (fn [_] false))
                         (fn [orgs]
                           (fn [hakukohde]
-                            (and (authorized-by-form? orgs application)
-                                 (or (= "form" (:oid hakukohde))
-                                     (authorized-by-tarjoaja? orgs hakukohde)))))
+                            (or (authorized-by-form? orgs application)
+                                (authorized-by-tarjoaja? orgs hakukohde))))
                         (fn [] (fn [_] true)))))]
     (reduce (fn [acc hakukohde]
               (->> user-rights/right-names
