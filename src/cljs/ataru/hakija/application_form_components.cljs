@@ -948,8 +948,10 @@
   (let [id          (keyword (:id field-descriptor))
         local-state (r/atom {:focused? false :value nil})]
     (fn [field-descriptor row-idx question-group-idx]
-      (let [value        (:value @(subscribe [:application/answer id question-group-idx row-idx]))
+      (let [{:keys [value
+                    valid]}       @(subscribe [:application/answer id question-group-idx row-idx])
             cannot-edit? @(subscribe [:application/cannot-edit? id])
+            show-error?            @(subscribe [:application/show-validation-error-class? id question-group-idx row-idx nil])
             on-blur      (fn [_]
                            (swap! local-state assoc
                                   :focused? false))
@@ -963,8 +965,11 @@
                                         row-idx
                                         value
                                         question-group-idx])))]
-        [:input.application__form-text-input.application__form-text-input--normal
-         {:id           (str id "-" row-idx)
+        [:input.application__form-text-input
+         {:class    (if show-error?
+                               " application__form-field-error"
+                               " application__form-text-input--normal")
+          :id           (str id "-" row-idx)
           :type         "text"
           :value        (if (:focused? @local-state)
                           (:value @local-state)
@@ -972,6 +977,7 @@
           :on-blur      on-blur
           :on-change    on-change
           :disabled     cannot-edit?
+          :aria-invalid (not valid)
           :autoComplete autocomplete-off}]))))
 
 (defn adjacent-text-fields [field-descriptor]
