@@ -1,5 +1,6 @@
 (ns ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-view
   (:require [ataru.application.review-states :as review-states]
+            [ataru.translations.texts :as translations]
             [re-frame.core :as re-frame]))
 
 (defn- kevyt-valinta-valinnan-tila-selection []
@@ -43,6 +44,18 @@
                               :grayed-out)]
     [kevyt-valinta-checkmark kind]))
 
+(defn- kevyt-valinta-julkaisun-tila-checkmark []
+  [kevyt-valinta-checkmark :unchecked])
+
+(defn- kevyt-valinta-julkaisun-tila-selection []
+  (let [application-key     @(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :key]])
+        julkaisun-tila      @(re-frame/subscribe [:virkailija-kevyt-valinta/julkaisun-tila application-key])
+        lang                @(re-frame/subscribe [:editor/virkailija-lang])
+        julkaisun-tila-i18n (-> translations/kevyt-valinta-julkaisun-tila-translations
+                                julkaisun-tila
+                                lang)]
+    [:span.application-handling__kevyt-valinta-value julkaisun-tila-i18n]))
+
 (defn- kevyt-valinta-row [checkmark-component
                           label
                           selection-component]
@@ -63,6 +76,11 @@
                   conj)
        (first)))
 
+(defn- kevyt-valinta-review-type-label [review-type lang]
+  (get-in review-states/kevyt-valinta-hakukohde-review-types
+          [review-type lang]
+          (str review-type)))
+
 (defn- kevyt-valinta-valinnan-tila-row []
   (let [lang                @(re-frame/subscribe [:editor/virkailija-lang])
         valinnan-tila-label (review-type-label :selection-state lang)]
@@ -71,6 +89,15 @@
      valinnan-tila-label
      kevyt-valinta-valinnan-tila-selection]))
 
+(defn- kevyt-valinta-julkaisun-tila-row []
+  (let [lang                 @(re-frame/subscribe [:editor/virkailija-lang])
+        julkaisun-tila-label (kevyt-valinta-review-type-label :kevyt-valinta/julkaisun-tila lang)]
+    [kevyt-valinta-row
+     kevyt-valinta-julkaisun-tila-checkmark
+     julkaisun-tila-label
+     kevyt-valinta-julkaisun-tila-selection]))
+
 (defn kevyt-valinta []
   [:div.application-handling__kevyt-valinta
-   [kevyt-valinta-valinnan-tila-row]])
+   [kevyt-valinta-valinnan-tila-row]
+   [kevyt-valinta-julkaisun-tila-row]])

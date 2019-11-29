@@ -61,6 +61,9 @@
    [:payment-obligation (:payment-obligation state-translations) application-payment-obligation-states]
    [:selection-state (:selection-state state-translations) application-hakukohde-selection-states]])
 
+(def kevyt-valinta-hakukohde-review-types
+  {:kevyt-valinta/julkaisun-tila {:fi "Julkaisu"}})
+
 (def hakukohde-review-types-map
   (util/group-by-first first hakukohde-review-types))
 
