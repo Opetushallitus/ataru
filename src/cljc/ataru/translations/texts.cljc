@@ -1561,6 +1561,10 @@ You will receive a confirmation of your application to your email."}
    :kevyt-valinta/perunut                {:fi "Perunut"}
    :kevyt-valinta/peruutettu             {:fi "Peruutettu"}})
 
+(def kevyt-valinta-julkaisun-tila-translations
+  {:kevyt-valinta/julkaistu-hakijalle {:fi "Julkaistu hakijalle"}
+   :kevyt-valinta/ei-julkaistu        {:fi "Ei julkaistu"}})
+
 (def state-translations
   {:active                 {:fi "Aktiivinen"
                             :sv "Aktiv"

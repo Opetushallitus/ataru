@@ -16,6 +16,22 @@
   margin-right: 10px;
 }
 
+.application-handling__kevyt-valinta-row:not(:first-of-type) {
+  margin-top: 30px;
+  position: relative;
+}
+
+.application-handling__kevyt-valinta-row:not(:first-of-type)::before {
+  width: 2px;
+  content: ' ';
+  height: 36px;
+  position: absolute;
+  top: -33px;
+  display: inline-block;
+  background-color: #d8d8d8;
+  left: 5px;
+}
+
 .application-handling__kevyt-valinta-checkmark {
   align-items: center;
   border-radius: 50%;
