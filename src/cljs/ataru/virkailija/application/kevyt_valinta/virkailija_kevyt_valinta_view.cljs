@@ -3,11 +3,14 @@
             [ataru.translations.texts :as translations]
             [re-frame.core :as re-frame]))
 
+(defn- kevyt-valinta-selection [label]
+  [:span.application-handling__kevyt-valinta-value label])
+
 (defn- kevyt-valinta-valinnan-tila-selection [valinnan-tila lang]
   (let [valinnan-tila-i18n (-> review-states/kevyt-valinta-selection-state
                                (get valinnan-tila)
                                lang)]
-    [:span.application-handling__kevyt-valinta-value valinnan-tila-i18n]))
+    [kevyt-valinta-selection valinnan-tila-i18n]))
 
 (def ^:private checked-valinnan-tilat
   #{"HYLATTY" "PERUUNTUNUT" "VARASIJALTA_HYVAKSYTTY" "HYVAKSYTTY" "PERUNUT" "PERUUTETTU"})
@@ -47,7 +50,7 @@
         julkaisun-tila-i18n (-> translations/kevyt-valinta-julkaisun-tila-translations
                                 julkaisun-tila
                                 lang)]
-    [:span.application-handling__kevyt-valinta-value julkaisun-tila-i18n]))
+    [kevyt-valinta-selection julkaisun-tila-i18n]))
 
 (defn- kevyt-valinta-row [checkmark-component
                           label
