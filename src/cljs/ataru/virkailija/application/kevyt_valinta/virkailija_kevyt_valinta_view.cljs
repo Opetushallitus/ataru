@@ -3,11 +3,8 @@
             [ataru.translations.texts :as translations]
             [re-frame.core :as re-frame]))
 
-(defn- kevyt-valinta-valinnan-tila-selection []
-  (let [application-key    @(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :key]])
-        valinnan-tila      @(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tila application-key])
-        lang               @(re-frame/subscribe [:editor/virkailija-lang])
-        valinnan-tila-i18n (-> review-states/kevyt-valinta-selection-state
+(defn- kevyt-valinta-valinnan-tila-selection [valinnan-tila lang]
+  (let [valinnan-tila-i18n (-> review-states/kevyt-valinta-selection-state
                                (get valinnan-tila)
                                lang)]
     [:span.application-handling__kevyt-valinta-value valinnan-tila-i18n]))
@@ -31,26 +28,22 @@
      (when show-checkmark?
        [:i.zmdi.zmdi-check.application-handling__kevyt-valinta-checkmark--bold])]))
 
-(defn- kevyt-valinta-valinnan-tila-checkmark []
-  (let [application-key @(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :key]])
-        valinnan-tila   @(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tila application-key])
-        kind            (cond (checked-valinnan-tilat valinnan-tila)
-                              :checked
+(defn- kevyt-valinta-valinnan-tila-checkmark [valinnan-tila]
+  (let [kind (cond (checked-valinnan-tilat valinnan-tila)
+                   :checked
 
-                              (= "VARALLA" valinnan-tila)
-                              :unchecked
+                   (= "VARALLA" valinnan-tila)
+                   :unchecked
 
-                              :else
-                              :grayed-out)]
+                   :else
+                   :grayed-out)]
     [kevyt-valinta-checkmark kind]))
 
 (defn- kevyt-valinta-julkaisun-tila-checkmark []
   [kevyt-valinta-checkmark :unchecked])
 
-(defn- kevyt-valinta-julkaisun-tila-selection []
-  (let [application-key     @(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :key]])
-        julkaisun-tila      @(re-frame/subscribe [:virkailija-kevyt-valinta/julkaisun-tila application-key])
-        lang                @(re-frame/subscribe [:editor/virkailija-lang])
+(defn- kevyt-valinta-julkaisun-tila-selection [application-key lang]
+  (let [julkaisun-tila      @(re-frame/subscribe [:virkailija-kevyt-valinta/julkaisun-tila application-key])
         julkaisun-tila-i18n (-> translations/kevyt-valinta-julkaisun-tila-translations
                                 julkaisun-tila
                                 lang)]
@@ -81,24 +74,25 @@
           [review-type lang]
           (str review-type)))
 
-(defn- kevyt-valinta-valinnan-tila-row []
-  (let [lang                @(re-frame/subscribe [:editor/virkailija-lang])
+(defn- kevyt-valinta-valinnan-tila-row [application-key lang]
+  (let [valinnan-tila       @(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tila application-key])
         valinnan-tila-label (review-type-label :selection-state lang)]
     [:<>
      [kevyt-valinta-row
-      [kevyt-valinta-valinnan-tila-checkmark]
+      [kevyt-valinta-valinnan-tila-checkmark valinnan-tila]
       valinnan-tila-label
-      [kevyt-valinta-valinnan-tila-selection]]]))
+      [kevyt-valinta-valinnan-tila-selection valinnan-tila lang]]]))
 
-(defn- kevyt-valinta-julkaisun-tila-row []
-  (let [lang                 @(re-frame/subscribe [:editor/virkailija-lang])
-        julkaisun-tila-label (kevyt-valinta-review-type-label :kevyt-valinta/julkaisun-tila lang)]
+(defn- kevyt-valinta-julkaisun-tila-row [application-key lang]
+  (let [julkaisun-tila-label (kevyt-valinta-review-type-label :kevyt-valinta/julkaisun-tila lang)]
     [kevyt-valinta-row
      [kevyt-valinta-julkaisun-tila-checkmark]
      julkaisun-tila-label
-     [kevyt-valinta-julkaisun-tila-selection]]))
+     [kevyt-valinta-julkaisun-tila-selection application-key lang]]))
 
 (defn kevyt-valinta []
-  [:div.application-handling__kevyt-valinta
-   [kevyt-valinta-valinnan-tila-row]
-   [kevyt-valinta-julkaisun-tila-row]])
+  (let [application-key @(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :key]])
+        lang            @(re-frame/subscribe [:editor/virkailija-lang])]
+    [:div.application-handling__kevyt-valinta
+     [kevyt-valinta-valinnan-tila-row application-key lang]
+     [kevyt-valinta-julkaisun-tila-row application-key lang]]))
