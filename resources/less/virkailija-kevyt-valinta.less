@@ -1,5 +1,7 @@
 @import "vars";
 
+@kevyt-valinta-checkmark-width: 13px;
+
 .application-handling__kevyt-valinta {
   display: flex;
   flex-flow: column nowrap;
@@ -16,30 +18,39 @@
   margin-right: 10px;
 }
 
-.application-handling__kevyt-valinta-row:not(:first-of-type) {
-  margin-top: 30px;
-  position: relative;
-}
-
-.application-handling__kevyt-valinta-row:not(:first-of-type)::before {
-  width: 2px;
-  content: ' ';
-  height: 36px;
-  position: absolute;
-  top: -33px;
-  display: inline-block;
-  background-color: #d8d8d8;
-  left: 5px;
-}
-
 .application-handling__kevyt-valinta-checkmark {
   align-items: center;
   border-radius: 50%;
   display: flex;
   font-size: 10px;
-  height: 12px;
+  height: @kevyt-valinta-checkmark-width;
   justify-content: center;
-  width: 12px;
+  position: relative;
+  width: @kevyt-valinta-checkmark-width;
+}
+
+.application-handling__kevyt-valinta-row:not(:last-child) {
+  margin-bottom: 25px;
+}
+
+.application-handling__kevyt-valinta-row:not(:first-child) .application-handling__kevyt-valinta-checkmark::before {
+  content: ' ';
+  width: 1px;
+  height: 30px;
+  position: absolute;
+  top: -30px;
+}
+
+.application-handling__kevyt-valinta-row:not(:first-child) .application-handling__kevyt-valinta-checkmark--checked::before {
+  background-color: @light-green;
+}
+
+.application-handling__kevyt-valinta-row:not(:first-child) .application-handling__kevyt-valinta-checkmark--unchecked::before {
+  background-color: @kevyt-valinta-grayed-out-color;
+}
+
+.application-handling__kevyt-valinta-row:not(:first-child) .application-handling__kevyt-valinta-checkmark--grayed-out::before {
+  background-color: @kevyt-valinta-grayed-out-color;
 }
 
 .application-handling__kevyt-valinta-checkmark--checked {

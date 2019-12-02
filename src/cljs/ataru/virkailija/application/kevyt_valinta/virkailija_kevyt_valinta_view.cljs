@@ -84,10 +84,11 @@
 (defn- kevyt-valinta-valinnan-tila-row []
   (let [lang                @(re-frame/subscribe [:editor/virkailija-lang])
         valinnan-tila-label (review-type-label :selection-state lang)]
-    [kevyt-valinta-row
-     kevyt-valinta-valinnan-tila-checkmark
-     valinnan-tila-label
-     kevyt-valinta-valinnan-tila-selection]))
+    [:<>
+     [kevyt-valinta-row
+      kevyt-valinta-valinnan-tila-checkmark
+      valinnan-tila-label
+      kevyt-valinta-valinnan-tila-selection]]))
 
 (defn- kevyt-valinta-julkaisun-tila-row []
   (let [lang                 @(re-frame/subscribe [:editor/virkailija-lang])
