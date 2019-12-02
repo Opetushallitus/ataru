@@ -60,11 +60,11 @@
                           label
                           selection-component]
   [:div.application-handling__kevyt-valinta-row
-   [checkmark-component]
+   checkmark-component
    [:div.application-handling__kevyt-valinta-label
     [:span label]
     [:div.application-handling__kevyt-valinta-hr]]
-   [selection-component]])
+   selection-component])
 
 (defn- review-type-label [review-type lang]
   (->> review-states/hakukohde-review-types
@@ -86,17 +86,17 @@
         valinnan-tila-label (review-type-label :selection-state lang)]
     [:<>
      [kevyt-valinta-row
-      kevyt-valinta-valinnan-tila-checkmark
+      [kevyt-valinta-valinnan-tila-checkmark]
       valinnan-tila-label
-      kevyt-valinta-valinnan-tila-selection]]))
+      [kevyt-valinta-valinnan-tila-selection]]]))
 
 (defn- kevyt-valinta-julkaisun-tila-row []
   (let [lang                 @(re-frame/subscribe [:editor/virkailija-lang])
         julkaisun-tila-label (kevyt-valinta-review-type-label :kevyt-valinta/julkaisun-tila lang)]
     [kevyt-valinta-row
-     kevyt-valinta-julkaisun-tila-checkmark
+     [kevyt-valinta-julkaisun-tila-checkmark]
      julkaisun-tila-label
-     kevyt-valinta-julkaisun-tila-selection]))
+     [kevyt-valinta-julkaisun-tila-selection]]))
 
 (defn kevyt-valinta []
   [:div.application-handling__kevyt-valinta
