@@ -41,3 +41,35 @@
                                        valinnan-tulos)))
                          valinta-tulos-service-db
                          response)))))
+
+(re-frame/reg-event-db
+  :virkailija-kevyt-valinta/toggle-kevyt-valinta-dropdown
+  (fn [db [_ kevyt-valinta-dropdown-id]]
+    (update-in db
+               [:application :kevyt-valinta]
+               (fn [kevyt-valinta-db]
+                 (as-> kevyt-valinta-db
+                       kevyt-valinta-db'
+
+                       (->> kevyt-valinta-db'
+                            (keys)
+                            (filter (comp (partial not= kevyt-valinta-dropdown-id)))
+                            (reduce (fn [acc kevyt-valinta-property]
+                                      (assoc-in acc [kevyt-valinta-property :open?] false))
+                                    kevyt-valinta-db'))
+
+                       (update-in kevyt-valinta-db'
+                                  [kevyt-valinta-dropdown-id :open?]
+                                  not))))))
+
+(re-frame/reg-event-fx
+  :virkailija-kevyt-valinta/change-valinnan-tila
+  (fn [_ [_ new-valinnan-tila]]
+    (println (str "new-valinnan-tila: " new-valinnan-tila))
+    {}))
+
+(re-frame/reg-event-fx
+  :virkailija-kevyt-valinta/change-julkaisun-tila
+  (fn [_ [_ new-julkaisun-tila]]
+    (println (str "new-julkaisun-tila: " new-julkaisun-tila))
+    {}))
