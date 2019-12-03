@@ -338,7 +338,8 @@
                                                          :created-time (:created-time a)})}))}))
 
 (defn get-excel-report-of-applications-by-key
-  [application-keys selected-hakukohde selected-hakukohderyhma user-wants-to-skip-answers? included-ids session organization-service tarjonta-service koodisto-cache ohjausparametrit-service person-service]
+  [application-keys selected-hakukohde selected-hakukohderyhma user-wants-to-skip-answers? included-ids session
+   organization-service tarjonta-service koodisto-cache ohjausparametrit-service person-service]
   (when (aac/applications-access-authorized? organization-service tarjonta-service session application-keys [:view-applications :edit-applications])
     (let [applications                     (application-store/get-applications-by-keys application-keys)
           application-reviews              (->> applications
@@ -359,13 +360,11 @@
                                                                         (get onr-persons)
                                                                         (person-service/parse-person application))))
                                                 applications)
-          skip-answers-to-preserve-memory? (if included-ids
+          skip-answers-to-preserve-memory? (if (not-empty included-ids)
                                              (<= 200000 (count applications))
                                              (<= 4500 (count applications)))
           skip-answers?                    (or user-wants-to-skip-answers?
                                                skip-answers-to-preserve-memory?)
-          included-ids                     (or included-ids
-                                               (constantly true))
           lang                             (keyword (or (-> session :identity :lang) :fi))]
       (ByteArrayInputStream. (excel/export-applications applications-with-persons
                                                         application-reviews

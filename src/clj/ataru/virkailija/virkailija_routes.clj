@@ -617,7 +617,7 @@
           (if (< size-limit (count application-keys))
             (response/request-entity-too-large
              {:error (str "Cannot create excel for more than " size-limit " applications")})
-            (let [included-ids (not-empty (set (remove clojure.string/blank? (clojure.string/split included-ids #"\s+"))))
+            (let [included-ids (set (remove clojure.string/blank? (clojure.string/split included-ids #"\s+")))
                   xls          (application-service/get-excel-report-of-applications-by-key
                                 application-keys
                                 selected-hakukohde
