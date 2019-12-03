@@ -31,12 +31,11 @@
      (when show-checkmark?
        [:i.zmdi.zmdi-check.application-handling__kevyt-valinta-checkmark--bold])]))
 
-(defn- kevyt-valinta-valinnan-tila-checkmark [valinnan-tila]
-  (let [kind (cond (checked-valinnan-tilat valinnan-tila)
-                   :checked
+(defn- kevyt-valinta-valinnan-tila-checkmark [kind]
+  [kevyt-valinta-checkmark kind])
 
-                   (= "VARALLA" valinnan-tila)
-                   :unchecked
+(defn- kevyt-valinta-julkaisun-tila-checkmark [kind]
+  [kevyt-valinta-checkmark kind])
 
                    :else
                    :grayed-out)]
@@ -79,17 +78,26 @@
 
 (defn- kevyt-valinta-valinnan-tila-row [application-key lang]
   (let [valinnan-tila       @(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tila application-key])
-        valinnan-tila-label (review-type-label :selection-state lang)]
+        valinnan-tila-label (review-type-label :selection-state lang)
+        kind                (cond (checked-valinnan-tilat valinnan-tila)
+                                  :checked
+
+                                  (= "VARALLA" valinnan-tila)
+                                  :unchecked
+
+                                  :else
+                                  :grayed-out)]
     [:<>
      [kevyt-valinta-row
-      [kevyt-valinta-valinnan-tila-checkmark valinnan-tila]
+      [kevyt-valinta-valinnan-tila-checkmark kind]
       valinnan-tila-label
       [kevyt-valinta-valinnan-tila-selection valinnan-tila lang]]]))
 
 (defn- kevyt-valinta-julkaisun-tila-row [application-key lang]
-  (let [julkaisun-tila-label (kevyt-valinta-review-type-label :kevyt-valinta/julkaisun-tila lang)]
+  (let [julkaisun-tila-label (kevyt-valinta-review-type-label :kevyt-valinta/julkaisun-tila lang)
+        kind                 :checked]
     [kevyt-valinta-row
-     [kevyt-valinta-julkaisun-tila-checkmark]
+     [kevyt-valinta-julkaisun-tila-checkmark kind]
      julkaisun-tila-label
      [kevyt-valinta-julkaisun-tila-selection application-key lang]]))
 
