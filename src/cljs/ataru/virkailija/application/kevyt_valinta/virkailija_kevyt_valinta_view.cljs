@@ -7,12 +7,14 @@
 (defn- kevyt-valinta-selection-dropdown [kevyt-valinta-dropdown-id
                                          kevyt-valinta-dropdown-value
                                          kevyt-valinta-dropdown-values
-                                         kevyt-valinta-on-dropdown-value-change]
+                                         kevyt-valinta-on-dropdown-value-change
+                                         ongoing-request?]
   (let [dropdown-open? @(re-frame/subscribe [:state-query [:application :kevyt-valinta kevyt-valinta-dropdown-id :open?]])]
     [:div.application-handling__kevyt-valinta-dropdown-container
      [:div.application-handling__kevyt-valinta-dropdown.application-handling__kevyt-valinta-dropdown-item
-      {:on-click (fn toggle-kevyt-valinta-selection-dropdown []
-                   (re-frame/dispatch [:virkailija-kevyt-valinta/toggle-kevyt-valinta-dropdown kevyt-valinta-dropdown-id]))}
+      {:on-click (when-not ongoing-request?
+                   (fn toggle-kevyt-valinta-selection-dropdown []
+                     (re-frame/dispatch [:virkailija-kevyt-valinta/toggle-kevyt-valinta-dropdown kevyt-valinta-dropdown-id])))}
       [:span kevyt-valinta-dropdown-value]
       [:i.zmdi.application-handling__kevyt-valinta-dropdown-chevron.zmdi-chevron-up
        {:class (when dropdown-open?
@@ -31,14 +33,17 @@
                                 kind
                                 kevyt-valinta-dropdown-value
                                 kevyt-valinta-dropdown-values
-                                kevyt-valinta-on-dropdown-value-change]
-  (if (= kind :checked)
+                                kevyt-valinta-on-dropdown-value-change
+                                ongoing-request?]
+  (if (and (= kind :checked)
+           (not ongoing-request?))
     [:span.application-handling__kevyt-valinta-value kevyt-valinta-dropdown-value]
     [kevyt-valinta-selection-dropdown
      kevyt-valinta-dropdown-id
      kevyt-valinta-dropdown-value
      kevyt-valinta-dropdown-values
-     kevyt-valinta-on-dropdown-value-change]))
+     kevyt-valinta-on-dropdown-value-change
+     ongoing-request?]))
 
 (defn- kevyt-valinta-checkmark [kind]
   (let [checkmark-class (case kind
@@ -98,10 +103,20 @@
 (defn- kevyt-valinta-valinnan-tila-checkmark [kind]
   [kevyt-valinta-checkmark kind])
 
-(defn- on-valinnan-tila-change [new-valinnan-tila]
-  (re-frame/dispatch [:virkailija-kevyt-valinta/change-valinnan-tila new-valinnan-tila]))
+(defn- on-valinnan-tila-change [hakukohde-oid
+                                application-key
+                                new-valinnan-tila]
+  (re-frame/dispatch [:virkailija-kevyt-valinta/change-valinnan-tila
+                      hakukohde-oid
+                      application-key
+                      new-valinnan-tila]))
 
-(defn- kevyt-valinta-valinnan-tila-selection [kind valinnan-tila lang]
+(defn- kevyt-valinta-valinnan-tila-selection [hakukohde-oid
+                                              application-key
+                                              kind
+                                              valinnan-tila
+                                              lang
+                                              ongoing-request?]
   (let [valinnan-tila-i18n  (valinnan-tila-label valinnan-tila lang)
         valinnan-tilat      (conj checked-valinnan-tilat "VARALLA")
         valinnan-tilat-i18n (map (fn [valinnan-tila]
@@ -113,18 +128,28 @@
      kind
      valinnan-tila-i18n
      valinnan-tilat-i18n
-     on-valinnan-tila-change]))
+     (partial on-valinnan-tila-change hakukohde-oid application-key)
+     ongoing-request?]))
 
-(defn- kevyt-valinta-valinnan-tila-row [valinnan-tila
+(defn- kevyt-valinta-valinnan-tila-row [hakukohde-oid
+                                        application-key
+                                        valinnan-tila
                                         valinnan-tila-kind
-                                        lang]
+                                        lang
+                                        ongoing-request?]
   (let [valinnan-tila-label (review-type-label :selection-state lang)]
     [:<>
      [kevyt-valinta-row
       valinnan-tila-kind
       [kevyt-valinta-valinnan-tila-checkmark valinnan-tila-kind]
       valinnan-tila-label
-      [kevyt-valinta-valinnan-tila-selection valinnan-tila-kind valinnan-tila lang]]]))
+      [kevyt-valinta-valinnan-tila-selection
+       hakukohde-oid
+       application-key
+       valinnan-tila-kind
+       valinnan-tila
+       lang
+       ongoing-request?]]]))
 
 (defn- kevyt-valinta-julkaisun-tila-checkmark [julkaisun-tila-kind]
   [kevyt-valinta-checkmark julkaisun-tila-kind])
@@ -134,7 +159,8 @@
 
 (defn- kevyt-valinta-julkaisun-tila-selection [julkaisun-tila
                                                julkaisun-tila-kind
-                                               lang]
+                                               lang
+                                               ongoing-request?]
   (let [julkaisun-tila-i18n (-> translations/kevyt-valinta-julkaisun-tila-translations
                                 julkaisun-tila
                                 lang)]
@@ -143,11 +169,13 @@
      julkaisun-tila-kind
      julkaisun-tila-i18n
      [{:value julkaisun-tila :label julkaisun-tila-i18n}]
-     on-julkaisun-tila-change]))
+     on-julkaisun-tila-change
+     ongoing-request?]))
 
 (defn- kevyt-valinta-julkaisun-tila-row [application-key
                                          valinnan-tila-kind
-                                         lang]
+                                         lang
+                                         ongoing-request?]
   (let [julkaisun-tila       @(re-frame/subscribe [:virkailija-kevyt-valinta/julkaisun-tila application-key])
         julkaisun-tila-label (kevyt-valinta-review-type-label :kevyt-valinta/julkaisun-tila lang)
         julkaisun-tila-kind  (match [valinnan-tila-kind julkaisun-tila]
@@ -160,10 +188,16 @@
      julkaisun-tila-kind
      [kevyt-valinta-julkaisun-tila-checkmark julkaisun-tila-kind]
      julkaisun-tila-label
-     [kevyt-valinta-julkaisun-tila-selection julkaisun-tila julkaisun-tila-kind lang]]))
+     [kevyt-valinta-julkaisun-tila-selection
+      julkaisun-tila
+      julkaisun-tila-kind
+      lang
+      ongoing-request?]]))
 
 (defn kevyt-valinta []
   (let [application-key    @(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :key]])
+        ;; kevytvalinta näytetään ainoastaan, kun yksi hakukohde valittuna, ks. :virkailija-kevyt-valinta/show-kevyt-valinta?
+        hakukohde-oid      (first @(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]]))
         lang               @(re-frame/subscribe [:editor/virkailija-lang])
         valinnan-tila      @(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tila application-key])
         valinnan-tila-kind (cond (some (partial = valinnan-tila) checked-valinnan-tilat)
@@ -173,7 +207,18 @@
                                  :unchecked
 
                                  :else
-                                 :grayed-out)]
+                                 :grayed-out)
+        ongoing-request? @(re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request?])]
     [:div.application-handling__kevyt-valinta
-     [kevyt-valinta-valinnan-tila-row valinnan-tila valinnan-tila-kind lang]
-     [kevyt-valinta-julkaisun-tila-row application-key valinnan-tila-kind lang]]))
+     [kevyt-valinta-valinnan-tila-row
+      hakukohde-oid
+      application-key
+      valinnan-tila
+      valinnan-tila-kind
+      lang
+      ongoing-request?]
+     [kevyt-valinta-julkaisun-tila-row
+      application-key
+      valinnan-tila-kind
+      lang
+      ongoing-request?]]))
