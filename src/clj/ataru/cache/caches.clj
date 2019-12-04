@@ -4,15 +4,18 @@
             [ataru.cache.in-memory-cache :as in-memory]
             [ataru.cache.two-layer-cache :as two-layer]
             [ataru.cache.redis-cache :as redis]
+            [ataru.cache.union-cache :as union-cache]
             [ataru.forms.form-store :as form-store]
             [ataru.lokalisointi-service.lokalisointi-service :as lokalisointi-service]
+            [ataru.tarjonta-service.kouta.kouta-client :as kouta-client]
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.organization-service.organization-client :as organization-client]
             [ataru.ohjausparametrit.ohjausparametrit-client :as ohjausparametrit-client]
             [ataru.statistics.statistics-service :as s]
             [ataru.koodisto.koodisto-db-cache :as koodisto-cache]
-            [com.stuartsierra.component :as component])
+            [com.stuartsierra.component :as component]
+            [ataru.cas.client :as cas])
   (:import java.util.concurrent.TimeUnit))
 
 (def caches
@@ -54,7 +57,7 @@
        :expire-after-access [3 TimeUnit/DAYS]
        :refresh-after       [5 TimeUnit/MINUTES]})
      {:redis-cache :hakukohde-redis-cache})]
-   [:haku-cache
+   [:haku-cache-1
     (component/using
      (redis/map->Cache
       {:name          "haku"
@@ -64,6 +67,26 @@
        :loader        (cache/->FunctionCacheLoader tarjonta-client/get-haku
                                                    tarjonta-client/haku-checker)})
      [:redis])]
+   [:kouta-internal-cas-client
+    (cas/new-client "/kouta-internal" "auth/login" "session")]
+   [:kouta-haku-cache-loader
+    (component/using
+      (kouta-client/map->CacheLoader {})
+      {:cas-client :kouta-internal-cas-client})]
+   [:haku-cache-2
+    (component/using
+      (redis/map->Cache
+        {:name          "kouta-haku"
+         :ttl           [3 TimeUnit/DAYS]
+         :refresh-after [15 TimeUnit/MINUTES]
+         :lock-timeout  [10000 TimeUnit/MILLISECONDS]})
+      {:loader :kouta-haku-cache-loader
+       :redis  :redis})]
+   [:haku-cache
+    (component/using
+      (union-cache/map->Cache {})
+      {:cache-1 :haku-cache-1
+       :cache-2 :haku-cache-2})]
    [:forms-in-use-cache
     (component/using
      (redis/map->Cache
