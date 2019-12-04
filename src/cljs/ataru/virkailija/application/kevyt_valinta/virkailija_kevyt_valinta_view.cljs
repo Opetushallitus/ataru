@@ -178,9 +178,15 @@
                                          ongoing-request?]
   (let [julkaisun-tila       @(re-frame/subscribe [:virkailija-kevyt-valinta/julkaisun-tila application-key])
         julkaisun-tila-label (kevyt-valinta-review-type-label :kevyt-valinta/julkaisun-tila lang)
-        julkaisun-tila-kind  (match [valinnan-tila-kind julkaisun-tila]
-                                    [(_ :guard (partial not= :checked)) _]
+        julkaisun-tila-kind  (match [valinnan-tila-kind julkaisun-tila ongoing-request?]
+                                    [(_ :guard (partial not= :checked)) _ _]
                                     :grayed-out
+
+                                    [:checked _ true]
+                                    :grayed-out
+
+                                    [_ true _]
+                                    :checked
 
                                     :else
                                     :unchecked)]
