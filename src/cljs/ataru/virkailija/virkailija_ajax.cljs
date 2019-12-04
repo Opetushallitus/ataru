@@ -20,6 +20,7 @@
                                        :get "haettaessa."
                                        :post "tallennettaessa."
                                        :put "tallennettaessa."
+                                       :patch "tallennettaessa."
                                        :delete "poistettaessa.")))]
     (dispatch [:flasher {:loading? false
                          :message  message

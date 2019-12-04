@@ -1,5 +1,7 @@
 (ns ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-handlers
-  (:require [re-frame.core :as re-frame]))
+  (:require [cljs-time.core :as t]
+            [cljs-time.format :as format]
+            [re-frame.core :as re-frame]))
 
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
@@ -62,11 +64,63 @@
                                   [kevyt-valinta-dropdown-id :open?]
                                   not))))))
 
+(def rfc-1123-date-formatter (format/formatter "E, d MMM yyyy HH:mm:ss"))
+
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/change-valinnan-tila
-  (fn [_ [_ new-valinnan-tila]]
-    (println (str "new-valinnan-tila: " new-valinnan-tila))
-    {}))
+  [(re-frame/inject-cofx :virkailija/resolve-url {:url-key    :valinta-tulos-service.valinnan-tulos
+                                                  :target-key :valinta-tulos-service-url})]
+  (fn [{valinta-tulos-service-url :valinta-tulos-service-url
+        db                        :db}
+       [_
+        hakukohde-oid
+        application-key
+        new-valinnan-tila]]
+    (let [request-id          (keyword (str (name :kevyt-valinta/valinnan-tila) "-" (t/epoch)))
+          db                  (-> db
+                                  (update-in [:application :kevyt-valinta :kevyt-valinta/valinnan-tila]
+                                             merge
+                                             {:request-id request-id
+                                              :open?      false})
+                                  (assoc-in [:application :kevyt-valinta :kevyt-valinta-ui/ongoing-request-for-property]
+                                            :kevyt-valinta/valinnan-tila)
+                                  (assoc-in [:application
+                                             :valinta-tulos-service
+                                             application-key
+                                             hakukohde-oid
+                                             :valinnantulos
+                                             :valinnantila]
+                                            new-valinnan-tila))
+          valinnan-tulos      (-> db
+                                  :application
+                                  :valinta-tulos-service
+                                  (get application-key)
+                                  (get hakukohde-oid)
+                                  :valinnantulos)
+          valintatapajono-oid (:valintatapajonoOid valinnan-tulos)
+          request-body        [(select-keys valinnan-tulos
+                                            [:vastaanottotila
+                                             :hakukohdeOid
+                                             :ilmoittautumistila
+                                             :henkiloOid
+                                             :valintatapajonoOid
+                                             :hakemusOid
+                                             :valinnantila])]
+          now                 (t/now)
+          formatted-now       (str (format/unparse rfc-1123-date-formatter now) " GMT")]
+      {:db   db
+       :http {:method        :patch
+              :path          (str valinta-tulos-service-url "/" valintatapajono-oid "?erillishaku=true")
+              :id            request-id
+              :override-args {:params              request-body
+                              :headers             {"X-If-Unmodified-Since" formatted-now}
+                              :handler-or-dispatch :virkailija-kevyt-valinta/handle-changed-valinnan-tila}}})))
+
+(re-frame/reg-event-db
+  :virkailija-kevyt-valinta/handle-changed-valinnan-tila
+  (fn [db [_ response]]
+    (println (str "response: " response))
+    db))
 
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/change-julkaisun-tila

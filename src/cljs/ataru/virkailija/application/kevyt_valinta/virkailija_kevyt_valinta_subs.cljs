@@ -59,3 +59,26 @@
       (if julkaistavissa?
         :kevyt-valinta/julkaistu-hakijalle
         :kevyt-valinta/ei-julkaistu))))
+
+(re-frame/reg-sub
+  :virkailija-kevyt-valinta/valintatapajono-oid
+  (fn [[_ application-key]]
+    [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+     (re-frame/subscribe [:state-query [:application :valinta-tulos-service application-key]])])
+  (fn [[hakukohde-oids valinnan-tulokset-for-application]]
+    (let [hakukohde-oid (first hakukohde-oids)]
+      (-> valinnan-tulokset-for-application
+          (get hakukohde-oid)
+          :valinnantulos
+          :valintatapajonoOid))))
+
+(re-frame/reg-sub
+  :virkailija-kevyt-valinta/ongoing-request?
+  (fn [db]
+    (when-let [kevyt-valinta-property (-> db :application :kevyt-valinta :kevyt-valinta-ui/ongoing-request-for-property)]
+      (let [request-id (-> db :application :kevyt-valinta kevyt-valinta-property :request-id)]
+        (-> db
+            :request-handles
+            request-id
+            nil?
+            not)))))
