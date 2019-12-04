@@ -80,6 +80,16 @@
             :locked           nil
             :locked-by        nil})
 
+(def form4 {:id               42
+            :key              "empty"
+            :name             {:fi "Selaintestilomake4"}
+            :created-by       "1.2.246.562.11.11111111111"
+            :organization-oid "1.2.246.562.10.0439845"
+            :languages        ["fi"]
+            :content          []
+            :locked           nil
+            :locked-by        nil})
+
 (def ssn-testform {:id               4
                    :key              "41101b4f-1762-49af-9db0-e3603adae656"
                    :name             {:fi "SSN_testilomake"}
@@ -275,6 +285,7 @@
   (form-store/create-new-form! form2 (:key form2))
   (form-store/create-new-form! form3 (:key form3))
   (form-store/create-new-form! form3 "41101b4f-1762-49af-9db0-e3603adae3ae")
+  (form-store/create-new-form! form4 (:key form4))
   (form-store/create-new-form! assosiaatio-hakukohteen-organisaatiosta-form
                                (:key assosiaatio-hakukohteen-organisaatiosta-form))
   (form-store/create-new-form! belongs-to-hakukohteet-test-form

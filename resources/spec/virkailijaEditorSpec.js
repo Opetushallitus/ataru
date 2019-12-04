@@ -205,8 +205,8 @@
   describe('Editor', () => {
     describe('with fixture forms', () => {
       before(wait.until(editorPageIsLoaded, 10000))
-      it('has 6 fixture forms', () => {
-        expect(formListItems()).to.have.length(6)
+      it('has 7 fixture forms', () => {
+        expect(formListItems()).to.have.length(7)
       })
     })
 
@@ -1596,31 +1596,9 @@
         })
       })
 
-      describe('Copy from this form and paste into another after closing the first form', () => {
-        before(
-          clickLomakeForEdit('Testilomake'),
-          wait.forMilliseconds(1000),
-          clickCopyFormComponent('Testiosio'),
-          wait.forMilliseconds(1000),
-          clickCloseDetailsButton(),
-          wait.forMilliseconds(500),
-          clickLomakeForEdit('Selaintestilomake1'),
-          wait.forMilliseconds(1000),
-          clickPasteFormComponent(0)
-        )
-        it('creates the copy in another form', () => {
-          expect(
-            formSections()
-              .eq(0)
-              .find('.editor-form__text-field')
-              .eq(0)
-              .val()
-          ).to.equal('Testiosio')
-        })
-      })
-
       describe('locking form', () => {
         before(
+          clickLomakeForEdit('Testilomake'),
           wait.forMilliseconds(1000), // wait abit since
           clickLockForm(), // this locking is sometimes so fast that the previous request gets blocked.
           wait.until(() =>
@@ -1687,6 +1665,30 @@
               .text()
           ).to.equal('Kaikki muutokset tallennettu')
         })
+      })
+    })
+
+    describe('Copy from a form and paste into another after closing the first form', () => {
+      before(
+        clickLomakeForEdit('Testilomake'),
+        wait.forMilliseconds(1000),
+        clickCopyFormComponent('Testiosio'),
+        wait.forMilliseconds(1000),
+        clickCloseDetailsButton(),
+        wait.forMilliseconds(500),
+        clickLomakeForEdit('Selaintestilomake4'),
+        wait.forMilliseconds(1000),
+        clickPasteFormComponent(0),
+        wait.forMilliseconds(500)
+      )
+      it('creates the copy in another form', () => {
+        expect(
+          formSections()
+            .eq(0)
+            .find('.editor-form__text-field')
+            .eq(0)
+            .val()
+        ).to.equal('Testiosio')
       })
     })
 
