@@ -741,12 +741,17 @@
             (update-in [:editor :forms copy-component-form-key] assoc :content []))))
 
 (defn paste-component
-  [db [_ {:keys [copy-component-form-key copy-component-path copy-component-cut? copy-component-unique-ids]} target-path]]
+  [db [_
+       {:keys [copy-component-form-key
+               copy-component-path
+               copy-component-content
+               copy-component-cut?]}
+       target-path]]
   (or
    (with-form-key [db form-key]
      (when (or (not copy-component-cut?) (= form-key copy-component-form-key))
        (let [copy?                             (not copy-component-cut?)
-             component                         (get-in db (concat [:editor :forms copy-component-form-key :content] copy-component-path))
+             component                         copy-component-content
              target-path                       (if copy?
                                                  target-path
                                                  (recalculate-target-path-prevent-oob copy-component-path target-path))
@@ -780,14 +785,18 @@
 (reg-event-db :editor/paste-component paste-component)
 
 (reg-event-db
-  :editor/copy-component                                    ; petar da li je ovo akcija na "copy"?
+  :editor/copy-component
   (fn copy-component [db [_ path cut?]]
-    (assoc-in db [:editor :copy-component] {:copy-component-form-key   (-> db :editor :selected-form-key)
-                                            :copy-component-path       path
-                                            :copy-component-cut?       cut?
-                                            :copy-component-unique-ids (set (->> (get-in db (vec (current-form-content-path db path)))
-                                                                                 (collect-ids [])
-                                                                                 (remove cu/valid-uuid?)))})))
+    (let [selected-form-key (-> db :editor :selected-form-key)
+          selected-content (get-in db (into [:editor :forms selected-form-key :content] path))]
+      (assoc-in db [:editor :copy-component] {:copy-component-form-key   selected-form-key
+                                              :copy-component-path       path
+                                              :copy-component-cut?       cut?
+                                              :copy-component-content    selected-content
+                                              :copy-component-unique-ids (->> (get-in db (current-form-content-path db path))
+                                                                              (collect-ids [])
+                                                                              (remove cu/valid-uuid?)
+                                                                              set)}))))
 
 (reg-event-db
   :editor/cancel-copy-component

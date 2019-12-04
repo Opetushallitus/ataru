@@ -225,7 +225,7 @@
       :summary "Get content for form"
       (ok (form-store/fetch-form id)))
 
-    (api/PUT "/forms/:id" {session :session}                ; petar here it fails with 400, sometimes
+    (api/PUT "/forms/:id" {session :session}
       :summary "Edit form content"
       :path-params [id :- Long]
       :body [operations [ataru-schema/Operation]]
