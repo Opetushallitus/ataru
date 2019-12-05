@@ -1,5 +1,6 @@
 (ns ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-view
   (:require [ataru.application.review-states :as review-states]
+            [ataru.application-common.loaders.ellipsis-loader :as el]
             [ataru.translations.texts :as translations]
             [re-frame.core :as re-frame])
   (:require-macros [cljs.core.match :refer [match]]))
@@ -12,10 +13,13 @@
   (let [dropdown-open? @(re-frame/subscribe [:state-query [:application :kevyt-valinta kevyt-valinta-dropdown-id :open?]])]
     [:div.application-handling__kevyt-valinta-dropdown-container
      [:div.application-handling__kevyt-valinta-dropdown.application-handling__kevyt-valinta-dropdown-item
-      {:on-click (when-not ongoing-request?
-                   (fn toggle-kevyt-valinta-selection-dropdown []
-                     (re-frame/dispatch [:virkailija-kevyt-valinta/toggle-kevyt-valinta-dropdown kevyt-valinta-dropdown-id])))}
-      [:span kevyt-valinta-dropdown-value]
+      (if ongoing-request?
+        {:class "application-handling__kevyt-valinta-dropdown--disabled"}
+        {:on-click (fn toggle-kevyt-valinta-selection-dropdown []
+                     (re-frame/dispatch [:virkailija-kevyt-valinta/toggle-kevyt-valinta-dropdown kevyt-valinta-dropdown-id]))})
+      [:span.application-handling__kevyt-valinta-dropdown-value kevyt-valinta-dropdown-value]
+      (when ongoing-request?
+        [el/ellipsis-loader])
       [:i.zmdi.application-handling__kevyt-valinta-dropdown-chevron.zmdi-chevron-up
        {:class (when dropdown-open?
                  "application-handling__kevyt-valinta-dropdown-chevron-open")}]]
@@ -214,7 +218,7 @@
 
                                  :else
                                  :grayed-out)
-        ongoing-request? @(re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request?])]
+        ongoing-request?   @(re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request?])]
     [:div.application-handling__kevyt-valinta
      [kevyt-valinta-valinnan-tila-row
       hakukohde-oid

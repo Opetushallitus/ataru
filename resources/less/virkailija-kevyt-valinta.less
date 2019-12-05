@@ -109,14 +109,23 @@
   width: 100%;
 }
 
+.application-handling__kevyt-valinta-dropdown--disabled {
+  color: @kevyt-valinta-grayed-out-color;
+}
+
 .application-handling__kevyt-valinta-dropdown-item {
   align-items: center;
   background-color: @white;
   border-radius: @kevyt-valinta-dropdown-border-radius;
   display: flex;
   height: ~"@{kevyt-valinta-row-height-in-px}px";
+  justify-content: space-between;
   padding: 0 18px;
   width: 100%;
+}
+
+.application-handling__kevyt-valinta-dropdown-value {
+  flex-grow: 2;
 }
 
 .application-handling__kevyt-valinta-dropdown-item:hover {
