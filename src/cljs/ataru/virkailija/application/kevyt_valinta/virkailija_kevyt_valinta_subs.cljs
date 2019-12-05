@@ -1,7 +1,8 @@
 (ns ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs
   (:require [ataru.feature-config :as fc]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-rights :as kvr]
-            [re-frame.core :as re-frame]))
+            [re-frame.core :as re-frame])
+  (:require-macros [cljs.core.match :refer [match]]))
 
 (defn- valintalaskenta-in-hakukohteet
   [db]
@@ -82,3 +83,21 @@
             request-id
             nil?
             not)))))
+
+(re-frame/reg-sub
+  :virkailija-kevyt-valinta/kevyt-valinta-property-state
+  (fn [[_ _ application-key]]
+    [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+     (re-frame/subscribe [:state-query [:application :valinta-tulos-service application-key]])])
+  (fn [[hakukohde-oids valinnan-tulokset-for-application] [_ kevyt-valinta-property]]
+    (let [hakukohde-oid       (first hakukohde-oids)
+          {valinnan-tila  :valinnantila
+           julkaisun-tila :julkaistavissa} (-> valinnan-tulokset-for-application
+                                               (get hakukohde-oid)
+                                               :valinnantulos)
+          kevyt-valinta-state (match [valinnan-tila julkaisun-tila]
+                                     [_ _]
+                                     {:kevyt-valinta/valinnan-tila  :unchecked
+                                      :kevyt-valinta/julkaisun-tila :unchecked})]
+      (kevyt-valinta-state kevyt-valinta-property))))
+
