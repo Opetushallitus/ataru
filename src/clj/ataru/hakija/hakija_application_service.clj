@@ -392,7 +392,7 @@
                         :operation audit-log/operation-failed
                         :session   session
                         :id        {:applicationOid (:key application)}})
-        (log/warn "Application edit failed verification" result)))
+        (log/warn "Application" (:key application) "edit failed verification" result)))
     result))
 
 (defn save-application-feedback
