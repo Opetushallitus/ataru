@@ -1,7 +1,7 @@
 (ns ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs
-  (:require [re-frame.core :as re-frame]
-            [ataru.feature-config :as fc]
-            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-rights :as kvr]))
+  (:require [ataru.feature-config :as fc]
+            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-rights :as kvr]
+            [re-frame.core :as re-frame]))
 
 (defn- valintalaskenta-in-hakukohteet
   [db]
