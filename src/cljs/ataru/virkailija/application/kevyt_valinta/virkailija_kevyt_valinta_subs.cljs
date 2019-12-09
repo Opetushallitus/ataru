@@ -52,14 +52,11 @@
     [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
      (re-frame/subscribe [:state-query [:application :valinta-tulos-service application-key]])])
   (fn [[hakukohde-oids valinnan-tulokset-for-application]]
-    (let [hakukohde-oid   (first hakukohde-oids)
-          julkaistavissa? (-> valinnan-tulokset-for-application
-                              (get hakukohde-oid)
-                              :valinnantulos
-                              :julkaistavissa)]
-      (if julkaistavissa?
-        :kevyt-valinta/julkaistu-hakijalle
-        :kevyt-valinta/ei-julkaistu))))
+    (let [hakukohde-oid   (first hakukohde-oids)]
+      (-> valinnan-tulokset-for-application
+          (get hakukohde-oid)
+          :valinnantulos
+          :julkaistavissa))))
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/valintatapajono-oid

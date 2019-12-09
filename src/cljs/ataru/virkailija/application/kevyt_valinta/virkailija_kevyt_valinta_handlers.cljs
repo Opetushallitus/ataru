@@ -110,7 +110,8 @@
                                                         :henkiloOid
                                                         :valintatapajonoOid
                                                         :hakemusOid
-                                                        :valinnantila])]
+                                                        :valinnantila
+                                                        :julkaistavissa])]
           now                            (t/now)
           formatted-now                  (str (format/unparse rfc-1123-date-formatter now) " GMT")]
       {:db   db
