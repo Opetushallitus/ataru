@@ -129,7 +129,7 @@
   flex-grow: 2;
 }
 
-.application-handling__kevyt-valinta-dropdown-item:hover {
+.application-handling__kevyt-valinta-dropdown-item:not(.application-handling__kevyt-valinta-dropdown--disabled):hover {
   background-color: #E8F2F5;
 }
 
@@ -152,7 +152,7 @@ div.application-handling__kevyt-valinta-dropdown-item-list {
   transition: all 0.2s ease-in-out;
 }
 
-.application-handling__kevyt-valinta-dropdown:hover .application-handling__kevyt-valinta-dropdown-chevron:not(.application-handling__kevyt-valinta-dropdown-chevron-open) {
+.application-handling__kevyt-valinta-dropdown:not(.application-handling__kevyt-valinta-dropdown--disabled):hover .application-handling__kevyt-valinta-dropdown-chevron:not(.application-handling__kevyt-valinta-dropdown-chevron-open) {
   transform: scale(1.7);
 }
 

@@ -74,15 +74,16 @@
           :valintatapajonoOid))))
 
 (re-frame/reg-sub
-  :virkailija-kevyt-valinta/ongoing-request?
+  :virkailija-kevyt-valinta/ongoing-request-property
   (fn [db]
     (when-let [kevyt-valinta-property (-> db :application :kevyt-valinta :kevyt-valinta-ui/ongoing-request-for-property)]
       (let [request-id (-> db :application :kevyt-valinta kevyt-valinta-property :request-id)]
-        (-> db
-            :request-handles
-            request-id
-            nil?
-            not)))))
+        (when (-> db
+                  :request-handles
+                  request-id
+                  nil?
+                  not)
+          kevyt-valinta-property)))))
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/kevyt-valinta-property-state

@@ -9,16 +9,18 @@
                                          kevyt-valinta-dropdown-value
                                          kevyt-valinta-dropdown-values
                                          kevyt-valinta-on-dropdown-value-change
-                                         ongoing-request?]
-  (let [dropdown-open? @(re-frame/subscribe [:state-query [:application :kevyt-valinta kevyt-valinta-dropdown-id :open?]])]
+                                         ongoing-request-property]
+  (let [dropdown-open?     @(re-frame/subscribe [:state-query [:application :kevyt-valinta kevyt-valinta-dropdown-id :open?]])
+        dropdown-disabled? ongoing-request-property
+        show-loader?       (= ongoing-request-property kevyt-valinta-dropdown-id)]
     [:div.application-handling__kevyt-valinta-dropdown-container
      [:div.application-handling__kevyt-valinta-dropdown.application-handling__kevyt-valinta-dropdown-item
-      (if ongoing-request?
+      (if dropdown-disabled?
         {:class "application-handling__kevyt-valinta-dropdown--disabled"}
         {:on-click (fn toggle-kevyt-valinta-selection-dropdown []
                      (re-frame/dispatch [:virkailija-kevyt-valinta/toggle-kevyt-valinta-dropdown kevyt-valinta-dropdown-id]))})
       [:span.application-handling__kevyt-valinta-dropdown-value kevyt-valinta-dropdown-value]
-      (when ongoing-request?
+      (when show-loader?
         [el/ellipsis-loader])
       [:i.zmdi.application-handling__kevyt-valinta-dropdown-chevron.zmdi-chevron-up
        {:class (when dropdown-open?
@@ -38,16 +40,17 @@
                                 kevyt-valinta-dropdown-value
                                 kevyt-valinta-dropdown-values
                                 kevyt-valinta-on-dropdown-value-change]
-  (let [ongoing-request? @(re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request?])]
+  (let [ongoing-request-property @(re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])]
     (if (and (= kevyt-valinta-property-state :checked)
-             (not ongoing-request?))
+             (or (not ongoing-request-property)
+                 (not= ongoing-request-property kevyt-valinta-dropdown-id)))
       [:span.application-handling__kevyt-valinta-value kevyt-valinta-dropdown-value]
       [kevyt-valinta-selection-dropdown
        kevyt-valinta-dropdown-id
        kevyt-valinta-dropdown-value
        kevyt-valinta-dropdown-values
        kevyt-valinta-on-dropdown-value-change
-       ongoing-request?])))
+       ongoing-request-property])))
 
 (defn- kevyt-valinta-checkmark [kevyt-valinta-property-state]
   (let [checkmark-class (case kevyt-valinta-property-state
