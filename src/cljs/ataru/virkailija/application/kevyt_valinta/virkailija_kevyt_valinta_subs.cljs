@@ -127,4 +127,3 @@
                                       :kevyt-valinta/julkaisun-tila   :checked
                                       :kevyt-valinta/vastaanotto-tila :unchecked})]
       (kevyt-valinta-state kevyt-valinta-property))))
-

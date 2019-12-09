@@ -1,5 +1,6 @@
 (ns ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-handlers
-  (:require [cljs-time.core :as t]
+  (:require [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-mappings :as mappings]
+            [cljs-time.core :as t]
             [cljs-time.format :as format]
             [re-frame.core :as re-frame]))
 
@@ -79,10 +80,7 @@
         application-key
         new-kevyt-valinta-property-value]]
     (let [request-id                     (keyword (str (name kevyt-valinta-property) "-" (t/epoch)))
-          valinta-tulos-service-property (case kevyt-valinta-property
-                                           :kevyt-valinta/valinnan-tila :valinnantila
-                                           :kevyt-valinta/julkaisun-tila :julkaistavissa
-                                           :kevyt-valinta/vastaanotto-tila :vastaanottotila)
+          valinta-tulos-service-property (mappings/kevyt-valinta-property->valinta-tulos-service-property kevyt-valinta-property)
           db                             (-> db
                                              (update-in [:application :kevyt-valinta kevyt-valinta-property]
                                                         merge
