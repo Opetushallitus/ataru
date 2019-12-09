@@ -716,7 +716,7 @@
           ),
           clickElement(() =>
             formComponents().find(
-              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(12) + label'
+              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(13) + label'
             )
           )
         )
@@ -752,10 +752,17 @@
           expect(
             formComponents()
               .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(11)'
+                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(11)' //pakollinen tieto
               )
               .prop('checked')
           ).to.equal(true)
+          expect(
+            formComponents()
+              .find(
+                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(12)' //vain numeroita
+              )
+              .prop('checked')
+          ).to.equal(false)
           expect(
             formComponents()
               .find(
@@ -766,10 +773,17 @@
           expect(
             formComponents()
               .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(12)'
+                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(13)' //pakollinen tieto
               )
               .prop('checked')
           ).to.equal(true)
+          expect(
+            formComponents()
+              .find(
+                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(14)' //vain numeroita
+              )
+              .prop('checked')
+          ).to.equal(false)
           expect(
             formComponents().find(
               '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__adjacent-fieldset-container .form__add-component-toolbar--list-item a:contains("Pohjakoulutusmoduuli")'
@@ -796,7 +810,7 @@
           ),
           clickElement(() =>
             formComponents().find(
-              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(13) + label'
+              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(15) + label'
             )
           ),
           clickSubComponentMenuItem(
@@ -815,7 +829,7 @@
           ),
           clickElement(() =>
             formComponents().find(
-              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(14) + label'
+              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(16) + label'
             )
           ),
           clickSubComponentMenuItem(
@@ -834,7 +848,7 @@
           ),
           clickElement(() =>
             formComponents().find(
-              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(15) + label'
+              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(18) + label'
             )
           )
         )
@@ -856,7 +870,7 @@
           expect(
             formComponents()
               .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(13)'
+                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(15)'
               )
               .prop('checked')
           ).to.equal(true) // multiple answers
@@ -870,7 +884,7 @@
           expect(
             formComponents()
               .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(14)'
+                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(16)'
               )
               .prop('checked')
           ).to.equal(true)
@@ -884,7 +898,7 @@
           expect(
             formComponents()
               .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(15)'
+                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(18)'
               )
               .prop('checked')
           ).to.equal(true)
