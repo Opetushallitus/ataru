@@ -245,7 +245,7 @@
       (reset! form (db/init-db-fixture person-info-form-with-hidden-attachment))))
 
   (it "should get form"
-    (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
+    (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:hakija :with-henkilo] resp
         (should= 200 (:status resp))
         (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
@@ -255,7 +255,7 @@
                    ["ssn" "birth-date"])))))
 
   (it "should get form as virkailija"
-    (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
+    (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija :with-henkilo] resp
         (should= 200 (:status resp))
         (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
@@ -267,7 +267,7 @@
                    [])))))
 
   (it "should get form as virkailija without henkilo"
-    (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
+    (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija] resp
         (should= 200 (:status resp))
         (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
@@ -279,7 +279,7 @@
                    [])))))
 
   (it "should get application with hakuaika ended"
-    (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-grace-period]
+    (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ended-within-grace-period]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:hakija :with-henkilo] resp
         (should= 200 (:status resp))
         (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
@@ -291,7 +291,7 @@
                    ["ssn" "birth-date"])))))
 
   (it "should get application with hakuaika ended as virkailija"
-    (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-grace-period]
+    (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ended-within-grace-period]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija :with-henkilo] resp
         (should= 200 (:status resp))
         (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
@@ -303,7 +303,7 @@
                    [])))))
 
   (it "should get application with hakuaika ended but hakukierros ongoing"
-    (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing]
+    (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ended-grace-period-passed-hakukierros-ongoing]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:hakija :with-henkilo] resp
         (should= 200 (:status resp))
         (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
@@ -315,7 +315,7 @@
                    ["ssn" "birth-date"])))))
 
   (it "should get application with hakuaika ended but hakukierros ongoing as virkailija"
-    (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing]
+    (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ended-grace-period-passed-hakukierros-ongoing]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija :with-henkilo] resp
         (should= 200 (:status resp))
         (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
@@ -332,7 +332,7 @@
   (describe "POST application"
             (around [spec]
               (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
-                            hakuaika/get-hakuaika-info                            hakuaika-ongoing
+                            hakuaika/hakukohteen-hakuaika                         hakuaika-ongoing
                             koodisto/all-koodisto-values                          (constantly nil)]
                 (spec)))
 
@@ -341,7 +341,7 @@
         (reset! form (db/init-db-fixture person-info-form-with-hidden-attachment))))
 
     (it "should validate application for hakukohde and do not contain hidden attachment"
-        (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
+        (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing]
           (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
             (should= 200 (:status resp))
             (should (have-application-for-hakukohde-in-db (get-in resp [:body :id]))))))
@@ -381,7 +381,7 @@
   (describe "GET application"
     (around [spec]
       (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
-                    hakuaika/get-hakuaika-info                            hakuaika-ongoing
+                    hakuaika/hakukohteen-hakuaika                         hakuaika-ongoing
                     koodisto/all-koodisto-values                          (constantly nil)
                     file-store/get-metadata                               (fn [keys]
                                                                             (map #(hash-map
@@ -409,22 +409,22 @@
         (should= 404 (:status resp))))
 
     (it "should get application"
-      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
+      (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing]
         (with-get-response "12345" resp
           (should= 200 (:status resp)))))
 
     (it "should get application with hakuaika ended"
-      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-grace-period]
+      (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ended-within-grace-period]
         (with-get-response "12345" resp
           (should= 200 (:status resp)))))
 
     (it "should get application with hakuaika ended but hakukierros ongoing"
-      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing]
+      (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ended-grace-period-passed-hakukierros-ongoing]
         (with-get-response "12345" resp
           (should= 200 (:status resp)))))
 
     (it "should get application with hakuaika ended but field deadline extended"
-      (with-redefs [hakuaika/get-hakuaika-info         hakuaika-ended-grace-period-passed-hakukierros-ongoing
+      (with-redefs [hakuaika/hakukohteen-hakuaika      hakuaika-ended-grace-period-passed-hakukierros-ongoing
                     field-deadline/get-field-deadlines (fn [_]
                                                          [{:field-id      "b0839467-a6e8-4294-b5cc-830756bbda8a"
                                                            :deadline      (.plusDays (DateTime/now) 1)
@@ -437,7 +437,7 @@
                                    :cannot-edit]))))))
 
     (it "should get application with hakuaika ended and field deadline passed"
-      (with-redefs [hakuaika/get-hakuaika-info         hakuaika-ended-grace-period-passed-hakukierros-ongoing
+      (with-redefs [hakuaika/hakukohteen-hakuaika      hakuaika-ended-grace-period-passed-hakukierros-ongoing
                     field-deadline/get-field-deadlines (fn [_]
                                                          [{:field-id      "b0839467-a6e8-4294-b5cc-830756bbda8a"
                                                            :deadline      (.minusDays (DateTime/now) 1)
@@ -454,7 +454,7 @@
       (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
                     application-email/start-email-edit-confirmation-job   (constantly nil)
                     application-service/remove-orphan-attachments         (fn [_ _])
-                    hakuaika/get-hakuaika-info                            hakuaika-ongoing
+                    hakuaika/hakukohteen-hakuaika                         hakuaika-ongoing
                     koodisto/all-koodisto-values                          (constantly nil)]
         (spec)))
 
@@ -484,7 +484,7 @@
             (should= "010101A123N" (get-answer application "ssn"))))))
 
     (it "should create for hakukohde with hakukohde order check"
-      (with-redefs [hakuaika/get-hakuaika-info            hakuaika-ongoing
+      (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing
                     crypto/url-part (constantly "0000000013")]
         (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
           (should= 200 (:status resp))
@@ -520,14 +520,14 @@
       (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
 
     (it "should create"
-      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing
+      (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing
                     crypto/url-part (constantly "0000000020")]
         (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
           (should= 200 (:status resp))
           (should (have-application-in-db (get-in resp [:body :id]))))))
 
     (it "should allow application edit after hakuaika within 10 days and only changes to attachments and limited person info"
-      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-grace-period-hakukierros-ongoing
+      (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ended-within-grace-period-hakukierros-ongoing
                     crypto/url-part (constantly "0000000021")]
         (with-response :put resp (merge application-for-hakukohde-edited {:secret "0000000020"})
           (should= 200 (:status resp))
@@ -539,7 +539,7 @@
                      (get-answer application "164954b5-7b23-4774-bd44-dee14071316b"))))))
 
     (it "should allow application edit after grace period and only changes to limited person info"
-      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing
+      (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ended-grace-period-passed-hakukierros-ongoing
                     crypto/url-part (constantly "0000000022")]
         (with-response :put resp (merge application-for-hakukohde-email-edited {:secret "0000000021"})
           (should= 200 (:status resp))
@@ -551,13 +551,13 @@
                      (get-answer application "164954b5-7b23-4774-bd44-dee14071316b"))))))
 
     (it "should disallow application edit after grace period to attachments"
-      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing
+      (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ended-grace-period-passed-hakukierros-ongoing
                     crypto/url-part (constantly "0000000023")]
         (with-response :put resp (merge application-fixtures/person-info-form-application-for-hakukohde {:secret "0000000022"})
           (should= 400 (:status resp)))))
 
     (it "should disallow application edit after grace period to attachment with extended field deadline that has passed"
-      (with-redefs [hakuaika/get-hakuaika-info         hakuaika-ended-grace-period-passed-hakukierros-ongoing
+      (with-redefs [hakuaika/hakukohteen-hakuaika      hakuaika-ended-grace-period-passed-hakukierros-ongoing
                     field-deadline/get-field-deadlines (fn [_]
                                                          [{:field-id      "164954b5-7b23-4774-bd44-dee14071316b"
                                                            :deadline      (.minusDays (DateTime/now) 1)
@@ -567,7 +567,7 @@
           (should= 400 (:status resp)))))
 
     (it "should allow application edit after grace period to attachment with extended field deadline"
-      (with-redefs [hakuaika/get-hakuaika-info         hakuaika-ended-grace-period-passed-hakukierros-ongoing
+      (with-redefs [hakuaika/hakukohteen-hakuaika      hakuaika-ended-grace-period-passed-hakukierros-ongoing
                     field-deadline/get-field-deadlines (fn [_]
                                                          [{:field-id      "164954b5-7b23-4774-bd44-dee14071316b"
                                                            :deadline      (.plusDays (DateTime/now) 1)
@@ -587,11 +587,11 @@
                     application-email/start-email-edit-confirmation-job   (constantly nil)
                     application-service/remove-orphan-attachments         (fn [_ _])
                     koodisto/all-koodisto-values                          (constantly nil)]
-        (with-redefs [hakuaika/get-hakuaika-info            hakuaika-ongoing
+        (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing
                       crypto/url-part (constantly "0000000023")]
           (with-response :post resp application-fixtures/person-info-form-application-with-empty-answers
             (should= 200 (:status resp))))
-        (with-redefs [hakuaika/get-hakuaika-info            hakuaika-ended-grace-period-passed-hakukierros-ongoing
+        (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ended-grace-period-passed-hakukierros-ongoing
                       crypto/url-part (constantly "0000000024")]
           (with-response :put resp (merge application-fixtures/person-info-form-application-with-empty-answers {:secret "0000000023"})
             (should= 200 (:status resp)))))))
@@ -601,7 +601,7 @@
       (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
                     application-email/start-email-edit-confirmation-job   (constantly nil)
                     application-service/remove-orphan-attachments         (fn [_ _])
-                    hakuaika/get-hakuaika-info                            hakuaika-ongoing
+                    hakuaika/hakukohteen-hakuaika                         hakuaika-ongoing
                     koodisto/all-koodisto-values                          (constantly nil)]
         (spec)))
 

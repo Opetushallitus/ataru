@@ -326,10 +326,9 @@
    :tarjoaja-name                                                                LocalizedStringOptional
    :tarjoaja-oids                                                                [s/Str]
    :ryhmaliitokset                                                               [s/Str]
-   :kaytetaan-hakukohdekohtaista-hakuaikaa?                                      s/Bool
    (s/optional-key :hakuaika-id)                                                 s/Str
-   (s/optional-key :hakuaika-alku)                                               s/Int
-   (s/optional-key :hakuaika-loppu)                                              s/Int
+   (s/optional-key :hakuajat)                                                    [{:start                org.joda.time.DateTime
+                                                                                   (s/optional-key :end) org.joda.time.DateTime}]
    :hakukelpoisuusvaatimus-uris                                                  [s/Str]
    :ylioppilastutkinto-antaa-hakukelpoisuuden?                                   s/Bool
    ;; jyemp
