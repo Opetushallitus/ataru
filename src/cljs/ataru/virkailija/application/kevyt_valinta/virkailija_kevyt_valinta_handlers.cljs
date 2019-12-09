@@ -55,6 +55,7 @@
 
                        (->> kevyt-valinta-db'
                             (keys)
+                            (filter (comp (partial not= :kevyt-valinta-ui/ongoing-request-for-property)))
                             (filter (comp (partial not= kevyt-valinta-dropdown-id)))
                             (reduce (fn [acc kevyt-valinta-property]
                                       (assoc-in acc [kevyt-valinta-property :open?] false))
