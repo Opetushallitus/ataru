@@ -85,8 +85,7 @@
            :haku-name                        (:name haku)
            :prioritize-hakukohteet           (:prioritize-hakukohteet haku)
            :max-hakukohteet                  (:max-hakukohteet haku)
-           :hakuaika                         (or (hakuaika/select-hakuaika now (hakuaika/haun-hakuajat now haku ohjausparametrit))
-                                                 (hakuaika/select-hakuaika now (map :hakuaika hakukohteet)))
+           :hakuaika                         (hakuaika/haun-hakuaika now haku ohjausparametrit)
            :can-submit-multiple-applications (:can-submit-multiple-applications haku)
            :yhteishaku                       (:yhteishaku haku)}}))))
   ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service haku-oid]
