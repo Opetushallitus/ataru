@@ -169,8 +169,7 @@
        lang]]]))
 
 (def ^:private julkaisun-tilat
-  [:kevyt-valinta/julkaistu-hakijalle
-   :kevyt-valinta/ei-julkaistu])
+  [true false])
 
 (defn- kevyt-valinta-julkaisun-tila-selection [hakukohde-oid
                                                application-key
@@ -178,15 +177,18 @@
                                                julkaisun-tila-property-state
                                                lang]
   (let [julkaisun-tilat-i18n (map (fn [julkaisun-tila]
-                                    {:value julkaisun-tila
-                                     :label (-> translations/kevyt-valinta-julkaisun-tila-translations
-                                                julkaisun-tila
-                                                lang)})
+                                    (let [translation-key (case julkaisun-tila
+                                                            true :kevyt-valinta/julkaistu-hakijalle
+                                                            false :kevyt-valinta/ei-julkaistu)]
+                                      {:value julkaisun-tila
+                                       :label (-> translations/kevyt-valinta-julkaisun-tila-translations
+                                                  translation-key
+                                                  lang)}))
                                   julkaisun-tilat)
-        julkaisun-tila-i18n (->> julkaisun-tilat-i18n
-                                 (filter (comp (partial = julkaisun-tila)
-                                               :value))
-                                 (map :label))]
+        julkaisun-tila-i18n  (->> julkaisun-tilat-i18n
+                                  (filter (comp (partial = julkaisun-tila)
+                                                :value))
+                                  (map :label))]
     [kevyt-valinta-selection
      :kevyt-valinta/julkaisun-tila
      julkaisun-tila-property-state
