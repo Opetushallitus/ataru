@@ -1574,6 +1574,15 @@ You will receive a confirmation of your application to your email."}
   {:kevyt-valinta/julkaistu-hakijalle {:fi "Julkaistu hakijalle"}
    :kevyt-valinta/ei-julkaistu        {:fi "Ei julkaistu"}})
 
+(def kevyt-valinta-vastaanotto-tila-translations
+  {:kevyt-valinta/ei-vastaanotettu-maaraaikana  {:fi "Ei vastaanotettu määräaikana"}
+   :kevyt-valinta/perunut                       {:fi "Perunut"}
+   :kevyt-valinta/peruutettu                    {:fi "Peruutettu"}
+   :kevyt-valinta/ottanut-vastaan-toisen-paikan {:fi "Ottanut vastaan toisen paikan"}
+   :kevyt-valinta/ehdollisesti-vastaanottanut   {:fi "Ehdollisesti vastaanottanut"}
+   :kevyt-valinta/vastaanottanut-sitovasti      {:fi "Vastaanottanut sitovasti"}
+   :kevyt-valinta/kesken                        {:fi "Kesken"}})
+
 (def state-translations
   {:active                 {:fi "Aktiivinen"
                             :sv "Aktiv"

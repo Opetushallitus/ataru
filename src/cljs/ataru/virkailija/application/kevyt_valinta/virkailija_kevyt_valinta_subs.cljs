@@ -59,6 +59,18 @@
           :julkaistavissa))))
 
 (re-frame/reg-sub
+  :virkailija-kevyt-valinta/vastaanotto-tila
+  (fn [[_ application-key]]
+    [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+     (re-frame/subscribe [:state-query [:application :valinta-tulos-service application-key]])])
+  (fn [[hakukohde-oids valinnan-tulokset-for-application]]
+    (let [hakukohde-oid (first hakukohde-oids)]
+      (-> valinnan-tulokset-for-application
+          (get hakukohde-oid)
+          :valinnantulos
+          :vastaanottotila))))
+
+(re-frame/reg-sub
   :virkailija-kevyt-valinta/valintatapajono-oid
   (fn [[_ application-key]]
     [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
@@ -89,13 +101,30 @@
      (re-frame/subscribe [:state-query [:application :valinta-tulos-service application-key]])])
   (fn [[hakukohde-oids valinnan-tulokset-for-application] [_ kevyt-valinta-property]]
     (let [hakukohde-oid       (first hakukohde-oids)
-          {valinnan-tila  :valinnantila
-           julkaisun-tila :julkaistavissa} (-> valinnan-tulokset-for-application
-                                               (get hakukohde-oid)
-                                               :valinnantulos)
-          kevyt-valinta-state (match [valinnan-tila julkaisun-tila]
-                                     [_ _]
-                                     {:kevyt-valinta/valinnan-tila  :unchecked
-                                      :kevyt-valinta/julkaisun-tila :unchecked})]
+          {valinnan-tila    :valinnantila
+           julkaisun-tila   :julkaistavissa
+           vastaanotto-tila :vastaanottotila} (-> valinnan-tulokset-for-application
+                                                  (get hakukohde-oid)
+                                                  :valinnantulos)
+          kevyt-valinta-state (match [valinnan-tila julkaisun-tila vastaanotto-tila]
+                                     [_ false _]
+                                     {:kevyt-valinta/valinnan-tila    :unchecked
+                                      :kevyt-valinta/julkaisun-tila   :unchecked
+                                      :kevyt-valinta/vastaanotto-tila :grayed-out}
+
+                                     [(:or "HYLATTY" "VARALLA" "PERUUNTUNUT") true _]
+                                     {:kevyt-valinta/valinnan-tila    :unchecked
+                                      :kevyt-valinta/julkaisun-tila   :unchecked
+                                      :kevyt-valinta/vastaanotto-tila :grayed-out}
+
+                                     [(:or "VARASIJALTA_HYVAKSYTTY" "HYVAKSYTTY" "PERUNUT" "PERUUTETTU") true "KESKEN"]
+                                     {:kevyt-valinta/valinnan-tila    :unchecked
+                                      :kevyt-valinta/julkaisun-tila   :unchecked
+                                      :kevyt-valinta/vastaanotto-tila :unchecked}
+
+                                     [(:or "VARASIJALTA_HYVAKSYTTY" "HYVAKSYTTY" "PERUNUT" "PERUUTETTU") true (_ :guard #(not= % "KESKEN"))]
+                                     {:kevyt-valinta/valinnan-tila    :checked
+                                      :kevyt-valinta/julkaisun-tila   :checked
+                                      :kevyt-valinta/vastaanotto-tila :unchecked})]
       (kevyt-valinta-state kevyt-valinta-property))))
 

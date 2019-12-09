@@ -81,7 +81,8 @@
     (let [request-id                     (keyword (str (name kevyt-valinta-property) "-" (t/epoch)))
           valinta-tulos-service-property (case kevyt-valinta-property
                                            :kevyt-valinta/valinnan-tila :valinnantila
-                                           :kevyt-valinta/julkaisun-tila :julkaistavissa)
+                                           :kevyt-valinta/julkaisun-tila :julkaistavissa
+                                           :kevyt-valinta/vastaanotto-tila :vastaanottotila)
           db                             (-> db
                                              (update-in [:application :kevyt-valinta kevyt-valinta-property]
                                                         merge
