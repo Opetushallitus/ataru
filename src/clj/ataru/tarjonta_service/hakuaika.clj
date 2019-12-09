@@ -149,15 +149,21 @@
                           :jatkuva-haku?                       (jatkuva-haku? haku)
                           :hakukierros-end                     (-> ohjausparametrit :PH_HKP :date)})))
 
-(defn haun-hakuajat
+(defn haun-hakuaika
   [now haku ohjausparametrit]
-  (map (fn [hakuaika]
-         (let [start (.getMillis (:start hakuaika))
-               end   (.getMillis (:end hakuaika))]
-           (hakuaika-with-label {:start                               start
-                                 :end                                 end
-                                 :on                                  (hakuaika-on now start end)
-                                 :attachment-modify-grace-period-days (-> ohjausparametrit :PH_LMT :value)
-                                 :jatkuva-haku?                       (jatkuva-haku? haku)
-                                 :hakukierros-end                     (-> ohjausparametrit :PH_HKP :date)})))
-       (:hakuajat haku)))
+  (when-let [hakuaika (->> (:hakuajat haku)
+                           (map (fn [hakuaika]
+                                  (let [start (.getMillis (:start hakuaika))
+                                        end   (some-> (:end hakuaika)
+                                                      (.getMillis))]
+                                    {:start start
+                                     :end   end
+                                     :on    (hakuaika-on now start end)})))
+                           (select-hakuaika now))]
+    (hakuaika-with-label
+     {:start                               (:start hakuaika)
+      :end                                 (:end hakuaika)
+      :on                                  (:on hakuaika)
+      :attachment-modify-grace-period-days (-> ohjausparametrit :PH_LMT :value)
+      :jatkuva-haku?                       (jatkuva-haku? haku)
+      :hakukierros-end                     (-> ohjausparametrit :PH_HKP :date)})))
