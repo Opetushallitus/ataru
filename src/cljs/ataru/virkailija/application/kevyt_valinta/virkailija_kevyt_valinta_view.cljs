@@ -218,6 +218,62 @@
       julkaisun-tila-property-state
       lang]]))
 
+(def ^:private vastaanotto-tilat
+  ["EI_VASTAANOTETTU_MAARA_AIKANA"
+   "PERUNUT"
+   "PERUUTETTU"
+   "OTTANUT_VASTAAN_TOISEN_PAIKAN"
+   "EHDOLLISESTI_VASTAANOTTANUT"
+   "VASTAANOTTANUT_SITOVASTI"
+   "KESKEN"])
+
+(defn- vastaanotto-tila-label [vastaanotto-tila lang]
+  (-> review-states/vastaanotto-tila-selection-state
+      (get vastaanotto-tila)
+      lang))
+
+(defn- kevyt-valinta-vastaanotto-tila-selection [hakukohde-oid
+                                                 application-key
+                                                 vastaanotto-tila-property-state
+                                                 vastaanotto-tila
+                                                 lang]
+  (let [vastaanotto-tilat-i18n (map (fn [vastaanotto-tila]
+                                      {:value vastaanotto-tila
+                                       :label (vastaanotto-tila-label vastaanotto-tila lang)})
+                                    vastaanotto-tilat)
+        vastaanotto-tila-i18n  (->> vastaanotto-tilat-i18n
+                                    (filter (comp (partial = vastaanotto-tila)
+                                                  :value))
+                                    (map :label))]
+    [kevyt-valinta-selection
+     :kevyt-valinta/vastaanotto-tila
+     vastaanotto-tila-property-state
+     vastaanotto-tila-i18n
+     vastaanotto-tilat-i18n
+     (partial on-kevyt-valinta-property-change
+              :kevyt-valinta/vastaanotto-tila
+              hakukohde-oid
+              application-key)]))
+
+(defn- kevyt-valinta-vastaanotto-tila-row [hakukohde-oid
+                                           application-key
+                                           lang]
+  (let [vastaanotto-tila                @(re-frame/subscribe [:virkailija-kevyt-valinta/vastaanotto-tila application-key])
+        vastaanotto-tila-label          (kevyt-valinta-review-type-label :kevyt-valinta/vastaanotto-tila lang)
+        vastaanotto-tila-property-state @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-state
+                                                              :kevyt-valinta/vastaanotto-tila
+                                                              application-key])]
+    [kevyt-valinta-row
+     vastaanotto-tila-property-state
+     [kevyt-valinta-checkmark vastaanotto-tila-property-state]
+     vastaanotto-tila-label
+     [kevyt-valinta-vastaanotto-tila-selection
+      hakukohde-oid
+      application-key
+      vastaanotto-tila-property-state
+      vastaanotto-tila
+      lang]]))
+
 (defn kevyt-valinta []
   (let [application-key @(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :key]])
         ;; kevytvalinta näytetään ainoastaan, kun yksi hakukohde valittuna, ks. :virkailija-kevyt-valinta/show-kevyt-valinta?
@@ -229,6 +285,10 @@
       application-key
       lang]
      [kevyt-valinta-julkaisun-tila-row
+      hakukohde-oid
+      application-key
+      lang]
+     [kevyt-valinta-vastaanotto-tila-row
       hakukohde-oid
       application-key
       lang]]))

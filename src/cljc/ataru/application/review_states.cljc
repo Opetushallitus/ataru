@@ -1,6 +1,7 @@
 (ns ataru.application.review-states
   (:require [ataru.translations.texts :refer [state-translations
-                                              kevyt-valinta-state-translations]]
+                                              kevyt-valinta-state-translations
+                                              kevyt-valinta-vastaanotto-tila-translations]]
             [ataru.util :as util]
             [clojure.set :refer [difference]]))
 
@@ -37,6 +38,15 @@
    "PERUNUT"                (:kevyt-valinta/perunut kevyt-valinta-state-translations)
    "PERUUTETTU"             (:kevyt-valinta/peruutettu kevyt-valinta-state-translations)})
 
+(def vastaanotto-tila-selection-state
+  {"EI_VASTAANOTETTU_MAARA_AIKANA" (:kevyt-valinta/ei-vastaanotettu-maaraaikana kevyt-valinta-vastaanotto-tila-translations)
+   "PERUNUT"                       (:kevyt-valinta/perunut kevyt-valinta-vastaanotto-tila-translations)
+   "PERUUTETTU"                    (:kevyt-valinta/peruutettu kevyt-valinta-vastaanotto-tila-translations)
+   "OTTANUT_VASTAAN_TOISEN_PAIKAN" (:kevyt-valinta/ottanut-vastaan-toisen-paikan kevyt-valinta-vastaanotto-tila-translations)
+   "EHDOLLISESTI_VASTAANOTTANUT"   (:kevyt-valinta/ehdollisesti-vastaanottanut kevyt-valinta-vastaanotto-tila-translations)
+   "VASTAANOTTANUT_SITOVASTI"      (:kevyt-valinta/vastaanottanut-sitovasti kevyt-valinta-vastaanotto-tila-translations)
+   "KESKEN"                        (:kevyt-valinta/kesken kevyt-valinta-vastaanotto-tila-translations)})
+
 (def application-hakukohde-review-states
   [["unreviewed" (:unreviewed state-translations)]
    ["fulfilled" (:fulfilled state-translations)]
@@ -62,7 +72,8 @@
    [:selection-state (:selection-state state-translations) application-hakukohde-selection-states]])
 
 (def kevyt-valinta-hakukohde-review-types
-  {:kevyt-valinta/julkaisun-tila {:fi "Julkaisu"}})
+  {:kevyt-valinta/julkaisun-tila   {:fi "Julkaisu"}
+   :kevyt-valinta/vastaanotto-tila {:fi "Vastaanotto"}})
 
 (def hakukohde-review-types-map
   (util/group-by-first first hakukohde-review-types))
