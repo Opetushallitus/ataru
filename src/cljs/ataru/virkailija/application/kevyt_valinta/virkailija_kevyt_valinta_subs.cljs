@@ -52,7 +52,7 @@
     [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
      (re-frame/subscribe [:state-query [:application :valinta-tulos-service application-key]])])
   (fn [[hakukohde-oids valinnan-tulokset-for-application]]
-    (let [hakukohde-oid   (first hakukohde-oids)]
+    (let [hakukohde-oid (first hakukohde-oids)]
       (-> valinnan-tulokset-for-application
           (get hakukohde-oid)
           :valinnantulos
