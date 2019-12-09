@@ -104,13 +104,15 @@
       (get valinnan-tila)
       lang))
 
-(defn- on-valinnan-tila-change [hakukohde-oid
-                                application-key
-                                new-valinnan-tila]
-  (re-frame/dispatch [:virkailija-kevyt-valinta/change-valinnan-tila
+(defn- on-kevyt-valinta-property-change [kevyt-valinta-property
+                                         hakukohde-oid
+                                         application-key
+                                         new-kevyt-valinta-property-value]
+  (re-frame/dispatch [:virkailija-kevyt-valinta/change-kevyt-valinta-property
+                      kevyt-valinta-property
                       hakukohde-oid
                       application-key
-                      new-valinnan-tila]))
+                      new-kevyt-valinta-property-value]))
 
 (defn- kevyt-valinta-valinnan-tila-selection [hakukohde-oid
                                               application-key
@@ -128,7 +130,10 @@
      valinnan-tila-property-state
      valinnan-tila-i18n
      valinnan-tilat-i18n
-     (partial on-valinnan-tila-change hakukohde-oid application-key)]))
+     (partial on-kevyt-valinta-property-change
+              :kevyt-valinta/valinnan-tila
+              hakukohde-oid
+              application-key)]))
 
 (defn- kevyt-valinta-valinnan-tila-row [hakukohde-oid
                                         application-key
@@ -150,10 +155,9 @@
        valinnan-tila
        lang]]]))
 
-(defn- on-julkaisun-tila-change [new-julkaisun-tila]
-  (re-frame/dispatch [:virkailija-kevyt-valinta/change-julkaisun-tila new-julkaisun-tila]))
-
-(defn- kevyt-valinta-julkaisun-tila-selection [julkaisun-tila
+(defn- kevyt-valinta-julkaisun-tila-selection [hakukohde-oid
+                                               application-key
+                                               julkaisun-tila
                                                julkaisun-tila-property-state
                                                lang]
   (let [julkaisun-tila-i18n (-> translations/kevyt-valinta-julkaisun-tila-translations
@@ -164,9 +168,13 @@
      julkaisun-tila-property-state
      julkaisun-tila-i18n
      [{:value julkaisun-tila :label julkaisun-tila-i18n}]
-     on-julkaisun-tila-change]))
+     (partial on-kevyt-valinta-property-change
+              :kevyt-valinta/julkaisun-tila
+              hakukohde-oid
+              application-key)]))
 
-(defn- kevyt-valinta-julkaisun-tila-row [application-key
+(defn- kevyt-valinta-julkaisun-tila-row [hakukohde-oid
+                                         application-key
                                          lang]
   (let [julkaisun-tila                @(re-frame/subscribe [:virkailija-kevyt-valinta/julkaisun-tila application-key])
         julkaisun-tila-label          (kevyt-valinta-review-type-label :kevyt-valinta/julkaisun-tila lang)
@@ -178,6 +186,8 @@
      [kevyt-valinta-checkmark julkaisun-tila-property-state]
      julkaisun-tila-label
      [kevyt-valinta-julkaisun-tila-selection
+      hakukohde-oid
+      application-key
       julkaisun-tila
       julkaisun-tila-property-state
       lang]]))
@@ -193,5 +203,6 @@
       application-key
       lang]
      [kevyt-valinta-julkaisun-tila-row
+      hakukohde-oid
       application-key
       lang]]))

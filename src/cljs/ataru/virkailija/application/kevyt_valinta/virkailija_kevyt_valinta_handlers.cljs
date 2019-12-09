@@ -67,63 +67,61 @@
 (def rfc-1123-date-formatter (format/formatter "E, d MMM yyyy HH:mm:ss"))
 
 (re-frame/reg-event-fx
-  :virkailija-kevyt-valinta/change-valinnan-tila
+  :virkailija-kevyt-valinta/change-kevyt-valinta-property
   [(re-frame/inject-cofx :virkailija/resolve-url {:url-key    :valinta-tulos-service.valinnan-tulos
                                                   :target-key :valinta-tulos-service-url})]
   (fn [{valinta-tulos-service-url :valinta-tulos-service-url
         db                        :db}
        [_
+        kevyt-valinta-property
         hakukohde-oid
         application-key
-        new-valinnan-tila]]
-    (let [request-id          (keyword (str (name :kevyt-valinta/valinnan-tila) "-" (t/epoch)))
-          db                  (-> db
-                                  (update-in [:application :kevyt-valinta :kevyt-valinta/valinnan-tila]
-                                             merge
-                                             {:request-id request-id
-                                              :open?      false})
-                                  (assoc-in [:application :kevyt-valinta :kevyt-valinta-ui/ongoing-request-for-property]
-                                            :kevyt-valinta/valinnan-tila)
-                                  (assoc-in [:application
+        new-kevyt-valinta-property-value]]
+    (let [request-id                     (keyword (str (name kevyt-valinta-property) "-" (t/epoch)))
+          valinta-tulos-service-property (case kevyt-valinta-property
+                                           :kevyt-valinta/valinnan-tila :valinnantila
+                                           :kevyt-valinta/julkaisun-tila :julkaistavissa)
+          db                             (-> db
+                                             (update-in [:application :kevyt-valinta kevyt-valinta-property]
+                                                        merge
+                                                        {:request-id request-id
+                                                         :open?      false})
+                                             (assoc-in [:application :kevyt-valinta :kevyt-valinta-ui/ongoing-request-for-property]
+                                                       kevyt-valinta-property)
+                                             (assoc-in [:application
+                                                        :valinta-tulos-service
+                                                        application-key
+                                                        hakukohde-oid
+                                                        :valinnantulos
+                                                        valinta-tulos-service-property]
+                                                       new-kevyt-valinta-property-value))
+          valinnan-tulos                 (-> db
+                                             :application
                                              :valinta-tulos-service
-                                             application-key
-                                             hakukohde-oid
-                                             :valinnantulos
-                                             :valinnantila]
-                                            new-valinnan-tila))
-          valinnan-tulos      (-> db
-                                  :application
-                                  :valinta-tulos-service
-                                  (get application-key)
-                                  (get hakukohde-oid)
-                                  :valinnantulos)
-          valintatapajono-oid (:valintatapajonoOid valinnan-tulos)
-          request-body        [(select-keys valinnan-tulos
-                                            [:vastaanottotila
-                                             :hakukohdeOid
-                                             :ilmoittautumistila
-                                             :henkiloOid
-                                             :valintatapajonoOid
-                                             :hakemusOid
-                                             :valinnantila])]
-          now                 (t/now)
-          formatted-now       (str (format/unparse rfc-1123-date-formatter now) " GMT")]
+                                             (get application-key)
+                                             (get hakukohde-oid)
+                                             :valinnantulos)
+          valintatapajono-oid            (:valintatapajonoOid valinnan-tulos)
+          request-body                   [(select-keys valinnan-tulos
+                                                       [:vastaanottotila
+                                                        :hakukohdeOid
+                                                        :ilmoittautumistila
+                                                        :henkiloOid
+                                                        :valintatapajonoOid
+                                                        :hakemusOid
+                                                        :valinnantila])]
+          now                            (t/now)
+          formatted-now                  (str (format/unparse rfc-1123-date-formatter now) " GMT")]
       {:db   db
        :http {:method        :patch
               :path          (str valinta-tulos-service-url "/" valintatapajono-oid "?erillishaku=true")
               :id            request-id
               :override-args {:params              request-body
                               :headers             {"X-If-Unmodified-Since" formatted-now}
-                              :handler-or-dispatch :virkailija-kevyt-valinta/handle-changed-valinnan-tila}}})))
+                              :handler-or-dispatch :virkailija-kevyt-valinta/handle-changed-kevyt-valinta-property}}})))
 
 (re-frame/reg-event-db
-  :virkailija-kevyt-valinta/handle-changed-valinnan-tila
+  :virkailija-kevyt-valinta/handle-changed-kevyt-valinta-property
   (fn [db [_ response]]
     (println (str "response: " response))
     db))
-
-(re-frame/reg-event-fx
-  :virkailija-kevyt-valinta/change-julkaisun-tila
-  (fn [_ [_ new-julkaisun-tila]]
-    (println (str "new-julkaisun-tila: " new-julkaisun-tila))
-    {}))
