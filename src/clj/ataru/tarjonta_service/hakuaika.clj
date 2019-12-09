@@ -51,12 +51,6 @@
   (and (started? now start)
        (not (ended? now end))))
 
-(defn- hakukohteen-hakuaika [haku hakukohde]
-  (some #(when (= (:hakuaika-id hakukohde)
-                  (:hakuaika-id %))
-           %)
-        (:hakuajat haku)))
-
 (defn date-time->localized-date-time [date-time]
   (->> [:fi :sv :en]
        (map (fn [lang] [lang (date-timez->localized-date-time date-time lang)]))
@@ -91,12 +85,6 @@
                       (< %1 %2)))
             hakuajat)))
 
-(defn select-hakuaika [now hakuajat]
-  (or (last-by-ending (filter :on hakuajat))
-      (last-by-ending (filter #(ended? now (:end %)) hakuajat))
-      (first-by-start (filter #(not (started? now (:start %))) hakuajat))
-      (last-by-ending hakuajat)))
-
 (defn index-hakuajat
   [hakukohteet]
   (reduce (fn [{:keys [uniques by-oid]} {:keys [oid hakuaika hakukohderyhmat]}]
@@ -107,6 +95,12 @@
           {:uniques #{}
            :by-oid  {}}
           hakukohteet))
+
+(defn- select-hakuaika [now hakuajat]
+  (or (last-by-ending (filter :on hakuajat))
+      (last-by-ending (filter #(ended? now (:end %)) hakuajat))
+      (first-by-start (filter #(not (started? now (:start %))) hakuajat))
+      (last-by-ending hakuajat)))
 
 (defn select-hakuaika-for-field [now field {:keys [uniques by-oid]}]
   (select-hakuaika
@@ -132,16 +126,25 @@
                            :end      (millis->localized-date-time end)
                            :end-time (millis->localized-time end)})))
 
-(defn get-hakuaika-info [now haku ohjausparametrit hakukohde]
-  (let [[start end] (if (:kaytetaan-hakukohdekohtaista-hakuaikaa? hakukohde)
-                      [(:hakuaika-alku hakukohde)
-                       (:hakuaika-loppu hakukohde)]
-                      (let [hakuaika (hakukohteen-hakuaika haku hakukohde)]
-                        [(.getMillis (:start hakuaika))
-                         (.getMillis (:end hakuaika))]))]
-    (hakuaika-with-label {:start                               start
-                          :end                                 end
-                          :on                                  (hakuaika-on now start end)
+(defn- hakukohteen-hakuajat [haku hakuaika-id]
+  (filter #(= hakuaika-id (:hakuaika-id %))
+          (:hakuajat haku)))
+
+(defn hakukohteen-hakuaika
+  [now haku ohjausparametrit hakukohde]
+  (let [hakuaika (->> (if-let [hakuaika-id (:hakuaika-id hakukohde)]
+                        (hakukohteen-hakuajat haku hakuaika-id)
+                        (:hakuajat hakukohde))
+                      (map (fn [hakuaika]
+                             (let [start (.getMillis (:start hakuaika))
+                                   end   (some-> (:end hakuaika) (.getMillis))]
+                               {:start start
+                                :end   end
+                                :on    (hakuaika-on now start end)})))
+                      (select-hakuaika now))]
+    (hakuaika-with-label {:start                               (:start hakuaika)
+                          :end                                 (:end hakuaika)
+                          :on                                  (:on hakuaika)
                           :attachment-modify-grace-period-days (-> ohjausparametrit :PH_LMT :value)
                           :jatkuva-haku?                       (jatkuva-haku? haku)
                           :hakukierros-end                     (-> ohjausparametrit :PH_HKP :date)})))
