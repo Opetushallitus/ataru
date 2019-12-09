@@ -14,7 +14,7 @@
             [ataru.virkailija.application.hyvaksynnan-ehto.view :as hyvaksynnan-ehto]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-handlers]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs]
-            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-view :as kv]
+            [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-view :as kv]
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :as t]
             [ataru.virkailija.temporal :as temporal]
