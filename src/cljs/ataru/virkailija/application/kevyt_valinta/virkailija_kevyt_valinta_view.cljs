@@ -53,16 +53,21 @@
        ongoing-request-property])))
 
 (defn- kevyt-valinta-checkmark [kevyt-valinta-property-state]
-  (let [checkmark-class (case kevyt-valinta-property-state
-                          :checked
-                          "application-handling__kevyt-valinta-checkmark--checked"
+  (let [ongoing-request-property @(re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])
+        checkmark-class          (match [kevyt-valinta-property-state ongoing-request-property]
+                                        [:checked (_ :guard (comp not nil?))]
+                                        "application-handling__kevyt-valinta-checkmark--unchecked"
 
-                          :unchecked
-                          "application-handling__kevyt-valinta-checkmark--unchecked"
+                                        [:checked _]
+                                        "application-handling__kevyt-valinta-checkmark--checked"
 
-                          :grayed-out
-                          "application-handling__kevyt-valinta-checkmark--grayed-out")
-        show-checkmark? (= kevyt-valinta-property-state :checked)]
+                                        [:unchecked _]
+                                        "application-handling__kevyt-valinta-checkmark--unchecked"
+
+                                        [:grayed-out _]
+                                        "application-handling__kevyt-valinta-checkmark--grayed-out")
+        show-checkmark?          (and (= kevyt-valinta-property-state :checked)
+                                      (not ongoing-request-property))]
     [:div.application-handling__kevyt-valinta-checkmark
      {:class checkmark-class}
      (when show-checkmark?
