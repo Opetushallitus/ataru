@@ -107,6 +107,9 @@
 (def ^:private checked-valinnan-tilat
   ["HYLATTY" "PERUUNTUNUT" "VARASIJALTA_HYVAKSYTTY" "HYVAKSYTTY" "PERUNUT" "PERUUTETTU"])
 
+(def ^:private valinnan-tilat
+  (conj checked-valinnan-tilat "VARALLA"))
+
 (defn- valinnan-tila-label [valinnan-tila lang]
   (-> review-states/kevyt-valinta-selection-state
       (get valinnan-tila)
@@ -127,12 +130,14 @@
                                               valinnan-tila-property-state
                                               valinnan-tila
                                               lang]
-  (let [valinnan-tila-i18n  (valinnan-tila-label valinnan-tila lang)
-        valinnan-tilat      (conj checked-valinnan-tilat "VARALLA")
-        valinnan-tilat-i18n (map (fn [valinnan-tila]
+  (let [valinnan-tilat-i18n (map (fn [valinnan-tila]
                                    {:value valinnan-tila
                                     :label (valinnan-tila-label valinnan-tila lang)})
-                                 valinnan-tilat)]
+                                 valinnan-tilat)
+        valinnan-tila-i18n  (->> valinnan-tilat-i18n
+                                 (filter (comp (partial = valinnan-tila)
+                                               :value))
+                                 (map :label))]
     [kevyt-valinta-selection
      :kevyt-valinta/valinnan-tila
      valinnan-tila-property-state
@@ -163,19 +168,30 @@
        valinnan-tila
        lang]]]))
 
+(def ^:private julkaisun-tilat
+  [:kevyt-valinta/julkaistu-hakijalle
+   :kevyt-valinta/ei-julkaistu])
+
 (defn- kevyt-valinta-julkaisun-tila-selection [hakukohde-oid
                                                application-key
                                                julkaisun-tila
                                                julkaisun-tila-property-state
                                                lang]
-  (let [julkaisun-tila-i18n (-> translations/kevyt-valinta-julkaisun-tila-translations
-                                julkaisun-tila
-                                lang)]
+  (let [julkaisun-tilat-i18n (map (fn [julkaisun-tila]
+                                    {:value julkaisun-tila
+                                     :label (-> translations/kevyt-valinta-julkaisun-tila-translations
+                                                julkaisun-tila
+                                                lang)})
+                                  julkaisun-tilat)
+        julkaisun-tila-i18n (->> julkaisun-tilat-i18n
+                                 (filter (comp (partial = julkaisun-tila)
+                                               :value))
+                                 (map :label))]
     [kevyt-valinta-selection
      :kevyt-valinta/julkaisun-tila
      julkaisun-tila-property-state
      julkaisun-tila-i18n
-     [{:value julkaisun-tila :label julkaisun-tila-i18n}]
+     julkaisun-tilat-i18n
      (partial on-kevyt-valinta-property-change
               :kevyt-valinta/julkaisun-tila
               hakukohde-oid
