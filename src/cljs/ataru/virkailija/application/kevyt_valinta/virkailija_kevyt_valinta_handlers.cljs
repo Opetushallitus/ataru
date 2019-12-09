@@ -114,15 +114,17 @@
           now                            (t/now)
           formatted-now                  (str (format/unparse rfc-1123-date-formatter now) " GMT")]
       {:db   db
-       :http {:method        :patch
-              :path          (str valinta-tulos-service-url "/" valintatapajono-oid "?erillishaku=true")
-              :id            request-id
-              :override-args {:params              request-body
-                              :headers             {"X-If-Unmodified-Since" formatted-now}
-                              :handler-or-dispatch :virkailija-kevyt-valinta/handle-changed-kevyt-valinta-property}}})))
+       :http {:method              :patch
+              :path                (str valinta-tulos-service-url "/" valintatapajono-oid "?erillishaku=true")
+              :id                  request-id
+              :override-args       {:params  request-body
+                                    :headers {"X-If-Unmodified-Since" formatted-now}}
+              :handler-or-dispatch :virkailija-kevyt-valinta/handle-changed-kevyt-valinta-property}})))
 
 (re-frame/reg-event-db
   :virkailija-kevyt-valinta/handle-changed-kevyt-valinta-property
-  (fn [db [_ response]]
-    (println (str "response: " response))
-    db))
+  (fn [db]
+    (update-in db
+               [:application :kevyt-valinta]
+               dissoc
+               :kevyt-valinta-ui/ongoing-request-for-property)))
