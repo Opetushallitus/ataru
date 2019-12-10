@@ -95,40 +95,6 @@
                   not)
           kevyt-valinta-property)))))
 
-(re-frame/reg-sub
-  :virkailija-kevyt-valinta/kevyt-valinta-property-state
-  (fn [[_ _ application-key]]
-    [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-     (re-frame/subscribe [:state-query [:application :valinta-tulos-service application-key]])])
-  (fn [[hakukohde-oids valinnan-tulokset-for-application] [_ kevyt-valinta-property]]
-    (let [hakukohde-oid       (first hakukohde-oids)
-          {valinnan-tila    :valinnantila
-           julkaisun-tila   :julkaistavissa
-           vastaanotto-tila :vastaanottotila} (-> valinnan-tulokset-for-application
-                                                  (get hakukohde-oid)
-                                                  :valinnantulos)
-          kevyt-valinta-state (match [valinnan-tila julkaisun-tila vastaanotto-tila]
-                                     [_ false _]
-                                     {:kevyt-valinta/valinnan-tila    :unchecked
-                                      :kevyt-valinta/julkaisun-tila   :unchecked
-                                      :kevyt-valinta/vastaanotto-tila :grayed-out}
-
-                                     [(:or "HYLATTY" "VARALLA" "PERUUNTUNUT") true _]
-                                     {:kevyt-valinta/valinnan-tila    :unchecked
-                                      :kevyt-valinta/julkaisun-tila   :unchecked
-                                      :kevyt-valinta/vastaanotto-tila :grayed-out}
-
-                                     [(:or "VARASIJALTA_HYVAKSYTTY" "HYVAKSYTTY" "PERUNUT" "PERUUTETTU") true "KESKEN"]
-                                     {:kevyt-valinta/valinnan-tila    :unchecked
-                                      :kevyt-valinta/julkaisun-tila   :unchecked
-                                      :kevyt-valinta/vastaanotto-tila :unchecked}
-
-                                     [(:or "VARASIJALTA_HYVAKSYTTY" "HYVAKSYTTY" "PERUNUT" "PERUUTETTU") true (_ :guard #(not= % "KESKEN"))]
-                                     {:kevyt-valinta/valinnan-tila    :checked
-                                      :kevyt-valinta/julkaisun-tila   :checked
-                                      :kevyt-valinta/vastaanotto-tila :unchecked})]
-      (kevyt-valinta-state kevyt-valinta-property))))
-
 (def ^:private kevyt-valinta-property-order
   [:kevyt-valinta/valinnan-tila
    :kevyt-valinta/julkaisun-tila
@@ -150,27 +116,87 @@
             (filter (comp not nil?))
             (first))))
 
+(re-frame/reg-sub
+  :virkailija-kevyt-valinta/kevyt-valinta-property-state
+  (fn [[_ _ application-key]]
+    [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+     (re-frame/subscribe [:state-query [:application :valinta-tulos-service application-key]])])
+  (fn [[hakukohde-oids valinnan-tulokset-for-application] [_ kevyt-valinta-property]]
+    (let [hakukohde-oid        (first hakukohde-oids)
+          {valinnan-tila    :valinnantila
+           julkaisun-tila   :julkaistavissa
+           vastaanotto-tila :vastaanottotila} (-> valinnan-tulokset-for-application
+                                                  (get hakukohde-oid)
+                                                  :valinnantulos)
+          kevyt-valinta-states (match [valinnan-tila julkaisun-tila vastaanotto-tila]
+                                      [_ (_ :guard nil?) (_ :guard nil?)]
+                                      {:kevyt-valinta/valinnan-tila    :unchecked
+                                       :kevyt-valinta/julkaisun-tila   :grayed-out
+                                       :kevyt-valinta/vastaanotto-tila :grayed-out}
+
+                                      [_ false _]
+                                      {:kevyt-valinta/valinnan-tila    :unchecked
+                                       :kevyt-valinta/julkaisun-tila   :unchecked
+                                       :kevyt-valinta/vastaanotto-tila :grayed-out}
+
+                                      [_ true "KESKEN"]
+                                      {:kevyt-valinta/valinnan-tila    :checked
+                                       :kevyt-valinta/julkaisun-tila   :unchecked
+                                       :kevyt-valinta/vastaanotto-tila :unchecked}
+
+                                      [_ true (_ :guard #(not= % "KESKEN"))]
+                                      {:kevyt-valinta/valinnan-tila    :checked
+                                       :kevyt-valinta/julkaisun-tila   :checked
+                                       :kevyt-valinta/vastaanotto-tila :unchecked})]
+      (kevyt-valinta-states kevyt-valinta-property))))
+
 (def ^:private not-nil? (comp not nil?))
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/kevyt-valinta-checkmark-state
-  (fn [[_ kevyt-valinta-property application-key]]
-    [(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-state kevyt-valinta-property application-key])
+  (fn [[_ _ application-key]]
+    [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+     (re-frame/subscribe [:state-query [:application :valinta-tulos-service application-key]])
      (re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])])
-  (fn [[kevyt-valinta-property-state ongoing-request-property] [_ kevyt-valinta-property]]
-    (let [ongoing-request? (and ongoing-request-property
+  (fn [[hakukohde-oids valinnan-tulokset-for-application ongoing-request-property] [_ kevyt-valinta-property]]
+    (let [hakukohde-oid    (first hakukohde-oids)
+          {valinnan-tila    :valinnantila
+           julkaisun-tila   :julkaistavissa
+           vastaanotto-tila :vastaanottotila} (-> valinnan-tulokset-for-application
+                                                  (get hakukohde-oid)
+                                                  :valinnantulos)
+          ongoing-request? (and ongoing-request-property
                                 (not (before? kevyt-valinta-property
                                               ongoing-request-property
-                                              kevyt-valinta-property-order)))]
-      (match [kevyt-valinta-property-state ongoing-request?]
-             [:checked true]
-             :unchecked
+                                              kevyt-valinta-property-order)))
+          checkmark-states (match [valinnan-tila julkaisun-tila vastaanotto-tila]
+                                  [_ (_ :guard nil?) (_ :guard nil?)]
+                                  {:kevyt-valinta/valinnan-tila    :unchecked
+                                   :kevyt-valinta/julkaisun-tila   :grayed-out
+                                   :kevyt-valinta/vastaanotto-tila :grayed-out}
 
-             [:checked _]
-             :checked
+                                  [_ false _]
+                                  {:kevyt-valinta/valinnan-tila    :checked
+                                   :kevyt-valinta/julkaisun-tila   :unchecked
+                                   :kevyt-valinta/vastaanotto-tila :grayed-out}
 
-             [:unchecked _]
-             :unchecked
+                                  [_ true "KESKEN"]
+                                  {:kevyt-valinta/valinnan-tila    :checked
+                                   :kevyt-valinta/julkaisun-tila   :checked
+                                   :kevyt-valinta/vastaanotto-tila :unchecked}
 
-             [:grayed-out _]
-             :grayed-out))))
+                                  [_ true (_ :guard #(not= % "KESKEN"))]
+                                  {:kevyt-valinta/valinnan-tila    :checked
+                                   :kevyt-valinta/julkaisun-tila   :checked
+                                   :kevyt-valinta/vastaanotto-tila :checked})
+          checkmark-state  (checkmark-states kevyt-valinta-property)]
+      (cond (and ongoing-request?
+                 (= checkmark-state :checked))
+            :unchecked
+
+            (and ongoing-request?
+                 (= checkmark-state :unchecked))
+            :grayed-out
+
+            :else
+            checkmark-state))))
