@@ -31,6 +31,11 @@
     (get-in db [:editor :ui])))
 
 (re-frame/reg-sub
+  :editor/form-used-in-hakus
+  (fn forms-in-use [db [_ key]]
+    (get-in db [:editor :forms-in-use (keyword key)])))
+
+(re-frame/reg-sub
   :editor/form-keys
   (fn form-keys [db _]
     (get-in db [:editor :sorted-form-keys])))
