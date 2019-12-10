@@ -45,7 +45,7 @@
                                                             application-key])]
     [common-view/kevyt-valinta-row
      julkaisun-tila-property-state
-     [common-view/kevyt-valinta-checkmark julkaisun-tila-property-state]
+     [common-view/kevyt-valinta-checkmark :kevyt-valinta/julkaisun-tila application-key]
      julkaisun-tila-label
      [kevyt-valinta-julkaisun-tila-selection
       hakukohde-oid

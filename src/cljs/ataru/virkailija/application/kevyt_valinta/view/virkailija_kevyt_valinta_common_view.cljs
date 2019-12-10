@@ -43,22 +43,18 @@
                 [:span label]])
              kevyt-valinta-dropdown-values)])]))
 
-(defn kevyt-valinta-checkmark [kevyt-valinta-property-state]
-  (let [ongoing-request-property @(re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])
-        checkmark-class          (match [kevyt-valinta-property-state ongoing-request-property]
-                                        [:checked (_ :guard (comp not nil?))]
-                                        "application-handling__kevyt-valinta-checkmark--unchecked"
+(defn kevyt-valinta-checkmark [kevyt-valinta-property application-key]
+  (let [checkmark-state @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-checkmark-state kevyt-valinta-property application-key])
+        checkmark-class (case checkmark-state
+                          :checked
+                          "application-handling__kevyt-valinta-checkmark--checked"
 
-                                        [:checked _]
-                                        "application-handling__kevyt-valinta-checkmark--checked"
+                          :unchecked
+                          "application-handling__kevyt-valinta-checkmark--unchecked"
 
-                                        [:unchecked _]
-                                        "application-handling__kevyt-valinta-checkmark--unchecked"
-
-                                        [:grayed-out _]
-                                        "application-handling__kevyt-valinta-checkmark--grayed-out")
-        show-checkmark?          (and (= kevyt-valinta-property-state :checked)
-                                      (not ongoing-request-property))]
+                          :grayed-out
+                          "application-handling__kevyt-valinta-checkmark--grayed-out")
+        show-checkmark? (= checkmark-state :checked)]
     [:div.application-handling__kevyt-valinta-checkmark
      {:class checkmark-class}
      (when show-checkmark?

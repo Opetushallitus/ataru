@@ -40,7 +40,7 @@
     [:<>
      [common-view/kevyt-valinta-row
       valinnan-tila-property-state
-      [common-view/kevyt-valinta-checkmark valinnan-tila-property-state]
+      [common-view/kevyt-valinta-checkmark :kevyt-valinta/valinnan-tila application-key]
       valinnan-tila-label
       [kevyt-valinta-valinnan-tila-selection
        hakukohde-oid
