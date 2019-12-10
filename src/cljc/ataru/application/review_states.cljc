@@ -36,7 +36,8 @@
    "VARASIJALTA_HYVAKSYTTY" (:kevyt-valinta/varasijalta-hyvaksytty kevyt-valinta-state-translations)
    "HYVAKSYTTY"             (:kevyt-valinta/hyvaksytty kevyt-valinta-state-translations)
    "PERUNUT"                (:kevyt-valinta/perunut kevyt-valinta-state-translations)
-   "PERUUTETTU"             (:kevyt-valinta/peruutettu kevyt-valinta-state-translations)})
+   "PERUUTETTU"             (:kevyt-valinta/peruutettu kevyt-valinta-state-translations)
+   "KESKEN"                 (:kevyt-valinta/kesken kevyt-valinta-state-translations)})
 
 (def vastaanotto-tila-selection-state
   {"EI_VASTAANOTETTU_MAARA_AIKANA" (:kevyt-valinta/ei-vastaanotettu-maaraaikana kevyt-valinta-vastaanotto-tila-translations)
