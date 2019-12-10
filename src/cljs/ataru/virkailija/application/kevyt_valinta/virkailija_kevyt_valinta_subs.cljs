@@ -128,3 +128,49 @@
                                       :kevyt-valinta/julkaisun-tila   :checked
                                       :kevyt-valinta/vastaanotto-tila :unchecked})]
       (kevyt-valinta-state kevyt-valinta-property))))
+
+(def ^:private kevyt-valinta-property-order
+  [:kevyt-valinta/valinnan-tila
+   :kevyt-valinta/julkaisun-tila
+   :kevyt-valinta/vastaanotto-tila])
+
+(defn- before? [a b coll]
+  "Testaa onko a ennen b:tä annetussa coll:ssa iteroimatta turhia"
+  (and (not= a b)
+       (->> coll
+            (partition-all 2 1)
+            (map (fn [[a' b']]
+                   (cond (and (= a' a)
+                              b')
+                         true
+
+                         (and (= a' b)
+                              (= b' a))
+                         false)))
+            (filter (comp not nil?))
+            (first))))
+
+(def ^:private not-nil? (comp not nil?))
+
+(re-frame/reg-sub
+  :virkailija-kevyt-valinta/kevyt-valinta-checkmark-state
+  (fn [[_ kevyt-valinta-property application-key]]
+    [(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-state kevyt-valinta-property application-key])
+     (re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])])
+  (fn [[kevyt-valinta-property-state ongoing-request-property] [_ kevyt-valinta-property]]
+    (let [ongoing-request? (and ongoing-request-property
+                                (not (before? kevyt-valinta-property
+                                              ongoing-request-property
+                                              kevyt-valinta-property-order)))]
+      (match [kevyt-valinta-property-state ongoing-request?]
+             [:checked true]
+             :unchecked
+
+             [:checked _]
+             :checked
+
+             [:unchecked _]
+             :unchecked
+
+             [:grayed-out _]
+             :grayed-out))))

@@ -51,7 +51,7 @@
                                                               application-key])]
     [common-view/kevyt-valinta-row
      vastaanotto-tila-property-state
-     [common-view/kevyt-valinta-checkmark vastaanotto-tila-property-state]
+     [common-view/kevyt-valinta-checkmark :kevyt-valinta/vastaanotto-tila application-key]
      vastaanotto-tila-label
      [kevyt-valinta-vastaanotto-tila-selection
       hakukohde-oid
