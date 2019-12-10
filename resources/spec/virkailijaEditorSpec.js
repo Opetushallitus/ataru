@@ -213,8 +213,9 @@
     describe('form creation', () => {
       before(
         clickElement(addNewFormLink),
-        wait.forMilliseconds(1000), // TODO: fix form refresh in frontend so that this isn't required (or check that no AJAX requests are ongoing)
+        wait.until(() => elementExists(formTitleField())),
         setTextFieldValue(formTitleField, 'Testilomake'),
+        wait.until(() => formTitleField().val() === 'Testilomake'),
         wait.until(
           () =>
             formListItems(0)
@@ -223,7 +224,6 @@
         )
       )
       it('creates blank form', () => {
-        expect(formTitleField().val()).to.equal('Testilomake')
         expect(formComponents()).to.have.length(0)
       })
       it('has person info module', () => {
