@@ -1,6 +1,7 @@
 (ns ataru.koodisto.koodisto-whitelist)
 
-(def koodisto-whitelist [{:uri "pohjakoulutuseditori" :version 1 :title "Pohjakoulutus"}
+(def koodisto-whitelist [{:uri "pohjakoulutustoinenaste" :version 1 :title "pohjakoulutus toinen aste"}
+                         {:uri "pohjakoulutuseditori" :version 1 :title "Pohjakoulutus"}
                          {:uri "tutkinto" :version 2 :title "Tutkinto"}
                          {:uri "koulutus" :version 6 :title "Koulutus"}
                          {:uri "tutkintonimikkeet" :version 2 :title "Tutkintonimikkeet"}
