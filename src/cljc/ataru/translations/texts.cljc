@@ -1559,7 +1559,8 @@ You will receive a confirmation of your application to your email."}
                                           :sv "Godkänd"
                                           :en "Selected"}
    :kevyt-valinta/perunut                {:fi "Perunut"}
-   :kevyt-valinta/peruutettu             {:fi "Peruutettu"}})
+   :kevyt-valinta/peruutettu             {:fi "Peruutettu"}
+   :kevyt-valinta/kesken                 {:fi "Kesken"}})
 
 (def kevyt-valinta-julkaisun-tila-translations
   {:kevyt-valinta/julkaistu-hakijalle {:fi "Julkaistu hakijalle"}

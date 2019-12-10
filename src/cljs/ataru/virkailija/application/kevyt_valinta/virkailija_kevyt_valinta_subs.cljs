@@ -41,10 +41,11 @@
   (fn [[hakukohde-oids valinnan-tulokset-for-application]]
     ;; Koska kevyt valinta näkyy ainoastaan yhdelle hakukohteelle, voidaan olettaa, että listassa on vain yksi alkio
     (let [hakukohde-oid (first hakukohde-oids)]
-      (-> valinnan-tulokset-for-application
-          (get hakukohde-oid)
-          :valinnantulos
-          :valinnantila))))
+      (or (-> valinnan-tulokset-for-application
+              (get hakukohde-oid)
+              :valinnantulos
+              :valinnantila)
+          "KESKEN"))))
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/julkaisun-tila

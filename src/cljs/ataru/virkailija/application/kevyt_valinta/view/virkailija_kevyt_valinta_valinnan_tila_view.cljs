@@ -3,11 +3,8 @@
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as translations]
             [re-frame.core :as re-frame]))
 
-(def ^:private checked-valinnan-tilat
-  ["HYLATTY" "PERUUNTUNUT" "VARASIJALTA_HYVAKSYTTY" "HYVAKSYTTY" "PERUNUT" "PERUUTETTU"])
-
 (def ^:private valinnan-tilat
-  (conj checked-valinnan-tilat "VARALLA"))
+  ["HYLATTY" "PERUUNTUNUT" "VARASIJALTA_HYVAKSYTTY" "HYVAKSYTTY" "PERUNUT" "PERUUTETTU" "VARALLA" "KESKEN"])
 
 (defn- kevyt-valinta-valinnan-tila-selection [hakukohde-oid
                                               application-key
