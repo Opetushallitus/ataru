@@ -1,5 +1,6 @@
 (ns ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-handlers
-  (:require [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-mappings :as mappings]
+  (:require [ataru.virkailija.kevyt-valinta.virkailija-kevyt-valinta-pseudo-random-valintatapajono-oids :as valintatapajono-oids]
+            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-mappings :as mappings]
             [cljs-time.core :as t]
             [cljs-time.format :as format]
             [re-frame.core :as re-frame]))
@@ -82,6 +83,8 @@
     (let [now                            (t/now)
           request-id                     (keyword (str (name kevyt-valinta-property) "-" now))
           valinta-tulos-service-property (mappings/kevyt-valinta-property->valinta-tulos-service-property kevyt-valinta-property)
+          haku-oid                       (-> db :application :selected-application-and-form :application :haku)
+          henkilo-oid                    (-> db :application :selected-application-and-form :application :person :oid)
           db                             (-> db
                                              (update-in [:application :kevyt-valinta kevyt-valinta-property]
                                                         merge
@@ -89,6 +92,22 @@
                                                          :open?      false})
                                              (assoc-in [:application :kevyt-valinta :kevyt-valinta-ui/ongoing-request-for-property]
                                                        kevyt-valinta-property)
+                                             (update-in [:application
+                                                         :valinta-tulos-service
+                                                         application-key
+                                                         hakukohde-oid
+                                                         :valinnantulos]
+                                                        (fn [valinnantulos]
+                                                          (if valinnantulos
+                                                            (assoc valinnantulos valinta-tulos-service-property new-kevyt-valinta-property-value)
+                                                            {:vastaanottotila    "KESKEN"
+                                                             :hakukohdeOid       hakukohde-oid
+                                                             :ilmoittautumistila "EI_TEHTY"
+                                                             :henkiloOid         henkilo-oid
+                                                             :valintatapajonoOid (valintatapajono-oids/pseudo-random-valintatapajono-oid haku-oid hakukohde-oid)
+                                                             :hakemusOid         application-key
+                                                             :valinnantila       new-kevyt-valinta-property-value
+                                                             :julkaistavissa     false})))
                                              (assoc-in [:application
                                                         :valinta-tulos-service
                                                         application-key
