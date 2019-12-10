@@ -238,12 +238,12 @@
    [:h3.editor-form__form-link-heading
     [:i.zmdi.zmdi-alert-circle-o]
     (str " "
-         (if (empty? (rest (vals form-used-in-hakus)))
+         (if (empty? (rest form-used-in-hakus))
            (get-virkailija-translation :used-by-haku)
            (get-virkailija-translation :used-by-haut)))]
    [:ul.editor-form__used-in-haku-list
     (doall
-      (for [haku (vals form-used-in-hakus)]
+      (for [haku form-used-in-hakus]
         ^{:key (str "haku-" (:haku-oid haku))}
         [:li
          [:div.editor-form__used-in-haku-list-haku-name
