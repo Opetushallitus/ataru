@@ -1390,7 +1390,8 @@
                               :post-logger (fn [options {:keys [uri] :as request} {:keys [status] :as response} totaltime]
                                              (when (or
                                                      (>= status 400)
-                                                     (clojure.string/starts-with? uri "/lomake-editori/api/"))
+                                                     (clojure.string/starts-with? uri "/lomake-editori/api/")
+                                                     (clojure.string/starts-with? uri "/lomake-editori/auth/"))
                                                (access-log/log options request response totaltime))))
                             (wrap-gzip)
 
