@@ -79,7 +79,7 @@
         hakukohde-oid
         application-key
         new-kevyt-valinta-property-value]]
-    (let [request-id                     (keyword (str (name kevyt-valinta-property) "-" (t/epoch)))
+    (let [request-id                     (keyword (str (name kevyt-valinta-property) "-" (t/now)))
           valinta-tulos-service-property (mappings/kevyt-valinta-property->valinta-tulos-service-property kevyt-valinta-property)
           db                             (-> db
                                              (update-in [:application :kevyt-valinta kevyt-valinta-property]
