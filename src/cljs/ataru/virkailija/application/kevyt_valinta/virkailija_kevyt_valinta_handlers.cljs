@@ -79,7 +79,8 @@
         hakukohde-oid
         application-key
         new-kevyt-valinta-property-value]]
-    (let [request-id                     (keyword (str (name kevyt-valinta-property) "-" (t/now)))
+    (let [now                            (t/now)
+          request-id                     (keyword (str (name kevyt-valinta-property) "-" now))
           valinta-tulos-service-property (mappings/kevyt-valinta-property->valinta-tulos-service-property kevyt-valinta-property)
           db                             (-> db
                                              (update-in [:application :kevyt-valinta kevyt-valinta-property]
@@ -111,7 +112,6 @@
                                                         :hakemusOid
                                                         :valinnantila
                                                         :julkaistavissa])]
-          now                            (t/now)
           formatted-now                  (str (format/unparse rfc-1123-date-formatter now) " GMT")]
       {:db   db
        :http {:method              :patch
