@@ -24,7 +24,8 @@
         julkaisun-tila-i18n  (->> julkaisun-tilat-i18n
                                   (filter (comp (partial = julkaisun-tila)
                                                 :value))
-                                  (map :label))]
+                                  (map :label)
+                                  (first))]
     [common-view/kevyt-valinta-dropdown-selection
      :kevyt-valinta/julkaisun-tila
      julkaisun-tila-selection-state

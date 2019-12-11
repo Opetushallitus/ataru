@@ -18,7 +18,8 @@
         valinnan-tila-i18n  (->> valinnan-tilat-i18n
                                  (filter (comp (partial = valinnan-tila)
                                                :value))
-                                 (map :label))]
+                                 (map :label)
+                                 (first))]
     [common-view/kevyt-valinta-dropdown-selection
      :kevyt-valinta/valinnan-tila
      valinnan-tila-selection-state
