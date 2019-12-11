@@ -93,9 +93,16 @@
 }
 
 .application-handling__kevyt-valinta-dropdown-container {
+  align-items: center;
+  display: flex;
   height: 100%;
+  justify-content: space-between;
   position: relative;
   width: 100%;
+}
+
+.application-handling__kevyt-valinta-dropdown-container > :last-child:not(:nth-child(1)) {
+  margin-right: 31px;
 }
 
 .application-handling__kevyt-valinta-dropdown {
@@ -125,7 +132,7 @@
   width: 100%;
 }
 
-.application-handling__kevyt-valinta-dropdown-value {
+.application-handling__kevyt-valinta-dropdown-label {
   flex-grow: 2;
 }
 

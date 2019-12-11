@@ -26,7 +26,7 @@
                                                 :value))
                                   (map :label)
                                   (first))]
-    [common-view/kevyt-valinta-dropdown-selection
+    [common-view/kevyt-valinta-checkbox-selection
      :kevyt-valinta/julkaisun-tila
      julkaisun-tila-selection-state
      julkaisun-tila-i18n
