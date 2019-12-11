@@ -43,29 +43,6 @@
                 [:span label]])
              kevyt-valinta-dropdown-values)])]))
 
-(defn- kevyt-valinta-selection-checkbox [kevyt-valinta-property
-                                         kevyt-valinta-checkbox-label
-                                         kevyt-valinta-checkbox-values
-                                         kevyt-valinta-on-checkbox-value-change
-                                         ongoing-request-property]
-  (let [checkbox-disabled? ongoing-request-property
-        show-loader?       (= ongoing-request-property kevyt-valinta-property)
-        checkbox-checked?  (->> kevyt-valinta-checkbox-values
-                                (some (fn [{value :value label :label}]
-                                        (and value
-                                             (= kevyt-valinta-checkbox-label label))))
-                                (true?))]
-    [:div.application-handling__kevyt-valinta-dropdown-container
-     [:input.application-handling__kevyt-valinta-checkbox
-      {:type      "checkbox"
-       :disabled  checkbox-disabled?
-       :checked   checkbox-checked?
-       :on-change (fn []
-                    (let [new-value (not checkbox-checked?)]
-                      (kevyt-valinta-on-checkbox-value-change new-value)))}]
-     (when show-loader?
-       [el/ellipsis-loader])]))
-
 (defn kevyt-valinta-checkmark [kevyt-valinta-property application-key]
   (let [checkmark-state @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-checkmark-state kevyt-valinta-property application-key])
         checkmark-class (case checkmark-state
@@ -106,26 +83,42 @@
                                         kevyt-valinta-dropdown-label
                                         kevyt-valinta-dropdown-values
                                         kevyt-valinta-on-dropdown-value-change]
-  [kevyt-valinta-selection
-   kevyt-valinta-selection-dropdown
-   kevyt-valinta-property
-   kevyt-valinta-dropdown-state
-   kevyt-valinta-dropdown-label
-   kevyt-valinta-dropdown-values
-   kevyt-valinta-on-dropdown-value-change])
+  (let [ongoing-request-property @(re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])]
+    (if (and (= kevyt-valinta-dropdown-state :checked)
+             (or (not ongoing-request-property)
+                 (not= ongoing-request-property kevyt-valinta-property)))
+      [:span.application-handling__kevyt-valinta-value kevyt-valinta-dropdown-label]
+      [kevyt-valinta-selection-dropdown
+       kevyt-valinta-property
+       kevyt-valinta-dropdown-label
+       kevyt-valinta-dropdown-values
+       kevyt-valinta-on-dropdown-value-change
+       ongoing-request-property])))
 
 (defn kevyt-valinta-checkbox-selection [kevyt-valinta-property
                                         kevyt-valinta-checkbox-state
                                         kevyt-valinta-checkbox-label
                                         kevyt-valinta-checkbox-values
                                         kevyt-valinta-on-checkbox-value-change]
-  [kevyt-valinta-selection
-   kevyt-valinta-selection-checkbox
-   kevyt-valinta-property
-   kevyt-valinta-checkbox-state
-   kevyt-valinta-checkbox-label
-   kevyt-valinta-checkbox-values
-   kevyt-valinta-on-checkbox-value-change])
+  (let [ongoing-request-property @(re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])
+        checkbox-disabled?       (or ongoing-request-property
+                                     (= kevyt-valinta-checkbox-state :checked))
+        show-loader?             (= ongoing-request-property kevyt-valinta-property)
+        checkbox-checked?        (->> kevyt-valinta-checkbox-values
+                                      (some (fn [{value :value label :label}]
+                                              (and value
+                                                   (= kevyt-valinta-checkbox-label label))))
+                                      (true?))]
+    [:div.application-handling__kevyt-valinta-dropdown-container
+     [:input.application-handling__kevyt-valinta-checkbox
+      {:type      "checkbox"
+       :disabled  checkbox-disabled?
+       :checked   checkbox-checked?
+       :on-change (fn []
+                    (let [new-value (not checkbox-checked?)]
+                      (kevyt-valinta-on-checkbox-value-change new-value)))}]
+     (when show-loader?
+       [el/ellipsis-loader])]))
 
 (defn kevyt-valinta-row [kevyt-valinta-selection-state
                          checkmark-component
