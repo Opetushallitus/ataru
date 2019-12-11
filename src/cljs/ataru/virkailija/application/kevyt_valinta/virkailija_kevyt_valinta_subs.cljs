@@ -1,5 +1,6 @@
 (ns ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs
   (:require [ataru.feature-config :as fc]
+            [ataru.collections :as coll]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-mappings :as mappings]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-rights :as kvr]
             [re-frame.core :as re-frame])
@@ -106,23 +107,6 @@
    :kevyt-valinta/vastaanotto-tila
    :kevyt-valinta/ilmoittautumisen-tila])
 
-(defn- before? [a b coll]
-  "Testaa onko a ennen b:tä annetussa coll:ssa iteroimatta turhia"
-  (and (not= a b)
-       (->> coll
-            (partition-all 2 1)
-            (transduce (comp (map (fn [[a' b']]
-                                    (cond (and (= a' a)
-                                               b')
-                                          true
-
-                                          (and (= a' b)
-                                               (= b' a))
-                                          false)))
-                             (filter (comp not nil?)))
-                       conj)
-            (first))))
-
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/kevyt-valinta-selection-state
   (fn [[_ _ application-key]]
@@ -196,14 +180,14 @@
                                    :kevyt-valinta/ilmoittautumisen-tila :unchecked})
           checkmark-state  (checkmark-states kevyt-valinta-property)]
       (cond (and ongoing-request-property
-                 (not (before? kevyt-valinta-property
+                 (not (coll/before? kevyt-valinta-property
                                ongoing-request-property
                                kevyt-valinta-property-order))
                  (= checkmark-state :checked))
             :unchecked
 
             (and ongoing-request-property
-                 (before? ongoing-request-property
+                 (coll/before? ongoing-request-property
                           kevyt-valinta-property
                           kevyt-valinta-property-order)
                  (= checkmark-state :unchecked))
