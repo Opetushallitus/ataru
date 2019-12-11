@@ -117,7 +117,7 @@
             (first))))
 
 (re-frame/reg-sub
-  :virkailija-kevyt-valinta/kevyt-valinta-property-state
+  :virkailija-kevyt-valinta/kevyt-valinta-dropdown-state
   (fn [[_ _ application-key]]
     [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
      (re-frame/subscribe [:state-query [:application :valinta-tulos-service application-key]])])
