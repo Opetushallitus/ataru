@@ -1,7 +1,7 @@
 (ns ataru.tarjonta-service.mock-tarjonta-service
   (:require [com.stuartsierra.component :as component]
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
-            [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService VirkailijaTarjontaService]]))
+            [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService]]))
 
 (def base-haku
   {:tila                                                 "LUONNOS",
@@ -233,6 +233,7 @@
                                  {:ataruLomakeAvain "hakukohteen-organisaatiosta-form"
                                   :oid              "1.2.246.562.20.49028100004"
                                   :hakuOid          "1.2.246.562.29.65950024188"
+                                  :tarjoajaOids     ["1.2.246.562.10.10826252480"]
                                   :koulutukset      [{:oid "1.2.246.562.17.74335799465"}]
                                   :hakukohteenNimet {:kieli_fi "Hakukohde johon käyttäjällä on organisaatio"
                                                      :kieli_sv "sv Hakukohde johon käyttäjällä on organisaatio"}})
@@ -311,8 +312,15 @@
     (when-let [h ((keyword haku-oid) haku)]
       (tarjonta-client/parse-haku h)))
 
-  (hakus-by-form-key [_ form-key]
-    [])
+  (hakus-by-form-key [this form-key]
+    (case form-key
+      "hakukohteen-organisaatiosta-form"
+      [(.get-haku this "1.2.246.562.29.65950024188")]
+      "belongs-to-hakukohteet-test-form"
+      [(.get-haku this "1.2.246.562.29.65950024185")]
+      "hakija-hakukohteen-hakuaika-test-form"
+      [(.get-haku this "1.2.246.562.29.65950024187")]
+      []))
 
   (get-haku-name [this haku-oid]
     (when (= haku-oid "1.2.246.562.29.65950024185")
@@ -325,20 +333,3 @@
     (into {} (keep #(when-let [v (get koulutus (keyword %))]
                       [% v])
                    koulutus-oids))))
-
-(defrecord MockVirkailijaTarjontaService []
-  VirkailijaTarjontaService
-  (get-forms-in-use [_ session]
-    (if (= (-> session :identity :oid) "1.2.246.562.11.11111111000")
-      {"hakukohteen-organisaatiosta-form"
-       {"1.2.246.562.29.65950024188"
-        {:haku-oid  "1.2.246.562.29.65950024188"
-         :haku-name {:fi "hakukohteen-organisaatiosta"}}}}
-      {"belongs-to-hakukohteet-test-form"
-       {(:oid base-haku)
-        {:haku-oid  (:oid base-haku)
-         :haku-name {:fi (:kieli_fi (:nimi base-haku))}}}
-       "hakija-hakukohteen-hakuaika-test-form"
-       {"1.2.246.562.29.65950024187"
-        {:haku-oid  "1.2.246.562.29.65950024187"
-         :haku-name {:fi "hakija-hakukohteen-hakuaika-haku"}}}})))

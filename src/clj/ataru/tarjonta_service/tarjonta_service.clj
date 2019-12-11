@@ -1,47 +1,12 @@
 (ns ataru.tarjonta-service.tarjonta-service
   (:require
     [ataru.tarjonta-service.tarjonta-client :as client]
-    [ataru.organization-service.session-organizations :refer [select-organizations-for-rights]]
-    [ataru.organization-service.organization-service :as organization-protocol]
     [ataru.organization-service.organization-client :refer [oph-organization]]
     [com.stuartsierra.component :as component]
     [ataru.config.core :refer [config]]
     [ataru.cache.cache-service :as cache]
-    [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService VirkailijaTarjontaService get-haku get-hakukohde]]
-    [ataru.tarjonta-service.mock-tarjonta-service :refer [->MockTarjontaService ->MockVirkailijaTarjontaService]]))
-
-(defn- parse-multi-lang-text
-  [text]
-  (reduce-kv (fn [m lang s]
-               (if (or (nil? s) (clojure.string/blank? s))
-                 m
-                 (assoc m lang s)))
-    {}
-    (clojure.set/rename-keys text {:kieli_fi :fi
-                                   :kieli_sv :sv
-                                   :kieli_en :en})))
-
-(defn- haku-name-and-oid [haku-names-and-oids haku]
-  (assoc haku-names-and-oids
-         (:oid haku)
-         {:haku-oid  (:oid haku)
-          :haku-name (parse-multi-lang-text (:nimi haku))}))
-
-(defn- hakus-by-form-key [hakus {:keys [avain haut]}]
-  (update hakus avain merge (reduce haku-name-and-oid {} haut)))
-
-(defn- forms-in-use
-  [forms-in-use-cache organization-service session]
-  (->> (select-organizations-for-rights organization-service
-                                        session
-                                        [:form-edit])
-       (map :oid)
-       ((fn [oids] (if (and (empty? oids)
-                            (get-in session [:identity :superuser]))
-                     [oph-organization]
-                     oids)))
-       (mapcat (partial cache/get-from forms-in-use-cache))
-       (reduce hakus-by-form-key {})))
+    [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService get-haku get-hakukohde]]
+    [ataru.tarjonta-service.mock-tarjonta-service :refer [->MockTarjontaService]]))
 
 (defn- parse-search-result
   [search-result]
@@ -97,9 +62,9 @@
   (hakus-by-form-key [this form-key]
     (mapv #(get-haku this %)
           (concat
-           (-> (cache/get-from forms-in-use-cache oph-organization)
-               (get form-key)
-               keys)
+           (some #(when (= form-key (:avain %))
+                    (map :oid (:haut %)))
+                 (cache/get-from forms-in-use-cache oph-organization))
            (cache/get-from kouta-hakus-by-form-key-cache form-key))))
 
   (get-haku-name [this haku-oid]
@@ -111,25 +76,8 @@
   (get-koulutukset [this koulutus-oids]
     (cache/get-many-from koulutus-cache koulutus-oids)))
 
-(defrecord VirkailijaTarjontaFormsService [forms-in-use-cache
-                                           organization-service]
-  component/Lifecycle
-  VirkailijaTarjontaService
-
-  (start [this] this)
-  (stop [this] this)
-
-  (get-forms-in-use [this session]
-    (forms-in-use forms-in-use-cache organization-service session)))
-
 (defn new-tarjonta-service
   []
   (if (-> config :dev :fake-dependencies)
     (->MockTarjontaService)
     (map->CachedTarjontaService {})))
-
-(defn new-virkailija-tarjonta-service
-  []
-  (if (-> config :dev :fake-dependencies)
-    (->MockVirkailijaTarjontaService)
-    (->VirkailijaTarjontaFormsService nil nil)))
