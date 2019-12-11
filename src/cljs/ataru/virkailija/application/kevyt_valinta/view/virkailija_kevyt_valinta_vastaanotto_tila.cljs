@@ -30,7 +30,8 @@
         vastaanotto-tila-i18n  (->> vastaanotto-tilat-i18n
                                     (filter (comp (partial = vastaanotto-tila)
                                                   :value))
-                                    (map :label))]
+                                    (map :label)
+                                    (first))]
     [common-view/kevyt-valinta-dropdown-selection
      :kevyt-valinta/vastaanotto-tila
      vastaanotto-tila-selection-state
