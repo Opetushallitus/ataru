@@ -33,7 +33,9 @@
                                        application-key
                                        lang]
   (let [valinnan-tila-label          (translations/review-type-label :selection-state lang)
-        valinnan-tila                @(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tila application-key])
+        valinnan-tila                @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-state
+                                                           :kevyt-valinta/valinnan-tila
+                                                           application-key])
         valinnan-tila-dropdown-state @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-dropdown-state
                                                            :kevyt-valinta/valinnan-tila
                                                            application-key])]
