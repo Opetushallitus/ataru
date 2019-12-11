@@ -103,7 +103,8 @@
 (def ^:private kevyt-valinta-property-order
   [:kevyt-valinta/valinnan-tila
    :kevyt-valinta/julkaisun-tila
-   :kevyt-valinta/vastaanotto-tila])
+   :kevyt-valinta/vastaanotto-tila
+   :kevyt-valinta/ilmoittautumisen-tila])
 
 (defn- before? [a b coll]
   "Testaa onko a ennen b:tä annetussa coll:ssa iteroimatta turhia"
@@ -126,29 +127,34 @@
   (fn [[_ _ application-key]]
     [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])])
   (fn [[valinnan-tulos-for-application] [_ kevyt-valinta-property]]
-    (let [{valinnan-tila    :valinnantila
-           julkaisun-tila   :julkaistavissa
-           vastaanotto-tila :vastaanottotila} valinnan-tulos-for-application
-          kevyt-valinta-states (match [valinnan-tila julkaisun-tila vastaanotto-tila]
-                                      [_ (_ :guard nil?) (_ :guard nil?)]
-                                      {:kevyt-valinta/valinnan-tila    :unchecked
-                                       :kevyt-valinta/julkaisun-tila   :grayed-out
-                                       :kevyt-valinta/vastaanotto-tila :grayed-out}
+    (let [{valinnan-tila         :valinnantila
+           julkaisun-tila        :julkaistavissa
+           vastaanotto-tila      :vastaanottotila
+           ilmoittautumisen-tila :ilmoittautumistila} valinnan-tulos-for-application
+          kevyt-valinta-states (match [valinnan-tila julkaisun-tila vastaanotto-tila ilmoittautumisen-tila]
+                                      [_ (_ :guard nil?) (_ :guard nil?) (_ :guard nil?)]
+                                      {:kevyt-valinta/valinnan-tila         :unchecked
+                                       :kevyt-valinta/julkaisun-tila        :grayed-out
+                                       :kevyt-valinta/vastaanotto-tila      :grayed-out
+                                       :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
-                                      [_ false _]
-                                      {:kevyt-valinta/valinnan-tila    :unchecked
-                                       :kevyt-valinta/julkaisun-tila   :unchecked
-                                       :kevyt-valinta/vastaanotto-tila :grayed-out}
+                                      [_ false _ _]
+                                      {:kevyt-valinta/valinnan-tila         :unchecked
+                                       :kevyt-valinta/julkaisun-tila        :unchecked
+                                       :kevyt-valinta/vastaanotto-tila      :grayed-out
+                                       :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
-                                      [_ true "KESKEN"]
-                                      {:kevyt-valinta/valinnan-tila    :checked
-                                       :kevyt-valinta/julkaisun-tila   :unchecked
-                                       :kevyt-valinta/vastaanotto-tila :unchecked}
+                                      [_ true "KESKEN" _]
+                                      {:kevyt-valinta/valinnan-tila         :checked
+                                       :kevyt-valinta/julkaisun-tila        :unchecked
+                                       :kevyt-valinta/vastaanotto-tila      :unchecked
+                                       :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
-                                      [_ true (_ :guard #(not= % "KESKEN"))]
-                                      {:kevyt-valinta/valinnan-tila    :checked
-                                       :kevyt-valinta/julkaisun-tila   :checked
-                                       :kevyt-valinta/vastaanotto-tila :unchecked})]
+                                      [_ true (_ :guard #(not= % "KESKEN")) "EI_TEHTY"]
+                                      {:kevyt-valinta/valinnan-tila         :checked
+                                       :kevyt-valinta/julkaisun-tila        :checked
+                                       :kevyt-valinta/vastaanotto-tila      :unchecked
+                                       :kevyt-valinta/ilmoittautumisen-tila :unchecked})]
       (kevyt-valinta-states kevyt-valinta-property))))
 
 (def ^:private not-nil? (comp not nil?))
@@ -159,29 +165,34 @@
     [(re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])
      (re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])])
   (fn [[ongoing-request-property valinnan-tulos-for-application] [_ kevyt-valinta-property]]
-    (let [{valinnan-tila    :valinnantila
-           julkaisun-tila   :julkaistavissa
-           vastaanotto-tila :vastaanottotila} valinnan-tulos-for-application
-          checkmark-states (match [valinnan-tila julkaisun-tila vastaanotto-tila]
-                                  [_ (_ :guard nil?) (_ :guard nil?)]
-                                  {:kevyt-valinta/valinnan-tila    :unchecked
-                                   :kevyt-valinta/julkaisun-tila   :grayed-out
-                                   :kevyt-valinta/vastaanotto-tila :grayed-out}
+    (let [{valinnan-tila         :valinnantila
+           julkaisun-tila        :julkaistavissa
+           vastaanotto-tila      :vastaanottotila
+           ilmoittautumisen-tila :ilmoittautumistila} valinnan-tulos-for-application
+          checkmark-states (match [valinnan-tila julkaisun-tila vastaanotto-tila ilmoittautumisen-tila]
+                                  [_ (_ :guard nil?) (_ :guard nil?) (_ :guard nil?)]
+                                  {:kevyt-valinta/valinnan-tila         :unchecked
+                                   :kevyt-valinta/julkaisun-tila        :grayed-out
+                                   :kevyt-valinta/vastaanotto-tila      :grayed-out
+                                   :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
-                                  [_ false _]
-                                  {:kevyt-valinta/valinnan-tila    :checked
-                                   :kevyt-valinta/julkaisun-tila   :unchecked
-                                   :kevyt-valinta/vastaanotto-tila :grayed-out}
+                                  [_ false _ _]
+                                  {:kevyt-valinta/valinnan-tila         :checked
+                                   :kevyt-valinta/julkaisun-tila        :unchecked
+                                   :kevyt-valinta/vastaanotto-tila      :grayed-out
+                                   :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
-                                  [_ true "KESKEN"]
-                                  {:kevyt-valinta/valinnan-tila    :checked
-                                   :kevyt-valinta/julkaisun-tila   :checked
-                                   :kevyt-valinta/vastaanotto-tila :unchecked}
+                                  [_ true "KESKEN" _]
+                                  {:kevyt-valinta/valinnan-tila         :checked
+                                   :kevyt-valinta/julkaisun-tila        :checked
+                                   :kevyt-valinta/vastaanotto-tila      :unchecked
+                                   :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
-                                  [_ true (_ :guard #(not= % "KESKEN"))]
-                                  {:kevyt-valinta/valinnan-tila    :checked
-                                   :kevyt-valinta/julkaisun-tila   :checked
-                                   :kevyt-valinta/vastaanotto-tila :checked})
+                                  [_ true (_ :guard #(not= % "KESKEN")) "EI_TEHTY"]
+                                  {:kevyt-valinta/valinnan-tila         :checked
+                                   :kevyt-valinta/julkaisun-tila        :checked
+                                   :kevyt-valinta/vastaanotto-tila      :checked
+                                   :kevyt-valinta/ilmoittautumisen-tila :unchecked})
           checkmark-state  (checkmark-states kevyt-valinta-property)]
       (cond (and ongoing-request-property
                  (not (before? kevyt-valinta-property

@@ -2,6 +2,7 @@
   (:require [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-valinnan-tila-view :as valinnan-tila]
             [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-julkaisun-tila-view :as julkaisun-tila]
             [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-vastaanotto-tila-view :as vastaanotto-tila]
+            [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-ilmoittautumisen-tila-view :as ilmoittautumisen-tila]
             [re-frame.core :as re-frame])
   (:require-macros [cljs.core.match :refer [match]]))
 
@@ -20,6 +21,10 @@
       application-key
       lang]
      [vastaanotto-tila/kevyt-valinta-vastaanotto-tila-row
+      hakukohde-oid
+      application-key
+      lang]
+     [ilmoittautumisen-tila/kevyt-valinta-ilmoittautumisen-tila-row
       hakukohde-oid
       application-key
       lang]]))

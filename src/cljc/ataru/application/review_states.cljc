@@ -1,7 +1,8 @@
 (ns ataru.application.review-states
   (:require [ataru.translations.texts :refer [state-translations
                                               kevyt-valinta-state-translations
-                                              kevyt-valinta-vastaanotto-tila-translations]]
+                                              kevyt-valinta-vastaanotto-tila-translations
+                                              kevyt-valinta-ilmoittautumisen-tila-translations]]
             [ataru.util :as util]
             [clojure.set :refer [difference]]))
 
@@ -48,6 +49,16 @@
    "VASTAANOTTANUT_SITOVASTI"      (:kevyt-valinta/vastaanottanut-sitovasti kevyt-valinta-vastaanotto-tila-translations)
    "KESKEN"                        (:kevyt-valinta/kesken kevyt-valinta-vastaanotto-tila-translations)})
 
+(def ilmoittautumisen-tila-selection-state
+  {"EI_TEHTY"              (:kevyt-valinta/ei-tehty kevyt-valinta-ilmoittautumisen-tila-translations)
+   "LASNA_KOKO_LUKUVUOSI"  (:kevyt-valinta/lasna-koko-lukuvuosi kevyt-valinta-ilmoittautumisen-tila-translations)
+   "POISSA_KOKO_LUKUVUOSI" (:kevyt-valinta/poissa-koko-lukuvuosi kevyt-valinta-ilmoittautumisen-tila-translations)
+   "EI_ILMOITTAUTUNUT"     (:kevyt-valinta/ei-ilmoittautunut kevyt-valinta-ilmoittautumisen-tila-translations)
+   "LASNA_SYKSY"           (:kevyt-valinta/lasna-syksy kevyt-valinta-ilmoittautumisen-tila-translations)
+   "POISSA_SYKSY"          (:kevyt-valinta/poissa-syksy kevyt-valinta-ilmoittautumisen-tila-translations)
+   "LASNA"                 (:kevyt-valinta/lasna kevyt-valinta-ilmoittautumisen-tila-translations)
+   "POISSA"                (:kevyt-valinta/poissa kevyt-valinta-ilmoittautumisen-tila-translations)})
+
 (def application-hakukohde-review-states
   [["unreviewed" (:unreviewed state-translations)]
    ["fulfilled" (:fulfilled state-translations)]
@@ -73,8 +84,9 @@
    [:selection-state (:selection-state state-translations) application-hakukohde-selection-states]])
 
 (def kevyt-valinta-hakukohde-review-types
-  {:kevyt-valinta/julkaisun-tila   {:fi "Julkaisu"}
-   :kevyt-valinta/vastaanotto-tila {:fi "Vastaanotto"}})
+  {:kevyt-valinta/julkaisun-tila        {:fi "Julkaisu"}
+   :kevyt-valinta/vastaanotto-tila      {:fi "Vastaanotto"}
+   :kevyt-valinta/ilmoittautumisen-tila {:fi "Ilmoittautuminen"}})
 
 (def hakukohde-review-types-map
   (util/group-by-first first hakukohde-review-types))
