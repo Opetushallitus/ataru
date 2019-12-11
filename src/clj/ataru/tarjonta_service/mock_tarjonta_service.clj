@@ -311,6 +311,9 @@
     (when-let [h ((keyword haku-oid) haku)]
       (tarjonta-client/parse-haku h)))
 
+  (hakus-by-form-key [_ form-key]
+    [])
+
   (get-haku-name [this haku-oid]
     (when (= haku-oid "1.2.246.562.29.65950024185")
       {:fi "testing2"}))

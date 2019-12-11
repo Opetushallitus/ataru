@@ -10,6 +10,7 @@
             [taoensso.timbre :as log]))
 
 (def haku-checker (s/checker form-schema/Haku))
+(def hakus-by-form-key-checker (s/checker [s/Str]))
 
 (defn- parse-date-time
   [s]
@@ -62,21 +63,40 @@
           (get-result cas-client)
           parse-haku))
 
+(s/defn ^:always-validate get-hakus-by-form-key :- (s/maybe [s/Str])
+  [cas-client
+   form-key :- s/Str]
+  (-> :kouta-internal.haku-search
+      (url-helper/resolve-url {"ataruId" form-key})
+      (get-result cas-client)
+      ((fn [result] (mapv :oid result)))))
+
 (defrecord CacheLoader [cas-client]
   cache-service/CacheLoader
 
   (load [_ haku-oid]
     (get-haku haku-oid cas-client))
 
-  (load-many [_ haku-oids]
-    (reduce (fn [acc haku-oid]
-              (let [result (get-haku haku-oid cas-client)]
-                (assoc acc haku-oid result)))
-            {}
-            haku-oids))
+  (load-many [this haku-oids]
+    (cache-service/default-load-many this haku-oids))
 
   (load-many-size [_]
     1)
 
   (check-schema [_ response]
     (haku-checker response)))
+
+(defrecord HakusByFormKeyCacheLoader [cas-client]
+  cache-service/CacheLoader
+
+  (load [_ form-key]
+    (get-hakus-by-form-key cas-client form-key))
+
+  (load-many [this form-keys]
+    (cache-service/default-load-many this form-keys))
+
+  (load-many-size [_]
+    1)
+
+  (check-schema [_ response]
+    (hakus-by-form-key-checker response)))

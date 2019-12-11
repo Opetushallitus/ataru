@@ -47,7 +47,9 @@
 
     :tarjonta-service (component/using
                        (tarjonta-service/new-tarjonta-service)
-                       [:koulutus-cache
+                       [:forms-in-use-cache
+                        :koulutus-cache
+                        :kouta-hakus-by-form-key-cache
                         :hakukohde-cache
                         :haku-cache
                         :hakukohde-search-cache])

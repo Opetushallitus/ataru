@@ -6,6 +6,7 @@
   (get-hakukohde-name [this hakukohde-oid])
   (hakukohde-search [this haku-oid organization-oid])
   (get-haku [this haku-oid])
+  (hakus-by-form-key [this form-key])
   (get-haku-name [this haku-oid])
   (get-koulutus [this haku-oid])
   (get-koulutukset [this koulutus-oids]))

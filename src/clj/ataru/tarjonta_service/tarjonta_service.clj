@@ -7,7 +7,7 @@
     [com.stuartsierra.component :as component]
     [ataru.config.core :refer [config]]
     [ataru.cache.cache-service :as cache]
-    [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService VirkailijaTarjontaService get-hakukohde]]
+    [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService VirkailijaTarjontaService get-haku get-hakukohde]]
     [ataru.tarjonta-service.mock-tarjonta-service :refer [->MockTarjontaService ->MockVirkailijaTarjontaService]]))
 
 (defn- parse-multi-lang-text
@@ -60,7 +60,9 @@
   (let [[haku-oid organization-oid] (clojure.string/split key #"#")]
     (client/hakukohde-search haku-oid organization-oid)))
 
-(defrecord CachedTarjontaService [koulutus-cache
+(defrecord CachedTarjontaService [forms-in-use-cache
+                                  koulutus-cache
+                                  kouta-hakus-by-form-key-cache
                                   hakukohde-cache
                                   haku-cache
                                   hakukohde-search-cache]
@@ -92,6 +94,14 @@
   (get-haku [this haku-oid]
     (cache/get-from haku-cache haku-oid))
 
+  (hakus-by-form-key [this form-key]
+    (mapv #(get-haku this %)
+          (concat
+           (-> (cache/get-from forms-in-use-cache oph-organization)
+               (get form-key)
+               keys)
+           (cache/get-from kouta-hakus-by-form-key-cache form-key))))
+
   (get-haku-name [this haku-oid]
     (:name (cache/get-from haku-cache haku-oid)))
 
@@ -116,7 +126,7 @@
   []
   (if (-> config :dev :fake-dependencies)
     (->MockTarjontaService)
-    (->CachedTarjontaService nil nil nil nil)))
+    (map->CachedTarjontaService {})))
 
 (defn new-virkailija-tarjonta-service
   []
