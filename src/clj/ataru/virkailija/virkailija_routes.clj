@@ -792,6 +792,12 @@
 
     (api/context "/tarjonta" []
       :tags ["tarjonta-api"]
+      (api/GET "/haku" []
+        :query-params [form-key :- (api/describe s/Str "Form key")]
+        :return [ataru-schema/Haku]
+        (-> (tarjonta/hakus-by-form-key tarjonta-service form-key)
+            response/ok
+            (header "Cache-Control" "public, max-age=300")))
       (api/GET "/haku/:oid" []
         :path-params [oid :- (api/describe s/Str "Haku OID")]
         :return ataru-schema/Haku

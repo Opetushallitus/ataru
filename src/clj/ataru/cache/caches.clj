@@ -87,15 +87,47 @@
       (union-cache/map->Cache {})
       {:cache-1 :haku-cache-1
        :cache-2 :haku-cache-2})]
-   [:forms-in-use-cache
+
+   [:kouta-hakus-by-form-key-cache-loader
+    (component/using
+     (kouta-client/map->HakusByFormKeyCacheLoader {})
+     {:cas-client :kouta-internal-cas-client})]
+   [:kouta-hakus-by-form-key-redis-cache
+    (component/using
+     (redis/map->Cache
+      {:name          "kouta-hakus-by-form-key"
+       :ttl           [3 TimeUnit/DAYS]
+       :refresh-after [15 TimeUnit/MINUTES]
+       :lock-timeout  [10 TimeUnit/SECONDS]})
+     {:loader :kouta-hakus-by-form-key-cache-loader
+      :redis  :redis})]
+   [:kouta-hakus-by-form-key-cache
+    (component/using
+     (two-layer/map->Cache
+      {:name                "in-memory-kouta-hakus-by-form-key"
+       :size                100
+       :expire-after-access [3 TimeUnit/DAYS]
+       :refresh-after       [5 TimeUnit/MINUTES]})
+     {:redis-cache :kouta-hakus-by-form-key-redis-cache})]
+
+   [:forms-in-use-redis-cache
     (component/using
      (redis/map->Cache
       {:name          "forms-in-use"
        :ttl           [3 TimeUnit/DAYS]
        :refresh-after [15 TimeUnit/MINUTES]
-       :lock-timeout  [10000 TimeUnit/MILLISECONDS]
+       :lock-timeout  [10 TimeUnit/SECONDS]
        :loader        (cache/->FunctionCacheLoader tarjonta-client/get-forms-in-use)})
      [:redis])]
+   [:forms-in-use-cache
+    (component/using
+     (two-layer/map->Cache
+      {:name                "in-memory-forms-in-use"
+       :size                10
+       :expire-after-access [3 TimeUnit/DAYS]
+       :refresh-after       [5 TimeUnit/MINUTES]})
+     {:redis-cache :forms-in-use-redis-cache})]
+
    [:ohjausparametrit-cache
     (component/using
      (redis/map->Cache
