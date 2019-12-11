@@ -39,14 +39,13 @@
         valinnan-tila-dropdown-state @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-dropdown-state
                                                            :kevyt-valinta/valinnan-tila
                                                            application-key])]
-    [:<>
-     [common-view/kevyt-valinta-row
+    [common-view/kevyt-valinta-row
+     valinnan-tila-dropdown-state
+     [common-view/kevyt-valinta-checkmark :kevyt-valinta/valinnan-tila application-key]
+     valinnan-tila-label
+     [kevyt-valinta-valinnan-tila-selection
+      hakukohde-oid
+      application-key
       valinnan-tila-dropdown-state
-      [common-view/kevyt-valinta-checkmark :kevyt-valinta/valinnan-tila application-key]
-      valinnan-tila-label
-      [kevyt-valinta-valinnan-tila-selection
-       hakukohde-oid
-       application-key
-       valinnan-tila-dropdown-state
-       valinnan-tila
-       lang]]]))
+      valinnan-tila
+      lang]]))
