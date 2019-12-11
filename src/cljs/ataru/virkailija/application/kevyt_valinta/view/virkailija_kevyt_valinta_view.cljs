@@ -1,7 +1,7 @@
 (ns ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-view
   (:require [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-valinnan-tila-view :as valinnan-tila]
             [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-julkaisun-tila-view :as julkaisun-tila]
-            [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-vastaanotto-tila :as vastaanotto-tila]
+            [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-vastaanotto-tila-view :as vastaanotto-tila]
             [re-frame.core :as re-frame])
   (:require-macros [cljs.core.match :refer [match]]))
 
