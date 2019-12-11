@@ -48,7 +48,7 @@
 
 (re-frame/reg-event-db
   :virkailija-kevyt-valinta/toggle-kevyt-valinta-dropdown
-  (fn [db [_ kevyt-valinta-dropdown-id]]
+  (fn [db [_ kevyt-valinta-property]]
     (update-in db
                [:application :kevyt-valinta]
                (fn [kevyt-valinta-db]
@@ -58,13 +58,13 @@
                        (->> kevyt-valinta-db'
                             (keys)
                             (filter (comp (partial not= :kevyt-valinta-ui/ongoing-request-for-property)))
-                            (filter (comp (partial not= kevyt-valinta-dropdown-id)))
+                            (filter (comp (partial not= kevyt-valinta-property)))
                             (reduce (fn [acc kevyt-valinta-property]
                                       (assoc-in acc [kevyt-valinta-property :open?] false))
                                     kevyt-valinta-db'))
 
                        (update-in kevyt-valinta-db'
-                                  [kevyt-valinta-dropdown-id :open?]
+                                  [kevyt-valinta-property :open?]
                                   not))))))
 
 (def rfc-1123-date-formatter (format/formatter "E, d MMM yyyy HH:mm:ss"))

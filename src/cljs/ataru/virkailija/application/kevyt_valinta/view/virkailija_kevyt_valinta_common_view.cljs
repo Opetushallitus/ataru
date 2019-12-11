@@ -13,20 +13,20 @@
                       application-key
                       new-kevyt-valinta-property-value]))
 
-(defn- kevyt-valinta-selection-dropdown [kevyt-valinta-dropdown-id
+(defn- kevyt-valinta-selection-dropdown [kevyt-valinta-property
                                          kevyt-valinta-dropdown-value
                                          kevyt-valinta-dropdown-values
                                          kevyt-valinta-on-dropdown-value-change
                                          ongoing-request-property]
-  (let [dropdown-open?     @(re-frame/subscribe [:state-query [:application :kevyt-valinta kevyt-valinta-dropdown-id :open?]])
+  (let [dropdown-open?     @(re-frame/subscribe [:state-query [:application :kevyt-valinta kevyt-valinta-property :open?]])
         dropdown-disabled? ongoing-request-property
-        show-loader?       (= ongoing-request-property kevyt-valinta-dropdown-id)]
+        show-loader?       (= ongoing-request-property kevyt-valinta-property)]
     [:div.application-handling__kevyt-valinta-dropdown-container
      [:div.application-handling__kevyt-valinta-dropdown.application-handling__kevyt-valinta-dropdown-item
       (if dropdown-disabled?
         {:class "application-handling__kevyt-valinta-dropdown--disabled"}
         {:on-click (fn toggle-kevyt-valinta-selection-dropdown []
-                     (re-frame/dispatch [:virkailija-kevyt-valinta/toggle-kevyt-valinta-dropdown kevyt-valinta-dropdown-id]))})
+                     (re-frame/dispatch [:virkailija-kevyt-valinta/toggle-kevyt-valinta-dropdown kevyt-valinta-property]))})
       [:span.application-handling__kevyt-valinta-dropdown-value kevyt-valinta-dropdown-value]
       (when show-loader?
         [el/ellipsis-loader])
@@ -36,7 +36,7 @@
      (when dropdown-open?
        [:div.application-handling__kevyt-valinta-dropdown.application-handling__kevyt-valinta-dropdown-item-list.animated.fadeIn
         (map (fn [{value :value label :label}]
-               ^{:key (str (name kevyt-valinta-dropdown-id) "-" value)}
+               ^{:key (str (name kevyt-valinta-property) "-" value)}
                [:div.application-handling__kevyt-valinta-dropdown-item
                 {:on-click (fn []
                              (kevyt-valinta-on-dropdown-value-change value))}
@@ -60,7 +60,7 @@
      (when show-checkmark?
        [:i.zmdi.zmdi-check.application-handling__kevyt-valinta-checkmark--bold])]))
 
-(defn kevyt-valinta-selection [kevyt-valinta-dropdown-id
+(defn kevyt-valinta-selection [kevyt-valinta-property
                                kevyt-valinta-dropdown-state
                                kevyt-valinta-dropdown-value
                                kevyt-valinta-dropdown-values
@@ -68,10 +68,10 @@
   (let [ongoing-request-property @(re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])]
     (if (and (= kevyt-valinta-dropdown-state :checked)
              (or (not ongoing-request-property)
-                 (not= ongoing-request-property kevyt-valinta-dropdown-id)))
+                 (not= ongoing-request-property kevyt-valinta-property)))
       [:span.application-handling__kevyt-valinta-value kevyt-valinta-dropdown-value]
       [kevyt-valinta-selection-dropdown
-       kevyt-valinta-dropdown-id
+       kevyt-valinta-property
        kevyt-valinta-dropdown-value
        kevyt-valinta-dropdown-values
        kevyt-valinta-on-dropdown-value-change
