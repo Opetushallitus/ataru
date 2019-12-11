@@ -162,10 +162,6 @@
     (let [{valinnan-tila    :valinnantila
            julkaisun-tila   :julkaistavissa
            vastaanotto-tila :vastaanottotila} valinnan-tulos-for-application
-          ongoing-request? (and ongoing-request-property
-                                (not (before? kevyt-valinta-property
-                                              ongoing-request-property
-                                              kevyt-valinta-property-order)))
           checkmark-states (match [valinnan-tila julkaisun-tila vastaanotto-tila]
                                   [_ (_ :guard nil?) (_ :guard nil?)]
                                   {:kevyt-valinta/valinnan-tila    :unchecked
@@ -187,11 +183,17 @@
                                    :kevyt-valinta/julkaisun-tila   :checked
                                    :kevyt-valinta/vastaanotto-tila :checked})
           checkmark-state  (checkmark-states kevyt-valinta-property)]
-      (cond (and ongoing-request?
+      (cond (and ongoing-request-property
+                 (not (before? kevyt-valinta-property
+                               ongoing-request-property
+                               kevyt-valinta-property-order))
                  (= checkmark-state :checked))
             :unchecked
 
-            (and ongoing-request?
+            (and ongoing-request-property
+                 (before? ongoing-request-property
+                          kevyt-valinta-property
+                          kevyt-valinta-property-order)
                  (= checkmark-state :unchecked))
             :grayed-out
 
