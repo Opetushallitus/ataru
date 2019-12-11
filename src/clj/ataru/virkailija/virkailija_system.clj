@@ -44,10 +44,6 @@
                            (organization-service/new-organization-service)
                            [:all-organization-groups-cache])
 
-    :virkailija-tarjonta-service (component/using
-                                  (tarjonta-service/new-virkailija-tarjonta-service)
-                                  [:forms-in-use-cache :organization-service])
-
     :tarjonta-service (component/using
                        (tarjonta-service/new-tarjonta-service)
                        [:forms-in-use-cache
@@ -155,7 +151,6 @@
               (virkailija-routes/new-handler)
               (vec (concat [:login-cas-client
                             :organization-service
-                            :virkailija-tarjonta-service
                             :tarjonta-service
                             :valintalaskentakoostepalvelu-service
                             :valintaperusteet-service

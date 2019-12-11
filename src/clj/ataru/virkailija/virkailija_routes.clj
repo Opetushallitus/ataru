@@ -193,7 +193,6 @@
                           valinta-tulos-service
                           job-runner
                           ohjausparametrit-service
-                          virkailija-tarjonta-service
                           localizations-cache
                           statistics-month-cache
                           statistics-week-cache
@@ -223,7 +222,18 @@
     (api/GET "/forms-in-use" {session :session}
       :summary "Return a map of form->hakus-currently-in-use-in-tarjonta-service"
       :return {s/Str {s/Str {:haku-oid s/Str :haku-name ataru-schema/LocalizedStringOptional}}}
-      (ok (tarjonta/get-forms-in-use virkailija-tarjonta-service session)))
+      (ok
+       (reduce (fn [acc form]
+                 (if-let [haut (seq (tarjonta/hakus-by-form-key tarjonta-service (:key form)))]
+                   (->> haut
+                        (reduce (fn [acc haku]
+                                  (assoc acc (:oid haku) {:haku-oid  (:oid haku)
+                                                          :haku-name (:name haku)}))
+                                {})
+                        (assoc acc (:key form)))
+                   acc))
+               {}
+               (form-store/get-all-forms))))
 
     (api/GET "/forms/latest/:key" []
       :path-params [key :- s/Str]
