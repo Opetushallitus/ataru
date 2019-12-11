@@ -111,15 +111,16 @@
   (and (not= a b)
        (->> coll
             (partition-all 2 1)
-            (map (fn [[a' b']]
-                   (cond (and (= a' a)
-                              b')
-                         true
+            (transduce (comp (map (fn [[a' b']]
+                                    (cond (and (= a' a)
+                                               b')
+                                          true
 
-                         (and (= a' b)
-                              (= b' a))
-                         false)))
-            (filter (comp not nil?))
+                                          (and (= a' b)
+                                               (= b' a))
+                                          false)))
+                             (filter (comp not nil?)))
+                       conj)
             (first))))
 
 (re-frame/reg-sub
