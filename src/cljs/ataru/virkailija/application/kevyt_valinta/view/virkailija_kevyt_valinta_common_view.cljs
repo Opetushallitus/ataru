@@ -61,12 +61,12 @@
        [:i.zmdi.zmdi-check.application-handling__kevyt-valinta-checkmark--bold])]))
 
 (defn kevyt-valinta-selection [kevyt-valinta-dropdown-id
-                               kevyt-valinta-property-state
+                               kevyt-valinta-dropdown-state
                                kevyt-valinta-dropdown-value
                                kevyt-valinta-dropdown-values
                                kevyt-valinta-on-dropdown-value-change]
   (let [ongoing-request-property @(re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])]
-    (if (and (= kevyt-valinta-property-state :checked)
+    (if (and (= kevyt-valinta-dropdown-state :checked)
              (or (not ongoing-request-property)
                  (not= ongoing-request-property kevyt-valinta-dropdown-id)))
       [:span.application-handling__kevyt-valinta-value kevyt-valinta-dropdown-value]
@@ -77,11 +77,11 @@
        kevyt-valinta-on-dropdown-value-change
        ongoing-request-property])))
 
-(defn kevyt-valinta-row [kevyt-valinta-property-state
+(defn kevyt-valinta-row [kevyt-valinta-dropdown-state
                          checkmark-component
                          label
                          selection-component]
-  (if (= kevyt-valinta-property-state :grayed-out)
+  (if (= kevyt-valinta-dropdown-state :grayed-out)
     [:div.application-handling__kevyt-valinta-row
      checkmark-component
      [:div.application-handling__kevyt-valinta-label

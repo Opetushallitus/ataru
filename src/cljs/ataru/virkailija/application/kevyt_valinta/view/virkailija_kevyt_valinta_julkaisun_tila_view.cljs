@@ -10,7 +10,7 @@
 (defn- kevyt-valinta-julkaisun-tila-selection [hakukohde-oid
                                                application-key
                                                julkaisun-tila
-                                               julkaisun-tila-property-state
+                                               julkaisun-tila-dropdown-state
                                                lang]
   (let [julkaisun-tilat-i18n (map (fn [julkaisun-tila]
                                     (let [translation-key (case julkaisun-tila
@@ -27,7 +27,7 @@
                                   (map :label))]
     [common-view/kevyt-valinta-selection
      :kevyt-valinta/julkaisun-tila
-     julkaisun-tila-property-state
+     julkaisun-tila-dropdown-state
      julkaisun-tila-i18n
      julkaisun-tilat-i18n
      (partial common-view/on-kevyt-valinta-property-change
@@ -40,16 +40,16 @@
                                         lang]
   (let [julkaisun-tila                @(re-frame/subscribe [:virkailija-kevyt-valinta/julkaisun-tila application-key])
         julkaisun-tila-label          (translations/kevyt-valinta-review-type-label :kevyt-valinta/julkaisun-tila lang)
-        julkaisun-tila-property-state @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-state
+        julkaisun-tila-dropdown-state @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-dropdown-state
                                                             :kevyt-valinta/julkaisun-tila
                                                             application-key])]
     [common-view/kevyt-valinta-row
-     julkaisun-tila-property-state
+     julkaisun-tila-dropdown-state
      [common-view/kevyt-valinta-checkmark :kevyt-valinta/julkaisun-tila application-key]
      julkaisun-tila-label
      [kevyt-valinta-julkaisun-tila-selection
       hakukohde-oid
       application-key
       julkaisun-tila
-      julkaisun-tila-property-state
+      julkaisun-tila-dropdown-state
       lang]]))
