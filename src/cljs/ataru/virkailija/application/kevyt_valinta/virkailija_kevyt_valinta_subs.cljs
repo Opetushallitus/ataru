@@ -1,5 +1,6 @@
 (ns ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs
   (:require [ataru.feature-config :as fc]
+            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-mappings :as mappings]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-rights :as kvr]
             [re-frame.core :as re-frame])
   (:require-macros [cljs.core.match :refer [match]]))
@@ -33,43 +34,25 @@
            ;; backendiltä ja nil? palauttaisi väärän positiivisen tiedon
            (every? false? (valintalaskenta-in-hakukohteet db))))))
 
-(re-frame/reg-sub
-  :virkailija-kevyt-valinta/valinnan-tila
-  (fn [[_ application-key]]
-    [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-     (re-frame/subscribe [:state-query [:application :valinta-tulos-service application-key]])])
-  (fn [[hakukohde-oids valinnan-tulokset-for-application]]
-    ;; Koska kevyt valinta näkyy ainoastaan yhdelle hakukohteelle, voidaan olettaa, että listassa on vain yksi alkio
-    (let [hakukohde-oid (first hakukohde-oids)]
-      (or (-> valinnan-tulokset-for-application
-              (get hakukohde-oid)
-              :valinnantulos
-              :valinnantila)
-          "KESKEN"))))
+(defn- default-kevyt-valinta-property-state [kevyt-valinta-property]
+  (when (= kevyt-valinta-property :kevyt-valinta/valinnan-tila)
+    "KESKEN"))
 
 (re-frame/reg-sub
-  :virkailija-kevyt-valinta/julkaisun-tila
-  (fn [[_ application-key]]
+  :virkailija-kevyt-valinta/kevyt-valinta-property-state
+  (fn [[_ _ application-key]]
     [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
      (re-frame/subscribe [:state-query [:application :valinta-tulos-service application-key]])])
-  (fn [[hakukohde-oids valinnan-tulokset-for-application]]
-    (let [hakukohde-oid (first hakukohde-oids)]
-      (-> valinnan-tulokset-for-application
-          (get hakukohde-oid)
-          :valinnantulos
-          :julkaistavissa))))
-
-(re-frame/reg-sub
-  :virkailija-kevyt-valinta/vastaanotto-tila
-  (fn [[_ application-key]]
-    [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-     (re-frame/subscribe [:state-query [:application :valinta-tulos-service application-key]])])
-  (fn [[hakukohde-oids valinnan-tulokset-for-application]]
-    (let [hakukohde-oid (first hakukohde-oids)]
-      (-> valinnan-tulokset-for-application
-          (get hakukohde-oid)
-          :valinnantulos
-          :vastaanottotila))))
+  (fn [[hakukohde-oids valinnan-tulokset-for-application] [_ kevyt-valinta-property]]
+    (let [hakukohde-oid                  (first hakukohde-oids)
+          valinta-tulos-service-property (mappings/kevyt-valinta-property->valinta-tulos-service-property kevyt-valinta-property)
+          kevyt-valinta-property-state   (-> valinnan-tulokset-for-application
+                                             (get hakukohde-oid)
+                                             :valinnantulos
+                                             valinta-tulos-service-property)]
+      (if (nil? kevyt-valinta-property-state)
+        (default-kevyt-valinta-property-state kevyt-valinta-property)
+        kevyt-valinta-property-state))))
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/valintatapajono-oid

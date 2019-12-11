@@ -38,7 +38,9 @@
 (defn kevyt-valinta-julkaisun-tila-row [hakukohde-oid
                                         application-key
                                         lang]
-  (let [julkaisun-tila                @(re-frame/subscribe [:virkailija-kevyt-valinta/julkaisun-tila application-key])
+  (let [julkaisun-tila                @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-state
+                                                            :kevyt-valinta/julkaisun-tila
+                                                            application-key])
         julkaisun-tila-label          (translations/kevyt-valinta-review-type-label :kevyt-valinta/julkaisun-tila lang)
         julkaisun-tila-dropdown-state @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-dropdown-state
                                                             :kevyt-valinta/julkaisun-tila

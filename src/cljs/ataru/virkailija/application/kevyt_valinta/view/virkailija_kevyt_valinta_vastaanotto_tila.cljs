@@ -44,7 +44,9 @@
 (defn kevyt-valinta-vastaanotto-tila-row [hakukohde-oid
                                           application-key
                                           lang]
-  (let [vastaanotto-tila                @(re-frame/subscribe [:virkailija-kevyt-valinta/vastaanotto-tila application-key])
+  (let [vastaanotto-tila                @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-state
+                                                              :kevyt-valinta/vastaanotto-tila
+                                                              application-key])
         vastaanotto-tila-label          (translations/kevyt-valinta-review-type-label :kevyt-valinta/vastaanotto-tila lang)
         vastaanotto-tila-dropdown-state @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-dropdown-state
                                                               :kevyt-valinta/vastaanotto-tila
