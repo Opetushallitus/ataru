@@ -1575,6 +1575,16 @@ You will receive a confirmation of your application to your email."}
    :kevyt-valinta/vastaanottanut-sitovasti      {:fi "Vastaanottanut sitovasti"}
    :kevyt-valinta/kesken                        {:fi "Kesken"}})
 
+(def kevyt-valinta-ilmoittautumisen-tila-translations
+  {:kevyt-valinta/ei-tehty              {:fi "Ei tehty"}
+   :kevyt-valinta/lasna-koko-lukuvuosi  {:fi "Läsnä (koko lukuvuosi)"}
+   :kevyt-valinta/poissa-koko-lukuvuosi {:fi "Poissa (koko lukuvuosi)"}
+   :kevyt-valinta/ei-ilmoittautunut     {:fi "Ei ilmoittautunut"}
+   :kevyt-valinta/lasna-syksy           {:fi "Läsnä syksy, poissa kevät"}
+   :kevyt-valinta/poissa-syksy          {:fi "Poissa syksy, läsnä kevät"}
+   :kevyt-valinta/lasna                 {:fi "Läsnä, keväällä alkava koulutus"}
+   :kevyt-valinta/poissa                {:fi "Poissa, keväällä alkava koulutus"}})
+
 (def state-translations
   {:active                 {:fi "Aktiivinen"
                             :sv "Aktiv"
