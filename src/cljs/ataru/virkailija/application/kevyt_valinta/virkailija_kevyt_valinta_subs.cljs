@@ -122,7 +122,7 @@
             (first))))
 
 (re-frame/reg-sub
-  :virkailija-kevyt-valinta/kevyt-valinta-dropdown-state
+  :virkailija-kevyt-valinta/kevyt-valinta-selection-state
   (fn [[_ _ application-key]]
     [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])])
   (fn [[valinnan-tulos-for-application] [_ kevyt-valinta-property]]

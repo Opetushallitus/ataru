@@ -20,7 +20,7 @@
 
 (defn- kevyt-valinta-vastaanotto-tila-selection [hakukohde-oid
                                                  application-key
-                                                 vastaanotto-tila-dropdown-state
+                                                 vastaanotto-tila-selection-state
                                                  vastaanotto-tila
                                                  lang]
   (let [vastaanotto-tilat-i18n (map (fn [vastaanotto-tila]
@@ -31,9 +31,9 @@
                                     (filter (comp (partial = vastaanotto-tila)
                                                   :value))
                                     (map :label))]
-    [common-view/kevyt-valinta-selection
+    [common-view/kevyt-valinta-dropdown-selection
      :kevyt-valinta/vastaanotto-tila
-     vastaanotto-tila-dropdown-state
+     vastaanotto-tila-selection-state
      vastaanotto-tila-i18n
      vastaanotto-tilat-i18n
      (partial common-view/on-kevyt-valinta-property-change
@@ -44,20 +44,20 @@
 (defn kevyt-valinta-vastaanotto-tila-row [hakukohde-oid
                                           application-key
                                           lang]
-  (let [vastaanotto-tila                @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-state
-                                                              :kevyt-valinta/vastaanotto-tila
-                                                              application-key])
-        vastaanotto-tila-label          (translations/kevyt-valinta-review-type-label :kevyt-valinta/vastaanotto-tila lang)
-        vastaanotto-tila-dropdown-state @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-dropdown-state
-                                                              :kevyt-valinta/vastaanotto-tila
-                                                              application-key])]
+  (let [vastaanotto-tila                 @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-state
+                                                               :kevyt-valinta/vastaanotto-tila
+                                                               application-key])
+        vastaanotto-tila-label           (translations/kevyt-valinta-review-type-label :kevyt-valinta/vastaanotto-tila lang)
+        vastaanotto-tila-selection-state @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-selection-state
+                                                               :kevyt-valinta/vastaanotto-tila
+                                                               application-key])]
     [common-view/kevyt-valinta-row
-     vastaanotto-tila-dropdown-state
+     vastaanotto-tila-selection-state
      [common-view/kevyt-valinta-checkmark :kevyt-valinta/vastaanotto-tila application-key]
      vastaanotto-tila-label
      [kevyt-valinta-vastaanotto-tila-selection
       hakukohde-oid
       application-key
-      vastaanotto-tila-dropdown-state
+      vastaanotto-tila-selection-state
       vastaanotto-tila
       lang]]))
