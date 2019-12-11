@@ -5,66 +5,88 @@
             [re-frame.core :as re-frame])
   (:require-macros [cljs.core.match :refer [match]]))
 
-(defn- valintalaskenta-in-hakukohteet
-  [db]
-  (->> (get-in db [:application :selected-review-hakukohde-oids])
-       (remove #(= "form" %))
-       (map #(get-in db [:application :valintalaskentakoostepalvelu % :valintalaskenta]))))
+(re-frame/reg-sub
+  :virkailija-kevyt-valinta/valintalaskenta-in-hakukohteet
+  (fn []
+    [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+     (re-frame/subscribe [:state-query [:application :valintalaskentakoostepalvelu]])])
+  (fn [[hakukohde-oids valintalaskentakoostepalvelu]]
+    (transduce (comp (remove (partial = "form"))
+                     (map (fn [hakukohde-oid]
+                            (-> valintalaskentakoostepalvelu
+                                (get hakukohde-oid)
+                                :valintalaskenta))))
+               conj
+               hakukohde-oids)))
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/show-selection-state-dropdown?
-  (fn [db _]
+  (fn []
+    [(re-frame/subscribe [:virkailija-kevyt-valinta/valintalaskenta-in-hakukohteet])])
+  (fn [[valintalaskenta-in-hakukohteet]]
     (or (not (fc/feature-enabled? :kevyt-valinta))
         ;; true?, koska nil tarkoittaa ettei tietoa ole vielä ladattu
         ;; backendiltä ja nil? palauttaisi väärän positiivisen tiedon
-        (every? true? (valintalaskenta-in-hakukohteet db)))))
+        (every? true? valintalaskenta-in-hakukohteet))))
+
+(re-frame/reg-sub
+  :virkailija-kevyt-valinta/sijoittelu?
+  (fn []
+    [(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :haku]])
+     (re-frame/subscribe [:state-query [:haut]])])
+  (fn [[haku-oid haut]]
+    (-> haut
+        (get haku-oid)
+        :sijoittelu)))
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/show-kevyt-valinta?
-  (fn [db _]
-    (let [haku-oid            (get-in db [:application :selected-application-and-form :application :haku])
-          hakukohde-oids      (get-in db [:application :selected-review-hakukohde-oids])
-          rights-by-hakukohde (get-in db [:application :selected-application-and-form :application :rights-by-hakukohde])]
-      (and (fc/feature-enabled? :kevyt-valinta)
-           ;; On päätetty, että kevyt valinta näkyy ainoastaan kun on yksi hakukohde valittavissa, muuten moni asia on todella epätriviaaleja toteuttaa
-           (= (count hakukohde-oids) 1)
-           (kvr/kevyt-valinta-rights-for-hakukohteet? hakukohde-oids rights-by-hakukohde)
-           (not (get-in db [:haut haku-oid :sijoittelu]))
-           ;; false?, koska nil tarkoittaa ettei tietoa ole vielä ladattu
-           ;; backendiltä ja nil? palauttaisi väärän positiivisen tiedon
-           (every? false? (valintalaskenta-in-hakukohteet db))))))
+  (fn []
+    [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+     (re-frame/subscribe [:state-query [:application :selected-application-and-form :application :rights-by-hakukohde]])
+     (re-frame/subscribe [:virkailija-kevyt-valinta/valintalaskenta-in-hakukohteet])
+     (re-frame/subscribe [:virkailija-kevyt-valinta/sijoittelu?])])
+  (fn [[hakukohde-oids rights-by-hakukohde valintalaskenta-in-hakukohteet sijoittelu?]]
+    (and (fc/feature-enabled? :kevyt-valinta)
+         ;; On päätetty, että kevyt valinta näkyy ainoastaan kun on yksi hakukohde valittavissa, muuten moni asia on todella epätriviaaleja toteuttaa
+         (= (count hakukohde-oids) 1)
+         (kvr/kevyt-valinta-rights-for-hakukohteet? hakukohde-oids rights-by-hakukohde)
+         (not sijoittelu?)
+         ;; false?, koska nil tarkoittaa ettei tietoa ole vielä ladattu
+         ;; backendiltä ja nil? palauttaisi väärän positiivisen tiedon
+         (every? false? valintalaskenta-in-hakukohteet))))
 
 (defn- default-kevyt-valinta-property-state [kevyt-valinta-property]
   (when (= kevyt-valinta-property :kevyt-valinta/valinnan-tila)
     "KESKEN"))
 
 (re-frame/reg-sub
+  :virkailija-kevyt-valinta/hakukohde-oid
+  (fn []
+    [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])])
+  (fn [[hakukohde-oids]]
+    (first hakukohde-oids)))
+
+(re-frame/reg-sub
+  :virkailija-kevyt-valinta/valinnan-tulos-for-application
+  (fn [[_ application-key]]
+    [(re-frame/subscribe [:virkailija-kevyt-valinta/hakukohde-oid])
+     (re-frame/subscribe [:state-query [:application :valinta-tulos-service application-key]])])
+  (fn [[hakukohde-oid valinnan-tulokset-for-application]]
+    (-> valinnan-tulokset-for-application
+        (get hakukohde-oid)
+        :valinnantulos)))
+
+(re-frame/reg-sub
   :virkailija-kevyt-valinta/kevyt-valinta-property-state
   (fn [[_ _ application-key]]
-    [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-     (re-frame/subscribe [:state-query [:application :valinta-tulos-service application-key]])])
-  (fn [[hakukohde-oids valinnan-tulokset-for-application] [_ kevyt-valinta-property]]
-    (let [hakukohde-oid                  (first hakukohde-oids)
-          valinta-tulos-service-property (mappings/kevyt-valinta-property->valinta-tulos-service-property kevyt-valinta-property)
-          kevyt-valinta-property-state   (-> valinnan-tulokset-for-application
-                                             (get hakukohde-oid)
-                                             :valinnantulos
-                                             valinta-tulos-service-property)]
+    [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])])
+  (fn [[valinnan-tulos-for-application] [_ kevyt-valinta-property]]
+    (let [valinta-tulos-service-property (mappings/kevyt-valinta-property->valinta-tulos-service-property kevyt-valinta-property)
+          kevyt-valinta-property-state   (valinta-tulos-service-property valinnan-tulos-for-application)]
       (if (nil? kevyt-valinta-property-state)
         (default-kevyt-valinta-property-state kevyt-valinta-property)
         kevyt-valinta-property-state))))
-
-(re-frame/reg-sub
-  :virkailija-kevyt-valinta/valintatapajono-oid
-  (fn [[_ application-key]]
-    [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-     (re-frame/subscribe [:state-query [:application :valinta-tulos-service application-key]])])
-  (fn [[hakukohde-oids valinnan-tulokset-for-application]]
-    (let [hakukohde-oid (first hakukohde-oids)]
-      (-> valinnan-tulokset-for-application
-          (get hakukohde-oid)
-          :valinnantulos
-          :valintatapajonoOid))))
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/ongoing-request-property
@@ -102,15 +124,11 @@
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/kevyt-valinta-dropdown-state
   (fn [[_ _ application-key]]
-    [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-     (re-frame/subscribe [:state-query [:application :valinta-tulos-service application-key]])])
-  (fn [[hakukohde-oids valinnan-tulokset-for-application] [_ kevyt-valinta-property]]
-    (let [hakukohde-oid        (first hakukohde-oids)
-          {valinnan-tila    :valinnantila
+    [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])])
+  (fn [[valinnan-tulos-for-application] [_ kevyt-valinta-property]]
+    (let [{valinnan-tila    :valinnantila
            julkaisun-tila   :julkaistavissa
-           vastaanotto-tila :vastaanottotila} (-> valinnan-tulokset-for-application
-                                                  (get hakukohde-oid)
-                                                  :valinnantulos)
+           vastaanotto-tila :vastaanottotila} valinnan-tulos-for-application
           kevyt-valinta-states (match [valinnan-tila julkaisun-tila vastaanotto-tila]
                                       [_ (_ :guard nil?) (_ :guard nil?)]
                                       {:kevyt-valinta/valinnan-tila    :unchecked
@@ -138,16 +156,12 @@
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/kevyt-valinta-checkmark-state
   (fn [[_ _ application-key]]
-    [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-     (re-frame/subscribe [:state-query [:application :valinta-tulos-service application-key]])
-     (re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])])
-  (fn [[hakukohde-oids valinnan-tulokset-for-application ongoing-request-property] [_ kevyt-valinta-property]]
-    (let [hakukohde-oid    (first hakukohde-oids)
-          {valinnan-tila    :valinnantila
+    [(re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])
+     (re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])])
+  (fn [[ongoing-request-property valinnan-tulos-for-application] [_ kevyt-valinta-property]]
+    (let [{valinnan-tila    :valinnantila
            julkaisun-tila   :julkaistavissa
-           vastaanotto-tila :vastaanottotila} (-> valinnan-tulokset-for-application
-                                                  (get hakukohde-oid)
-                                                  :valinnantulos)
+           vastaanotto-tila :vastaanottotila} valinnan-tulos-for-application
           ongoing-request? (and ongoing-request-property
                                 (not (before? kevyt-valinta-property
                                               ongoing-request-property
