@@ -1,32 +1,17 @@
---name: yesql-get-forms-query
--- Get stored forms, without content, filtered by what's allowed for the viewing user. Use the latest version.
+--name: yesql-get-forms
+-- Get stored forms, without content. Use the latest version.
 SELECT
   id,
   key,
   name,
+  organization_oid,
   deleted,
   created_by,
   created_time,
   languages,
   locked
 FROM latest_forms
-WHERE (deleted IS NULL OR deleted = FALSE)
-  AND (:query_type = 'ALL' OR organization_oid IN (:authorized_organization_oids))
-ORDER BY created_time DESC;
-
---name: yesql-get-forms-by-keys
--- Get stored forms, without content, filtered by what's allowed for the viewing user. Use the latest version.
-SELECT
-  f.id,
-  f.key,
-  f.name,
-  f.deleted,
-  f.created_by,
-  f.created_time,
-  f.languages,
-  f.locked
-FROM latest_forms f
-WHERE (f.key IN (:keys)) AND (f.deleted IS NULL OR NOT f.deleted)
+WHERE deleted IS NULL OR deleted = FALSE
 ORDER BY created_time DESC;
 
 -- name: yesql-add-form<!

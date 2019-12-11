@@ -218,7 +218,7 @@
                              In practice this is Tarjonta system only for now.
                              Return forms authorized with editor right (:form-edit)"
       :return {:forms [ataru-schema/Form]}
-      (ok (access-controlled-form/get-forms-for-editor session virkailija-tarjonta-service organization-service)))
+      (ok (access-controlled-form/get-forms-for-editor session tarjonta-service organization-service)))
 
     (api/GET "/forms-in-use" {session :session}
       :summary "Return a map of form->hakus-currently-in-use-in-tarjonta-service"
@@ -241,7 +241,7 @@
       :summary "Edit form content"
       :path-params [id :- Long]
       :body [operations [ataru-schema/Operation]]
-      (access-controlled-form/edit-form-with-operations id operations session virkailija-tarjonta-service organization-service)
+      (access-controlled-form/edit-form-with-operations id operations session tarjonta-service organization-service)
       (ok {}))
 
     (api/PUT "/forms/:id/lock/:operation" {session :session}
@@ -250,17 +250,17 @@
       :return {:locked    (s/maybe DateTime)
                :id        Long}
       :summary "Toggle form locked state"
-      (ok (access-controlled-form/update-form-lock id operation session tarjonta-service virkailija-tarjonta-service organization-service)))
+      (ok (access-controlled-form/update-form-lock id operation session tarjonta-service organization-service)))
 
     (api/DELETE "/forms/:id" {session :session}
       :path-params [id :- Long]
       :summary "Mark form as deleted"
-      (ok (access-controlled-form/delete-form id session virkailija-tarjonta-service organization-service)))
+      (ok (access-controlled-form/delete-form id session tarjonta-service organization-service)))
 
     (api/POST "/forms" {session :session}
       :summary "Persist changed form."
       :body [form ataru-schema/FormWithContent]
-      (ok (access-controlled-form/post-form form session virkailija-tarjonta-service organization-service)))
+      (ok (access-controlled-form/post-form form session tarjonta-service organization-service)))
 
     (api/POST "/client-error" []
       :summary "Log client-side errors to server log"
