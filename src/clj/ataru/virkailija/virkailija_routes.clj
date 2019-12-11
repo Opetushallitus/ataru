@@ -376,6 +376,7 @@
                  :hakukohde-reviews                 ataru-schema/HakukohdeReviews
                  :form                              ataru-schema/FormWithContent
                  (s/optional-key :latest-form) ataru-schema/Form
+                 (s/optional-key :form-changes) ataru-schema/ApplicationDiff
                  :information-requests              [ataru-schema/InformationRequest]}
         (if-let [application (application-service/get-application-with-human-readable-koodis
                               koodisto-cache

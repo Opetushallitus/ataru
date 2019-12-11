@@ -95,6 +95,39 @@
       (update :params dissoc :info-text)
       (dissoc :metadata)))
 
+(defn get-changed-elem-ids [old new]
+  (let [changed (filter (fn [old-elem]
+                          (let [new-with-same-id (find-first (fn [x] (= (:id x) (:id old-elem))) new)
+                                [a b _] (diff old-elem new-with-same-id)
+                                res (not (and (empty? a)
+                                              (empty? b)))]
+                            res)
+                          ) old)
+        ]
+    (map #(:id %) changed)))
+
+(defn get-new-and-changed-ids [application tarjonta-info older-form newer-form]
+  (and (not= (:id older-form) (:id newer-form))
+       (let [answers        (group-by :key (:answers application))
+             hakutoiveet    (set (:hakukohde application))
+             visible-fields (fn [form]
+                              (let [flat-form-fields (util/flatten-form-fields (:content form))
+                                    field-by-id (util/group-by-first :id flat-form-fields)]
+                                (->> flat-form-fields
+                                     (filter #(visible? % field-by-id answers hakutoiveet
+                                                        (-> tarjonta-info :tarjonta :hakukohteet)))
+                                     (map remove-irrelevant-changes))))
+             fields-left    (sort-by :id (visible-fields older-form))
+             fields-right   (sort-by :id (visible-fields newer-form))
+             left-ids (set (map #(:id %) fields-left))
+             right-ids (set (map #(:id %) fields-right))
+             new-ids (clojure.set/difference right-ids left-ids)
+             changed-ids (get-changed-elem-ids fields-left fields-right)
+             ]
+         (log/info (str "---***--- new ids (" (count new-ids) "): "(pr-str new-ids)))
+         (log/info (str "---***--- changed ids (" (count changed-ids) "): "(pr-str changed-ids)))
+         [new-ids changed-ids])))
+
 (defn forms-differ? [application tarjonta-info form-left form-right]
   (and (not= (:id form-left) (:id form-right))
        (let [answers        (group-by :key (:answers application))
@@ -150,6 +183,15 @@
                                              newest-form)
                                        (assoc :content [])
                                        (dissoc :organization-oid))
+
+
+          changes (if with-newest-form? (if-let [[new-ids changed-ids] (get-new-and-changed-ids application tarjonta-info (populate-form-fields form-in-application koodisto-cache tarjonta-info)
+                                                                                            (populate-form-fields newest-form koodisto-cache tarjonta-info))]
+                                          (-> {}
+                                              (assoc :new-ids new-ids)
+                                              (assoc :changed-ids changed-ids))
+                                          {}))
+
           hakukohde-reviews    (future (parse-application-hakukohde-reviews application-key))
           attachment-reviews   (future (parse-application-attachment-reviews application-key))
           events               (future (get-application-events organization-service application-key))
@@ -168,7 +210,8 @@
                                :events               @events
                                :review               @review
                                :review-notes         @review-notes
-                               :information-requests @information-requests}))))
+                               :information-requests @information-requests
+                               :form-changes         changes}))))
 
 (defn ->form-query
   [key]
