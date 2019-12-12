@@ -195,3 +195,47 @@
 
             :else
             checkmark-state))))
+
+(def ^:private valinnan-tilat
+  ["KESKEN"
+   "HYVAKSYTTY"
+   "VARASIJALTA_HYVAKSYTTY"
+   "HYLATTY"
+   "VARALLA"
+   "PERUUNTUNUT"
+   "PERUNUT"
+   "PERUUTETTU"])
+
+(def ^:private julkaisun-tilat
+  [false true])
+
+(def ^:private ilmoittautumisen-tilat
+  ["EI_TEHTY"
+   "LASNA"
+   "POISSA"
+   "LASNA_KOKO_LUKUVUOSI"
+   "POISSA_KOKO_LUKUVUOSI"
+   "POISSA_SYKSY"
+   "LASNA_SYKSY"
+   "EI_ILMOITTAUTUNUT"])
+
+(def ^:private vastaanotto-tilat
+  ["KESKEN"
+   "EI_VASTAANOTETTU_MAARA_AIKANA"
+   "PERUNUT"
+   "PERUUTETTU"
+   "OTTANUT_VASTAAN_TOISEN_PAIKAN"
+   "EHDOLLISESTI_VASTAANOTTANUT"
+   "VASTAANOTTANUT_SITOVASTI"])
+
+(re-frame/reg-sub
+  :virkailija-kevyt-valinta/allowed-kevyt-valinta-property-values
+  (fn [[_ _ application-key]]
+    [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])])
+  (fn [[valinnan-tulos-for-application] [_ kevyt-valinta-property]]
+    (let [kevyt-valinta-propery-values (case kevyt-valinta-property
+                                         :kevyt-valinta/valinnan-tila valinnan-tilat
+                                         :kevyt-valinta/julkaisun-tila julkaisun-tilat
+                                         :kevyt-valinta/ilmoittautumisen-tila ilmoittautumisen-tilat
+                                         :kevyt-valinta/vastaanotto-tila vastaanotto-tilat)]
+      kevyt-valinta-propery-values)))
