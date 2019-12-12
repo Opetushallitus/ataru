@@ -522,7 +522,6 @@
       (-> db
           (update :editor dissoc :ui)
           (assoc-in [:editor :forms key] new-form)
-          (assoc-in [:editor :selected-form-key] key)
           (fold-all)
           (assoc-in [:editor :save-snapshot] new-form)
           (assoc-in [:editor :autosave] (create-autosave-loop new-form))
@@ -536,6 +535,20 @@
           :handler-or-dispatch :editor/handle-fetch-form}})
 
 (reg-event-fx
+  :editor/handle-refresh-form-used-in-hakus
+  (fn [{db :db} [_ response _]]
+    {:db       (assoc-in db [:editor :form-used-in-hakus] response)
+     :dispatch [:editor/refresh-used-by-haut]}))
+
+(reg-event-fx
+  :editor/refresh-form-used-in-hakus
+  (fn [_ [_ form-key]]
+    {:http {:method              :get
+            :path                (str "/lomake-editori/api/tarjonta/haku?form-key=" form-key)
+            :handler-or-dispatch :editor/handle-refresh-form-used-in-hakus
+            :skip-parse-times?   true}}))
+
+(reg-event-fx
   :editor/select-form
   (fn [{db :db} [_ form-key]]
     (with-form-key [db previous-form-key]
@@ -545,7 +558,7 @@
                      (update-in [:editor :forms previous-form-key] assoc :content [])
                      true
                      (assoc-in [:editor :selected-form-key] form-key))}
-        {:dispatch [:editor/refresh-used-by-haut]}
+        {:dispatch [:editor/refresh-form-used-in-hakus form-key]}
         (when (and (some? previous-form-key)
                    (not= previous-form-key form-key))
           {:stop-autosave (get-in db [:editor :autosave])})
