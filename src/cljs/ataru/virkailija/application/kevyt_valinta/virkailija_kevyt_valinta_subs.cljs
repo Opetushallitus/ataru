@@ -181,15 +181,15 @@
           checkmark-state  (checkmark-states kevyt-valinta-property)]
       (cond (and ongoing-request-property
                  (not (coll/before? kevyt-valinta-property
-                               ongoing-request-property
-                               kevyt-valinta-property-order))
+                                    ongoing-request-property
+                                    kevyt-valinta-property-order))
                  (= checkmark-state :checked))
             :unchecked
 
             (and ongoing-request-property
                  (coll/before? ongoing-request-property
-                          kevyt-valinta-property
-                          kevyt-valinta-property-order)
+                               kevyt-valinta-property
+                               kevyt-valinta-property-order)
                  (= checkmark-state :unchecked))
             :grayed-out
 
