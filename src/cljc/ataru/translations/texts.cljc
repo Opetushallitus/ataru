@@ -45,18 +45,21 @@
    :application-period                          {:fi "Hakuaika"
                                                  :sv "Ansökningstid"
                                                  :en "Application period"}
-   :application-period-hours-left               {:fi "Hakuaikaa jäljellä %s tuntia"
-                                                 :sv "Av ansökningstiden återstår %s timmar"
-                                                 :en "%s hours left in the application period"}
-   :application-period-hour-left                {:fi "Hakuaikaa jäljellä yksi tunti"
-                                                 :sv "Av ansökningstiden återstår en timme"
-                                                 :en "One hour left in the application period"}
-   :application-period-minutes-left             {:fi "Hakuaikaa jäljellä alle %s minuuttia"
-                                                 :sv "Av ansökningstiden återstår %s minuter"
-                                                 :en "Less than %s minutes left in the application period"}
-   :application-period-left-until               {:fi "Hakuaika päättyy %s"
-                                                 :sv "Ansökninstiden utgår %s"
-                                                 :en "Application period ends %s"}
+   :application-period-less-than-day-left       {:fi "Hakuaikaa jäljellä alle vuorokausi"
+                                                 :sv "Av ansökningstiden återstår mindre än en dag"
+                                                 :en "Less than a day left in the application period"}
+   :application-period-less-than-hour-left      {:fi "Hakuaikaa jäljellä alle tunti"
+                                                 :sv "Av ansökningstiden återstår mindre än en timme"
+                                                 :en "Less than one hour left in the application period"}
+   :application-period-less-than-45-min-left    {:fi "Hakuaikaa jäljellä alle 45 min"
+                                                 :sv "Av ansökningstiden återstår 45 minuter"
+                                                 :en "Less than 45 min left in the application period"}
+   :application-period-less-than-30-min-left    {:fi "Hakuaikaa jäljellä alle 30 min"
+                                                 :sv "Av ansökningstiden återstår 30 minuter"
+                                                 :en "Less than 30 min left in the application period"}
+   :application-period-less-than-15-min-left    {:fi "Hakuaikaa jäljellä alle 15 min"
+                                                 :sv "Av ansökningstiden återstår 15 minuter"
+                                                 :en "Less than 15 min left in the application period"}
    :application-priorization-invalid            {:fi "Hakukohteet ovat väärässä ensisijaisuusjärjestyksessä"
                                                  :sv "Fel prioritetsordning för ansökningsmålen"
                                                  :en "Application options are in an invalid order of preference"}
