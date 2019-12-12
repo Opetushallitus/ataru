@@ -3,26 +3,19 @@
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as translations]
             [re-frame.core :as re-frame]))
 
-(def ^:private ilmoittautumisen-tilat
-  ["EI_TEHTY"
-   "LASNA_KOKO_LUKUVUOSI"
-   "POISSA_KOKO_LUKUVUOSI"
-   "EI_ILMOITTAUTUNUT"
-   "LASNA_SYKSY"
-   "POISSA_SYKSY"
-   "LASNA"
-   "POISSA"])
-
 (defn- kevyt-valinta-ilmoittautumisen-tila-selection [hakukohde-oid
                                                       application-key
                                                       ilmoittautumisen-tila-selection-state
                                                       ilmoittautumisen-tila
                                                       lang]
-  (let [ilmoittautumisen-tilat-i18n (map (fn [ilmoittautumisen-tila]
+  (let [ilmoittautumisen-tilat      @(re-frame/subscribe [:virkailija-kevyt-valinta/allowed-kevyt-valinta-property-values
+                                                          :kevyt-valinta/ilmoittautumisen-tila
+                                                          application-key])
+        ilmoittautumisen-tilat-i18n (map (fn [ilmoittautumisen-tila]
                                            {:value ilmoittautumisen-tila
                                             :label (translations/kevyt-valinta-selection-label :kevyt-valinta/ilmoittautumisen-tila
                                                                                                ilmoittautumisen-tila
-                                                                                               :fi)})
+                                                                                               lang)})
                                          ilmoittautumisen-tilat)
         ilmoittautumisen-tila-i18n  (->> ilmoittautumisen-tilat-i18n
                                          (filter (comp (partial = ilmoittautumisen-tila)

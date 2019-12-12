@@ -3,21 +3,15 @@
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as translations]
             [re-frame.core :as re-frame]))
 
-(def ^:private vastaanotto-tilat
-  ["EI_VASTAANOTETTU_MAARA_AIKANA"
-   "PERUNUT"
-   "PERUUTETTU"
-   "OTTANUT_VASTAAN_TOISEN_PAIKAN"
-   "EHDOLLISESTI_VASTAANOTTANUT"
-   "VASTAANOTTANUT_SITOVASTI"
-   "KESKEN"])
-
 (defn- kevyt-valinta-vastaanotto-tila-selection [hakukohde-oid
                                                  application-key
                                                  vastaanotto-tila-selection-state
                                                  vastaanotto-tila
                                                  lang]
-  (let [vastaanotto-tilat-i18n (map (fn [vastaanotto-tila]
+  (let [vastaanotto-tilat      @(re-frame/subscribe [:virkailija-kevyt-valinta/allowed-kevyt-valinta-property-values
+                                                     :kevyt-valinta/vastaanotto-tila
+                                                     application-key])
+        vastaanotto-tilat-i18n (map (fn [vastaanotto-tila]
                                       {:value vastaanotto-tila
                                        :label (translations/kevyt-valinta-selection-label :kevyt-valinta/vastaanotto-tila
                                                                                           vastaanotto-tila

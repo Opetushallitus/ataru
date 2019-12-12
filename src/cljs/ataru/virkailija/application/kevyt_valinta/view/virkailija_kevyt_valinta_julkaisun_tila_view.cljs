@@ -3,15 +3,15 @@
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as translations]
             [re-frame.core :as re-frame]))
 
-(def ^:private julkaisun-tilat
-  [true false])
-
 (defn- kevyt-valinta-julkaisun-tila-selection [hakukohde-oid
                                                application-key
                                                julkaisun-tila
                                                julkaisun-tila-selection-state
                                                lang]
-  (let [julkaisun-tilat-i18n (map (fn [julkaisun-tila]
+  (let [julkaisun-tilat      @(re-frame/subscribe [:virkailija-kevyt-valinta/allowed-kevyt-valinta-property-values
+                                                   :kevyt-valinta/julkaisun-tila
+                                                   application-key])
+        julkaisun-tilat-i18n (map (fn [julkaisun-tila]
                                     {:value julkaisun-tila
                                      :label (translations/kevyt-valinta-selection-label :kevyt-valinta/julkaisun-tila
                                                                                         julkaisun-tila

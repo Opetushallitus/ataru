@@ -3,15 +3,15 @@
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as translations]
             [re-frame.core :as re-frame]))
 
-(def ^:private valinnan-tilat
-  ["HYLATTY" "PERUUNTUNUT" "VARASIJALTA_HYVAKSYTTY" "HYVAKSYTTY" "PERUNUT" "PERUUTETTU" "VARALLA" "KESKEN"])
-
 (defn- kevyt-valinta-valinnan-tila-selection [hakukohde-oid
                                               application-key
                                               valinnan-tila-selection-state
                                               valinnan-tila
                                               lang]
-  (let [valinnan-tilat-i18n (map (fn [valinnan-tila]
+  (let [valinnan-tilat      @(re-frame/subscribe [:virkailija-kevyt-valinta/allowed-kevyt-valinta-property-values
+                                                  :kevyt-valinta/valinnan-tila
+                                                  application-key])
+        valinnan-tilat-i18n (map (fn [valinnan-tila]
                                    {:value valinnan-tila
                                     :label (translations/kevyt-valinta-selection-label :kevyt-valinta/valinnan-tila
                                                                                        valinnan-tila
