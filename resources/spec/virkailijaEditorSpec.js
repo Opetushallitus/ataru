@@ -59,6 +59,54 @@
       )
   }
 
+  function clickLomakeForEdit(name) {
+    return clickElement(() =>
+      formListItems().find(
+        '.editor-form__list-form-name:contains("' + name + '")'
+      )
+    )
+  }
+
+  function clickCopyFormComponent(name) {
+    return () => {
+      testFrame()
+        .find('.editor-form__component-wrapper:contains("' + name + '")')
+        .find('.editor-form__component-button:contains("Kopioi")')
+        .click()
+    }
+  }
+
+  function clickCloseDetailsButton() {
+    return () => {
+      testFrame()
+        .find('.close-details-button')
+        .click()
+    }
+  }
+
+  function clickPasteFormComponent(n) {
+    return () => {
+      triggerEvent(
+        testFrame()
+          .find('.editor-form__drag_n_drop_spacer_container_for_component')
+          .eq(n),
+        'mouseover'
+      )
+      const selector =
+        '.editor-form__drag_n_drop_spacer_container_for_component button.editor-form__component-button:visible:enabled:contains("Liitä")'
+      return wait
+        .until(() => {
+          const b = testFrame().find(selector).length !== 0
+          return b
+        })()
+        .then(() =>
+          testFrame()
+            .find(selector)
+            .click()
+        )
+    }
+  }
+
   function clickComponentMenuItem(title) {
     const menuItem = () => {
       triggerEvent(
@@ -157,8 +205,8 @@
   describe('Editor', () => {
     describe('with fixture forms', () => {
       before(wait.until(editorPageIsLoaded, 10000))
-      it('has 6 fixture forms', () => {
-        expect(formListItems()).to.have.length(6)
+      it('has 7 fixture forms', () => {
+        expect(formListItems()).to.have.length(7)
       })
     })
 
@@ -1550,6 +1598,7 @@
 
       describe('locking form', () => {
         before(
+          clickLomakeForEdit('Testilomake'),
           wait.forMilliseconds(1000), // wait abit since
           clickLockForm(), // this locking is sometimes so fast that the previous request gets blocked.
           wait.until(() =>
@@ -1619,14 +1668,34 @@
       })
     })
 
+    describe('Copy from a form and paste into another after closing the first form', () => {
+      before(
+        clickLomakeForEdit('Testilomake'),
+        wait.forMilliseconds(1000),
+        clickCopyFormComponent('Testiosio'),
+        wait.forMilliseconds(1000),
+        clickCloseDetailsButton(),
+        wait.forMilliseconds(500),
+        clickLomakeForEdit('Selaintestilomake4'),
+        wait.forMilliseconds(1000),
+        clickPasteFormComponent(0),
+        wait.forMilliseconds(500)
+      )
+      it('creates the copy in another form', () => {
+        expect(
+          formSections()
+            .eq(0)
+            .find('.editor-form__text-field')
+            .eq(0)
+            .val()
+        ).to.equal('Testiosio')
+      })
+    })
+
     describe('hakukohde specific question', () => {
       const component = () => formComponents().eq(0)
       before(
-        clickElement(() =>
-          formListItems().find(
-            '.editor-form__list-form-name:contains("belongs-to-hakukohteet-test-form")'
-          )
-        ),
+        clickLomakeForEdit('belongs-to-hakukohteet-test-form'),
         wait.forMilliseconds(1000),
         clickElement(() =>
           component().find('.editor-form__component-fold-button')
