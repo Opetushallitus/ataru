@@ -391,16 +391,16 @@
   :editor/refresh-used-by-haut
   (fn [{db :db} _]
     (when-let [form-key (get-in db [:editor :selected-form-key])]
-      (let [haku-oids (map (comp :haku-oid second) (get-in db [:editor :forms-in-use (keyword form-key)]))
-            organization-oids (map :oid (get-in db [:editor :user-info :organizations] []))
+      (let [haku-oids               (map (comp :haku-oid second) (get-in db [:editor :forms-in-use (keyword form-key)]))
+            organization-oids       (map :oid (get-in db [:editor :user-info :organizations] []))
             hakukohderyhmat-promise (async/promise-chan)
-            hakukohteet-promise (async/promise-chan)]
+            hakukohteet-promise     (async/promise-chan)]
         (on-haku-data-fetched hakukohteet-promise hakukohderyhmat-promise)
-        {:db (-> db
-               (assoc-in [:editor :used-by-haut :fetching?] true)
-               (assoc-in [:editor :used-by-haut :error?] false))
+        {:db                          (-> db
+                                          (assoc-in [:editor :used-by-haut :fetching?] true)
+                                          (assoc-in [:editor :used-by-haut :error?] false))
          :fetch-haut-with-hakukohteet [hakukohteet-promise organization-oids haku-oids]
-         :fetch-hakukohde-groups [hakukohderyhmat-promise]}))))
+         :fetch-hakukohde-groups      [hakukohderyhmat-promise]}))))
 
 (reg-event-db
   :editor/handle-user-info
