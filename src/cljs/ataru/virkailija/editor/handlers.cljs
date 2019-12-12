@@ -545,12 +545,12 @@
                      (update-in [:editor :forms previous-form-key] assoc :content [])
                      true
                      (assoc-in [:editor :selected-form-key] form-key))}
-       {:dispatch [:editor/refresh-used-by-haut]}
-       (when (and (some? previous-form-key)
-                  (not= previous-form-key form-key))
-         {:stop-autosave (get-in db [:editor :autosave])})
-       (when-let [id (get-in db [:editor :forms form-key :id])]
-         (fetch-form-content-fx id))))))
+        {:dispatch [:editor/refresh-used-by-haut]}
+        (when (and (some? previous-form-key)
+                   (not= previous-form-key form-key))
+          {:stop-autosave (get-in db [:editor :autosave])})
+        (when-let [id (get-in db [:editor :forms form-key :id])]
+          (fetch-form-content-fx id))))))
 
 (def save-chan (async/chan (async/sliding-buffer 1)))
 
