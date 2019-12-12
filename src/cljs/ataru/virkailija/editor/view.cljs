@@ -244,30 +244,30 @@
    [:ul.editor-form__used-in-haku-list
     (doall
       (for [haku form-used-in-hakus]
-        ^{:key (str "haku-" (:haku-oid haku))}
+        ^{:key (str "haku-" (:oid haku))}
         [:li
          [:div.editor-form__used-in-haku-list-haku-name
           [:span
-           (str (some #(get (:haku-name haku) %) [:fi :sv :en]) " ")
+           (str (some #(get (:name haku) %) [:fi :sv :en]) " ")
            [:a.editor-form__haku-admin-link
             {:href   (str "/tarjonta-app/index.html#/haku/"
-                          (:haku-oid haku))
+                          (:oid haku))
              :target "_blank"}
             [:i.zmdi.zmdi-open-in-new]]]]
          [:div.editor-form__haku-preview-link
           [:a {:href   (str "/lomake-editori/api/preview/haku/"
-                            (:haku-oid haku)
+                            (:oid haku)
                             "?lang=fi")
                :target "_blank"}
            (get-virkailija-translation :test-application)]
           [:span " | "]
           [:a {:href   (str js/config.applicant.service_url
-                            "/hakemus/haku/" (:haku-oid haku)
+                            "/hakemus/haku/" (:oid haku)
                             "?lang=fi")
                :target "_blank"}
            (get-virkailija-translation :form)]
           (when (:superuser? @user-info)
-            (link-to-feedback (str "/hakemus/haku/" (:haku-oid haku))))]]))]])
+            (link-to-feedback (str "/hakemus/haku/" (:oid haku))))]]))]])
 
 (defn- form-in-use-warning-for-empty-hakus [form languages user-info]
   [:div.editor-form__form-link-container

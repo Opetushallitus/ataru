@@ -19,8 +19,11 @@
 
 (re-frame/reg-sub
   :editor/form-used-in-hakus
-  (fn form-used-in-hakus [db [_ key]]
-    (vals (get-in db [:editor :forms-in-use (keyword key)]))))
+  (fn form-used-in-hakus [db [_ key]]                       ;; TODO fix
+    (let [hakus (get-in db [:editor :form-used-in-hakus])]
+      (if (not (empty? hakus))
+        hakus
+        nil))))
 
 (re-frame/reg-sub
   :editor/form-keys
