@@ -154,7 +154,7 @@
                     (fn [[_ _ notify-key value]]
                       (when-let [key (notify-key->key (:name cache) notify-key)]
                         (when-let [p (get promises key)]
-                          (deliver p value))))}
+                          (deliver p [value]))))}
                    (car/psubscribe (->notify-pattern (:name cache))))]
     (try
       (doseq [key keys]
@@ -163,9 +163,13 @@
       (enqueue-update-execution cache)
 
       (reduce (fn [values [key promise]]
-                (if-let [value (deref promise (:lock-timeout-ms cache) nil)]
-                  (assoc values key value)
-                  values))
+                (if-let [[value] (deref promise (:lock-timeout-ms cache) nil)]
+                  (if (some? value)
+                    (assoc values key value)
+                    values)
+                  (throw
+                   (new RuntimeException
+                        (str "Failed to fetch " (:name cache) " " key)))))
               {}
               promises)
       (finally
