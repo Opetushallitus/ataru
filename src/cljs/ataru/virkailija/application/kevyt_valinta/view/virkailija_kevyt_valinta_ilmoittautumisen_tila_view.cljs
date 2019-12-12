@@ -1,6 +1,5 @@
 (ns ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-ilmoittautumisen-tila-view
   (:require [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-common-view :as common-view]
-            [ataru.application.review-states :as review-states]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as translations]
             [re-frame.core :as re-frame]))
 
@@ -14,11 +13,6 @@
    "LASNA"
    "POISSA"])
 
-(defn- ilmoittautumisen-tila-label [ilmoittautumisen-tila lang]
-  (-> review-states/ilmoittautumisen-tila-selection-state
-      (get ilmoittautumisen-tila)
-      lang))
-
 (defn- kevyt-valinta-ilmoittautumisen-tila-selection [hakukohde-oid
                                                       application-key
                                                       ilmoittautumisen-tila-selection-state
@@ -26,7 +20,9 @@
                                                       lang]
   (let [ilmoittautumisen-tilat-i18n (map (fn [ilmoittautumisen-tila]
                                            {:value ilmoittautumisen-tila
-                                            :label (ilmoittautumisen-tila-label ilmoittautumisen-tila lang)})
+                                            :label (translations/kevyt-valinta-selection-label :kevyt-valinta/ilmoittautumisen-tila
+                                                                                               ilmoittautumisen-tila
+                                                                                               :fi)})
                                          ilmoittautumisen-tilat)
         ilmoittautumisen-tila-i18n  (->> ilmoittautumisen-tilat-i18n
                                          (filter (comp (partial = ilmoittautumisen-tila)

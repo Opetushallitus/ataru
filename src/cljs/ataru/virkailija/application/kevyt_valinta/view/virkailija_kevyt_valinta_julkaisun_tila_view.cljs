@@ -1,7 +1,6 @@
 (ns ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-julkaisun-tila-view
   (:require [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-common-view :as common-view]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as translations]
-            [ataru.translations.texts :as texts]
             [re-frame.core :as re-frame]))
 
 (def ^:private julkaisun-tilat
@@ -13,13 +12,10 @@
                                                julkaisun-tila-selection-state
                                                lang]
   (let [julkaisun-tilat-i18n (map (fn [julkaisun-tila]
-                                    (let [translation-key (case julkaisun-tila
-                                                            true :kevyt-valinta/julkaistu-hakijalle
-                                                            false :kevyt-valinta/ei-julkaistu)]
-                                      {:value julkaisun-tila
-                                       :label (-> texts/kevyt-valinta-julkaisun-tila-translations
-                                                  translation-key
-                                                  lang)}))
+                                    {:value julkaisun-tila
+                                     :label (translations/kevyt-valinta-selection-label :kevyt-valinta/julkaisun-tila
+                                                                                        julkaisun-tila
+                                                                                        lang)})
                                   julkaisun-tilat)
         julkaisun-tila-i18n  (->> julkaisun-tilat-i18n
                                   (filter (comp (partial = julkaisun-tila)
