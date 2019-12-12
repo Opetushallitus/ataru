@@ -1,6 +1,5 @@
 (ns ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-vastaanotto-tila-view
-  (:require [ataru.application.review-states :as review-states]
-            [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-common-view :as common-view]
+  (:require [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-common-view :as common-view]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as translations]
             [re-frame.core :as re-frame]))
 
@@ -13,11 +12,6 @@
    "VASTAANOTTANUT_SITOVASTI"
    "KESKEN"])
 
-(defn- vastaanotto-tila-label [vastaanotto-tila lang]
-  (-> review-states/vastaanotto-tila-selection-state
-      (get vastaanotto-tila)
-      lang))
-
 (defn- kevyt-valinta-vastaanotto-tila-selection [hakukohde-oid
                                                  application-key
                                                  vastaanotto-tila-selection-state
@@ -25,7 +19,9 @@
                                                  lang]
   (let [vastaanotto-tilat-i18n (map (fn [vastaanotto-tila]
                                       {:value vastaanotto-tila
-                                       :label (vastaanotto-tila-label vastaanotto-tila lang)})
+                                       :label (translations/kevyt-valinta-selection-label :kevyt-valinta/vastaanotto-tila
+                                                                                          vastaanotto-tila
+                                                                                          lang)})
                                     vastaanotto-tilat)
         vastaanotto-tila-i18n  (->> vastaanotto-tilat-i18n
                                     (filter (comp (partial = vastaanotto-tila)

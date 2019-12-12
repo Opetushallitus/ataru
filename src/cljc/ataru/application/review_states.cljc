@@ -1,6 +1,7 @@
 (ns ataru.application.review-states
   (:require [ataru.translations.texts :refer [state-translations
                                               kevyt-valinta-state-translations
+                                              kevyt-valinta-julkaisun-tila-translations
                                               kevyt-valinta-vastaanotto-tila-translations
                                               kevyt-valinta-ilmoittautumisen-tila-translations]]
             [ataru.util :as util]
@@ -30,7 +31,7 @@
    ["selected" (:selected state-translations)]
    ["rejected" (:rejected state-translations)]])
 
-(def kevyt-valinta-selection-state
+(def valinnan-tila-selection-state
   {"HYLATTY"                (:kevyt-valinta/hylatty kevyt-valinta-state-translations)
    "VARALLA"                (:kevyt-valinta/varalla kevyt-valinta-state-translations)
    "PERUUNTUNUT"            (:kevyt-valinta/peruuntunut kevyt-valinta-state-translations)
@@ -39,6 +40,10 @@
    "PERUNUT"                (:kevyt-valinta/perunut kevyt-valinta-state-translations)
    "PERUUTETTU"             (:kevyt-valinta/peruutettu kevyt-valinta-state-translations)
    "KESKEN"                 (:kevyt-valinta/kesken kevyt-valinta-state-translations)})
+
+(def julkaisun-tila-selection-state
+  {true  (:kevyt-valinta/julkaistu-hakijalle kevyt-valinta-julkaisun-tila-translations)
+   false (:kevyt-valinta/ei-julkaistu kevyt-valinta-julkaisun-tila-translations)})
 
 (def vastaanotto-tila-selection-state
   {"EI_VASTAANOTETTU_MAARA_AIKANA" (:kevyt-valinta/ei-vastaanotettu-maaraaikana kevyt-valinta-vastaanotto-tila-translations)
@@ -84,7 +89,8 @@
    [:selection-state (:selection-state state-translations) application-hakukohde-selection-states]])
 
 (def kevyt-valinta-hakukohde-review-types
-  {:kevyt-valinta/julkaisun-tila        {:fi "Julkaisu"}
+  {:kevyt-valinta/valinnan-tila         {:fi "Valinta"}
+   :kevyt-valinta/julkaisun-tila        {:fi "Julkaisu"}
    :kevyt-valinta/vastaanotto-tila      {:fi "Vastaanotto"}
    :kevyt-valinta/ilmoittautumisen-tila {:fi "Ilmoittautuminen"}})
 

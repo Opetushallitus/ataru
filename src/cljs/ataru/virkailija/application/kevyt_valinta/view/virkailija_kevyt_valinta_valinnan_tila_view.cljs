@@ -13,7 +13,9 @@
                                               lang]
   (let [valinnan-tilat-i18n (map (fn [valinnan-tila]
                                    {:value valinnan-tila
-                                    :label (translations/valinnan-tila-label valinnan-tila lang)})
+                                    :label (translations/kevyt-valinta-selection-label :kevyt-valinta/valinnan-tila
+                                                                                       valinnan-tila
+                                                                                       lang)})
                                  valinnan-tilat)
         valinnan-tila-i18n  (->> valinnan-tilat-i18n
                                  (filter (comp (partial = valinnan-tila)
@@ -33,7 +35,7 @@
 (defn kevyt-valinta-valinnan-tila-row [hakukohde-oid
                                        application-key
                                        lang]
-  (let [valinnan-tila-label           (translations/review-type-label :selection-state lang)
+  (let [valinnan-tila-label           (translations/kevyt-valinta-review-type-label :kevyt-valinta/valinnan-tila lang)
         valinnan-tila                 @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-state
                                                             :kevyt-valinta/valinnan-tila
                                                             application-key])
