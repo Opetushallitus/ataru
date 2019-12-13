@@ -46,19 +46,19 @@
                                                  :sv "Ansökningstid"
                                                  :en "Application period"}
    :application-period-less-than-day-left       {:fi "Hakuaikaa jäljellä alle vuorokausi"
-                                                 :sv "Av ansökningstiden återstår mindre än en dag"
+                                                 :sv "Av ansökningstiden återstår mindre än ett dygn"
                                                  :en "Less than a day left in the application period"}
    :application-period-less-than-hour-left      {:fi "Hakuaikaa jäljellä alle tunti"
                                                  :sv "Av ansökningstiden återstår mindre än en timme"
                                                  :en "Less than one hour left in the application period"}
    :application-period-less-than-45-min-left    {:fi "Hakuaikaa jäljellä alle 45 min"
-                                                 :sv "Av ansökningstiden återstår 45 minuter"
+                                                 :sv "Av ansökningstiden återstår mindre än 45 min."
                                                  :en "Less than 45 min left in the application period"}
    :application-period-less-than-30-min-left    {:fi "Hakuaikaa jäljellä alle 30 min"
-                                                 :sv "Av ansökningstiden återstår 30 minuter"
+                                                 :sv "Av ansökningstiden återstår mindre än 30 min."
                                                  :en "Less than 30 min left in the application period"}
    :application-period-less-than-15-min-left    {:fi "Hakuaikaa jäljellä alle 15 min"
-                                                 :sv "Av ansökningstiden återstår 15 minuter"
+                                                 :sv "Av ansökningstiden återstår mindre än 15 min."
                                                  :en "Less than 15 min left in the application period"}
    :application-priorization-invalid            {:fi "Hakukohteet ovat väärässä ensisijaisuusjärjestyksessä"
                                                  :sv "Fel prioritetsordning för ansökningsmålen"
