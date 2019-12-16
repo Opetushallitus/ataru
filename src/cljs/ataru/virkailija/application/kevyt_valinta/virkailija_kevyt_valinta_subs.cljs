@@ -79,12 +79,22 @@
         :valinnantulos)))
 
 (re-frame/reg-sub
+  :virkailija-kevyt-valinta/korkeakouluhaku?
+  (fn []
+    false))
+
+(re-frame/reg-sub
   :virkailija-kevyt-valinta/kevyt-valinta-property-value
   (fn [[_ _ application-key]]
-    [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])])
-  (fn [[valinnan-tulos-for-application] [_ kevyt-valinta-property]]
+    [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])
+     (re-frame/subscribe [:virkailija-kevyt-valinta/korkeakouluhaku?])])
+  (fn [[valinnan-tulos-for-application korkeakouluhaku?] [_ kevyt-valinta-property]]
     (let [valinta-tulos-service-property (mappings/kevyt-valinta-property->valinta-tulos-service-property kevyt-valinta-property)
-          kevyt-valinta-property-value   (valinta-tulos-service-property valinnan-tulos-for-application)]
+          kevyt-valinta-property-value   (some-> valinnan-tulos-for-application
+                                                 (valinta-tulos-service-property)
+                                                 (mappings/valinta-tulos-service-value->kevyt-valinta-property-value
+                                                   kevyt-valinta-property
+                                                   korkeakouluhaku?))]
       (if (nil? kevyt-valinta-property-value)
         (default-kevyt-valinta-property-value kevyt-valinta-property)
         kevyt-valinta-property-value))))
@@ -231,7 +241,7 @@
    "LASNA_SYKSY"
    "EI_ILMOITTAUTUNUT"])
 
-(def ^:private vastaanotto-tilat
+(def ^:private vastaanotto-tilat-for-korkeakoulu
   ["KESKEN"
    "EI_VASTAANOTETTU_MAARA_AIKANA"
    "PERUNUT"
@@ -240,14 +250,25 @@
    "EHDOLLISESTI_VASTAANOTTANUT"
    "VASTAANOTTANUT_SITOVASTI"])
 
+(def ^:private vastaanotto-tilat-for-not-korkeakoulu
+  ["KESKEN"
+   "EI_VASTAANOTETTU_MAARA_AIKANA"
+   "PERUNUT"
+   "PERUUTETTU"
+   "OTTANUT_VASTAAN_TOISEN_PAIKAN"
+   "VASTAANOTTANUT"])
+
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/allowed-kevyt-valinta-property-values
   (fn [[_ _ application-key]]
-    [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])])
-  (fn [[valinnan-tulos-for-application] [_ kevyt-valinta-property]]
-    (let [kevyt-valinta-propery-values (case kevyt-valinta-property
-                                         :kevyt-valinta/valinnan-tila valinnan-tilat
-                                         :kevyt-valinta/julkaisun-tila julkaisun-tilat
-                                         :kevyt-valinta/ilmoittautumisen-tila ilmoittautumisen-tilat
-                                         :kevyt-valinta/vastaanotto-tila vastaanotto-tilat)]
-      kevyt-valinta-propery-values)))
+    [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])
+     (re-frame/subscribe [:virkailija-kevyt-valinta/korkeakouluhaku?])])
+  (fn [[valinnan-tulos-for-application korkeakouluhaku?] [_ kevyt-valinta-property]]
+    (let [kevyt-valinta-property-values (case kevyt-valinta-property
+                                          :kevyt-valinta/valinnan-tila valinnan-tilat
+                                          :kevyt-valinta/julkaisun-tila julkaisun-tilat
+                                          :kevyt-valinta/ilmoittautumisen-tila ilmoittautumisen-tilat
+                                          :kevyt-valinta/vastaanotto-tila (if korkeakouluhaku?
+                                                                            vastaanotto-tilat-for-korkeakoulu
+                                                                            vastaanotto-tilat-for-not-korkeakoulu))]
+      kevyt-valinta-property-values)))

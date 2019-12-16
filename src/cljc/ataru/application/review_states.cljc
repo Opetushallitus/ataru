@@ -52,7 +52,8 @@
    "OTTANUT_VASTAAN_TOISEN_PAIKAN" (:kevyt-valinta/ottanut-vastaan-toisen-paikan kevyt-valinta-vastaanotto-tila-translations)
    "EHDOLLISESTI_VASTAANOTTANUT"   (:kevyt-valinta/ehdollisesti-vastaanottanut kevyt-valinta-vastaanotto-tila-translations)
    "VASTAANOTTANUT_SITOVASTI"      (:kevyt-valinta/vastaanottanut-sitovasti kevyt-valinta-vastaanotto-tila-translations)
-   "KESKEN"                        (:kevyt-valinta/kesken kevyt-valinta-vastaanotto-tila-translations)})
+   "KESKEN"                        (:kevyt-valinta/kesken kevyt-valinta-vastaanotto-tila-translations)
+   "VASTAANOTTANUT"                (:kevyt-valinta/vastaanottanut kevyt-valinta-vastaanotto-tila-translations)})
 
 (def ilmoittautumisen-tila-selection-state
   {"EI_TEHTY"              (:kevyt-valinta/ei-tehty kevyt-valinta-ilmoittautumisen-tila-translations)
