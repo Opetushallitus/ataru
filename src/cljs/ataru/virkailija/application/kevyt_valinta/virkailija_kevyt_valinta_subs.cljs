@@ -264,11 +264,13 @@
     [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])
      (re-frame/subscribe [:virkailija-kevyt-valinta/korkeakouluhaku?])])
   (fn [[valinnan-tulos-for-application korkeakouluhaku?] [_ kevyt-valinta-property]]
-    (let [kevyt-valinta-property-values (case kevyt-valinta-property
-                                          :kevyt-valinta/valinnan-tila valinnan-tilat
-                                          :kevyt-valinta/julkaisun-tila julkaisun-tilat
-                                          :kevyt-valinta/ilmoittautumisen-tila ilmoittautumisen-tilat
-                                          :kevyt-valinta/vastaanotto-tila (if korkeakouluhaku?
-                                                                            vastaanotto-tilat-for-korkeakoulu
-                                                                            vastaanotto-tilat-for-not-korkeakoulu))]
-      kevyt-valinta-property-values)))
+    (let [{valinnan-tila :valinnantila} valinnan-tulos-for-application]
+      (case kevyt-valinta-property
+        :kevyt-valinta/valinnan-tila (cond->> valinnan-tilat
+                                              (not= valinnan-tila "KESKEN")
+                                              (remove (partial = "KESKEN")))
+        :kevyt-valinta/julkaisun-tila julkaisun-tilat
+        :kevyt-valinta/vastaanotto-tila (if korkeakouluhaku?
+                                          vastaanotto-tilat-for-korkeakoulu
+                                          vastaanotto-tilat-for-not-korkeakoulu)
+        :kevyt-valinta/ilmoittautumisen-tila ilmoittautumisen-tilat))))
