@@ -233,7 +233,7 @@
    [:div.editor-form__toolbar-right
     [fold-all]]])
 
-(defn- form-in-use-warning-for-non-empty-hakus [form-used-in-hakus user-info]
+(defn- form-in-use-in-hakus [form-used-in-hakus user-info]
   [:div.editor-form__form-link-container.animated.flash
    [:h3.editor-form__form-link-heading
     [:i.zmdi.zmdi-alert-circle-o]
@@ -269,7 +269,7 @@
           (when (:superuser? @user-info)
             (link-to-feedback (str "/hakemus/haku/" (:oid haku))))]]))]])
 
-(defn- form-in-use-warning-for-empty-hakus [form-key languages user-info]
+(defn- form-not-in-use-in-hakus [form-key languages user-info]
   [:div.editor-form__form-link-container
    [:h3.editor-form__form-link-heading
     [:i.zmdi.zmdi-alert-circle-o]
@@ -286,14 +286,14 @@
    (when (:superuser? @user-info)
      (link-to-feedback (str "/hakemus/" form-key)))])
 
-(defn form-in-use-warning
+(defn form-usage
   [form-key]
   (let [languages (subscribe [:editor/languages])
         user-info (subscribe [:state-query [:editor :user-info]])]
     (fn [form-key]
       (if-let [form-used-in-hakus @(subscribe [:editor/form-used-in-hakus form-key])]
-        (form-in-use-warning-for-non-empty-hakus form-used-in-hakus user-info)
-        (form-in-use-warning-for-empty-hakus form-key languages user-info)))))
+        (form-in-use-in-hakus form-used-in-hakus user-info)
+        (form-not-in-use-in-hakus form-key languages user-info)))))
 
 (defn- close-form []
   [:a {:on-click (fn [event]
@@ -307,7 +307,7 @@
    [close-form]
    [:div
     [editor-name]
-    [form-in-use-warning form-key]]
+    [form-usage form-key]]
    [c/editor]])
 
 (defn editor []
