@@ -289,11 +289,15 @@
      (when (:superuser? user-info)
        (link-to-feedback (str "/hakemus/" form-key)))]))
 
-(defn- form-usage
-  [form-key]
-  (if-let [form-used-in-hakus @(subscribe [:editor/form-used-in-hakus form-key])]
-    [form-in-use-in-hakus form-used-in-hakus]
-    [form-not-in-use-in-hakus form-key]))
+(defn- hakus-present-or-still-fetching [hakus]
+  (or (not (empty? hakus))
+      (nil? hakus)))
+
+(defn- form-usage [form-key]
+  (let [form-used-in-hakus @(subscribe [:editor/form-used-in-hakus form-key])]
+    (if (hakus-present-or-still-fetching form-used-in-hakus)
+      [form-in-use-in-hakus form-used-in-hakus]
+      [form-not-in-use-in-hakus form-key])))
 
 (defn- close-form []
   [:a {:on-click (fn [event]
