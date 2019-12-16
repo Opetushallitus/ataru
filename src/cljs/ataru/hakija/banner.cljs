@@ -117,9 +117,19 @@
   (let [inv (/ 1.0 step)]
     (/ (Math/ceil (* value inv)) inv)))
 
+(defn hakuaika-left-text [hours minutes]
+  (let [text-code (cond
+                    (and (zero? hours) (> 15 minutes))  :application-period-less-than-15-min-left
+                    (and (zero? hours) (> 30 minutes))  :application-period-less-than-30-min-left
+                    (and (zero? hours) (> 45 minutes))  :application-period-less-than-45-min-left
+                    (zero? hours)                       :application-period-less-than-hour-left
+                    (> 24 hours)                        :application-period-less-than-day-left)]
+    (if text-code
+      [:div.application__hakuaika-left
+       (get-translation text-code)])))
+
 (defn- hakuaika-left []
-  (let [haku-end-time (subscribe [:application/haku-end-time])
-        hakuaika-end  (subscribe [:state-query [:form :hakuaika-end]])
+  (let [hakuaika-end  (subscribe [:state-query [:form :hakuaika-end]])
         time-diff     (subscribe [:state-query [:form :time-delta-from-server]])
         seconds-left  (r/atom (new-time-left @hakuaika-end @time-diff))
         interval      (r/atom nil)]
@@ -133,18 +143,7 @@
       (when (< 0 @seconds-left (* 3600 24))
         (let [hours   (Math/floor (/ @seconds-left 3600))
               minutes (round (Math/floor (/ (rem @seconds-left 3600) 60)) 15)]
-          (cond (< 1 hours)
-                [:div.application__hakuaika-left
-                 (s/format (get-translation :application-period-hours-left) hours)]
-                (= 1 hours)
-                [:div.application__hakuaika-left
-                 (get-translation :application-period-hour-left)]
-                :else
-                [:div.application__hakuaika-left
-                 [:div
-                  (s/format (get-translation :application-period-minutes-left) minutes)]
-                 [:div
-                  (s/format (get-translation :application-period-left-until) @haku-end-time)]]))))))
+          (hakuaika-left-text hours minutes))))))
 
 (defn status-controls [submit-status]
   (let [valid-status (subscribe [:application/valid-status])
