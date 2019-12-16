@@ -30,22 +30,40 @@
   (fn [{valinta-tulos-service-url :valinta-tulos-service-url} [_ application-key]]
     {:http {:method              :get
             :path                (str valinta-tulos-service-url "?hakemusOid=" application-key)
-            :handler-or-dispatch :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos}}))
+            :handler-or-dispatch :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos
+            :handler-args        {:application-key application-key}}}))
 
-(re-frame/reg-event-db
+(re-frame/reg-event-fx
   :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos
-  (fn [db [_ response]]
-    (update-in db
-               [:application :valinta-tulos-service]
-               (fn valinnan-tulokset->db [valinta-tulos-service-db]
-                 (reduce (fn valinnan-tulos->db [acc valinnan-tulos]
-                           (let [hakemus-oid   (-> valinnan-tulos :valinnantulos :hakemusOid)
-                                 hakukohde-oid (-> valinnan-tulos :valinnantulos :hakukohdeOid)]
-                             (assoc-in acc
-                                       [hakemus-oid hakukohde-oid]
-                                       valinnan-tulos)))
-                         valinta-tulos-service-db
-                         response)))))
+  (fn [{db :db} [_ response {application-key :application-key}]]
+    (let [db           (update-in db
+                                  [:application :valinta-tulos-service]
+                                  (fn valinnan-tulokset->db [valinta-tulos-service-db]
+                                    (->> response
+                                         (filter (fn [valinnan-tulos]
+                                                   (let [vastaanotto-tila (-> valinnan-tulos :valinnantulos :vastaanottotila)]
+                                                     (not= vastaanotto-tila "OTTANUT_VASTAAN_TOISEN_PAIKAN"))))
+                                         (reduce (fn valinnan-tulos->db [acc valinnan-tulos]
+                                                   (let [hakemus-oid   (-> valinnan-tulos :valinnantulos :hakemusOid)
+                                                         hakukohde-oid (-> valinnan-tulos :valinnantulos :hakukohdeOid)]
+                                                     (assoc-in acc
+                                                               [hakemus-oid hakukohde-oid]
+                                                               valinnan-tulos)))
+                                                 valinta-tulos-service-db))))
+          dispatch-vec (->> response
+                            (filter (fn [valinnan-tulos]
+                                      (let [vastaanotto-tila (-> valinnan-tulos :valinnantulos :vastaanottotila)]
+                                        (= vastaanotto-tila "OTTANUT_VASTAAN_TOISEN_PAIKAN"))))
+                            (map (fn [valinnan-tulos]
+                                   (let [hakukohde-oid (-> valinnan-tulos :valinnantulos :hakukohdeOid)]
+                                     [:virkailija-kevyt-valinta/change-kevyt-valinta-property
+                                      :kevyt-valinta/valinnan-tila
+                                      hakukohde-oid
+                                      application-key
+                                      "PERUUNTUNUT"]))))]
+      (cond-> {:db db}
+              (not-empty dispatch-vec)
+              (assoc :dispatch-n dispatch-vec)))))
 
 (re-frame/reg-event-db
   :virkailija-kevyt-valinta/toggle-kevyt-valinta-dropdown
