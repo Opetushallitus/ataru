@@ -233,67 +233,67 @@
    [:div.editor-form__toolbar-right
     [fold-all]]])
 
-(defn- form-in-use-in-hakus [form-used-in-hakus user-info]
-  [:div.editor-form__form-link-container.animated.flash
-   [:h3.editor-form__form-link-heading
-    [:i.zmdi.zmdi-alert-circle-o]
-    (str " "
-         (if (empty? (rest form-used-in-hakus))
-           @(subscribe [:editor/virkailija-translation :used-by-haku])
-           @(subscribe [:editor/virkailija-translation :used-by-haut])))]
-   [:ul.editor-form__used-in-haku-list
-    (doall
-      (for [haku form-used-in-hakus]
-        ^{:key (str "haku-" (:oid haku))}
-        [:li
-         [:div.editor-form__used-in-haku-list-haku-name
-          [:span
-           (str (some #(get (:name haku) %) [:fi :sv :en]) " ")
-           [:a.editor-form__haku-admin-link
-            {:href   (str "/tarjonta-app/index.html#/haku/"
-                          (:oid haku))
-             :target "_blank"}
-            [:i.zmdi.zmdi-open-in-new]]]]
-         [:div.editor-form__haku-preview-link
-          [:a {:href   (str "/lomake-editori/api/preview/haku/"
-                            (:oid haku)
-                            "?lang=fi")
-               :target "_blank"}
-           @(subscribe [:editor/virkailija-translation :test-application])]
-          [:span " | "]
-          [:a {:href   (str js/config.applicant.service_url
-                            "/hakemus/haku/" (:oid haku)
-                            "?lang=fi")
-               :target "_blank"}
-           @(subscribe [:editor/virkailija-translation :form])]
-          (when (:superuser? @user-info)
-            (link-to-feedback (str "/hakemus/haku/" (:oid haku))))]]))]])
+(defn- form-in-use-in-hakus [form-used-in-hakus]
+  (let [user-info @(subscribe [:state-query [:editor :user-info]])]
+    [:div.editor-form__form-link-container.animated.flash
+     [:h3.editor-form__form-link-heading
+      [:i.zmdi.zmdi-alert-circle-o]
+      (str " "
+           (if (empty? (rest form-used-in-hakus))
+             @(subscribe [:editor/virkailija-translation :used-by-haku])
+             @(subscribe [:editor/virkailija-translation :used-by-haut])))]
+     [:ul.editor-form__used-in-haku-list
+      (doall
+       (for [haku form-used-in-hakus]
+         ^{:key (str "haku-" (:oid haku))}
+         [:li
+          [:div.editor-form__used-in-haku-list-haku-name
+           [:span
+            (str (some #(get (:name haku) %) [:fi :sv :en]) " ")
+            [:a.editor-form__haku-admin-link
+             {:href   (str "/tarjonta-app/index.html#/haku/"
+                           (:oid haku))
+              :target "_blank"}
+             [:i.zmdi.zmdi-open-in-new]]]]
+          [:div.editor-form__haku-preview-link
+           [:a {:href   (str "/lomake-editori/api/preview/haku/"
+                             (:oid haku)
+                             "?lang=fi")
+                :target "_blank"}
+            @(subscribe [:editor/virkailija-translation :test-application])]
+           [:span " | "]
+           [:a {:href   (str js/config.applicant.service_url
+                             "/hakemus/haku/" (:oid haku)
+                             "?lang=fi")
+                :target "_blank"}
+            @(subscribe [:editor/virkailija-translation :form])]
+           (when (:superuser? user-info)
+             (link-to-feedback (str "/hakemus/haku/" (:oid haku))))]]))]]))
 
-(defn- form-not-in-use-in-hakus [form-key languages user-info]
-  [:div.editor-form__form-link-container
-   [:h3.editor-form__form-link-heading
-    [:i.zmdi.zmdi-alert-circle-o]
-    (str " " @(subscribe [:editor/virkailija-translation :link-to-form]))]
-   [:a.editor-form__form-preview-link
-    {:href   (str js/config.applicant.service_url
-                  "/hakemus/" form-key
-                  "?lang=fi")
-     :target "_blank"}
-    @(subscribe [:editor/virkailija-translation :form])]
-   [:span " | "]
-   [:a.editor-form__form-admin-preview-link @(subscribe [:editor/virkailija-translation :test-application])]
-   (map (partial preview-link form-key) @languages)
-   (when (:superuser? @user-info)
-     (link-to-feedback (str "/hakemus/" form-key)))])
+(defn- form-not-in-use-in-hakus [form-key]
+  (let [languages @(subscribe [:editor/languages])
+        user-info @(subscribe [:state-query [:editor :user-info]])]
+    [:div.editor-form__form-link-container
+     [:h3.editor-form__form-link-heading
+      [:i.zmdi.zmdi-alert-circle-o]
+      (str " " @(subscribe [:editor/virkailija-translation :link-to-form]))]
+     [:a.editor-form__form-preview-link
+      {:href   (str js/config.applicant.service_url
+                    "/hakemus/" form-key
+                    "?lang=fi")
+       :target "_blank"}
+      @(subscribe [:editor/virkailija-translation :form])]
+     [:span " | "]
+     [:a.editor-form__form-admin-preview-link @(subscribe [:editor/virkailija-translation :test-application])]
+     (map (partial preview-link form-key) languages)
+     (when (:superuser? user-info)
+       (link-to-feedback (str "/hakemus/" form-key)))]))
 
-(defn form-usage
+(defn- form-usage
   [form-key]
-  (let [languages (subscribe [:editor/languages])
-        user-info (subscribe [:state-query [:editor :user-info]])]
-    (fn [form-key]
-      (if-let [form-used-in-hakus @(subscribe [:editor/form-used-in-hakus form-key])]
-        (form-in-use-in-hakus form-used-in-hakus user-info)
-        (form-not-in-use-in-hakus form-key languages user-info)))))
+  (if-let [form-used-in-hakus @(subscribe [:editor/form-used-in-hakus form-key])]
+    [form-in-use-in-hakus form-used-in-hakus]
+    [form-not-in-use-in-hakus form-key]))
 
 (defn- close-form []
   [:a {:on-click (fn [event]
