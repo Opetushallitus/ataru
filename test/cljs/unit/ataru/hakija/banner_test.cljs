@@ -5,17 +5,14 @@
             [ataru.hakija.banner :refer [hakuaika-left-text]]
             [ataru.util :as util]))
 
-(defn subscription-stub [x]
-  (atom
-    (case x
-      [:application/form-language] :fi)))
-
 (deftest correctly-shows-remaining-time
   (defn invoke-and-verify [hours minutes substring]
     (let [actual (hakuaika-left-text hours minutes)
           text   (second actual)]
       (is (includes? text substring)))
     )
+  (defn subscription-stub [_]
+    (atom :fi))
   (with-redefs [subscribe subscription-stub]
                (invoke-and-verify 0 14 "Hakuaikaa jäljellä alle 15 min")
                (invoke-and-verify 0 15 "Hakuaikaa jäljellä alle 30 min")
