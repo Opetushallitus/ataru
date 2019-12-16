@@ -145,13 +145,19 @@
                                        :kevyt-valinta/vastaanotto-tila      :unchecked
                                        :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
-                                      [_ true (_ :guard #(not= % "KESKEN")) "EI_TEHTY"]
+                                      [_ true (_ :guard #(not= % "VASTAANOTTANUT_SITOVASTI")) _]
+                                      {:kevyt-valinta/valinnan-tila         :checked
+                                       :kevyt-valinta/julkaisun-tila        :checked
+                                       :kevyt-valinta/vastaanotto-tila      :unchecked
+                                       :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
+
+                                      [_ true _ "EI_TEHTY"]
                                       {:kevyt-valinta/valinnan-tila         :checked
                                        :kevyt-valinta/julkaisun-tila        :checked
                                        :kevyt-valinta/vastaanotto-tila      :unchecked
                                        :kevyt-valinta/ilmoittautumisen-tila :unchecked}
 
-                                      [_ true (_ :guard #(not= % "KESKEN")) (_ :guard #(not= % "EI_TEHTY"))]
+                                      [_ true _ (_ :guard #(not= % "EI_TEHTY"))]
                                       {:kevyt-valinta/valinnan-tila         :checked
                                        :kevyt-valinta/julkaisun-tila        :checked
                                        :kevyt-valinta/vastaanotto-tila      :checked
@@ -189,13 +195,19 @@
                                    :kevyt-valinta/vastaanotto-tila      :unchecked
                                    :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
-                                  [_ true (_ :guard #(not= % "KESKEN")) "EI_TEHTY"]
+                                  [_ true (_ :guard #(not= % "VASTAANOTTANUT_SITOVASTI")) _]
+                                  {:kevyt-valinta/valinnan-tila         :checked
+                                   :kevyt-valinta/julkaisun-tila        :checked
+                                   :kevyt-valinta/vastaanotto-tila      :checked
+                                   :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
+
+                                  [_ true _ "EI_TEHTY"]
                                   {:kevyt-valinta/valinnan-tila         :checked
                                    :kevyt-valinta/julkaisun-tila        :checked
                                    :kevyt-valinta/vastaanotto-tila      :checked
                                    :kevyt-valinta/ilmoittautumisen-tila :unchecked}
 
-                                  [_ true (_ :guard #(not= % "KESKEN")) (_ :guard #(not= % "EI_TEHTY"))]
+                                  [_ true _ (_ :guard #(not= % "EI_TEHTY"))]
                                   {:kevyt-valinta/valinnan-tila         :checked
                                    :kevyt-valinta/julkaisun-tila        :checked
                                    :kevyt-valinta/vastaanotto-tila      :checked

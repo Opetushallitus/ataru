@@ -3,7 +3,8 @@
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-mappings :as mappings]
             [cljs-time.core :as t]
             [cljs-time.format :as format]
-            [re-frame.core :as re-frame]))
+            [re-frame.core :as re-frame])
+  (:require-macros [cljs.core.match :refer [match]]))
 
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
@@ -83,58 +84,95 @@
     (let [new-kevyt-valinta-property-value (mappings/kevyt-valinta-property-value->valinta-tulos-service-value
                                              new-kevyt-valinta-property-value
                                              kevyt-valinta-property)
-          now                            (t/now)
-          request-id                     (keyword (str (name kevyt-valinta-property) "-" now))
-          valinta-tulos-service-property (mappings/kevyt-valinta-property->valinta-tulos-service-property kevyt-valinta-property)
-          haku-oid                       (-> db :application :selected-application-and-form :application :haku)
-          henkilo-oid                    (-> db :application :selected-application-and-form :application :person :oid)
-          db                             (-> db
-                                             (update-in [:application :kevyt-valinta kevyt-valinta-property]
-                                                        merge
-                                                        {:request-id request-id
-                                                         :open?      false})
-                                             (assoc-in [:application :kevyt-valinta :kevyt-valinta-ui/ongoing-request-for-property]
-                                                       kevyt-valinta-property)
-                                             (update-in [:application
-                                                         :valinta-tulos-service
-                                                         application-key
-                                                         hakukohde-oid
-                                                         :valinnantulos]
-                                                        (fn [valinnantulos]
-                                                          (if valinnantulos
-                                                            (assoc valinnantulos valinta-tulos-service-property new-kevyt-valinta-property-value)
-                                                            {:vastaanottotila    "KESKEN"
-                                                             :hakukohdeOid       hakukohde-oid
-                                                             :ilmoittautumistila "EI_TEHTY"
-                                                             :henkiloOid         henkilo-oid
-                                                             :valintatapajonoOid (valintatapajono-oids/pseudo-random-valintatapajono-oid haku-oid hakukohde-oid)
-                                                             :hakemusOid         application-key
-                                                             :valinnantila       new-kevyt-valinta-property-value
-                                                             :julkaistavissa     false})))
-                                             (assoc-in [:application
-                                                        :valinta-tulos-service
-                                                        application-key
-                                                        hakukohde-oid
-                                                        :valinnantulos
-                                                        valinta-tulos-service-property]
-                                                       new-kevyt-valinta-property-value))
-          valinnan-tulos                 (-> db
-                                             :application
-                                             :valinta-tulos-service
-                                             (get application-key)
-                                             (get hakukohde-oid)
-                                             :valinnantulos)
-          valintatapajono-oid            (:valintatapajonoOid valinnan-tulos)
-          request-body                   [(select-keys valinnan-tulos
-                                                       [:vastaanottotila
-                                                        :hakukohdeOid
-                                                        :ilmoittautumistila
-                                                        :henkiloOid
-                                                        :valintatapajonoOid
-                                                        :hakemusOid
-                                                        :valinnantila
-                                                        :julkaistavissa])]
-          formatted-now                  (str (format/unparse rfc-1123-date-formatter now) " GMT")]
+          now                              (t/now)
+          request-id                       (keyword (str (name kevyt-valinta-property) "-" now))
+          valinta-tulos-service-property   (mappings/kevyt-valinta-property->valinta-tulos-service-property kevyt-valinta-property)
+          haku-oid                         (-> db :application :selected-application-and-form :application :haku)
+          henkilo-oid                      (-> db :application :selected-application-and-form :application :person :oid)
+          db                               (-> db
+                                               (update-in [:application :kevyt-valinta kevyt-valinta-property]
+                                                          merge
+                                                          {:request-id request-id
+                                                           :open?      false})
+                                               (assoc-in [:application :kevyt-valinta :kevyt-valinta-ui/ongoing-request-for-property]
+                                                         kevyt-valinta-property)
+                                               (update-in [:application
+                                                           :valinta-tulos-service
+                                                           application-key
+                                                           hakukohde-oid
+                                                           :valinnantulos]
+                                                          (fn [valinnantulos]
+                                                            (if valinnantulos
+                                                              (let [{valinnan-tila         :valinnantila
+                                                                     julkaisun-tila        :julkaistavissa
+                                                                     vastaanotto-tila      :vastaanottotila
+                                                                     ilmoittautumisen-tila :ilmoittautumistila} (assoc
+                                                                                                                  valinnantulos
+                                                                                                                  valinta-tulos-service-property
+                                                                                                                  new-kevyt-valinta-property-value)
+                                                                    new-kevyt-valinta-states (match [vastaanotto-tila]
+                                                                                                    [(:or "EHDOLLISESTI_VASTAANOTTANUT" "VASTAANOTTANUT_SITOVASTI")]
+                                                                                                    {:valinnantila       "HYVAKSYTTY"
+                                                                                                     :julkaistavissa     julkaisun-tila
+                                                                                                     :vastaanottotila    vastaanotto-tila
+                                                                                                     :ilmoittautumistila ilmoittautumisen-tila}
+
+                                                                                                    ["EI_VASTAANOTETTU_MAARA_AIKANA"]
+                                                                                                    {:valinnantila       "PERUUNTUNUT"
+                                                                                                     :julkaistavissa     julkaisun-tila
+                                                                                                     :vastaanottotila    vastaanotto-tila
+                                                                                                     :ilmoittautumistila ilmoittautumisen-tila}
+
+                                                                                                    ["PERUNUT"]
+                                                                                                    {:valinnantila       "PERUNUT"
+                                                                                                     :julkaistavissa     julkaisun-tila
+                                                                                                     :vastaanottotila    vastaanotto-tila
+                                                                                                     :ilmoittautumistila ilmoittautumisen-tila}
+
+                                                                                                    ["PERUUTETTU"]
+                                                                                                    {:valinnantila       "PERUUTETTU"
+                                                                                                     :julkaistavissa     julkaisun-tila
+                                                                                                     :vastaanottotila    vastaanotto-tila
+                                                                                                     :ilmoittautumistila ilmoittautumisen-tila}
+
+                                                                                                    :else
+                                                                                                    {:valinnantila       valinnan-tila
+                                                                                                     :julkaistavissa     julkaisun-tila
+                                                                                                     :vastaanottotila    vastaanotto-tila
+                                                                                                     :ilmoittautumistila ilmoittautumisen-tila})]
+                                                                (merge valinnantulos new-kevyt-valinta-states))
+                                                              {:vastaanottotila    "KESKEN"
+                                                               :hakukohdeOid       hakukohde-oid
+                                                               :ilmoittautumistila "EI_TEHTY"
+                                                               :henkiloOid         henkilo-oid
+                                                               :valintatapajonoOid (valintatapajono-oids/pseudo-random-valintatapajono-oid haku-oid hakukohde-oid)
+                                                               :hakemusOid         application-key
+                                                               :valinnantila       new-kevyt-valinta-property-value
+                                                               :julkaistavissa     false})))
+                                               (assoc-in [:application
+                                                          :valinta-tulos-service
+                                                          application-key
+                                                          hakukohde-oid
+                                                          :valinnantulos
+                                                          valinta-tulos-service-property]
+                                                         new-kevyt-valinta-property-value))
+          valinnan-tulos                   (-> db
+                                               :application
+                                               :valinta-tulos-service
+                                               (get application-key)
+                                               (get hakukohde-oid)
+                                               :valinnantulos)
+          valintatapajono-oid              (:valintatapajonoOid valinnan-tulos)
+          request-body                     [(select-keys valinnan-tulos
+                                                         [:vastaanottotila
+                                                          :hakukohdeOid
+                                                          :ilmoittautumistila
+                                                          :henkiloOid
+                                                          :valintatapajonoOid
+                                                          :hakemusOid
+                                                          :valinnantila
+                                                          :julkaistavissa])]
+          formatted-now                    (str (format/unparse rfc-1123-date-formatter now) " GMT")]
       {:db   db
        :http {:method              :patch
               :path                (str valinta-tulos-service-url "/" valintatapajono-oid "?erillishaku=true")
