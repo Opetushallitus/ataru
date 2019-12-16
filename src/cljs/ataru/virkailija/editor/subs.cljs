@@ -20,10 +20,7 @@
 (re-frame/reg-sub
   :editor/form-used-in-hakus
   (fn form-used-in-hakus [db [_ form-key]]
-    (let [hakus (get-in db [:editor :form-used-in-hakus form-key])]
-      (if (not (empty? hakus))
-        hakus
-        nil))))
+    (get-in db [:editor :form-used-in-hakus form-key])))
 
 (re-frame/reg-sub
   :editor/form-keys
