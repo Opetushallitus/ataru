@@ -269,31 +269,31 @@
           (when (:superuser? @user-info)
             (link-to-feedback (str "/hakemus/haku/" (:oid haku))))]]))]])
 
-(defn- form-in-use-warning-for-empty-hakus [form languages user-info]
+(defn- form-in-use-warning-for-empty-hakus [form-key languages user-info]
   [:div.editor-form__form-link-container
    [:h3.editor-form__form-link-heading
     [:i.zmdi.zmdi-alert-circle-o]
     (str " " (get-virkailija-translation :link-to-form))]
    [:a.editor-form__form-preview-link
     {:href   (str js/config.applicant.service_url
-                  "/hakemus/" (:key form)
+                  "/hakemus/" form-key
                   "?lang=fi")
      :target "_blank"}
     (get-virkailija-translation :form)]
    [:span " | "]
    [:a.editor-form__form-admin-preview-link (get-virkailija-translation :test-application)]
-   (map (partial preview-link (:key form)) @languages)
+   (map (partial preview-link form-key) @languages)
    (when (:superuser? @user-info)
-     (link-to-feedback (str "/hakemus/" (:key form))))])
+     (link-to-feedback (str "/hakemus/" form-key)))])
 
 (defn form-in-use-warning
-  [form]
+  [form-key]
   (let [languages (subscribe [:editor/languages])
         user-info (subscribe [:state-query [:editor :user-info]])]
-    (fn [form]
-      (if-let [form-used-in-hakus @(subscribe [:editor/form-used-in-hakus (:key form)])]
+    (fn [form-key]
+      (if-let [form-used-in-hakus @(subscribe [:editor/form-used-in-hakus form-key])]
         (form-in-use-warning-for-non-empty-hakus form-used-in-hakus user-info)
-        (form-in-use-warning-for-empty-hakus form languages user-info)))))
+        (form-in-use-warning-for-empty-hakus form-key languages user-info)))))
 
 (defn- close-form []
   [:a {:on-click (fn [event]
@@ -302,23 +302,23 @@
    [:div.close-details-button
     [:i.zmdi.zmdi-close.close-details-button-mark]]])
 
-(defn- editor-panel [form]
+(defn- editor-panel [form-key]
   [:div.editor-form__panel-container
    [close-form]
    [:div
     [editor-name]
-    [form-in-use-warning form]]
+    [form-in-use-warning form-key]]
    [c/editor]])
 
 (defn editor []
-  (let [form @(subscribe [:editor/selected-form])]
+  (let [form-key @(subscribe [:editor/selected-form-key])]
     [:div
      [:div.editor-form__container.panel-content
       [form-header-row]
       [form-list]]
-     (when form
+     (when form-key
        ^{:key "editor-panel"}
-       [editor-panel form])
-     (when form
+       [editor-panel form-key])
+     (when form-key
        ^{:key "form-toolbar"}
        [form-toolbar])]))
