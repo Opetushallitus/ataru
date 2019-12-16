@@ -127,6 +127,12 @@
            vastaanotto-tila      :vastaanottotila
            ilmoittautumisen-tila :ilmoittautumistila} valinnan-tulos-for-application
           kevyt-valinta-states (match [valinnan-tila julkaisun-tila vastaanotto-tila ilmoittautumisen-tila]
+                                      [_ _ "OTTANUT_VASTAAN_TOISEN_PAIKAN" _]
+                                      {:kevyt-valinta/valinnan-tila         :checked
+                                       :kevyt-valinta/julkaisun-tila        :checked
+                                       :kevyt-valinta/vastaanotto-tila      :checked
+                                       :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
+
                                       [_ (_ :guard nil?) (_ :guard nil?) (_ :guard nil?)]
                                       {:kevyt-valinta/valinnan-tila         :unchecked
                                        :kevyt-valinta/julkaisun-tila        :grayed-out
@@ -177,6 +183,12 @@
            vastaanotto-tila      :vastaanottotila
            ilmoittautumisen-tila :ilmoittautumistila} valinnan-tulos-for-application
           checkmark-states (match [valinnan-tila julkaisun-tila vastaanotto-tila ilmoittautumisen-tila]
+                                  [_ _ "OTTANUT_VASTAAN_TOISEN_PAIKAN" _]
+                                  {:kevyt-valinta/valinnan-tila         :checked
+                                   :kevyt-valinta/julkaisun-tila        :checked
+                                   :kevyt-valinta/vastaanotto-tila      :checked
+                                   :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
+
                                   [_ (_ :guard nil?) (_ :guard nil?) (_ :guard nil?)]
                                   {:kevyt-valinta/valinnan-tila         :unchecked
                                    :kevyt-valinta/julkaisun-tila        :grayed-out
