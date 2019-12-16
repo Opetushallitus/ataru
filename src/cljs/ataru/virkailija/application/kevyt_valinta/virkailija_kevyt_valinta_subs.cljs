@@ -139,6 +139,12 @@
                                       {:kevyt-valinta/valinnan-tila         :checked
                                        :kevyt-valinta/julkaisun-tila        :checked
                                        :kevyt-valinta/vastaanotto-tila      :unchecked
+                                       :kevyt-valinta/ilmoittautumisen-tila :unchecked}
+
+                                      [_ true (_ :guard #(not= % "KESKEN")) (_ :guard #(not= % "EI_TEHTY"))]
+                                      {:kevyt-valinta/valinnan-tila         :checked
+                                       :kevyt-valinta/julkaisun-tila        :checked
+                                       :kevyt-valinta/vastaanotto-tila      :checked
                                        :kevyt-valinta/ilmoittautumisen-tila :unchecked})]
       (kevyt-valinta-states kevyt-valinta-property))))
 
@@ -177,7 +183,13 @@
                                   {:kevyt-valinta/valinnan-tila         :checked
                                    :kevyt-valinta/julkaisun-tila        :checked
                                    :kevyt-valinta/vastaanotto-tila      :checked
-                                   :kevyt-valinta/ilmoittautumisen-tila :unchecked})
+                                   :kevyt-valinta/ilmoittautumisen-tila :unchecked}
+
+                                  [_ true (_ :guard #(not= % "KESKEN")) (_ :guard #(not= % "EI_TEHTY"))]
+                                  {:kevyt-valinta/valinnan-tila         :checked
+                                   :kevyt-valinta/julkaisun-tila        :checked
+                                   :kevyt-valinta/vastaanotto-tila      :checked
+                                   :kevyt-valinta/ilmoittautumisen-tila :checked})
           checkmark-state  (checkmark-states kevyt-valinta-property)]
       (cond (and ongoing-request-property
                  (not (coll/before? kevyt-valinta-property
