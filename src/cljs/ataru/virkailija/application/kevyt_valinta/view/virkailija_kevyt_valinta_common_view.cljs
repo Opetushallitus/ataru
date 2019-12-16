@@ -99,7 +99,7 @@
                                                                                                           kevyt-valinta-property-value
                                                                                                           lang)})
                                                     kevyt-valinta-property-values)
-        kevyt-valinta-property-value           @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-state
+        kevyt-valinta-property-value           @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-value
                                                                      kevyt-valinta-property
                                                                      application-key])
         kevyt-valinta-dropdown-label           (->> kevyt-valinta-dropdown-values
@@ -147,7 +147,7 @@
                                                                                                           kevyt-valinta-property-value
                                                                                                           lang)})
                                                     kevyt-valinta-property-values)
-        kevyt-valinta-checkbox-state           @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-state
+        kevyt-valinta-checkbox-state           @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-value
                                                                      kevyt-valinta-property
                                                                      application-key])
         kevyt-valinta-checkbox-label           (->> kevyt-valinta-checkbox-values

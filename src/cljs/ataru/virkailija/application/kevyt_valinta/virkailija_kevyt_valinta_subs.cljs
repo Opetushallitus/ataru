@@ -57,7 +57,7 @@
          ;; backendiltä ja nil? palauttaisi väärän positiivisen tiedon
          (every? false? valintalaskenta-in-hakukohteet))))
 
-(defn- default-kevyt-valinta-property-state [kevyt-valinta-property]
+(defn- default-kevyt-valinta-property-value [kevyt-valinta-property]
   (when (= kevyt-valinta-property :kevyt-valinta/valinnan-tila)
     "KESKEN"))
 
@@ -79,15 +79,15 @@
         :valinnantulos)))
 
 (re-frame/reg-sub
-  :virkailija-kevyt-valinta/kevyt-valinta-property-state
+  :virkailija-kevyt-valinta/kevyt-valinta-property-value
   (fn [[_ _ application-key]]
     [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])])
   (fn [[valinnan-tulos-for-application] [_ kevyt-valinta-property]]
     (let [valinta-tulos-service-property (mappings/kevyt-valinta-property->valinta-tulos-service-property kevyt-valinta-property)
-          kevyt-valinta-property-state   (valinta-tulos-service-property valinnan-tulos-for-application)]
-      (if (nil? kevyt-valinta-property-state)
-        (default-kevyt-valinta-property-state kevyt-valinta-property)
-        kevyt-valinta-property-state))))
+          kevyt-valinta-property-value   (valinta-tulos-service-property valinnan-tulos-for-application)]
+      (if (nil? kevyt-valinta-property-value)
+        (default-kevyt-valinta-property-value kevyt-valinta-property)
+        kevyt-valinta-property-value))))
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/ongoing-request-property
