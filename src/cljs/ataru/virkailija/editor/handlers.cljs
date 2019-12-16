@@ -536,8 +536,8 @@
 
 (reg-event-fx
   :editor/handle-refresh-form-used-in-hakus
-  (fn [{db :db} [_ response _]]
-    {:db       (assoc-in db [:editor :form-used-in-hakus] response)
+  (fn [{db :db} [_ response args]]
+    {:db       (assoc-in db [:editor :form-used-in-hakus (:form-key args)] response)
      :dispatch [:editor/refresh-used-by-haut]}))
 
 (reg-event-fx
@@ -546,6 +546,7 @@
     {:http {:method              :get
             :path                (str "/lomake-editori/api/tarjonta/haku?form-key=" form-key)
             :handler-or-dispatch :editor/handle-refresh-form-used-in-hakus
+            :handler-args        {:form-key form-key}
             :skip-parse-times?   true}}))
 
 (reg-event-fx
