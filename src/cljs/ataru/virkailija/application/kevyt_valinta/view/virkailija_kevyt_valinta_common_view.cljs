@@ -38,12 +38,16 @@
      (when dropdown-open?
        [:div.application-handling__kevyt-valinta-dropdown.application-handling__kevyt-valinta-dropdown-item-list.animated.fadeIn
         (map (fn [{value :value label :label}]
-               ^{:key (str (name kevyt-valinta-property) "-" value)}
-               [:div.application-handling__kevyt-valinta-dropdown-item
-                {:on-click (when-not (= value kevyt-valinta-property-value)
-                             (fn []
-                               (kevyt-valinta-on-dropdown-value-change value)))}
-                [:span label]])
+               (let [current-value? (= value kevyt-valinta-property-value)]
+                 ^{:key (str (name kevyt-valinta-property) "-" value)}
+                 [:div.application-handling__kevyt-valinta-dropdown-item
+                  {:on-click (when-not current-value?
+                               (fn []
+                                 (kevyt-valinta-on-dropdown-value-change current-value?)))}
+                  [:span
+                   (when current-value?
+                     {:class "application-handling__kevyt-valinta-dropdown-label--selected"})
+                   label]]))
              kevyt-valinta-dropdown-values)])]))
 
 (defn- kevyt-valinta-checkmark [kevyt-valinta-property application-key]
