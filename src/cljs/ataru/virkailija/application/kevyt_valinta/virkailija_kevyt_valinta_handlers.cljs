@@ -80,7 +80,10 @@
         hakukohde-oid
         application-key
         new-kevyt-valinta-property-value]]
-    (let [now                            (t/now)
+    (let [new-kevyt-valinta-property-value (mappings/kevyt-valinta-property-value->valinta-tulos-service-value
+                                             new-kevyt-valinta-property-value
+                                             kevyt-valinta-property)
+          now                            (t/now)
           request-id                     (keyword (str (name kevyt-valinta-property) "-" now))
           valinta-tulos-service-property (mappings/kevyt-valinta-property->valinta-tulos-service-property kevyt-valinta-property)
           haku-oid                       (-> db :application :selected-application-and-form :application :haku)

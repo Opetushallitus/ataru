@@ -1573,7 +1573,8 @@ You will receive a confirmation of your application to your email."}
    :kevyt-valinta/ottanut-vastaan-toisen-paikan {:fi "Ottanut vastaan toisen paikan"}
    :kevyt-valinta/ehdollisesti-vastaanottanut   {:fi "Ehdollisesti vastaanottanut"}
    :kevyt-valinta/vastaanottanut-sitovasti      {:fi "Vastaanottanut sitovasti"}
-   :kevyt-valinta/kesken                        {:fi "Kesken"}})
+   :kevyt-valinta/kesken                        {:fi "Kesken"}
+   :kevyt-valinta/vastaanottanut                {:fi "Vastaanottanut"}})
 
 (def kevyt-valinta-ilmoittautumisen-tila-translations
   {:kevyt-valinta/ei-tehty              {:fi "Ei tehty"}
