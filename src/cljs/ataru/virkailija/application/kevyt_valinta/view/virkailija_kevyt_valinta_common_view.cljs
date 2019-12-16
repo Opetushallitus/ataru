@@ -41,9 +41,10 @@
                (let [current-value? (= value kevyt-valinta-property-value)]
                  ^{:key (str (name kevyt-valinta-property) "-" value)}
                  [:div.application-handling__kevyt-valinta-dropdown-item
-                  {:on-click (when-not current-value?
-                               (fn []
-                                 (kevyt-valinta-on-dropdown-value-change current-value?)))}
+                  {:on-click (fn []
+                               (if current-value?
+                                 (re-frame/dispatch [:virkailija-kevyt-valinta/toggle-kevyt-valinta-dropdown kevyt-valinta-property])
+                                 (kevyt-valinta-on-dropdown-value-change value)))}
                   [:span
                    (when current-value?
                      {:class "application-handling__kevyt-valinta-dropdown-label--selected"})
