@@ -16,6 +16,7 @@
 
 (defn- kevyt-valinta-selection-dropdown [kevyt-valinta-property
                                          kevyt-valinta-dropdown-label
+                                         kevyt-valinta-property-value
                                          kevyt-valinta-dropdown-values
                                          kevyt-valinta-on-dropdown-value-change
                                          ongoing-request-property]
@@ -39,8 +40,9 @@
         (map (fn [{value :value label :label}]
                ^{:key (str (name kevyt-valinta-property) "-" value)}
                [:div.application-handling__kevyt-valinta-dropdown-item
-                {:on-click (fn []
-                             (kevyt-valinta-on-dropdown-value-change value))}
+                {:on-click (when-not (= value kevyt-valinta-property-value)
+                             (fn []
+                               (kevyt-valinta-on-dropdown-value-change value)))}
                 [:span label]])
              kevyt-valinta-dropdown-values)])]))
 
@@ -116,6 +118,7 @@
       [kevyt-valinta-selection-dropdown
        kevyt-valinta-property
        kevyt-valinta-dropdown-label
+       kevyt-valinta-property-value
        kevyt-valinta-dropdown-values
        kevyt-valinta-on-dropdown-value-change
        ongoing-request-property])))
