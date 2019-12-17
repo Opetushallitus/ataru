@@ -60,12 +60,13 @@
     (cache/get-from haku-cache haku-oid))
 
   (hakus-by-form-key [this form-key]
-    (mapv #(get-haku this %)
-          (concat
-           (some #(when (= form-key (:avain %))
-                    (map :oid (:haut %)))
-                 (cache/get-from forms-in-use-cache oph-organization))
-           (cache/get-from kouta-hakus-by-form-key-cache form-key))))
+    (->> (concat
+          (some #(when (= form-key (:avain %))
+                   (map :oid (:haut %)))
+                (cache/get-from forms-in-use-cache oph-organization))
+          (cache/get-from kouta-hakus-by-form-key-cache form-key))
+         (cache/get-many-from haku-cache)
+         vals))
 
   (get-haku-name [this haku-oid]
     (:name (cache/get-from haku-cache haku-oid)))
