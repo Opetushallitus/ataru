@@ -2,6 +2,7 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [ataru.cljs-util :refer [wrap-scroll-to get-virkailija-translation get-virkailija-label]]
             [ataru.component-data.component :as component]
+            [ataru.util :as util]
             [ataru.virkailija.editor.core :as c]
             [ataru.virkailija.editor.subs]
             [ataru.virkailija.routes :as routes]
@@ -233,15 +234,19 @@
    [:div.editor-form__toolbar-right
     [fold-all]]])
 
+(defn- in-language [term lang]
+  (util/non-blank-val term [lang :fi :sv :en]))
+
 (defn- used-in-haku-list-haku-name [haku]
-  [:div.editor-form__used-in-haku-list-haku-name
-   [:span
-    (str (some #(get (:name haku) %) [:fi :sv :en]) " ")
-    [:a.editor-form__haku-admin-link
-     {:href   (str "/tarjonta-app/index.html#/haku/"
-                   (:oid haku))
-      :target "_blank"}
-     [:i.zmdi.zmdi-open-in-new]]]])
+  (let [lang @(subscribe [:editor/virkailija-lang])]
+    [:div.editor-form__used-in-haku-list-haku-name
+     [:span
+      (str (in-language (:name haku) lang) " ")
+      [:a.editor-form__haku-admin-link
+       {:href   (str "/tarjonta-app/index.html#/haku/"
+                     (:oid haku))
+        :target "_blank"}
+       [:i.zmdi.zmdi-open-in-new]]]]))
 
 (defn- haku-preview-link [haku]
   (let [user-info @(subscribe [:state-query [:editor :user-info]])]
