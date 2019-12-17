@@ -57,10 +57,8 @@
                    (s/optional-key :application-count) s/Int
                    (s/optional-key :deleted)           (s/maybe s/Bool)})
 
-(s/defschema ApplicationDiff {
-                              (s/optional-key :new-ids) (s/maybe s/Any)
-                              (s/optional-key :changed-ids) (s/maybe s/Any)
-                              })
+(s/defschema ApplicationDiff {(s/optional-key :new-ids)     (s/maybe s/Any)
+                              (s/optional-key :changed-ids) (s/maybe s/Any)})
 
 (s/defschema Module (s/enum :person-info))
 

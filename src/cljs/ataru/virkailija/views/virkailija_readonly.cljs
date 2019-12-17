@@ -64,11 +64,13 @@
                                                       (get-value (-> application :answers id) group-idx))
                                                     (:options field-descriptor)
                                                     lang)
-        highlight-field? (subscribe [:application/field-highlighted? id])]
+        highlight-field? (subscribe [:application/field-highlighted? id])
+        form-changes @(subscribe [:application/form-changes])
+        showing-latest (not (some? @(subscribe [:state-query [:application :latest-form]])))
+        this-form-field-changed? (and showing-latest (contains? form-changes (name id)))
+        class (clojure.string/join " " [(when @highlight-field? "highlighted") (when this-form-field-changed? "form-highlighted")])]
     [:div.application__form-field
-     {:class (when @highlight-field? "highlighted")
-      :id    id}
-
+     {:class class :id    id}
      [:label.application__form-field-label
       [:span
       (str (from-multi-lang (:label field-descriptor) lang)

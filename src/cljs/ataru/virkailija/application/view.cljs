@@ -1934,7 +1934,9 @@
           show-creating-henkilo-failed? @(subscribe [:application/show-creating-henkilo-failed?])
           show-not-yksiloity?           (and (some? person-oid)
                                              (not (-> application :person :yksiloity)))
-          show-metadata-not-found?      @(subscribe [:state-query [:application :metadata-not-found]])]
+          show-metadata-not-found?      @(subscribe [:state-query [:application :metadata-not-found]])
+          form-changes       @(subscribe [:state-query [:application :form-changes]])
+          changes-count      (+ (count (:new-ids form-changes)) (count (:changed-ids form-changes)))]
       (when (or show-not-latest-form?
                 show-creating-henkilo-failed?
                 show-not-yksiloity?
@@ -1942,12 +1944,20 @@
         [:div.application__message-display.application__message-display--notification
          [:div.application__message-display--exclamation [:i.zmdi.zmdi-alert-triangle]]
          [:div.application__message-display--details
-          (when show-not-latest-form?
+          (if show-not-latest-form?
             [notification {:text      :form-outdated
                            :link-text :show-newest-version
                            :on-click  (fn [evt]
                                         (.preventDefault evt)
-                                        (select-application (:key application) selected-review-hakukohde true))}])
+                                        (select-application (:key application) selected-review-hakukohde true))}]
+            (when (> changes-count 0) [:show-form-changes
+                                       "Lomakkeessa on muutoksia. " [:a
+                                                                     {:href     "href"
+                                                                      :target   "_blank"
+                                                                      :on-click (fn [])}
+                                                                     [:span (str "Näytä muutokset (" changes-count ")") ]]
+                                       ])
+            )
           (when show-creating-henkilo-failed?
             [notification {:text :creating-henkilo-failed}])
           (when show-not-yksiloity?
@@ -2072,8 +2082,11 @@
         applications            (subscribe [:application/applications-to-render])
         has-more?               (subscribe [:application/has-more-applications?])
         loading?                (subscribe [:application/fetching-applications?])
-        expanded                (subscribe [:state-query [:application :application-list-expanded?]])]
+        expanded                (subscribe [:state-query [:application :application-list-expanded?]])
+        changes                 (subscribe [:state-query [:application :form-changes]])
+        ]
     (fn []
+      (js/console.log (str "--- 22 form changes " @changes))
       [:div
        [:div.application-handling__overview
         [application-search-control]

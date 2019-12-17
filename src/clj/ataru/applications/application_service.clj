@@ -184,13 +184,11 @@
                                        (assoc :content [])
                                        (dissoc :organization-oid))
 
-
-          changes (if with-newest-form? (if-let [[new-ids changed-ids] (get-new-and-changed-ids application tarjonta-info (populate-form-fields form-in-application koodisto-cache tarjonta-info)
+          changes (if-let [[new-ids changed-ids] (get-new-and-changed-ids application tarjonta-info (populate-form-fields form-in-application koodisto-cache tarjonta-info)
                                                                                             (populate-form-fields newest-form koodisto-cache tarjonta-info))]
                                           (-> {}
                                               (assoc :new-ids new-ids)
-                                              (assoc :changed-ids changed-ids))
-                                          {}))
+                                              (assoc :changed-ids changed-ids)))
 
           hakukohde-reviews    (future (parse-application-hakukohde-reviews application-key))
           attachment-reviews   (future (parse-application-attachment-reviews application-key))
