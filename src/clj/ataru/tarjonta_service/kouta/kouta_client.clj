@@ -33,6 +33,7 @@
                                                        (apply max))
       :hakukohteet                                (:hakukohteet haku)
       :hakutapa-uri                               (:hakutapaKoodiUri haku)
+      :haun-tiedot-url                            "/kouta"   ;; TODO: suora linkki haun sivulle Kouta:ssa
       :kohdejoukko-uri                            (:kohdejoukkoKoodiUri haku)
       :name                                       (:nimi haku)
       :oid                                        (:oid haku)

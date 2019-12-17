@@ -121,7 +121,8 @@
     :prioritize-hakukohteet                     (boolean (:usePriority haku))
     :can-submit-multiple-applications           (boolean (:canSubmitMultipleApplications haku))
     :sijoittelu                                 (boolean (:sijoittelu haku))
-    :hakuajat                                   (mapv parse-hakuaika (:hakuaikas haku))}
+    :hakuajat                                   (mapv parse-hakuaika (:hakuaikas haku))
+    :haun-tiedot-url                            (str "/tarjonta-app/index.html#/haku/" (:oid haku))}
    (when (some? (:ataruLomakeAvain haku))
      {:ataru-form-key (:ataruLomakeAvain haku)})
    (when (and (some? (:maxHakukohdes haku))

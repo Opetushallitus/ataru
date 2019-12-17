@@ -308,6 +308,7 @@
    :hakuajat                                   [{:hakuaika-id          s/Str
                                                  :start                org.joda.time.DateTime
                                                  (s/optional-key :end) org.joda.time.DateTime}]
+   :haun-tiedot-url                            s/Str
    (s/optional-key :ataru-form-key)            s/Str
    (s/optional-key :max-hakukohteet)           s/Int})
 
