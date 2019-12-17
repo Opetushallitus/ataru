@@ -291,7 +291,8 @@
     (let [{valinnan-tila :valinnantila} valinnan-tulos-for-application]
       (case kevyt-valinta-property
         :kevyt-valinta/valinnan-tila (cond->> valinnan-tilat
-                                              (not= valinnan-tila "KESKEN")
+                                              (and (-> valinnan-tila nil? not)
+                                                   (not= valinnan-tila "KESKEN"))
                                               (remove (partial = "KESKEN")))
         :kevyt-valinta/julkaisun-tila julkaisun-tilat
         :kevyt-valinta/vastaanotto-tila (if korkeakouluhaku?
