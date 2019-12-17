@@ -135,10 +135,14 @@
 
 (defn- get-forms-as-ordinary-user
   [tarjonta-service session authorized-organization-oids]
-  (filter (fn [form]
-            (or (contains? authorized-organization-oids (:organization-oid form))
-                (form-allowed-by-haku? tarjonta-service authorized-organization-oids (:key form))))
-          (form-store/get-all-forms)))
+  (let [tarjonta-authorized-forms (->> authorized-organization-oids
+                                       (mapcat #(tarjonta-protocol/hakus-by-hakukohteen-tarjoaja tarjonta-service %))
+                                       (map :ataru-form-key)
+                                       set)]
+    (filter (fn [form]
+              (or (contains? authorized-organization-oids (:organization-oid form))
+                  (contains? tarjonta-authorized-forms (:key form))))
+            (form-store/get-all-forms))))
 
 (defn get-forms-for-editor [session tarjonta-service organization-service]
   {:forms (session-orgs/run-org-authorized
