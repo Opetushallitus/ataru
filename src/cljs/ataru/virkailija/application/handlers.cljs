@@ -678,7 +678,7 @@
                                         [:application/get-application-change-history application-key]]
                                        (valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec db)
                                        (hyvaksynnan-ehto-dispatch-vec db)
-                                       (when (kvr/kevyt-valinta-rights-for-hakukohteet?
+                                       (when (kvr/kevyt-valinta-read-only-rights-for-hakukohteet?
                                               (-> db
                                                   :application
                                                   :selected-review-hakukohde-oids)

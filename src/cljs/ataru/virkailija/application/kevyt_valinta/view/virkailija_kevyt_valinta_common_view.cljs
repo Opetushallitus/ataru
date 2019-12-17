@@ -153,7 +153,9 @@
                                                                   @application-key))
         force-show-checkbox?                   (reagent/atom nil)
         kevyt-valinta-dropdowns-open?          (re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-dropdowns-open?])
-        checkbox-info-visible?                 (reaction (and (if (some? @force-show-checkbox?)
+        kevyt-valinta-write-rights?            (re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-write-rights?])
+        checkbox-info-visible?                 (reaction (and @kevyt-valinta-write-rights?
+                                                              (if (some? @force-show-checkbox?)
                                                                 @force-show-checkbox?
                                                                 (not @checkbox-checked?))
                                                               (not @kevyt-valinta-dropdowns-open?)))]
@@ -185,7 +187,8 @@
             {:on-click (fn []
                          (swap! force-show-checkbox? (fnil not @checkbox-info-visible?)))}
             [:div.application-handling__kevyt-valinta-checkbox-info-container
-             [:i.zmdi.zmdi-info]
+             (when @kevyt-valinta-write-rights?
+               [:i.zmdi.zmdi-info])
              (when @checkbox-info-visible?
                [:div.application-handling__kevyt-valinta-checkbox-info-indicator])]
             (when @checkbox-info-visible?
