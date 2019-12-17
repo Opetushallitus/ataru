@@ -25,22 +25,25 @@
                           :start       (parse-date-time (:alkaa hakuaika))
                           :end         (parse-date-time (:paattyy hakuaika))})
                        (:hakuajat haku))]
-    {:can-submit-multiple-applications           true
-     :hakuajat                                   hakuajat
-     :hakukausi-vuosi                            (->> hakuajat
-                                                      (map #(t/year (:start %)))
-                                                      (apply max))
-     :hakukohteet                                (:hakukohteet haku)
-     :hakutapa-uri                               (:hakutapaKoodiUri haku)
-     :kohdejoukko-uri                            (:kohdejoukkoKoodiUri haku)
-     :name                                       (:nimi haku)
-     :oid                                        (:oid haku)
-     :prioritize-hakukohteet                     false
-     :sijoittelu                                 false
-     :yhteishaku                                 (clojure.string/starts-with?
-                                                  (:hakutapaKoodiUri haku)
-                                                  "hakutapa_01#")
-     :ylioppilastutkinto-antaa-hakukelpoisuuden? false}))
+    (merge
+     {:can-submit-multiple-applications           true
+      :hakuajat                                   hakuajat
+      :hakukausi-vuosi                            (->> hakuajat
+                                                       (map #(t/year (:start %)))
+                                                       (apply max))
+      :hakukohteet                                (:hakukohteet haku)
+      :hakutapa-uri                               (:hakutapaKoodiUri haku)
+      :kohdejoukko-uri                            (:kohdejoukkoKoodiUri haku)
+      :name                                       (:nimi haku)
+      :oid                                        (:oid haku)
+      :prioritize-hakukohteet                     false
+      :sijoittelu                                 false
+      :yhteishaku                                 (clojure.string/starts-with?
+                                                   (:hakutapaKoodiUri haku)
+                                                   "hakutapa_01#")
+      :ylioppilastutkinto-antaa-hakukelpoisuuden? false}
+     (when (some? (:hakulomakeAtaruId haku))
+       {:ataru-form-key (:hakulomakeAtaruId haku)}))))
 
 (defn- get-result
   [url cas-client]
