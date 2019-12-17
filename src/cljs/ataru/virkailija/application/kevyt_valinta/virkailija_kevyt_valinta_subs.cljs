@@ -51,7 +51,7 @@
     (and (fc/feature-enabled? :kevyt-valinta)
          ;; On päätetty, että kevyt valinta näkyy ainoastaan kun on yksi hakukohde valittavissa, muuten moni asia on todella epätriviaaleja toteuttaa
          (= (count hakukohde-oids) 1)
-         (kvr/kevyt-valinta-rights-for-hakukohteet? hakukohde-oids rights-by-hakukohde)
+         (kvr/kevyt-valinta-read-only-rights-for-hakukohteet? hakukohde-oids rights-by-hakukohde)
          (not sijoittelu?)
          ;; false?, koska nil tarkoittaa ettei tietoa ole vielä ladattu
          ;; backendiltä ja nil? palauttaisi väärän positiivisen tiedon
@@ -118,52 +118,67 @@
    :kevyt-valinta/ilmoittautumisen-tila])
 
 (re-frame/reg-sub
+  :virkailija-kevyt-valinta/kevyt-valinta-write-rights?
+  (fn []
+    [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+     (re-frame/subscribe [:state-query [:application :selected-application-and-form :application :rights-by-hakukohde]])])
+  (fn [[hakukohde-oids rights-by-hakukohde]]
+    (kvr/kevyt-valinta-write-rights-for-hakukohteet? hakukohde-oids rights-by-hakukohde)))
+
+(re-frame/reg-sub
   :virkailija-kevyt-valinta/kevyt-valinta-selection-state
   (fn [[_ _ application-key]]
-    [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])])
-  (fn [[valinnan-tulos-for-application] [_ kevyt-valinta-property]]
+    [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])
+     (re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-write-rights?])])
+  (fn [[valinnan-tulos-for-application kevyt-valinta-write-rights?] [_ kevyt-valinta-property]]
     (let [{valinnan-tila         :valinnantila
            julkaisun-tila        :julkaistavissa
            vastaanotto-tila      :vastaanottotila
            ilmoittautumisen-tila :ilmoittautumistila} valinnan-tulos-for-application
-          kevyt-valinta-states (match [valinnan-tila julkaisun-tila vastaanotto-tila ilmoittautumisen-tila]
-                                      [_ _ "OTTANUT_VASTAAN_TOISEN_PAIKAN" _]
+          kevyt-valinta-states (match [valinnan-tila julkaisun-tila vastaanotto-tila ilmoittautumisen-tila kevyt-valinta-write-rights?]
+                                      [_ _ _ _ false]
+                                      {:kevyt-valinta/valinnan-tila         :checked
+                                       :kevyt-valinta/julkaisun-tila        :checked
+                                       :kevyt-valinta/vastaanotto-tila      :checked
+                                       :kevyt-valinta/ilmoittautumisen-tila :checked}
+
+                                      [_ _ "OTTANUT_VASTAAN_TOISEN_PAIKAN" _ _]
                                       {:kevyt-valinta/valinnan-tila         :checked
                                        :kevyt-valinta/julkaisun-tila        :checked
                                        :kevyt-valinta/vastaanotto-tila      :checked
                                        :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
-                                      [_ (_ :guard nil?) (_ :guard nil?) (_ :guard nil?)]
+                                      [_ (_ :guard nil?) (_ :guard nil?) (_ :guard nil?) _]
                                       {:kevyt-valinta/valinnan-tila         :unchecked
                                        :kevyt-valinta/julkaisun-tila        :grayed-out
                                        :kevyt-valinta/vastaanotto-tila      :grayed-out
                                        :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
-                                      [_ false _ _]
+                                      [_ false _ _ _]
                                       {:kevyt-valinta/valinnan-tila         :unchecked
                                        :kevyt-valinta/julkaisun-tila        :unchecked
                                        :kevyt-valinta/vastaanotto-tila      :grayed-out
                                        :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
-                                      [_ true "KESKEN" _]
+                                      [_ true "KESKEN" _ _]
                                       {:kevyt-valinta/valinnan-tila         :checked
                                        :kevyt-valinta/julkaisun-tila        :unchecked
                                        :kevyt-valinta/vastaanotto-tila      :unchecked
                                        :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
-                                      [_ true (_ :guard #(not= % "VASTAANOTTANUT_SITOVASTI")) _]
+                                      [_ true (_ :guard #(not= % "VASTAANOTTANUT_SITOVASTI")) _ _]
                                       {:kevyt-valinta/valinnan-tila         :checked
                                        :kevyt-valinta/julkaisun-tila        :checked
                                        :kevyt-valinta/vastaanotto-tila      :unchecked
                                        :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
-                                      [_ true _ "EI_TEHTY"]
+                                      [_ true _ "EI_TEHTY" _]
                                       {:kevyt-valinta/valinnan-tila         :checked
                                        :kevyt-valinta/julkaisun-tila        :checked
                                        :kevyt-valinta/vastaanotto-tila      :unchecked
                                        :kevyt-valinta/ilmoittautumisen-tila :unchecked}
 
-                                      [_ true _ (_ :guard #(not= % "EI_TEHTY"))]
+                                      [_ true _ (_ :guard #(not= % "EI_TEHTY")) _]
                                       {:kevyt-valinta/valinnan-tila         :checked
                                        :kevyt-valinta/julkaisun-tila        :checked
                                        :kevyt-valinta/vastaanotto-tila      :checked

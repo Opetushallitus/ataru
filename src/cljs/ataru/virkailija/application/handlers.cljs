@@ -668,7 +668,7 @@
                                                  (valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec db))
 
                                            (cond-> dispatches'
-                                                   (kvr/kevyt-valinta-rights-for-hakukohteet?
+                                                   (kvr/kevyt-valinta-read-only-rights-for-hakukohteet?
                                                      (-> db
                                                          :application
                                                          :selected-review-hakukohde-oids)
