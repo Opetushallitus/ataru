@@ -11,7 +11,7 @@
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]))
 
-(defn form-row [key selected? used-in-haku-count]
+(defn form-row [key selected?]
   [:a.editor-form__row
    {:class    (when selected? "editor-form__selected-row")
     :on-click (partial routes/navigate-to-click-handler (str "/lomake-editori/editor/" key))}
@@ -19,25 +19,21 @@
    [:span.editor-form__list-form-time (temporal/time->str @(subscribe [:editor/form-created-time key]))]
    [:span.editor-form__list-form-editor @(subscribe [:editor/form-created-by key])]
    (when @(subscribe [:editor/this-form-locked? key])
-     [:i.zmdi.zmdi-lock.editor-form__list-form-locked])
-   (when (< 0 used-in-haku-count)
-     [:span.editor-form__list-form-used-in-haku-count used-in-haku-count])])
+     [:i.zmdi.zmdi-lock.editor-form__list-form-locked])])
 
 (defn form-list []
   (let [form-keys         (subscribe [:editor/form-keys])
-        selected-form-key (subscribe [:editor/selected-form-key])
-        forms-in-use      (subscribe [:state-query [:editor :forms-in-use]])]
+        selected-form-key (subscribe [:editor/selected-form-key])]
     (fn form-list []
       (into (if @selected-form-key
               [:div.editor-form__list]
               [:div.editor-form__list.editor-form__list_expanded])
             (for [key  @form-keys
-                  :let [selected?          (= key @selected-form-key)
-                        used-in-haku-count (count (keys (get @forms-in-use (keyword key))))]]
+                  :let [selected? (= key @selected-form-key)]]
               ^{:key (str "form-list-item-" key)}
               (if selected?
-                [wrap-scroll-to [form-row key selected? used-in-haku-count]]
-                [form-row key selected? used-in-haku-count]))))))
+                [wrap-scroll-to [form-row key selected?]]
+                [form-row key selected?]))))))
 
 (defn- add-form []
   [:button.editor-form__control-button.editor-form__control-button--enabled
