@@ -7,10 +7,12 @@
     <link rel="stylesheet" href="/lomake-editori/vendor/css/material-design-iconic-font.min.css?fingerprint={{cache-fingerprint}}">
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i' rel='stylesheet' type='text/css'>
     <link href="/lomake-editori/css/compiled/virkailija-site.css?fingerprint={{cache-fingerprint}}" rel="stylesheet" type="text/css">
+    <script src="/lomake-editori/vendor/js/stacktrace.min.js?fingerprint={{cache-fingerprint}}"></script>
+    <script src="/lomake-editori/vendor/js/oph_urls.js?fingerprint={{cache-fingerprint}}"></script>
     <script type="text/javascript">
       var config = {{config|safe}};
+      window.urls.addProperties({{front-properties|safe}});
     </script>
-    <script src="/lomake-editori/vendor/js/stacktrace.min.js?fingerprint={{cache-fingerprint}}"></script>
   </head>
   <body class="ataru-app">
     <div id="app"></div>

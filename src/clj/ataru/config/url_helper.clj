@@ -7,8 +7,11 @@
 
 (defn- load-config
   []
-  (let [{:keys [virkailija-host hakija-host editor-url liiteri-url] :or
-               {virkailija-host "" hakija-host "" editor-url "" liiteri-url ""}} (:urls config)]
+  (let [{:keys [virkailija-host hakija-host editor-url liiteri-url]
+         :or   {virkailija-host ""
+                hakija-host     ""
+                editor-url      ""
+                liiteri-url     ""}} (:urls config)]
     (reset! url-properties
             (doto (OphProperties. (into-array String ["/ataru-oph.properties"]))
               (.addDefault "host-virkailija" virkailija-host)
@@ -21,3 +24,9 @@
   (when (nil? @url-properties)
     (load-config))
   (.url @url-properties (name key) (to-array (or params []))))
+
+(defn front-json
+  []
+  (when (nil? @url-properties)
+    (load-config))
+  (.frontPropertiesToJson @url-properties))
