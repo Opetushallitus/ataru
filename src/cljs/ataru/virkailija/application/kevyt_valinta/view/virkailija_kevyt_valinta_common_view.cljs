@@ -68,24 +68,6 @@
      (when show-checkmark?
        [:i.zmdi.zmdi-check.application-handling__kevyt-valinta-checkmark--bold])]))
 
-(defn- kevyt-valinta-selection [kevyt-valinta-selection-component
-                                kevyt-valinta-property
-                                kevyt-valinta-selection-state
-                                kevyt-valinta-selection-label
-                                kevyt-valinta-selection-values
-                                kevyt-valinta-on-selection-value-change]
-  (let [ongoing-request-property @(re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])]
-    (if (and (= kevyt-valinta-selection-state :checked)
-             (or (not ongoing-request-property)
-                 (not= ongoing-request-property kevyt-valinta-property)))
-      [:span.application-handling__kevyt-valinta-value kevyt-valinta-selection-label]
-      [kevyt-valinta-selection-component
-       kevyt-valinta-property
-       kevyt-valinta-selection-label
-       kevyt-valinta-selection-values
-       kevyt-valinta-on-selection-value-change
-       ongoing-request-property])))
-
 (defn kevyt-valinta-dropdown-selection [kevyt-valinta-property]
   (let [ongoing-request-property               @(re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])
         lang                                   @(re-frame/subscribe [:editor/virkailija-lang])
