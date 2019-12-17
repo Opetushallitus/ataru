@@ -391,7 +391,7 @@
   :editor/refresh-used-by-haut
   (fn [{db :db} _]
     (when-let [form-key (get-in db [:editor :selected-form-key])]
-      (let [haku-oids               (map (comp :haku-oid second) (get-in db [:editor :forms-in-use (keyword form-key)]))
+      (let [haku-oids               (map :oid (get-in db [:editor :form-used-in-hakus form-key]))
             organization-oids       (map :oid (get-in db [:editor :user-info :organizations] []))
             hakukohderyhmat-promise (async/promise-chan)
             hakukohteet-promise     (async/promise-chan)]
