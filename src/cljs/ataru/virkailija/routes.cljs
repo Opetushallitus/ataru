@@ -45,15 +45,13 @@
     (dispatch [:set-active-panel :editor])
     (dispatch [:application/stop-loading-applications])
     (dispatch [:editor/select-form nil])
-    (dispatch [:editor/refresh-forms-for-editor])
-    (dispatch [:editor/refresh-forms-in-use]))
+    (dispatch [:editor/refresh-forms-for-editor]))
 
   (defroute #"^/lomake-editori/editor/(.*)" [key]
     (common-actions)
     (dispatch [:set-active-panel :editor])
     (dispatch [:application/stop-loading-applications])
     (dispatch [:editor/refresh-forms-if-empty key])
-    (dispatch [:editor/refresh-forms-in-use])
     (dispatch-after-state
      :predicate
      (fn [db]

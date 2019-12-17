@@ -694,20 +694,6 @@
   (fn [{db :db} _]
     {:db (assoc-in db [:editor :ui :remove-form-button-state] :confirm)}))
 
-(reg-event-fx
-  :editor/refresh-forms-in-use
-  (fn [_ _]
-    {:http {:method              :get
-            :path                "/lomake-editori/api/forms-in-use"
-            :handler-or-dispatch :editor/update-forms-in-use
-            :skip-parse-times?   true}}))
-
-(reg-event-fx
-  :editor/update-forms-in-use
-  (fn [{db :db} [_ result]]
-    {:db (assoc-in db [:editor :forms-in-use] result)
-     :dispatch [:editor/refresh-used-by-haut]}))
-
 (reg-event-db
   :editor/change-form-name
   (fn [db [_ lang new-form-name]]
