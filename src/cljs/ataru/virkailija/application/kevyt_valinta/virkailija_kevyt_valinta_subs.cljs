@@ -299,3 +299,14 @@
                                           vastaanotto-tilat-for-korkeakoulu
                                           vastaanotto-tilat-for-not-korkeakoulu)
         :kevyt-valinta/ilmoittautumisen-tila ilmoittautumisen-tilat))))
+
+(re-frame/reg-sub
+  :virkailija-kevyt-valinta/kevyt-valinta-dropdowns-open?
+  (fn []
+    [(re-frame/subscribe [:state-query [:application :kevyt-valinta]])])
+  (fn [[kevyt-valinta-db]]
+    (->> kevyt-valinta-db
+         (vals)
+         (map :open?)
+         (some true?)
+         (true?))))
