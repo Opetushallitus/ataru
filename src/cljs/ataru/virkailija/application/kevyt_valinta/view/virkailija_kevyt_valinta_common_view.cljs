@@ -206,7 +206,10 @@
     [:div.application-handling__kevyt-valinta-row
      [kevyt-valinta-checkmark kevyt-valinta-property application-key]
      [:div.application-handling__kevyt-valinta-label
-      [:span kevyt-valinta-label]
+      [:span
+       (when selection-grayed-out?
+         {:class "application-handling__kevyt-valinta-label--disabled"})
+       kevyt-valinta-label]
       (when-not selection-grayed-out?
         [:div.application-handling__kevyt-valinta-hr])]
      (when-not selection-grayed-out?
