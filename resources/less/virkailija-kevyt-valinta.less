@@ -3,6 +3,7 @@
 @kevyt-valinta-checkmark-width-in-px: 13;
 @kevyt-valinta-dropdown-border-radius: 5px;
 @kevyt-valinta-row-height-in-px: 48;
+@kevyt-valinta-dropdown-item-list-offset: @kevyt-valinta-row-height-in-px + 2;
 @kevyt-valinta-vertical-bar-length-in-px: @kevyt-valinta-row-height-in-px - @kevyt-valinta-checkmark-width-in-px;
 @kevyt-valinta-dropdown-height-in-px: @kevyt-valinta-row-height-in-px - 4;
 
@@ -108,9 +109,8 @@
 .application-handling__kevyt-valinta-dropdown {
   align-items: center;
   background-color: @white;
-  border: 1px solid @kevyt-valinta-grayed-out-color;
   border-radius: @kevyt-valinta-dropdown-border-radius;
-  box-shadow: 0 1px 3px -1px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
   cursor: pointer;
   justify-content: space-between;
   user-select: none;
@@ -149,7 +149,7 @@
   display: flex;
   flex-flow: column nowrap;
   position: absolute;
-  top: ~"@{kevyt-valinta-row-height-in-px}px";
+  top: ~"@{kevyt-valinta-dropdown-item-list-offset}px";
   z-index: 19;
 }
 
