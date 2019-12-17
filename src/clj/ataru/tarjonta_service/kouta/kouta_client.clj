@@ -10,7 +10,7 @@
             [taoensso.timbre :as log]))
 
 (def haku-checker (s/checker form-schema/Haku))
-(def hakus-by-form-key-checker (s/checker [s/Str]))
+(def hakus-by-checker (s/checker [s/Str]))
 
 (defn- parse-date-time
   [s]
@@ -63,11 +63,17 @@
           (get-result cas-client)
           parse-haku))
 
-(s/defn ^:always-validate get-hakus-by-form-key :- (s/maybe [s/Str])
+(s/defn ^:always-validate get-hakus-by :- (s/maybe [s/Str])
   [cas-client
-   form-key :- s/Str]
+   query :- {(s/optional-key :form-key)     s/Str
+             (s/optional-key :tarjoaja-oid) s/Str}]
   (-> :kouta-internal.haku-search
-      (url-helper/resolve-url {"ataruId" form-key})
+      (url-helper/resolve-url
+       (cond-> {}
+               (contains? query :form-key)
+               (assoc "ataruId" (:form-key query))
+               (contains? query :tarjoaja-oid)
+               (assoc "hakukohteenTarjoaja" (:tarjoaja-oid query))))
       (get-result cas-client)
       ((fn [result] (mapv :oid result)))))
 
@@ -90,7 +96,7 @@
   cache-service/CacheLoader
 
   (load [_ form-key]
-    (get-hakus-by-form-key cas-client form-key))
+    (get-hakus-by cas-client {:form-key form-key}))
 
   (load-many [this form-keys]
     (cache-service/default-load-many this form-keys))
@@ -99,4 +105,19 @@
     1)
 
   (check-schema [_ response]
-    (hakus-by-form-key-checker response)))
+    (hakus-by-checker response)))
+
+(defrecord HakusByHakukohteenTarjoajaCacheLoader [cas-client]
+  cache-service/CacheLoader
+
+  (load [_ tarjoaja-oid]
+    (get-hakus-by cas-client {:tarjoaja-oid tarjoaja-oid}))
+
+  (load-many [this form-keys]
+    (cache-service/default-load-many this form-keys))
+
+  (load-many-size [_]
+    1)
+
+  (check-schema [_ response]
+    (hakus-by-checker response)))
