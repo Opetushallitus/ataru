@@ -239,8 +239,7 @@
      [:span
       (str (in-language (:name haku) lang) " ")
       [:a.editor-form__haku-admin-link
-       {:href   (str "/tarjonta-app/index.html#/haku/"
-                     (:oid haku))
+       {:href   (:haun-tiedot-url haku)
         :target "_blank"}
        [:i.zmdi.zmdi-open-in-new]]]]))
 
