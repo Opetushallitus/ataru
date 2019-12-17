@@ -28,6 +28,7 @@
 (defrecord CachedTarjontaService [forms-in-use-cache
                                   koulutus-cache
                                   kouta-hakus-by-form-key-cache
+                                  kouta-hakus-by-hakukohteen-tarjoaja-cache
                                   hakukohde-cache
                                   haku-cache
                                   hakukohde-search-cache]
@@ -65,6 +66,14 @@
                    (map :oid (:haut %)))
                 (cache/get-from forms-in-use-cache oph-organization))
           (cache/get-from kouta-hakus-by-form-key-cache form-key))
+         (cache/get-many-from haku-cache)
+         vals))
+
+  (hakus-by-hakukohteen-tarjoaja [this tarjoaja-oid]
+    (->> (concat
+          (mapcat #(map :oid (:haut %))
+                  (cache/get-from forms-in-use-cache tarjoaja-oid))
+          (cache/get-from kouta-hakus-by-hakukohteen-tarjoaja-cache tarjoaja-oid))
          (cache/get-many-from haku-cache)
          vals))
 

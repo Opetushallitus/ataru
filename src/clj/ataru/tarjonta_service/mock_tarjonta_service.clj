@@ -322,6 +322,15 @@
       [(.get-haku this "1.2.246.562.29.65950024187")]
       []))
 
+  (hakus-by-hakukohteen-tarjoaja [this tarjoaja-oid]
+    (case tarjoaja-oid
+      "1.2.246.562.10.10826252480"
+      [(.get-haku this "1.2.246.562.29.65950024188")]
+      "1.2.246.562.10.10826252479"
+      [(.get-haku this "1.2.246.562.29.65950024185")
+       (.get-haku this "1.2.246.562.29.65950024187")]
+      []))
+
   (get-haku-name [this haku-oid]
     (when (= haku-oid "1.2.246.562.29.65950024185")
       {:fi "testing2"}))
