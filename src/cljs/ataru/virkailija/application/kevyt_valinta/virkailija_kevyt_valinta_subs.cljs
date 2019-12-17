@@ -270,7 +270,6 @@
    "EI_VASTAANOTETTU_MAARA_AIKANA"
    "PERUNUT"
    "PERUUTETTU"
-   "OTTANUT_VASTAAN_TOISEN_PAIKAN"
    "EHDOLLISESTI_VASTAANOTTANUT"
    "VASTAANOTTANUT_SITOVASTI"])
 
@@ -279,7 +278,6 @@
    "EI_VASTAANOTETTU_MAARA_AIKANA"
    "PERUNUT"
    "PERUUTETTU"
-   "OTTANUT_VASTAAN_TOISEN_PAIKAN"
    "VASTAANOTTANUT"])
 
 (re-frame/reg-sub
@@ -288,16 +286,19 @@
     [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])
      (re-frame/subscribe [:virkailija-kevyt-valinta/korkeakouluhaku?])])
   (fn [[valinnan-tulos-for-application korkeakouluhaku?] [_ kevyt-valinta-property]]
-    (let [{valinnan-tila :valinnantila} valinnan-tulos-for-application]
+    (let [{valinnan-tila    :valinnantila
+           vastaanotto-tila :vastaanottotila} valinnan-tulos-for-application]
       (case kevyt-valinta-property
         :kevyt-valinta/valinnan-tila (cond->> valinnan-tilat
                                               (and (-> valinnan-tila nil? not)
                                                    (not= valinnan-tila "KESKEN"))
                                               (remove (partial = "KESKEN")))
         :kevyt-valinta/julkaisun-tila julkaisun-tilat
-        :kevyt-valinta/vastaanotto-tila (if korkeakouluhaku?
-                                          vastaanotto-tilat-for-korkeakoulu
-                                          vastaanotto-tilat-for-not-korkeakoulu)
+        :kevyt-valinta/vastaanotto-tila (cond-> (if korkeakouluhaku?
+                                                  vastaanotto-tilat-for-korkeakoulu
+                                                  vastaanotto-tilat-for-not-korkeakoulu)
+                                                (= vastaanotto-tila "OTTANUT_VASTAAN_TOISEN_PAIKAN")
+                                                (conj "OTTANUT_VASTAAN_TOISEN_PAIKAN"))
         :kevyt-valinta/ilmoittautumisen-tila ilmoittautumisen-tilat))))
 
 (re-frame/reg-sub
