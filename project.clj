@@ -203,7 +203,7 @@
                                        :source-map-timestamp true
                                        :pretty-print         false}}]}
 
-  :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]
+  :repl-options {:nrepl-middleware [cider.piggieback/wrap-cljs-repl]
                  :init             (set! *print-length* 50)
                  :init-ns          user}
 
@@ -218,7 +218,7 @@
                               :commit    ~(System/getenv "TRAVIS_COMMIT")}
              :silent         false}
 
-  :profiles {:dev            {:dependencies   [[com.cemerick/piggieback "0.2.2"]
+  :profiles {:dev            {:dependencies   [[cider/piggieback "0.4.2"]
                                                [figwheel-sidecar "0.5.19"]
                                                [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
                                                [reloaded.repl "0.2.4"]
@@ -230,7 +230,7 @@
                               :resource-paths ["dev-resources"]
                               :env            {:dev? "true"}}
 
-             :test           {:dependencies   [[com.cemerick/piggieback "0.2.2"]
+             :test           {:dependencies   [[cider/piggieback "0.4.2"]
                                                [figwheel-sidecar "0.5.18"]
                                                [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
                                                [reloaded.repl "0.2.4"]
