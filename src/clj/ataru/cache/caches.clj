@@ -39,16 +39,27 @@
      {:loader        (cache/->FunctionCacheLoader lokalisointi-service/get-localizations)
       :expires-after [3 TimeUnit/DAYS]
       :refresh-after [5 TimeUnit/MINUTES]})]
+
+   [:kouta-hakukohde-cache-loader
+    (component/using
+     (kouta-client/map->HakukohdeCacheLoader {})
+     {:cas-client           :kouta-internal-cas-client
+      :organization-service :organization-service})]
+   [:hakukohde-union-cache-loader
+    (component/using
+     (union-cache/map->CacheLoader
+      {:high-priority-loader (cache/->FunctionCacheLoader tarjonta-client/get-hakukohde
+                                                          tarjonta-client/hakukohde-checker)})
+     {:low-priority-loader :kouta-hakukohde-cache-loader})]
    [:hakukohde-redis-cache
     (component/using
      (redis/map->Cache
       {:name          "hakukohde"
        :ttl           [3 TimeUnit/DAYS]
        :refresh-after [15 TimeUnit/MINUTES]
-       :lock-timeout  [10000 TimeUnit/MILLISECONDS]
-       :loader        (cache/->FunctionCacheLoader tarjonta-client/get-hakukohde
-                                                   tarjonta-client/hakukohde-checker)})
-     [:redis])]
+       :lock-timeout  [10000 TimeUnit/MILLISECONDS]})
+     {:redis  :redis
+      :loader :hakukohde-union-cache-loader})]
    [:hakukohde-cache
     (component/using
      (two-layer/map->Cache
