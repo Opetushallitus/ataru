@@ -188,7 +188,7 @@
                          (swap! force-show-checkbox? (fnil not @checkbox-info-visible?)))}
             [:div.application-handling__kevyt-valinta-checkbox-info-container
              (when @kevyt-valinta-write-rights?
-               [:i.zmdi.zmdi-info])
+               [:i.zmdi.zmdi-info.application-handling__kevyt-valinta-checkbox-info-symbol])
              (when @checkbox-info-visible?
                [:div.application-handling__kevyt-valinta-checkbox-info-indicator])]
             (when @checkbox-info-visible?
