@@ -270,15 +270,23 @@
 (def ^:private julkaisun-tilat
   [false true])
 
-(def ^:private ilmoittautumisen-tilat
+(def ^:private ilmoittautumisen-tilat-for-korkeakoulu
   ["EI_TEHTY"
-   "LASNA"
-   "POISSA"
+   "EI_ILMOITTAUTUNUT"
    "LASNA_KOKO_LUKUVUOSI"
    "POISSA_KOKO_LUKUVUOSI"
-   "POISSA_SYKSY"
    "LASNA_SYKSY"
-   "EI_ILMOITTAUTUNUT"])
+   "POISSA_SYKSY"
+   "LASNA"
+   "POISSA"])
+
+(def ^:private ilmoittautumisen-tilat-for-not-korkeakoulu
+  ["EI_TEHTY"
+   "EI_ILMOITTAUTUNUT"
+   "LASNA_KOKO_LUKUVUOSI"
+   "POISSA_KOKO_LUKUVUOSI"
+   "LASNA_SYKSY"
+   "POISSA_SYKSY"])
 
 (def ^:private vastaanotto-tilat-for-korkeakoulu
   ["KESKEN"
@@ -314,7 +322,9 @@
                                                   vastaanotto-tilat-for-not-korkeakoulu)
                                                 (= vastaanotto-tila "OTTANUT_VASTAAN_TOISEN_PAIKAN")
                                                 (conj "OTTANUT_VASTAAN_TOISEN_PAIKAN"))
-        :kevyt-valinta/ilmoittautumisen-tila ilmoittautumisen-tilat))))
+        :kevyt-valinta/ilmoittautumisen-tila (if korkeakouluhaku?
+                                               ilmoittautumisen-tilat-for-korkeakoulu
+                                               ilmoittautumisen-tilat-for-not-korkeakoulu)))))
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/kevyt-valinta-dropdowns-open?
