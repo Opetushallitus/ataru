@@ -12,6 +12,7 @@
 
 (def haku-checker (s/checker form-schema/Haku))
 (def hakukohde-checker (s/checker form-schema/Hakukohde))
+(def toteutus-checker (s/checker form-schema/Koulutus))
 (def hakus-by-checker (s/checker [s/Str]))
 
 (defn- parse-date-time
@@ -132,6 +133,13 @@
                            (organization-service/get-organizations-for-oids
                             organization-service))]
     (parse-hakukohde hakukohde tarjoajat)))
+
+(s/defn ^:always-validate get-toteutus :- (s/maybe form-schema/Koulutus)
+  [toteutus-oid :- s/Str]
+  {:oid                  toteutus-oid
+   :koulutuskoodi-name   {}
+   :koulutusohjelma-name {}
+   :tutkintonimike-names []})
 
 (defrecord CacheLoader [cas-client]
   cache-service/CacheLoader

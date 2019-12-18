@@ -171,16 +171,22 @@
        :lock-timeout  [10000 TimeUnit/MILLISECONDS]
        :loader        (cache/->FunctionCacheLoader ohjausparametrit-client/get-ohjausparametrit)})
      [:redis])]
+
+   [:koulutus-union-cache-loader
+    (union-cache/map->CacheLoader
+     {:high-priority-loader (cache/->FunctionCacheLoader tarjonta-client/get-koulutus
+                                                         tarjonta-client/koulutus-checker)
+      :low-priority-loader  (cache/->FunctionCacheLoader kouta-client/get-toteutus
+                                                         kouta-client/toteutus-checker)})]
    [:koulutus-redis-cache
     (component/using
      (redis/map->Cache
       {:name          "koulutus"
        :ttl           [3 TimeUnit/DAYS]
        :refresh-after [15 TimeUnit/MINUTES]
-       :lock-timeout  [10000 TimeUnit/MILLISECONDS]
-       :loader        (cache/->FunctionCacheLoader tarjonta-client/get-koulutus
-                                                   tarjonta-client/koulutus-checker)})
-     [:redis])]
+       :lock-timeout  [10000 TimeUnit/MILLISECONDS]})
+     {:redis  :redis
+      :loader :koulutus-union-cache-loader})]
    [:koulutus-cache
     (component/using
      (two-layer/map->Cache
@@ -189,6 +195,7 @@
        :expire-after-access [3 TimeUnit/DAYS]
        :refresh-after       [7 TimeUnit/MINUTES]})
      {:redis-cache :koulutus-redis-cache})]
+
    [:henkilo-redis-cache
     (component/using
      (redis/map->Cache
