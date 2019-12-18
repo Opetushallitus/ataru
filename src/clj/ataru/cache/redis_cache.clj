@@ -141,9 +141,14 @@
   (.execute
    (:executor cache)
    (fn []
-     (when-let [keys (or (seq (pop-keys cache (->high-priority-queue (:name cache))))
-                         (seq (pop-keys cache (->low-priority-queue (:name cache)))))]
-       (update-keys cache keys)
+     (when (try
+             (when-let [keys (or (seq (pop-keys cache (->high-priority-queue (:name cache))))
+                                 (seq (pop-keys cache (->low-priority-queue (:name cache)))))]
+               (update-keys cache keys)
+               true)
+             (catch Exception e
+               (log/error e "Failed to update" (:name cache) "keys")
+               true))
        (recur)))))
 
 (defn- fetch-as-high-priority
