@@ -213,19 +213,30 @@
        :expire-after-access [3 TimeUnit/DAYS]
        :refresh-after       [1 TimeUnit/SECONDS]})
      {:redis-cache :henkilo-redis-cache})]
+
+   [:kouta-hakukohde-search-cache-loader
+    (component/using
+     (kouta-client/map->HakukohdeSearchCacheLoader {})
+     {:cas-client :kouta-internal-cas-client})]
+   [:hakukohde-search-union-cache-loader
+    (component/using
+     (union-cache/map->CacheLoader
+      {:high-priority-loader (cache/->FunctionCacheLoader
+                              (fn [key]
+                                (let [[haku-oid organization-oid] (clojure.string/split key #"#")]
+                                  (tarjonta-client/hakukohde-search haku-oid organization-oid)))
+                              tarjonta-client/hakukohde-search-checker)})
+     {:low-priority-loader :kouta-hakukohde-search-cache-loader})]
    [:hakukohde-search-cache
     (component/using
      (redis/map->Cache
       {:name          "hakukohde-search"
        :ttl           [3 TimeUnit/DAYS]
        :refresh-after [15 TimeUnit/MINUTES]
-       :lock-timeout  [10000 TimeUnit/MILLISECONDS]
-       :loader        (cache/->FunctionCacheLoader
-                       (fn [key]
-                         (let [[haku-oid organization-oid] (clojure.string/split key #"#")]
-                           (tarjonta-client/hakukohde-search haku-oid organization-oid)))
-                       tarjonta-client/hakukohde-search-checker)})
-     [:redis])]
+       :lock-timeout  [10 TimeUnit/SECONDS]})
+     {:redis  :redis
+      :loader :hakukohde-search-union-cache-loader})]
+
    [:statistics-month-cache
     (component/using
      (redis/map->Cache

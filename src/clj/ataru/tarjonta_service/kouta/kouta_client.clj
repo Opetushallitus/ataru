@@ -14,6 +14,7 @@
 (def hakukohde-checker (s/checker form-schema/Hakukohde))
 (def toteutus-checker (s/checker form-schema/Koulutus))
 (def hakus-by-checker (s/checker [s/Str]))
+(def hakukohde-search-checker (s/checker [s/Str]))
 
 (defn- parse-date-time
   [s]
@@ -104,19 +105,19 @@
           (get-result cas-client)
           parse-haku))
 
-(s/defn ^:always-validate get-hakus-by :- (s/maybe [s/Str])
+(s/defn ^:always-validate get-hakus-by :- [s/Str]
   [cas-client
    query :- {(s/optional-key :form-key)     s/Str
              (s/optional-key :tarjoaja-oid) s/Str}]
-  (-> :kouta-internal.haku-search
-      (url-helper/resolve-url
-       (cond-> {}
-               (contains? query :form-key)
-               (assoc "ataruId" (:form-key query))
-               (contains? query :tarjoaja-oid)
-               (assoc "hakukohteenTarjoaja" (:tarjoaja-oid query))))
-      (get-result cas-client)
-      ((fn [result] (mapv :oid result)))))
+  (some-> :kouta-internal.haku-search
+          (url-helper/resolve-url
+           (cond-> {}
+                   (contains? query :form-key)
+                   (assoc "ataruId" (:form-key query))
+                   (contains? query :tarjoaja-oid)
+                   (assoc "hakukohteenTarjoaja" (:tarjoaja-oid query))))
+          (get-result cas-client)
+          ((fn [result] (mapv :oid result)))))
 
 (s/defn ^:always-validate get-hakukohde :- (s/maybe form-schema/Hakukohde)
   [hakukohde-oid :- s/Str
@@ -133,6 +134,18 @@
                            (organization-service/get-organizations-for-oids
                             organization-service))]
     (parse-hakukohde hakukohde tarjoajat)))
+
+(s/defn ^:always-validate get-hakukohdes-by :- (s/maybe [s/Str])
+  [cas-client
+   query :- {:haku-oid                      s/Str
+             (s/optional-key :tarjoaja-oid) s/Str}]
+  (some-> :kouta-internal.hakukohde-search
+          (url-helper/resolve-url
+           (cond-> {"haku" (:haku-oid query)}
+                   (contains? query :tarjoaja-oid)
+                   (assoc "tarjoaja" (:tarjoaja-oid query))))
+          (get-result cas-client)
+          ((fn [result] (mapv :oid result)))))
 
 (s/defn ^:always-validate get-toteutus :- (s/maybe form-schema/Koulutus)
   [toteutus-oid :- s/Str]
@@ -200,3 +213,23 @@
 
   (check-schema [_ response]
     (hakus-by-checker response)))
+
+(defrecord HakukohdeSearchCacheLoader [cas-client]
+  cache-service/CacheLoader
+
+  (load [_ key]
+    (let [[haku-oid organization-oid] (clojure.string/split key #"#")]
+      (get-hakukohdes-by
+       cas-client
+       (cond-> {:haku-oid haku-oid}
+               (some? organization-oid)
+               (assoc :tarjoaja-oid organization-oid)))))
+
+  (load-many [this form-keys]
+    (cache-service/default-load-many this form-keys))
+
+  (load-many-size [_]
+    1)
+
+  (check-schema [_ response]
+    (hakukohde-search-checker response)))

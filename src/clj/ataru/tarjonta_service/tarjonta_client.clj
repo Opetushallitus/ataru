@@ -134,7 +134,8 @@
   [search-result]
   (->> (:tulokset search-result)
        (mapcat :tulokset)
-       (mapv :oid)))
+       (map :oid)
+       seq))
 
 (defn- get-result
   [url]
@@ -158,7 +159,7 @@
           get-result
           parse-hakukohde))
 
-(s/defn ^:always-validate hakukohde-search :- [s/Str]
+(s/defn ^:always-validate hakukohde-search :- (s/maybe [s/Str])
   [haku-oid :- s/Str
    organization-oid :- (s/maybe s/Str)]
   (-> :tarjonta-service.hakukohde.search
