@@ -1573,7 +1573,7 @@ You will receive a confirmation of your application to your email."}
 
 (def kevyt-valinta-julkaisun-tila-translations
   {:kevyt-valinta/julkaistu-hakijalle {:fi "Julkaistu hakijalle"}
-   :kevyt-valinta/ei-julkaistu        {:fi "Ei julkaistu"}})
+   :kevyt-valinta/ei-julkaistu        {:fi "Julkaistu hakijalle"}})
 
 (def kevyt-valinta-vastaanotto-tila-translations
   {:kevyt-valinta/ei-vastaanotettu-maaraaikana  {:fi "Ei vastaanotettu määräaikana"}
