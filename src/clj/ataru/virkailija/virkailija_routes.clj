@@ -804,14 +804,12 @@
         :query-params [organizationOid :- (api/describe s/Str "Organization OID")
                        hakuOid :- (api/describe s/Str "Haku OID")]
         :return [ataru-schema/HakukohdeSearchResult]
-        (if-let [hakukohteet (tarjonta/hakukohde-search
-                               tarjonta-service
-                               hakuOid
-                               organizationOid)]
-          (-> hakukohteet
-              ok
-              (header "Cache-Control" "public, max-age=300"))
-          (internal-server-error {:error "Internal server error"}))))
+        (-> (tarjonta/hakukohde-search
+             tarjonta-service
+             hakuOid
+             organizationOid)
+            ok
+            (header "Cache-Control" "public, max-age=300"))))
 
     (api/context "/files" []
       :tags ["files-api"]
