@@ -190,9 +190,9 @@
              (when @kevyt-valinta-write-rights?
                [:i.zmdi.zmdi-info.application-handling__kevyt-valinta-checkbox-info-symbol])
              (when @checkbox-info-visible?
-               [:div.application-handling__kevyt-valinta-checkbox-info-indicator])]
+               [:div.application-handling__kevyt-valinta-checkbox-info-indicator.animated.fadeIn])]
             (when @checkbox-info-visible?
-              [:div.application-handling__kevyt-valinta-checkbox-info
+              [:div.application-handling__kevyt-valinta-checkbox-info.animated.fadeIn
                [:span.application-handling__kevyt-valinta-checkbox-info-text "Julkaisun jälkeen valintatieto näkyy hakijalle Oma opintopolku -palvelussa."]
                [:span.application-handling__kevyt-valinta-checkbox-info-text "Hyväksytyille hakijoille lähetetään myös sähköposti klo 8.00 tai 20.00"]])]])]
        (when @show-loader?
