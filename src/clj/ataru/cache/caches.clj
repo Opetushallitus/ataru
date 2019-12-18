@@ -57,36 +57,37 @@
        :expire-after-access [3 TimeUnit/DAYS]
        :refresh-after       [5 TimeUnit/MINUTES]})
      {:redis-cache :hakukohde-redis-cache})]
-   [:haku-cache-1
+
+   [:kouta-internal-cas-client
+    (cas/new-client "/kouta-internal" "auth/login" "session")]
+   [:kouta-haku-cache-loader
+    (component/using
+     (kouta-client/map->CacheLoader {})
+     {:cas-client :kouta-internal-cas-client})]
+   [:haku-union-cache-loader
+    (component/using
+     (union-cache/map->CacheLoader
+      {:high-priority-loader (cache/->FunctionCacheLoader
+                              tarjonta-client/get-haku
+                              tarjonta-client/haku-checker)})
+     {:low-priority-loader :kouta-haku-cache-loader})]
+   [:haku-redis-cache
     (component/using
      (redis/map->Cache
       {:name          "haku"
        :ttl           [3 TimeUnit/DAYS]
        :refresh-after [15 TimeUnit/MINUTES]
-       :lock-timeout  [10000 TimeUnit/MILLISECONDS]
-       :loader        (cache/->FunctionCacheLoader tarjonta-client/get-haku
-                                                   tarjonta-client/haku-checker)})
-     [:redis])]
-   [:kouta-internal-cas-client
-    (cas/new-client "/kouta-internal" "auth/login" "session")]
-   [:kouta-haku-cache-loader
-    (component/using
-      (kouta-client/map->CacheLoader {})
-      {:cas-client :kouta-internal-cas-client})]
-   [:haku-cache-2
-    (component/using
-      (redis/map->Cache
-        {:name          "kouta-haku"
-         :ttl           [3 TimeUnit/DAYS]
-         :refresh-after [15 TimeUnit/MINUTES]
-         :lock-timeout  [10000 TimeUnit/MILLISECONDS]})
-      {:loader :kouta-haku-cache-loader
-       :redis  :redis})]
+       :lock-timeout  [10 TimeUnit/SECONDS]})
+     {:redis  :redis
+      :loader :haku-union-cache-loader})]
    [:haku-cache
     (component/using
-      (union-cache/map->Cache {})
-      {:cache-1 :haku-cache-1
-       :cache-2 :haku-cache-2})]
+     (two-layer/map->Cache
+      {:name                "in-memory-haku"
+       :size                100
+       :expire-after-access [3 TimeUnit/DAYS]
+       :refresh-after       [5 TimeUnit/MINUTES]})
+     {:redis-cache :haku-redis-cache})]
 
    [:kouta-hakus-by-form-key-cache-loader
     (component/using
