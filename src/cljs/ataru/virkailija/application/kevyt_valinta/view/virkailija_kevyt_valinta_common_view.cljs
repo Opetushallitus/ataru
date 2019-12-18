@@ -131,19 +131,14 @@
                                                                                                                     kevyt-valinta-property-value
                                                                                                                     @lang)})
                                                               @kevyt-valinta-property-values))
-        kevyt-valinta-checkbox-state           (reaction @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-value
+        kevyt-valinta-checkbox-value           (reaction @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-value
                                                                                kevyt-valinta-property
                                                                                @application-key]))
         kevyt-valinta-checkbox-label           (reaction (->> @kevyt-valinta-checkbox-values
-                                                              (filter (comp (partial = @kevyt-valinta-checkbox-state)
+                                                              (filter (comp (partial = @kevyt-valinta-checkbox-value)
                                                                             :value))
                                                               (map :label)
                                                               (first)))
-        checkbox-checked?                      (reaction (->> @kevyt-valinta-checkbox-values
-                                                              (some (fn [{value :value label :label}]
-                                                                      (and value
-                                                                           (= @kevyt-valinta-checkbox-label label))))
-                                                              (true?)))
         ;; kevytvalinta näytetään ainoastaan, kun yksi hakukohde valittuna, ks. :virkailija-kevyt-valinta/show-kevyt-valinta?
         hakukohde-oid                          (reaction (first @(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])))
 
@@ -157,7 +152,7 @@
         checkbox-info-visible?                 (reaction (and @kevyt-valinta-write-rights?
                                                               (if (some? @force-show-checkbox?)
                                                                 @force-show-checkbox?
-                                                                (not @checkbox-checked?))
+                                                                (not @kevyt-valinta-checkbox-value))
                                                               (not @kevyt-valinta-dropdowns-open?)))]
     (fn [_]
       [:div.application-handling__kevyt-valinta-checkbox-container
@@ -170,14 +165,14 @@
                                         " application-handling__kevyt-valinta-checkbox--enabled"))
 
                          (cond-> classes
-                                 @checkbox-checked?
+                                 @kevyt-valinta-checkbox-value
                                  (str " application-handling__kevyt-valinta-checkbox--checked")))
          :on-click (when-not @checkbox-disabled?
                      (fn []
-                       (let [new-value (not @checkbox-checked?)]
+                       (let [new-value (not @kevyt-valinta-checkbox-value)]
                          (reset! force-show-checkbox? nil)
                          (@kevyt-valinta-on-checkbox-value-change new-value))))}
-        (when @checkbox-checked?
+        (when @kevyt-valinta-checkbox-value
           [:i.zmdi.zmdi-check.application-handling__kevyt-valinta-checkbox-checkmark])]
        [:div.application-handling__kevyt-valinta-checkbox-label
         [:span @kevyt-valinta-checkbox-label]
