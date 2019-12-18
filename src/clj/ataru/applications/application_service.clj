@@ -95,15 +95,12 @@
       (update :params dissoc :info-text)
       (dissoc :metadata)))
 
-(defn get-changed-elem-ids [old new]
-  (let [changed (filter (fn [old-elem]
-                          (let [new-with-same-id (find-first (fn [x] (= (:id x) (:id old-elem))) new)
-                                [a b _] (diff old-elem new-with-same-id)
-                                res (not (and (empty? a)
-                                              (empty? b)))]
-                            res)
-                          ) old)
-        ]
+(defn get-changed-elem-ids [old-elems new-elems]
+  (let [changed (filter (fn [new-elem]
+                          (let [old-with-same-id (find-first (fn [x] (= (:id x) (:id new-elem))) old-elems)
+                                [a b _] (diff old-with-same-id new-elem)]
+                            (not (and (empty? a) (empty? b))))
+                          ) new-elems)]
     (map #(:id %) changed)))
 
 (defn get-new-and-changed-ids [application tarjonta-info older-form newer-form]
