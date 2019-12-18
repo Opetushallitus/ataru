@@ -202,7 +202,11 @@
        :ttl           [3 TimeUnit/DAYS]
        :refresh-after [15 TimeUnit/MINUTES]
        :lock-timeout  [10000 TimeUnit/MILLISECONDS]
-       :loader        (cache/->FunctionCacheLoader tarjonta-service/hakukohde-search-cache-loader-fn)})
+       :loader        (cache/->FunctionCacheLoader
+                       (fn [key]
+                         (let [[haku-oid organization-oid] (clojure.string/split key #"#")]
+                           (tarjonta-client/hakukohde-search haku-oid organization-oid)))
+                       tarjonta-client/hakukohde-search-checker)})
      [:redis])]
    [:statistics-month-cache
     (component/using

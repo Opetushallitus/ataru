@@ -12,6 +12,7 @@
 (def koulutus-checker (s/checker schema/Koulutus))
 (def hakukohde-checker (s/checker schema/Hakukohde))
 (def haku-checker (s/checker schema/Haku))
+(def hakukohde-search-checker (s/checker [s/Str]))
 
 (defn- localized-names
   ([names]
@@ -129,6 +130,12 @@
               (pos? (:maxHakukohdes haku)))
      {:max-hakukohteet (:maxHakukohdes haku)})))
 
+(defn- parse-search-result
+  [search-result]
+  (->> (:tulokset search-result)
+       (mapcat :tulokset)
+       (mapv :oid)))
+
 (defn- get-result
   [url]
   (let [{:keys [status body]} (http-util/do-get url)]
@@ -151,14 +158,15 @@
           get-result
           parse-hakukohde))
 
-(defn hakukohde-search
-  [haku-oid organization-oid]
+(s/defn ^:always-validate hakukohde-search :- [s/Str]
+  [haku-oid :- s/Str
+   organization-oid :- (s/maybe s/Str)]
   (-> :tarjonta-service.hakukohde.search
-      (resolve-url (cond-> {"hakuOid"         haku-oid
-                            "defaultTarjoaja" organization-oid}
-                           (some? organization-oid)
-                           (assoc "organisationOid" organization-oid)))
-      get-result))
+      (resolve-url (merge {"hakuOid" haku-oid}
+                          (when (some? organization-oid)
+                            {"organisationOid" organization-oid})))
+      get-result
+      parse-search-result))
 
 (s/defn ^:always-validate get-haku :- (s/maybe schema/Haku)
   [haku-oid :- s/Str]

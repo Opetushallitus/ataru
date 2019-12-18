@@ -16,14 +16,8 @@
 
 (defn fetch-or-cached-hakukohde-search
   [hakukohde-search-cache haku-oid organization-oid]
-  (parse-search-result (cache/get-from
-                        hakukohde-search-cache
-                        (str haku-oid "#" organization-oid))))
-
-(defn hakukohde-search-cache-loader-fn
-  [key]
-  (let [[haku-oid organization-oid] (clojure.string/split key #"#")]
-    (client/hakukohde-search haku-oid organization-oid)))
+  (cache/get-from hakukohde-search-cache
+                  (str haku-oid "#" organization-oid)))
 
 (defrecord CachedTarjontaService [forms-in-use-cache
                                   koulutus-cache
@@ -46,14 +40,11 @@
     (:name (cache/get-from hakukohde-cache hakukohde-oid)))
 
   (hakukohde-search [this haku-oid organization-oid]
-    (let [filtered-hakukohde-oids (->> (fetch-or-cached-hakukohde-search
+    (let [filtered-hakukohde-oids (set (fetch-or-cached-hakukohde-search
                                         hakukohde-search-cache
                                         haku-oid
-                                        organization-oid)
-                                       (map :oid)
-                                       set)]
+                                        organization-oid))]
       (->> (fetch-or-cached-hakukohde-search hakukohde-search-cache haku-oid nil)
-           (map :oid)
            (.get-hakukohteet this)
            (map #(assoc % :user-organization? (contains? filtered-hakukohde-oids (:oid %)))))))
 
