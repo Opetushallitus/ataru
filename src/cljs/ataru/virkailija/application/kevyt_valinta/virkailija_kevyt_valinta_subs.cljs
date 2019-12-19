@@ -79,9 +79,21 @@
         :valinnantulos)))
 
 (re-frame/reg-sub
+  :virkailija-kevyt-valinta/haku
+  (fn []
+    [(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :haku]])
+     (re-frame/subscribe [:state-query [:haut]])])
+  (fn [[haku-oid haut]]
+    (get haut haku-oid)))
+
+(re-frame/reg-sub
   :virkailija-kevyt-valinta/korkeakouluhaku?
   (fn []
-    false))
+    [(re-frame/subscribe [:virkailija-kevyt-valinta/haku])])
+  (fn [[haku]]
+    (true? (some-> haku
+                   :kohdejoukko-uri
+                   (clojure.string/starts-with? "haunkohdejoukko_12#")))))
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/kevyt-valinta-property-value

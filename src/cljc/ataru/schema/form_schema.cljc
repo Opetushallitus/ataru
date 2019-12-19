@@ -301,7 +301,8 @@
    :hakuajat               [{:start                java.time.ZonedDateTime
                              (s/optional-key :end) java.time.ZonedDateTime}]
    :hakukohteet            [s/Str]
-   :sijoittelu             s/Bool})
+   :sijoittelu             s/Bool
+   :kohdejoukko-uri        s/Str})
 
 (s/defschema Hakukohderyhma
   {:oid             s/Str

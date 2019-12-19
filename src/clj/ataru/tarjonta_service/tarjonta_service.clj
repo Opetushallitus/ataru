@@ -67,7 +67,8 @@
    :yhteishaku             (yhteishaku? haku)
    :hakuajat               (mapv parse-hakuaika (:hakuaikas haku))
    :hakukohteet            (:hakukohdeOids haku)
-   :sijoittelu             (:sijoittelu haku)})
+   :sijoittelu             (:sijoittelu haku)
+   :kohdejoukko-uri        (:kohdejoukkoUri haku)})
 
 (defn- parse-search-result
   [search-result]
