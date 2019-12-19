@@ -7,8 +7,11 @@
     (or (cache/load high-priority-loader key)
         (cache/load low-priority-loader key)))
   (load-many [this keys]
-    (merge (cache/load-many low-priority-loader keys)
-           (cache/load-many high-priority-loader keys)))
+    (let [high-results (cache/load-many high-priority-loader keys)]
+      (merge (->> keys
+                  (remove #(contains? high-results %))
+                  (cache/load-many low-priority-loader))
+             high-results)))
   (load-many-size [this]
     (min (cache/load-many-size high-priority-loader)
          (cache/load-many-size low-priority-loader)))
