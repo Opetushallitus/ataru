@@ -21,13 +21,16 @@
 
 (defqueries "sql/person-integration-queries.sql")
 
-(defn start-update-person-info-job
-  [job-runner person-oid]
+(defn- start-jobs-for-person [job-runner person-oid]
   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
     (job/start-job job-runner
-                   connection
-                   "update-person-info-job"
-                   {:person-oid person-oid})))
+      connection
+      "update-person-info-job"
+      {:person-oid person-oid})
+    (job/start-job job-runner
+      connection
+      "automatic-payment-obligation-job"
+      {:person-oid person-oid})))
 
 (defn muu-person-info-module? [application]
   (person-info-module/muu-person-info-module?
@@ -48,7 +51,7 @@
              (log/info "Person" oid "already existed in oppijanumerorekisteri"))
       (application-store/add-person-oid application-id oid)
       (log/info "Added person" oid "to application" application-id)
-      (start-update-person-info-job job-runner oid)
+      (start-jobs-for-person job-runner oid)
       (log/info "Started person info update job for application" application-id))
     (catch IllegalArgumentException e
       (log/error e "Failed to create-or-find person for application"
@@ -112,17 +115,6 @@
     oid
     (throw (new RuntimeException
                 (str "Could not find key oidHenkilo from message '" s "'")))))
-
-(defn- start-jobs-for-person [job-runner person-oid]
-  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-    (job/start-job job-runner
-      connection
-      "update-person-info-job"
-      {:person-oid person-oid})
-    (job/start-job job-runner
-      connection
-      "automatic-payment-obligation-job"
-      {:person-oid person-oid})))
 
 (defn- try-handle-message
   [job-runner sns-message-manager drain-failed? message]
