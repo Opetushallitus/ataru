@@ -8,7 +8,7 @@
                                                  :en "Add"}
    :add-application-option                      {:fi "Lisää hakukohde"
                                                  :sv "Lägg till ansökningsmål"
-                                                 :en "Add application option"}
+                                                 :en "Add study programme"}
    :add-attachment                              {:fi "Lisää liite..."
                                                  :en "Upload attachment..."
                                                  :sv "Ladda upp bilagan..."}
@@ -62,10 +62,10 @@
                                                  :en "Less than 15 min left in the application period"}
    :application-priorization-invalid            {:fi "Hakukohteet ovat väärässä ensisijaisuusjärjestyksessä"
                                                  :sv "Fel prioritetsordning för ansökningsmålen"
-                                                 :en "Application options are in an invalid order of preference"}
+                                                 :en "Study programmes are in an invalid order of preference"}
    :application-limit-reached-in-hakukohderyhma {:fi "Et voi hakea tähän hakukohteeseen, koska olet jo hakemassa seuraaviin hakukohteisiin:"
                                                  :sv "Du kan inte söka till detta ansökningsmål, eftersom du redan söker till följande ansökningsmål:"
-                                                 :en "You can't apply to this application option because you are applying to the following application option:"}
+                                                 :en "You can't apply to this study programme because you are applying to the following study programme:"}
    :application-processed-cant-modify           {:fi "Tämä hakemus on käsitelty eikä ole enää muokattavissa"
                                                  :sv "Denna ansökan har behandlats och kan inte längre bearbetas"
                                                  :en "This application has been processed and can no longer be modified"}
@@ -92,13 +92,13 @@
                                                  :en "SAVE MODIFICATIONS"}
    :applications_at_most                        {:fi "Tässä haussa voit hakea %s hakukohteeseen"
                                                  :sv "I denna ansökan kan du söka till %s ansökningsmål"
-                                                 :en "In this application you can apply to %s options "}
+                                                 :en "In this application you can apply to %s study programmes "}
    :best-regards                                {:fi "Ystävällisin terveisin"
                                                  :sv "Med vänliga hälsningar"
                                                  :en "Best Regards"}
    :should-be-higher-priorization-than          {:fi ["Hakukohde " " tulee olla korkeammalla prioriteetillä kuin "]
                                                  :sv ["Ansökningsmålet " " bör ha en högre prioritet än "]
-                                                 :en ["Application option " " has to be in higher order of preference than "]}
+                                                 :en ["Study programme " " has to be in higher order of preference than "]}
    :check-answers                               {:fi ["Tarkista " " tietoa"]
                                                  :sv ["Kontrollera " " uppgifter"]
                                                  :en ["Check " " answers"]}
@@ -226,7 +226,7 @@
                                                  :sv "Meddelande om otillräcklig grundutbildning"
                                                  :en "Insufficient educational background"}
    :liitepyynto-for-hakukohde                   {:fi "Liitepyyntö kuuluu hakukohteisiin:"
-                                                 :en "Request for attachment is for application options:"
+                                                 :en "Request for attachment is for study programmes:"
                                                  :sv "Begäran om bilagor berör ansökningsmål:"}
    :lupatiedot-info                             {:fi "Tarkista hakulomakkeelle täyttämäsi tiedot huolellisesti ennen hakulomakkeen lähettämistä. Opiskelijavalinta voidaan purkaa, jos olet antanut vääriä tietoja. Hakemuksesi kaikki tiedot tallennetaan opiskelijavalintarekisteriin (L 884/2017). [Opintopolun tietosuojaseloste](https://opintopolku.fi/wp/tietosuojaseloste/).
 
@@ -254,7 +254,7 @@ You will receive a confirmation of your application to your email."}
                                                  :sv "Du kan se och redigera din ansökan via länken ovan."}
    :muokkaa-hakukohteita                        {:fi "Muokkaa hakukohteita"
                                                  :sv "Bearbeta ansökningsmål"
-                                                 :en "Modify your application options"}
+                                                 :en "Modify your study programmes"}
    :no-hakukohde-search-hits                    {:fi "Ei hakutuloksia"
                                                  :en "No search results found"
                                                  :sv "Inga sökresultat"}
@@ -289,16 +289,16 @@ You will receive a confirmation of your application to your email."}
                                                  :en "Preview"
                                                  :sv "Förhandsvisa"}
    :question-for-hakukohde                      {:fi "Kysymys kuuluu hakukohteisiin:"
-                                                 :en "This question is for application options:"
+                                                 :en "This question is for study programmes:"
                                                  :sv "Frågan berör ansökningsmål:"}
    :info-for-hakukohde                          {:fi "Osio kuuluu hakukohteisiin:"
                                                  :en "This information is shown for application options:"
                                                  :sv "Frågan berör ansökningsmål:"}
    :show-application-options                    {:fi "Näytä hakukohteet"
-                                                 :en "Show application options"
+                                                 :en "Show study programmes"
                                                  :sv "Visa ansökningsmål"}
    :hide-application-options                    {:fi "Piilota hakukohteet"
-                                                 :en "Hide application options"
+                                                 :en "Hide study programmes"
                                                  :sv "Dölj ansökningsmål"}
    :limit-reached                               {:fi "ei valittavissa"
                                                  :en "unselectable"
@@ -740,7 +740,7 @@ You will receive a confirmation of your application to your email."}
                                                      :en "All"}
    :all-hakukohteet                                 {:fi "Kaikki hakukohteet"
                                                      :sv "Alla ansökningsmål"
-                                                     :en "All application options"}
+                                                     :en "All study programmes"}
    :allow-invalid-koodis                            {:fi "Sisällytä päättyneet koodit"
                                                      :sv "SV: Sisällytä päättyneet koodit"
                                                      :en "EN: Sisällytä päättyneet koodit"}
@@ -764,7 +764,7 @@ You will receive a confirmation of your application to your email."}
                                                      :en "EN: Tähän tulee hakemusnumero, hakutoiveet, puuttuvat liitepyynnöt ja muokkauslinkki"}
    :application-options                             {:fi "hakukohdetta"
                                                      :sv "ansökningsmål"
-                                                     :en "application option"}
+                                                     :en "study programme"}
    :application-received                            {:fi "Hakemus vastaanotettu"
                                                      :sv "Ansökan har mottagits"
                                                      :en "Application submitted"}
@@ -860,7 +860,7 @@ You will receive a confirmation of your application to your email."}
                                                      :en "Cancel copy"}
    :only-selected-hakukohteet                       {:fi "vain valituille hakukohteille"
                                                      :sv "till valda ansökningsmål"
-                                                     :en "only selected application options"}
+                                                     :en "only selected study programmes"}
    :confirmation-sent                               {:fi "Vahvistussähköposti lähetetty hakijalle"
                                                      :sv "E-post med bekräftelse har skickats till sökande"
                                                      :en "Confirmation email has been sent"}
@@ -998,7 +998,7 @@ You will receive a confirmation of your application to your email."}
                                                      :en "Extra questions"}
    :for-hakukohde                                   {:fi "hakukohteelle"
                                                      :sv "för ansökningsmålet"
-                                                     :en "for application option"}
+                                                     :en "for study programme"}
    :form                                            {:fi "Lomake"
                                                      :sv "Blankett"
                                                      :en "Form"}
@@ -1043,13 +1043,13 @@ You will receive a confirmation of your application to your email."}
                                                      :en "EN: Tässä hakija voi valita hakukohteet. Hakukohteiden määrä ja priorisointi määritetään haun asetuksissa."}
    :hakukohteet                                     {:fi "Hakukohteet"
                                                      :sv "Ansökningsmål"
-                                                     :en "Application options"}
+                                                     :en "Study programmes"}
    :hakukohderyhmat                                 {:fi "Hakukohderyhmät"
                                                      :sv "Ansökningsmålsgrupp"
                                                      :en "Application option groups"}
    :search-hakukohde-placeholder                    {:fi "Etsi hakukohteita ja hakukohderyhmiä"
                                                      :sv "Sök ansökningsmål och ansökningsmålsgrupper"
-                                                     :en "Search for application options and application option groups"}
+                                                     :en "Search for study programmes and study programme groups"}
    :handling-notes                                  {:fi "Käsittelymerkinnät"
                                                      :sv "Anteckningar om behandling"
                                                      :en "Notes"}
