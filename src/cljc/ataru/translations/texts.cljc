@@ -263,7 +263,7 @@ You will receive a confirmation of your application to your email."}
                                                  :en "Please note that the education you have given does not provide eligibility for these study programmes. Please check the required eligibility from the study programme’s admission criteria."}
    :not-editable-application-period-ended       {:fi "Tämä hakutoive ei ole muokattavissa koska sen hakuaika on päättynyt."
                                                  :sv "Ansökningsmålet kan inte bearbetas eftersom ansökningstiden har utgått."
-                                                 :en "You can't modify this application option because the application period has ended."}
+                                                 :en "You can't modify this study programme because the application period has ended."}
    :not-selectable-application-period-ended     {:fi "Hakuaika ei ole käynnissä"
                                                  :sv "Ingen pågående ansökningstid"
                                                  :en "Application period not ongoing"}
@@ -292,7 +292,7 @@ You will receive a confirmation of your application to your email."}
                                                  :en "This question is for study programmes:"
                                                  :sv "Frågan berör ansökningsmål:"}
    :info-for-hakukohde                          {:fi "Osio kuuluu hakukohteisiin:"
-                                                 :en "This information is shown for application options:"
+                                                 :en "This information is shown for study programmes:"
                                                  :sv "Frågan berör ansökningsmål:"}
    :show-application-options                    {:fi "Näytä hakukohteet"
                                                  :en "Show study programmes"
@@ -317,7 +317,7 @@ You will receive a confirmation of your application to your email."}
                                                  :en "Remove row"}
    :search-application-options                  {:fi "Etsi tämän haun koulutuksia"
                                                  :sv "Sök ansökningsmål i denna ansökan"
-                                                 :en "Search for application options"}
+                                                 :en "Search for study programmes"}
    :second                                      {:fi "sekunti"
                                                  :en "second"
                                                  :sv "sekund"}
@@ -1046,7 +1046,7 @@ You will receive a confirmation of your application to your email."}
                                                      :en "Study programmes"}
    :hakukohderyhmat                                 {:fi "Hakukohderyhmät"
                                                      :sv "Ansökningsmålsgrupp"
-                                                     :en "Application option groups"}
+                                                     :en "Study programme groups"}
    :search-hakukohde-placeholder                    {:fi "Etsi hakukohteita ja hakukohderyhmiä"
                                                      :sv "Sök ansökningsmål och ansökningsmålsgrupper"
                                                      :en "Search for study programmes and study programme groups"}
@@ -1211,7 +1211,7 @@ You will receive a confirmation of your application to your email."}
                                                      :en "Form's"}
    :of-hakukohde                                    {:fi "Hakukohteen"
                                                      :sv "Ansökningsmålets"
-                                                     :en "Application options"}
+                                                     :en "Study programme's"}
    :only-numeric                                    {:fi "Kenttään voi täyttää vain numeroita"
                                                      :sv "Endast siffror i fältet"
                                                      :en "Only numbers"}
