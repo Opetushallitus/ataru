@@ -142,7 +142,7 @@
     (fn []
       (when (< 0 @seconds-left (* 3600 24))
         (let [hours   (Math/floor (/ @seconds-left 3600))
-              minutes (round (Math/floor (/ (rem @seconds-left 3600) 60)) 15)]
+              minutes (Math/floor (/ (rem @seconds-left 3600) 60))]
           (hakuaika-left-text hours minutes))))))
 
 (defn status-controls [submit-status]
