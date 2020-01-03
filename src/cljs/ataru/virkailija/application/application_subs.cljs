@@ -552,9 +552,13 @@
 (re-frame/reg-sub
   :application/events-and-information-requests
   (fn [db _]
-    (->> (concat (-> db :application :events mark-last-modify-event)
-                 (-> db :application :information-requests))
-         (sort event-and-information-request-comparator))))
+    (let [application-key (-> db :application :selected-application-and-form :application :key)]
+      (->> (concat (-> db :application :events mark-last-modify-event)
+                   (-> db :application :information-requests)
+                   (->> (get-in db [:hyvaksynnan-ehto application-key])
+                        vals
+                        (mapcat :events)))
+           (sort event-and-information-request-comparator)))))
 
 (re-frame/reg-sub
   :application/resend-modify-application-link-enabled?

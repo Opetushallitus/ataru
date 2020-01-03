@@ -1,5 +1,7 @@
 (ns ataru.virkailija.application.hyvaksynnan-ehto.handlers
-  (:require [re-frame.core :as re-frame]
+  (:require [cljs-time.core :as c]
+            [cljs-time.format :as f]
+            [re-frame.core :as re-frame]
             [ataru.util :as util]
             [ataru.application-common.fx :refer [http]]))
 
@@ -54,6 +56,9 @@
         {:db
          (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :request-in-flight?] true)
          :hyvaksynnan-ehto/get-ehto-hakukohteessa
+         {:application-key application-key
+          :hakukohde-oid   hakukohde-oid}
+         :hyvaksynnan-ehto/get-ehto-hakukohteessa-muutoshistoria
          {:application-key application-key
           :hakukohde-oid   hakukohde-oid}}))))
 
@@ -152,6 +157,31 @@
         (assoc :last-modified (get-in response [:headers "last-modified"]))
         (dissoc :request-in-flight?))))
 
+(def iso-formatter (f/formatter "yyyy-MM-dd'T'HH:mm:ssZZ"))
+
+(re-frame/reg-event-db
+  :hyvaksynnan-ehto/set-ehto-hakukohteessa-muutoshistoria
+  (fn [db [_ application-key hakukohde-oid response]]
+    (if (= 200 (:status response))
+      (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :events]
+                (mapv (fn [versio]
+                        (merge
+                         {:event-type      (if (contains? versio :arvo)
+                                             "ehto-hakukohteessa-set"
+                                             "ehto-hakukohteessa-unset")
+                          :time            (->> (:alku versio)
+                                                (f/parse iso-formatter)
+                                                c/to-default-time-zone)
+                          :id              -1
+                          :application-key application-key
+                          :hakukohde       hakukohde-oid
+                          :first-name      nil
+                          :last-name       nil}
+                         (when (contains? versio :arvo)
+                           {:ehto (:arvo versio)})))
+                      (:body response)))
+      db)))
+
 (re-frame/reg-event-fx
   :hyvaksynnan-ehto/set-ehto-hakukohteessa
   (fn [{db :db} [_ application-key hakukohde-oid response]]
@@ -214,6 +244,20 @@
           {:method        :get
            :url           "/lomake-editori/api/koodisto/hyvaksynnanehdot/1?allow-invalid=false"
            :handler       [:hyvaksynnan-ehto/set-koodit]
+           :error-handler [:hyvaksynnan-ehto/ignore-error]})))
+
+(re-frame/reg-fx
+  :hyvaksynnan-ehto/get-ehto-hakukohteessa-muutoshistoria
+  (fn [{:keys [application-key hakukohde-oid]}]
+    (http (aget js/config "virkailija-caller-id")
+          {:method        :get
+           :url           (.url js/window
+                                "valinta-tulos-service.hyvaksynnan-ehto-muutoshistoria"
+                                application-key
+                                hakukohde-oid)
+           :handler       [:hyvaksynnan-ehto/set-ehto-hakukohteessa-muutoshistoria
+                           application-key
+                           hakukohde-oid]
            :error-handler [:hyvaksynnan-ehto/ignore-error]})))
 
 (re-frame/reg-fx

@@ -948,6 +948,9 @@ You will receive a confirmation of your application to your email."}
    :ehdollisesti-hyvaksyttavissa                    {:fi "Ehdollinen"
                                                      :sv "SV: Ehdollinen"
                                                      :en "EN: Ehdollinen"}
+   :ei-ehdollisesti-hyvaksyttavissa                 {:fi "Ei ehdollinen"
+                                                     :sv "SV: Ei ehdollinen"
+                                                     :en "EN: Ei ehdollinen"}
    :eligibility                                     {:fi "Hakukelpoisuus:"
                                                      :sv "Ansökningsbehörighet:"
                                                      :en "Criteria for eligibility"}

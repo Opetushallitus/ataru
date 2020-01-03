@@ -1391,6 +1391,19 @@
        [:span @(subscribe [:application/field-label (:review-key event)])]]
       (event-organizations-list event lang)]]
 
+    {:event-type "ehto-hakukohteessa-set"}
+    [[:span (get-virkailija-translation :ehdollisesti-hyvaksyttavissa)]
+     [:div
+      [:div @(subscribe [:application/hakukohde-and-tarjoaja-name (:hakukohde event)])]
+      [:div.application-handling__event-row--ehto-hakukohteessa
+       (util/non-blank-val (:ehto event) [lang :fi :sv :en])]]]
+
+    {:event-type "ehto-hakukohteessa-unset"}
+    [[:span (get-virkailija-translation :ei-ehdollisesti-hyvaksyttavissa)]
+     [:div
+      [:div
+       [:span @(subscribe [:application/hakukohde-and-tarjoaja-name (:hakukohde event)])]]]]
+
     {:subject _ :message _ :message-type message-type}
     [[:span
       (if (= message-type "mass-information-request")
