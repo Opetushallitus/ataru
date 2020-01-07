@@ -24,7 +24,8 @@
             [clojure.java.jdbc :as jdbc]
             [schema.core :as s]
             [taoensso.timbre :refer [info warn]]
-            [yesql.core :refer [defqueries]])
+            [yesql.core :refer [defqueries]]
+            [ataru.config.core :refer [config]])
   (:import [java.time
             LocalDateTime
             ZoneId]
@@ -636,7 +637,10 @@ WHERE la.key IS NULL\n"
   (mapv ->kebab-case-kw (exec-db :db yesql-get-application-attachment-reviews {:application_key application-key})))
 
 (defn get-latest-application-by-secret [secret]
-  (when-let [application (->> (exec-db :db yesql-get-latest-application-by-secret {:secret secret})
+  (when-let [application (->> (exec-db :db
+                                       yesql-get-latest-application-by-secret
+                                       {:secret secret
+                                        :attachment_modify_grace_period_days (-> config :public-config :attachment-modify-grace-period-days)})
                               (first)
                               (unwrap-application))]
     (-> application

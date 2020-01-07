@@ -126,9 +126,9 @@
    :expired-secret-heading                      {:fi "Tämä hakemuslinkki on vanhentunut"
                                                  :en "This application link has expired"
                                                  :sv "Denna ansökningslänk är föråldrad"}
-   :expired-secret-paragraph                    {:fi "Turvallisuussyistä hakemuslinkki on voimassa yhden muokkauskerran tai enintään 30 päivää."
-                                                 :en "For security reasons the link is valid for one application update or a maximum of 30 days."
-                                                 :sv "Av säkerhetsskäl är ansökningslänken i kraft under en session eller i högst 30 dagar."}
+   :expired-secret-paragraph                    {:fi "Turvallisuussyistä hakemuslinkki on voimassa yhden muokkauskerran tai enintään %d päivää."
+                                                 :en "For security reasons the link is valid for one application update or a maximum of %d days."
+                                                 :sv "Av säkerhetsskäl är ansökningslänken i kraft under en session eller i högst %d dagar."}
    :expired-secret-sent                         {:fi "Uusi linkki lähetetty!"
                                                  :en "The new link has been sent!"
                                                  :sv "Den nya länken har skickats!"}
