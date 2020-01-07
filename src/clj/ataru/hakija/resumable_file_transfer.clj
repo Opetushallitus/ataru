@@ -63,15 +63,20 @@
               (temp-file-store/delete-file file-store input-file-name)))
     output-file))
 
-(defn- combine-file-parts
-  [file-store file-id file-name file-size]
+(defn- with-temp-file
+  [prefix suffix f]
+  (let [file (File/createTempFile prefix suffix)]
+    (try
+      (f file)
+      (finally
+        (.delete file)))))
+
+(defn- combine-file-parts!
+  [file-store output-file file-id file-name file-size]
   (let [parts-count     (count-parts file-size)
-        file-part-names (map (partial build-file-name file-id file-name parts-count) (range parts-count))
-        output-file     (File/createTempFile "combined-file" ".output")]
-    (.deleteOnExit output-file)
+        file-part-names (map (partial build-file-name file-id file-name parts-count) (range parts-count))]
     (combine-files! file-store file-part-names output-file)
-    (assert-valid-file output-file file-id file-size)
-    output-file))
+    (assert-valid-file output-file file-id file-size)))
 
 (defn- all-parts-exist?
   [file-store file-id file-name file-size]
@@ -94,7 +99,6 @@
                                                            :multipart        [{:part-name "file"
                                                                                :content   (FileInputStream. file)
                                                                                :name      (Normalizer/normalize file-name Normalizer$Form/NFD)}]})]
-    (.delete file)
     (cond (= status 200)
           (do
             (log/info "Uploaded file" file-name "to liiteri in" (- (System/currentTimeMillis) start-time) "ms:" body)
@@ -122,8 +126,9 @@
         (store-part file-store file file-part-name)
         (if last-part?
           (if (all-parts-exist? file-store file-id file-name file-size)
-            (upload-file-to-liiteri
-             (combine-file-parts file-store file-id file-name file-size)
-             file-name)
+            (with-temp-file "combined-file" ".output"
+              (fn [file]
+                (combine-file-parts! file-store file file-id file-name file-size)
+                (upload-file-to-liiteri file file-name)))
             [:retransmit nil])
           [:send-next nil])))))
