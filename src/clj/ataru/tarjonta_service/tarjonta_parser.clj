@@ -32,9 +32,9 @@
     {:oid                                                         (:oid hakukohde)
      :name                                                        (:name hakukohde)
      :hakukohderyhmat                                             (filter #(contains? hakukohderyhmat %) (:ryhmaliitokset hakukohde))
-     :kohdejoukko-korkeakoulu?                                    (clojure.string/starts-with?
-                                                                   (:kohdejoukkoUri haku)
-                                                                   "haunkohdejoukko_12#")
+     :kohdejoukko-korkeakoulu?                                    (true? (some-> haku
+                                                                                 :kohdejoukko-uri
+                                                                                 (clojure.string/starts-with? "haunkohdejoukko_12#")))
      :tarjoaja-name                                               (:tarjoaja-name hakukohde)
      :form-key                                                    (:ataruLomakeAvain haku)
      :koulutukset                                                 (mapv #(or (get tarjonta-koulutukset %)

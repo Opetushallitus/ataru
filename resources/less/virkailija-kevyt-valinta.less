@@ -1,37 +1,77 @@
 @import "vars";
 
+@kevyt-valinta-checkmark-width-in-px: 13;
+@kevyt-valinta-dropdown-border-radius: 5px;
+@kevyt-valinta-row-height-in-px: 48;
+@kevyt-valinta-dropdown-item-list-offset: @kevyt-valinta-row-height-in-px + 2;
+@kevyt-valinta-vertical-bar-length-in-px: @kevyt-valinta-row-height-in-px - @kevyt-valinta-checkmark-width-in-px;
+@kevyt-valinta-dropdown-height-in-px: @kevyt-valinta-row-height-in-px - 4;
+
 .application-handling__kevyt-valinta {
   display: flex;
   flex-flow: column nowrap;
   margin: 32px 0;
+  position: relative;
+  z-index: 18;
 }
 
 .application-handling__kevyt-valinta-row {
   align-items: center;
   display: flex;
   flex-flow: row nowrap;
+  height: ~"@{kevyt-valinta-row-height-in-px}px";
 }
 
 .application-handling__kevyt-valinta-row > :not(:last-child) {
+  flex-shrink: 0;
   margin-right: 10px;
 }
 
-.application-handling__kevyt-valinta-check {
-  border-radius: 50%;
-  height: 12px;
-  width: 12px;
-}
-
-.application-handling__kevyt-valinta-check--checked {
+.application-handling__kevyt-valinta-checkmark {
   align-items: center;
-  background-color: @light-green;
-  color: @white;
+  border-radius: 50%;
   display: flex;
   font-size: 10px;
+  height: ~"@{kevyt-valinta-checkmark-width-in-px}px";
   justify-content: center;
+  position: relative;
+  width: ~"@{kevyt-valinta-checkmark-width-in-px}px";
 }
 
-.application-handling__kevyt-valinta-check--bold {
+.application-handling__kevyt-valinta-row:not(:first-child) .application-handling__kevyt-valinta-checkmark::before {
+  content: ' ';
+  width: 1px;
+  height: ~"@{kevyt-valinta-vertical-bar-length-in-px}px";
+  position: absolute;
+  top: ~"-@{kevyt-valinta-vertical-bar-length-in-px}px";
+}
+
+.application-handling__kevyt-valinta-row:not(:first-child) .application-handling__kevyt-valinta-checkmark--checked::before {
+  background-color: @light-green;
+}
+
+.application-handling__kevyt-valinta-row:not(:first-child) .application-handling__kevyt-valinta-checkmark--unchecked::before {
+  background-color: @kevyt-valinta-grayed-out-color;
+}
+
+.application-handling__kevyt-valinta-row:not(:first-child) .application-handling__kevyt-valinta-checkmark--grayed-out::before {
+  background-color: @kevyt-valinta-grayed-out-color;
+}
+
+.application-handling__kevyt-valinta-checkmark--checked {
+  background-color: @light-green;
+  color: @white;
+}
+
+.application-handling__kevyt-valinta-checkmark--unchecked {
+  background-color: @kevyt-valinta-unchecked-color;
+}
+
+.application-handling__kevyt-valinta-checkmark--grayed-out {
+  background-color: @kevyt-valinta-grayed-out-color;
+}
+
+.application-handling__kevyt-valinta-checkmark--bold {
   font-weight: 600;
 }
 
@@ -39,6 +79,10 @@
   align-items: center;
   display: flex;
   width: 121px;
+}
+
+.application-handling__kevyt-valinta-label--disabled {
+  color: @kevyt-valinta-gray-for-disabled;
 }
 
 .application-handling__kevyt-valinta-hr {
@@ -51,4 +95,189 @@
 .application-handling__kevyt-valinta-value {
   color: @button-blue;
   font-weight: 800;
+}
+
+.application-handling__kevyt-valinta-dropdown-container,
+.application-handling__kevyt-valinta-checkbox-container {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.application-handling__kevyt-valinta-dropdown-container {
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.application-handling__kevyt-valinta-checkbox-container {
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.application-handling__kevyt-valinta-checkbox-container--disabled {
+  color: @kevyt-valinta-gray-for-disabled;
+}
+
+.application-handling__kevyt-valinta-dropdown-container > :last-child:not(:nth-child(1)),
+.application-handling__kevyt-valinta-checkbox-container > :last-child:not(:nth-child(1)) {
+  margin-right: 31px;
+}
+
+.application-handling__kevyt-valinta-checkbox-label {
+  align-items: center;
+  display: flex;
+  margin-left: 5px;
+  position: relative;
+  width: 100%;
+}
+
+.application-handling__kevyt-valinta-checkbox-label .zmdi-info {
+  color: @kevyt-valinta-unchecked-color;
+  font-size: 21px;
+  margin-left: 5px;
+}
+
+.application-handling__kevyt-valinta-checkbox {
+  border-radius: 3px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  flex-shrink: 0;
+  height: 19px;
+  margin: 0 5px 0 0;
+  width: 19px;
+}
+
+.application-handling__kevyt-valinta-checkbox--disabled {
+  cursor: default;
+}
+
+.application-handling__kevyt-valinta-checkbox--enabled {
+  color: @kevyt-valinta-unchecked-color;
+}
+
+.application-handling__kevyt-valinta-checkbox--enabled:hover {
+  background-color: @kevyt-valinta-selection-hovered-background-color;
+}
+
+.application-handling__kevyt-valinta-checkbox--checked {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+}
+
+.application-handling__kevyt-valinta-checkbox-checkmark {
+  font-weight: 600;
+}
+
+.application-handling__kevyt-valinta-checkbox-info-container {
+  position: relative;
+}
+
+.application-handling__kevyt-valinta-checkbox-info {
+  background-color: @kevyt-valinta-unchecked-color;
+  color: @white;
+  left: -29px;
+  padding: 15px;
+  position: absolute;
+  top: 33px;
+  user-select: none;
+  width: 252px;
+  z-index: 20;
+}
+
+.application-handling__kevyt-valinta-checkbox-info-symbol:hover {
+  color: @link-color;
+}
+
+.application-handling__kevyt-valinta-checkbox-info-text {
+  display: inline-block;
+}
+
+.application-handling__kevyt-valinta-checkbox-info > .application-handling__kevyt-valinta-checkbox-info-text:not(:last-child) {
+  margin-bottom: 10px;
+}
+
+.application-handling__kevyt-valinta-checkbox-info > .application-handling__kevyt-valinta-checkbox-info-text:not(:last-child) {
+  margin-bottom: 10px;
+}
+
+.application-handling__kevyt-valinta-checkbox-info-indicator {
+  border-bottom: 10px solid #00526C;
+  border-left: 13px solid transparent;
+  border-right: 13px solid transparent;
+  height: 0;
+  left: 0;
+  position: absolute;
+  top: 23px;
+  width: 0;
+}
+
+.application-handling__kevyt-valinta-dropdown {
+  align-items: center;
+  background-color: @white;
+  border-radius: @kevyt-valinta-dropdown-border-radius;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  justify-content: space-between;
+  user-select: none;
+  width: 100%;
+}
+
+.application-handling__kevyt-valinta-dropdown--disabled {
+  color: @kevyt-valinta-grayed-out-color;
+}
+
+.application-handling__kevyt-valinta-dropdown-item {
+  align-items: center;
+  background-color: @white;
+  border-radius: @kevyt-valinta-dropdown-border-radius;
+  display: flex;
+  height: ~"@{kevyt-valinta-dropdown-height-in-px}px";
+  justify-content: space-between;
+  padding: 0 18px;
+  width: 100%;
+}
+
+.application-handling__kevyt-valinta-dropdown-label {
+  flex-grow: 2;
+}
+
+.application-handling__kevyt-valinta-dropdown-label--selected {
+  color: @kevyt-valinta-unchecked-color;
+}
+
+.application-handling__kevyt-valinta-dropdown-item:not(.application-handling__kevyt-valinta-dropdown--disabled):hover {
+  background-color: @kevyt-valinta-selection-hovered-background-color;
+}
+
+.application-handling__kevyt-valinta-dropdown-item-list {
+  align-items: flex-start;
+  display: flex;
+  flex-flow: column nowrap;
+  position: absolute;
+  top: ~"@{kevyt-valinta-dropdown-item-list-offset}px";
+  z-index: 19;
+}
+
+div.application-handling__kevyt-valinta-dropdown-item-list {
+  animation-duration: 0.25s;
+}
+
+.application-handling__kevyt-valinta-dropdown-chevron {
+  color: @kevyt-valinta-grayed-out-color;
+  font-size: 24px;
+  transition: all 0.2s ease-in-out;
+}
+
+.application-handling__kevyt-valinta-dropdown:not(.application-handling__kevyt-valinta-dropdown--disabled):hover .application-handling__kevyt-valinta-dropdown-chevron:not(.application-handling__kevyt-valinta-dropdown-chevron-open) {
+  transform: scale(1.7);
+}
+
+.application-handling__kevyt-valinta-dropdown:hover .application-handling__kevyt-valinta-dropdown-chevron-open {
+  transform: scale(1.7) rotate3d(1, 0, 0, 180deg);
+}
+
+.application-handling__kevyt-valinta-dropdown-chevron-open {
+  transform: rotate3d(1, 0, 0, 180deg)
 }

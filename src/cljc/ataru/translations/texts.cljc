@@ -1555,6 +1555,46 @@ You will receive a confirmation of your application to your email."}
                                                      :sv "Automatspar: av"
                                                      :en "Auto-save: disabled"}})
 
+(def kevyt-valinta-state-translations
+  {:kevyt-valinta/hylatty                {:fi "Hylätty"
+                                          :sv "Underkänd"
+                                          :en "Rejected"}
+   :kevyt-valinta/varalla                {:fi "Varalla"
+                                          :sv "På reserv"
+                                          :en "On reserve place"}
+   :kevyt-valinta/peruuntunut            {:fi "Peruuntunut"}
+   :kevyt-valinta/varasijalta-hyvaksytty {:fi "Varasijalta hyväksytty"}
+   :kevyt-valinta/hyvaksytty             {:fi "Hyväksytty"
+                                          :sv "Godkänd"
+                                          :en "Selected"}
+   :kevyt-valinta/perunut                {:fi "Perunut"}
+   :kevyt-valinta/peruutettu             {:fi "Peruutettu"}
+   :kevyt-valinta/kesken                 {:fi "Kesken"}})
+
+(def kevyt-valinta-julkaisun-tila-translations
+  {:kevyt-valinta/julkaistu-hakijalle {:fi "Julkaistu hakijalle"}
+   :kevyt-valinta/ei-julkaistu        {:fi "Julkaistu hakijalle"}})
+
+(def kevyt-valinta-vastaanotto-tila-translations
+  {:kevyt-valinta/ei-vastaanotettu-maaraaikana  {:fi "Ei vastaanotettu määräaikana"}
+   :kevyt-valinta/perunut                       {:fi "Perunut"}
+   :kevyt-valinta/peruutettu                    {:fi "Peruutettu"}
+   :kevyt-valinta/ottanut-vastaan-toisen-paikan {:fi "Ottanut vastaan toisen paikan"}
+   :kevyt-valinta/ehdollisesti-vastaanottanut   {:fi "Ehdollisesti vastaanottanut"}
+   :kevyt-valinta/vastaanottanut-sitovasti      {:fi "Vastaanottanut sitovasti"}
+   :kevyt-valinta/kesken                        {:fi "Kesken"}
+   :kevyt-valinta/vastaanottanut                {:fi "Vastaanottanut"}})
+
+(def kevyt-valinta-ilmoittautumisen-tila-translations
+  {:kevyt-valinta/ei-tehty              {:fi "Ei tehty"}
+   :kevyt-valinta/lasna-koko-lukuvuosi  {:fi "Läsnä (koko lukuvuosi)"}
+   :kevyt-valinta/poissa-koko-lukuvuosi {:fi "Poissa (koko lukuvuosi)"}
+   :kevyt-valinta/ei-ilmoittautunut     {:fi "Ei ilmoittautunut määräaikana"}
+   :kevyt-valinta/lasna-syksy           {:fi "Läsnä syksy, poissa kevät"}
+   :kevyt-valinta/poissa-syksy          {:fi "Poissa syksy, läsnä kevät"}
+   :kevyt-valinta/lasna                 {:fi "Läsnä, keväällä alkava koulutus"}
+   :kevyt-valinta/poissa                {:fi "Poissa, keväällä alkava koulutus"}})
+
 (def state-translations
   {:active                 {:fi "Aktiivinen"
                             :sv "Aktiv"

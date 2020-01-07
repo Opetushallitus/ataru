@@ -1,0 +1,11 @@
+(ns ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-julkaisun-tila-view
+  (:require [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-common-view :as common-view]
+            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as translations]))
+
+(defn- kevyt-valinta-julkaisun-tila-selection []
+  [common-view/kevyt-valinta-checkbox-selection :kevyt-valinta/julkaisun-tila])
+
+(defn kevyt-valinta-julkaisun-tila-row []
+  [common-view/kevyt-valinta-row
+   :kevyt-valinta/julkaisun-tila
+   [kevyt-valinta-julkaisun-tila-selection]])

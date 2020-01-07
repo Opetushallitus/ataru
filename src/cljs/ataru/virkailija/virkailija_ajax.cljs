@@ -3,7 +3,7 @@
             [cljs.core.match :refer-macros [match]]
             [ataru.cljs-util :as util]
             [ataru.virkailija.temporal :as temporal]
-            [ajax.core :refer [GET POST PUT DELETE] :as ajax]
+            [ajax.core :refer [GET POST PUT DELETE PATCH] :as ajax]
             [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn dispatch-flasher-error-msg
@@ -20,6 +20,7 @@
                                        :get "haettaessa."
                                        :post "tallennettaessa."
                                        :put "tallennettaessa."
+                                       :patch "tallennettaessa."
                                        :delete "poistettaessa.")))]
     (dispatch [:flasher {:loading? false
                          :message  message
@@ -41,7 +42,8 @@
                         :get GET
                         :post POST
                         :put PUT
-                        :delete DELETE)
+                        :delete DELETE
+                        :patch PATCH)
         error-handler (fn [response]
                         (when (not= (:failure response) :aborted)
                           (dispatch [:remove-request-handle id])
@@ -59,7 +61,7 @@
                                              :message  (if skip-flasher?
                                                          nil
                                                          (match method
-                                                                (:or :post :put) "Kaikki muutokset tallennettu"
+                                                                (:or :post :put :patch) "Kaikki muutokset tallennettu"
                                                                 :delete "Tiedot poistettu"
                                                                 :else nil))}])
                         (match [handler-or-dispatch]
@@ -69,7 +71,7 @@
     (when-not skip-flasher?
       (dispatch [:flasher {:loading? true
                            :message  (match method
-                                            (:or :post :put) "Tietoja tallennetaan"
+                                            (:or :post :put :patch) "Tietoja tallennetaan"
                                             :delete "Tietoja poistetaan"
                                             :else nil)}]))
     (if-let [response (when cache-ttl
