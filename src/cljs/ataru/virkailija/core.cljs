@@ -2,6 +2,7 @@
   (:require [reagent.core :as reagent]
             [re-frame.core :as re-frame]
             [re-frisk.core :as re-frisk]
+            ataru.virkailija.application.hyvaksynnan-ehto.handlers
             [ataru.virkailija.handlers]
             [ataru.virkailija.subs]
             [ataru.cljs-util :refer [set-global-error-handler!]]
@@ -64,6 +65,7 @@
     (re-frisk/enable-re-frisk!))
   (re-frame/dispatch [:editor/get-user-info])
   (re-frame/dispatch [:authenticate-to-valinta-tulos-service])
+  (re-frame/dispatch [:hyvaksynnan-ehto/get-koodit])
   (re-frame/dispatch [:editor/do-organization-query])
   (mount-root)
   (init-scroll-listeners))

@@ -64,6 +64,7 @@
   {:oid                    (:oid haku)
    :name                   (parse-multi-lang-text (:nimi haku))
    :prioritize-hakukohteet (:usePriority haku)
+   :kohdejoukko-uri        (:kohdejoukkoUri haku)
    :yhteishaku             (yhteishaku? haku)
    :hakuajat               (mapv parse-hakuaika (:hakuaikas haku))
    :hakukohteet            (:hakukohdeOids haku)

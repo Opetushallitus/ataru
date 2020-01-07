@@ -297,6 +297,7 @@
   {:oid                    s/Str
    :name                   LocalizedStringOptional
    :yhteishaku             s/Bool
+   :kohdejoukko-uri        s/Str
    :prioritize-hakukohteet s/Bool
    :hakuajat               [{:start                java.time.ZonedDateTime
                              (s/optional-key :end) java.time.ZonedDateTime}]

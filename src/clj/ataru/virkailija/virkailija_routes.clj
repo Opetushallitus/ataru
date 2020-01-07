@@ -45,6 +45,8 @@
             [ataru.organization-service.organization-client :as organization-client]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu]
+            [ataru.valintaperusteet.service :as valintaperusteet]
+            [ataru.valintaperusteet.client :as valintaperusteet-client]
             [cheshire.core :as json]
             [cheshire.generate :refer [add-encoder]]
             [clojure.core.match :refer [match]]
@@ -186,6 +188,7 @@
 (defn api-routes [{:keys [organization-service
                           tarjonta-service
                           valintalaskentakoostepalvelu-service
+                          valintaperusteet-service
                           job-runner
                           ohjausparametrit-service
                           virkailija-tarjonta-service
@@ -720,6 +723,17 @@
                                                                                                        hakukohde-oid))]
           (response/ok {:hakukohde-oid   hakukohde-oid
                         :valintalaskenta valintalaskenta-enabled?}))))
+
+    (api/context "/valintaperusteet" []
+      :tags ["valintaperusteet-api"]
+
+      (api/GET "/valintatapajono/:oid" {session :session}
+        :path-params [oid :- s/Str]
+        :return valintaperusteet-client/Valintatapajono
+        :summary "Hae valintatapajonon tiedot"
+        (if-let [jono (valintaperusteet/valintatapajono valintaperusteet-service oid)]
+          (response/ok jono)
+          (response/not-found))))
 
     (api/context "/koodisto" []
       :tags ["koodisto-api"]

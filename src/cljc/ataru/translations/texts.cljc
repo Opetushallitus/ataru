@@ -945,6 +945,12 @@ You will receive a confirmation of your application to your email."}
    :editable-content-title                          {:fi "Muokattava osuus (otsikko)"
                                                      :sv "Del som ska bearbetas (rubrik)"
                                                      :en "EN: Muokattava osuus (otsikko)"}
+   :ehdollisesti-hyvaksyttavissa                    {:fi "Ehdollinen"
+                                                     :sv "SV: Ehdollinen"
+                                                     :en "EN: Ehdollinen"}
+   :ei-ehdollisesti-hyvaksyttavissa                 {:fi "Ei ehdollinen"
+                                                     :sv "SV: Ei ehdollinen"
+                                                     :en "EN: Ei ehdollinen"}
    :eligibility                                     {:fi "Hakukelpoisuus:"
                                                      :sv "Ansökningsbehörighet:"
                                                      :en "Criteria for eligibility"}
@@ -1245,6 +1251,9 @@ You will receive a confirmation of your application to your email."}
    :individualize-in-henkilopalvelu                 {:fi "Tee yksilöinti henkilöpalvelussa."
                                                      :sv "Identifiera i persontjänsten."
                                                      :en "Identify the applicant."}
+   :operation-failed                                {:fi "Toiminto epäonnistui"
+                                                     :sv "SV: Toiminto epäonnistui"
+                                                     :en "EN: Toiminto epäonnistui"}
    :creating-henkilo-failed                         {:fi "Henkilön luonti ei ole valmistunut! Tarkista hakemuksen nimitiedot (esim. kutsumanimi on yksi etunimistä)."
                                                      :sv "Att bilda personen är inte färdig. Kontrollera att namnuppgifterna är korrekta (t.ex. att tilltalsnamnet ingår)"
                                                      :en "EN: Henkilön luonti ei ole valmistunut! Tarkista hakemuksen nimitiedot (esim. kutsumanimi on yksi etunimistä)"}
