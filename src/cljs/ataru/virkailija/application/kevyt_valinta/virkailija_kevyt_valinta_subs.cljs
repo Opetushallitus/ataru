@@ -72,7 +72,7 @@
   :virkailija-kevyt-valinta/valinnan-tulos-for-application
   (fn [[_ application-key]]
     [(re-frame/subscribe [:virkailija-kevyt-valinta/hakukohde-oid])
-     (re-frame/subscribe [:state-query [:application :valinta-tulos-service application-key]])])
+     (re-frame/subscribe [:state-query [:valinta-tulos-service application-key]])])
   (fn [[hakukohde-oid valinnan-tulokset-for-application]]
     (-> valinnan-tulokset-for-application
         (get hakukohde-oid)

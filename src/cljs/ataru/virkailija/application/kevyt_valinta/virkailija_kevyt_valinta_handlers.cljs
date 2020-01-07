@@ -36,20 +36,20 @@
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos
   (fn [{db :db} [_ response {application-key :application-key}]]
-    (let [db           (update-in db
-                                  [:application :valinta-tulos-service]
-                                  (fn valinnan-tulokset->db [valinta-tulos-service-db]
-                                    (->> response
-                                         (filter (fn [valinnan-tulos]
-                                                   (let [vastaanotto-tila (-> valinnan-tulos :valinnantulos :vastaanottotila)]
-                                                     (not= vastaanotto-tila "OTTANUT_VASTAAN_TOISEN_PAIKAN"))))
-                                         (reduce (fn valinnan-tulos->db [acc valinnan-tulos]
-                                                   (let [hakemus-oid   (-> valinnan-tulos :valinnantulos :hakemusOid)
-                                                         hakukohde-oid (-> valinnan-tulos :valinnantulos :hakukohdeOid)]
-                                                     (assoc-in acc
-                                                               [hakemus-oid hakukohde-oid]
-                                                               valinnan-tulos)))
-                                                 valinta-tulos-service-db))))
+    (let [db           (update db
+                               :valinta-tulos-service
+                               (fn valinnan-tulokset->db [valinta-tulos-service-db]
+                                 (->> response
+                                      (filter (fn [valinnan-tulos]
+                                                (let [vastaanotto-tila (-> valinnan-tulos :valinnantulos :vastaanottotila)]
+                                                  (not= vastaanotto-tila "OTTANUT_VASTAAN_TOISEN_PAIKAN"))))
+                                      (reduce (fn valinnan-tulos->db [acc valinnan-tulos]
+                                                (let [hakemus-oid   (-> valinnan-tulos :valinnantulos :hakemusOid)
+                                                      hakukohde-oid (-> valinnan-tulos :valinnantulos :hakukohdeOid)]
+                                                  (assoc-in acc
+                                                            [hakemus-oid hakukohde-oid]
+                                                            valinnan-tulos)))
+                                              valinta-tulos-service-db))))
           dispatch-vec (->> response
                             (filter (fn [valinnan-tulos]
                                       (let [vastaanotto-tila (-> valinnan-tulos :valinnantulos :vastaanottotila)]
@@ -114,8 +114,7 @@
                                                            :open?      false})
                                                (assoc-in [:application :kevyt-valinta :kevyt-valinta-ui/ongoing-request-for-property]
                                                          kevyt-valinta-property)
-                                               (update-in [:application
-                                                           :valinta-tulos-service
+                                               (update-in [:valinta-tulos-service
                                                            application-key
                                                            hakukohde-oid
                                                            :valinnantulos]
@@ -167,15 +166,13 @@
                                                                :hakemusOid         application-key
                                                                :valinnantila       new-kevyt-valinta-property-value
                                                                :julkaistavissa     false})))
-                                               (assoc-in [:application
-                                                          :valinta-tulos-service
+                                               (assoc-in [:valinta-tulos-service
                                                           application-key
                                                           hakukohde-oid
                                                           :valinnantulos
                                                           valinta-tulos-service-property]
                                                          new-kevyt-valinta-property-value))
           valinnan-tulos                   (-> db
-                                               :application
                                                :valinta-tulos-service
                                                (get application-key)
                                                (get hakukohde-oid)
