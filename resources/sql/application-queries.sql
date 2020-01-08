@@ -84,7 +84,7 @@ LEFT JOIN LATERAL (SELECT secret, age(now(), created_time)
                    WHERE application_key = a.key
                    ORDER BY id DESC
                    LIMIT 1) AS las
-  ON las.age < '29 days'
+  ON las.age < (interval '1 day' * :secret_link_valid_days - '1 day')
 WHERE a.person_oid = :person_oid AND
       a.haku IS NOT NULL AND
       ar.state <> 'inactivated' AND
