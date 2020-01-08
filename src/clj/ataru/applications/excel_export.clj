@@ -67,6 +67,19 @@
                     (get-label state lang)))
           reviews)))))
 
+(defn- ehdollinen-formatter
+  [ehdollinen?]
+  (if (< 1 (count ehdollinen?))
+    (clojure.string/join
+     "\n"
+     (map (fn [{:keys [hakukohde hakukohde-name ehdollinen?]}]
+            (format "%s (%s): %s"
+                    hakukohde-name
+                    hakukohde
+                    (if ehdollinen? "kyllä" "ei")))
+          ehdollinen?))
+    (if (:ehdollinen? (first ehdollinen?)) "kyllä" "ei")))
+
 (defn- application-review-notes-formatter
   ([review-notes]
     (application-review-notes-formatter nil review-notes))
@@ -143,6 +156,9 @@
     :field     [:application :application-hakukohde-reviews]
     :lang?     true
     :format-fn (partial hakukohde-review-formatter "selection-state")}
+   {:label     (:ehdollinen excel-texts)
+    :field     [:ehdollinen?]
+    :format-fn ehdollinen-formatter}
    {:label     (:pisteet excel-texts)
     :field     [:application-review :score]}
    {:label     (:applicant-oid excel-texts)
@@ -269,6 +285,7 @@
                            application-review
                            application-review-notes
                            person
+                           ehdollinen?
                            headers
                            application-meta-fields
                            form-fields-by-key
@@ -276,10 +293,11 @@
                            lang]
   (doseq [meta-field application-meta-fields]
     (let [format-fn  (:format-fn meta-field)
-          field      (get-in {:application        application
-                              :application-review application-review
+          field      (get-in {:application              application
+                              :application-review       application-review
                               :application-review-notes application-review-notes
-                              :person             person}
+                              :person                   person
+                              :ehdollinen?              ehdollinen?}
                              (:field meta-field))
           meta-value (if (some? format-fn)
                        (if (:lang? meta-field)
@@ -458,6 +476,24 @@
                                 all-reviews)]
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
+(defn- get-ehdollinen?
+  [get-hakukohde hakukohteiden-ehdolliset application selected-hakukohde-oids]
+  (sequence
+   (comp (filter (fn [hakukohde-oid]
+                   (or (empty? selected-hakukohde-oids)
+                       (some #{hakukohde-oid} selected-hakukohde-oids))))
+         (map (fn [hakukohde-oid]
+                {:hakukohde      hakukohde-oid
+                 :hakukohde-name (get-hakukohde-name
+                                  get-hakukohde
+                                  (:lang application)
+                                  (:haku application)
+                                  hakukohde-oid)
+                 :ehdollinen?    (contains? (get hakukohteiden-ehdolliset
+                                                 hakukohde-oid)
+                                            (:key application))})))
+   (:hakukohde application)))
+
 (defn- filter-eligibility-set-automatically
   [selected-hakukohde-oids application]
   (if (empty? selected-hakukohde-oids)
@@ -483,6 +519,7 @@
    skip-answers?
    included-ids
    lang
+   hakukohteiden-ehdolliset
    tarjonta-service
    koodisto-cache
    organization-service
@@ -551,12 +588,14 @@
                                               (let [row-writer                   (make-writer styles applications-sheet (inc row-idx))
                                                     application-review           (get application-reviews (:key application))
                                                     review-notes-for-application (get application-review-notes (:key application))
-                                                    person                       (:person application)]
+                                                    person                       (:person application)
+                                                    ehdollinen?                  (get-ehdollinen? get-hakukohde hakukohteiden-ehdolliset application selected-hakukohde-oids)]
                                                 (write-application! row-writer
                                                                     application
                                                                     application-review
                                                                     review-notes-for-application
                                                                     person
+                                                                    ehdollinen?
                                                                     headers
                                                                     application-meta-fields
                                                                     form-fields-by-key

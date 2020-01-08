@@ -189,6 +189,7 @@
                           tarjonta-service
                           valintalaskentakoostepalvelu-service
                           valintaperusteet-service
+                          valinta-tulos-service
                           job-runner
                           ohjausparametrit-service
                           virkailija-tarjonta-service
@@ -633,7 +634,8 @@
                                 tarjonta-service
                                 koodisto-cache
                                 ohjausparametrit-service
-                                person-service)]
+                                person-service
+                                valinta-tulos-service)]
               (if xls
                 {:status  200
                  :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

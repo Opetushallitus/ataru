@@ -1746,6 +1746,9 @@ You will receive a confirmation of your application to your email."}
    :valinnan-tila            {:fi "Valinnan tila"
                               :sv "Antagningens status"
                               :en "EN: Valinnan tila"}
+   :ehdollinen               {:fi "Ehdollinen"
+                              :sv "SV: Ehdollinen"
+                              :en "EN: Ehdollinen"}
    :pisteet                  {:fi "Pisteet"
                               :sv "Poäng"
                               :en "EN: Pisteet"}
