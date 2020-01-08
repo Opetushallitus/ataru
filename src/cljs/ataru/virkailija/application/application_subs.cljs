@@ -189,16 +189,9 @@
   (fn [db]
     (let [selected-by (application-list-selected-by db)]
       (cond (= :selected-hakukohde selected-by)
-            (some->> (get-in db [:application :selected-hakukohde])
-                     (get (get-in db [:hakukohteet]))
-                     :haku-oid
-                     (get (get-in db [:haut]))
-                     :prioritize-hakukohteet)
+            true
             (= :selected-hakukohderyhma selected-by)
-            (some->> (get-in db [:application :selected-hakukohderyhma])
-                     first
-                     (get (get-in db [:haut]))
-                     :prioritize-hakukohteet)
+            true
             :else
             false))))
 
@@ -210,11 +203,7 @@
 (re-frame/reg-sub
   :application/show-rajaa-hakukohteella?
   (fn [db]
-    (and (= :selected-hakukohderyhma (application-list-selected-by db))
-         (some->> (get-in db [:application :selected-hakukohderyhma])
-                  first
-                  (get (get-in db [:haut]))
-                  :prioritize-hakukohteet))))
+    (= :selected-hakukohderyhma (application-list-selected-by db))))
 
 (re-frame/reg-sub
   :application/filters-changed?
