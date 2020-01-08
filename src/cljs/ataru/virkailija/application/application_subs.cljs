@@ -540,14 +540,18 @@
 
 (re-frame/reg-sub
   :application/events-and-information-requests
-  (fn [db _]
-    (let [application-key (-> db :application :selected-application-and-form :application :key)]
-      (->> (concat (-> db :application :events mark-last-modify-event)
-                   (-> db :application :information-requests)
-                   (->> (get-in db [:hyvaksynnan-ehto application-key])
-                        vals
-                        (mapcat :events)))
-           (sort event-and-information-request-comparator)))))
+  (fn []
+    [(re-frame/subscribe [:state-query [:application :events]])
+     (re-frame/subscribe [:state-query [:application :information-requests]])
+     (re-frame/subscribe [:state-query [:hyvaksynnan-ehto]])])
+  (fn [[events information-requests hyvaksynnan-ehto]]
+    (as-> [] requests
+          (->> events mark-last-modify-event (into requests))
+          (into requests information-requests)
+          (->> hyvaksynnan-ehto
+               vals
+               (mapcat :events))
+          (sort event-and-information-request-comparator requests))))
 
 (re-frame/reg-sub
   :application/resend-modify-application-link-enabled?
