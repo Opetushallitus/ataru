@@ -266,9 +266,9 @@
     (http (aget js/config "virkailija-caller-id")
           {:method        :get
            :url           (.url js/window
-                                "valinta-tulos-service.hyvaksynnan-ehto"
-                                application-key
-                                hakukohde-oid)
+                                "valinta-tulos-service.hyvaksynnan-ehto.hakukohteessa.hakemus"
+                                hakukohde-oid
+                                application-key)
            :handler       [:hyvaksynnan-ehto/set-ehto-hakukohteessa
                            application-key
                            hakukohde-oid]
@@ -282,9 +282,9 @@
     (http (aget js/config "virkailija-caller-id")
           {:method        :get
            :url           (.url js/window
-                                "valinta-tulos-service.hyvaksynnan-ehto.valintatapajonot"
-                                application-key
-                                hakukohde-oid)
+                                "valinta-tulos-service.hyvaksynnan-ehto.valintatapajonoissa.hakemus"
+                                hakukohde-oid
+                                application-key)
            :handler       [:hyvaksynnan-ehto/set-ehto-valintatapajonoissa
                            application-key
                            hakukohde-oid]
@@ -307,9 +307,9 @@
     (http (aget js/config "virkailija-caller-id")
           {:method        :put
            :url           (.url js/window
-                                "valinta-tulos-service.hyvaksynnan-ehto"
-                                application-key
-                                hakukohde-oid)
+                                "valinta-tulos-service.hyvaksynnan-ehto.hakukohteessa.hakemus"
+                                hakukohde-oid
+                                application-key)
            :post-data     ehto
            :headers       (if (some? last-modified)
                             {"If-Unmodified-Since" last-modified}
@@ -327,9 +327,9 @@
     (http (aget js/config "virkailija-caller-id")
           {:method        :delete
            :url           (.url js/window
-                                "valinta-tulos-service.hyvaksynnan-ehto"
-                                application-key
-                                hakukohde-oid)
+                                "valinta-tulos-service.hyvaksynnan-ehto.hakukohteessa.hakemus"
+                                hakukohde-oid
+                                application-key)
            :headers       {"If-Unmodified-Since" last-modified}
            :handler       [:hyvaksynnan-ehto/set-ehto-hakukohteessa
                            application-key

@@ -19,6 +19,7 @@
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
     [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
     [ataru.util :as util]
+    [ataru.valinta-tulos-service.service :as valinta-tulos-service]
     [ataru.applications.filtering :as application-filtering]
     [clojure.data :refer [diff]]
     [ataru.virkailija.editor.form-utils :refer [visible?]]
@@ -337,9 +338,19 @@
                                        "created-time"   {:key          (:key a)
                                                          :created-time (:created-time a)})}))}))
 
+(defn- hakukohteiden-ehdolliset
+  [valinta-tulos-service applications]
+  (into {}
+        (comp (mapcat :hakukohde)
+              (distinct)
+              (map #(vector % (valinta-tulos-service/hakukohteen-ehdolliset
+                               valinta-tulos-service
+                               %))))
+        applications))
+
 (defn get-excel-report-of-applications-by-key
   [application-keys selected-hakukohde selected-hakukohderyhma user-wants-to-skip-answers? included-ids session
-   organization-service tarjonta-service koodisto-cache ohjausparametrit-service person-service]
+   organization-service tarjonta-service koodisto-cache ohjausparametrit-service person-service valinta-tulos-service]
   (when (aac/applications-access-authorized? organization-service tarjonta-service session application-keys [:view-applications :edit-applications])
     (let [applications                     (application-store/get-applications-by-keys application-keys)
           application-reviews              (->> applications
@@ -360,6 +371,7 @@
                                                                         (get onr-persons)
                                                                         (person-service/parse-person application))))
                                                 applications)
+          hakukohteiden-ehdolliset         (hakukohteiden-ehdolliset valinta-tulos-service applications)
           skip-answers-to-preserve-memory? (if (not-empty included-ids)
                                              (<= 200000 (count applications))
                                              (<= 4500 (count applications)))
@@ -374,6 +386,7 @@
                                                         skip-answers?
                                                         included-ids
                                                         lang
+                                                        hakukohteiden-ehdolliset
                                                         tarjonta-service
                                                         koodisto-cache
                                                         organization-service
