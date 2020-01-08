@@ -87,13 +87,13 @@
             [editable-fields form submit-status]))))))
 
 (defn application-contents []
-  (let [form                                (subscribe [:state-query [:form]])
-        load-failure?                       (subscribe [:state-query [:error :code]])
-        can-apply?                          (subscribe [:application/can-apply?])
-        editing?                            (subscribe [:state-query [:application :editing?]])
-        expired                             (subscribe [:state-query [:application :secret-expired?]])
-        delivery-status                     (subscribe [:state-query [:application :secret-delivery-status]])
-        attachment-modify-grace-period-days (config/get-public-config [:attachment-modify-grace-period-days])]
+  (let [form                   (subscribe [:state-query [:form]])
+        load-failure?          (subscribe [:state-query [:error :code]])
+        can-apply?             (subscribe [:application/can-apply?])
+        editing?               (subscribe [:state-query [:application :editing?]])
+        expired                (subscribe [:state-query [:application :secret-expired?]])
+        delivery-status        (subscribe [:state-query [:application :secret-delivery-status]])
+        secret-link-valid-days (config/get-public-config [:secret-link-valid-days])]
     (fn []
       [:div.application__form-content-area
        (when-not (or @load-failure?
@@ -105,7 +105,7 @@
           [:div.application__secret-expired-icon
            [:i.zmdi.zmdi-lock-outline]]
           [:h2 (get-translation :expired-secret-heading)]
-          [:p (get-translation :expired-secret-paragraph attachment-modify-grace-period-days)]
+          [:p (get-translation :expired-secret-paragraph secret-link-valid-days)]
           [:button.application__secret-resend-button
            {:disabled (some? @delivery-status)
             :on-click #(dispatch [:application/send-new-secret])}

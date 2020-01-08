@@ -371,7 +371,7 @@ FROM applications AS a
 JOIN forms AS f ON a.form_id = f.id
 JOIN application_secrets AS las ON las.application_key = a.key
 WHERE las.secret = :secret AND
-      las.created_time > now() - INTERVAL '1 day' * :attachment_modify_grace_period_days AND
+      las.created_time > now() - INTERVAL '1 day' * :secret_link_valid_days AND
       NOT EXISTS (SELECT 1
                   FROM applications AS a2
                   WHERE a2.key = a.key AND

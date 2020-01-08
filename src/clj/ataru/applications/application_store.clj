@@ -640,7 +640,7 @@ WHERE la.key IS NULL\n"
   (when-let [application (->> (exec-db :db
                                        yesql-get-latest-application-by-secret
                                        {:secret secret
-                                        :attachment_modify_grace_period_days (-> config :public-config :attachment-modify-grace-period-days)})
+                                        :secret_link_valid_days (-> config :public-config :secret-link-valid-days)})
                               (first)
                               (unwrap-application))]
     (-> application
