@@ -241,7 +241,8 @@
       (spec)))
 
   (before
-   (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
+    (let [person-info-form-with-hidden-attachment (update form-fixtures/person-info-form :content concat form-fixtures/form-hidden-attachment)]
+      (reset! form (db/init-db-fixture person-info-form-with-hidden-attachment))))
 
   (it "should get form"
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
@@ -259,7 +260,7 @@
         (should= 200 (:status resp))
         (let [fields (-> resp :body :content util/flatten-form-fields)]
           (should= (map :id (remove cannot-edit? fields))
-                   ["hakukohteet" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b"])
+                   ["hakukohteet" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-edit? fields))
                    ["first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language"])
           (should= (map :id (filter cannot-view? fields))
@@ -271,7 +272,7 @@
         (should= 200 (:status resp))
         (let [fields (-> resp :body :content util/flatten-form-fields)]
           (should= (map :id (remove cannot-edit? fields))
-                   ["hakukohteet" "first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "language" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b"])
+                   ["hakukohteet" "first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "language" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-edit? fields))
                    [])
           (should= (map :id (filter cannot-view? fields))
@@ -283,7 +284,7 @@
         (should= 200 (:status resp))
         (let [fields (-> resp :body :content util/flatten-form-fields)]
           (should= (map :id (remove cannot-edit? fields))
-                   ["164954b5-7b23-4774-bd44-dee14071316b"])
+                   ["164954b5-7b23-4774-bd44-dee14071316b" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-edit? fields))
                    ["hakukohteet" "first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "language" "b0839467-a6e8-4294-b5cc-830756bbda8a"])
           (should= (map :id (filter cannot-view? fields))
@@ -295,7 +296,7 @@
         (should= 200 (:status resp))
         (let [fields (-> resp :body :content util/flatten-form-fields)]
           (should= (map :id (remove cannot-edit? fields))
-                   ["hakukohteet" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b"])
+                   ["hakukohteet" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-edit? fields))
                    ["first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language"])
           (should= (map :id (filter cannot-view? fields))
@@ -309,7 +310,7 @@
           (should= (map :id (remove cannot-edit? fields))
                    ["birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city"])
           (should= (map :id (filter cannot-edit? fields))
-                   ["hakukohteet" "first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b"])
+                   ["hakukohteet" "first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-view? fields))
                    ["ssn" "birth-date"])))))
 
@@ -319,7 +320,7 @@
         (should= 200 (:status resp))
         (let [fields (-> resp :body :content util/flatten-form-fields)]
           (should= (map :id (remove cannot-edit? fields))
-                   ["hakukohteet" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b"])
+                   ["hakukohteet" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-edit? fields))
                    ["first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language"])
           (should= (map :id (filter cannot-view? fields))
@@ -336,9 +337,10 @@
                 (spec)))
 
     (before
-      (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
+      (let [person-info-form-with-hidden-attachment (update form-fixtures/person-info-form :content concat form-fixtures/form-hidden-attachment)]
+        (reset! form (db/init-db-fixture person-info-form-with-hidden-attachment))))
 
-    (it "should validate application for hakukohde"
+    (it "should validate application for hakukohde and do not contain hidden attachment"
         (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
           (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
             (should= 200 (:status resp))
