@@ -43,7 +43,8 @@
       (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params session-cookie-name))))
     (let [resp (http-util/do-request (merge {:url url :method method}
                                             (create-params session-cookie-name cas-session-id body)))]
-      (if (= 302 (:status resp))
+      (if (or (= 401 (:status resp))
+              (= 302 (:status resp)))
         (do
           (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params session-cookie-name)))
           (http-util/do-request (merge {:url url :method method}
