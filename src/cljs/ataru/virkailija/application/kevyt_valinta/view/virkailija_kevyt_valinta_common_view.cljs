@@ -119,7 +119,7 @@
         kevyt-valinta-slider-toggle-state           (reaction @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-selection-state
                                                                                     kevyt-valinta-property
                                                                                     @application-key]))
-        slider-toggle-disabled?                     (reaction (or @ongoing-request-property
+        slider-toggle-disabled?                     (reaction (or (some? @ongoing-request-property)
                                                                   (= @kevyt-valinta-slider-toggle-state :checked)))
         show-loader?                                (reaction (= @ongoing-request-property kevyt-valinta-property))
         kevyt-valinta-property-values               (reaction @(re-frame/subscribe [:virkailija-kevyt-valinta/allowed-kevyt-valinta-property-values
@@ -159,14 +159,26 @@
        (when @slider-toggle-disabled?
          {:class "application-handling__kevyt-valinta-slider-toggle-container--disabled"})
        [:div.application-handling__kevyt-valinta-slider-toggle
-        {:class    (as-> "" classes
-                         (str classes (if @slider-toggle-disabled?
-                                        " application-handling__kevyt-valinta-slider-toggle--disabled"
-                                        " application-handling__kevyt-valinta-slider-toggle--enabled"))
+        {:class    (cond-> ""
+                           @slider-toggle-disabled?
+                           (str " application-handling__kevyt-valinta-slider-toggle--disabled")
 
-                         (cond-> classes
-                                 @kevyt-valinta-slider-toggle-value
-                                 (str " application-handling__kevyt-valinta-slider-toggle--checked")))
+                           (match [@kevyt-valinta-slider-toggle-state @ongoing-request-property]
+                                  [:unchecked (_ :guard nil?)]
+                                  true
+
+                                  [:unchecked (_ :guard #(not= % kevyt-valinta-property))]
+                                  true
+
+                                  [:checked (_ :guard #(not= % kevyt-valinta-property))]
+                                  true
+
+                                  :else
+                                  false)
+                           (str " application-handling__kevyt-valinta-slider-toggle--enabled")
+
+                           @kevyt-valinta-slider-toggle-value
+                           (str " application-handling__kevyt-valinta-slider-toggle--checked"))
          :on-click (when-not @slider-toggle-disabled?
                      (fn []
                        (let [new-value (not @kevyt-valinta-slider-toggle-value)]
