@@ -274,10 +274,7 @@
    "HYVAKSYTTY"
    "VARASIJALTA_HYVAKSYTTY"
    "HYLATTY"
-   "VARALLA"
-   "PERUUNTUNUT"
-   "PERUNUT"
-   "PERUUTETTU"])
+   "VARALLA"])
 
 (def ^:private julkaisun-tilat
   [false true])
@@ -324,10 +321,15 @@
     (let [{valinnan-tila    :valinnantila
            vastaanotto-tila :vastaanottotila} valinnan-tulos-for-application]
       (case kevyt-valinta-property
-        :kevyt-valinta/valinnan-tila (cond->> valinnan-tilat
-                                              (and (-> valinnan-tila nil? not)
-                                                   (not= valinnan-tila "KESKEN"))
-                                              (remove (partial = "KESKEN")))
+        :kevyt-valinta/valinnan-tila (as-> valinnan-tilat valinnan-tilat'
+                                           (cond->> valinnan-tilat'
+                                                    (and (-> valinnan-tila nil? not)
+                                                         (not= valinnan-tila "KESKEN"))
+                                                    (remove (partial = "KESKEN")))
+
+                                           (cond-> valinnan-tilat'
+                                                   (some #{valinnan-tila} ["PERUUNTUNUT" "PERUNUT" "PERUUTETTU"])
+                                                   (conj valinnan-tila)))
         :kevyt-valinta/julkaisun-tila julkaisun-tilat
         :kevyt-valinta/vastaanotto-tila (cond-> (if korkeakouluhaku?
                                                   vastaanotto-tilat-for-korkeakoulu
