@@ -98,7 +98,7 @@
 }
 
 .application-handling__kevyt-valinta-dropdown-container,
-.application-handling__kevyt-valinta-checkbox-container {
+.application-handling__kevyt-valinta-slider-toggle-container {
   display: flex;
   height: 100%;
   width: 100%;
@@ -110,21 +110,21 @@
   position: relative;
 }
 
-.application-handling__kevyt-valinta-checkbox-container {
+.application-handling__kevyt-valinta-slider-toggle-container {
   align-items: center;
   justify-content: flex-start;
 }
 
-.application-handling__kevyt-valinta-checkbox-container--disabled {
+.application-handling__kevyt-valinta-slider-toggle-container--disabled {
   color: @kevyt-valinta-gray-for-disabled;
 }
 
 .application-handling__kevyt-valinta-dropdown-container > :last-child:not(:nth-child(1)),
-.application-handling__kevyt-valinta-checkbox-container > :last-child:not(:nth-child(1)) {
+.application-handling__kevyt-valinta-slider-toggle-container > :last-child:not(:nth-child(1)) {
   margin-right: 31px;
 }
 
-.application-handling__kevyt-valinta-checkbox-label {
+.application-handling__kevyt-valinta-slider-toggle-label {
   align-items: center;
   display: flex;
   margin-left: 5px;
@@ -132,13 +132,13 @@
   width: 100%;
 }
 
-.application-handling__kevyt-valinta-checkbox-label .zmdi-info {
+.application-handling__kevyt-valinta-slider-toggle-label .zmdi-info {
   color: @kevyt-valinta-unchecked-color;
   font-size: 21px;
   margin-left: 5px;
 }
 
-.application-handling__kevyt-valinta-checkbox {
+.application-handling__kevyt-valinta-slider-toggle {
   align-items: center;
   background-color: @kevyt-valinta-grayed-out-color;
   border-radius: 11px;
@@ -151,7 +151,7 @@
   width: 40px;
 }
 
-.application-handling__kevyt-valinta-checkbox-toggle-indicator {
+.application-handling__kevyt-valinta-slider-toggle-toggle-indicator {
   background-color: @white;
   border-radius: 50%;
   height: 20px;
@@ -160,23 +160,23 @@
   width: 20px;
 }
 
-.application-handling__kevyt-valinta-checkbox--disabled {
+.application-handling__kevyt-valinta-slider-toggle--disabled {
   cursor: default;
 }
 
-.application-handling__kevyt-valinta-checkbox--checked.application-handling__kevyt-valinta-checkbox--enabled {
+.application-handling__kevyt-valinta-slider-toggle--checked.application-handling__kevyt-valinta-slider-toggle--enabled {
   background-color: @light-green;
 }
 
-.application-handling__kevyt-valinta-checkbox--checked > .application-handling__kevyt-valinta-checkbox-toggle-indicator {
+.application-handling__kevyt-valinta-slider-toggle--checked > .application-handling__kevyt-valinta-slider-toggle-toggle-indicator {
   transform: translateX(18px);
 }
 
-.application-handling__kevyt-valinta-checkbox-info-container {
+.application-handling__kevyt-valinta-slider-toggle-info-container {
   position: relative;
 }
 
-.application-handling__kevyt-valinta-checkbox-info {
+.application-handling__kevyt-valinta-slider-toggle-info {
   background-color: @kevyt-valinta-unchecked-color;
   color: @white;
   left: -29px;
@@ -188,23 +188,23 @@
   z-index: 20;
 }
 
-.application-handling__kevyt-valinta-checkbox-info-symbol:hover {
+.application-handling__kevyt-valinta-slider-toggle-info-symbol:hover {
   color: @link-color;
 }
 
-.application-handling__kevyt-valinta-checkbox-info-text {
+.application-handling__kevyt-valinta-slider-toggle-info-text {
   display: inline-block;
 }
 
-.application-handling__kevyt-valinta-checkbox-info > .application-handling__kevyt-valinta-checkbox-info-text:not(:last-child) {
+.application-handling__kevyt-valinta-slider-toggle-info > .application-handling__kevyt-valinta-slider-toggle-info-text:not(:last-child) {
   margin-bottom: 10px;
 }
 
-.application-handling__kevyt-valinta-checkbox-info > .application-handling__kevyt-valinta-checkbox-info-text:not(:last-child) {
+.application-handling__kevyt-valinta-slider-toggle-info > .application-handling__kevyt-valinta-slider-toggle-info-text:not(:last-child) {
   margin-bottom: 10px;
 }
 
-.application-handling__kevyt-valinta-checkbox-info-indicator {
+.application-handling__kevyt-valinta-slider-toggle-info-indicator {
   border-bottom: 10px solid #00526C;
   border-left: 13px solid transparent;
   border-right: 13px solid transparent;
