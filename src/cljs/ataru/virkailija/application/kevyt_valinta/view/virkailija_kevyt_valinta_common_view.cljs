@@ -112,7 +112,7 @@
        kevyt-valinta-on-dropdown-value-change
        ongoing-request-property])))
 
-(defn kevyt-valinta-checkbox-selection [kevyt-valinta-property]
+(defn kevyt-valinta-slider-toggle-selection [kevyt-valinta-property]
   (let [lang                                   (re-frame/subscribe [:editor/virkailija-lang])
         ongoing-request-property               (re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])
         application-key                        (re-frame/subscribe [:state-query [:application :selected-application-and-form :application :key]])
@@ -172,8 +172,7 @@
                        (let [new-value (not @kevyt-valinta-checkbox-value)]
                          (reset! force-show-checkbox? nil)
                          (@kevyt-valinta-on-checkbox-value-change new-value))))}
-        (when @kevyt-valinta-checkbox-value
-          [:i.zmdi.zmdi-check.application-handling__kevyt-valinta-checkbox-checkmark])]
+        [:div.application-handling__kevyt-valinta-checkbox-toggle-indicator]]
        [:div.application-handling__kevyt-valinta-checkbox-label
         [:span @kevyt-valinta-checkbox-label]
         (when-not @show-loader?

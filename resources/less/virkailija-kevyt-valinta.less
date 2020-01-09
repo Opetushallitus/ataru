@@ -139,35 +139,37 @@
 }
 
 .application-handling__kevyt-valinta-checkbox {
-  border-radius: 3px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  align-items: center;
+  background-color: @kevyt-valinta-grayed-out-color;
+  border-radius: 11px;
   cursor: pointer;
+  display: flex;
   flex-shrink: 0;
-  height: 19px;
+  height: 22px;
   margin: 0 5px 0 0;
-  width: 19px;
+  transition: all 0.2s ease-in-out;
+  width: 40px;
+}
+
+.application-handling__kevyt-valinta-checkbox-toggle-indicator {
+  background-color: @white;
+  border-radius: 50%;
+  height: 20px;
+  margin: 0 1px;
+  transition: all 0.2s ease-in-out;
+  width: 20px;
 }
 
 .application-handling__kevyt-valinta-checkbox--disabled {
   cursor: default;
 }
 
-.application-handling__kevyt-valinta-checkbox--enabled {
-  color: @kevyt-valinta-unchecked-color;
+.application-handling__kevyt-valinta-checkbox--checked.application-handling__kevyt-valinta-checkbox--enabled {
+  background-color: @light-green;
 }
 
-.application-handling__kevyt-valinta-checkbox--enabled:hover {
-  background-color: @kevyt-valinta-selection-hovered-background-color;
-}
-
-.application-handling__kevyt-valinta-checkbox--checked {
-  align-items: center;
-  display: flex;
-  justify-content: center;
-}
-
-.application-handling__kevyt-valinta-checkbox-checkmark {
-  font-weight: 600;
+.application-handling__kevyt-valinta-checkbox--checked > .application-handling__kevyt-valinta-checkbox-toggle-indicator {
+  transform: translateX(18px);
 }
 
 .application-handling__kevyt-valinta-checkbox-info-container {
