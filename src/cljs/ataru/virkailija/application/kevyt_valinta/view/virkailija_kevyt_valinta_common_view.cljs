@@ -113,47 +113,47 @@
        ongoing-request-property])))
 
 (defn kevyt-valinta-slider-toggle-selection [kevyt-valinta-property]
-  (let [lang                                   (re-frame/subscribe [:editor/virkailija-lang])
-        ongoing-request-property               (re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])
-        application-key                        (re-frame/subscribe [:state-query [:application :selected-application-and-form :application :key]])
+  (let [lang                                        (re-frame/subscribe [:editor/virkailija-lang])
+        ongoing-request-property                    (re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])
+        application-key                             (re-frame/subscribe [:state-query [:application :selected-application-and-form :application :key]])
         kevyt-valinta-slider-toggle-state           (reaction @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-selection-state
-                                                                               kevyt-valinta-property
-                                                                               @application-key]))
+                                                                                    kevyt-valinta-property
+                                                                                    @application-key]))
         slider-toggle-disabled?                     (reaction (or @ongoing-request-property
-                                                             (= @kevyt-valinta-slider-toggle-state :checked)))
-        show-loader?                           (reaction (= @ongoing-request-property kevyt-valinta-property))
-        kevyt-valinta-property-values          (reaction @(re-frame/subscribe [:virkailija-kevyt-valinta/allowed-kevyt-valinta-property-values
-                                                                               kevyt-valinta-property
-                                                                               @application-key]))
+                                                                  (= @kevyt-valinta-slider-toggle-state :checked)))
+        show-loader?                                (reaction (= @ongoing-request-property kevyt-valinta-property))
+        kevyt-valinta-property-values               (reaction @(re-frame/subscribe [:virkailija-kevyt-valinta/allowed-kevyt-valinta-property-values
+                                                                                    kevyt-valinta-property
+                                                                                    @application-key]))
         kevyt-valinta-slider-toggle-values          (reaction (map (fn [kevyt-valinta-property-value]
-                                                                {:value kevyt-valinta-property-value
-                                                                 :label (translations/kevyt-valinta-selection-label kevyt-valinta-property
-                                                                                                                    kevyt-valinta-property-value
-                                                                                                                    @lang)})
-                                                              @kevyt-valinta-property-values))
+                                                                     {:value kevyt-valinta-property-value
+                                                                      :label (translations/kevyt-valinta-selection-label kevyt-valinta-property
+                                                                                                                         kevyt-valinta-property-value
+                                                                                                                         @lang)})
+                                                                   @kevyt-valinta-property-values))
         kevyt-valinta-slider-toggle-value           (reaction @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-value
-                                                                               kevyt-valinta-property
-                                                                               @application-key]))
+                                                                                    kevyt-valinta-property
+                                                                                    @application-key]))
         kevyt-valinta-slider-toggle-label           (reaction (->> @kevyt-valinta-slider-toggle-values
-                                                              (filter (comp (partial = @kevyt-valinta-slider-toggle-value)
-                                                                            :value))
-                                                              (map :label)
-                                                              (first)))
+                                                                   (filter (comp (partial = @kevyt-valinta-slider-toggle-value)
+                                                                                 :value))
+                                                                   (map :label)
+                                                                   (first)))
         ;; kevytvalinta näytetään ainoastaan, kun yksi hakukohde valittuna, ks. :virkailija-kevyt-valinta/show-kevyt-valinta?
-        hakukohde-oid                          (reaction (first @(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])))
+        hakukohde-oid                               (reaction (first @(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])))
 
         kevyt-valinta-on-slider-toggle-value-change (reaction (partial on-kevyt-valinta-property-change
-                                                                  kevyt-valinta-property
-                                                                  @hakukohde-oid
-                                                                  @application-key))
+                                                                       kevyt-valinta-property
+                                                                       @hakukohde-oid
+                                                                       @application-key))
         force-show-slider-toggle?                   (reagent/atom nil)
-        kevyt-valinta-dropdowns-open?          (re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-dropdowns-open?])
-        kevyt-valinta-write-rights?            (re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-write-rights?])
+        kevyt-valinta-dropdowns-open?               (re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-dropdowns-open?])
+        kevyt-valinta-write-rights?                 (re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-write-rights?])
         slider-toggle-info-visible?                 (reaction (and @kevyt-valinta-write-rights?
-                                                              (if (some? @force-show-slider-toggle?)
-                                                                @force-show-slider-toggle?
-                                                                (not @kevyt-valinta-slider-toggle-value))
-                                                              (not @kevyt-valinta-dropdowns-open?)))]
+                                                                   (if (some? @force-show-slider-toggle?)
+                                                                     @force-show-slider-toggle?
+                                                                     (not @kevyt-valinta-slider-toggle-value))
+                                                                   (not @kevyt-valinta-dropdowns-open?)))]
     (fn [_]
       [:div.application-handling__kevyt-valinta-slider-toggle-container
        (when @slider-toggle-disabled?
