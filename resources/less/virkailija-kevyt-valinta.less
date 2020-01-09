@@ -112,7 +112,9 @@
 
 .application-handling__kevyt-valinta-slider-toggle-container {
   align-items: center;
+  display: flex;
   justify-content: flex-start;
+  position: relative;
 }
 
 .application-handling__kevyt-valinta-slider-toggle-container--disabled {
@@ -121,18 +123,17 @@
 
 .application-handling__kevyt-valinta-dropdown-container > :last-child:not(:nth-child(1)),
 .application-handling__kevyt-valinta-slider-toggle-container > :last-child:not(:nth-child(1)) {
-  margin-right: 31px;
+  margin-right: 30px;
 }
 
 .application-handling__kevyt-valinta-slider-toggle-label {
   align-items: center;
   display: flex;
-  margin-left: 5px;
-  position: relative;
-  width: 100%;
+  flex-basis: 74px;
+  margin-right: 5px;
 }
 
-.application-handling__kevyt-valinta-slider-toggle-label .zmdi-info {
+.application-handling__kevyt-valinta-slider-toggle-container .zmdi-info {
   color: @kevyt-valinta-unchecked-color;
   font-size: 21px;
   margin-left: 5px;
@@ -179,10 +180,10 @@
 .application-handling__kevyt-valinta-slider-toggle-info {
   background-color: @kevyt-valinta-unchecked-color;
   color: @white;
-  left: -29px;
+  left: -1px;
   padding: 15px;
   position: absolute;
-  top: 33px;
+  top: 46px;
   user-select: none;
   width: 252px;
   z-index: 20;

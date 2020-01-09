@@ -158,6 +158,8 @@
       [:div.application-handling__kevyt-valinta-slider-toggle-container
        (when @slider-toggle-disabled?
          {:class "application-handling__kevyt-valinta-slider-toggle-container--disabled"})
+       [:div.application-handling__kevyt-valinta-slider-toggle-label
+        [:span @kevyt-valinta-slider-toggle-label]]
        [:div.application-handling__kevyt-valinta-slider-toggle
         {:class    (cond-> ""
                            @slider-toggle-disabled?
@@ -185,22 +187,20 @@
                          (reset! force-show-slider-toggle? nil)
                          (@kevyt-valinta-on-slider-toggle-value-change new-value))))}
         [:div.application-handling__kevyt-valinta-slider-toggle-toggle-indicator]]
-       [:div.application-handling__kevyt-valinta-slider-toggle-label
-        [:span @kevyt-valinta-slider-toggle-label]
-        (when-not @show-loader?
-          [:<>
-           [:a
-            {:on-click (fn []
-                         (swap! force-show-slider-toggle? (fnil not @slider-toggle-info-visible?)))}
-            [:div.application-handling__kevyt-valinta-slider-toggle-info-container
-             (when @kevyt-valinta-write-rights?
-               [:i.zmdi.zmdi-info.application-handling__kevyt-valinta-slider-toggle-info-symbol])
-             (when @slider-toggle-info-visible?
-               [:div.application-handling__kevyt-valinta-slider-toggle-info-indicator.animated.fadeIn])]
+       (when-not @show-loader?
+         [:<>
+          [:a
+           {:on-click (fn []
+                        (swap! force-show-slider-toggle? (fnil not @slider-toggle-info-visible?)))}
+           [:div.application-handling__kevyt-valinta-slider-toggle-info-container
+            (when @kevyt-valinta-write-rights?
+              [:i.zmdi.zmdi-info.application-handling__kevyt-valinta-slider-toggle-info-symbol])
             (when @slider-toggle-info-visible?
-              [:div.application-handling__kevyt-valinta-slider-toggle-info.animated.fadeIn
-               [:span.application-handling__kevyt-valinta-slider-toggle-info-text "Julkaisun jälkeen valintatieto näkyy hakijalle Oma opintopolku -palvelussa."]
-               [:span.application-handling__kevyt-valinta-slider-toggle-info-text "Hyväksytyille hakijoille lähetetään myös sähköposti klo 8.00 tai 20.00"]])]])]
+              [:div.application-handling__kevyt-valinta-slider-toggle-info-indicator.animated.fadeIn])]
+           (when @slider-toggle-info-visible?
+             [:div.application-handling__kevyt-valinta-slider-toggle-info.animated.fadeIn
+              [:span.application-handling__kevyt-valinta-slider-toggle-info-text "Julkaisun jälkeen valintatieto näkyy hakijalle Oma opintopolku -palvelussa."]
+              [:span.application-handling__kevyt-valinta-slider-toggle-info-text "Hyväksytyille hakijoille lähetetään myös sähköposti klo 8.00 tai 20.00"]])]])
        (when @show-loader?
          [el/ellipsis-loader])])))
 
