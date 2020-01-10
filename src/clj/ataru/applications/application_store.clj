@@ -155,7 +155,7 @@
   [answers fields]
   (filter (fn [field]
             (and (= "attachment" (:fieldType field))
-                 (not (get-in field [:params :hidden]))
+                 (-> field :params :hidden not)
                  (or (not (contains? field :followup-of))
                      (followup-option-selected? field answers))))
           fields))
