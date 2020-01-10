@@ -185,7 +185,7 @@
       (if-let [saved-application (hakija-application-service/save-application-feedback feedback)]
         (do
           (flowdock-client/send-application-feedback saved-application)
-          (palaute-client/send-application-feedback amazon-sqs saved-application)
+          (palaute-client/send-application-feedback amazon-sqs feedback)
           (response/ok {:id (:id saved-application)}))
         (response/bad-request {})))
     (api/POST "/application" {session :session}
