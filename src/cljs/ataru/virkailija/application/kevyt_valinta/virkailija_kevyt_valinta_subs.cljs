@@ -160,6 +160,12 @@
                                        :kevyt-valinta/vastaanotto-tila      :checked
                                        :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
+                                      [(:or "HYLATTY" "VARALLA") true _ _ _]
+                                      {:kevyt-valinta/valinnan-tila         :checked
+                                       :kevyt-valinta/julkaisun-tila        :unchecked
+                                       :kevyt-valinta/vastaanotto-tila      :grayed-out
+                                       :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
+
                                       [_ (_ :guard nil?) (_ :guard nil?) (_ :guard nil?) _]
                                       {:kevyt-valinta/valinnan-tila         :unchecked
                                        :kevyt-valinta/julkaisun-tila        :grayed-out
@@ -214,6 +220,12 @@
                                   {:kevyt-valinta/valinnan-tila         :checked
                                    :kevyt-valinta/julkaisun-tila        :checked
                                    :kevyt-valinta/vastaanotto-tila      :checked
+                                   :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
+
+                                  [(:or "HYLATTY" "VARALLA") true _ _]
+                                  {:kevyt-valinta/valinnan-tila         :checked
+                                   :kevyt-valinta/julkaisun-tila        :checked
+                                   :kevyt-valinta/vastaanotto-tila      :grayed-out
                                    :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
                                   [_ (_ :guard nil?) (_ :guard nil?) (_ :guard nil?)]
