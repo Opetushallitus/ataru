@@ -56,6 +56,11 @@
        (or (empty? (:children field-descriptor))
            (some #(visible? % application) (:children field-descriptor)))))
 
+(defn- should-highlight-form-change? [id]
+  (let [form-changes @(subscribe [:application/form-changes])
+        showing-latest (not (some? @(subscribe [:state-query [:application :latest-form]])))]
+    (and showing-latest (contains? form-changes (name id)))))
+
 (defn text [field-descriptor application lang group-idx]
   (let [id               (keyword (:id field-descriptor))
         use-onr-info?    (contains? (:person application) id)
@@ -65,12 +70,10 @@
                                                     (:options field-descriptor)
                                                     lang)
         highlight-field? (subscribe [:application/field-highlighted? id])
-        form-changes @(subscribe [:application/form-changes])
-        showing-latest (not (some? @(subscribe [:state-query [:application :latest-form]])))
-        this-form-field-changed? (and showing-latest (contains? form-changes (name id)))
-        class (clojure.string/join " " [(when @highlight-field? "highlighted") (when this-form-field-changed? "form-highlighted")])]
+        class (clojure.string/join " " [(when @highlight-field? "highlighted") (when (should-highlight-form-change? id) "form-highlighted")])]
+
     [:div.application__form-field
-     {:class class :id    id}
+     {:class class :id id}
      [:label.application__form-field-label
       [:span
       (str (from-multi-lang (:label field-descriptor) lang)
@@ -121,6 +124,7 @@
                            (some? group-idx)
                            (nth group-idx))]
     [:div.application__form-field
+     (when (should-highlight-form-change? id) {:class "form-highlighted"})
      [:label.application__form-field-label
       [:span
        (str (from-multi-lang (:label field-descriptor) lang)
@@ -208,6 +212,7 @@
 
 (defn- selectable [content application lang question-group-idx]
   [:div.application__form-field
+   (when (should-highlight-form-change? (:id content)) {:class "form-highlighted"})
    [:div.application__form-field-label--selectable
     [:div.application__form-field-label
      [:span
@@ -285,8 +290,8 @@
         [:h2 @(subscribe [:application/hakukohteet-header])]
         [scroll-to-anchor content]]
        [:div.application__wrapper-contents
-        {:class (when @(subscribe [:application/field-highlighted? :hakukohteet])
-                  "highlighted")
+        {:class (clojure.string/join " " [(when @(subscribe [:application/field-highlighted? :hakukohteet]) "highlighted")
+                                          (when (should-highlight-form-change? :hakukohteet) "form-highlighted")])
          :id    "hakukohteet"}
         [haku-row @(subscribe [:application/selected-application-haku-name])
          @(subscribe [:state-query [:application :selected-application-and-form :application :haku]])]
@@ -337,7 +342,8 @@
                                                              lang))
         highlight-field? (subscribe [:application/field-highlighted? id])]
     [:div.application__form-field
-     {:class (when @highlight-field? "highlighted")
+     {:class (clojure.string/join " " [(when @highlight-field? "highlighted")
+                                      (when (should-highlight-form-change? id) "form-highlighted")])
       :id    id}
      [:label.application__form-field-label
       (str (from-multi-lang (:label field) lang)

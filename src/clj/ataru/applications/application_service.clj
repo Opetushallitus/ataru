@@ -104,8 +104,7 @@
     (map #(:id %) changed)))
 
 (defn get-new-and-changed-ids [application tarjonta-info older-form newer-form]
-  (and (not= (:id older-form) (:id newer-form))
-       (let [answers        (group-by :key (:answers application))
+  (let [answers        (group-by :key (:answers application))
              hakutoiveet    (set (:hakukohde application))
              visible-fields (fn [form]
                               (let [flat-form-fields (util/flatten-form-fields (:content form))
@@ -119,11 +118,10 @@
              left-ids (set (map #(:id %) fields-left))
              right-ids (set (map #(:id %) fields-right))
              new-ids (clojure.set/difference right-ids left-ids)
-             changed-ids (get-changed-elem-ids fields-left fields-right)
-             ]
+             changed-ids (get-changed-elem-ids fields-left fields-right)]
          (log/info (str "---***--- new ids (" (count new-ids) "): "(pr-str new-ids)))
          (log/info (str "---***--- changed ids (" (count changed-ids) "): "(pr-str changed-ids)))
-         [new-ids changed-ids])))
+         [new-ids changed-ids]))
 
 (defn forms-differ? [application tarjonta-info form-left form-right]
   (and (not= (:id form-left) (:id form-right))

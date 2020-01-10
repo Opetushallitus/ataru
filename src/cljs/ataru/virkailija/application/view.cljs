@@ -1,7 +1,7 @@
 (ns ataru.virkailija.application.view
   (:require [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]
-            [ataru.cljs-util :as cljs-util]
+            [ataru.cljs-util :as cljs-util :refer [wrap-scroll-to-first-changed]]
             [ataru.translations.texts :refer [state-translations general-texts]]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as kvt]
             [ataru.util :as util]
@@ -928,7 +928,7 @@
          (subscribe [:state-query [:application :selection-state-counts]])]])]))
 
 (defn application-contents [{:keys [form application]}]
-  [readonly-contents/readonly-fields form application])
+  [wrap-scroll-to-first-changed [readonly-contents/readonly-fields form application]])
 
 (defn review-state-selected-row [on-click label multiple-values?]
   (let [settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
@@ -1936,7 +1936,7 @@
                                              (not (-> application :person :yksiloity)))
           show-metadata-not-found?      @(subscribe [:state-query [:application :metadata-not-found]])
           form-changes       @(subscribe [:state-query [:application :form-changes]])
-          changes-count      (+ (count (:new-ids form-changes)) (count (:changed-ids form-changes)))]
+          changes-count      (count (:changed-ids form-changes))]
       (when (or show-not-latest-form?
                 show-creating-henkilo-failed?
                 show-not-yksiloity?
@@ -1951,13 +1951,11 @@
                                         (.preventDefault evt)
                                         (select-application (:key application) selected-review-hakukohde true))}]
             (when (> changes-count 0) [:show-form-changes
-                                       "Lomakkeessa on muutoksia. " [:a
-                                                                     {:href     "href"
-                                                                      :target   "_blank"
-                                                                      :on-click (fn [])}
+                                       "Tämä on lomakkeen uusin, muuttunut versio. " [:a
+                                                                     {:on-click (fn []
+                                                                                  (.scrollIntoView (first (array-seq (.getElementsByClassName js/document "form-highlighted"))) (js-obj "behavior" "smooth" "block" "center")))}
                                                                      [:span (str "Näytä muutokset (" changes-count ")") ]]
-                                       ])
-            )
+                                       ]))
           (when show-creating-henkilo-failed?
             [notification {:text :creating-henkilo-failed}])
           (when show-not-yksiloity?
