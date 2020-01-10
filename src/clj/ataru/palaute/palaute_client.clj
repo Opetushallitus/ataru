@@ -9,7 +9,7 @@
 
 (defn- build-palaute-request
   [feedback]
-  {:stars      (:stars feedback)
+  {:stars      (:rating feedback)
    :feedback   (:feedback feedback)
    :user-agent (:user-agent feedback)
    :created-at (.getTime (java.util.Date.))
