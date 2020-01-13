@@ -1,6 +1,6 @@
 (ns ataru.virkailija.editor.view
   (:require-macros [reagent.ratom :refer [reaction]])
-  (:require [ataru.cljs-util :refer [wrap-scroll-to get-virkailija-translation get-virkailija-label]]
+  (:require [ataru.cljs-util :refer [wrap-scroll-to get-virkailija-translation]]
             [ataru.component-data.component :as component]
             [ataru.virkailija.editor.core :as c]
             [ataru.virkailija.editor.subs]

@@ -1,7 +1,7 @@
 (ns ataru.virkailija.views.banner
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]])
-  (:require [ataru.cljs-util :as util :refer [get-virkailija-translation get-virkailija-label]]
+  (:require [ataru.cljs-util :as util :refer [get-virkailija-translation]]
             [ataru.util :as autil]
             [ataru.virkailija.routes :as routes]
             [cljs.core.async :refer [<! timeout]]
@@ -16,11 +16,11 @@
   {:editor      {:text :forms-panel :href "/lomake-editori/editor/"}
    :application {:text :applications-panel :href "/lomake-editori/applications/"}})
 
-(def right-labels {:form-edit         (get-virkailija-label :form-edit-rights-panel)
-                   :view-applications (get-virkailija-label :view-applications-rights-panel)
-                   :edit-applications (get-virkailija-label :edit-applications-rights-panel)
-                   :view-valinta      (get-virkailija-label :view-valinta-rights-panel)
-                   :edit-valinta      (get-virkailija-label :edit-valinta-rights-panel)})
+(def right-labels {:form-edit         :form-edit-rights-panel
+                   :view-applications :view-applications-rights-panel
+                   :edit-applications :edit-applications-rights-panel
+                   :view-valinta      :view-valinta-rights-panel
+                   :edit-valinta      :edit-valinta-rights-panel})
 
 (def active-section-arrow [:i.active-section-arrow.zmdi.zmdi-chevron-down.zmdi-hc-lg])
 
@@ -45,12 +45,12 @@
   [label]
   (some #(-> label %) [:fi :sv :en]))
 
-(defn create-org-labels [organizations lang]
+(defn create-org-labels [organizations]
   (map
     (fn [org]
       (str (get-label (:name org))
            (when (not-empty (:rights org))
-             (str " (" (string/join ", " (map #(get-in right-labels [(keyword %) lang]) (:rights org))) ")"))))
+             (str " (" (string/join ", " (map #(-> right-labels (keyword %) (get-virkailija-translation)) (:rights org))) ")"))))
    organizations))
 
 (defn- org-label
@@ -91,7 +91,6 @@
 (defn profile []
   (let [user-info                 (subscribe [:state-query [:editor :user-info]])
         org-select-visible?       (reagent/atom false)
-        lang                      (subscribe [:editor/virkailija-lang])
         results-page              (subscribe [:state-query [:editor :organizations :results-page]])
         search-results            (subscribe [:state-query [:editor :organizations :matches]])
         selected-organization-sub (subscribe [:state-query [:editor :user-info :selected-organization]])
@@ -122,7 +121,7 @@
                   [:ul.profile__organization-select-user-orgs.zmdi-hc-ul]
                   (map
                     (fn [org] [:li [:i.zmdi.zmdi-hc-li.zmdi-accounts] org])
-                    (create-org-labels (or selected-organization organizations) @lang)))
+                    (create-org-labels (or selected-organization organizations))))
                 (when selected-organization
                   [:div
                    (when (:superuser? @user-info)

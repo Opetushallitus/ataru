@@ -177,9 +177,6 @@
          texts/translation-mapping
          params))
 
-(defn get-virkailija-label [key]
-  (get @(subscribe [:editor/virkailija-texts]) key))
-
 (defn get-virkailija-translation [key & params]
   (apply translation-util/get-translation
          key

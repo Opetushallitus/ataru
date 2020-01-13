@@ -1,7 +1,7 @@
 (ns ataru.virkailija.application.view
   (:require [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]
-            [ataru.cljs-util :as cljs-util :refer [get-virkailija-translation get-virkailija-label]]
+            [ataru.cljs-util :as cljs-util :refer [get-virkailija-translation]]
             [ataru.translations.texts :refer [state-translations general-texts]]
             [ataru.util :as util]
             [ataru.virkailija.application.application-search-control :refer [application-search-control]]
@@ -374,7 +374,6 @@
             [h-and-h/search-input
              {:id                       haku-oid
               :haut                     [{:oid         haku-oid
-                                          :name        (get-virkailija-label :hakukohteet)
                                           :hakukohteet hakukohteet}]
               :hakukohderyhmat          hakukohderyhmat
               :hakukohde-selected?      #(= selected-hakukohde-oid %)
@@ -383,7 +382,6 @@
             [h-and-h/search-listing
              {:id                       haku-oid
               :haut                     [{:oid         haku-oid
-                                          :name        (get-virkailija-label :hakukohteet)
                                           :hakukohteet hakukohteet}]
               :hakukohderyhmat          hakukohderyhmat
               :hakukohde-selected?      #(= selected-hakukohde-oid %)
@@ -689,7 +687,7 @@
                       "zmdi-chevron-up application-handling__sort-arrow")}]]])))
 
 (defn- application-filter-checkbox
-  [filters label lang kw state]
+  [filters label kw state]
   (let [kw       (keyword kw)
         state    (keyword state)
         checked? (boolean (get-in @filters [kw state]))]
@@ -700,9 +698,7 @@
       {:type      "checkbox"
        :checked   checked?
        :on-change #(dispatch [:application/toggle-filter kw state])}]
-     [:span (if (some? lang)
-              (util/non-blank-val label [lang :fi :sv :en])
-              label)]]))
+     [:span label]]))
 
 (defn- review-type-filter
   [filters lang [kw group-label states]]
@@ -714,7 +710,10 @@
      [:div.application-handling__filter-group-checkboxes]
      (map
        (fn [[state checkbox-label]]
-         (application-filter-checkbox filters checkbox-label lang kw state))
+         (application-filter-checkbox filters
+                                      (lang checkbox-label)
+                                      kw
+                                      state))
        states))])
 
 (defn- application-base-education-filters
@@ -744,7 +743,7 @@
           :on-change #(dispatch [:application/toggle-all-pohjakoulutus-filters @all-filters-selected?])}]
         [:span "Kaikki"]]
        (->> checkboxes
-            (map (fn [[id label]] (application-filter-checkbox filters-checkboxes label nil :base-education id)))
+            (map (fn [[id label]] (application-filter-checkbox filters-checkboxes label :base-education id)))
             (doall))])))
 
 (defn- select-rajaava-hakukohde [opened?]
@@ -839,16 +838,16 @@
                  [select-rajaava-hakukohde rajaava-hakukohde-opened?])])
             [:div.application-handling__filter-group
              [:h3.application-handling__filter-group-heading (get-virkailija-translation :ssn)]
-             [application-filter-checkbox filters-checkboxes (get-virkailija-label :without-ssn) @lang :only-ssn :without-ssn]
-             [application-filter-checkbox filters-checkboxes (get-virkailija-label :with-ssn) @lang :only-ssn :with-ssn]]
+             [application-filter-checkbox filters-checkboxes (get-virkailija-translation :without-ssn) :only-ssn :without-ssn]
+             [application-filter-checkbox filters-checkboxes (get-virkailija-translation :with-ssn) :only-ssn :with-ssn]]
             [:div.application-handling__filter-group
              [:h3.application-handling__filter-group-heading (get-virkailija-translation :identifying)]
-             [application-filter-checkbox filters-checkboxes (get-virkailija-label :unidentified) @lang :only-identified :unidentified]
-             [application-filter-checkbox filters-checkboxes (get-virkailija-label :identified) @lang :only-identified :identified]]
+             [application-filter-checkbox filters-checkboxes (get-virkailija-translation :unidentified) :only-identified :unidentified]
+             [application-filter-checkbox filters-checkboxes (get-virkailija-translation :identified) :only-identified :identified]]
             [:div.application-handling__filter-group
              [:h3.application-handling__filter-group-heading (get-virkailija-translation :active-status)]
-             [application-filter-checkbox filters-checkboxes (get-virkailija-label :active-status-active) @lang :active-status :active]
-             [application-filter-checkbox filters-checkboxes (get-virkailija-label :active-status-passive) @lang :active-status :passive]]]
+             [application-filter-checkbox filters-checkboxes (get-virkailija-translation :active-status-active) :active-status :active]
+             [application-filter-checkbox filters-checkboxes (get-virkailija-translation :active-status-passive) :active-status :passive]]]
            [:div.application-handling__popup-column
             [:div.application-handling__filter-group
              [:h3.application-handling__filter-group-heading (get-virkailija-translation :handling-notes)]
@@ -865,11 +864,18 @@
              (when @show-eligibility-set-automatically-filter
                [:div.application-handling__filter-group
                 [:div.application-handling__filter-group-title
-                 (util/non-blank-val (get-virkailija-label :eligibility-set-automatically)
-                                     [@lang :fi :sv :en])]
+                 (get-virkailija-translation :eligibility-set-automatically)]
                 [:div.application-handling__filter-group-checkboxes
-                 [application-filter-checkbox filters-checkboxes (:yes general-texts) @lang :eligibility-set-automatically :yes]
-                 [application-filter-checkbox filters-checkboxes (:no general-texts) @lang :eligibility-set-automatically :no]]])]]
+                 [application-filter-checkbox
+                  filters-checkboxes
+                  (-> general-texts :yes (get @lang))
+                  :eligibility-set-automatically
+                  :yes]
+                 [application-filter-checkbox
+                  filters-checkboxes
+                  (-> general-texts :no (get @lang))
+                  :eligibility-set-automatically
+                  :no]]])]]
            (when @has-base-education-answers
              [:div.application-handling__popup-column.application-handling__popup-column--large
               [application-base-education-filters filters-checkboxes @lang]])]

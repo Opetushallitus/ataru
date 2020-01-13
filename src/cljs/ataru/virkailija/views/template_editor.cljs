@@ -1,6 +1,6 @@
 (ns ataru.virkailija.views.template-editor
   (:require [ataru.translations.texts :refer [email-default-texts]]
-            [ataru.cljs-util :refer [get-virkailija-translation get-virkailija-label]]
+            [ataru.cljs-util :refer [get-virkailija-translation]]
             [ataru.virkailija.views.modal :as modal]
             [goog.string :as s]
             [re-frame.core :refer [subscribe dispatch]]
@@ -16,9 +16,9 @@
 (defn- render-template-editor []
   (let [tab-lang (r/atom :fi)]
     (fn []
-      (let [language-names   {:fi (get-virkailija-label :finnish)
-                              :sv (get-virkailija-label :swedish)
-                              :en (get-virkailija-label :english)}
+      (let [language-names   {:fi (get-virkailija-translation :finnish)
+                              :sv (get-virkailija-translation :swedish)
+                              :en (get-virkailija-translation :english)}
             content          @(subscribe [:editor/email-template])
             contents-changed @(subscribe [:editor/email-templates-altered])
             any-changed?     (some true? (vals contents-changed))
@@ -53,7 +53,7 @@
                     {:key   (str "email-preview-lang-radio-label-" (name @tab-lang))
                      :for   (str "email-template-language-selection-" (name button-lang))
                      :class (when (= button-lang @tab-lang) "virkailija-email-preview__tab-label--selected")}
-                    (get-in language-names [button-lang @virkailija-lang])
+                    (get language-names button-lang)
                     (when (get contents-changed (name button-lang))
                       [:span.virkailija-email-preview__tab-edited "*"])]))
                 [:fi :sv :en]))]
