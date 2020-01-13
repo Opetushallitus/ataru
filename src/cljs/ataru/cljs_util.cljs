@@ -171,17 +171,11 @@
         (fnil identity [])))
 
 (defn get-translation [key & params]
-  (if (some? params)
-    (apply gstring/format
-           (translation-util/get-translation
-             key
-             @(subscribe [:application/form-language])
-             texts/translation-mapping)
-           params)
-    (translation-util/get-translation
-      key
-      @(subscribe [:application/form-language])
-      texts/translation-mapping)))
+  (apply translation-util/get-translation
+         key
+         @(subscribe [:application/form-language])
+         texts/translation-mapping
+         params))
 
 (defn get-virkailija-label [key]
   (get @(subscribe [:editor/virkailija-texts]) key))
