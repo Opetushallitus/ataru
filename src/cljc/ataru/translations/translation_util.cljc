@@ -13,8 +13,8 @@
                              :sv "Översättning inte tillgänglig. Var vänlig och kontakta administrationen."
                              :en "Translation not available. Please contact an administrator."})
 
-(defn get-translation [key lang]
-  (-> translation-mapping
+(defn get-translation [key lang texts]
+  (-> texts
       (get key not-found-translations)
       (get lang)))
 

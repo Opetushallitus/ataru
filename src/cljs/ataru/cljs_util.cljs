@@ -13,7 +13,8 @@
             [goog.string.format]
             [ataru.translations.translation-util :as translation-util]
             [goog.string :as gstring]
-            [goog.string.format])
+            [goog.string.format]
+            [ataru.translations.texts :as texts])
   (:import [goog.net Cookies]))
 
 (def wrap-scroll-to
@@ -172,9 +173,15 @@
 (defn get-translation [key & params]
   (if (some? params)
     (apply gstring/format
-      (translation-util/get-translation key @(subscribe [:application/form-language]))
-      params)
-    (translation-util/get-translation key @(subscribe [:application/form-language]))))
+           (translation-util/get-translation
+             key
+             @(subscribe [:application/form-language])
+             texts/translation-mapping)
+           params)
+    (translation-util/get-translation
+      key
+      @(subscribe [:application/form-language])
+      texts/translation-mapping)))
 
 (defn get-virkailija-label [key]
   (get @(subscribe [:editor/virkailija-texts]) key))
