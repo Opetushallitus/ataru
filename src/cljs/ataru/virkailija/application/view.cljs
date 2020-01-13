@@ -3,6 +3,7 @@
             [ataru.application.review-states :as review-states]
             [ataru.cljs-util :as cljs-util :refer [get-virkailija-translation get-virkailija-label]]
             [ataru.translations.texts :refer [state-translations general-texts]]
+            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as kvt]
             [ataru.util :as util]
             [ataru.virkailija.application.application-search-control :refer [application-search-control]]
             [ataru.virkailija.application.application-subs]
@@ -15,6 +16,7 @@
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-handlers]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs]
             [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-view :as kv]
+            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-mappings :as mappings]
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :as t]
             [ataru.virkailija.temporal :as temporal]
@@ -1267,7 +1269,7 @@
            :target "_blank"}
           (util/non-blank-val (:name org) [lang :fi :sv :en])]]))]))
 
-(defn event-content [event lang]
+(defn event-content [event lang & {korkeakouluhaku? :korkeakouluhaku?}]
   (match event
     {:event-type "review-state-change"}
     (let [label (application-states/get-review-state-label-by-name
@@ -1404,6 +1406,18 @@
       [:div
        [:span @(subscribe [:application/hakukohde-and-tarjoaja-name (:hakukohde event)])]]]]
 
+    {:event-type "kevyt-valinta-valinnan-tila-change" :valinnan-tila valinnan-tila}
+    (let [kevyt-valinta-property-value (mappings/valinta-tulos-service-value->kevyt-valinta-property-value
+                                         valinnan-tila
+                                         :kevyt-valinta/valinnan-tila
+                                         korkeakouluhaku?)
+          kevyt-valinta-i18n           (kvt/kevyt-valinta-selection-label :kevyt-valinta/valinnan-tila
+                                                                          kevyt-valinta-property-value
+                                                                          lang)
+          event-text                   (get-virkailija-translation :kevyt-valinta-valinnan-tila-change
+                                                                   kevyt-valinta-i18n)]
+      [[:span event-text]])
+
     {:subject _ :message _ :message-type message-type}
     [[:span
       (if (= message-type "mass-information-request")
@@ -1423,10 +1437,11 @@
 
 (defn event-row
   [_]
-  (let [show-details? (r/atom false)
-        lang          (subscribe [:editor/virkailija-lang])]
+  (let [show-details?    (r/atom false)
+        lang             (subscribe [:editor/virkailija-lang])
+        korkeakouluhaku? (subscribe [:virkailija-kevyt-valinta/korkeakouluhaku?])]
     (fn [event]
-      (let [[caption details] (event-content event @lang)]
+      (let [[caption details] (event-content event @lang :korkeakouluhaku? @korkeakouluhaku?)]
         [:div.application-handling__event-row
          [:div.application-handling__event-row-header
           {:on-click #(swap! show-details? not)
@@ -1444,14 +1459,15 @@
             details])]))))
 
 (defn application-review-events []
-  [:div.application-handling__event-list
-   [:div.application-handling__review-header (get-virkailija-translation :events)]
-   (doall
-    (map-indexed
-     (fn [i event]
-       ^{:key (str "event-row-for-" i)}
-       [event-row event])
-     @(subscribe [:application/events-and-information-requests])))])
+  (let [application-key @(subscribe [:state-query [:application :selected-application-and-form :application :key]])]
+    [:div.application-handling__event-list
+     [:div.application-handling__review-header (get-virkailija-translation :events)]
+     (doall
+       (map-indexed
+         (fn [i event]
+           ^{:key (str "event-row-for-" i)}
+           [event-row event])
+         @(subscribe [:application/events-and-information-requests application-key])))]))
 
 (defn- application-review-note-input []
   (let [input-value               (subscribe [:state-query [:application :review-comment]])

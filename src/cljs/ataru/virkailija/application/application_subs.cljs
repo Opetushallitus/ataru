@@ -5,6 +5,7 @@
             [medley.core :refer [find-first]]
             [ataru.application-common.application-field-common :as common]
             [ataru.component-data.person-info-module :as person-info-module]
+            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs]
             [ataru.virkailija.db :as initial-db]
             [ataru.util :as u]
             [ataru.cljs-util :as util]))
@@ -538,19 +539,37 @@
             (assoc % :last-modify-event? true)
             %) events)))
 
+(defn- tila-historia->information-request [tila-historia]
+  (-> tila-historia
+      (select-keys [:luotu :tila])
+      (clojure.set/rename-keys {:luotu :created-time
+                                :tila  :valinnan-tila})
+      (assoc :event-type "kevyt-valinta-valinnan-tila-change")))
+
 (re-frame/reg-sub
   :application/events-and-information-requests
-  (fn []
+  (fn [[_ application-key]]
     [(re-frame/subscribe [:state-query [:application :events]])
      (re-frame/subscribe [:state-query [:application :information-requests]])
-     (re-frame/subscribe [:state-query [:hyvaksynnan-ehto]])])
-  (fn [[events information-requests hyvaksynnan-ehto]]
+     (re-frame/subscribe [:state-query [:hyvaksynnan-ehto application-key]])
+     (re-frame/subscribe [:virkailija-kevyt-valinta/show-kevyt-valinta?])
+     (re-frame/subscribe [:virkailija-kevyt-valinta/tila-historia-for-application application-key])])
+  (fn [[events
+        information-requests
+        hyvaksynnan-ehto
+        show-kevyt-valinta?
+        tila-historia]]
     (as-> [] requests
           (->> events mark-last-modify-event (into requests))
           (into requests information-requests)
           (->> hyvaksynnan-ehto
                vals
-               (mapcat :events))
+               (mapcat :events)
+               (into requests))
+          (cond-> requests
+                  show-kevyt-valinta?
+                  (into (map tila-historia->information-request)
+                        tila-historia))
           (sort event-and-information-request-comparator requests))))
 
 (re-frame/reg-sub

@@ -79,6 +79,16 @@
         :valinnantulos)))
 
 (re-frame/reg-sub
+  :virkailija-kevyt-valinta/tila-historia-for-application
+  (fn [[_ application-key]]
+    [(re-frame/subscribe [:virkailija-kevyt-valinta/hakukohde-oid])
+     (re-frame/subscribe [:state-query [:valinta-tulos-service application-key]])])
+  (fn [[hakukohde-oid valinnan-tulokset-for-application]]
+    (-> valinnan-tulokset-for-application
+        (get hakukohde-oid)
+        :tilaHistoria)))
+
+(re-frame/reg-sub
   :virkailija-kevyt-valinta/haku
   (fn []
     [(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :haku]])
