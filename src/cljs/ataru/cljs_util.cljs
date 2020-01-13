@@ -1,5 +1,6 @@
 (ns ataru.cljs-util
-  (:require [clojure.string :refer [join]]
+  (:require [ataru.translations.translation-util :as tu]
+            [clojure.string :refer [join]]
             [cljs.core.match :refer-macros [match]]
             [cljs.reader :as reader :refer [read-string]]
             [cljs-uuid-utils.core :as uuid]
@@ -179,7 +180,10 @@
   (get @(subscribe [:editor/virkailija-texts]) key))
 
 (defn get-virkailija-translation [key]
-  (get (get-virkailija-label key) @(subscribe [:editor/virkailija-lang]) (str key)))
+  (let [lang @(subscribe [:editor/virkailija-lang])]
+    (get (get-virkailija-label key)
+         lang
+         (get tu/not-found-translations lang))))
 
 (defn modify-event? [event]
   (some #{(:event-type event)} ["updated-by-applicant" "updated-by-virkailija"]))

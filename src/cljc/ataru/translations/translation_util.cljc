@@ -9,11 +9,13 @@
                             (get lang)))
                         translation-mapping))
 
+(def not-found-translations {:fi "Käännöstä ei ole saatavilla. Ole hyvä ja ota yhteyttä ylläpitoon."
+                             :sv "Översättning inte tillgänglig. Var vänlig och kontakta administrationen."
+                             :en "Translation not available. Please contact an administrator."})
+
 (defn get-translation [key lang]
   (-> translation-mapping
-      (get key {:fi "Käännöstä ei ole saatavilla. Ole hyvä ja ota yhteyttä ylläpitoon."
-                :sv "Översättning inte tillgänglig. Var vänlig och kontakta administrationen."
-                :en "Translation not available. Please contact an administrator."})
+      (get key not-found-translations)
       (get lang)))
 
 (defn get-virkailija-translation [key lang params]
