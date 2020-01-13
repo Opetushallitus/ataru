@@ -180,17 +180,12 @@
 (defn get-virkailija-label [key]
   (get @(subscribe [:editor/virkailija-texts]) key))
 
-(defn- format-string [text params]
-  (apply gstring/format text params))
-
 (defn get-virkailija-translation [key & params]
-  (let [lang @(subscribe [:editor/virkailija-lang])
-        text (get (get-virkailija-label key)
-                  lang
-                  (get tu/not-found-translations lang))]
-    (cond-> text
-            (some? params)
-            (format-string params))))
+  (apply translation-util/get-translation
+         key
+         @(subscribe [:editor/virkailija-lang])
+         @(subscribe [:editor/virkailija-texts])
+         params))
 
 (defn modify-event? [event]
   (some #{(:event-type event)} ["updated-by-applicant" "updated-by-virkailija"]))
