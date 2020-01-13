@@ -3,6 +3,319 @@
     expect(window.uiError || null).to.be.null
   })
 
+  const massInformationRequestPopup = () => {
+    return testFrame().find(
+      '.application-handling__mass-information-request-popup'
+    )
+  }
+
+  const massInformationRequestText = () => {
+    return massInformationRequestPopup()
+      .find('p')
+      .first()
+      .text()
+  }
+
+  const massInformationRequestSubject = () => {
+    return massInformationRequestPopup().find(
+      'input.application-handling__information-request-text-input'
+    )
+  }
+
+  const massInformationRequestContent = () => {
+    return massInformationRequestPopup().find(
+      'textarea.application-handling__information-request-message-area'
+    )
+  }
+
+  const massInformationRequestSendButton = () => {
+    return massInformationRequestPopup().find(
+      'button.application-handling__send-information-request-button'
+    )
+  }
+
+  const massInformationRequestStatusText = () => {
+    return massInformationRequestPopup()
+      .find('.application-handling__information-request-status')
+      .text()
+  }
+
+  const massUpdateSubmitButton = () => {
+    return massUpdatePopup().find('.application-handling__link-button')
+  }
+
+  const massUpdateFromState = () => {
+    return massUpdatePopup()
+      .children('div')
+      .eq(1)
+  }
+
+  const massUpdateFromStateSelectionOpened = () => {
+    return massUpdateFromState()
+  }
+
+  const massUpdateFromStateSelectionClosed = () => {
+    const sel = '.application-handling__review-state-row--mass-update'
+    return massUpdateFromState()
+      .find(sel)
+      .addBack(sel)
+  }
+
+  const massUpdateToState = () => {
+    return massUpdatePopup()
+      .children('div')
+      .eq(2)
+  }
+
+  const massUpdateToStateSelectionOpened = () => {
+    return massUpdateToState()
+  }
+
+  const massUpdateToStateSelectionClosed = () => {
+    const sel = '.application-handling__review-state-row--mass-update'
+    return massUpdateToState()
+      .find(sel)
+      .addBack(sel)
+  }
+
+  const massUpdatePopup = () => {
+    return testFrame().find(
+      '.application-handling__mass-edit-review-states-popup'
+    )
+  }
+
+  const applicationHakukohdeStates = () => {
+    return _.map(
+      testFrame().find('.application-handling__hakukohde-state'),
+      o => $(o).text()
+    )
+  }
+
+  const editLink = () => {
+    return testFrame().find(
+      '.application-handling__link-button.application-handling__button:contains("Muokkaa hakemusta")'
+    )
+  }
+
+  const directFormHakuList = () => {
+    return testFrame().find('.application__search-control-direct-form-haku')
+  }
+
+  const applicationHeader = () => {
+    return testFrame().find('.application-handling__header-haku')
+  }
+
+  const form1OnList = () => {
+    return testFrame().find(
+      '.application__search-control-direct-form-haku a:contains(Selaintestilomake1)'
+    )
+  }
+
+  const directFormHakuListExists = () => {
+    return elementExists(directFormHakuList())
+  }
+
+  const navigateToApplicationHandling = () => {
+    loadInFrame('http://localhost:8350/lomake-editori/applications/')
+  }
+
+  const navigateToApplicationHandlingWithUrlParams = () => {
+    loadInFrame(
+      'http://localhost:8350/lomake-editori/applications/foobar1?application-key=1.2.246.562.11.00000000000000000001&processing-state-filter=processing,invited-to-interview'
+    )
+  }
+
+  const navigateToApplicationHandlingForForm = () => {
+    loadInFrame('http://localhost:8350/lomake-editori/applications/foobar1')
+  }
+
+  const includedHakukohdeProcessingStateFilters = () => {
+    return testFrame().find(
+      '.application-handling__filter-state:eq(1) .application-handling__filter-state-selected-row'
+    ).length
+  }
+
+  const includedSelectionStateFilters = () => {
+    return testFrame().find(
+      '.application-handling__filter-state:eq(2) .application-handling__filter-state-selected-row'
+    ).length
+  }
+
+  const applicationHeadingIs = expected => {
+    return () => {
+      return (
+        testFrame()
+          .find('.application-handling__review-area-main-heading')
+          .text() === expected
+      )
+    }
+  }
+
+  const hakukohdeProcessingFilterLink = () => {
+    return testFrame()
+      .find('.application-handling__filter-state a')
+      .eq(1)
+  }
+
+  const selectionStateFilterLink = () => {
+    return testFrame()
+      .find('.application-handling__filter-state a')
+      .eq(2)
+  }
+
+  const applicationRow = () => {
+    return testFrame().find(
+      '.application-handling__list-row:not(.application-handling__list-header) .application-handling__list-row--applicant-name:contains(Vatanen)'
+    )
+  }
+
+  const reviewHeader = () => {
+    return testFrame().find('.application-handling__review-header')
+  }
+
+  const filteredApplicationsCount = () => {
+    return testFrame()
+      .find('.application-handling__list-row')
+      .not('.application-handling__list-header').length
+  }
+
+  const selectionStateSelected = () =>
+    testFrame().find(
+      '.application-handling__review-state-container-selection-state .application-handling__review-state-row--selected'
+    )
+
+  const selectionStateOpened = () => {
+    return testFrame().find(
+      '.application-handling__review-state-container-selection-state .application-handling__review-state-list--opened'
+    )
+  }
+
+  const firstApplication = () => {
+    return testFrame()
+      .find(
+        '.application-handling__list-row--applicant-name:contains(Vatanen)'
+      )
+      .closest('.application-handling__list-row')
+  }
+
+  const secondApplication = () => {
+    return testFrame()
+      .find(
+        '.application-handling__list-row--applicant-name:contains(Kuikeloinen)'
+      )
+      .closest('.application-handling__list-row')
+  }
+
+  const thirdApplication = () => {
+    return testFrame()
+      .find(
+        '.application-handling__list-row--applicant-name:contains(Tyrni)'
+      )
+      .closest('.application-handling__list-row')
+  }
+
+  const reviewNotes = () => {
+    return testFrame().find('.application-handling__review-note-input')
+  }
+
+  const reviewNotesSubmitButton = () => {
+    return testFrame().find(
+      '.application-handling__review-note-submit-button'
+    )
+  }
+
+  const score = () => {
+    return testFrame().find('.application-handling__score-input')
+  }
+
+  function eventCaptions() {
+    return testFrame().find(
+      '.application-handling__event-row-header > span'
+    )
+  }
+
+  const selectedState = () => {
+    return testFrame().find(
+      '.application-handling__review-state-row--selected'
+    )
+  }
+
+  const notSelectedStates = () => {
+    return testFrame().find(
+      '.application-handling__review-state-row:not(.application-handling__review-state-row--selected)'
+    )
+  }
+
+  const downloadLink = () => {
+    return testFrame().find('.application-handling__excel-download-link')
+  }
+
+  const expectApplicants = expected => {
+    expect(applicantNames()).to.eql(expected)
+  }
+
+  const firstApplicantName = () => {
+    return applicantNames()[0]
+  }
+
+  const firstApplicantNameIs = expected => {
+    return () => {
+      return firstApplicantName() === expected
+    }
+  }
+
+  const applicantNamesExist = () => {
+    return () => {
+      return applicantNames().length > 0
+    }
+  }
+
+  const applicantNames = () => {
+    const scoreColumnObjects = testFrame().find(
+      '.application-handling__list-row--applicant-name'
+    )
+    return _(scoreColumnObjects)
+      .map(obj => $(obj).text())
+      .filter(val => val !== 'Hakija')
+      .value()
+  }
+
+  const applicantColumn = () => {
+    return testFrame().find(
+      '.application-handling__list-row--applicant > span'
+    )
+  }
+
+  const timeColumn = () => {
+    return testFrame().find(
+      '.application-handling__list-row--created-time i'
+    )
+  }
+
+  const multipleApplicationsApplicant = () => {
+    return testFrame().find(
+      '.application-handling__list-row--applicant-name:contains(Kuikeloinen)'
+    )
+  }
+
+  const searchApplicationsBySsnLink = () => {
+    return testFrame().find(
+      '.application-handling__review-area-main-heading-applications-link'
+    )
+  }
+
+  const ssnSearchField = () => {
+    return testFrame().find(
+      '.application__search-control-search-term-input'
+    )
+  }
+
+  const ssnSearchFieldHasValue = value => {
+    return () => {
+      return ssnSearchField().val() === value
+    }
+  }
+
   describe('Application handling', () => {
     describe('for first form', () => {
       let firstNotSelected = null
@@ -168,101 +481,6 @@
           ).to.equal('Hyväksytty')
         })
       })
-
-      const selectionStateSelected = () =>
-        testFrame().find(
-          '.application-handling__review-state-container-selection-state .application-handling__review-state-row--selected'
-        )
-
-      const selectionStateOpened = () => {
-        return testFrame().find(
-          '.application-handling__review-state-container-selection-state .application-handling__review-state-list--opened'
-        )
-      }
-
-      const firstApplication = () => {
-        return testFrame()
-          .find(
-            '.application-handling__list-row--applicant-name:contains(Vatanen)'
-          )
-          .closest('.application-handling__list-row')
-      }
-
-      const secondApplication = () => {
-        return testFrame()
-          .find(
-            '.application-handling__list-row--applicant-name:contains(Kuikeloinen)'
-          )
-          .closest('.application-handling__list-row')
-      }
-
-      const thirdApplication = () => {
-        return testFrame()
-          .find(
-            '.application-handling__list-row--applicant-name:contains(Tyrni)'
-          )
-          .closest('.application-handling__list-row')
-      }
-
-      const reviewNotes = () => {
-        return testFrame().find('.application-handling__review-note-input')
-      }
-
-      const reviewNotesSubmitButton = () => {
-        return testFrame().find(
-          '.application-handling__review-note-submit-button'
-        )
-      }
-
-      const score = () => {
-        return testFrame().find('.application-handling__score-input')
-      }
-
-      const form1OnList = () => {
-        return testFrame().find(
-          '.application__search-control-direct-form-haku a:contains(Selaintestilomake1)'
-        )
-      }
-
-      const directFormHakuListExists = () => {
-        return elementExists(directFormHakuList())
-      }
-
-      const navigateToApplicationHandling = () => {
-        loadInFrame('http://localhost:8350/lomake-editori/applications/')
-      }
-
-      function eventCaptions() {
-        return testFrame().find(
-          '.application-handling__event-row-header > span'
-        )
-      }
-
-      const applicationRow = () => {
-        return testFrame().find(
-          '.application-handling__list-row:not(.application-handling__list-header) .application-handling__list-row--applicant-name:contains(Vatanen)'
-        )
-      }
-
-      const selectedState = () => {
-        return testFrame().find(
-          '.application-handling__review-state-row--selected'
-        )
-      }
-
-      const notSelectedStates = () => {
-        return testFrame().find(
-          '.application-handling__review-state-row:not(.application-handling__review-state-row--selected)'
-        )
-      }
-
-      const reviewHeader = () => {
-        return testFrame().find('.application-handling__review-header')
-      }
-
-      const downloadLink = () => {
-        return testFrame().find('.application-handling__excel-download-link')
-      }
     })
 
     describe('Application sorting', () => {
@@ -327,48 +545,6 @@
           ])
         })
       })
-
-      const expectApplicants = expected => {
-        expect(applicantNames()).to.eql(expected)
-      }
-
-      const firstApplicantName = () => {
-        return applicantNames()[0]
-      }
-
-      const firstApplicantNameIs = expected => {
-        return () => {
-          return firstApplicantName() === expected
-        }
-      }
-
-      const applicantNamesExist = () => {
-        return () => {
-          return applicantNames().length > 0
-        }
-      }
-
-      const applicantNames = () => {
-        const scoreColumnObjects = testFrame().find(
-          '.application-handling__list-row--applicant-name'
-        )
-        return _(scoreColumnObjects)
-          .map(obj => $(obj).text())
-          .filter(val => val !== 'Hakija')
-          .value()
-      }
-
-      const applicantColumn = () => {
-        return testFrame().find(
-          '.application-handling__list-row--applicant > span'
-        )
-      }
-
-      const timeColumn = () => {
-        return testFrame().find(
-          '.application-handling__list-row--created-time i'
-        )
-      }
     })
 
     describe('application filtering on hakukohde processing state', () => {
@@ -521,37 +697,6 @@
           .then(done)
           .fail(done)
       })
-
-      const multipleApplicationsApplicant = () => {
-        return testFrame().find(
-          '.application-handling__list-row--applicant-name:contains(Kuikeloinen)'
-        )
-      }
-
-      const searchApplicationsBySsnLink = () => {
-        return testFrame().find(
-          '.application-handling__review-area-main-heading-applications-link'
-        )
-      }
-
-      const ssnSearchField = () => {
-        return testFrame().find(
-          '.application__search-control-search-term-input'
-        )
-      }
-
-      const ssnSearchFieldHasValue = value => {
-        return () => {
-          return ssnSearchField().val() === value
-        }
-      }
-
-      const applicantNames = () => {
-        const scoreColumnObjects = testFrame().find(
-          '.application-handling__list-row--applicant-name'
-        )
-        return _.map(scoreColumnObjects, obj => $(obj).text())
-      }
     })
 
     describe('Virkailija hakemus edit', () => {
@@ -851,187 +996,5 @@
         })
       })
     })
-
-    const massInformationRequestPopup = () => {
-      return testFrame().find(
-        '.application-handling__mass-information-request-popup'
-      )
-    }
-
-    const massInformationRequestText = () => {
-      return massInformationRequestPopup()
-        .find('p')
-        .first()
-        .text()
-    }
-
-    const massInformationRequestSubject = () => {
-      return massInformationRequestPopup().find(
-        'input.application-handling__information-request-text-input'
-      )
-    }
-
-    const massInformationRequestContent = () => {
-      return massInformationRequestPopup().find(
-        'textarea.application-handling__information-request-message-area'
-      )
-    }
-
-    const massInformationRequestSendButton = () => {
-      return massInformationRequestPopup().find(
-        'button.application-handling__send-information-request-button'
-      )
-    }
-
-    const massInformationRequestStatusText = () => {
-      return massInformationRequestPopup()
-        .find('.application-handling__information-request-status')
-        .text()
-    }
-
-    const massUpdateSubmitButton = () => {
-      return massUpdatePopup().find('.application-handling__link-button')
-    }
-
-    const massUpdateFromState = () => {
-      return massUpdatePopup()
-        .children('div')
-        .eq(1)
-    }
-
-    const massUpdateFromStateSelectionOpened = () => {
-      return massUpdateFromState()
-    }
-
-    const massUpdateFromStateSelectionClosed = () => {
-      const sel = '.application-handling__review-state-row--mass-update'
-      return massUpdateFromState()
-        .find(sel)
-        .addBack(sel)
-    }
-
-    const massUpdateToState = () => {
-      return massUpdatePopup()
-        .children('div')
-        .eq(2)
-    }
-
-    const massUpdateToStateSelectionOpened = () => {
-      return massUpdateToState()
-    }
-
-    const massUpdateToStateSelectionClosed = () => {
-      const sel = '.application-handling__review-state-row--mass-update'
-      return massUpdateToState()
-        .find(sel)
-        .addBack(sel)
-    }
-
-    const massUpdatePopup = () => {
-      return testFrame().find(
-        '.application-handling__mass-edit-review-states-popup'
-      )
-    }
-
-    const applicationHakukohdeStates = () => {
-      return _.map(
-        testFrame().find('.application-handling__hakukohde-state'),
-        o => $(o).text()
-      )
-    }
-
-    const editLink = () => {
-      return testFrame().find(
-        '.application-handling__link-button.application-handling__button:contains("Muokkaa hakemusta")'
-      )
-    }
-
-    const directFormHakuList = () => {
-      return testFrame().find('.application__search-control-direct-form-haku')
-    }
-
-    const applicationHeader = () => {
-      return testFrame().find('.application-handling__header-haku')
-    }
-
-    const form1OnList = () => {
-      return testFrame().find(
-        '.application__search-control-direct-form-haku a:contains(Selaintestilomake1)'
-      )
-    }
-
-    const directFormHakuListExists = () => {
-      return elementExists(directFormHakuList())
-    }
-
-    const navigateToApplicationHandling = () => {
-      loadInFrame('http://localhost:8350/lomake-editori/applications/')
-    }
-
-    const navigateToApplicationHandlingWithUrlParams = () => {
-      loadInFrame(
-        'http://localhost:8350/lomake-editori/applications/foobar1?application-key=1.2.246.562.11.00000000000000000001&processing-state-filter=processing,invited-to-interview'
-      )
-    }
-
-    const navigateToApplicationHandlingForForm = () => {
-      loadInFrame('http://localhost:8350/lomake-editori/applications/foobar1')
-    }
-
-    const includedHakukohdeProcessingStateFilters = () => {
-      return testFrame().find(
-        '.application-handling__filter-state:eq(1) .application-handling__filter-state-selected-row'
-      ).length
-    }
-
-    const includedSelectionStateFilters = () => {
-      return testFrame().find(
-        '.application-handling__filter-state:eq(2) .application-handling__filter-state-selected-row'
-      ).length
-    }
-
-    const applicationHeadingIs = expected => {
-      return () => {
-        return (
-          testFrame()
-            .find('.application-handling__review-area-main-heading')
-            .text() === expected
-        )
-      }
-    }
-
-    const hakukohdeProcessingFilterLink = () => {
-      return testFrame()
-        .find('.application-handling__filter-state a')
-        .eq(1)
-    }
-
-    const selectionStateFilterLink = () => {
-      return testFrame()
-        .find('.application-handling__filter-state a')
-        .eq(2)
-    }
-
-    const applicationRow = () => {
-      return testFrame().find(
-        '.application-handling__list-row:not(.application-handling__list-header) .application-handling__list-row--applicant-name:contains(Vatanen)'
-      )
-    }
-
-    const reviewHeader = () => {
-      return testFrame().find('.application-handling__review-header')
-    }
-
-    const selectionStates = () => {
-      return testFrame().find(
-        '.application-handling__list .application-handling__hakukohde-selection'
-      )
-    }
-
-    const filteredApplicationsCount = () => {
-      return testFrame()
-        .find('.application-handling__list-row')
-        .not('.application-handling__list-header').length
-    }
   })
 })()
