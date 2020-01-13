@@ -26,12 +26,3 @@
     (cond-> text
             (some? params)
             (format-string params))))
-
-(defn get-virkailija-translation [key lang params]
-  (if-let [text-value (get virkailija-texts key)]
-    (if (fn? text-value)
-      (-> text-value
-          (apply params)
-          (get lang))
-      (get text-value lang))
-    (println "No key found in translations:" key)))
