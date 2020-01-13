@@ -192,9 +192,7 @@
 
   const firstApplication = () => {
     return testFrame()
-      .find(
-        '.application-handling__list-row--applicant-name:contains(Vatanen)'
-      )
+      .find('.application-handling__list-row--applicant-name:contains(Vatanen)')
       .closest('.application-handling__list-row')
   }
 
@@ -208,9 +206,7 @@
 
   const thirdApplication = () => {
     return testFrame()
-      .find(
-        '.application-handling__list-row--applicant-name:contains(Tyrni)'
-      )
+      .find('.application-handling__list-row--applicant-name:contains(Tyrni)')
       .closest('.application-handling__list-row')
   }
 
@@ -219,9 +215,7 @@
   }
 
   const reviewNotesSubmitButton = () => {
-    return testFrame().find(
-      '.application-handling__review-note-submit-button'
-    )
+    return testFrame().find('.application-handling__review-note-submit-button')
   }
 
   const score = () => {
@@ -229,15 +223,11 @@
   }
 
   function eventCaptions() {
-    return testFrame().find(
-      '.application-handling__event-row-header > span'
-    )
+    return testFrame().find('.application-handling__event-row-header > span')
   }
 
   const selectedState = () => {
-    return testFrame().find(
-      '.application-handling__review-state-row--selected'
-    )
+    return testFrame().find('.application-handling__review-state-row--selected')
   }
 
   const notSelectedStates = () => {
@@ -281,15 +271,11 @@
   }
 
   const applicantColumn = () => {
-    return testFrame().find(
-      '.application-handling__list-row--applicant > span'
-    )
+    return testFrame().find('.application-handling__list-row--applicant > span')
   }
 
   const timeColumn = () => {
-    return testFrame().find(
-      '.application-handling__list-row--created-time i'
-    )
+    return testFrame().find('.application-handling__list-row--created-time i')
   }
 
   const multipleApplicationsApplicant = () => {
@@ -305,9 +291,7 @@
   }
 
   const ssnSearchField = () => {
-    return testFrame().find(
-      '.application__search-control-search-term-input'
-    )
+    return testFrame().find('.application__search-control-search-term-input')
   }
 
   const ssnSearchFieldHasValue = value => {
