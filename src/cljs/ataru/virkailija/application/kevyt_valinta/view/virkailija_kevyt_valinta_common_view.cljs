@@ -112,84 +112,95 @@
        kevyt-valinta-on-dropdown-value-change
        ongoing-request-property])))
 
-(defn kevyt-valinta-checkbox-selection [kevyt-valinta-property]
-  (let [lang                                   (re-frame/subscribe [:editor/virkailija-lang])
-        ongoing-request-property               (re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])
-        application-key                        (re-frame/subscribe [:state-query [:application :selected-application-and-form :application :key]])
-        kevyt-valinta-checkbox-state           (reaction @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-selection-state
-                                                                               kevyt-valinta-property
-                                                                               @application-key]))
-        checkbox-disabled?                     (reaction (or @ongoing-request-property
-                                                             (= @kevyt-valinta-checkbox-state :checked)))
-        show-loader?                           (reaction (= @ongoing-request-property kevyt-valinta-property))
-        kevyt-valinta-property-values          (reaction @(re-frame/subscribe [:virkailija-kevyt-valinta/allowed-kevyt-valinta-property-values
-                                                                               kevyt-valinta-property
-                                                                               @application-key]))
-        kevyt-valinta-checkbox-values          (reaction (map (fn [kevyt-valinta-property-value]
-                                                                {:value kevyt-valinta-property-value
-                                                                 :label (translations/kevyt-valinta-selection-label kevyt-valinta-property
-                                                                                                                    kevyt-valinta-property-value
-                                                                                                                    @lang)})
-                                                              @kevyt-valinta-property-values))
-        kevyt-valinta-checkbox-value           (reaction @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-value
-                                                                               kevyt-valinta-property
-                                                                               @application-key]))
-        kevyt-valinta-checkbox-label           (reaction (->> @kevyt-valinta-checkbox-values
-                                                              (filter (comp (partial = @kevyt-valinta-checkbox-value)
-                                                                            :value))
-                                                              (map :label)
-                                                              (first)))
+(defn kevyt-valinta-slider-toggle-selection [kevyt-valinta-property]
+  (let [lang                                        (re-frame/subscribe [:editor/virkailija-lang])
+        ongoing-request-property                    (re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])
+        application-key                             (re-frame/subscribe [:state-query [:application :selected-application-and-form :application :key]])
+        kevyt-valinta-slider-toggle-state           (reaction @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-selection-state
+                                                                                    kevyt-valinta-property
+                                                                                    @application-key]))
+        slider-toggle-disabled?                     (reaction (or (some? @ongoing-request-property)
+                                                                  (= @kevyt-valinta-slider-toggle-state :checked)))
+        show-loader?                                (reaction (= @ongoing-request-property kevyt-valinta-property))
+        kevyt-valinta-property-values               (reaction @(re-frame/subscribe [:virkailija-kevyt-valinta/allowed-kevyt-valinta-property-values
+                                                                                    kevyt-valinta-property
+                                                                                    @application-key]))
+        kevyt-valinta-slider-toggle-values          (reaction (map (fn [kevyt-valinta-property-value]
+                                                                     {:value kevyt-valinta-property-value
+                                                                      :label (translations/kevyt-valinta-selection-label kevyt-valinta-property
+                                                                                                                         kevyt-valinta-property-value
+                                                                                                                         @lang)})
+                                                                   @kevyt-valinta-property-values))
+        kevyt-valinta-slider-toggle-value           (reaction @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-value
+                                                                                    kevyt-valinta-property
+                                                                                    @application-key]))
+        kevyt-valinta-slider-toggle-label           (reaction (->> @kevyt-valinta-slider-toggle-values
+                                                                   (filter (comp (partial = @kevyt-valinta-slider-toggle-value)
+                                                                                 :value))
+                                                                   (map :label)
+                                                                   (first)))
         ;; kevytvalinta näytetään ainoastaan, kun yksi hakukohde valittuna, ks. :virkailija-kevyt-valinta/show-kevyt-valinta?
-        hakukohde-oid                          (reaction (first @(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])))
+        hakukohde-oid                               (reaction (first @(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])))
 
-        kevyt-valinta-on-checkbox-value-change (reaction (partial on-kevyt-valinta-property-change
-                                                                  kevyt-valinta-property
-                                                                  @hakukohde-oid
-                                                                  @application-key))
-        force-show-checkbox?                   (reagent/atom nil)
-        kevyt-valinta-dropdowns-open?          (re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-dropdowns-open?])
-        kevyt-valinta-write-rights?            (re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-write-rights?])
-        checkbox-info-visible?                 (reaction (and @kevyt-valinta-write-rights?
-                                                              (if (some? @force-show-checkbox?)
-                                                                @force-show-checkbox?
-                                                                (not @kevyt-valinta-checkbox-value))
-                                                              (not @kevyt-valinta-dropdowns-open?)))]
+        kevyt-valinta-on-slider-toggle-value-change (reaction (partial on-kevyt-valinta-property-change
+                                                                       kevyt-valinta-property
+                                                                       @hakukohde-oid
+                                                                       @application-key))
+        force-show-slider-toggle?                   (reagent/atom nil)
+        kevyt-valinta-dropdowns-open?               (re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-dropdowns-open?])
+        kevyt-valinta-write-rights?                 (re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-write-rights?])
+        slider-toggle-info-visible?                 (reaction (and @kevyt-valinta-write-rights?
+                                                                   (if (some? @force-show-slider-toggle?)
+                                                                     @force-show-slider-toggle?
+                                                                     (not @kevyt-valinta-slider-toggle-value))
+                                                                   (not @kevyt-valinta-dropdowns-open?)))]
     (fn [_]
-      [:div.application-handling__kevyt-valinta-checkbox-container
-       (when @checkbox-disabled?
-         {:class "application-handling__kevyt-valinta-checkbox-container--disabled"})
-       [:div.application-handling__kevyt-valinta-checkbox
-        {:class    (as-> "" classes
-                         (str classes (if @checkbox-disabled?
-                                        " application-handling__kevyt-valinta-checkbox--disabled"
-                                        " application-handling__kevyt-valinta-checkbox--enabled"))
+      [:div.application-handling__kevyt-valinta-slider-toggle-container
+       (when @slider-toggle-disabled?
+         {:class "application-handling__kevyt-valinta-slider-toggle-container--disabled"})
+       [:div.application-handling__kevyt-valinta-slider-toggle-label
+        [:span @kevyt-valinta-slider-toggle-label]]
+       [:div.application-handling__kevyt-valinta-slider-toggle
+        {:class    (cond-> ""
+                           @slider-toggle-disabled?
+                           (str " application-handling__kevyt-valinta-slider-toggle--disabled")
 
-                         (cond-> classes
-                                 @kevyt-valinta-checkbox-value
-                                 (str " application-handling__kevyt-valinta-checkbox--checked")))
-         :on-click (when-not @checkbox-disabled?
+                           (match [@kevyt-valinta-slider-toggle-state @ongoing-request-property]
+                                  [:unchecked (_ :guard nil?)]
+                                  true
+
+                                  [:unchecked (_ :guard #(not= % kevyt-valinta-property))]
+                                  true
+
+                                  [:checked (_ :guard #(not= % kevyt-valinta-property))]
+                                  true
+
+                                  :else
+                                  false)
+                           (str " application-handling__kevyt-valinta-slider-toggle--enabled")
+
+                           @kevyt-valinta-slider-toggle-value
+                           (str " application-handling__kevyt-valinta-slider-toggle--checked"))
+         :on-click (when-not @slider-toggle-disabled?
                      (fn []
-                       (let [new-value (not @kevyt-valinta-checkbox-value)]
-                         (reset! force-show-checkbox? nil)
-                         (@kevyt-valinta-on-checkbox-value-change new-value))))}
-        (when @kevyt-valinta-checkbox-value
-          [:i.zmdi.zmdi-check.application-handling__kevyt-valinta-checkbox-checkmark])]
-       [:div.application-handling__kevyt-valinta-checkbox-label
-        [:span @kevyt-valinta-checkbox-label]
-        (when-not @show-loader?
-          [:<>
-           [:a
-            {:on-click (fn []
-                         (swap! force-show-checkbox? (fnil not @checkbox-info-visible?)))}
-            [:div.application-handling__kevyt-valinta-checkbox-info-container
-             (when @kevyt-valinta-write-rights?
-               [:i.zmdi.zmdi-info.application-handling__kevyt-valinta-checkbox-info-symbol])
-             (when @checkbox-info-visible?
-               [:div.application-handling__kevyt-valinta-checkbox-info-indicator.animated.fadeIn])]
-            (when @checkbox-info-visible?
-              [:div.application-handling__kevyt-valinta-checkbox-info.animated.fadeIn
-               [:span.application-handling__kevyt-valinta-checkbox-info-text "Julkaisun jälkeen valintatieto näkyy hakijalle Oma opintopolku -palvelussa."]
-               [:span.application-handling__kevyt-valinta-checkbox-info-text "Hyväksytyille hakijoille lähetetään myös sähköposti klo 8.00 tai 20.00"]])]])]
+                       (let [new-value (not @kevyt-valinta-slider-toggle-value)]
+                         (reset! force-show-slider-toggle? nil)
+                         (@kevyt-valinta-on-slider-toggle-value-change new-value))))}
+        [:div.application-handling__kevyt-valinta-slider-toggle-toggle-indicator]]
+       (when-not @show-loader?
+         [:<>
+          [:a
+           {:on-click (fn []
+                        (swap! force-show-slider-toggle? (fnil not @slider-toggle-info-visible?)))}
+           [:div.application-handling__kevyt-valinta-slider-toggle-info-container
+            (when @kevyt-valinta-write-rights?
+              [:i.zmdi.zmdi-info.application-handling__kevyt-valinta-slider-toggle-info-symbol])
+            (when @slider-toggle-info-visible?
+              [:div.application-handling__kevyt-valinta-slider-toggle-info-indicator.animated.fadeIn])]
+           (when @slider-toggle-info-visible?
+             [:div.application-handling__kevyt-valinta-slider-toggle-info.animated.fadeIn
+              [:span.application-handling__kevyt-valinta-slider-toggle-info-text "Julkaisun jälkeen valintatieto näkyy hakijalle Oma opintopolku -palvelussa."]
+              [:span.application-handling__kevyt-valinta-slider-toggle-info-text "Hyväksytyille hakijoille lähetetään myös sähköposti klo 8.00 tai 20.00"]])]])
        (when @show-loader?
          [el/ellipsis-loader])])))
 

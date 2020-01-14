@@ -3,7 +3,7 @@
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as translations]))
 
 (defn- kevyt-valinta-julkaisun-tila-selection []
-  [common-view/kevyt-valinta-checkbox-selection :kevyt-valinta/julkaisun-tila])
+  [common-view/kevyt-valinta-slider-toggle-selection :kevyt-valinta/julkaisun-tila])
 
 (defn kevyt-valinta-julkaisun-tila-row []
   [common-view/kevyt-valinta-row
