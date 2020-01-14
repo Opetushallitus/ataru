@@ -26,3 +26,10 @@
     (cond-> text
             (some? params)
             (format-string params))))
+
+(defn get-hakija-translation [key lang & params]
+  (apply get-translation
+         key
+         lang
+         translation-mapping
+         params))

@@ -2,10 +2,12 @@
   (:require [markdown.core :refer [md->html]]
             [markdown.transformers :refer [transformer-vector]]
             [reagent.core :as reagent]
+            [re-frame.core :as re-frame]
             [clojure.string :as string]
             [goog.string :as s]
             [ataru.util :as util]
-            [ataru.cljs-util :refer [valid-uuid? get-translation get-virkailija-translation]])
+            [ataru.cljs-util :refer [valid-uuid? get-virkailija-translation]]
+            [ataru.translations.translation-util :as translations])
   (:import (goog.html.sanitizer HtmlSanitizer)))
 
 (defn answer-key [field-data]
@@ -80,7 +82,8 @@
                             (js/clearTimeout @timeout)
                             (reset!
                              timeout
-                             (js/setTimeout #(set-markdown-height component scroll-height) 200)))]
+                             (js/setTimeout #(set-markdown-height component scroll-height) 200)))
+         lang             (re-frame/subscribe [:application/form-language])]
      (reagent/create-class
       {:component-did-mount
        (fn [component]
@@ -117,8 +120,16 @@
               [:button.application__form-info-text-collapse-button
                {:on-click (fn [] (swap! collapsed not))}
                (if @collapsed
-                 [:span (str (get-translation :read-more) " ") [:i.zmdi.zmdi-hc-lg.zmdi-chevron-down]]
-                 [:span (str (get-translation :read-less) " ") [:i.zmdi.zmdi-hc-lg.zmdi-chevron-up]])])]))}))))
+                 [:span (str (translations/get-hakija-translation
+                               :read-more
+                               @lang)
+                             " ")
+                  [:i.zmdi.zmdi-hc-lg.zmdi-chevron-down]]
+                 [:span (str (translations/get-hakija-translation
+                               :read-less
+                               @lang)
+                             " ")
+                  [:i.zmdi.zmdi-hc-lg.zmdi-chevron-up]])])]))}))))
 
 (defn render-paragraphs [s]
   (->> (clojure.string/split s "\n")

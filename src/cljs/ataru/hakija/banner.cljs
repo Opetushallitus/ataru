@@ -6,7 +6,7 @@
             [goog.string :as s]
             [cljs.core.match :refer-macros [match]]
             [ataru.util :as util]
-            [ataru.cljs-util :refer [get-translation]]))
+            [ataru.translations.translation-util :as translations]))
 
 (defn logo []
   (let [lang (subscribe [:application/form-language])]
@@ -24,15 +24,16 @@
 (defn invalid-field-status []
   (let [show-details        (r/atom false)
         toggle-show-details #(do (reset! show-details (not @show-details)) nil)
-        languages           (subscribe [:application/default-languages])]
+        languages           (subscribe [:application/default-languages])
+        lang                (subscribe [:application/form-language])]
     (fn [valid-status]
       (when (seq (:invalid-fields valid-status))
         [:div.application__invalid-field-status
          [:span.application__invalid-field-status-title
           {:on-click toggle-show-details}
-          (first (get-translation :check-answers))
+          (first (translations/get-hakija-translation :check-answers @lang))
           [:b (count (:invalid-fields valid-status))]
-          (last (get-translation :check-answers))]
+          (last (translations/get-hakija-translation :check-answers @lang))]
          (when @show-details
            [:div
             [:div.application__invalid-fields-arrow-up]
@@ -43,30 +44,32 @@
                   (map (fn [field]
                          (let [label (util/non-blank-val (:label field) @languages)]
                            [:a {:href (str "#scroll-to-" (name (:key field)))} [:div (if (empty? label)
-                                                                                       (get-translation :missing-input)
+                                                                                       (translations/get-hakija-translation :missing-input @lang)
                                                                                        label)]]))
                        (:invalid-fields valid-status)))])]))))
 
 (defn sent-indicator [submit-status]
-  (let [virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])]
+  (let [virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])
+        lang              (subscribe [:application/form-language])]
     (fn [submit-status]
       (match [submit-status @virkailija-secret]
-             [:submitting _] [:div.application__sent-indicator (get-translation :application-sending)]
+             [:submitting _] [:div.application__sent-indicator (translations/get-hakija-translation :application-sending @lang)]
              [:submitted (_ :guard #(nil? %))]
-             [:div.application__sent-indicator.animated.fadeIn (get-translation :application-confirmation)]
+             [:div.application__sent-indicator.animated.fadeIn (translations/get-hakija-translation :application-confirmation @lang)]
              :else nil))))
 
 (defn- edit-text [editing?
                   hakija-secret
-                  virkailija-secret]
+                  virkailija-secret
+                  lang]
   (cond (and editing? (some? hakija-secret))
-        (get-translation :application-hakija-edit-text)
+        (translations/get-hakija-translation :application-hakija-edit-text lang)
 
         (and editing? (some? virkailija-secret))
-        (get-translation :application-virkailija-edit-text)
+        (translations/get-hakija-translation :application-virkailija-edit-text lang)
 
         :else
-        (get-translation :hakija-new-text)))
+        (translations/get-hakija-translation :hakija-new-text lang)))
 
 (defn send-button-or-placeholder [valid-status submit-status]
   (let [secret                (subscribe [:state-query [:application :secret]])
@@ -75,15 +78,18 @@
         editing               (subscribe [:state-query [:application :editing?]])
         values-changed?       (subscribe [:state-query [:application :values-changed?]])
         validators-processing (subscribe [:state-query [:application :validators-processing]])
-        secret-expired?       (subscribe [:state-query [:application :secret-expired?]])]
+        secret-expired?       (subscribe [:state-query [:application :secret-expired?]])
+        lang                  (subscribe [:application/form-language])]
     (fn [valid-status submit-status]
       (match submit-status
              :submitted [:div.application__sent-placeholder.animated.fadeIn
                          [:i.zmdi.zmdi-check]
                          [:span.application__sent-placeholder-text
-                          (get-translation (if (and @editing @virkailija-secret)
-                                             :modifications-saved
-                                             :application-sent))]]
+                          (translations/get-hakija-translation
+                            (if (and @editing @virkailija-secret)
+                              :modifications-saved
+                              :application-sent)
+                            @lang)]]
              :else [:button.application__send-application-button
                     {:disabled (or @transmitting?
                                    (not-empty (:invalid-fields valid-status))
@@ -94,21 +100,22 @@
                      :on-click #(if @editing
                                   (dispatch [:application/edit])
                                   (dispatch [:application/submit]))}
-                    (edit-text @editing @secret @virkailija-secret)]))))
+                    (edit-text @editing @secret @virkailija-secret @lang)]))))
 
 (defn- preview-toggle
   [submit-status enabled?]
-  (let [toggle-fn (fn [_] (dispatch [:state-update #(update-in % [:application :preview-enabled] not)]))]
+  (let [toggle-fn (fn [_] (dispatch [:state-update #(update-in % [:application :preview-enabled] not)]))
+        lang      @(subscribe [:application/form-language])]
     (when (not submit-status)
       [:div.application__preview-toggle-container
        [:a.application__preview-link
         {:class (when enabled? "application__preview-link--disabled")
          :on-click toggle-fn}
-        (get-translation :edit-answers)]
+        (translations/get-hakija-translation :edit-answers lang)]
        [:a.application__preview-link
         {:class (when-not enabled? "application__preview-link--disabled")
          :on-click toggle-fn}
-        (get-translation :preview-answers)]])))
+        (translations/get-hakija-translation :preview-answers lang)]])))
 
 (defn- new-time-left [hakuaika-end time-diff]
   (/ (- hakuaika-end (.getTime (js/Date.)) time-diff) 1000))
@@ -117,7 +124,7 @@
   (let [inv (/ 1.0 step)]
     (/ (Math/ceil (* value inv)) inv)))
 
-(defn hakuaika-left-text [hours minutes]
+(defn hakuaika-left-text [hours minutes lang]
   (let [text-code (cond
                     (and (zero? hours) (> 15 minutes))  :application-period-less-than-15-min-left
                     (and (zero? hours) (> 30 minutes))  :application-period-less-than-30-min-left
@@ -126,13 +133,14 @@
                     (> 24 hours)                        :application-period-less-than-day-left)]
     (if text-code
       [:div.application__hakuaika-left
-       (get-translation text-code)])))
+       (translations/get-hakija-translation text-code lang)])))
 
 (defn- hakuaika-left []
   (let [hakuaika-end  (subscribe [:state-query [:form :hakuaika-end]])
         time-diff     (subscribe [:state-query [:form :time-delta-from-server]])
         seconds-left  (r/atom (new-time-left @hakuaika-end @time-diff))
-        interval      (r/atom nil)]
+        interval      (r/atom nil)
+        lang          @(subscribe [:application/form-language])]
     (reset! interval (js/setInterval (fn []
                                        (let [new-time (new-time-left @hakuaika-end @time-diff)]
                                          (if (or (nil? @hakuaika-end) (< 0 new-time))
@@ -143,7 +151,7 @@
       (when (< 0 @seconds-left (* 3600 24))
         (let [hours   (Math/floor (/ @seconds-left 3600))
               minutes (Math/floor (/ (rem @seconds-left 3600) 60))]
-          (hakuaika-left-text hours minutes))))))
+          (hakuaika-left-text hours minutes lang))))))
 
 (defn status-controls [submit-status]
   (let [valid-status (subscribe [:application/valid-status])

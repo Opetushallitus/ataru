@@ -170,13 +170,6 @@
   (comp (partial resize-vector target-length)
         (fnil identity [])))
 
-(defn get-translation [key & params]
-  (apply translation-util/get-translation
-         key
-         @(subscribe [:application/form-language])
-         texts/translation-mapping
-         params))
-
 (defn get-virkailija-translation [key & params]
   (apply translation-util/get-translation
          key

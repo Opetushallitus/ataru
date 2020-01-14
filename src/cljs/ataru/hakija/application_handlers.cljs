@@ -8,6 +8,7 @@
             [ataru.hakija.rules :as rules]
             [ataru.hakija.resumable-upload :as resumable-upload]
             [ataru.hakija.try-selection :refer [try-selection]]
+            [ataru.translations.translation-util :as translations]
             [cljs.core.match :refer-macros [match]]
             [ataru.hakija.application :refer [create-initial-answers
                                               create-application-to-submit
@@ -1349,7 +1350,7 @@
   :application/set-page-title
   (fn [{:keys [db]}]
     (let [lang-kw       (keyword (-> db :form :selected-language))
-          title-prefix  (util/get-translation :page-title)
+          title-prefix  (translations/get-hakija-translation :page-title lang-kw)
           title-suffix  (or
                           (lang-kw (-> db :form :tarjonta :haku-name))
                           (-> db :form :name lang-kw))]
