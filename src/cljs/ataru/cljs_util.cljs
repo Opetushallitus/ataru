@@ -170,12 +170,5 @@
   (comp (partial resize-vector target-length)
         (fnil identity [])))
 
-(defn get-virkailija-translation [key & params]
-  (apply translation-util/get-translation
-         key
-         @(subscribe [:editor/virkailija-lang])
-         @(subscribe [:editor/virkailija-texts])
-         params))
-
 (defn modify-event? [event]
   (some #{(:event-type event)} ["updated-by-applicant" "updated-by-virkailija"]))

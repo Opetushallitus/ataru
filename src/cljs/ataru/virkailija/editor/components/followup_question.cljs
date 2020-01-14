@@ -43,10 +43,10 @@
                                  (fn [v] (update v option-index not)))}]
     [:div.editor-form__followup-question
      (if (empty? followups)
-       [:a attrs (util/get-virkailija-translation :followups)]
+       [:a attrs @(subscribe [:editor/virkailija-translation :followups])]
        [:a attrs
         (s/format "%s (%d) "
-                  (util/get-virkailija-translation :followups)
+                  @(subscribe [:editor/virkailija-translation :followups])
                   (count followups))
         (if (get @show-followups option-index)
           [:i.zmdi.zmdi-chevron-up.zmdi-hc-lg]

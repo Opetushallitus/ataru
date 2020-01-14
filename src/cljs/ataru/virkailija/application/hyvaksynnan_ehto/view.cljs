@@ -1,7 +1,6 @@
 (ns ataru.virkailija.application.hyvaksynnan-ehto.view
   (:require [re-frame.core :as re-frame]
             [reagent.core :as r]
-            [ataru.cljs-util :as cu]
             [ataru.util :as util]
             ataru.virkailija.application.hyvaksynnan-ehto.subs))
 
@@ -30,7 +29,7 @@
                                           hakukohde-oid])))}]
      [:label.hyvaksynnan-ehto-ehdollisesti-hyvaksyttavissa__label
       {:for (str "hyvaksynnan-ehto-ehdollisesti-hyvaksyttavissa-" application-key "-" hakukohde-oid)}
-      (cu/get-virkailija-translation :ehdollisesti-hyvaksyttavissa)]]))
+      @(re-frame/subscribe [:editor/virkailija-translation :ehdollisesti-hyvaksyttavissa])]]))
 
 (defn ehto-koodi
   [_ _]
@@ -242,7 +241,7 @@
                                               application-key
                                               hakukohde-oid])]
          [:span.hyvaksynnan-ehto-error__text
-          (cu/get-virkailija-translation :operation-failed)])]
+          @(re-frame/subscribe [:editor/virkailija-translation :operation-failed])])]
       (when @(re-frame/subscribe [:hyvaksynnan-ehto/show-ehto-koodi?
                                   application-key
                                   hakukohde-oid])

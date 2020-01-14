@@ -2,7 +2,6 @@
   (:require [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]
             [ataru.virkailija.application.attachments.virkailija-attachment-subs :as attachment-subs]
-            [ataru.cljs-util :as cu]
             [ataru.util :as u]
             [reagent.core :as reagent]
             [re-frame.core :as re-frame]
@@ -62,7 +61,7 @@
 
 (defn- attachment-skimming-filename [selected-attachment]
   (let [download-label     (gstring/format "%s (%s)"
-                                           (cu/get-virkailija-translation :load-attachment-in-skimming)
+                                           @(re-frame/subscribe [:editor/virkailija-translation :load-attachment-in-skimming])
                                            (-> selected-attachment :size u/size-bytes->str))
         download-url       (download-url selected-attachment)
         filename           (-> selected-attachment :filename)
@@ -79,13 +78,13 @@
        (cond (= :download-only display-capability)
              [:div.attachment-skimming-header__cannot-display-text.animated.fadeIn
               [:div.attachment-skimming-header__cannot-display-text-indicator]
-              [:span (cu/get-virkailija-translation :cannot-display-file-type-in-attachment-skimming)]]
+              [:span @(re-frame/subscribe [:editor/virkailija-translation :cannot-display-file-type-in-attachment-skimming])]]
              (and (= :provide-preview display-capability)
                   (> page-count pages-to-display))
              [:div.attachment-skimming-header__partial-preview-text.animated.fadeIn
               [:div.attachment-skimming-header__partial-preview-text-indicator]
               [:span
-               (cu/get-virkailija-translation :partial-preview-in-attachment-skimming)
+               @(re-frame/subscribe [:editor/virkailija-translation :partial-preview-in-attachment-skimming])
                (gstring/format "1%s%s/%s" non-breaking-range-dash pages-to-display page-count)]])]]]))
 
 (defn- attachment-skimming-state-list []

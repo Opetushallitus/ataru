@@ -6,7 +6,7 @@
             [clojure.string :as string]
             [goog.string :as s]
             [ataru.util :as util]
-            [ataru.cljs-util :refer [valid-uuid? get-virkailija-translation]]
+            [ataru.cljs-util :refer [valid-uuid?]]
             [ataru.translations.translation-util :as translations])
   (:import (goog.html.sanitizer HtmlSanitizer)))
 
@@ -253,10 +253,10 @@
                    (not (include? id)))
       [:div.editor-form__id-container
        [:a.editor-form__copy-question-id
-        {:data-tooltip  (s/format (get-virkailija-translation (if answer? :copy-answer-id :copy-question-id))
+        {:data-tooltip  (s/format @(re-frame/subscribe [:editor/virkailija-translation (if answer? :copy-answer-id :copy-question-id)])
                           id)
          :on-mouse-down #(copy id)}
         "id"]
        (when (and (not (false? shared-use-warning?)) (not (valid-uuid? id)))
          [:span.editor-form__id-fixed
-          (get-virkailija-translation :id-in-shared-use)])])))
+          @(re-frame/subscribe [:editor/virkailija-translation :id-in-shared-use])])])))

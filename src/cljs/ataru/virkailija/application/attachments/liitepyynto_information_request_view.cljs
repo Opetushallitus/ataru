@@ -1,10 +1,7 @@
 (ns ataru.virkailija.application.attachments.liitepyynto-information-request-view
-  (:require [ataru.cljs-util :as cu]
-            [ataru.translations.texts :as texts]
-            [ataru.virkailija.date-time-picker :as date-time-picker]
+  (:require [ataru.virkailija.date-time-picker :as date-time-picker]
             ataru.virkailija.application.attachments.liitepyynto-information-request-subs
             ataru.virkailija.application.attachments.liitepyynto-information-request-handlers
-            [reagent.core :as reagent]
             [re-frame.core :as re-frame]))
 
 (defn send-toggle [application-key liitepyynto-key]
@@ -41,64 +38,62 @@
    {:for (str "liitepyynto-information-request-toggle-"
               application-key "-"
               (name liitepyynto-key))}
-   (cu/get-virkailija-translation :liitepyynto-deadline)])
+   @(re-frame/subscribe [:editor/virkailija-translation :liitepyynto-deadline])])
 
 (defn deadline-date-input [application-key liitepyynto-key]
   (let [value     (re-frame/subscribe
-                   [:liitepyynto-information-request/deadline-date
-                    application-key
-                    liitepyynto-key])
+                    [:liitepyynto-information-request/deadline-date
+                     application-key
+                     liitepyynto-key])
         on-change (fn [value]
                     (re-frame/dispatch
-                     [:liitepyynto-information-request/set-deadline-date
-                      application-key
-                      liitepyynto-key
-                      value]))]
-    (fn [_ _]
-      [date-time-picker/date-picker
-       (str "liitepyynto-deadline__date-input-"
-            application-key "-" (name liitepyynto-key))
-       "liitepyynto-deadline__date-input"
-       @value
-       (if (= "" @value) (cu/get-virkailija-translation :required) "")
-       on-change])))
+                      [:liitepyynto-information-request/set-deadline-date
+                       application-key
+                       liitepyynto-key
+                       value]))]
+    [date-time-picker/date-picker
+     (str "liitepyynto-deadline__date-input-"
+          application-key "-" (name liitepyynto-key))
+     "liitepyynto-deadline__date-input"
+     @value
+     (if (= "" @value) @(re-frame/subscribe [:editor/virkailija-translation :required]) "")
+     on-change]))
 
 (defn deadline-time-input [application-key liitepyynto-key]
   (let [value     (re-frame/subscribe
-                   [:liitepyynto-information-request/deadline-time
-                    application-key
-                    liitepyynto-key])
+                    [:liitepyynto-information-request/deadline-time
+                     application-key
+                     liitepyynto-key])
         on-change (fn [value]
                     (re-frame/dispatch
-                     [:liitepyynto-information-request/set-deadline-time
-                      application-key
-                      liitepyynto-key
-                      value])
+                      [:liitepyynto-information-request/set-deadline-time
+                       application-key
+                       liitepyynto-key
+                       value])
                     (re-frame/dispatch
-                     [:liitepyynto-information-request/debounced-save-deadline
-                      application-key
-                      liitepyynto-key]))]
-    (fn [_ _]
-      [date-time-picker/time-picker
-       (str "liitepyynto-deadline__time-input-"
-            application-key "-" (name liitepyynto-key))
-       "liitepyynto-deadline__time-input"
-       @value
-       (if (= "" @value) (cu/get-virkailija-translation :required) "")
-       on-change])))
+                      [:liitepyynto-information-request/debounced-save-deadline
+                       application-key
+                       liitepyynto-key]))]
+    [date-time-picker/time-picker
+     (str "liitepyynto-deadline__time-input-"
+          application-key "-" (name liitepyynto-key))
+     "liitepyynto-deadline__time-input"
+     @value
+     (if (= "" @value) @(re-frame/subscribe [:editor/virkailija-translation :required]) "")
+     on-change]))
 
 (defn deadline-date-label [application-key liitepyynto-key]
   [:label.liitepyynto-deadline__date-label
    {:for (str "liitepyynto-deadline__date-input-"
               application-key "-" (name liitepyynto-key))}
-   (cu/get-virkailija-translation :liitepyynto-deadline-date)])
+   @(re-frame/subscribe [:editor/virkailija-translation :liitepyynto-deadline-date])])
 
 (defn deadline-time-label [application-key liitepyynto-key]
   [:label.liitepyynto-deadline__time-label
    {:for (str "liitepyynto-deadline__time-input-"
               application-key "-" (name liitepyynto-key))}
-   (cu/get-virkailija-translation :liitepyynto-deadline-time)])
+   @(re-frame/subscribe [:editor/virkailija-translation :liitepyynto-deadline-time])])
 
 (defn deadline-error []
   [:span.liitepyynto-deadline__error
-   (cu/get-virkailija-translation :liitepyynto-deadline-error)])
+   @(re-frame/subscribe [:editor/virkailija-translation :liitepyynto-deadline-error])])

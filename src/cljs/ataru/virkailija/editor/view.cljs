@@ -1,6 +1,6 @@
 (ns ataru.virkailija.editor.view
   (:require-macros [reagent.ratom :refer [reaction]])
-  (:require [ataru.cljs-util :refer [wrap-scroll-to get-virkailija-translation]]
+  (:require [ataru.cljs-util :refer [wrap-scroll-to]]
             [ataru.component-data.component :as component]
             [ataru.virkailija.editor.core :as c]
             [ataru.virkailija.editor.subs]
@@ -43,7 +43,7 @@
    {:on-click (fn [evt]
                 (.preventDefault evt)
                 (dispatch [:editor/add-form]))}
-   (get-virkailija-translation :new-form)])
+   @(subscribe [:editor/virkailija-translation :new-form])])
 
 (defn- copy-form []
   (let [form-key    (subscribe [:state-query [:editor :selected-form-key]])
@@ -57,26 +57,26 @@
         :class    (if @disabled?
                     "editor-form__control-button--disabled"
                     "editor-form__control-button--enabled")}
-       (get-virkailija-translation :copy-form)])))
+       @(subscribe [:editor/virkailija-translation :copy-form])])))
 
 (defn- remove-form []
   (case @(subscribe [:editor/remove-form-button-state])
     :active
     [:button.editor-form__control-button--enabled.editor-form__control-button
      {:on-click #(dispatch [:editor/start-remove-form])}
-     (get-virkailija-translation :delete-form)]
+     @(subscribe [:editor/virkailija-translation :delete-form])]
     :confirm
     [:div.editor-form__component-button-group
      [:button.editor-form__control-button--confirm.editor-form__control-button
       {:on-click #(dispatch [:editor/confirm-remove-form])}
-      (get-virkailija-translation :confirm-delete)]
+      @(subscribe [:editor/virkailija-translation :confirm-delete])]
      [:button.editor-form__control-button--enabled.editor-form__control-button
       {:on-click #(dispatch [:editor/unstart-remove-form])}
-      (get-virkailija-translation :cancel-form-delete)]]
+      @(subscribe [:editor/virkailija-translation :cancel-form-delete])]]
     :disabled
     [:button.editor-form__control-button--disabled.editor-form__control-button
      {:disabled true}
-     (get-virkailija-translation :delete-form)]))
+     @(subscribe [:editor/virkailija-translation :delete-form])]))
 
 (defn- form-controls []
   [:div.editor-form__form-controls-container
@@ -86,7 +86,7 @@
 
 (defn- form-header-row []
   [:div.editor-form__form-header-row
-   [:h1.editor-form__form-heading (get-virkailija-translation :forms)]
+   [:h1.editor-form__form-heading @(subscribe [:editor/virkailija-translation :forms])]
    [form-controls]])
 
 (defn- editor-name-input [lang focus?]
@@ -104,7 +104,7 @@
                                {:type        "text"
                                 :value       (get-in @form [:name lang])
                                 :disabled    @form-locked?
-                                :placeholder (get-virkailija-translation :form-name)
+                                :placeholder @(subscribe [:editor/virkailija-translation :form-name])
                                 :on-change   #(do (dispatch [:editor/change-form-name lang (.-value (.-target %))])
                                                   (dispatch [:set-state [:editor :new-form-created?] false]))
                                 :on-blur     #(dispatch [:set-state [:editor :new-form-created?] false])}])})))
@@ -128,7 +128,7 @@
 (defn- get-org-name [org]
   (str (get-in org [:name :fi])
        (if (= "group" (:type org))
-         (str " (" (get-virkailija-translation :group) ")")
+         (str " (" @(subscribe [:editor/virkailija-translation :group]) ")")
          "")))
 
 (defn- get-org-name-for-oid [oid orgs] (get-org-name (first (filter #(= oid (:oid %)) orgs))))
@@ -137,12 +137,12 @@
   [:div
    [:span.editor-form__fold-clickable-text
     {:on-click #(dispatch [:editor/fold-all])}
-    (get-virkailija-translation :close)]
+    @(subscribe [:editor/virkailija-translation :close])]
    [:span.editor-form__fold-description-text " / "]
    [:span.editor-form__fold-clickable-text
     {:on-click #(dispatch [:editor/unfold-all])}
-    (get-virkailija-translation :open)]
-   [:span.editor-form__fold-description-text (str " " (get-virkailija-translation :questions))]])
+    @(subscribe [:editor/virkailija-translation :open])]
+   [:span.editor-form__fold-description-text (str " " @(subscribe [:editor/virkailija-translation :questions]))]])
 
 (defn- preview-link [form-key lang-kwd]
   [:a.editor-form__preview-button-link
@@ -161,7 +161,7 @@
     {:href   (str "/palaute/"
                   "?q=" (str js/config.applicant.service_url path))
      :target "_blank"}
-    (get-virkailija-translation :link-to-feedback)]])
+    @(subscribe [:editor/virkailija-translation :link-to-feedback])]])
 
 (defn- lock-form-editing []
   (let [form-locked-info @(subscribe [:editor/form-locked-info])
@@ -173,7 +173,7 @@
     [:div.editor-form__preview-buttons
      (when (not= lock-state :open)
        [:div.editor-form__form-editing-locked
-        (get-virkailija-translation :form-locked)
+        @(subscribe [:editor/virkailija-translation :form-locked])
         [:i.zmdi.zmdi-lock.editor-form__form-editing-lock-icon]
         [:div.editor-form__form-editing-locked-by
          (str "("
@@ -186,8 +186,8 @@
         {:on-click #(dispatch [:editor/toggle-form-editing-lock])}
         {:disabled true})
       (if (= lock-state :locked)
-        (get-virkailija-translation :remove-lock)
-        (get-virkailija-translation :lock-form))]]))
+        @(subscribe [:editor/virkailija-translation :remove-lock])
+        @(subscribe [:editor/virkailija-translation :lock-form]))]]))
 
 (defn- disable-autosave
   []
@@ -198,8 +198,8 @@
         {:on-click #(dispatch [:editor/toggle-autosave])
          :class    (when-not @autosave-enabled "editor-form__autosave-toggle-link--autosave-off")}
         (if @autosave-enabled
-          (get-virkailija-translation :autosave-enabled)
-          (get-virkailija-translation :autosave-disabled))]])))
+          @(subscribe [:editor/virkailija-translation :autosave-enabled])
+          @(subscribe [:editor/virkailija-translation :autosave-disabled]))]])))
 
 (defn- lang-checkbox [lang-kwd]
   (let [id (str "lang-checkbox-" (name lang-kwd))]
@@ -212,10 +212,10 @@
        :on-change (fn [_] (dispatch [:editor/toggle-language lang-kwd]))}]
      [:label.editor-form__checkbox-label.editor-form__language-checkbox-label
       {:for id}
-      (get-virkailija-translation (case lang-kwd
-                                    :fi :finnish
-                                    :sv :swedish
-                                    :en :english))]]))
+      @(subscribe [:editor/virkailija-translation (case lang-kwd
+                                                    :fi :finnish
+                                                    :sv :swedish
+                                                    :en :english)])]]))
 
 (defn- form-toolbar []
   [:div.editor-form__toolbar
@@ -227,7 +227,7 @@
     [:div.editor-form__preview-buttons
      [:a.editor-form__email-template-editor-link
       {:on-click #(dispatch [:editor/toggle-email-template-editor])}
-      (get-virkailija-translation :edit-email-templates)]]
+      @(subscribe [:editor/virkailija-translation :edit-email-templates])]]
     [lock-form-editing]
     [disable-autosave]]
    [:div.editor-form__toolbar-right
@@ -245,8 +245,8 @@
           [:i.zmdi.zmdi-alert-circle-o]
           (str " "
                (if (empty? (rest (vals form-used-in-hakus)))
-                 (get-virkailija-translation :used-by-haku)
-                 (get-virkailija-translation :used-by-haut)))]
+                 @(subscribe [:editor/virkailija-translation :used-by-haku])
+                 @(subscribe [:editor/virkailija-translation :used-by-haut])))]
          [:ul.editor-form__used-in-haku-list
           (doall
            (for [haku (vals form-used-in-hakus)]
@@ -266,29 +266,29 @@
                               (:haku-oid haku)
                               "?lang=fi")
                  :target "_blank"}
-                (get-virkailija-translation :test-application)]
+                @(subscribe [:editor/virkailija-translation :test-application])]
                [:span " | "]
                [:a
                 {:href   (str js/config.applicant.service_url
                               "/hakemus/haku/" (:haku-oid haku)
                               "?lang=fi")
                  :target "_blank"}
-                (get-virkailija-translation :form)]
+                @(subscribe [:editor/virkailija-translation :form])]
                (when (:superuser? @user-info)
                  (link-to-feedback (str "/hakemus/haku/" (:haku-oid haku))))]]))]]
         [:div.editor-form__form-link-container
          [:h3.editor-form__form-link-heading
           [:i.zmdi.zmdi-alert-circle-o]
-          (str " " (get-virkailija-translation :link-to-form))]
+          (str " " @(subscribe [:editor/virkailija-translation :link-to-form]))]
          [:a.editor-form__form-preview-link
           {:href   (str js/config.applicant.service_url
                         "/hakemus/" (:key form)
                         "?lang=fi")
            :target "_blank"}
-          (get-virkailija-translation :form)]
+          @(subscribe [:editor/virkailija-translation :form])]
          [:span " | "]
          [:a.editor-form__form-admin-preview-link
-          (get-virkailija-translation :test-application)]
+          @(subscribe [:editor/virkailija-translation :test-application])]
          (map (partial preview-link (:key form)) @languages)
          (when (:superuser? @user-info)
            (link-to-feedback (str "/hakemus/" (:key form))))]))))

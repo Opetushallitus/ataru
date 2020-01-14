@@ -2,7 +2,7 @@
   (:require
    [ataru.application-common.application-field-common :refer [copy-link]]
    [ataru.util :as cutil]
-   [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid get-virkailija-translation]]
+   [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid]]
    [ataru.component-data.component :as component]
    [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
    [ataru.virkailija.editor.components.followup-question :refer [followup-question followup-question-overlay]]
@@ -46,7 +46,7 @@
      [:label.editor-form__checkbox-label
       {:for   id
        :class (when disabled? "editor-form__checkbox-label--disabled")}
-      (get-virkailija-translation key)]]))
+      @(subscribe [:editor/virkailija-translation key])]]))
 
 (defn- repeater-checkbox
   [path initial-content]
@@ -63,7 +63,7 @@
      [:label.editor-form__checkbox-label
       {:for   id
        :class (when component-locked? "editor-form__checkbox-label--disabled")}
-      (get-virkailija-translation :multiple-answers)]]))
+      @(subscribe [:editor/virkailija-translation :multiple-answers])]]))
 
 (defn- belongs-to-hakukohteet-modal
   [path id selected-hakukohteet selected-hakukohderyhmat hidden-disabled?]
@@ -100,7 +100,7 @@
         [h-and-h/popup
          [:div.belongs-to-hakukohteet-modal__no-haku-row
           [:p.belongs-to-hakukohteet-modal__no-haku
-           (get-virkailija-translation :set-haku-to-form)]]
+           @(subscribe [:editor/virkailija-translation :set-haku-to-form])]]
          nil
          nil
          #(dispatch [:editor/hide-belongs-to-hakukohteet-modal id])]))))
@@ -148,13 +148,13 @@
            :class    (when @form-locked? "belongs-to-hakukohteet__modal-toggle--disabled")
            :on-click (when-not @form-locked?
                        (if @show-modal? on-click-hide on-click-show))}
-          (str (get-virkailija-translation :visibility-on-form) " ")]
+          (str @(subscribe [:editor/virkailija-translation :visibility-on-form]) " ")]
          [:span.belongs-to-hakukohteet__modal-toggle-label
           (cond (and (empty? visible))
-                (get-virkailija-translation :visible-to-all)
+                @(subscribe [:editor/virkailija-translation :visible-to-all])
 
                 :else
-                (get-virkailija-translation :visible-to-hakukohteet))]
+                @(subscribe [:editor/virkailija-translation :visible-to-hakukohteet]))]
          (when @show-modal?
            [belongs-to-hakukohteet-modal path
             id
@@ -195,16 +195,16 @@
            :class    (when @component-locked? "belongs-to-hakukohteet__modal-toggle--disabled")
            :on-click (when-not @component-locked?
                        (if @show-modal? on-click-hide on-click-show))}
-          (str (get-virkailija-translation :visibility-on-form) " ")]
+          (str @(subscribe [:editor/virkailija-translation :visibility-on-form]) " ")]
          [:span.belongs-to-hakukohteet__modal-toggle-label
           (cond @hidden?
-                (get-virkailija-translation :hidden)
+                @(subscribe [:editor/virkailija-translation :hidden])
 
                 (and (empty? visible))
-                (get-virkailija-translation :visible-to-all)
+                @(subscribe [:editor/virkailija-translation :visible-to-all])
 
                 :else
-                (get-virkailija-translation :visible-to-hakukohteet))]
+                @(subscribe [:editor/virkailija-translation :visible-to-hakukohteet]))]
          (when @show-modal?
            [belongs-to-hakukohteet-modal path
             (:id initial-content)
@@ -224,58 +224,58 @@
     :enabled
     [:button.editor-form__component-button
      {:on-click #(dispatch [:editor/copy-component path true])}
-     (get-virkailija-translation :cut-element)]
+     @(subscribe [:editor/virkailija-translation :cut-element])]
     :active
     [:button.editor-form__component-button
      {:on-click #(dispatch [:editor/cancel-copy-component])}
-     (get-virkailija-translation :cancel-cut)]
+     @(subscribe [:editor/virkailija-translation :cancel-cut])]
     :disabled
     [:button.editor-form__component-button
      {:disabled true}
-     (get-virkailija-translation :cut-element)]))
+     @(subscribe [:editor/virkailija-translation :cut-element])]))
 
 (defn- copy-component-button [path]
   (case @(subscribe [:editor/component-button-state path :copy])
     :enabled
     [:button.editor-form__component-button
      {:on-click #(dispatch [:editor/copy-component path false])}
-     (get-virkailija-translation :copy-element)]
+     @(subscribe [:editor/virkailija-translation :copy-element])]
     :active
     [:button.editor-form__component-button
      {:on-click #(dispatch [:editor/cancel-copy-component])}
-     (get-virkailija-translation :cancel-copy)]
+     @(subscribe [:editor/virkailija-translation :cancel-copy])]
     :disabled
     [:button.editor-form__component-button
      {:disabled true}
-     (get-virkailija-translation :copy-element)]))
+     @(subscribe [:editor/virkailija-translation :copy-element])]))
 
 (defn- remove-component-button [path]
   (case @(subscribe [:editor/component-button-state path :remove])
     :enabled
     [:button.editor-form__component-button
      {:on-click #(dispatch [:editor/start-remove-component path])}
-     (get-virkailija-translation :remove)]
+     @(subscribe [:editor/virkailija-translation :remove])]
     :confirm
     [:div.editor-form__component-button-group
      [:button.editor-form__component-button.editor-form__component-button--confirm
       {:on-click (fn [_] (dispatch [:editor/confirm-remove-component path]))}
-      (get-virkailija-translation :confirm-delete)]
+      @(subscribe [:editor/virkailija-translation :confirm-delete])]
      [:button.editor-form__component-button
       {:on-click #(dispatch [:editor/cancel-remove-component path])}
-      (get-virkailija-translation :cancel-remove)]]
+      @(subscribe [:editor/virkailija-translation :cancel-remove])]]
     :disabled
     [:button.editor-form__component-button
      {:disabled true}
-     (get-virkailija-translation :remove)]))
+     @(subscribe [:editor/virkailija-translation :remove])]))
 
 (defn- header-metadata
   [path metadata]
   [:div
    [:span.editor-form__component-main-header-metadata
     (s/format "%s %s, %s %s %s"
-              (get-virkailija-translation :created-by)
+              @(subscribe [:editor/virkailija-translation :created-by])
               (-> metadata :created-by :name)
-              (get-virkailija-translation :last-modified-by)
+              @(subscribe [:editor/virkailija-translation :last-modified-by])
               (if (= (-> metadata :created-by :oid)
                      (-> metadata :modified-by :oid))
                 ""
@@ -401,20 +401,20 @@
    [:div
     [:div.editor-form__markdown-help-arrow-left]
     [:div.editor-form__markdown-help-content
-     [:span (get-virkailija-translation :md-help-title)]
+     [:span @(subscribe [:editor/virkailija-translation :md-help-title])]
      [:br]
-     [:span (get-virkailija-translation :md-help-bold)]
+     [:span @(subscribe [:editor/virkailija-translation :md-help-bold])]
      [:br]
-     [:span (get-virkailija-translation :md-help-cursive)]
+     [:span @(subscribe [:editor/virkailija-translation :md-help-cursive])]
      [:br]
-     [:span (get-virkailija-translation :md-help-link)]
+     [:span @(subscribe [:editor/virkailija-translation :md-help-link])]
      [:br]
      [:a {:href          "https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet"
           :target        "_blank"
           :on-mouse-down (fn [evt]
                            (let [url (.getAttribute (-> evt .-target) "href")]
                              (.open js/window url "_blank")))}
-      (get-virkailija-translation :md-help-more)]]]])
+      @(subscribe [:editor/virkailija-translation :md-help-more])]]]])
 
 (defn input-field [path lang dispatch-fn {:keys [class value-fn tag placeholder]
                                           :or   {tag :input}}]
@@ -501,7 +501,7 @@
         [:label
          {:for   id
           :class (when @component-locked? "disabled")}
-         (get-virkailija-translation :info-addon)]]
+         @(subscribe [:editor/virkailija-translation :info-addon])]]
        (when @checked?
          (let [collapsed-id (util/new-uuid)]
            [:div.editor-form__info-addon-checkbox
@@ -516,7 +516,7 @@
             [:label
              {:for   collapsed-id
               :class (when @component-locked? "editor-form__checkbox-label--disabled")}
-             (get-virkailija-translation :collapse-info-text)]]))
+             @(subscribe [:editor/virkailija-translation :collapse-info-text])]]))
        (when @checked?
          [:div.editor-form__info-addon-inputs
           (->> (input-fields-with-lang
@@ -550,7 +550,7 @@
     (fn [component-id path]
       [:div
        [:div.editor-form__additional-params-container
-        [:header.editor-form__component-item-header (get-virkailija-translation :shape)]
+        [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :shape])]
         [:select.editor-form__decimal-places-selector
          {:value     (or @decimal-places "")
           :disabled  @component-locked?
@@ -559,15 +559,15 @@
                              value   (when (not-empty new-val)
                                        (js/parseInt new-val))]
                          (dispatch [:editor/set-decimals-value component-id value path])))}
-         [:option {:value "" :key 0} (get-virkailija-translation :integer)]
+         [:option {:value "" :key 0} @(subscribe [:editor/virkailija-translation :integer])]
          (doall
            (for [i (range 1 5)]
-             [:option {:value i :key i} (str i " " (get-virkailija-translation :decimals))]))]]
+             [:option {:value i :key i} (str i " " @(subscribe [:editor/virkailija-translation :decimals]))]))]]
        [:div.editor-form__additional-params-container
         [:label.editor-form__range-label
          {:for   min-id
           :class (when @component-locked? "editor-form__checkbox-label--disabled")}
-         (get-virkailija-translation :numeric-range)]
+         @(subscribe [:editor/virkailija-translation :numeric-range])]
         [:input.editor-form__range-input
          {:type      "text"
           :id        min-id
@@ -609,7 +609,7 @@
         [:label.editor-form__checkbox-label
          {:for   id
           :class (when @component-locked? "editor-form__checkbox-label--disabled")}
-         (get-virkailija-translation :only-numeric)]]
+         @(subscribe [:editor/virkailija-translation :only-numeric])]]
        (when @checked?
          [decimal-places-selector component-id path])])))
 
@@ -645,7 +645,7 @@
         [:div
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__text-field-wrapper
-           [:header.editor-form__component-item-header (get-virkailija-translation :question)
+           [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :question])
             [copy-link (:id initial-content)]]
            (input-fields-with-lang
             (fn [lang]
@@ -676,7 +676,7 @@
                        btn-name]]))]
            (when text-area?
              [:div.editor-form__max-length-container
-              [:header.editor-form__component-item-header (get-virkailija-translation :max-characters)]
+              [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :max-characters])]
               [:input.editor-form__text-field.editor-form__text-field-auto-width
                {:value     @max-length
                 :disabled  @component-locked?
@@ -692,13 +692,13 @@
 
 (defn text-field [initial-content path]
   [text-component initial-content path
-   :header-label (get-virkailija-translation :text-field)
-   :size-label (get-virkailija-translation :text-field-size)])
+   :header-label @(subscribe [:editor/virkailija-translation :text-field])
+   :size-label @(subscribe [:editor/virkailija-translation :text-field-size])])
 
 (defn text-area [initial-content path]
   [text-component initial-content path
-   :header-label (get-virkailija-translation :text-area)
-   :size-label (get-virkailija-translation :text-area-size)])
+   :header-label @(subscribe [:editor/virkailija-translation :text-area])
+   :size-label @(subscribe [:editor/virkailija-translation :text-area-size])])
 
 (defn- remove-dropdown-option-button [path option-index disabled? parent-key option-value question-group-element?]
   [:div.editor-form__multi-options-remove--cross
@@ -757,7 +757,7 @@
           [:div.editor-form__selection-limit
            [input-field option-path :dont-care #(dispatch [:editor/set-dropdown-option-selection-limit
                                                            (only-numbers (-> % .-target .-value)) option-path :selection-limit])
-            {:placeholder (get-virkailija-translation :selection-limit-input)
+            {:placeholder @(subscribe [:editor/virkailija-translation :selection-limit-input])
              :class       "editor-form__text-field--selection-limit"
              :value-fn    (fn [v] (:selection-limit v))}]])
         (when (not question-group-element?)
@@ -776,7 +776,7 @@
       [:div.editor-form__koodisto-options
        [:label.editor-form__select-koodisto-dropdown-label
         {:for id}
-        (get-virkailija-translation :koodisto)]
+        @(subscribe [:editor/virkailija-translation :koodisto])]
        [:div.editor-form__select-koodisto-dropdown-wrapper
         [:select.editor-form__select-koodisto-dropdown
          {:id        id
@@ -835,12 +835,12 @@
           [:div.editor-form__show-koodisto-values
            [:a
             {:on-click show-koodisto-options}
-            [:i.zmdi.zmdi-chevron-down] (str " " (get-virkailija-translation :show-options))]]
+            [:i.zmdi.zmdi-chevron-down] (str " " @(subscribe [:editor/virkailija-translation :show-options]))]]
           [:div
            [:div.editor-form__show-koodisto-values
             [:a
              {:on-click hide-koodisto-options}
-             [:i.zmdi.zmdi-chevron-up] (str " " (get-virkailija-translation :hide-options))]]
+             [:i.zmdi.zmdi-chevron-up] (str " " @(subscribe [:editor/virkailija-translation :hide-options]))]]
            [custom-answer-options languages (:options value) followups path question-group-element? editable? show-followups parent-key]])))))
 
 (defn dropdown [initial-content followups path]
@@ -860,12 +860,12 @@
         [:div.editor-form__component-wrapper
          (let [header (case field-type
                         "dropdown"       (if (some? @options-koodisto)
-                                           (get-virkailija-translation :dropdown-koodisto)
-                                           (get-virkailija-translation :dropdown))
-                        "singleChoice"   (get-virkailija-translation :single-choice-button)
+                                           @(subscribe [:editor/virkailija-translation :dropdown-koodisto])
+                                           @(subscribe [:editor/virkailija-translation :dropdown]))
+                        "singleChoice"   @(subscribe [:editor/virkailija-translation :single-choice-button])
                         "multipleChoice" (if (some? @options-koodisto)
-                                           (get-virkailija-translation :multiple-choice-koodisto)
-                                           (get-virkailija-translation :multiple-choice)))]
+                                           @(subscribe [:editor/virkailija-translation :multiple-choice-koodisto])
+                                           @(subscribe [:editor/virkailija-translation :multiple-choice])))]
            [text-header (:id initial-content) header path (:metadata initial-content)
             :sub-header (:label @value)])
          [component-content
@@ -874,7 +874,7 @@
            [:div.editor-form__component-row-wrapper
             [:div.editor-form__multi-question-wrapper
              [:div.editor-form__text-field-wrapper
-              [:header.editor-form__component-item-header (get-virkailija-translation :question)
+              [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :question])
                [copy-link (:id initial-content)]]
               (input-fields-with-lang
                (fn [lang]
@@ -897,7 +897,7 @@
                                 (dispatch [:editor/set-ordered-by-user (-> event .-target .-checked) path]))}]
                  [:label.editor-form__checkbox-label
                   {:for koodisto-ordered-id}
-                  (get-virkailija-translation :alphabetically)]])
+                  @(subscribe [:editor/virkailija-translation :alphabetically])]])
               (when (some? @options-koodisto)
                 [:div.editor-form__checkbox-container
                  [:input.editor-form__checkbox
@@ -911,14 +911,14 @@
                                           (not (:allow-invalid? @options-koodisto))])}]
                  [:label.editor-form__checkbox-label
                   {:for allow-invalid-koodis-id}
-                  (get-virkailija-translation :allow-invalid-koodis)]])]
+                  @(subscribe [:editor/virkailija-translation :allow-invalid-koodis])]])]
              [belongs-to-hakukohteet path initial-content]]]
            [info-addon path initial-content]
            [:div.editor-form__component-row-wrapper
             [:div.editor-form__multi-options_wrapper
              (if (some? @options-koodisto)
                [select-koodisto-dropdown path]
-               [:header.editor-form__component-item-header (get-virkailija-translation :options)])
+               [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :options])])
              (if (nil? @options-koodisto)
                [custom-answer-options languages (:options @value) followups path question-group-element? true show-followups (:id initial-content)]
                [koodisto-answer-options (:id @value) followups path question-group-element? (:id initial-content)])
@@ -931,18 +931,18 @@
                                 (reset! show-followups nil)
                                 (dispatch [:editor/add-dropdown-option path])))
                   :class    (when @component-locked? "editor-form__add-dropdown-item--disabled")}
-                 [:i.zmdi.zmdi-plus-square] (str " " (get-virkailija-translation :add))]])]]]]]))))
+                 [:i.zmdi.zmdi-plus-square] (str " " @(subscribe [:editor/virkailija-translation :add]))]])]]]]]))))
 
 (defn component-group [content path children]
   (let [id                (:id content)
         languages         @(subscribe [:editor/languages])
         value             @(subscribe [:editor/get-component-value path])
         group-header-text (case (:fieldClass content)
-                            "wrapperElement" (get-virkailija-translation :wrapper-element)
-                            "questionGroup"  (get-virkailija-translation :question-group))
+                            "wrapperElement" @(subscribe [:editor/virkailija-translation :wrapper-element])
+                            "questionGroup"  @(subscribe [:editor/virkailija-translation :question-group]))
         header-label-text (case (:fieldClass content)
-                            "wrapperElement" (get-virkailija-translation :wrapper-header)
-                            "questionGroup"  (get-virkailija-translation :group-header))]
+                            "wrapperElement" @(subscribe [:editor/virkailija-translation :wrapper-header])
+                            "questionGroup"  @(subscribe [:editor/virkailija-translation :group-header]))]
     [:div.editor-form__component-wrapper
      [text-header id group-header-text path (:metadata content)
       :sub-header (:label value)]
@@ -989,7 +989,7 @@
         :can-remove? false]
        [:div.editor-form__component-content-wrapper
         [:div.editor-form__module-fields
-         (get-virkailija-translation :hakukohde-info)]]])))
+         @(subscribe [:editor/virkailija-translation :hakukohde-info])]]])))
 
 (defn module [content path]
   (let [languages       (subscribe [:editor/languages])
@@ -1017,10 +1017,10 @@
              :value     (or (get values (:id content)) "onr")}
             (doall (for [opt values]
                      [:option {:value opt
-                               :key   opt} (get-virkailija-translation (keyword (str "person-info-module-" opt)))]))]])
+                               :key   opt} @(subscribe [:editor/virkailija-translation (keyword (str "person-info-module-" opt))])]))]])
         [:div.editor-form__module-fields
          [:span.editor-form__module-fields-label
-          (get-virkailija-translation :contains-fields)]
+          @(subscribe [:editor/virkailija-translation :contains-fields])]
          " "
          (clojure.string/join ", " (get-leaf-component-labels @value :fi))]]])))
 
@@ -1033,21 +1033,21 @@
         component-locked?     (subscribe [:editor/component-locked? path])]
     (fn [initial-content path]
       [:div.editor-form__component-wrapper
-       [text-header (:id initial-content) (get-virkailija-translation :info-element) path (:metadata initial-content)
+       [text-header (:id initial-content) @(subscribe [:editor/virkailija-translation :info-element]) path (:metadata initial-content)
         :sub-header @sub-header]
        [component-content
         path ;(:id initial-content)
         [:div
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__text-field-wrapper
-           [:header.editor-form__component-item-header (get-virkailija-translation :title)]
+           [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :title])]
            (input-fields-with-lang
             (fn [lang]
               [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
             @languages
             :header? true)
            [:div.infoelement
-            [:header.editor-form__component-item-header (get-virkailija-translation :text)]
+            [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :text])]
             (->> (input-fields-with-lang
                   (fn [lang]
                     [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :text lang])
@@ -1073,7 +1073,7 @@
               [:label.editor-form__checkbox-label
                {:for   collapsed-id
                 :class (when @component-locked? "editor-form__checkbox-label--disabled")}
-               (get-virkailija-translation :collapse-info-text)]])]
+               @(subscribe [:editor/virkailija-translation :collapse-info-text])]])]
           [belongs-to-hakukohteet path initial-content]]]]])))
 
 (defn pohjakoulutusristiriita
@@ -1106,14 +1106,14 @@
         component-locked? (subscribe [:editor/component-locked? path])]
     (fn [content path children]
       [:div.editor-form__component-wrapper
-       [text-header (:id content) (get-virkailija-translation :adjacent-fieldset) path (:metadata content)
+       [text-header (:id content) @(subscribe [:editor/virkailija-translation :adjacent-fieldset]) path (:metadata content)
         :sub-header @sub-header]
        [component-content
         path ;(:id content)
         [:div
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__text-field-wrapper
-           [:header.editor-form__component-item-header (get-virkailija-translation :title)]
+           [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :title])]
            (input-fields-with-lang
             (fn [lang]
               [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
@@ -1138,7 +1138,7 @@
         numeric? (subscribe [:editor/get-component-value path :params :numeric])]
     (fn [content path]
       [:div.editor-form__component-wrapper
-       [text-header (:id content) (get-virkailija-translation :text-field) path (:metadata content)
+       [text-header (:id content) @(subscribe [:editor/virkailija-translation :text-field]) path (:metadata content)
         :foldable? false
         :can-cut? false
         :can-copy? false
@@ -1146,7 +1146,7 @@
        [:div.editor-form__component-content-wrapper
         [:div.editor-form__component-row-wrapper
          [:div.editor-form__text-field-wrapper
-          [:header.editor-form__component-item-header (get-virkailija-translation :question)
+          [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :question])
            [copy-link (:id content)]]
           (input-fields-with-lang
            (fn [lang]
@@ -1179,7 +1179,7 @@
           [:label
            {:for   id
             :class (when @component-locked? "editor-form__checkbox-label--disabled")}
-           (get-virkailija-translation :mail-attachment-text)]])
+           @(subscribe [:editor/virkailija-translation :mail-attachment-text])]])
        (when-not @mail-attachment?
          (let [id (util/new-uuid)]
            [:div.editor-form__info-addon-checkbox
@@ -1194,7 +1194,7 @@
             [:label
              {:for   id
               :class (when @component-locked? "editor-form__checkbox-label--disabled")}
-             (get-virkailija-translation :attachment-info-text)]]))
+             @(subscribe [:editor/virkailija-translation :attachment-info-text])]]))
        (when @checked?
          (let [id (util/new-uuid)]
            [:div.editor-form__info-addon-checkbox
@@ -1209,7 +1209,7 @@
             [:label
              {:for   id
               :class (when @component-locked? "editor-form__checkbox-label--disabled")}
-             (get-virkailija-translation :collapse-info-text)]]))
+             @(subscribe [:editor/virkailija-translation :collapse-info-text])]]))
        (when @checked?
          [:div.editor-form__info-addon-inputs
           (->> (input-fields-with-lang
@@ -1259,14 +1259,14 @@
                               :else (update-value value nil false))))]
     (fn [content path]
       [:div.editor-form__component-wrapper
-       [text-header (:id content) (get-virkailija-translation :attachment) path (:metadata content)
+       [text-header (:id content) @(subscribe [:editor/virkailija-translation :attachment]) path (:metadata content)
         :sub-header (:label @component)]
        [component-content
         path ;(:id content)
         [:div
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__text-field-wrapper
-           [:header.editor-form__component-item-header (get-virkailija-translation :attachment-name)
+           [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :attachment-name])
             [copy-link (:id content)]]
            (input-fields-with-lang
             (fn attachment-file-name-input [lang]
@@ -1274,7 +1274,7 @@
             @languages
             :header? true)]
           [:div.editor-form__text-field-wrapper
-           [:label.editor-form__component-item-header (get-virkailija-translation :attachment-deadline)]
+           [:label.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :attachment-deadline])]
            [:input.editor-form__attachment-deadline-field
             {:type        "text"
              :class       (when-not @valid "editor-form__text-field--invalid")

@@ -1,6 +1,5 @@
 (ns ataru.virkailija.views.hakukohde-and-hakukohderyhma-search
   (:require [ataru.util :as util]
-            [ataru.cljs-util :as cljs-util]
             [re-frame.core :as re-frame]
             [reagent.core :as r]))
 
@@ -131,7 +130,7 @@
           [:li.hakukohde-and-hakukohderyhma-category-list-item.hakukohde-and-hakukohderyhma-category-list-item--show-more
            {:on-click #(swap! show-n + 10)}
            [:span.hakukohde-and-hakukohderyhma-show-more
-            (cljs-util/get-virkailija-translation :show-more)]])]])))
+            @(re-frame/subscribe [:editor/virkailija-translation :show-more])]])]])))
 
 (defn search-input
   [{:keys [id
@@ -150,7 +149,7 @@
                     hakukohde-selected?
                     hakukohderyhma-selected?
                     (.-value (.-target %))])
-    :placeholder (cljs-util/get-virkailija-translation :search-hakukohde-placeholder)}])
+    :placeholder @(re-frame/subscribe [:editor/virkailija-translation :search-hakukohde-placeholder])}])
 
 (defn visibility-checkbox
   [id path]
@@ -163,7 +162,7 @@
      :on-change #(re-frame/dispatch [:editor/toggle-element-visibility-on-form path])}]
    [:label
     {:for id}
-    (cljs-util/get-virkailija-translation :is-hidden?)]])
+    @(re-frame/subscribe [:editor/virkailija-translation :is-hidden?])]])
 
 (defn search-listing
   [{:keys [id
@@ -182,7 +181,7 @@
                              id
                              hakukohderyhmat]))]
        [category-listing
-        (cljs-util/get-virkailija-translation :hakukohderyhmat)
+        @(re-frame/subscribe [:editor/virkailija-translation :hakukohderyhmat])
         hits
         hakukohderyhma-selected?
         on-hakukohderyhma-select
