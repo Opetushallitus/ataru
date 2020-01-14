@@ -28,39 +28,39 @@
    ["selected" (:selected state-translations)]
    ["rejected" (:rejected state-translations)]])
 
-(def valinnan-tila-selection-state
-  {"HYLATTY"                (:kevyt-valinta/hylatty virkailija-texts)
-   "VARALLA"                (:kevyt-valinta/varalla virkailija-texts)
-   "PERUUNTUNUT"            (:kevyt-valinta/peruuntunut virkailija-texts)
-   "VARASIJALTA_HYVAKSYTTY" (:kevyt-valinta/varasijalta-hyvaksytty virkailija-texts)
-   "HYVAKSYTTY"             (:kevyt-valinta/hyvaksytty virkailija-texts)
-   "PERUNUT"                (:kevyt-valinta/perunut virkailija-texts)
-   "PERUUTETTU"             (:kevyt-valinta/peruutettu virkailija-texts)
-   "KESKEN"                 (:kevyt-valinta/kesken virkailija-texts)})
+(def valinnan-tila-i18n-mapping
+  {"HYLATTY"                :kevyt-valinta/hylatty
+   "VARALLA"                :kevyt-valinta/varalla
+   "PERUUNTUNUT"            :kevyt-valinta/peruuntunut
+   "VARASIJALTA_HYVAKSYTTY" :kevyt-valinta/varasijalta-hyvaksytty
+   "HYVAKSYTTY"             :kevyt-valinta/hyvaksytty
+   "PERUNUT"                :kevyt-valinta/perunut
+   "PERUUTETTU"             :kevyt-valinta/peruutettu
+   "KESKEN"                 :kevyt-valinta/kesken})
 
-(def julkaisun-tila-selection-state
-  {true  (:kevyt-valinta/julkaistu-hakijalle virkailija-texts)
-   false (:kevyt-valinta/ei-julkaistu virkailija-texts)})
+(def julkaisun-tila-i18n-mapping
+  {true  :kevyt-valinta/julkaistu-hakijalle
+   false :kevyt-valinta/ei-julkaistu})
 
-(def vastaanotto-tila-selection-state
-  {"EI_VASTAANOTETTU_MAARA_AIKANA" (:kevyt-valinta/ei-vastaanotettu-maaraaikana virkailija-texts)
-   "PERUNUT"                       (:kevyt-valinta/perunut virkailija-texts)
-   "PERUUTETTU"                    (:kevyt-valinta/peruutettu virkailija-texts)
-   "OTTANUT_VASTAAN_TOISEN_PAIKAN" (:kevyt-valinta/ottanut-vastaan-toisen-paikan virkailija-texts)
-   "EHDOLLISESTI_VASTAANOTTANUT"   (:kevyt-valinta/ehdollisesti-vastaanottanut virkailija-texts)
-   "VASTAANOTTANUT_SITOVASTI"      (:kevyt-valinta/vastaanottanut-sitovasti virkailija-texts)
-   "KESKEN"                        (:kevyt-valinta/kesken virkailija-texts)
-   "VASTAANOTTANUT"                (:kevyt-valinta/vastaanottanut virkailija-texts)})
+(def vastaanotto-tila-i18n-mapping
+  {"EI_VASTAANOTETTU_MAARA_AIKANA" :kevyt-valinta/ei-vastaanotettu-maaraaikana
+   "PERUNUT"                       :kevyt-valinta/perunut
+   "PERUUTETTU"                    :kevyt-valinta/peruutettu
+   "OTTANUT_VASTAAN_TOISEN_PAIKAN" :kevyt-valinta/ottanut-vastaan-toisen-paikan
+   "EHDOLLISESTI_VASTAANOTTANUT"   :kevyt-valinta/ehdollisesti-vastaanottanut
+   "VASTAANOTTANUT_SITOVASTI"      :kevyt-valinta/vastaanottanut-sitovasti
+   "KESKEN"                        :kevyt-valinta/kesken
+   "VASTAANOTTANUT"                :kevyt-valinta/vastaanottanut})
 
-(def ilmoittautumisen-tila-selection-state
-  {"EI_TEHTY"              (:kevyt-valinta/ei-tehty virkailija-texts)
-   "LASNA_KOKO_LUKUVUOSI"  (:kevyt-valinta/lasna-koko-lukuvuosi virkailija-texts)
-   "POISSA_KOKO_LUKUVUOSI" (:kevyt-valinta/poissa-koko-lukuvuosi virkailija-texts)
-   "EI_ILMOITTAUTUNUT"     (:kevyt-valinta/ei-ilmoittautunut virkailija-texts)
-   "LASNA_SYKSY"           (:kevyt-valinta/lasna-syksy virkailija-texts)
-   "POISSA_SYKSY"          (:kevyt-valinta/poissa-syksy virkailija-texts)
-   "LASNA"                 (:kevyt-valinta/lasna virkailija-texts)
-   "POISSA"                (:kevyt-valinta/poissa virkailija-texts)})
+(def ilmoittautumisen-tila-i18n-mapping
+  {"EI_TEHTY"              :kevyt-valinta/ei-tehty
+   "LASNA_KOKO_LUKUVUOSI"  :kevyt-valinta/lasna-koko-lukuvuosi
+   "POISSA_KOKO_LUKUVUOSI" :kevyt-valinta/poissa-koko-lukuvuosi
+   "EI_ILMOITTAUTUNUT"     :kevyt-valinta/ei-ilmoittautunut
+   "LASNA_SYKSY"           :kevyt-valinta/lasna-syksy
+   "POISSA_SYKSY"          :kevyt-valinta/poissa-syksy
+   "LASNA"                 :kevyt-valinta/lasna
+   "POISSA"                :kevyt-valinta/poissa})
 
 (def application-hakukohde-review-states
   [["unreviewed" (:unreviewed state-translations)]
@@ -85,12 +85,6 @@
    [:eligibility-state (:eligibility-state state-translations) application-hakukohde-eligibility-states]
    [:payment-obligation (:payment-obligation state-translations) application-payment-obligation-states]
    [:selection-state (:selection-state state-translations) application-hakukohde-selection-states]])
-
-(def kevyt-valinta-hakukohde-review-types
-  {:kevyt-valinta/valinnan-tila         {:fi "Valinta"}
-   :kevyt-valinta/julkaisun-tila        {:fi "Julkaisu"}
-   :kevyt-valinta/vastaanotto-tila      {:fi "Vastaanotto"}
-   :kevyt-valinta/ilmoittautumisen-tila {:fi "Ilmoittautuminen"}})
 
 (def hakukohde-review-types-map
   (util/group-by-first first hakukohde-review-types))

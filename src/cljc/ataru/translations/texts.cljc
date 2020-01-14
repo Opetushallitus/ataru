@@ -1582,7 +1582,11 @@ You will receive a confirmation of your application to your email."}
    :kevyt-valinta/lasna-syksy                       {:fi "Läsnä syksy, poissa kevät"}
    :kevyt-valinta/poissa-syksy                      {:fi "Poissa syksy, läsnä kevät"}
    :kevyt-valinta/lasna                             {:fi "Läsnä, keväällä alkava koulutus"}
-   :kevyt-valinta/poissa                            {:fi "Poissa, keväällä alkava koulutus"}})
+   :kevyt-valinta/poissa                            {:fi "Poissa, keväällä alkava koulutus"}
+   :kevyt-valinta/valinta                           {:fi "Valinta"}
+   :kevyt-valinta/julkaisu                          {:fi "Julkaisu"}
+   :kevyt-valinta/vastaanotto                       {:fi "Vastaanotto"}
+   :kevyt-valinta/ilmoittautuminen                  {:fi "Ilmoittautuminen"}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"
