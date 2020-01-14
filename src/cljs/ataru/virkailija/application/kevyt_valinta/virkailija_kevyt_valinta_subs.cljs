@@ -160,6 +160,12 @@
                                        :kevyt-valinta/vastaanotto-tila      :checked
                                        :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
+                                      [(:or "HYLATTY" "VARALLA") true _ _ _]
+                                      {:kevyt-valinta/valinnan-tila         :checked
+                                       :kevyt-valinta/julkaisun-tila        :unchecked
+                                       :kevyt-valinta/vastaanotto-tila      :grayed-out
+                                       :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
+
                                       [_ (_ :guard nil?) (_ :guard nil?) (_ :guard nil?) _]
                                       {:kevyt-valinta/valinnan-tila         :unchecked
                                        :kevyt-valinta/julkaisun-tila        :grayed-out
@@ -214,6 +220,12 @@
                                   {:kevyt-valinta/valinnan-tila         :checked
                                    :kevyt-valinta/julkaisun-tila        :checked
                                    :kevyt-valinta/vastaanotto-tila      :checked
+                                   :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
+
+                                  [(:or "HYLATTY" "VARALLA") true _ _]
+                                  {:kevyt-valinta/valinnan-tila         :checked
+                                   :kevyt-valinta/julkaisun-tila        :checked
+                                   :kevyt-valinta/vastaanotto-tila      :grayed-out
                                    :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
                                   [_ (_ :guard nil?) (_ :guard nil?) (_ :guard nil?)]
@@ -274,10 +286,7 @@
    "HYVAKSYTTY"
    "VARASIJALTA_HYVAKSYTTY"
    "HYLATTY"
-   "VARALLA"
-   "PERUUNTUNUT"
-   "PERUNUT"
-   "PERUUTETTU"])
+   "VARALLA"])
 
 (def ^:private julkaisun-tilat
   [false true])
@@ -324,10 +333,15 @@
     (let [{valinnan-tila    :valinnantila
            vastaanotto-tila :vastaanottotila} valinnan-tulos-for-application]
       (case kevyt-valinta-property
-        :kevyt-valinta/valinnan-tila (cond->> valinnan-tilat
-                                              (and (-> valinnan-tila nil? not)
-                                                   (not= valinnan-tila "KESKEN"))
-                                              (remove (partial = "KESKEN")))
+        :kevyt-valinta/valinnan-tila (as-> valinnan-tilat valinnan-tilat'
+                                           (cond->> valinnan-tilat'
+                                                    (and (-> valinnan-tila nil? not)
+                                                         (not= valinnan-tila "KESKEN"))
+                                                    (remove (partial = "KESKEN")))
+
+                                           (cond-> valinnan-tilat'
+                                                   (some #{valinnan-tila} ["PERUUNTUNUT" "PERUNUT" "PERUUTETTU"])
+                                                   (conj valinnan-tila)))
         :kevyt-valinta/julkaisun-tila julkaisun-tilat
         :kevyt-valinta/vastaanotto-tila (cond-> (if korkeakouluhaku?
                                                   vastaanotto-tilat-for-korkeakoulu
