@@ -1501,7 +1501,7 @@
              :on-change #(dispatch [:application/toggle-only-selected-hakukohteet])}]
            [:label
             {:for "application-handling__review-checkbox--only-selected-hakukohteet"}
-            @(subscribe [:editor/virkailija-lang :only-selected-hakukohteet])]])]
+            @(subscribe [:editor/virkailija-translation :only-selected-hakukohteet])]])]
        [application-review-note-input]
        (->> (if @only-selected-hakukohteet
               @notes-for-selected
