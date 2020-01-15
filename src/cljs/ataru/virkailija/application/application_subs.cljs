@@ -546,6 +546,13 @@
                                 :tila  :valinnan-tila})
       (assoc :event-type "kevyt-valinta-valinnan-tila-change")))
 
+(defn- valinnan-tulos->information-request [valinnan-tulos]
+  (-> valinnan-tulos
+      (select-keys [:valinnantilanViimeisinMuutos :valinnantila])
+      (clojure.set/rename-keys {:valinnantilanViimeisinMuutos :created-time
+                                :valinnantila                 :valinnan-tila})
+      (assoc :event-type "kevyt-valinta-valinnan-tila-change")))
+
 (re-frame/reg-sub
   :application/events-and-information-requests
   (fn [[_ application-key]]
@@ -553,12 +560,14 @@
      (re-frame/subscribe [:state-query [:application :information-requests]])
      (re-frame/subscribe [:state-query [:hyvaksynnan-ehto application-key]])
      (re-frame/subscribe [:virkailija-kevyt-valinta/show-kevyt-valinta?])
-     (re-frame/subscribe [:virkailija-kevyt-valinta/tila-historia-for-application application-key])])
+     (re-frame/subscribe [:virkailija-kevyt-valinta/tila-historia-for-application application-key])
+     (re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])])
   (fn [[events
         information-requests
         hyvaksynnan-ehto
         show-kevyt-valinta?
-        tila-historia]]
+        tila-historia
+        valinnan-tulos]]
     (as-> [] requests
           (->> events mark-last-modify-event (into requests))
           (into requests information-requests)
@@ -569,7 +578,9 @@
           (cond-> requests
                   show-kevyt-valinta?
                   (into (map tila-historia->information-request)
-                        tila-historia))
+                        tila-historia)
+                  (and show-kevyt-valinta? valinnan-tulos)
+                  (conj (valinnan-tulos->information-request valinnan-tulos)))
           (sort event-and-information-request-comparator requests))))
 
 (re-frame/reg-sub
