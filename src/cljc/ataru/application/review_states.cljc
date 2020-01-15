@@ -29,38 +29,38 @@
    ["rejected" (:rejected state-translations)]])
 
 (def valinnan-tila-i18n-mapping
-  {"HYLATTY"                :kevyt-valinta/hylatty
-   "VARALLA"                :kevyt-valinta/varalla
-   "PERUUNTUNUT"            :kevyt-valinta/peruuntunut
-   "VARASIJALTA_HYVAKSYTTY" :kevyt-valinta/varasijalta-hyvaksytty
-   "HYVAKSYTTY"             :kevyt-valinta/hyvaksytty
-   "PERUNUT"                :kevyt-valinta/perunut
-   "PERUUTETTU"             :kevyt-valinta/peruutettu
-   "KESKEN"                 :kevyt-valinta/kesken})
+  {"HYLATTY"                :hylatty
+   "VARALLA"                :varalla
+   "PERUUNTUNUT"            :peruuntunut
+   "VARASIJALTA_HYVAKSYTTY" :varasijalta-hyvaksytty
+   "HYVAKSYTTY"             :hyvaksytty
+   "PERUNUT"                :perunut
+   "PERUUTETTU"             :peruutettu
+   "KESKEN"                 :kesken})
 
 (def julkaisun-tila-i18n-mapping
-  {true  :kevyt-valinta/julkaistu-hakijalle
-   false :kevyt-valinta/ei-julkaistu})
+  {true  :julkaistu
+   false :ei-julkaistu})
 
 (def vastaanotto-tila-i18n-mapping
-  {"EI_VASTAANOTETTU_MAARA_AIKANA" :kevyt-valinta/ei-vastaanotettu-maaraaikana
-   "PERUNUT"                       :kevyt-valinta/perunut
-   "PERUUTETTU"                    :kevyt-valinta/peruutettu
-   "OTTANUT_VASTAAN_TOISEN_PAIKAN" :kevyt-valinta/ottanut-vastaan-toisen-paikan
-   "EHDOLLISESTI_VASTAANOTTANUT"   :kevyt-valinta/ehdollisesti-vastaanottanut
-   "VASTAANOTTANUT_SITOVASTI"      :kevyt-valinta/vastaanottanut-sitovasti
-   "KESKEN"                        :kevyt-valinta/kesken
-   "VASTAANOTTANUT"                :kevyt-valinta/vastaanottanut})
+  {"EI_VASTAANOTETTU_MAARA_AIKANA" :ei-vastaanotettu-maaraaikana
+   "PERUNUT"                       :perunut
+   "PERUUTETTU"                    :peruutettu
+   "OTTANUT_VASTAAN_TOISEN_PAIKAN" :ottanut-vastaan-toisen-paikan
+   "EHDOLLISESTI_VASTAANOTTANUT"   :ehdollisesti-vastaanottanut
+   "VASTAANOTTANUT_SITOVASTI"      :vastaanottanut-sitovasti
+   "KESKEN"                        :kesken
+   "VASTAANOTTANUT"                :vastaanottanut})
 
 (def ilmoittautumisen-tila-i18n-mapping
-  {"EI_TEHTY"              :kevyt-valinta/ei-tehty
-   "LASNA_KOKO_LUKUVUOSI"  :kevyt-valinta/lasna-koko-lukuvuosi
-   "POISSA_KOKO_LUKUVUOSI" :kevyt-valinta/poissa-koko-lukuvuosi
-   "EI_ILMOITTAUTUNUT"     :kevyt-valinta/ei-ilmoittautunut
-   "LASNA_SYKSY"           :kevyt-valinta/lasna-syksy
-   "POISSA_SYKSY"          :kevyt-valinta/poissa-syksy
-   "LASNA"                 :kevyt-valinta/lasna
-   "POISSA"                :kevyt-valinta/poissa})
+  {"EI_TEHTY"              :ei-tehty
+   "LASNA_KOKO_LUKUVUOSI"  :lasna-koko-lukuvuosi
+   "POISSA_KOKO_LUKUVUOSI" :poissa-koko-lukuvuosi
+   "EI_ILMOITTAUTUNUT"     :ei-ilmoittautunut-maaraaikana
+   "LASNA_SYKSY"           :lasna-syksy
+   "POISSA_SYKSY"          :poissa-syksy
+   "LASNA"                 :lasna
+   "POISSA"                :poissa})
 
 (def application-hakukohde-review-states
   [["unreviewed" (:unreviewed state-translations)]

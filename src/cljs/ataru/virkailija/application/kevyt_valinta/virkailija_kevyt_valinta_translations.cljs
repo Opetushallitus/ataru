@@ -11,7 +11,7 @@
 
 (defn kevyt-valinta-label-translation-key [kevyt-valinta-property]
   (case kevyt-valinta-property
-    :kevyt-valinta/valinnan-tila :kevyt-valinta/valinta
-    :kevyt-valinta/julkaisun-tila :kevyt-valinta/julkaisu
-    :kevyt-valinta/vastaanotto-tila :kevyt-valinta/vastaanotto
-    :kevyt-valinta/ilmoittautumisen-tila :kevyt-valinta/ilmoittautuminen))
+    :kevyt-valinta/valinnan-tila :valinta
+    :kevyt-valinta/julkaisun-tila :julkaisu
+    :kevyt-valinta/vastaanotto-tila :vastaanotto
+    :kevyt-valinta/ilmoittautumisen-tila :ilmoittautuminen))
