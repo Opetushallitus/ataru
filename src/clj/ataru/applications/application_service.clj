@@ -105,23 +105,26 @@
 
 (defn get-new-and-changed-ids [application tarjonta-info older-form newer-form]
   (let [answers        (group-by :key (:answers application))
-             hakutoiveet    (set (:hakukohde application))
-             visible-fields (fn [form]
-                              (let [flat-form-fields (util/flatten-form-fields (:content form))
-                                    field-by-id (util/group-by-first :id flat-form-fields)]
-                                (->> flat-form-fields
-                                     (filter #(visible? % field-by-id answers hakutoiveet
-                                                        (-> tarjonta-info :tarjonta :hakukohteet)))
-                                     (map remove-irrelevant-changes))))
-             fields-left    (sort-by :id (visible-fields older-form))
-             fields-right   (sort-by :id (visible-fields newer-form))
-             left-ids (set (map #(:id %) fields-left))
-             right-ids (set (map #(:id %) fields-right))
-             new-ids (clojure.set/difference right-ids left-ids)
-             changed-ids (get-changed-elem-ids fields-left fields-right)]
-         (log/info (str "---***--- new ids (" (count new-ids) "): "(pr-str new-ids)))
-         (log/info (str "---***--- changed ids (" (count changed-ids) "): "(pr-str changed-ids)))
-         [new-ids changed-ids]))
+        hakutoiveet    (set (:hakukohde application))
+        visible-fields (fn [form]
+                        (let [flat-form-fields (util/flatten-form-fields (:content form))
+                              field-by-id (util/group-by-first :id flat-form-fields)]
+                          (log/info (str "filtering visibles, form id " (:id form) " - unfiltered ids " (pr-str (map #(:id %) flat-form-fields))))
+                          (->> flat-form-fields
+                               (filter #(visible? % field-by-id answers hakutoiveet
+                                                  (-> tarjonta-info :tarjonta :hakukohteet)))
+                               (map remove-irrelevant-changes))))
+        fields-left    (sort-by :id (visible-fields older-form))
+        fields-right   (sort-by :id (visible-fields newer-form))
+        left-ids (set (map #(:id %) fields-left))
+        right-ids (set (map #(:id %) fields-right))
+        new-ids (clojure.set/difference right-ids left-ids)
+        changed-ids (get-changed-elem-ids fields-left fields-right)]
+     (log/info (str "all visible old field ids " left-ids))
+     (log/info (str "all visible new field ids " right-ids))
+     (log/info (str "---***--- new ids (" (count new-ids) "): "(pr-str new-ids)))
+     (log/info (str "---***--- changed ids (" (count changed-ids) "): "(pr-str changed-ids)))
+     [new-ids changed-ids]))
 
 (defn forms-differ? [application tarjonta-info form-left form-right]
   (and (not= (:id form-left) (:id form-right))
