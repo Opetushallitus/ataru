@@ -1937,7 +1937,7 @@
           show-metadata-not-found?      @(subscribe [:state-query [:application :metadata-not-found]])
           form-changes       @(subscribe [:state-query [:application :form-changes]])
           changes-count      (count (:changed-ids form-changes))]
-      (when (or show-not-latest-form?
+      (when (or (or show-not-latest-form? (> changes-count 0))
                 show-creating-henkilo-failed?
                 show-not-yksiloity?
                 show-metadata-not-found?)
