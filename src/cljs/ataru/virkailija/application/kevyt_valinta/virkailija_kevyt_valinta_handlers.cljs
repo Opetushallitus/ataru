@@ -194,12 +194,14 @@
               :id                  request-id
               :override-args       {:params  request-body
                                     :headers {"X-If-Unmodified-Since" formatted-now}}
-              :handler-or-dispatch :virkailija-kevyt-valinta/handle-changed-kevyt-valinta-property}})))
+              :handler-or-dispatch :virkailija-kevyt-valinta/handle-changed-kevyt-valinta-property
+              :handler-args        {:application-key application-key}}})))
 
-(re-frame/reg-event-db
+(re-frame/reg-event-fx
   :virkailija-kevyt-valinta/handle-changed-kevyt-valinta-property
-  (fn [db]
-    (update-in db
-               [:application :kevyt-valinta]
-               dissoc
-               :kevyt-valinta-ui/ongoing-request-for-property)))
+  (fn [{db :db} [_ _ {application-key :application-key}]]
+    {:db       (update-in db
+                          [:application :kevyt-valinta]
+                          dissoc
+                          :kevyt-valinta-ui/ongoing-request-for-property)
+     :dispatch [:virkailija-kevyt-valinta/fetch-valinnan-tulos application-key]}))
