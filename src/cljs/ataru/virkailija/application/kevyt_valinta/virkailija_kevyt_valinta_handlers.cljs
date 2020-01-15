@@ -107,14 +107,15 @@
           valinta-tulos-service-property   (mappings/kevyt-valinta-property->valinta-tulos-service-property kevyt-valinta-property)
           haku-oid                         (-> db :application :selected-application-and-form :application :haku)
           henkilo-oid                      (-> db :application :selected-application-and-form :application :person :oid)
-          db                               (-> db
-                                               (update-in [:application :kevyt-valinta kevyt-valinta-property]
+          valintatapajono-oid              (valintatapajono-oids/pseudo-random-valintatapajono-oid haku-oid hakukohde-oid)
+          db                               (as-> db db'
+                                                 (update-in db' [:application :kevyt-valinta kevyt-valinta-property]
                                                           merge
                                                           {:request-id request-id
                                                            :open?      false})
-                                               (assoc-in [:application :kevyt-valinta :kevyt-valinta-ui/ongoing-request-for-property]
+                                                 (assoc-in db' [:application :kevyt-valinta :kevyt-valinta-ui/ongoing-request-for-property]
                                                          kevyt-valinta-property)
-                                               (update-in [:valinta-tulos-service
+                                                 (update-in db' [:valinta-tulos-service
                                                            application-key
                                                            hakukohde-oid
                                                            :valinnantulos]
@@ -162,16 +163,35 @@
                                                                :hakukohdeOid       hakukohde-oid
                                                                :ilmoittautumistila "EI_TEHTY"
                                                                :henkiloOid         henkilo-oid
-                                                               :valintatapajonoOid (valintatapajono-oids/pseudo-random-valintatapajono-oid haku-oid hakukohde-oid)
+                                                               :valintatapajonoOid valintatapajono-oid
                                                                :hakemusOid         application-key
                                                                :valinnantila       new-kevyt-valinta-property-value
-                                                               :julkaistavissa     false})))
-                                               (assoc-in [:valinta-tulos-service
+                                                               :julkaistavissa     false
+                                                               :valinnantilanViimeisinMuutos now})))
+                                                 (assoc-in db' [:valinta-tulos-service
                                                           application-key
                                                           hakukohde-oid
                                                           :valinnantulos
                                                           valinta-tulos-service-property]
-                                                         new-kevyt-valinta-property-value))
+                                                         new-kevyt-valinta-property-value)
+                                                 (cond-> db'
+                                                         (= kevyt-valinta-property :kevyt-valinta/valinnan-tila)
+                                                         (update-in [:valinta-tulos-service
+                                                                     application-key
+                                                                     hakukohde-oid
+                                                                     :tilaHistoria]
+                                                                    (fnil conj [])
+                                                                    (let [old-valinnan-tulos               (-> db
+                                                                                                               :valinta-tulos-service
+                                                                                                               (get application-key)
+                                                                                                               (get hakukohde-oid)
+                                                                                                               :valinnantulos)
+                                                                          old-kevyt-valinta-property-value (:valinnantila old-valinnan-tulos)
+                                                                          created-time                     (:valinnantilanViimeisinMuutos old-valinnan-tulos)]
+                                                                      {:valintatapajonoOid valintatapajono-oid
+                                                                       :hakemusOid         application-key
+                                                                       :tila               old-kevyt-valinta-property-value
+                                                                       :luotu              created-time}))))
           valinnan-tulos                   (-> db
                                                :valinta-tulos-service
                                                (get application-key)
