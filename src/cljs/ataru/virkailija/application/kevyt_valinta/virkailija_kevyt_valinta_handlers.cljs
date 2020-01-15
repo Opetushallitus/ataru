@@ -110,70 +110,70 @@
           valintatapajono-oid              (valintatapajono-oids/pseudo-random-valintatapajono-oid haku-oid hakukohde-oid)
           db                               (as-> db db'
                                                  (update-in db' [:application :kevyt-valinta kevyt-valinta-property]
-                                                          merge
-                                                          {:request-id request-id
-                                                           :open?      false})
+                                                            merge
+                                                            {:request-id request-id
+                                                             :open?      false})
                                                  (assoc-in db' [:application :kevyt-valinta :kevyt-valinta-ui/ongoing-request-for-property]
-                                                         kevyt-valinta-property)
+                                                           kevyt-valinta-property)
                                                  (update-in db' [:valinta-tulos-service
-                                                           application-key
-                                                           hakukohde-oid
-                                                           :valinnantulos]
-                                                          (fn [valinnantulos]
-                                                            (if valinnantulos
-                                                              (let [{valinnan-tila         :valinnantila
-                                                                     julkaisun-tila        :julkaistavissa
-                                                                     vastaanotto-tila      :vastaanottotila
-                                                                     ilmoittautumisen-tila :ilmoittautumistila} (assoc
-                                                                                                                  valinnantulos
-                                                                                                                  valinta-tulos-service-property
-                                                                                                                  new-kevyt-valinta-property-value)
-                                                                    new-kevyt-valinta-states (match [vastaanotto-tila]
-                                                                                                    [(:or "EHDOLLISESTI_VASTAANOTTANUT" "VASTAANOTTANUT_SITOVASTI")]
-                                                                                                    {:valinnantila       "HYVAKSYTTY"
-                                                                                                     :julkaistavissa     julkaisun-tila
-                                                                                                     :vastaanottotila    vastaanotto-tila
-                                                                                                     :ilmoittautumistila ilmoittautumisen-tila}
+                                                                 application-key
+                                                                 hakukohde-oid
+                                                                 :valinnantulos]
+                                                            (fn [valinnantulos]
+                                                              (if valinnantulos
+                                                                (let [{valinnan-tila         :valinnantila
+                                                                       julkaisun-tila        :julkaistavissa
+                                                                       vastaanotto-tila      :vastaanottotila
+                                                                       ilmoittautumisen-tila :ilmoittautumistila} (assoc
+                                                                                                                    valinnantulos
+                                                                                                                    valinta-tulos-service-property
+                                                                                                                    new-kevyt-valinta-property-value)
+                                                                      new-kevyt-valinta-states (match [vastaanotto-tila]
+                                                                                                      [(:or "EHDOLLISESTI_VASTAANOTTANUT" "VASTAANOTTANUT_SITOVASTI")]
+                                                                                                      {:valinnantila       "HYVAKSYTTY"
+                                                                                                       :julkaistavissa     julkaisun-tila
+                                                                                                       :vastaanottotila    vastaanotto-tila
+                                                                                                       :ilmoittautumistila ilmoittautumisen-tila}
 
-                                                                                                    ["EI_VASTAANOTETTU_MAARA_AIKANA"]
-                                                                                                    {:valinnantila       "PERUUNTUNUT"
-                                                                                                     :julkaistavissa     julkaisun-tila
-                                                                                                     :vastaanottotila    vastaanotto-tila
-                                                                                                     :ilmoittautumistila ilmoittautumisen-tila}
+                                                                                                      ["EI_VASTAANOTETTU_MAARA_AIKANA"]
+                                                                                                      {:valinnantila       "PERUUNTUNUT"
+                                                                                                       :julkaistavissa     julkaisun-tila
+                                                                                                       :vastaanottotila    vastaanotto-tila
+                                                                                                       :ilmoittautumistila ilmoittautumisen-tila}
 
-                                                                                                    ["PERUNUT"]
-                                                                                                    {:valinnantila       "PERUNUT"
-                                                                                                     :julkaistavissa     julkaisun-tila
-                                                                                                     :vastaanottotila    vastaanotto-tila
-                                                                                                     :ilmoittautumistila ilmoittautumisen-tila}
+                                                                                                      ["PERUNUT"]
+                                                                                                      {:valinnantila       "PERUNUT"
+                                                                                                       :julkaistavissa     julkaisun-tila
+                                                                                                       :vastaanottotila    vastaanotto-tila
+                                                                                                       :ilmoittautumistila ilmoittautumisen-tila}
 
-                                                                                                    ["PERUUTETTU"]
-                                                                                                    {:valinnantila       "PERUUTETTU"
-                                                                                                     :julkaistavissa     julkaisun-tila
-                                                                                                     :vastaanottotila    vastaanotto-tila
-                                                                                                     :ilmoittautumistila ilmoittautumisen-tila}
+                                                                                                      ["PERUUTETTU"]
+                                                                                                      {:valinnantila       "PERUUTETTU"
+                                                                                                       :julkaistavissa     julkaisun-tila
+                                                                                                       :vastaanottotila    vastaanotto-tila
+                                                                                                       :ilmoittautumistila ilmoittautumisen-tila}
 
-                                                                                                    :else
-                                                                                                    {:valinnantila       valinnan-tila
-                                                                                                     :julkaistavissa     julkaisun-tila
-                                                                                                     :vastaanottotila    vastaanotto-tila
-                                                                                                     :ilmoittautumistila ilmoittautumisen-tila})]
-                                                                (merge valinnantulos new-kevyt-valinta-states))
-                                                              {:vastaanottotila    "KESKEN"
-                                                               :hakukohdeOid       hakukohde-oid
-                                                               :ilmoittautumistila "EI_TEHTY"
-                                                               :henkiloOid         henkilo-oid
-                                                               :valintatapajonoOid valintatapajono-oid
-                                                               :hakemusOid         application-key
-                                                               :valinnantila       new-kevyt-valinta-property-value
-                                                               :julkaistavissa     false
-                                                               :valinnantilanViimeisinMuutos now})))
+                                                                                                      :else
+                                                                                                      {:valinnantila       valinnan-tila
+                                                                                                       :julkaistavissa     julkaisun-tila
+                                                                                                       :vastaanottotila    vastaanotto-tila
+                                                                                                       :ilmoittautumistila ilmoittautumisen-tila})]
+                                                                  (merge valinnantulos new-kevyt-valinta-states))
+                                                                {:vastaanottotila              "KESKEN"
+                                                                 :hakukohdeOid                 hakukohde-oid
+                                                                 :ilmoittautumistila           "EI_TEHTY"
+                                                                 :henkiloOid                   henkilo-oid
+                                                                 :valintatapajonoOid           valintatapajono-oid
+                                                                 :hakemusOid                   application-key
+                                                                 :valinnantila                 new-kevyt-valinta-property-value
+                                                                 :julkaistavissa               false
+                                                                 :valinnantilanViimeisinMuutos now})))
                                                  (assoc-in db' [:valinta-tulos-service
-                                                          application-key
-                                                          hakukohde-oid
-                                                          :valinnantulos
-                                                          valinta-tulos-service-property]
-                                                         new-kevyt-valinta-property-value)
+                                                                application-key
+                                                                hakukohde-oid
+                                                                :valinnantulos
+                                                                valinta-tulos-service-property]
+                                                           new-kevyt-valinta-property-value)
                                                  (cond-> db'
                                                          (= kevyt-valinta-property :kevyt-valinta/valinnan-tila)
                                                          (update-in [:valinta-tulos-service
