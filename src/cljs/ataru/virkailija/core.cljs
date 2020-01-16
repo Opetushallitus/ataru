@@ -11,7 +11,6 @@
             [ataru.virkailija.virkailija-ajax :refer [post]]
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.views :as views]
-            [ataru.virkailija.config :as config]
             [ataru.virkailija.editor.handlers]
             [taoensso.timbre :refer-macros [spy info]]
             [ataru.application-common.fx :refer [http]] ; ataru.application-common.fx must be required to have common fx handlers enabled
