@@ -50,7 +50,8 @@
   (fn [[hakukohde-oids rights-by-hakukohde valintalaskenta-in-hakukohteet sijoittelu?]]
     (and (fc/feature-enabled? :kevyt-valinta)
          ;; On päätetty, että kevyt valinta näkyy ainoastaan kun on yksi hakukohde valittavissa, muuten moni asia on todella epätriviaaleja toteuttaa
-         (= (count hakukohde-oids) 1)
+         (and (= (count hakukohde-oids) 1)
+              (not= (first hakukohde-oids) "form"))
          (kvr/kevyt-valinta-read-only-rights-for-hakukohteet? hakukohde-oids rights-by-hakukohde)
          (not sijoittelu?)
          ;; false?, koska nil tarkoittaa ettei tietoa ole vielä ladattu
