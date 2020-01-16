@@ -70,7 +70,8 @@
   [[selected-hakukohde-oids
     form-fields
     application
-    liitepyynnot-for-hakukohteet]]
+    liitepyynnot-for-hakukohteet]
+   _]
   (transduce (comp (map (fn [hakukohde-oid]               ;; PETAR this thing is eventually creating the list of attachments, in random order
                           (when-let [liitepyynnot-for-hakukohde (-> hakukohde-oid keyword liitepyynnot-for-hakukohteet)]
                             (map (fn [[liitepyynto-key-str liitepyynto-state]]
@@ -95,13 +96,9 @@
      (re-frame/subscribe [:application/selected-form-fields-by-id])
      (re-frame/subscribe [:application/selected-application])
      (re-frame/subscribe [:state-query [:application :review :attachment-reviews]])]) ; petar ovde uzima listu attachmenta, iz stanja aplikacije ocigledno
-  (fn [[selected-hakukohde-oids
-        form-fields
-        application
-        liitepyynnot-for-hakukohteet]]
-    (reaction (liitepyynnot-for-selected-hakukohteet [selected-hakukohde-oids form-fields application liitepyynnot-for-hakukohteet]))))
+  liitepyynnot-for-selected-hakukohteet)
 
-(re-frame/reg-sub                                           ; petar ovaj valjda dovlaci sve moguce atacmente
+(re-frame/reg-sub
   :virkailija-attachments/selected-attachment-and-liitepyynto
   (fn []
     [(re-frame/subscribe [:virkailija-attachments/liitepyynnot-for-selected-hakukohteet])

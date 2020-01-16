@@ -28,7 +28,7 @@
   (fn [_ _]
     (re-frame/subscribe [:application/selected-form]))
   (fn selected-form-fields-by-id [form _]
-    (u/form-fields-by-id form)))
+    (u/form-fields-by-id form)))                            ; petar ovde fino transformise form contents elemente
 
 (re-frame/reg-sub
   :application/events
