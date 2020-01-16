@@ -554,7 +554,7 @@
       (assoc-in [:application :review-notes] review-notes)
       (assoc-in [:application :notes] (review-notes-by-hakukohde-and-state-name review-notes))
       (assoc-in [:application :review :hakukohde-reviews] hakukohde-reviews)
-      (assoc-in [:application :review :attachment-reviews] attachment-reviews)
+      (assoc-in [:application :review :attachment-reviews] attachment-reviews) ; petar ovde puni db
       (assoc-in [:application :information-requests] information-requests)
       (update-in [:application :selected-review-hakukohde-oids]
         (fn [current-hakukohde-oids]

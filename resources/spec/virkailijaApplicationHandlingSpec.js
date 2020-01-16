@@ -429,6 +429,37 @@
           .fail(done)
       })
 
+      it('PETAR shows attachments for application sorted as in form', done => {
+        clickElement(firstApplication)()
+          .then(wait.until(applicationHeadingIs('Vatanen, Ari — 141196-933S')))
+          .then(() => {
+            expect(
+              elementExists(
+                testFrame().find(
+                  'span:contains("Tee yksilöinti henkilöpalvelussa.")'
+                )
+              )
+            ).to.equal(false)
+          })
+          .then(clickElement(thirdApplication))
+          .then(
+            wait.until(
+              applicationHeadingIs('Tyrni, Johanna Irmeli — 020202A0202')
+            )
+          )
+          .then(
+            wait.until(() => {
+              return elementExists(
+                testFrame().find(
+                  'span:contains("Tee yksilöinti henkilöpalvelussa.")'
+                )
+              )
+            })
+          )
+          .then(done)
+          .fail(done)
+      })
+
       describe('successfully changes selection state', () => {
         before(
           wait.until(() => {
