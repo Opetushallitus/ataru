@@ -24,7 +24,8 @@
             [clojure.java.jdbc :as jdbc]
             [schema.core :as s]
             [taoensso.timbre :refer [info warn]]
-            [yesql.core :refer [defqueries]])
+            [yesql.core :refer [defqueries]]
+            [ataru.config.core :refer [config]])
   (:import [java.time
             LocalDateTime
             ZoneId]
@@ -556,7 +557,9 @@ WHERE la.key IS NULL\n"
   [person-oid]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (->> (yesql-get-application-list-by-person-oid-for-omatsivut
-          {:person_oid person-oid} {:connection conn})
+          {:person_oid             person-oid
+           :secret_link_valid_days (-> config :public-config :secret-link-valid-days)}
+          {:connection conn})
          ->kebab-case-kw
          (mapv #(if (nil? (:secret %))
                   (do (info "Refreshing secret for application" (:key %))
@@ -636,7 +639,10 @@ WHERE la.key IS NULL\n"
   (mapv ->kebab-case-kw (exec-db :db yesql-get-application-attachment-reviews {:application_key application-key})))
 
 (defn get-latest-application-by-secret [secret]
-  (when-let [application (->> (exec-db :db yesql-get-latest-application-by-secret {:secret secret})
+  (when-let [application (->> (exec-db :db
+                                       yesql-get-latest-application-by-secret
+                                       {:secret secret
+                                        :secret_link_valid_days (-> config :public-config :secret-link-valid-days)})
                               (first)
                               (unwrap-application))]
     (-> application
