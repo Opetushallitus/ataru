@@ -1,7 +1,7 @@
 (ns ataru.virkailija.application.view
   (:require [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]
-            [ataru.cljs-util :as cljs-util :refer [get-virkailija-translation get-virkailija-label]]
+            [ataru.cljs-util :as cljs-util]
             [ataru.translations.texts :refer [state-translations general-texts]]
             [ataru.util :as util]
             [ataru.virkailija.application.application-search-control :refer [application-search-control]]
@@ -63,21 +63,21 @@
       [:span.application-handling__excel-request-container
        [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
         {:on-click #(dispatch [:application/set-excel-popup-visibility true])}
-        (get-virkailija-translation :load-excel)]
+        @(subscribe [:editor/virkailija-translation :load-excel])]
        (when @visible?
          [:div.application-handling__popup__excel.application-handling__excel-request-popup
           [:div.application-handling__mass-edit-review-states-title-container
            [:h4.application-handling__mass-edit-review-states-title
-            (get-virkailija-translation :excel-request)]
+            @(subscribe [:editor/virkailija-translation :excel-request])]
            [:button.virkailija-close-button
             {:on-click #(dispatch [:application/set-excel-popup-visibility false])}
             [:i.zmdi.zmdi-close]]]
           [:div.application-handling__excel-request-row
-           [:div.application-handling__excel-request-heading (get-virkailija-translation :excel-included-ids)]]
+           [:div.application-handling__excel-request-heading @(subscribe [:editor/virkailija-translation :excel-included-ids])]]
           [:div.application-handling__excel-request-row
            [:textarea.application-handling__information-request-message-area.application-handling__information-request-message-area--large
             {:value       (or @included-ids "")
-             :placeholder (get-virkailija-translation :excel-include-all-placeholder)
+             :placeholder @(subscribe [:editor/virkailija-translation :excel-include-all-placeholder])
              :on-change   #(dispatch [:application/set-excel-request-included-ids (-> % .-target .-value)])}]]
           [:div.application-handling__excel-request-row
            [:form#excel-download-link
@@ -112,7 +112,7 @@
              :on-click (fn [e]
                          (.submit (.getElementById js/document "excel-download-link")))}
             [:span
-             (str (get-virkailija-translation :load-excel)
+             (str @(subscribe [:editor/virkailija-translation :load-excel])
                   (when @loading? " "))
              (when @loading?
                [:i.zmdi.zmdi-spinner.spin])]]]])])))
@@ -190,12 +190,12 @@
         [:span.application-handling__mass-edit-review-states-container
          [:a.application-handling__mass-edit-review-states-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
           {:on-click #(dispatch [:application/set-mass-update-popup-visibility true])}
-          (get-virkailija-translation :mass-edit)]
+          @(subscribe [:editor/virkailija-translation :mass-edit])]
          (when @visible?
            [:div.application-handling__mass-edit-review-states-popup.application-handling__popup
             [:div.application-handling__mass-edit-review-states-title-container
              [:h4.application-handling__mass-edit-review-states-title
-              (get-virkailija-translation :mass-edit)]
+              @(subscribe [:editor/virkailija-translation :mass-edit])]
              [:button.virkailija-close-button
               {:on-click #(dispatch [:application/set-mass-update-popup-visibility false])}
               [:i.zmdi.zmdi-close]]]
@@ -204,7 +204,7 @@
                @(subscribe [:application/haku-name haku-oid])
                (when hakukohde-oid
                  (str ", " @(subscribe [:application/hakukohde-name hakukohde-oid])))])
-            [:h4.application-handling__mass-edit-review-states-heading (get-virkailija-translation :from-state)]
+            [:h4.application-handling__mass-edit-review-states-heading @(subscribe [:editor/virkailija-translation :from-state])]
 
             (if @from-list-open?
               (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
@@ -216,7 +216,7 @@
                  (reset! submit-button-state :submit))
                (selected-or-default-mass-review-state-label selected-from-review-state from-states @review-state-counts)))
 
-            [:h4.application-handling__mass-edit-review-states-heading (get-virkailija-translation :to-state)]
+            [:h4.application-handling__mass-edit-review-states-heading @(subscribe [:editor/virkailija-translation :to-state])]
 
             (if @to-list-open?
               (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
@@ -237,7 +237,7 @@
                  {:on-click #(when-not button-disabled? (reset! submit-button-state :confirm))
                   :disabled button-disabled?}
                  [:span
-                  (str (get-virkailija-translation :change)
+                  (str @(subscribe [:editor/virkailija-translation :change])
                        (when @loading? " "))
                   (when @loading?
                     [:i.zmdi.zmdi-spinner.spin])]])
@@ -255,7 +255,7 @@
                               (reset! selected-to-review-state nil)
                               (reset! from-list-open? false)
                               (reset! to-list-open? false)))}
-               (get-virkailija-translation :confirm-change)])])]))))
+               @(subscribe [:editor/virkailija-translation :confirm-change])])])]))))
 
 (declare application-information-request-contains-modification-link)
 
@@ -271,18 +271,18 @@
       [:span.application-handling__mass-information-request-container
        [:a.application-handling__mass-information-request-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
         {:on-click #(dispatch [:application/set-mass-information-request-popup-visibility true])}
-        (get-virkailija-translation :mass-information-request)]
+        @(subscribe [:editor/virkailija-translation :mass-information-request])]
        (when @visible?
          [:div.application-handling__popup.application-handling__mass-information-request-popup
           [:div.application-handling__mass-edit-review-states-title-container
            [:h4.application-handling__mass-edit-review-states-title
-            (get-virkailija-translation :mass-information-request)]
+            @(subscribe [:editor/virkailija-translation :mass-information-request])]
            [:button.virkailija-close-button
             {:on-click #(dispatch [:application/set-mass-information-request-popup-visibility false])}
             [:i.zmdi.zmdi-close]]]
-          [:p (gstring/format (get-virkailija-translation :mass-information-request-email-n-recipients) @applications-count)]
+          [:p @(subscribe [:editor/virkailija-translation :mass-information-request-email-n-recipients @applications-count])]
           [:div.application-handling__information-request-row
-           [:div.application-handling__information-request-info-heading (get-virkailija-translation :mass-information-request-subject)]
+           [:div.application-handling__information-request-info-heading @(subscribe [:editor/virkailija-translation :mass-information-request-subject])]
            [:div.application-handling__information-request-text-input-container
             [:input.application-handling__information-request-text-input
              {:value     @subject
@@ -302,28 +302,28 @@
                            "application-handling__send-information-request-button--enabled"
                            "application-handling__send-information-request-button--disabled")
                :on-click #(dispatch [:application/confirm-mass-information-request])}
-              (get-virkailija-translation :mass-information-request-send)]
+              @(subscribe [:editor/virkailija-translation :mass-information-request-send])]
 
              :loading-applications
              [:button.application-handling__send-information-request-button.application-handling__send-information-request-button--disabled
               {:disabled true}
-              [:span (str (get-virkailija-translation :mass-information-request-send) " ")
+              [:span (str @(subscribe [:editor/virkailija-translation :mass-information-request-send]) " ")
                [:i.zmdi.zmdi-spinner.spin]]]
 
              :confirm
              [:button.application-handling__send-information-request-button.application-handling__send-information-request-button--confirm
               {:on-click #(dispatch [:application/submit-mass-information-request])}
-              (gstring/format (get-virkailija-translation :mass-information-request-confirm-n-messages) @applications-count)]
+              @(subscribe [:editor/virkailija-translation :mass-information-request-confirm-n-messages @applications-count])]
 
              :submitting
              [:div.application-handling__information-request-status
               [:i.zmdi.zmdi-hc-lg.zmdi-spinner.spin.application-handling__information-request-status-icon]
-              (get-virkailija-translation :mass-information-request-sending-messages)]
+              @(subscribe [:editor/virkailija-translation :mass-information-request-sending-messages])]
 
              :submitted
              [:div.application-handling__information-request-status
               [:i.zmdi.zmdi-hc-lg.zmdi-check-circle.application-handling__information-request-status-icon.application-handling__information-request-status-icon--sent]
-              (get-virkailija-translation :mass-information-request-messages-sent)])]])])))
+              @(subscribe [:editor/virkailija-translation :mass-information-request-messages-sent])])]])])))
 
 (defn- closed-row
   [on-click label]
@@ -341,7 +341,7 @@
        :checked   ensisijaisesti?
        :on-change #(dispatch [:application/set-ensisijaisesti
                               (not ensisijaisesti?)])}]
-     [:span (get-virkailija-translation :ensisijaisesti)]]))
+     [:span @(subscribe [:editor/virkailija-translation :ensisijaisesti])]]))
 
 (defn haku-applications-heading
   [_]
@@ -368,13 +368,12 @@
                            @(subscribe [:application/hakukohderyhma-name
                                         selected-hakukohderyhma-oid])
                            :else
-                           (get-virkailija-translation :all-hakukohteet)))
+                           @(subscribe [:editor/virkailija-translation :all-hakukohteet])))
          (when @list-opened
            [h-and-h/popup
             [h-and-h/search-input
              {:id                       haku-oid
               :haut                     [{:oid         haku-oid
-                                          :name        (get-virkailija-label :hakukohteet)
                                           :hakukohteet hakukohteet}]
               :hakukohderyhmat          hakukohderyhmat
               :hakukohde-selected?      #(= selected-hakukohde-oid %)
@@ -383,7 +382,6 @@
             [h-and-h/search-listing
              {:id                       haku-oid
               :haut                     [{:oid         haku-oid
-                                          :name        (get-virkailija-label :hakukohteet)
                                           :hakukohteet hakukohteet}]
               :hakukohderyhmat          hakukohderyhmat
               :hakukohde-selected?      #(= selected-hakukohde-oid %)
@@ -502,7 +500,7 @@
                    review-states/application-hakukohde-processing-states
                    processing-state
                    @lang)
-                 (get-virkailija-translation :unprocessed))
+                 @(subscribe [:editor/virkailija-translation :unprocessed]))
                (when show-state-email-icon?
                  [:i.zmdi.zmdi-email.application-handling__list-row-email-icon])]]
              (when (:selection-state review-settings true)
@@ -515,7 +513,7 @@
                      review-states/application-hakukohde-selection-states
                      selection-state
                      @lang)
-                   (get-virkailija-translation :incomplete))]])]))
+                   @(subscribe [:editor/virkailija-translation :incomplete]))]])]))
         application-hakukohde-oids))))
 
 (defn- application-attachment-states
@@ -556,7 +554,8 @@
       :id       (str "application-list-row-" (:key application))}
      [:div.application-handling__list-row-person-info
       [:span.application-handling__list-row--application-applicant
-       [:span.application-handling__list-row--applicant-name (or applicant [:span.application-handling__list-row--applicant-unknown (get-virkailija-translation :unknown)])]
+       [:span.application-handling__list-row--applicant-name (or applicant [:span.application-handling__list-row--applicant-unknown
+                                                                            @(subscribe [:editor/virkailija-translation :unknown])])]
        [:span.application-handling__list-row--applicant-details (or (-> application :person :ssn) (-> application :person :dob))]]
       [:span.application-handling__list-row--application-time
        [:span.application-handling__list-row--time-day day]
@@ -637,7 +636,7 @@
                                                                                 []
                                                                                 (map first states)))])
                                           (dispatch [:application/reload-applications]))}]
-                    [:span (get-virkailija-translation :all)]]]]
+                    [:span @(subscribe [:editor/virkailija-translation :all])]]]]
                  (mapv
                    (fn [[review-state-id review-state-label]]
                      (let [filter-selected? (contains? (set @filter-sub) review-state-id)]
@@ -679,8 +678,8 @@
         [:span.application-handling__created-time-column-header
          {:on-click #(dispatch [:application/toggle-shown-time-column])}
          (if (= "created-time" @selected-time-column)
-           (get-virkailija-translation :last-modified)
-           (get-virkailija-translation :submitted-at))]
+           @(subscribe [:editor/virkailija-translation :last-modified])
+           @(subscribe [:editor/virkailija-translation :submitted-at]))]
         " |"
         [:i.zmdi
          {:on-click #(dispatch [:application/update-sort @selected-time-column])
@@ -689,7 +688,7 @@
                       "zmdi-chevron-up application-handling__sort-arrow")}]]])))
 
 (defn- application-filter-checkbox
-  [filters label lang kw state]
+  [filters label kw state]
   (let [kw       (keyword kw)
         state    (keyword state)
         checked? (boolean (get-in @filters [kw state]))]
@@ -700,9 +699,7 @@
       {:type      "checkbox"
        :checked   checked?
        :on-change #(dispatch [:application/toggle-filter kw state])}]
-     [:span (if (some? lang)
-              (util/non-blank-val label [lang :fi :sv :en])
-              label)]]))
+     [:span label]]))
 
 (defn- review-type-filter
   [filters lang [kw group-label states]]
@@ -714,38 +711,40 @@
      [:div.application-handling__filter-group-checkboxes]
      (map
        (fn [[state checkbox-label]]
-         (application-filter-checkbox filters checkbox-label lang kw state))
+         (application-filter-checkbox filters
+                                      (lang checkbox-label)
+                                      kw
+                                      state))
        states))])
 
 (defn- application-base-education-filters
   [filters-checkboxes]
-  (let [checkboxes            [[:pohjakoulutus_yo (get-virkailija-translation :pohjakoulutus_yo)]
-                               [:pohjakoulutus_lk (get-virkailija-translation :pohjakoulutus_lk)]
-                               [:pohjakoulutus_yo_kansainvalinen_suomessa (get-virkailija-translation :pohjakoulutus_yo_kansainvalinen_suomessa)]
-                               [:pohjakoulutus_yo_ammatillinen (get-virkailija-translation :pohjakoulutus_yo_ammatillinen)]
-                               [:pohjakoulutus_am (get-virkailija-translation :pohjakoulutus_am)]
-                               [:pohjakoulutus_amt (get-virkailija-translation :pohjakoulutus_amt)]
-                               [:pohjakoulutus_kk (get-virkailija-translation :pohjakoulutus_kk)]
-                               [:pohjakoulutus_yo_ulkomainen (get-virkailija-translation :pohjakoulutus_yo_ulkomainen)]
-                               [:pohjakoulutus_kk_ulk (get-virkailija-translation :pohjakoulutus_kk_ulk)]
-                               [:pohjakoulutus_ulk (get-virkailija-translation :pohjakoulutus_ulk)]
-                               [:pohjakoulutus_avoin (get-virkailija-translation :pohjakoulutus_avoin)]
-                               [:pohjakoulutus_muu (get-virkailija-translation :pohjakoulutus_muu)]]
+  (let [checkboxes            [[:pohjakoulutus_yo @(subscribe [:editor/virkailija-translation :pohjakoulutus_yo])]
+                               [:pohjakoulutus_lk @(subscribe [:editor/virkailija-translation :pohjakoulutus_lk])]
+                               [:pohjakoulutus_yo_kansainvalinen_suomessa @(subscribe [:editor/virkailija-translation :pohjakoulutus_yo_kansainvalinen_suomessa])]
+                               [:pohjakoulutus_yo_ammatillinen @(subscribe [:editor/virkailija-translation :pohjakoulutus_yo_ammatillinen])]
+                               [:pohjakoulutus_am @(subscribe [:editor/virkailija-translation :pohjakoulutus_am])]
+                               [:pohjakoulutus_amt @(subscribe [:editor/virkailija-translation :pohjakoulutus_amt])]
+                               [:pohjakoulutus_kk @(subscribe [:editor/virkailija-translation :pohjakoulutus_kk])]
+                               [:pohjakoulutus_yo_ulkomainen @(subscribe [:editor/virkailija-translation :pohjakoulutus_yo_ulkomainen])]
+                               [:pohjakoulutus_kk_ulk @(subscribe [:editor/virkailija-translation :pohjakoulutus_kk_ulk])]
+                               [:pohjakoulutus_ulk @(subscribe [:editor/virkailija-translation :pohjakoulutus_ulk])]
+                               [:pohjakoulutus_avoin @(subscribe [:editor/virkailija-translation :pohjakoulutus_avoin])]
+                               [:pohjakoulutus_muu @(subscribe [:editor/virkailija-translation :pohjakoulutus_muu])]]
         all-filters-selected? (subscribe [:application/all-pohjakoulutus-filters-selected?])]
-    (fn []
-      [:div.application-handling__filter-group
-       [:h3.application-handling__filter-group-heading (get-virkailija-translation :base-education)]
-       [:label.application-handling__filter-checkbox-label.application-handling__filter-checkbox-label--all
-        {:key   (str "application-filter-pohjakoulutus-any")
-         :class (when @all-filters-selected? "application-handling__filter-checkbox-label--checked")}
-        [:input.application-handling__filter-checkbox
-         {:type      "checkbox"
-          :checked   @all-filters-selected?
-          :on-change #(dispatch [:application/toggle-all-pohjakoulutus-filters @all-filters-selected?])}]
-        [:span "Kaikki"]]
-       (->> checkboxes
-            (map (fn [[id label]] (application-filter-checkbox filters-checkboxes label nil :base-education id)))
-            (doall))])))
+    [:div.application-handling__filter-group
+     [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :base-education])]
+     [:label.application-handling__filter-checkbox-label.application-handling__filter-checkbox-label--all
+      {:key   (str "application-filter-pohjakoulutus-any")
+       :class (when @all-filters-selected? "application-handling__filter-checkbox-label--checked")}
+      [:input.application-handling__filter-checkbox
+       {:type      "checkbox"
+        :checked   @all-filters-selected?
+        :on-change #(dispatch [:application/toggle-all-pohjakoulutus-filters @all-filters-selected?])}]
+      [:span "Kaikki"]]
+     (->> checkboxes
+          (map (fn [[id label]] (application-filter-checkbox filters-checkboxes label :base-education id)))
+          (doall))]))
 
 (defn- select-rajaava-hakukohde [opened?]
   (let [ryhman-ensisijainen-hakukohde @(subscribe [:state-query [:application :rajaus-hakukohteella-value]])]
@@ -753,7 +752,7 @@
      [:button.application-handling__ensisijaisesti-hakukohteeseen-popup-button
       {:on-click #(swap! opened? not)}
       (if (nil? ryhman-ensisijainen-hakukohde)
-        (get-virkailija-translation :all-hakukohteet)
+        @(subscribe [:editor/virkailija-translation :all-hakukohteet])
         (or @(subscribe [:application/hakukohde-name ryhman-ensisijainen-hakukohde])
             [:i.zmdi.zmdi-spinner.spin]))]
      (when @opened?
@@ -810,7 +809,7 @@
                       (swap! filters-visible not))}
         [:span
          (gstring/format "%s (%d"
-                         (get-virkailija-translation :filter-applications)
+                         @(subscribe [:editor/virkailija-translation :filter-applications])
                          @applications-count)]
         (when @fetching?
           [:span "+ "
@@ -821,7 +820,7 @@
           [:span.application-handling__filters-count-separator "|"]
           [:a
            {:on-click #(dispatch [:application/remove-filters])}
-           (get-virkailija-translation :remove-filters)
+           @(subscribe [:editor/virkailija-translation :remove-filters])
            " (" @enabled-filter-count ")"]])
        (when @filters-visible
          [:div.application-handling__filters-popup
@@ -833,25 +832,25 @@
            [:div.application-handling__popup-column
             (when @show-ensisijaisesti?
               [:div.application-handling__filter-group
-               [:h3.application-handling__filter-group-heading (get-virkailija-translation :ensisijaisuus)]
+               [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :ensisijaisuus])]
                [ensisijaisesti]
                (when @show-rajaa-hakukohteella?
                  [select-rajaava-hakukohde rajaava-hakukohde-opened?])])
             [:div.application-handling__filter-group
-             [:h3.application-handling__filter-group-heading (get-virkailija-translation :ssn)]
-             [application-filter-checkbox filters-checkboxes (get-virkailija-label :without-ssn) @lang :only-ssn :without-ssn]
-             [application-filter-checkbox filters-checkboxes (get-virkailija-label :with-ssn) @lang :only-ssn :with-ssn]]
+             [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :ssn])]
+             [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :without-ssn]) :only-ssn :without-ssn]
+             [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :with-ssn]) :only-ssn :with-ssn]]
             [:div.application-handling__filter-group
-             [:h3.application-handling__filter-group-heading (get-virkailija-translation :identifying)]
-             [application-filter-checkbox filters-checkboxes (get-virkailija-label :unidentified) @lang :only-identified :unidentified]
-             [application-filter-checkbox filters-checkboxes (get-virkailija-label :identified) @lang :only-identified :identified]]
+             [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :identifying])]
+             [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :unidentified]) :only-identified :unidentified]
+             [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :identified]) :only-identified :identified]]
             [:div.application-handling__filter-group
-             [:h3.application-handling__filter-group-heading (get-virkailija-translation :active-status)]
-             [application-filter-checkbox filters-checkboxes (get-virkailija-label :active-status-active) @lang :active-status :active]
-             [application-filter-checkbox filters-checkboxes (get-virkailija-label :active-status-passive) @lang :active-status :passive]]]
+             [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :active-status])]
+             [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translations :active-status-active]) :active-status :active]
+             [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :active-status-passive]) :active-status :passive]]]
            [:div.application-handling__popup-column
             [:div.application-handling__filter-group
-             [:h3.application-handling__filter-group-heading (get-virkailija-translation :handling-notes)]
+             [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :handling-notes])]
              (when (some? @selected-hakukohde-oid)
                [:div.application-handling__filter-hakukohde-name
                 @(subscribe [:application/hakukohde-name @selected-hakukohde-oid])])
@@ -865,11 +864,18 @@
              (when @show-eligibility-set-automatically-filter
                [:div.application-handling__filter-group
                 [:div.application-handling__filter-group-title
-                 (util/non-blank-val (get-virkailija-label :eligibility-set-automatically)
-                                     [@lang :fi :sv :en])]
+                 @(subscribe [:editor/virkailija-translation :eligibility-set-automatically])]
                 [:div.application-handling__filter-group-checkboxes
-                 [application-filter-checkbox filters-checkboxes (:yes general-texts) @lang :eligibility-set-automatically :yes]
-                 [application-filter-checkbox filters-checkboxes (:no general-texts) @lang :eligibility-set-automatically :no]]])]]
+                 [application-filter-checkbox
+                  filters-checkboxes
+                  (-> general-texts :yes (get @lang))
+                  :eligibility-set-automatically
+                  :yes]
+                 [application-filter-checkbox
+                  filters-checkboxes
+                  (-> general-texts :no (get @lang))
+                  :eligibility-set-automatically
+                  :no]]])]]
            (when @has-base-education-answers
              [:div.application-handling__popup-column.application-handling__popup-column--large
               [application-base-education-filters filters-checkboxes @lang]])]
@@ -881,13 +887,13 @@
              :on-click (fn [_]
                          (reset! filters-visible false)
                          (dispatch [:application/apply-filters]))}
-            (get-virkailija-translation :filters-apply-button)]
+            @(subscribe [:editor/virkailija-translation :filters-apply-button])]
            [:a.editor-form__control-button.editor-form__control-button--variable-width
             {:class    (if @filters-changed?
                          "editor-form__control-button--enabled"
                          "editor-form__control-button--disabled")
              :on-click #(dispatch [:application/undo-filters])}
-            (get-virkailija-translation :filters-cancel-button)]]])])))
+            @(subscribe [:editor/virkailija-translation :filters-cancel-button])]]])])))
 
 (defn- application-list-header [applications]
   (let [review-settings (subscribe [:state-query [:application :review-settings :config]])]
@@ -895,27 +901,27 @@
      [:span.application-handling__list-row--applicant
       [application-list-basic-column-header
        "applicant-name"
-       (get-virkailija-translation :applicant)]
+       @(subscribe [:editor/virkailija-translation :applicant])]
       [application-filters]]
      [created-time-column-header]
      (when (:attachment-handling @review-settings true)
        [:span.application-handling__list-row--attachment-state
         [hakukohde-state-filter-controls
          :attachment-state-filter
-         (get-virkailija-translation :attachments)
+         @(subscribe [:editor/virkailija-translation :attachments])
          review-states/attachment-hakukohde-review-types-with-no-requirements
          (subscribe [:state-query [:application :attachment-state-counts]])]])
      [:span.application-handling__list-row--state
       [hakukohde-state-filter-controls
        :processing-state-filter
-       (get-virkailija-translation :processing-state)
+       @(subscribe [:editor/virkailija-translation :processing-state])
        review-states/application-hakukohde-processing-states
        (subscribe [:state-query [:application :review-state-counts]])]]
      (when (:selection-state @review-settings true)
        [:span.application-handling__list-row--selection
         [hakukohde-state-filter-controls
          :selection-state-filter
-         (get-virkailija-translation :selection)
+         @(subscribe [:editor/virkailija-translation :selection])
          review-states/application-hakukohde-selection-states
          (subscribe [:state-query [:application :selection-state-counts]])]])]))
 
@@ -934,12 +940,10 @@
      (if multiple-values?
        [:span
         [icon-many-checked]
-        [:span (get-virkailija-translation :multiple-values)]
-        ]
+        [:span @(subscribe [:editor/virkailija-translation :multiple-values])]]
        [:span
         [icon-check]
-        [:span label]
-        ])]))
+        [:span label]])]))
 
 (defn review-state-row [state-name current-review-state lang multiple-values? [review-state-id review-state-label]]
   (if (or (= current-review-state review-state-id)
@@ -971,7 +975,7 @@
     (fn []
       (let [active? (= "active" @state)]
         [:div.application-handling__review-deactivate-row
-         [:span.application-handling__review-deactivate-label (get-virkailija-translation :application-state)]
+         [:span.application-handling__review-deactivate-label @(subscribe [:editor/virkailija-translation :application-state])]
          [:div.application-handling__review-deactivate-toggle
           [:div.application-handling__review-deactivate-toggle-slider
            {:class    (cond-> ""
@@ -981,10 +985,10 @@
             :on-click #(when @can-edit?
                          (dispatch [:application/set-application-activeness (not active?)]))}
            [:div.application-handling__review-deactivate-toggle-label-left
-            (get-virkailija-translation :active)]
+            @(subscribe [:editor/virkailija-translation :active])]
            [:div.application-handling__review-deactivate-toggle-divider]
            [:div.application-handling__review-deactivate-toggle-label-right
-            (get-virkailija-translation :passive)]]]]))))
+            @(subscribe [:editor/virkailija-translation :passive])]]]]))))
 
 (defn- hakukohde-name [hakukohde-oid]
   (if-let [hakukohde-name @(subscribe [:application/hakukohde-name
@@ -1030,7 +1034,7 @@
                {:on-click (when-not (= 1 hakukohde-count) toggle-list-open)
                 :class (when (= 1 hakukohde-count) "application-handling__review-state-row--disabled")}
                (gstring/format "%s (%d)"
-                 (get-virkailija-translation :hakukohteet)
+                 @(subscribe [:editor/virkailija-translation :hakukohteet])
                  hakukohde-count)
                (when-not (= 1 hakukohde-count)
                  (if @list-opened
@@ -1056,7 +1060,7 @@
   (let [note                (subscribe [:state-query [:application :review-notes note-idx]])
         name                (reaction (if (and (:first-name @note) (:last-name @note))
                                         (str (:first-name @note) " " (:last-name @note))
-                                        (get-virkailija-translation :unknown-virkailija)))
+                                        @(subscribe [:editor/virkailija-translation :unknown-virkailija])))
         created-time        (reaction (when-let [created-time (:created-time @note)]
                                         (temporal/time->short-str created-time)))
         notes               (reaction (:notes @note))
@@ -1091,7 +1095,7 @@
                          (remove-note)
                          (start-removing-note)))}
          (if @removing?
-           (get-virkailija-translation :confirm-delete)
+           @(subscribe [:editor/virkailija-translation :confirm-delete])
            [:i.zmdi.zmdi-close])]]
        (when-not @details-folded?
          [:div.application-handling__review-note-details-row
@@ -1110,10 +1114,10 @@
                 (util/non-blank-val (:name org) [@lang :fi :sv :en])]]))]])
        [:div.application-handling__review-note-content
         (when (:hakukohde @note)
-          {:data-tooltip (str (get-virkailija-translation :eligibility-explanation)
+          {:data-tooltip (str @(subscribe [:editor/virkailija-translation :eligibility-explanation])
                               (when (not= "form" (:hakukohde @note))
                                 (gstring/format " %s %s"
-                                  (get-virkailija-translation :for-hakukohde)
+                                  @(subscribe [:editor/virkailija-translation :for-hakukohde])
                                   @hakukohde-name)))})
         @notes]])))
 
@@ -1134,7 +1138,7 @@
       [:div.application-handling__review-state-selected-container
        [:textarea.application-handling__review-note-input
         {:value       @review-note
-         :placeholder (get-virkailija-translation :rejection-reason)
+         :placeholder @(subscribe [:editor/virkailija-translation :rejection-reason])
          :on-change   (fn [event]
                         (let [note (.. event -target -value)]
                           (dispatch [:state-update #(assoc-in % [:application :notes note-state-path state-name] note)])))}]
@@ -1145,7 +1149,7 @@
          :class    (if button-enabled?
                      "application-handling__review-note-submit-button--enabled"
                      "application-handling__review-note-submit-button--disabled")}
-        (get-virkailija-translation :add)]
+        @(subscribe [:editor/virkailija-translation :add])]
        (->> @selected-notes-idx
             (map (fn [idx]
                    ^{:key (str "application-review-note-" idx)}
@@ -1177,11 +1181,11 @@
             (cond (and (= :eligibility-state kw)
                        @eligibility-automatically-checked?)
                   [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
-                   {:title (get-virkailija-translation :eligibility-set-automatically)}]
+                   {:title @(subscribe [:editor/virkailija-translation :eligibility-set-automatically])}]
                   (and (= :payment-obligation kw)
                        @payment-obligation-automatically-checked?)
                   [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
-                   {:title (get-virkailija-translation :payment-obligation-set-automatically)}])]
+                   {:title @(subscribe [:editor/virkailija-translation :payment-obligation-set-automatically])}])]
            (if @list-opened
              (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
                      {:on-click list-click}]
@@ -1242,7 +1246,7 @@
                         {:on-click (fn [e]
                                      (.stopPropagation e)
                                      (dispatch [:application/open-application-version-history event]))}
-                        (get-virkailija-translation :compare)]]
+                        @(subscribe [:editor/virkailija-translation :compare])]]
    [:ul.application-handling__event-row-update-list
     (for [[key field] @(subscribe [:application/changes-made-for-event (:id event)])]
       [:li
@@ -1275,36 +1279,36 @@
                  (:new-review-state event)
                  lang)]
       [[:span label " " (or (virkailija-initials-span event)
-                            (get-virkailija-translation :unknown))]
+                            @(subscribe [:editor/virkailija-translation :unknown]))]
        nil])
 
     {:event-type "updated-by-applicant"}
     (update-event
      (gstring/format "%s %d %s"
-                     (get-virkailija-translation :from-applicant)
+                     @(subscribe [:editor/virkailija-translation :from-applicant])
                      (count @(subscribe [:application/changes-made-for-event (:id event)]))
-                     (get-virkailija-translation :changes))
+                     @(subscribe [:editor/virkailija-translation :changes]))
      event)
 
     {:event-type "updated-by-virkailija"}
     (update-event
      [:span
-      (or (virkailija-initials-span event) (get-virkailija-translation :unknown))
+      (or (virkailija-initials-span event) @(subscribe [:editor/virkailija-translation :unknown]))
       (gstring/format " %s %d %s"
-                      (get-virkailija-translation :did)
+                      @(subscribe [:editor/virkailija-translation :did])
                       (count @(subscribe [:application/changes-made-for-event (:id event)]))
-                      (get-virkailija-translation :changes))]
+                      @(subscribe [:editor/virkailija-translation :changes]))]
      event)
 
     {:event-type "received-from-applicant"}
-    [[:span (get-virkailija-translation :application-received)]
+    [[:span @(subscribe [:editor/virkailija-translation :application-received])]
      nil]
 
     {:event-type "received-from-virkailija"}
     [[:span
       (virkailija-initials-span event)
       " "
-      (get-virkailija-translation :submitted-application)]
+      @(subscribe [:editor/virkailija-translation :submitted-application])]
      nil]
 
     {:event-type "hakukohde-review-state-change"}
@@ -1335,30 +1339,30 @@
 
     {:event-type "eligibility-state-automatically-changed"}
     [[:span
-      (get-virkailija-translation :eligibility)
+      @(subscribe [:editor/virkailija-translation :eligibility])
       ": "
       (some #(when (= (:new-review-state event) (first %))
                (get (second %) lang))
             review-states/application-hakukohde-eligibility-states)
       [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
-       {:title (get-virkailija-translation :eligibility-set-automatically)}]]
+       {:title @(subscribe [:editor/virkailija-translation :eligibility-set-automatically])}]]
      [:span @(subscribe [:application/hakukohde-and-tarjoaja-name (:hakukohde event)])]]
 
     {:event-type "payment-obligation-automatically-changed"}
     [[:span
-      (get-virkailija-translation :payment-obligation)
+      @(subscribe [:editor/virkailija-translation :payment-obligation])
       ": "
       (some #(when (= (:new-review-state event) (first %))
                (get (second %) lang))
             review-states/application-payment-obligation-states)
       [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
-       {:title (get-virkailija-translation :payment-obligation-set-automatically)}]]
+       {:title @(subscribe [:editor/virkailija-translation :payment-obligation-set-automatically])}]]
      [:span @(subscribe [:application/hakukohde-and-tarjoaja-name (:hakukohde event)])]]
 
     {:event-type "attachment-review-state-change"}
     [[:span
       (gstring/format "%s: %s "
-                      (get-virkailija-translation :attachment)
+                      @(subscribe [:editor/virkailija-translation :attachment])
                       (application-states/get-review-state-label-by-name
                        review-states/attachment-hakukohde-review-types
                        (:new-review-state event)
@@ -1367,39 +1371,39 @@
      nil]
 
     {:event-type "modification-link-sent"}
-    [[:span (get-virkailija-translation :confirmation-sent)]
+    [[:span @(subscribe [:editor/virkailija-translation :confirmation-sent])]
      nil]
 
     {:event-type "field-deadline-set"}
-    [[:span (str (get-virkailija-translation :liitepyynto-deadline-set) " ")
+    [[:span (str @(subscribe [:editor/virkailija-translation :liitepyynto-deadline-set]) " ")
       (virkailija-initials-span event)]
      [:div
       [:div
-       [:span (str (get-virkailija-translation :attachment) ": ")]
+       [:span (str @(subscribe [:editor/virkailija-translation :attachment]) ": ")]
        [:span @(subscribe [:application/field-label (:review-key event)])]]
       [:div
-       [:span (str (get-virkailija-translation :liitepyynto-deadline-date) ": ")]
+       [:span (str @(subscribe [:editor/virkailija-translation :liitepyynto-deadline-date]) ": ")]
        [:span (t/time->short-str (:new-review-state event))]]
       (event-organizations-list event lang)]]
 
     {:event-type "field-deadline-unset"}
-    [[:span (str (get-virkailija-translation :liitepyynto-deadline-unset) " ")
+    [[:span (str @(subscribe [:editor/virkailija-translation :liitepyynto-deadline-unset]) " ")
       (virkailija-initials-span event)]
      [:div
       [:div
-       [:span (str (get-virkailija-translation :attachment) ": ")]
+       [:span (str @(subscribe [:editor/virkailija-translation :attachment]) ": ")]
        [:span @(subscribe [:application/field-label (:review-key event)])]]
       (event-organizations-list event lang)]]
 
     {:event-type "ehto-hakukohteessa-set"}
-    [[:span (get-virkailija-translation :ehdollisesti-hyvaksyttavissa)]
+    [[:span @(subscribe [:editor/virkailija-translation :ehdollisesti-hyvaksyttavissa])]
      [:div
       [:div @(subscribe [:application/hakukohde-and-tarjoaja-name (:hakukohde event)])]
       [:div.application-handling__event-row--ehto-hakukohteessa
        (util/non-blank-val (:ehto event) [lang :fi :sv :en])]]]
 
     {:event-type "ehto-hakukohteessa-unset"}
-    [[:span (get-virkailija-translation :ei-ehdollisesti-hyvaksyttavissa)]
+    [[:span @(subscribe [:editor/virkailija-translation :ei-ehdollisesti-hyvaksyttavissa])]
      [:div
       [:div
        [:span @(subscribe [:application/hakukohde-and-tarjoaja-name (:hakukohde event)])]]]]
@@ -1407,8 +1411,8 @@
     {:subject _ :message _ :message-type message-type}
     [[:span
       (if (= message-type "mass-information-request")
-        (get-virkailija-translation :mass-information-request-sent)
-        (get-virkailija-translation :information-request-sent))
+        @(subscribe [:editor/virkailija-translation :mass-information-request-sent])
+        @(subscribe [:editor/virkailija-translation :information-request-sent]))
       " "
       (virkailija-initials-span event)]
      [:div.application-handling__event-row--message
@@ -1418,7 +1422,7 @@
        (:message event)]]]
 
     :else
-    [[:span (get-virkailija-translation :unknown)]
+    [[:span @(subscribe [:editor/virkailija-translation :unknown])]
      nil]))
 
 (defn event-row
@@ -1445,7 +1449,7 @@
 
 (defn application-review-events []
   [:div.application-handling__event-list
-   [:div.application-handling__review-header (get-virkailija-translation :events)]
+   [:div.application-handling__review-header @(subscribe [:editor/virkailija-translation :events])]
    (doall
     (map-indexed
      (fn [i event]
@@ -1477,7 +1481,7 @@
                      (if @only-selected-hakukohteet
                        (dispatch [:application/add-review-notes @input-value nil])
                        (dispatch [:application/add-review-note @input-value nil])))}
-        (get-virkailija-translation :add)]])))
+        @(subscribe [:editor/virkailija-translation :add])]])))
 
 (defn application-review-notes []
   (let [notes                            (subscribe [:application/review-note-indexes-excluding-eligibility])
@@ -1487,7 +1491,7 @@
     (fn []
       [:div.application-handling__review-row--nocolumn
        [:div.application-handling__review-header
-        (get-virkailija-translation :notes)
+        @(subscribe [:editor/virkailija-translation :notes])
         (when (< 0 (count @selected-review-hakukohde))
           [:div.application-handling__review-filters
            [:input.application-handling__review-checkbox
@@ -1497,7 +1501,7 @@
              :on-change #(dispatch [:application/toggle-only-selected-hakukohteet])}]
            [:label
             {:for "application-handling__review-checkbox--only-selected-hakukohteet"}
-            (get-virkailija-translation :only-selected-hakukohteet)]])]
+            @(subscribe [:editor/virkailija-translation :only-selected-hakukohteet])]])]
        [application-review-note-input]
        (->> (if @only-selected-hakukohteet
               @notes-for-selected
@@ -1536,7 +1540,7 @@
           (when @settings-visible?
             [review-settings-checkbox :score])
           [:div.application-handling__review-header.application-handling__review-header--points
-           (get-virkailija-translation :points)]
+           @(subscribe [:editor/virkailija-translation :points])]
           [:input.application-handling__score-input
            {:type      "text"
             :value     @display-value
@@ -1561,14 +1565,14 @@
       :class  (when (or @settings-visible? (not @can-edit?))
                 "application-handling__button--disabled")
       :target "_blank"}
-     (get-virkailija-translation (if superuser?
-                                   :edit-application-with-rewrite
-                                   :edit-application))]))
+     @(subscribe [:editor/virkailija-translation (if superuser?
+                                                   :edit-application-with-rewrite
+                                                   :edit-application)])]))
 
 (defn- application-information-request-recipient []
   (let [email (subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])]
     [:div.application-handling__information-request-row
-     [:div.application-handling__information-request-info-heading (get-virkailija-translation :receiver)]
+     [:div.application-handling__information-request-info-heading @(subscribe [:editor/virkailija-translation :receiver])]
      [:div @email]]))
 
 (defn- application-information-request-subject []
@@ -1596,8 +1600,8 @@
   (let [enabled?      (subscribe [:application/information-request-submit-enabled?])
         request-state (subscribe [:state-query [:application :information-request :state]])
         button-text   (reaction (if (= @request-state :submitting)
-                                  (get-virkailija-translation :sending-information-request)
-                                  (get-virkailija-translation :send-information-request)))]
+                                  @(subscribe [:editor/virkailija-translation :sending-information-request])
+                                  @(subscribe [:editor/virkailija-translation :send-information-request])))]
     (fn []
       [:div.application-handling__information-request-row
        [:button.application-handling__send-information-request-button
@@ -1612,7 +1616,7 @@
 (defn- application-information-request-header []
   (let [request-state (subscribe [:state-query [:application :information-request :state]])]
     [:div.application-handling__information-request-header
-     (get-virkailija-translation :send-information-request-to-applicant)
+     @(subscribe [:editor/virkailija-translation :send-information-request-to-applicant])
      (when (nil? @request-state)
        [:i.zmdi.zmdi-close-circle.application-handling__information-request-close-button
         {:on-click #(dispatch [:application/set-information-request-window-visibility false])}])]))
@@ -1621,12 +1625,12 @@
   [:div.application-handling__information-request-row.application-handling__information-request-row--checkmark-container
    [:div.application-handling__information-request-submitted-loader]
    [:div.application-handling__information-request-submitted-checkmark]
-   [:span.application-handling__information-request-submitted-text (get-virkailija-translation :information-request-sent)]])
+   [:span.application-handling__information-request-submitted-text @(subscribe [:editor/virkailija-translation :information-request-sent])]])
 
 (defn- application-information-request-contains-modification-link []
   [:div.application-handling__information-request-row
    [:p.application-handling__information-request-contains-modification-link
-    (get-virkailija-translation :edit-link-sent-automatically)]])
+    @(subscribe [:editor/virkailija-translation :edit-link-sent-automatically])]])
 
 (defn- application-information-request []
   (let [window-visible?      (subscribe [:state-query [:application :information-request :visible?]])
@@ -1650,7 +1654,7 @@
         [:div.application-handling__information-request-show-container-link
          [:a
           {:on-click #(dispatch [:application/set-information-request-window-visibility true])}
-          (get-virkailija-translation :send-information-request-to-applicant)]]))))
+          @(subscribe [:editor/virkailija-translation :send-information-request-to-applicant])]]))))
 
 (defn- application-resend-modify-link []
   (let [recipient         (subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])
@@ -1668,7 +1672,7 @@
                      (if (or @settings-visible? (not @can-edit?))
                        " application-handling__send-information-request-button--cursor-default"
                        " application-handling__send-information-request-button--cursor-pointer"))}
-     [:div (get-virkailija-translation :send-confirmation-email-to-applicant)]
+     [:div @(subscribe [:editor/virkailija-translation :send-confirmation-email-to-applicant])]
      [:div.application-handling__resend-modify-application-link-email-text @recipient]]))
 
 (defn- application-resend-modify-link-confirmation []
@@ -1677,7 +1681,7 @@
       [:div.application-handling__resend-modify-link-confirmation.application-handling__button.animated.fadeIn
        {:class (when (= @state :disappearing) "animated fadeOut")}
        [:div.application-handling__resend-modify-link-confirmation-indicator]
-       (get-virkailija-translation :send-edit-link-to-applicant)])))
+       @(subscribe [:editor/virkailija-translation :send-edit-link-to-applicant])])))
 
 (defn- attachment-review-row [selected-attachment-keys all-similar-attachments lang]
   (let [list-opened (r/atom false)]
@@ -1792,8 +1796,10 @@
         [:div.application-handling__attachment-review-header
          [:div
           (gstring/format "%s %s (%d)"
-                          (if (= "form" (second (first (vals reviews)))) (get-virkailija-translation :of-form) (get-virkailija-translation :of-hakukohde))
-                          (.toLowerCase (get-virkailija-translation :attachments))
+                          (if (= "form" (second (first (vals reviews))))
+                            @(subscribe [:editor/virkailija-translation :of-form])
+                            @(subscribe [:editor/virkailija-translation :of-hakukohde]))
+                          (.toLowerCase @(subscribe [:editor/virkailija-translation :attachments]))
                           (count (keys reviews)))]]
         [:div.application__attachment-review-row
          [:div.application__attachment-review-info-row
@@ -1807,7 +1813,7 @@
                                                        selected-attachment-keys)]
                            (dispatch [:virkailija-attachments/toggle-attachment-selection attachments-to-toggle])))}]
           [:p.application__attachment-review-row-label
-           (get-virkailija-translation :select-all)]
+           @(subscribe [:editor/virkailija-translation :select-all])]
           [:div.application-handling__excel-request-row
            [:form#attachment-download-link
             {:action "/lomake-editori/api/files/zip"
@@ -1823,7 +1829,7 @@
             {:disabled (empty? selected-attachment-keys)
              :on-click (fn [e]
                          (.submit (.getElementById js/document "attachment-download-link")))}
-            (get-virkailija-translation :load-attachments)]]]]
+            @(subscribe [:editor/virkailija-translation :load-attachments])]]]]
         (doall (for [all-similar-attachments (vals reviews)]
                  ^{:key (:key (ffirst all-similar-attachments))}
                  [attachment-review-row selected-attachment-keys all-similar-attachments lang]))])]))
@@ -1857,7 +1863,7 @@
               [:div.application-handling__review-settings-indicator-inner]]
              [:div.application-handling__review-settings-header
               [:i.zmdi.zmdi-account.application-handling__review-settings-header-icon]
-              [:span.application-handling__review-settings-header-text (get-virkailija-translation :settings)]]]
+              [:span.application-handling__review-settings-header-text @(subscribe [:editor/virkailija-translation :settings])]]]
             [:div.application-handling__review
              (when show-attachment-review?
                [attachment-review-area attachment-reviews-for-hakukohde @lang])
@@ -1878,7 +1884,7 @@
                         [:span [:i.zmdi.zmdi-chevron-right] [:i.zmdi.zmdi-chevron-right]]
                         [:span [:i.zmdi.zmdi-chevron-left] [:i.zmdi.zmdi-chevron-left]])]
                      (gstring/format "%s (%d)"
-                                     (get-virkailija-translation :attachments)
+                                     @(subscribe [:editor/virkailija-translation :attachments])
                                      (count (keys attachment-reviews-for-hakukohde)))]])
                  [application-hakukohde-review-inputs review-states/hakukohde-review-types]])
               (when @(subscribe [:application/show-info-request-ui?])
@@ -1895,12 +1901,12 @@
 
 (defn notification [link-params]
   (fn [{:keys [text link-text href on-click]}]
-    [:div.application__message-display--details-notification (get-virkailija-translation text)
+    [:div.application__message-display--details-notification @(subscribe [:editor/virkailija-translation text])
      [:a.application-handling__form-outdated--button.application-handling__button
       {:href     href
        :target   "_blank"
        :on-click on-click}
-      [:span (get-virkailija-translation link-text)]]]))
+      [:span @(subscribe [:editor/virkailija-translation link-text])]]]))
 
 (defn notifications-display []
   (fn []
@@ -1965,14 +1971,14 @@
                :target "_blank"}
               [:i.zmdi.zmdi-account-circle.application-handling__review-area-main-heading-person-icon]
               [:span.application-handling__review-area-main-heading-person-oid
-               (str (get-virkailija-translation :student) " " person-oid)]])
+               (str @(subscribe [:editor/virkailija-translation :student]) " " person-oid)]])
            (when person-oid
              [:a
               {:href   (str "/suoritusrekisteri/#/opiskelijat?henkilo=" person-oid)
                :target "_blank"}
               [:i.zmdi.zmdi-collection-text.application-handling__review-area-main-heading-person-icon]
               [:span.application-handling__review-area-main-heading-person-oid
-               (get-virkailija-translation :person-completed-education)]])
+               @(subscribe [:editor/virkailija-translation :person-completed-education])]])
            (when (> applications-count 1)
              [:a.application-handling__review-area-main-heading-applications-link
               {:on-click (fn [_]
@@ -1981,7 +1987,7 @@
                                            "?term=" (or ssn email))]))}
               [:i.zmdi.zmdi-collection-text.application-handling__review-area-main-heading-person-icon]
               [:span.application-handling__review-area-main-heading-person-oid
-               (str (get-virkailija-translation :view-applications) " (" applications-count ")")]])]]
+               (str @(subscribe [:editor/virkailija-translation :view-applications]) " (" applications-count ")")]])]]
          [notifications-display]])
       (when (not (contains? (:answers application) :hakukohteet))
         [:ul.application-handling__hakukohteet-list
@@ -1994,11 +2000,11 @@
       [:a.application-handling__navigation-link
        {:on-click #(dispatch [:application/navigate-application-list -1])}
        [:i.zmdi.zmdi-chevron-left]
-       (str " " (get-virkailija-translation :navigate-applications-back))]
+       (str " " @(subscribe [:editor/virkailija-translation :navigate-applications-back]))]
       [:span.application-handling__navigation-link-divider "|"]
       [:a.application-handling__navigation-link
        {:on-click #(dispatch [:application/navigate-application-list 1])}
-       (str (get-virkailija-translation :navigate-applications-forward) " ")
+       (str @(subscribe [:editor/virkailija-translation :navigate-applications-forward]) " ")
        [:i.zmdi.zmdi-chevron-right]]]]))
 
 (defn close-application []
@@ -2076,11 +2082,11 @@
   (let [event (subscribe [:application/selected-event])]
     (fn []
       (let [changed-by (if (= (:event-type @event) "updated-by-applicant")
-                         (.toLowerCase (get-virkailija-translation :applicant))
+                         (.toLowerCase @(subscribe [:editor/virkailija-translation :applicant]))
                          (str (:first-name @event) " " (:last-name @event)))]
         [:div.application-handling__version-history-header
          [:div.application-handling__version-history-header-text
-          (str (get-virkailija-translation :diff-from-changes)
+          (str @(subscribe [:editor/virkailija-translation :diff-from-changes])
                " "
                (t/time->short-str (or (:time @event) (:created-time @event))))]
          [:div.application-handling__version-history-header-sub-text
@@ -2088,9 +2094,9 @@
            changed-by]
           [:span
            (gstring/format " %s %s %s"
-                           (get-virkailija-translation :changed)
+                           @(subscribe [:editor/virkailija-translation :changed])
                            changes-amount
-                           (get-virkailija-translation :answers))]]]))))
+                           @(subscribe [:editor/virkailija-translation :answers]))]]]))))
 
 (defn- application-version-history-list-value [values]
   [:ol.application-handling__version-history-list-value
@@ -2148,12 +2154,12 @@
     (breadcrumb-label history-item)]
    [application-version-history-sub-row
     [:span.application-handling__version-history-value-label
-     (get-virkailija-translation :diff-removed)]
+     @(subscribe [:editor/virkailija-translation :diff-removed])]
     [:div.application-handling__version-history-value.application-handling__version-history-value__old
      (application-version-history-value (:old history-item))]]
    [application-version-history-sub-row
     [:span.application-handling__version-history-value-label
-     (get-virkailija-translation :diff-added)]
+     @(subscribe [:editor/virkailija-translation :diff-added])]
     [:div.application-handling__version-history-value.application-handling__version-history-value__new
      (application-version-history-value (:new history-item))]]])
 

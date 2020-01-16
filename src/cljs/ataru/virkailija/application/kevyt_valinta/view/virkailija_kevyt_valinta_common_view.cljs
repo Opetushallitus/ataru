@@ -1,6 +1,6 @@
 (ns ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-common-view
   (:require [ataru.application-common.loaders.ellipsis-loader :as el]
-            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as translations]
+            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as i18n-mapping]
             [reagent.core :as reagent]
             [re-frame.core :as re-frame])
   (:require-macros [cljs.core.match :refer [match]]
@@ -39,19 +39,19 @@
                  "application-handling__kevyt-valinta-dropdown-chevron-open")}]]
      (when dropdown-open?
        [:div.application-handling__kevyt-valinta-dropdown.application-handling__kevyt-valinta-dropdown-item-list.animated.fadeIn
-        (map (fn [{value :value label :label}]
-               (let [current-value? (= value kevyt-valinta-property-value)]
-                 ^{:key (str (name kevyt-valinta-property) "-" value)}
-                 [:div.application-handling__kevyt-valinta-dropdown-item
-                  {:on-click (fn []
-                               (if current-value?
-                                 (re-frame/dispatch [:virkailija-kevyt-valinta/toggle-kevyt-valinta-dropdown kevyt-valinta-property])
-                                 (kevyt-valinta-on-dropdown-value-change value)))}
-                  [:span
-                   (when current-value?
-                     {:class "application-handling__kevyt-valinta-dropdown-label--selected"})
-                   label]]))
-             kevyt-valinta-dropdown-values)])]))
+        (doall (map (fn [{value :value label :label}]
+                      (let [current-value? (= value kevyt-valinta-property-value)]
+                        ^{:key (str (name kevyt-valinta-property) "-" value)}
+                        [:div.application-handling__kevyt-valinta-dropdown-item
+                         {:on-click (fn []
+                                      (if current-value?
+                                        (re-frame/dispatch [:virkailija-kevyt-valinta/toggle-kevyt-valinta-dropdown kevyt-valinta-property])
+                                        (kevyt-valinta-on-dropdown-value-change value)))}
+                         [:span
+                          (when current-value?
+                            {:class "application-handling__kevyt-valinta-dropdown-label--selected"})
+                          label]]))
+                    kevyt-valinta-dropdown-values))])]))
 
 (defn- kevyt-valinta-checkmark [kevyt-valinta-property application-key]
   (let [checkmark-state @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-checkmark-state kevyt-valinta-property application-key])
@@ -72,16 +72,16 @@
 
 (defn kevyt-valinta-dropdown-selection [kevyt-valinta-property]
   (let [ongoing-request-property               @(re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])
-        lang                                   @(re-frame/subscribe [:editor/virkailija-lang])
         application-key                        @(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :key]])
         kevyt-valinta-property-values          @(re-frame/subscribe [:virkailija-kevyt-valinta/allowed-kevyt-valinta-property-values
                                                                      kevyt-valinta-property
                                                                      application-key])
         kevyt-valinta-dropdown-values          (map (fn [kevyt-valinta-property-value]
                                                       {:value kevyt-valinta-property-value
-                                                       :label (translations/kevyt-valinta-selection-label kevyt-valinta-property
-                                                                                                          kevyt-valinta-property-value
-                                                                                                          lang)})
+                                                       :label (let [translation-key (i18n-mapping/kevyt-valinta-value-translation-key
+                                                                                      kevyt-valinta-property
+                                                                                      kevyt-valinta-property-value)]
+                                                                @(re-frame/subscribe [:editor/virkailija-translation translation-key]))})
                                                     kevyt-valinta-property-values)
         kevyt-valinta-property-value           @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-value
                                                                      kevyt-valinta-property
@@ -127,9 +127,10 @@
                                                                                     @application-key]))
         kevyt-valinta-slider-toggle-values          (reaction (map (fn [kevyt-valinta-property-value]
                                                                      {:value kevyt-valinta-property-value
-                                                                      :label (translations/kevyt-valinta-selection-label kevyt-valinta-property
-                                                                                                                         kevyt-valinta-property-value
-                                                                                                                         @lang)})
+                                                                      :label (let [translation-key (i18n-mapping/kevyt-valinta-value-translation-key
+                                                                                                     kevyt-valinta-property
+                                                                                                     kevyt-valinta-property-value)]
+                                                                               @(re-frame/subscribe [:editor/virkailija-translation translation-key]))})
                                                                    @kevyt-valinta-property-values))
         kevyt-valinta-slider-toggle-value           (reaction @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-value
                                                                                     kevyt-valinta-property
@@ -205,9 +206,9 @@
          [el/ellipsis-loader])])))
 
 (defn kevyt-valinta-row [kevyt-valinta-property selection-component]
-  (let [lang                          @(re-frame/subscribe [:editor/virkailija-lang])
-        application-key               @(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :key]])
-        kevyt-valinta-label           (translations/kevyt-valinta-review-type-label kevyt-valinta-property lang)
+  (let [application-key               @(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :key]])
+        kevyt-valinta-label           (let [translation-key (i18n-mapping/kevyt-valinta-label-translation-key kevyt-valinta-property)]
+                                        @(re-frame/subscribe [:editor/virkailija-translation translation-key]))
         kevyt-valinta-selection-state @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-selection-state
                                                             kevyt-valinta-property
                                                             application-key])

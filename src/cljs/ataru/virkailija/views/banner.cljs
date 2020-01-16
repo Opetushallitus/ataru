@@ -1,8 +1,7 @@
 (ns ataru.virkailija.views.banner
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]])
-  (:require [ataru.cljs-util :as util :refer [get-virkailija-translation get-virkailija-label]]
-            [ataru.util :as autil]
+  (:require [ataru.util :as autil]
             [ataru.virkailija.routes :as routes]
             [cljs.core.async :refer [<! timeout]]
             [cljs.core.match :refer-macros [match]]
@@ -16,11 +15,11 @@
   {:editor      {:text :forms-panel :href "/lomake-editori/editor/"}
    :application {:text :applications-panel :href "/lomake-editori/applications/"}})
 
-(def right-labels {:form-edit         (get-virkailija-label :form-edit-rights-panel)
-                   :view-applications (get-virkailija-label :view-applications-rights-panel)
-                   :edit-applications (get-virkailija-label :edit-applications-rights-panel)
-                   :view-valinta      (get-virkailija-label :view-valinta-rights-panel)
-                   :edit-valinta      (get-virkailija-label :edit-valinta-rights-panel)})
+(def right-labels {:form-edit         :form-edit-rights-panel
+                   :view-applications :view-applications-rights-panel
+                   :edit-applications :edit-applications-rights-panel
+                   :view-valinta      :view-valinta-rights-panel
+                   :edit-valinta      :edit-valinta-rights-panel})
 
 (def active-section-arrow [:i.active-section-arrow.zmdi.zmdi-chevron-down.zmdi-hc-lg])
 
@@ -32,7 +31,7 @@
        [:a {:href (-> panels panel-kw :href)}
         (when @active?
           active-section-arrow)
-        (get-virkailija-translation (get-in panels [panel-kw :text]))]])))
+        @(subscribe [:editor/virkailija-translation (get-in panels [panel-kw :text])])]])))
 
 (defn title []
   (fn []
@@ -45,12 +44,13 @@
   [label]
   (some #(-> label %) [:fi :sv :en]))
 
-(defn create-org-labels [organizations lang]
+(defn create-org-labels [organizations]
   (map
     (fn [org]
       (str (get-label (:name org))
            (when (not-empty (:rights org))
-             (str " (" (string/join ", " (map #(get-in right-labels [(keyword %) lang]) (:rights org))) ")"))))
+             (str " (" (string/join ", " (map #(@(subscribe [:editor/virkailija-translation ((keyword %) right-labels)]))
+                                              (:rights org))) ")"))))
    organizations))
 
 (defn- org-label
@@ -58,15 +58,15 @@
   (let [org-count (count organizations)]
     (cond
       (some? selected-organization) (get-label (:name selected-organization))
-      (zero? org-count) (get-virkailija-translation :no-organization)
-      (< 1 org-count) (get-virkailija-translation :multiple-organizations)
+      (zero? org-count) @(subscribe [:editor/virkailija-translation :no-organization])
+      (< 1 org-count) @(subscribe [:editor/virkailija-translation :multiple-organizations])
       :else (-> organizations (first) :name (get-label)))))
 
 (defn- organization-rights-select []
   (let [lang   @(subscribe [:editor/virkailija-lang])
         rights (set @(subscribe [:state-query [:editor :user-info :selected-organization :rights]]))]
     [:div.profile__organization-rights-selector
-     (get-virkailija-translation :choose-user-rights)
+     @(subscribe [:editor/virkailija-translation :choose-user-rights])
      (doall
       (for [[right label] right-labels]
         ^{:key (str "org-right-selector-for-" (name right))}
@@ -91,7 +91,6 @@
 (defn profile []
   (let [user-info                 (subscribe [:state-query [:editor :user-info]])
         org-select-visible?       (reagent/atom false)
-        lang                      (subscribe [:editor/virkailija-lang])
         results-page              (subscribe [:state-query [:editor :organizations :results-page]])
         search-results            (subscribe [:state-query [:editor :organizations :matches]])
         selected-organization-sub (subscribe [:state-query [:editor :user-info :selected-organization]])
@@ -122,7 +121,7 @@
                   [:ul.profile__organization-select-user-orgs.zmdi-hc-ul]
                   (map
                     (fn [org] [:li [:i.zmdi.zmdi-hc-li.zmdi-accounts] org])
-                    (create-org-labels (or selected-organization organizations) @lang)))
+                    (create-org-labels (or selected-organization organizations))))
                 (when selected-organization
                   [:div
                    (when (:superuser? @user-info)
@@ -130,12 +129,12 @@
                    [:a.profile__reset-to-default-organization
                     {:on-click #(dispatch [:editor/remove-selected-organization])}
                     (s/format "%s (%s)"
-                              (get-virkailija-translation :reset-organization)
+                              @(subscribe [:editor/virkailija-translation :reset-organization])
                               (org-label organizations nil))]])
-                [:h4.profile__organization-select-title (get-virkailija-translation :change-organization)]
+                [:h4.profile__organization-select-title @(subscribe [:editor/virkailija-translation :change-organization])]
                 [:input.editor-form__text-field.profile__organization-select-input
                  {:type        "text"
-                  :placeholder (get-virkailija-translation :search-sub-organizations)
+                  :placeholder @(subscribe [:editor/virkailija-translation :search-sub-organizations])
                   :value       @(subscribe [:state-query [:editor :organizations :query]])
                   :on-change   #(dispatch [:editor/update-organization-select-query (.-value (.-target %))])}]
                 (into [:div.profile__organization-select-filters]
@@ -161,7 +160,7 @@
                  (when (= (inc num-results-to-show) (count @search-results))
                    [:a.profile__organization-more-results
                     {:on-click #(dispatch [:editor/increase-organization-result-page])}
-                    (get-virkailija-translation :more-results-refine-search)])]]])]])))))
+                    @(subscribe [:editor/virkailija-translation :more-results-refine-search])])]]])]])))))
 
 (defn status []
   (let [flash    (subscribe [:state-query [:flash]])
@@ -199,7 +198,7 @@
 
 (defn local-dev-logout []
   [:div.local-dev-logout
-   [:a {:href "/lomake-editori/auth/logout"} (get-virkailija-translation :logout)]])
+   [:a {:href "/lomake-editori/auth/logout"} @(subscribe [:editor/virkailija-translation :logout])]])
 
 (defn snackbar []
   (if-let [snackbar-messages @(subscribe [:snackbar-message])]

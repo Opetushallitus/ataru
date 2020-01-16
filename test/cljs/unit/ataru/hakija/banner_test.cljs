@@ -7,7 +7,7 @@
 
 (deftest correctly-shows-remaining-time
   (defn invoke-and-verify [hours minutes substring]
-    (let [actual (hakuaika-left-text hours minutes)
+    (let [actual (hakuaika-left-text hours minutes :fi)
           text   (second actual)]
       (is (includes? text substring)))
     )
@@ -23,5 +23,5 @@
                (invoke-and-verify 0 59 "Hakuaikaa jäljellä alle tunti")
                (invoke-and-verify 1 00 "Hakuaikaa jäljellä alle vuorokausi")
                (invoke-and-verify 23 59 "Hakuaikaa jäljellä alle vuorokausi")
-               (is (nil? (hakuaika-left-text 24 0)))))
+               (is (nil? (hakuaika-left-text 24 0 :fi)))))
 

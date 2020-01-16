@@ -4,13 +4,26 @@
             [re-frame.core :as re-frame]
             [ataru.cljs-util :as cu]
             [taoensso.timbre :refer-macros [spy debug]]
-            [markdown.core :as md]))
+            [markdown.core :as md]
+            [ataru.translations.translation-util :as translations]))
 
 (re-frame/reg-sub
   :editor/virkailija-texts
   (fn [db _]
     (or (-> db :editor :virkailija-texts)
         {})))
+
+(re-frame/reg-sub
+  :editor/virkailija-translation
+  (fn []
+    [(re-frame/subscribe [:editor/virkailija-texts])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn [[virkailija-texts lang] [_ translation-key & params]]
+    (apply translations/get-translation
+           translation-key
+           lang
+           virkailija-texts
+           params)))
 
 (re-frame/reg-sub
   :editor/ui

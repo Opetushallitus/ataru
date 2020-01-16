@@ -16,7 +16,6 @@
                                                                        copy-link
                                                                        question-group-answer?
                                                                        answers->read-only-format]]
-            [ataru.cljs-util :refer [get-virkailija-translation]]
             [ataru.feature-config :as fc]
             [ataru.component-data.component-util :refer [answer-to-always-include?]]
             [ataru.util :as util]
@@ -103,11 +102,11 @@
                         component-key     (str "attachment-div-" idx)
                         virus-status-elem (case virus-scan-status
                                             "not_started" [:span.application__virkailija-readonly-attachment-virus-status-not-started
-                                                           (s/format "| %s..." (get-virkailija-translation :checking))]
+                                                           (s/format "| %s..." @(subscribe [:editor/virkailija-translation :checking]))]
                                             "failed" [:span.application__virkailija-readonly-attachment-virus-status-virus-found
-                                                      (s/format "| %s" (get-virkailija-translation :virus-found))]
+                                                      (s/format "| %s" @(subscribe [:editor/virkailija-translation :virus-found]))]
                                             "done" nil
-                                            (get-virkailija-translation :error))]
+                                            @(subscribe [:editor/virkailija-translation :error]))]
                     [:div.application__virkailija-readonly-attachment
                      {:key component-key}
                      [attachment-item file-key virus-scan-status virus-status-elem text]]))
@@ -242,8 +241,8 @@
           [:div
            [:p.application__text-field-paragraph
             (if value
-              (str (get-virkailija-translation :unknown-option) " " value)
-              (str (get-virkailija-translation :empty-option)))]]))])]])
+              (str @(subscribe [:editor/virkailija-translation :unknown-option]) " " value)
+              (str @(subscribe [:editor/virkailija-translation :empty-option])))]]))])]])
 
 (defn- haku-row [haku-name haku-oid]
   [:div.application__form-field

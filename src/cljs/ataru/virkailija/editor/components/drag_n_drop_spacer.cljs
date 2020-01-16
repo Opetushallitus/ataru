@@ -1,6 +1,5 @@
 (ns ataru.virkailija.editor.components.drag-n-drop-spacer
   (:require [re-frame.core :as re-frame]
-            [ataru.cljs-util :as util :refer [get-virkailija-translation]]
             [reagent.core :as r]))
 
 (defn drag-n-drop-spacer [path]
@@ -23,7 +22,7 @@
                 :on-click (fn [_] (when (and @expanded?)
                                     (reset! expanded? false)
                                     (re-frame/dispatch [:editor/paste-component @copy-component path])))}
-               (get-virkailija-translation :paste-element)]
+               @(re-frame/subscribe [:editor/virkailija-translation :paste-element])]
               [:button.editor-form__component-button
                {:disabled true}
-               (get-virkailija-translation :paste-element)])]))])))
+               @(re-frame/subscribe [:editor/virkailija-translation :paste-element])])]))])))

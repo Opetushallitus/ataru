@@ -5,7 +5,6 @@
             [markdown.core :refer [md->html]]
             [cljs.core.match :refer-macros [match]]
             [cljs-time.core :as time]
-            [ataru.cljs-util :as cljs-util :refer [get-translation]]
             [ataru.application-common.application-field-common
              :refer
              [answer-key
@@ -20,7 +19,9 @@
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]
             [clojure.string :as string]
-            [ataru.hakija.person-info-fields :refer [editing-forbidden-person-info-field-ids]]))
+            [ataru.hakija.person-info-fields :refer [editing-forbidden-person-info-field-ids]]
+            [ataru.translations.translation-util :as tu]))
+
 
 (defonce autocomplete-off "new-password")
 
@@ -123,7 +124,7 @@
        (let [lang                           @(subscribe [:application/form-language])
              selected-hakukohteet-for-field @(subscribe [:application/selected-hakukohteet-for-field field-descriptor])]
          [:div.application__question_hakukohde_names_container
-          [:div.application__question_hakukohde_names_belongs-to (str (get-translation translation-key) " ")]
+          [:div.application__question_hakukohde_names_belongs-to (str (tu/get-hakija-translation translation-key lang) " ")]
           (when @show-hakukohde-list?
             [:ul.application__question_hakukohde_names
              (for [hakukohde selected-hakukohteet-for-field
@@ -135,7 +136,9 @@
            {:role "button"
             :aria-pressed (str (boolean @show-hakukohde-list?))
             :on-click #(swap! show-hakukohde-list? not)}
-           (str (get-translation (if @show-hakukohde-list? :hide-application-options :show-application-options))
+           (str (tu/get-hakija-translation
+                  (if @show-hakukohde-list? :hide-application-options :show-application-options)
+                  lang)
                 " (" (count selected-hakukohteet-for-field) ")")]])))))
 
 (defn- belongs-to-hakukohde-or-ryhma? [field]
@@ -183,11 +186,12 @@
                           @validators-processing
                           (:value answer)
                           (:valid answer))
-            value       (:value answer)]
+            value       (:value answer)
+            lang        @(subscribe [:application/form-language])]
         [div-kwd
          [label field-descriptor]
          [:div.application__form-info-element
-          [markdown-paragraph (get-translation :email-info-text) false nil]]
+          [markdown-paragraph (tu/get-hakija-translation :email-info-text lang) false nil]]
          [:input.application__form-text-input
           (merge {:id            id
                   :type          "text"
@@ -213,7 +217,7 @@
                    {:disabled true}))]
          [validation-error (:errors answer)]
          (let [id           :verify-email
-               verify-label (get-translation :verify-email)]
+               verify-label (tu/get-hakija-translation :verify-email lang)]
            [:div
             [:label.application__form-field-label.label.application__form-field-label--verify-email
              {:id  "application-form-field-label-verify-email"
@@ -340,7 +344,8 @@
                                                         field-descriptor
                                                         value
                                                         repeatable-idx
-                                                        question-group-idx])))]
+                                                        question-group-idx])))
+            lang                         @(subscribe [:application/form-language])]
         [:div.application__form-repeatable-text-wrap
          {:class (when padded? "application__form-repeatable-text-wrap--padded")}
          [:input.application__form-text-input
@@ -357,7 +362,7 @@
                                (:value @local-state)
                                :else
                                value)
-           :placeholder  (when last? (get-translation :add-more))
+           :placeholder  (when last? (tu/get-hakija-translation :add-more lang))
            :disabled     (or cannot-edit? (and last? first-is-empty?))
            :aria-invalid (not valid)
            :autoComplete autocomplete-off
@@ -505,7 +510,8 @@
         label         (util/non-blank-val (:label field-descriptor) @languages)
         row-count     (subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]])
         cannot-edits? (map #(subscribe [:application/cannot-edit? (keyword (:id %))])
-                        (util/flatten-form-fields children))]
+                        (util/flatten-form-fields children))
+        lang          @(subscribe [:application/form-language])]
     [:div.application__question-group
      (when-not (clojure.string/blank? label)
        [:h3.application__question-group-heading label])
@@ -526,7 +532,7 @@
                          (.preventDefault event)
                          (dispatch [:application/add-question-group-row field-descriptor]))}
          [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
-         (get-translation :add)]])]))
+         (tu/get-hakija-translation :add lang)]])]))
 
 (defn row-wrapper [children]
   (into [:div.application__row-field-wrapper]
@@ -673,8 +679,9 @@
         valid?         (subscribe [:application/single-choice-option-valid? parent-id question-group-idx])
         on-change      (fn [event]
                          (let [value (.. event -target -value)]
-                           (dispatch [:application/select-single-choice-button value field-descriptor question-group-idx])))]
-    (fn [option parent-id field-descriptor question-group-idx lang use-multi-choice-style? verifying?]
+                           (dispatch [:application/select-single-choice-button value field-descriptor question-group-idx])))
+        lang           (subscribe [:application/form-language])]
+    (fn [option parent-id field-descriptor question-group-idx languages use-multi-choice-style? verifying?]
       (let [unselectable?        (and (or (not @checked?)
                                           (not @valid?))
                                       @limit-reached?)
@@ -702,7 +709,7 @@
              [:i.zmdi.zmdi-spinner.spin]])
           label
           (when (and (not @verifying?) unselectable?)
-            (str " (" (get-translation :limit-reached) ")"))]
+            (str " (" (tu/get-hakija-translation :limit-reached @lang) ")"))]
          (when (and (and @checked? @valid?)
                     (not-empty (:followups option))
                     (some (partial visible? (subscribe [:state-query [:application :ui]])) (:followups option)))
@@ -769,11 +776,13 @@
     (dispatch [:application/add-attachments field-descriptor question-group-idx files])))
 
 (defn deadline-info [deadline]
-  [:div.application__form-upload-attachment--deadline
-   (str (get-translation :deadline-in) " " deadline)])
+  (let [lang @(subscribe [:application/form-language])]
+    [:div.application__form-upload-attachment--deadline
+     (str (tu/get-hakija-translation :deadline-in lang) " " deadline)]))
 
 (defn attachment-upload [field-descriptor component-id attachment-count question-group-idx]
-  (let [id       (str component-id (when question-group-idx "-" question-group-idx) "-upload-button")]
+  (let [id       (str component-id (when question-group-idx "-" question-group-idx) "-upload-button")
+        lang     @(subscribe [:application/form-language])]
     [:div.application__form-upload-attachment-container
      [:input.application__form-upload-input
       {:id           id
@@ -787,10 +796,10 @@
      [:label.application__form-upload-label
       {:for id}
       [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
-      [:span.application__form-upload-button-add-text (get-translation :add-attachment)]]
+      [:span.application__form-upload-button-add-text (tu/get-hakija-translation :add-attachment lang)]]
      [:span.application__form-upload-button-info
       [:div
-       (get-translation :file-size-info (util/size-bytes->str max-attachment-size-bytes))]
+       (tu/get-hakija-translation :file-size-info lang (util/size-bytes->str max-attachment-size-bytes))]
       (when-let [deadline @(subscribe [:application/attachment-deadline field-descriptor])]
                (deadline-info deadline))]]))
 
@@ -816,34 +825,37 @@
   (let [id       (keyword (:id field-descriptor))
         confirm? (r/atom false)]
     (fn [field-descriptor question-group-idx attachment-idx]
-      [:div.application__form-attachment-remove-button-container
-       (when-not @(subscribe [:application/cannot-edit? id])
-         [:button.application__form-attachment-remove-button
-          {:on-click #(swap! confirm? not)}
-          (if @confirm?
-            (get-translation :cancel-remove)
-            (get-translation :remove))])
-       (when @confirm?
-         [:button.application__form-attachment-remove-button.application__form-attachment-remove-button__confirm
-          {:on-click (fn [event]
-                       (reset! confirm? false)
-                       (dispatch [:application/remove-attachment
-                                  field-descriptor
-                                  question-group-idx
-                                  attachment-idx]))}
-          (get-translation :confirm-remove)])])))
+      (let [lang         @(subscribe [:application/form-language])
+            cannot-edit? @(subscribe [:application/cannot-edit? id])]
+        [:div.application__form-attachment-remove-button-container
+         (when-not cannot-edit?
+           [:button.application__form-attachment-remove-button
+            {:on-click #(swap! confirm? not)}
+            (if @confirm?
+              (tu/get-hakija-translation :cancel-remove lang)
+              (tu/get-hakija-translation :remove lang))])
+         (when @confirm?
+           [:button.application__form-attachment-remove-button.application__form-attachment-remove-button__confirm
+            {:on-click (fn [event]
+                         (reset! confirm? false)
+                         (dispatch [:application/remove-attachment
+                                    field-descriptor
+                                    question-group-idx
+                                    attachment-idx]))}
+            (tu/get-hakija-translation :confirm-remove lang)])]))))
 
 (defn- cancel-attachment-upload-button
   [field-descriptor question-group-idx attachment-idx]
   (let [id       (keyword (:id field-descriptor))
-        confirm? (r/atom false)]
+        confirm? (r/atom false)
+        lang     (subscribe [:application/cannot-edit? id])]
     (fn [field-descriptor question-group-idx attachment-idx]
       [:div.application__form-attachment-remove-button-container
        [:button.application__form-attachment-remove-button
         {:on-click #(swap! confirm? not)}
         (if @confirm?
-          (get-translation :cancel-cancel-upload)
-          (get-translation :cancel-upload))]
+          (tu/get-hakija-translation :cancel-cancel-upload @lang)
+          (tu/get-hakija-translation :cancel-upload @lang))]
        (when @confirm?
          [:button.application__form-attachment-remove-button.application__form-attachment-remove-button__confirm
           {:on-click (fn [event]
@@ -852,7 +864,7 @@
                                   field-descriptor
                                   question-group-idx
                                   attachment-idx]))}
-          (get-translation :confirm-cancel-upload)])])))
+          (tu/get-hakija-translation :confirm-cancel-upload @lang)])])))
 
 (defn attachment-view-file [field-descriptor component-id question-group-idx attachment-idx]
   [:div.application__form-attachment-list-item-container
@@ -867,7 +879,8 @@
   (let [attachment @(subscribe [:application/answer
                                 component-id
                                 question-group-idx
-                                attachment-idx])]
+                                attachment-idx])
+        lang       @(subscribe [:application/form-language])]
     [:div.application__form-attachment-list-item-container
      [:div.application__form-attachment-list-item-sub-container.application__form-attachment-filename-container.application__form-attachment-filename-container__error
       [attachment-filename component-id question-group-idx attachment-idx true]]
@@ -876,7 +889,7 @@
        (map-indexed (fn [i error]
                       ^{:key (str "attachment-error-" i)}
                       [:span.application__form-attachment-error
-                       (apply get-translation error)])
+                       (tu/get-hakija-translation error lang)])
                     (:errors attachment)))]
      [:div.application__form-attachment-list-item-sub-container
       [attachment-remove-button field-descriptor question-group-idx attachment-idx]]]))
@@ -892,13 +905,17 @@
         size             (:size (:value attachment))
         uploaded-size    (:uploaded-size attachment)
         upload-complete? (<= size uploaded-size)
-        percent          (int (* 100 (/ uploaded-size size)))]
+        percent          (int (* 100 (/ uploaded-size size)))
+        lang             @(subscribe [:application/form-language])]
     [:div.application__form-attachment-list-item-container
      [:div.application__form-attachment-list-item-sub-container.application__form-attachment-filename-container
       [attachment-filename component-id question-group-idx attachment-idx false]]
      [:div.application__form-attachment-list-item-sub-container.application__form-attachment-uploading-container
       [:i.zmdi.zmdi-spinner.application__form-upload-uploading-spinner]
-      [:span (str (get-translation (if upload-complete? :processing-file :uploading)) "... ")]
+      [:span (str (tu/get-hakija-translation
+                    (if upload-complete? :processing-file :uploading)
+                    lang)
+                  "... ")]
       [:span (str percent " % "
                   "(" (util/size-bytes->str uploaded-size false)
                   "/"
@@ -996,7 +1013,8 @@
                               (.preventDefault event)
                               (dispatch [:application/add-adjacent-fields
                                          field-descriptor
-                                         question-group-idx]))]
+                                         question-group-idx]))
+            lang            @(subscribe [:application/form-language])]
         [:div.application__form-field
          [label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
@@ -1019,14 +1037,14 @@
                        (when (and (pos? row-idx) (not (some deref cannot-edits?)))
                          [:a {:data-row-idx row-idx
                               :on-click     remove-on-click}
-                          [:span.application__form-adjacent-row--mobile-only (get-translation :remove-row)]
+                          [:span.application__form-adjacent-row--mobile-only (tu/get-hakija-translation :remove-row lang)]
                           [:i.application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])]))
                doall)]
          (when (and (get-in field-descriptor [:params :repeatable])
                     (not (some deref cannot-edits?)))
            [:a.application__form-add-new-row
             {:on-click add-on-click}
-            [:i.zmdi.zmdi-plus-square] (str " " (get-translation :add-row))])]))))
+            [:i.zmdi.zmdi-plus-square] (str " " (tu/get-hakija-translation :add-row lang))])]))))
 
 (defn render-field
   [field-descriptor & args]

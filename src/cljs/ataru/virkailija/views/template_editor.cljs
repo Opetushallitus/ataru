@@ -1,6 +1,5 @@
 (ns ataru.virkailija.views.template-editor
   (:require [ataru.translations.texts :refer [email-default-texts]]
-            [ataru.cljs-util :refer [get-virkailija-translation get-virkailija-label]]
             [ataru.virkailija.views.modal :as modal]
             [goog.string :as s]
             [re-frame.core :refer [subscribe dispatch]]
@@ -16,9 +15,9 @@
 (defn- render-template-editor []
   (let [tab-lang (r/atom :fi)]
     (fn []
-      (let [language-names   {:fi (get-virkailija-label :finnish)
-                              :sv (get-virkailija-label :swedish)
-                              :en (get-virkailija-label :english)}
+      (let [language-names   {:fi @(subscribe [:editor/virkailija-translation :finnish])
+                              :sv @(subscribe [:editor/virkailija-translation :swedish])
+                              :en @(subscribe [:editor/virkailija-translation :english])}
             content          @(subscribe [:editor/email-template])
             contents-changed @(subscribe [:editor/email-templates-altered])
             any-changed?     (some true? (vals contents-changed))
@@ -28,10 +27,10 @@
         [modal/modal
          #(dispatch [:editor/toggle-email-template-editor])
          [:div.virkailija-email-preview
-          [:h3.virkailija-email-preview__heading (get-virkailija-translation :email-content)]
+          [:h3.virkailija-email-preview__heading @(subscribe [:editor/virkailija-translation :email-content])]
           [:div.virkailija-email-preview__info-text
            (s/format "%s '%s'"
-                     (get-virkailija-translation :applicant-will-receive-following-email)
+                     @(subscribe [:editor/virkailija-translation :applicant-will-receive-following-email])
                      (get lang-content :from))]
           (when (not (nil? content))
             [:div.virkailija-email-preview__tabs
@@ -53,28 +52,28 @@
                     {:key   (str "email-preview-lang-radio-label-" (name @tab-lang))
                      :for   (str "email-template-language-selection-" (name button-lang))
                      :class (when (= button-lang @tab-lang) "virkailija-email-preview__tab-label--selected")}
-                    (get-in language-names [button-lang @virkailija-lang])
+                    (get language-names button-lang)
                     (when (get contents-changed (name button-lang))
                       [:span.virkailija-email-preview__tab-edited "*"])]))
                 [:fi :sv :en]))]
              [:div.virkailija-email-preview__tab-border]
              [:div.virkailija-email-preview__tab-content
-              [:h4.virkailija-email-preview__sub-heading (get-virkailija-translation :editable-content-title)]
+              [:h4.virkailija-email-preview__sub-heading @(subscribe [:editor/virkailija-translation :editable-content-title])]
               [:input.virkailija-email-preview__input
                {:value     (:subject lang-content)
                 :class     (when (clojure.string/blank? (:subject lang-content)) "virkailija-email-preview__input-field-error")
                 :on-change #(dispatch [:editor/update-email-preview (name @tab-lang) :subject (.-value (.-target %))])}]
-              [:h4.virkailija-email-preview__sub-heading (get-virkailija-translation :editable-content-beginning)]
+              [:h4.virkailija-email-preview__sub-heading @(subscribe [:editor/virkailija-translation :editable-content-beginning])]
               [:textarea.virkailija-email-preview__text-input
                {:value     (:content lang-content)
                 :on-change #(dispatch [:editor/update-email-preview (name @tab-lang) :content (.-value (.-target %))])}]
-              [:h4.virkailija-email-preview__sub-heading (get-virkailija-translation  :application-oid-here)]
-              [:h4.virkailija-email-preview__sub-heading (get-virkailija-translation :editable-content-ending)]
+              [:h4.virkailija-email-preview__sub-heading @(subscribe [:editor/virkailija-translation  :application-oid-here])]
+              [:h4.virkailija-email-preview__sub-heading @(subscribe [:editor/virkailija-translation :editable-content-ending])]
               [:textarea.virkailija-email-preview__text-input
                {:value     (:content-ending lang-content)
                 :on-change #(dispatch [:editor/update-email-preview (name @tab-lang) :content-ending (.-value (.-target %))])}]
               [:div.virkailija-email-preview__preview-container
-               [:h4.virkailija-email-preview__sub-heading (get-virkailija-translation :message-preview)]
+               [:h4.virkailija-email-preview__sub-heading @(subscribe [:editor/virkailija-translation :message-preview])]
                [:iframe.virkailija-email-preview__preview-iframe
                 {:srcDoc (:body lang-content)}]
                [:div.virkailija-email-preview__buttons
@@ -83,7 +82,7 @@
                               "editor-form__control-button--enabled"
                               "editor-form__control-button--disabled")
                   :on-click #(when (and any-changed? (not any-errors?)) (dispatch [:editor/save-email-template]))}
-                 (str (get-virkailija-translation :save-changes)
+                 (str @(subscribe [:editor/virkailija-translation :save-changes])
                       (when any-changed?
                         (str
                          " ("
