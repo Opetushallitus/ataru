@@ -1,19 +1,17 @@
 (ns ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations
   (:require [ataru.application.review-states :as review-states]))
 
-(defn kevyt-valinta-selection-label [kevyt-valinta-property
-                                     kevyt-valinta-property-value
-                                     lang]
-  (let [valinta-tulos-service->translation-mapping (case kevyt-valinta-property
-                                                     :kevyt-valinta/valinnan-tila review-states/valinnan-tila-selection-state
-                                                     :kevyt-valinta/julkaisun-tila review-states/julkaisun-tila-selection-state
-                                                     :kevyt-valinta/vastaanotto-tila review-states/vastaanotto-tila-selection-state
-                                                     :kevyt-valinta/ilmoittautumisen-tila review-states/ilmoittautumisen-tila-selection-state)]
-    (-> valinta-tulos-service->translation-mapping
-        (get kevyt-valinta-property-value)
-        lang)))
+(defn kevyt-valinta-value-translation-key [kevyt-valinta-property kevyt-valinta-property-value]
+  (let [i18n-mapping (case kevyt-valinta-property
+                       :kevyt-valinta/valinnan-tila review-states/valinnan-tila-translation-key-mapping
+                       :kevyt-valinta/julkaisun-tila review-states/julkaisun-tila-translation-key-mapping
+                       :kevyt-valinta/vastaanotto-tila review-states/vastaanotto-tila-translation-key-mapping
+                       :kevyt-valinta/ilmoittautumisen-tila review-states/ilmoittautumisen-tila-translation-key-mapping)]
+    (get i18n-mapping kevyt-valinta-property-value)))
 
-(defn kevyt-valinta-review-type-label [review-type lang]
-  (get-in review-states/kevyt-valinta-hakukohde-review-types
-          [review-type lang]
-          (str review-type)))
+(defn kevyt-valinta-label-translation-key [kevyt-valinta-property]
+  (case kevyt-valinta-property
+    :kevyt-valinta/valinnan-tila :valinta
+    :kevyt-valinta/julkaisun-tila :julkaisu
+    :kevyt-valinta/vastaanotto-tila :vastaanotto
+    :kevyt-valinta/ilmoittautumisen-tila :ilmoittautuminen))

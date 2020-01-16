@@ -126,9 +126,9 @@
    :expired-secret-heading                      {:fi "Tämä hakemuslinkki on vanhentunut"
                                                  :en "This application link has expired"
                                                  :sv "Denna ansökningslänk är föråldrad"}
-   :expired-secret-paragraph                    {:fi "Turvallisuussyistä hakemuslinkki on voimassa yhden muokkauskerran tai enintään 30 päivää."
-                                                 :en "For security reasons the link is valid for one application update or a maximum of 30 days."
-                                                 :sv "Av säkerhetsskäl är ansökningslänken i kraft under en session eller i högst 30 dagar."}
+   :expired-secret-paragraph                    {:fi "Turvallisuussyistä hakemuslinkki on voimassa yhden muokkauskerran tai enintään %d päivää."
+                                                 :en "For security reasons the link is valid for one application update or a maximum of %d days."
+                                                 :sv "Av säkerhetsskäl är ansökningslänken i kraft under en session eller i högst %d dagar."}
    :expired-secret-sent                         {:fi "Uusi linkki lähetetty!"
                                                  :en "The new link has been sent!"
                                                  :sv "Den nya länken har skickats!"}
@@ -1556,47 +1556,44 @@ You will receive a confirmation of your application to your email."}
                                                      :en "Multiple values"}
    :autosave-disabled                               {:fi "Automaattitalletus: pois päältä"
                                                      :sv "Automatspar: av"
-                                                     :en "Auto-save: disabled"}})
-
-(def kevyt-valinta-state-translations
-  {:kevyt-valinta/hylatty                {:fi "Hylätty"
-                                          :sv "Underkänd"
-                                          :en "Rejected"}
-   :kevyt-valinta/varalla                {:fi "Varalla"
-                                          :sv "På reserv"
-                                          :en "On reserve place"}
-   :kevyt-valinta/peruuntunut            {:fi "Peruuntunut"}
-   :kevyt-valinta/varasijalta-hyvaksytty {:fi "Varasijalta hyväksytty"}
-   :kevyt-valinta/hyvaksytty             {:fi "Hyväksytty"
-                                          :sv "Godkänd"
-                                          :en "Selected"}
-   :kevyt-valinta/perunut                {:fi "Perunut"}
-   :kevyt-valinta/peruutettu             {:fi "Peruutettu"}
-   :kevyt-valinta/kesken                 {:fi "Kesken"}})
-
-(def kevyt-valinta-julkaisun-tila-translations
-  {:kevyt-valinta/julkaistu-hakijalle {:fi "Julkaistu hakijalle"}
-   :kevyt-valinta/ei-julkaistu        {:fi "Julkaistu hakijalle"}})
-
-(def kevyt-valinta-vastaanotto-tila-translations
-  {:kevyt-valinta/ei-vastaanotettu-maaraaikana  {:fi "Ei vastaanotettu määräaikana"}
-   :kevyt-valinta/perunut                       {:fi "Perunut"}
-   :kevyt-valinta/peruutettu                    {:fi "Peruutettu"}
-   :kevyt-valinta/ottanut-vastaan-toisen-paikan {:fi "Ottanut vastaan toisen paikan"}
-   :kevyt-valinta/ehdollisesti-vastaanottanut   {:fi "Ehdollisesti vastaanottanut"}
-   :kevyt-valinta/vastaanottanut-sitovasti      {:fi "Vastaanottanut sitovasti"}
-   :kevyt-valinta/kesken                        {:fi "Kesken"}
-   :kevyt-valinta/vastaanottanut                {:fi "Vastaanottanut"}})
-
-(def kevyt-valinta-ilmoittautumisen-tila-translations
-  {:kevyt-valinta/ei-tehty              {:fi "Ei tehty"}
-   :kevyt-valinta/lasna-koko-lukuvuosi  {:fi "Läsnä (koko lukuvuosi)"}
-   :kevyt-valinta/poissa-koko-lukuvuosi {:fi "Poissa (koko lukuvuosi)"}
-   :kevyt-valinta/ei-ilmoittautunut     {:fi "Ei ilmoittautunut määräaikana"}
-   :kevyt-valinta/lasna-syksy           {:fi "Läsnä syksy, poissa kevät"}
-   :kevyt-valinta/poissa-syksy          {:fi "Poissa syksy, läsnä kevät"}
-   :kevyt-valinta/lasna                 {:fi "Läsnä, keväällä alkava koulutus"}
-   :kevyt-valinta/poissa                {:fi "Poissa, keväällä alkava koulutus"}})
+                                                     :en "Auto-save: disabled"}
+   :hylatty                                         {:fi "Hylätty"
+                                                     :sv "Underkänd"
+                                                     :en "Rejected"}
+   :varalla                                         {:fi "Varalla"
+                                                     :sv "På reserv"
+                                                     :en "On reserve place"}
+   :peruuntunut                                     {:fi "Peruuntunut"}
+   :varasijalta-hyvaksytty                          {:fi "Varasijalta hyväksytty"}
+   :hyvaksytty                                      {:fi "Hyväksytty"
+                                                     :sv "Godkänd"
+                                                     :en "Selected"}
+   :julkaistu                                       {:fi "Julkaistu"}
+   :ei-julkaistu                                    {:fi "Ei julkaistu"}
+   :ei-vastaanotettu-maaraaikana                    {:fi "Ei vastaanotettu määräaikana"}
+   :perunut                                         {:fi "Perunut"}
+   :peruutettu                                      {:fi "Peruutettu"}
+   :ottanut-vastaan-toisen-paikan                   {:fi "Ottanut vastaan toisen paikan"}
+   :ehdollisesti-vastaanottanut                     {:fi "Ehdollisesti vastaanottanut"}
+   :vastaanottanut-sitovasti                        {:fi "Vastaanottanut sitovasti"}
+   :kesken                                          {:fi "Kesken"
+                                                     :sv "Inte färdig"
+                                                     :en "Incomplete"}
+   :vastaanottanut                                  {:fi "Vastaanottanut"}
+   :ei-tehty                                        {:fi "Ei tehty"}
+   :lasna-koko-lukuvuosi                            {:fi "Läsnä (koko lukuvuosi)"}
+   :poissa-koko-lukuvuosi                           {:fi "Poissa (koko lukuvuosi)"}
+   :ei-ilmoittautunut-maaraaikana                   {:fi "Ei ilmoittautunut määräaikana"}
+   :lasna-syksy                                     {:fi "Läsnä syksy, poissa kevät"}
+   :poissa-syksy                                    {:fi "Poissa syksy, läsnä kevät"}
+   :lasna                                           {:fi "Läsnä, keväällä alkava koulutus"}
+   :poissa                                          {:fi "Poissa, keväällä alkava koulutus"}
+   :valinta                                         {:fi "Valinta"
+                                                     :sv "Antagning"
+                                                     :en "Selection"}
+   :julkaisu                                        {:fi "Julkaisu"}
+   :vastaanotto                                     {:fi "Vastaanotto"}
+   :ilmoittautuminen                                {:fi "Ilmoittautuminen"}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"

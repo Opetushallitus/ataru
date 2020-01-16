@@ -1,9 +1,6 @@
 (ns ataru.application.review-states
   (:require [ataru.translations.texts :refer [state-translations
-                                              kevyt-valinta-state-translations
-                                              kevyt-valinta-julkaisun-tila-translations
-                                              kevyt-valinta-vastaanotto-tila-translations
-                                              kevyt-valinta-ilmoittautumisen-tila-translations]]
+                                              virkailija-texts]]
             [ataru.util :as util]
             [clojure.set :refer [difference]]))
 
@@ -31,39 +28,39 @@
    ["selected" (:selected state-translations)]
    ["rejected" (:rejected state-translations)]])
 
-(def valinnan-tila-selection-state
-  {"HYLATTY"                (:kevyt-valinta/hylatty kevyt-valinta-state-translations)
-   "VARALLA"                (:kevyt-valinta/varalla kevyt-valinta-state-translations)
-   "PERUUNTUNUT"            (:kevyt-valinta/peruuntunut kevyt-valinta-state-translations)
-   "VARASIJALTA_HYVAKSYTTY" (:kevyt-valinta/varasijalta-hyvaksytty kevyt-valinta-state-translations)
-   "HYVAKSYTTY"             (:kevyt-valinta/hyvaksytty kevyt-valinta-state-translations)
-   "PERUNUT"                (:kevyt-valinta/perunut kevyt-valinta-state-translations)
-   "PERUUTETTU"             (:kevyt-valinta/peruutettu kevyt-valinta-state-translations)
-   "KESKEN"                 (:kevyt-valinta/kesken kevyt-valinta-state-translations)})
+(def valinnan-tila-translation-key-mapping
+  {"HYLATTY"                :hylatty
+   "VARALLA"                :varalla
+   "PERUUNTUNUT"            :peruuntunut
+   "VARASIJALTA_HYVAKSYTTY" :varasijalta-hyvaksytty
+   "HYVAKSYTTY"             :hyvaksytty
+   "PERUNUT"                :perunut
+   "PERUUTETTU"             :peruutettu
+   "KESKEN"                 :kesken})
 
-(def julkaisun-tila-selection-state
-  {true  (:kevyt-valinta/julkaistu-hakijalle kevyt-valinta-julkaisun-tila-translations)
-   false (:kevyt-valinta/ei-julkaistu kevyt-valinta-julkaisun-tila-translations)})
+(def julkaisun-tila-translation-key-mapping
+  {true  :julkaistu
+   false :ei-julkaistu})
 
-(def vastaanotto-tila-selection-state
-  {"EI_VASTAANOTETTU_MAARA_AIKANA" (:kevyt-valinta/ei-vastaanotettu-maaraaikana kevyt-valinta-vastaanotto-tila-translations)
-   "PERUNUT"                       (:kevyt-valinta/perunut kevyt-valinta-vastaanotto-tila-translations)
-   "PERUUTETTU"                    (:kevyt-valinta/peruutettu kevyt-valinta-vastaanotto-tila-translations)
-   "OTTANUT_VASTAAN_TOISEN_PAIKAN" (:kevyt-valinta/ottanut-vastaan-toisen-paikan kevyt-valinta-vastaanotto-tila-translations)
-   "EHDOLLISESTI_VASTAANOTTANUT"   (:kevyt-valinta/ehdollisesti-vastaanottanut kevyt-valinta-vastaanotto-tila-translations)
-   "VASTAANOTTANUT_SITOVASTI"      (:kevyt-valinta/vastaanottanut-sitovasti kevyt-valinta-vastaanotto-tila-translations)
-   "KESKEN"                        (:kevyt-valinta/kesken kevyt-valinta-vastaanotto-tila-translations)
-   "VASTAANOTTANUT"                (:kevyt-valinta/vastaanottanut kevyt-valinta-vastaanotto-tila-translations)})
+(def vastaanotto-tila-translation-key-mapping
+  {"EI_VASTAANOTETTU_MAARA_AIKANA" :ei-vastaanotettu-maaraaikana
+   "PERUNUT"                       :perunut
+   "PERUUTETTU"                    :peruutettu
+   "OTTANUT_VASTAAN_TOISEN_PAIKAN" :ottanut-vastaan-toisen-paikan
+   "EHDOLLISESTI_VASTAANOTTANUT"   :ehdollisesti-vastaanottanut
+   "VASTAANOTTANUT_SITOVASTI"      :vastaanottanut-sitovasti
+   "KESKEN"                        :kesken
+   "VASTAANOTTANUT"                :vastaanottanut})
 
-(def ilmoittautumisen-tila-selection-state
-  {"EI_TEHTY"              (:kevyt-valinta/ei-tehty kevyt-valinta-ilmoittautumisen-tila-translations)
-   "LASNA_KOKO_LUKUVUOSI"  (:kevyt-valinta/lasna-koko-lukuvuosi kevyt-valinta-ilmoittautumisen-tila-translations)
-   "POISSA_KOKO_LUKUVUOSI" (:kevyt-valinta/poissa-koko-lukuvuosi kevyt-valinta-ilmoittautumisen-tila-translations)
-   "EI_ILMOITTAUTUNUT"     (:kevyt-valinta/ei-ilmoittautunut kevyt-valinta-ilmoittautumisen-tila-translations)
-   "LASNA_SYKSY"           (:kevyt-valinta/lasna-syksy kevyt-valinta-ilmoittautumisen-tila-translations)
-   "POISSA_SYKSY"          (:kevyt-valinta/poissa-syksy kevyt-valinta-ilmoittautumisen-tila-translations)
-   "LASNA"                 (:kevyt-valinta/lasna kevyt-valinta-ilmoittautumisen-tila-translations)
-   "POISSA"                (:kevyt-valinta/poissa kevyt-valinta-ilmoittautumisen-tila-translations)})
+(def ilmoittautumisen-tila-translation-key-mapping
+  {"EI_TEHTY"              :ei-tehty
+   "LASNA_KOKO_LUKUVUOSI"  :lasna-koko-lukuvuosi
+   "POISSA_KOKO_LUKUVUOSI" :poissa-koko-lukuvuosi
+   "EI_ILMOITTAUTUNUT"     :ei-ilmoittautunut-maaraaikana
+   "LASNA_SYKSY"           :lasna-syksy
+   "POISSA_SYKSY"          :poissa-syksy
+   "LASNA"                 :lasna
+   "POISSA"                :poissa})
 
 (def application-hakukohde-review-states
   [["unreviewed" (:unreviewed state-translations)]
@@ -88,12 +85,6 @@
    [:eligibility-state (:eligibility-state state-translations) application-hakukohde-eligibility-states]
    [:payment-obligation (:payment-obligation state-translations) application-payment-obligation-states]
    [:selection-state (:selection-state state-translations) application-hakukohde-selection-states]])
-
-(def kevyt-valinta-hakukohde-review-types
-  {:kevyt-valinta/valinnan-tila         {:fi "Valinta"}
-   :kevyt-valinta/julkaisun-tila        {:fi "Julkaisu"}
-   :kevyt-valinta/vastaanotto-tila      {:fi "Vastaanotto"}
-   :kevyt-valinta/ilmoittautumisen-tila {:fi "Ilmoittautuminen"}})
 
 (def hakukohde-review-types-map
   (util/group-by-first first hakukohde-review-types))

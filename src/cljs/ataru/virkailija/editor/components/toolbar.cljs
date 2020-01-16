@@ -1,6 +1,5 @@
 (ns ataru.virkailija.editor.components.toolbar
-  (:require [ataru.cljs-util :as util :refer [get-virkailija-translation]]
-            [ataru.component-data.component :as component]
+  (:require [ataru.component-data.component :as component]
             [ataru.component-data.base-education-module :as base-education-module]
             [ataru.component-data.higher-education-base-education-module :as kk-base-education-module]
             [ataru.feature-config :as fc]
@@ -89,7 +88,7 @@
                [:a {:on-click (fn [evt]
                                 (.preventDefault evt)
                                 (generator generate-fn))}
-                (get-virkailija-translation component-name)]])))))
+                @(subscribe [:editor/virkailija-translation component-name])]])))))
 
 
 (defn custom-add-component [toolbar path generator]

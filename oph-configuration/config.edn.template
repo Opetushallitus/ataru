@@ -35,6 +35,7 @@
                  :virkailija {:service_url "https://{{host_virkailija}}/lomake-editori/"}
                  :environment-name "{{ataru_environment_name}}"
                  :features {:kevyt-valinta {{ataru_kevyt_valinta_enabled | default('false')}}}
+                 :secret-link-valid-days {{ataru_secret_link_valid_days | default('14')}}
                  :attachment-modify-grace-period-days 14
                  :attachment-file-max-size-bytes {{ataru_attachment_file_max_size_bytes}}
                  :attachment-file-part-max-size-bytes {{ataru_attachment_file_part_max_size_bytes}}

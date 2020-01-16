@@ -3,7 +3,7 @@
     [re-frame.core :refer [subscribe dispatch dispatch-sync]]
     [ataru.application-common.application-field-common :refer [scroll-to-anchor]]
     [ataru.util :as util]
-    [ataru.cljs-util :refer [get-translation]]
+    [ataru.translations.translation-util :as translations]
     [reagent.core :as r]))
 
 (defn hilighted-text->span [idx {:keys [text hilight]}]
@@ -30,12 +30,13 @@
 
 (defn- selected-hakukohde-row-remove
   [hakukohde-oid disabled?]
-  [:button.application__selected-hakukohde-row--remove
-   {:data-hakukohde-oid hakukohde-oid
-    :disabled           disabled?
-    :on-click           (when (not disabled?)
-                          hakukohde-remove-event-handler)}
-   (get-translation :remove)])
+  (let [lang @(subscribe [:application/form-language])]
+    [:button.application__selected-hakukohde-row--remove
+     {:data-hakukohde-oid hakukohde-oid
+      :disabled           disabled?
+      :on-click           (when (not disabled?)
+                            hakukohde-remove-event-handler)}
+     (translations/get-hakija-translation :remove lang)]))
 
 (defn- selected-hakukohde-increase-priority
   [hakukohde-oid priority-number disabled?]
@@ -65,16 +66,17 @@
      [selected-hakukohde-decrease-priority hakukohde-oid priority-number disabled?]]))
 
 (defn- offending-priorization [should-be-higher should-be-lower]
-  [:div.application__selected-hakukohde-row--offending-priorization
-   [:i.zmdi.zmdi-alert-circle]
-   [:div
-    [:div.application__selected-hakukohde-row--offending-priorization-heading
-     (get-translation :application-priorization-invalid)]
-    [:div
-     (first (get-translation :should-be-higher-priorization-than))
-     [:em (str "\"" @(subscribe [:application/hakukohde-label should-be-higher]) "\"")]
-     (last (get-translation :should-be-higher-priorization-than))
-     [:em (str "\"" @(subscribe [:application/hakukohde-label should-be-lower]) "\"")]]]])
+  (let [lang @(subscribe [:application/form-language])]
+    [:div.application__selected-hakukohde-row--offending-priorization
+     [:i.zmdi.zmdi-alert-circle]
+     [:div
+      [:div.application__selected-hakukohde-row--offending-priorization-heading
+       (translations/get-hakija-translation :application-priorization-invalid lang)]
+      [:div
+       (first (translations/get-hakija-translation :should-be-higher-priorization-than lang))
+       [:em (str "\"" @(subscribe [:application/hakukohde-label should-be-higher]) "\"")]
+       (last (translations/get-hakija-translation :should-be-higher-priorization-than lang))
+       [:em (str "\"" @(subscribe [:application/hakukohde-label should-be-lower]) "\"")]]]]))
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
@@ -83,7 +85,8 @@
         haku-editable?                     @(subscribe [:application/hakukohteet-editable?])
         hakukohde-editable?                @(subscribe [:application/hakukohde-editable? hakukohde-oid])
         [should-be-lower should-be-higher] @(subscribe [:application/hakukohde-offending-priorization? hakukohde-oid])
-        rajaavat-hakukohteet               @(subscribe [:application/rajaavat-hakukohteet hakukohde-oid])]
+        rajaavat-hakukohteet               @(subscribe [:application/rajaavat-hakukohteet hakukohde-oid])
+        lang                               @(subscribe [:application/form-language])]
     [:div.application__selected-hakukohde-row.animated
      {:class (if deleting? "fadeOut" "fadeIn")}
      (when prioritize-hakukohteet?
@@ -96,11 +99,11 @@
       (when (not hakukohde-editable?)
         [:div.application__hakukohde-application-period-ended
          [:i.zmdi.zmdi-lock]
-         (get-translation :not-editable-application-period-ended)])
+         (translations/get-hakija-translation :not-editable-application-period-ended lang)])
       (when (not-empty rajaavat-hakukohteet)
         [:div.application__search-hit-hakukohde-row--limit-reached
          [:h3.application__search-hit-hakukohde-row--limit-reached-heading
-          (get-translation :application-limit-reached-in-hakukohderyhma)]
+          (translations/get-hakija-translation :application-limit-reached-in-hakukohderyhma lang)]
          (doall (for [hakukohde rajaavat-hakukohteet]
                   ^{:key (str "limitting-hakukohde-" (:oid hakukohde))}
                   [:div.application__search-hit-hakukohde-row--limitting-hakukohde
@@ -125,7 +128,8 @@
         aria-description-id  (str "hakukohde-search-hit-description-" hakukohde-oid)
         hakukohde-editable?  @(subscribe [:application/hakukohde-editable? hakukohde-oid])
         hakukohteet-full?    @(subscribe [:application/hakukohteet-full? hakukohde-oid])
-        rajaavat-hakukohteet @(subscribe [:application/rajaavat-hakukohteet hakukohde-oid])]
+        rajaavat-hakukohteet @(subscribe [:application/rajaavat-hakukohteet hakukohde-oid])
+        lang                 @(subscribe [:application/form-language])]
     [:div.application__search-hit-hakukohde-row
      [:div.application__search-hit-hakukohde-row--content
       [:div.application__hakukohde-header
@@ -137,12 +141,12 @@
       (when (not hakukohde-editable?)
         [:div.application__hakukohde-application-period-ended
          [:i.zmdi.zmdi-lock]
-         (get-translation :not-selectable-application-period-ended)])
+         (translations/get-hakija-translation :not-selectable-application-period-ended lang)])
       (when (and (not hakukohde-selected?)
                  (not-empty rajaavat-hakukohteet))
         [:div.application__search-hit-hakukohde-row--limit-reached
          [:h3.application__search-hit-hakukohde-row--limit-reached-heading
-          (get-translation :application-limit-reached-in-hakukohderyhma)]
+          (translations/get-hakija-translation :application-limit-reached-in-hakukohderyhma lang)]
          (doall (for [hakukohde rajaavat-hakukohteet]
                   ^{:key (str "limitting-hakukohde-" (:oid hakukohde))}
                   [:div.application__search-hit-hakukohde-row--limitting-hakukohde
@@ -158,13 +162,14 @@
                                   (not-empty rajaavat-hakukohteet))
           :aria-labelledby    aria-header-id
           :aria-describedby   aria-description-id}
-         (get-translation :add)])]]))
+         (translations/get-hakija-translation :add lang)])]]))
 
 (defn- hakukohde-selection-search
   []
   (let [hakukohde-hits         (subscribe [:application/hakukohde-hits])
         prioritize-hakukohteet (subscribe [:application/prioritize-hakukohteet?])
-        search-input           (r/atom @(subscribe [:application/hakukohde-query]))]
+        search-input           (r/atom @(subscribe [:application/hakukohde-query]))
+        lang                   (subscribe [:application/form-language])]
     (fn []
       [:div.application__hakukohde-selection
        [:div.application__hakukohde-selection-search-arrow-up
@@ -178,8 +183,8 @@
          [:input.application__form-text-input-in-box
           {:on-change   #(do (reset! search-input (.-value (.-target %)))
                              (dispatch [:application/hakukohde-query-change search-input]))
-           :title       (get-translation :search-application-options)
-           :placeholder (get-translation :search-application-options)
+           :title       (translations/get-hakija-translation :search-application-options @lang)
+           :placeholder (translations/get-hakija-translation :search-application-options @lang)
            :value       @search-input}]
          (when (not (empty? @search-input))
            [:div.application__form-clear-text-input-in-box
@@ -191,7 +196,7 @@
          (if (and
                (empty? @hakukohde-hits)
                (not (clojure.string/blank? @search-input)))
-           [:div.application__hakukohde-selection-search-no-hits (get-translation :no-hakukohde-search-hits)]
+           [:div.application__hakukohde-selection-search-no-hits (translations/get-hakija-translation :no-hakukohde-search-hits @lang)]
            (for [hakukohde-oid @hakukohde-hits]
              ^{:key (str "found-hakukohde-row-" hakukohde-oid)}
              [search-hit-hakukohde-row hakukohde-oid]))]
@@ -199,7 +204,7 @@
           [:div.application__show_more_hakukohdes_container
            [:span.application__show_more_hakukohdes
             {:on-click #(dispatch [:application/show-more-hakukohdes])}
-            (get-translation :show-more)]])]])))
+            (translations/get-hakija-translation :show-more @lang)]])]])))
 
 (defn- hakukohde-selection-header
   [field-descriptor]
@@ -208,15 +213,16 @@
    [scroll-to-anchor field-descriptor]])
 
 (defn- select-new-hakukohde-row []
-  (when @(subscribe [:application/hakukohteet-editable?])
-    (if @(subscribe [:application/hakukohteet-full?])
-      (let [max-hakukohteet @(subscribe [:application/max-hakukohteet])]
-        [:span.application__hakukohde-max-selected
-         (get-translation :applications_at_most max-hakukohteet)])
-      [:div.application__hakukohde-selection-open-search-wrapper
-       [:a.application__hakukohde-selection-open-search
-        {:on-click hakukohde-search-toggle-event-handler}
-        (get-translation :add-application-option)]])))
+  (let [lang @(subscribe [:application/form-language])]
+    (when @(subscribe [:application/hakukohteet-editable?])
+      (if @(subscribe [:application/hakukohteet-full?])
+        (let [max-hakukohteet @(subscribe [:application/max-hakukohteet])]
+          [:span.application__hakukohde-max-selected
+           (translations/get-hakija-translation :applications_at_most max-hakukohteet lang)])
+        [:div.application__hakukohde-selection-open-search-wrapper
+         [:a.application__hakukohde-selection-open-search
+          {:on-click hakukohde-search-toggle-event-handler}
+          (translations/get-hakija-translation :add-application-option lang)]]))))
 
 (defn hakukohteet
   [field-descriptor]

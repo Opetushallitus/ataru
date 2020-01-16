@@ -1,9 +1,10 @@
 (ns ataru.hakija.application-view
   (:require [clojure.string :refer [trim]]
+            [ataru.config :as config]
             [ataru.hakija.banner :refer [banner]]
             [ataru.hakija.application-form-components :refer [editable-fields]]
             [ataru.hakija.hakija-readonly :as readonly-view]
-            [ataru.cljs-util :as util :refer [get-translation]]
+            [ataru.translations.translation-util :as translations]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
             [cljs-time.core :refer [to-default-time-zone now after?]]
@@ -28,10 +29,11 @@
         cannot-edit-because-in-processing? @(subscribe [:application/cannot-edit-because-in-processing?])
         editing?                           @(subscribe [:application/editing?])
         virkailija?                        @(subscribe [:application/virkailija?])
+        lang                               @(subscribe [:application/form-language])
         apply-dates                        (when-let [hakuaika @(subscribe [:application/haku-aika])]
                                              (if (:jatkuva-haku? hakuaika)
-                                               (get-translation :continuous-period)
-                                               [:span (str (get-translation :application-period)
+                                               (translations/get-hakija-translation :continuous-period lang)
+                                               [:span (str (translations/get-hakija-translation :application-period lang)
                                                            " "
                                                            (-> hakuaika :label :start selected-lang)
                                                            " - "
@@ -40,7 +42,7 @@
                                                 [:br]
                                                 (when (and (not (:on hakuaika))
                                                            (not virkailija?))
-                                                  (str " (" (get-translation :not-within-application-period) ")"))]))]
+                                                  (str " (" (translations/get-hakija-translation :not-within-application-period lang) ")"))]))]
     [:div
      [:div.application__header-container
       [:h1.application__header (or (-> form :tarjonta :haku-name selected-lang)
@@ -66,7 +68,7 @@
                 (not virkailija?))
        [:div.application__sub-header-container
         [:span.application__sub-header-modifying-prevented
-         (get-translation :application-processed-cant-modify)]])]))
+         (translations/get-hakija-translation :application-processed-cant-modify lang)]])]))
 
 (defn readonly-fields [form]
   (let [application (subscribe [:state-query [:application]])]
@@ -86,12 +88,14 @@
             [editable-fields form submit-status]))))))
 
 (defn application-contents []
-  (let [form            (subscribe [:state-query [:form]])
-        load-failure?   (subscribe [:state-query [:error :code]])
-        can-apply?      (subscribe [:application/can-apply?])
-        editing?        (subscribe [:state-query [:application :editing?]])
-        expired         (subscribe [:state-query [:application :secret-expired?]])
-        delivery-status (subscribe [:state-query [:application :secret-delivery-status]])]
+  (let [form                   (subscribe [:state-query [:form]])
+        load-failure?          (subscribe [:state-query [:error :code]])
+        can-apply?             (subscribe [:application/can-apply?])
+        editing?               (subscribe [:state-query [:application :editing?]])
+        expired                (subscribe [:state-query [:application :secret-expired?]])
+        delivery-status        (subscribe [:state-query [:application :secret-delivery-status]])
+        lang                   (subscribe [:application/form-language])
+        secret-link-valid-days (config/get-public-config [:secret-link-valid-days])]
     (fn []
       [:div.application__form-content-area
        (when-not (or @load-failure?
@@ -102,15 +106,15 @@
          [:div.application__secret-expired
           [:div.application__secret-expired-icon
            [:i.zmdi.zmdi-lock-outline]]
-          [:h2 (get-translation :expired-secret-heading)]
-          [:p (get-translation :expired-secret-paragraph)]
+          [:h2 (translations/get-hakija-translation :expired-secret-heading @lang)]
+          [:p (translations/get-hakija-translation :expired-secret-paragraph @lang secret-link-valid-days)]
           [:button.application__secret-resend-button
            {:disabled (some? @delivery-status)
             :on-click #(dispatch [:application/send-new-secret])}
            (if (= :completed @delivery-status)
-             (get-translation :expired-secret-sent)
-             (get-translation :expired-secret-button))]
-          [:p (get-translation :expired-secret-contact)]])
+             (translations/get-hakija-translation :expired-secret-sent @lang)
+             (translations/get-hakija-translation :expired-secret-button @lang))]
+          [:p (translations/get-hakija-translation :expired-secret-contact @lang)]])
 
        ^{:key (:id @form)}
        [application-header]
@@ -128,14 +132,15 @@
 (defn- submit-notification
   [hidden?]
   (fn []
-    [:div.application__submitted-submit-notification
-     [:div.application__submitted-submit-notification-inner
-      [:h1.application__submitted-submit-notification-heading
-       (get-translation :application-submitted)]]
-     [:div.application__submitted-submit-notification-inner
-      [:a.application__send-feedback-button.application__send-feedback-button--enabled
-       {:on-click #(reset! hidden? true)}
-       (get-translation :application-submitted-ok)]]]))
+    (let [lang @(subscribe [:application/form-language])]
+      [:div.application__submitted-submit-notification
+       [:div.application__submitted-submit-notification-inner
+        [:h1.application__submitted-submit-notification-heading
+         (translations/get-hakija-translation :application-submitted lang)]]
+       [:div.application__submitted-submit-notification-inner
+        [:a.application__send-feedback-button.application__send-feedback-button--enabled
+         {:on-click #(reset! hidden? true)}
+         (translations/get-hakija-translation :application-submitted-ok lang)]]])))
 
 (defn feedback-form
   [feedback-hidden?]
@@ -145,7 +150,8 @@
         rating-status     (subscribe [:state-query [:application :feedback :status]])
         virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])
         show-feedback?    (reaction (and (= :submitted @submit-status)
-                                         (not @feedback-hidden?)))]
+                                         (not @feedback-hidden?)))
+        lang              (subscribe [:application/form-language])]
     (fn []
       (let [rated?     (= :rating-given @rating-status)
             submitted? (= :feedback-submitted @rating-status)]
@@ -156,7 +162,7 @@
             [:i.zmdi.zmdi-close.close-details-button-mark]]
            [:div.application-feedback-form-container
             (when (not submitted?)
-              [:h2.application-feedback-form__header (get-translation :feedback-header)])
+              [:h2.application-feedback-form__header (translations/get-hakija-translation :feedback-header @lang)])
             (when (not submitted?)
               [:div.application-feedback-form__rating-container.animated.zoomIn
                {:on-click      #(dispatch [:application/rating-submit (star-number-from-event %)])
@@ -175,13 +181,13 @@
                (let [stars-selected (or @stars @star-hovered)]
                  (if (and (int? stars-selected)
                           (< 0 stars-selected 6))
-                   (get (get-translation :feedback-ratings) stars-selected)
+                   (get (translations/get-hakija-translation :feedback-ratings @lang) stars-selected)
                    (gstring/unescapeEntities "&nbsp;")))])
             (when (not submitted?)
               [:div.application-feedback-form__text-feedback-container
                [:textarea.application__form-text-input.application__form-text-area.application__form-text-area__size-medium
                 {:on-change   #(dispatch [:application/rating-update-feedback (.-value (.-target %))])
-                 :placeholder (get-translation :feedback-text-placeholder)
+                 :placeholder (translations/get-hakija-translation :feedback-text-placeholder @lang)
                  :max-length  2000}]])
             (when (and (not submitted?)
                        rated?)
@@ -189,17 +195,17 @@
                {:on-click (fn [evt]
                             (.preventDefault evt)
                             (dispatch [:application/rating-feedback-submit]))}
-               (get-translation :feedback-send)])
+               (translations/get-hakija-translation :feedback-send @lang)])
             (when (and (not submitted?)
                        (not rated?))
               [:a.application__send-feedback-button.application__send-feedback-button--disabled
-               (get-translation :feedback-send)])
+               (translations/get-hakija-translation :feedback-send @lang)])
             (when (not submitted?)
-              [:div.application-feedback-form__disclaimer (get-translation :feedback-disclaimer)])
+              [:div.application-feedback-form__disclaimer (translations/get-hakija-translation :feedback-disclaimer @lang)])
             (when submitted?
               [:div.application__thanks
                [:i.zmdi.zmdi-thumb-up.application__thanks-icon]
-               [:span.application__thanks-text (get-translation :feedback-thanks)]])]])))))
+               [:span.application__thanks-text (translations/get-hakija-translation :feedback-thanks @lang)]])]])))))
 
 (defn- submitted-overlay
   []
@@ -215,14 +221,15 @@
          (when (not @submit-notification-hidden?) [submit-notification submit-notification-hidden?])]))))
 
 (defn error-display []
-  (let [error-code (subscribe [:state-query [:error :code]])]
+  (let [error-code (subscribe [:state-query [:error :code]])
+        lang       (subscribe [:application/form-language])]
     (fn [] (if-let [error-code @error-code]
              [:div.application__message-display
               {:class (if (some #(= error-code %) [:inactivated :network-offline])
                         "application__message-display--warning"
                         "application__message-display--error")}
               [:div.application__message-display--exclamation [:i.zmdi.zmdi-alert-triangle]]
-              [:div.application__message-display--details (get-translation error-code)]]))))
+              [:div.application__message-display--details (translations/get-hakija-translation error-code @lang)]]))))
 
 (defn form-view []
   [:div

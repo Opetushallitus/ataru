@@ -1,5 +1,6 @@
 (ns ataru.cljs-util
-  (:require [clojure.string :refer [join]]
+  (:require [ataru.translations.translation-util :as tu]
+            [clojure.string :refer [join]]
             [cljs.core.match :refer-macros [match]]
             [cljs.reader :as reader :refer [read-string]]
             [cljs-uuid-utils.core :as uuid]
@@ -12,7 +13,8 @@
             [goog.string.format]
             [ataru.translations.translation-util :as translation-util]
             [goog.string :as gstring]
-            [goog.string.format])
+            [goog.string.format]
+            [ataru.translations.texts :as texts])
   (:import [goog.net Cookies]))
 
 (def wrap-scroll-to
@@ -167,24 +169,6 @@
 (defn vector-of-length [target-length]
   (comp (partial resize-vector target-length)
         (fnil identity [])))
-
-(defn get-translation [key & params]
-  (if (some? params)
-    (apply gstring/format
-      (translation-util/get-translation key @(subscribe [:application/form-language]))
-      params)
-    (translation-util/get-translation key @(subscribe [:application/form-language]))))
-
-(defn get-virkailija-label [key]
-  (get @(subscribe [:editor/virkailija-texts]) key))
-
-(defn get-virkailija-translation [key & params]
-  (let [text (get (get-virkailija-label key) @(subscribe [:editor/virkailija-lang]) (str key))]
-    (if (some? params)
-      (apply gstring/format
-             text
-             params)
-      text)))
 
 (defn modify-event? [event]
   (some #{(:event-type event)} ["updated-by-applicant" "updated-by-virkailija"]))

@@ -5,7 +5,8 @@
             [cljs.core.async :as async]
             [ataru.hakija.has-applied :refer [has-applied]]
             [ataru.hakija.application-validators :as validator]
-            [ataru.cljs-util :as util]))
+            [ataru.cljs-util :as util]
+            [ataru.translations.translation-util :as tu]))
 
 (defn http [caller-id
             {:keys [method
@@ -136,7 +137,8 @@
 
 (defn- confirm-window-close!
   [event]
-  (let [warning-label   (util/get-translation :window-close-warning)
+  (let [lang            @(re-frame/subscribe [:application/form-language])
+        warning-label   (tu/get-hakija-translation :window-close-warning lang)
         values-changed? @(re-frame/subscribe [:state-query [:application :values-changed?]])
         submit-status   @(re-frame/subscribe [:state-query [:application :submit-status]])]
     (when (and (some? values-changed?)
