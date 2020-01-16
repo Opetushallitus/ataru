@@ -1488,6 +1488,9 @@ You will receive a confirmation of your application to your email."}
    :used-by-haut                                    {:fi "Tämä lomake on seuraavien hakujen käytössä"
                                                      :sv "Denna blankett används i följande ansökningar"
                                                      :en "EN: Tämä lomake on seuraavien hakujen käytössä"}
+   :kevyt-valinta-valinnan-tila-change              {:fi "Valinta: %s"
+                                                     :sv "Antagning: %s"
+                                                     :en "Student selection: %s"}
    :valintatuloksen-julkaisulupa                    {:fi "Valintatuloksen julkaisulupa"
                                                      :sv "Tillstånd att publicera antagningsresultat"
                                                      :en "EN : Valintatuloksen julkaisulupa"}

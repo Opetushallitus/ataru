@@ -5,6 +5,7 @@
             [medley.core :refer [find-first]]
             [ataru.application-common.application-field-common :as common]
             [ataru.component-data.person-info-module :as person-info-module]
+            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs]
             [ataru.virkailija.db :as initial-db]
             [ataru.util :as u]
             [ataru.cljs-util :as util]))
@@ -538,16 +539,50 @@
             (assoc % :last-modify-event? true)
             %) events)))
 
+(defn- tila-historia->information-request [tila-historia]
+  (-> tila-historia
+      (select-keys [:luotu :tila])
+      (clojure.set/rename-keys {:luotu :created-time
+                                :tila  :valinnan-tila})
+      (assoc :event-type "kevyt-valinta-valinnan-tila-change")))
+
+(defn- valinnan-tulos->information-request [valinnan-tulos]
+  (-> valinnan-tulos
+      (select-keys [:valinnantilanViimeisinMuutos :valinnantila])
+      (clojure.set/rename-keys {:valinnantilanViimeisinMuutos :created-time
+                                :valinnantila                 :valinnan-tila})
+      (assoc :event-type "kevyt-valinta-valinnan-tila-change")))
+
 (re-frame/reg-sub
   :application/events-and-information-requests
-  (fn [db _]
-    (let [application-key (-> db :application :selected-application-and-form :application :key)]
-      (->> (concat (-> db :application :events mark-last-modify-event)
-                   (-> db :application :information-requests)
-                   (->> (get-in db [:hyvaksynnan-ehto application-key])
-                        vals
-                        (mapcat :events)))
-           (sort event-and-information-request-comparator)))))
+  (fn [[_ application-key]]
+    [(re-frame/subscribe [:state-query [:application :events]])
+     (re-frame/subscribe [:state-query [:application :information-requests]])
+     (re-frame/subscribe [:state-query [:hyvaksynnan-ehto application-key]])
+     (re-frame/subscribe [:virkailija-kevyt-valinta/show-kevyt-valinta?])
+     (re-frame/subscribe [:virkailija-kevyt-valinta/tila-historia-for-application application-key])
+     (re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])])
+  (fn [[events
+        information-requests
+        hyvaksynnan-ehto
+        show-kevyt-valinta?
+        tila-historia
+        valinnan-tulos]]
+    (as-> [] requests
+          (->> events mark-last-modify-event (into requests))
+          (into requests information-requests)
+          (->> hyvaksynnan-ehto
+               vals
+               (mapcat :events)
+               (into requests))
+          (cond-> requests
+                  show-kevyt-valinta?
+                  (into (comp (filter (comp not nil? :tila))
+                              (map tila-historia->information-request))
+                        tila-historia)
+                  (and show-kevyt-valinta? valinnan-tulos)
+                  (conj (valinnan-tulos->information-request valinnan-tulos)))
+          (sort event-and-information-request-comparator requests))))
 
 (re-frame/reg-sub
   :application/resend-modify-application-link-enabled?
