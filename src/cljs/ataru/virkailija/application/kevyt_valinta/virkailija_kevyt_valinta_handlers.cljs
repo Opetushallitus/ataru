@@ -88,6 +88,41 @@
 
 (def rfc-1123-date-formatter (format/formatter "E, d MMM yyyy HH:mm:ss"))
 
+(defn- new-kevyt-valinta-states [valinnan-tila
+                                 julkaisun-tila
+                                 vastaanotto-tila
+                                 ilmoittautumisen-tila]
+  (match [vastaanotto-tila]
+         [(:or "EHDOLLISESTI_VASTAANOTTANUT" "VASTAANOTTANUT_SITOVASTI")]
+         {:valinnantila       "HYVAKSYTTY"
+          :julkaistavissa     julkaisun-tila
+          :vastaanottotila    vastaanotto-tila
+          :ilmoittautumistila ilmoittautumisen-tila}
+
+         ["EI_VASTAANOTETTU_MAARA_AIKANA"]
+         {:valinnantila       "PERUUNTUNUT"
+          :julkaistavissa     julkaisun-tila
+          :vastaanottotila    vastaanotto-tila
+          :ilmoittautumistila ilmoittautumisen-tila}
+
+         ["PERUNUT"]
+         {:valinnantila       "PERUNUT"
+          :julkaistavissa     julkaisun-tila
+          :vastaanottotila    vastaanotto-tila
+          :ilmoittautumistila ilmoittautumisen-tila}
+
+         ["PERUUTETTU"]
+         {:valinnantila       "PERUUTETTU"
+          :julkaistavissa     julkaisun-tila
+          :vastaanottotila    vastaanotto-tila
+          :ilmoittautumistila ilmoittautumisen-tila}
+
+         :else
+         {:valinnantila       valinnan-tila
+          :julkaistavissa     julkaisun-tila
+          :vastaanottotila    vastaanotto-tila
+          :ilmoittautumistila ilmoittautumisen-tila}))
+
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/change-kevyt-valinta-property
   [(re-frame/inject-cofx :virkailija/resolve-url {:url-key    :valinta-tulos-service.valinnan-tulos
@@ -128,37 +163,11 @@
                                                                                                                     valinnantulos
                                                                                                                     valinta-tulos-service-property
                                                                                                                     new-kevyt-valinta-property-value)
-                                                                      new-kevyt-valinta-states (match [vastaanotto-tila]
-                                                                                                      [(:or "EHDOLLISESTI_VASTAANOTTANUT" "VASTAANOTTANUT_SITOVASTI")]
-                                                                                                      {:valinnantila       "HYVAKSYTTY"
-                                                                                                       :julkaistavissa     julkaisun-tila
-                                                                                                       :vastaanottotila    vastaanotto-tila
-                                                                                                       :ilmoittautumistila ilmoittautumisen-tila}
-
-                                                                                                      ["EI_VASTAANOTETTU_MAARA_AIKANA"]
-                                                                                                      {:valinnantila       "PERUUNTUNUT"
-                                                                                                       :julkaistavissa     julkaisun-tila
-                                                                                                       :vastaanottotila    vastaanotto-tila
-                                                                                                       :ilmoittautumistila ilmoittautumisen-tila}
-
-                                                                                                      ["PERUNUT"]
-                                                                                                      {:valinnantila       "PERUNUT"
-                                                                                                       :julkaistavissa     julkaisun-tila
-                                                                                                       :vastaanottotila    vastaanotto-tila
-                                                                                                       :ilmoittautumistila ilmoittautumisen-tila}
-
-                                                                                                      ["PERUUTETTU"]
-                                                                                                      {:valinnantila       "PERUUTETTU"
-                                                                                                       :julkaistavissa     julkaisun-tila
-                                                                                                       :vastaanottotila    vastaanotto-tila
-                                                                                                       :ilmoittautumistila ilmoittautumisen-tila}
-
-                                                                                                      :else
-                                                                                                      {:valinnantila       valinnan-tila
-                                                                                                       :julkaistavissa     julkaisun-tila
-                                                                                                       :vastaanottotila    vastaanotto-tila
-                                                                                                       :ilmoittautumistila ilmoittautumisen-tila})]
-                                                                  (merge valinnantulos new-kevyt-valinta-states))
+                                                                      kevyt-valinta-states (new-kevyt-valinta-states valinnan-tila
+                                                                                                                     julkaisun-tila
+                                                                                                                     vastaanotto-tila
+                                                                                                                     ilmoittautumisen-tila)]
+                                                                  (merge valinnantulos kevyt-valinta-states))
                                                                 {:vastaanottotila              "KESKEN"
                                                                  :hakukohdeOid                 hakukohde-oid
                                                                  :ilmoittautumistila           "EI_TEHTY"
