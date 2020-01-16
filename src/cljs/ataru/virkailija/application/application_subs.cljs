@@ -577,7 +577,8 @@
                (into requests))
           (cond-> requests
                   show-kevyt-valinta?
-                  (into (map tila-historia->information-request)
+                  (into (comp (filter (comp not nil? :tila))
+                              (map tila-historia->information-request))
                         tila-historia)
                   (and show-kevyt-valinta? valinnan-tulos)
                   (conj (valinnan-tulos->information-request valinnan-tulos)))
