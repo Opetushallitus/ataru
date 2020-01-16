@@ -3,10 +3,10 @@
 
 (defn kevyt-valinta-value-translation-key [kevyt-valinta-property kevyt-valinta-property-value]
   (let [i18n-mapping (case kevyt-valinta-property
-                       :kevyt-valinta/valinnan-tila review-states/valinnan-tila-i18n-mapping
-                       :kevyt-valinta/julkaisun-tila review-states/julkaisun-tila-i18n-mapping
-                       :kevyt-valinta/vastaanotto-tila review-states/vastaanotto-tila-i18n-mapping
-                       :kevyt-valinta/ilmoittautumisen-tila review-states/ilmoittautumisen-tila-i18n-mapping)]
+                       :kevyt-valinta/valinnan-tila review-states/valinnan-tila-translation-key-mapping
+                       :kevyt-valinta/julkaisun-tila review-states/julkaisun-tila-translation-key-mapping
+                       :kevyt-valinta/vastaanotto-tila review-states/vastaanotto-tila-translation-key-mapping
+                       :kevyt-valinta/ilmoittautumisen-tila review-states/ilmoittautumisen-tila-translation-key-mapping)]
     (get i18n-mapping kevyt-valinta-property-value)))
 
 (defn kevyt-valinta-label-translation-key [kevyt-valinta-property]

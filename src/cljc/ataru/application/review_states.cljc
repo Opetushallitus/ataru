@@ -28,7 +28,7 @@
    ["selected" (:selected state-translations)]
    ["rejected" (:rejected state-translations)]])
 
-(def valinnan-tila-i18n-mapping
+(def valinnan-tila-translation-key-mapping
   {"HYLATTY"                :hylatty
    "VARALLA"                :varalla
    "PERUUNTUNUT"            :peruuntunut
@@ -38,11 +38,11 @@
    "PERUUTETTU"             :peruutettu
    "KESKEN"                 :kesken})
 
-(def julkaisun-tila-i18n-mapping
+(def julkaisun-tila-translation-key-mapping
   {true  :julkaistu
    false :ei-julkaistu})
 
-(def vastaanotto-tila-i18n-mapping
+(def vastaanotto-tila-translation-key-mapping
   {"EI_VASTAANOTETTU_MAARA_AIKANA" :ei-vastaanotettu-maaraaikana
    "PERUNUT"                       :perunut
    "PERUUTETTU"                    :peruutettu
@@ -52,7 +52,7 @@
    "KESKEN"                        :kesken
    "VASTAANOTTANUT"                :vastaanottanut})
 
-(def ilmoittautumisen-tila-i18n-mapping
+(def ilmoittautumisen-tila-translation-key-mapping
   {"EI_TEHTY"              :ei-tehty
    "LASNA_KOKO_LUKUVUOSI"  :lasna-koko-lukuvuosi
    "POISSA_KOKO_LUKUVUOSI" :poissa-koko-lukuvuosi
