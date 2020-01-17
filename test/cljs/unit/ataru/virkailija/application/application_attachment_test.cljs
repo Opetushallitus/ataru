@@ -6,11 +6,51 @@
             [ataru.virkailija.application.attachments.virkailija-attachment-subs :refer [liitepyynnot-for-selected-hakukohteet]]
             [ataru.util :as util]))
 
-(deftest returns-attachments-in-correct-order
+(def test-form-with-attachments-everywhere
+  {:content [{:id "d1"
+             :fieldType "dropdown"
+             :koodisto-source {:uri     "maatjavaltiot2"
+                               :version 1}
+             :label     {:fi "FI: Suoritusmaa"}}
+            {:id        "attachment1"
+             :fieldType "attachment"
+             :label     {:fi "FI: Liite 1"}}
+            {:id         "ryhma-1"
+             :fieldClass "questionGroup"
+             :fieldType  "fieldset"
+             :label      {:fi ""}
+             :children   [{:id        "attachment2"
+                           :fieldType "attachment"
+                           :label     {:fi "FI: Liite 2"}}]}
+            {:id        "first-name"
+             :fieldType "textField"
+             :label     {:fi "FI: Etunimet"}}
+            {:id        "last-name"
+             :fieldType "textField"
+             :label     {:fi "FI: Sukunimi"}}
+            {:id        "attachment3"
+             :fieldType "attachment"
+             :label     {:fi "FI: Liite 3"}}]})
+
+(def expected-form-attachment-fields
+  [{:id "attachment1",
+    :fieldType "attachment",
+    :label {:fi "FI: Liite 1"}}
+   {:id "attachment2",
+    :fieldType "attachment",
+    :label {:fi "FI: Liite 2"},
+    :children-of "ryhma-1"}
+   {:id "attachment3",
+    :fieldType "attachment",
+    :label {:fi "FI: Liite 3"}}])
+
+(deftest extract-attachments-from-form
+  (let [attachments (util/form-attachment-fields test-form-with-attachments-everywhere)]
+    (is (= attachments expected-form-attachment-fields))))
+
+(deftest liitepyynnot-for-selected-hakukohteet-are-in-correct-order
   (let [selected-hakukohde-oids ["hakukohde_oid"]
-        form-fields {:attachment3 {:label "label3"}
-                     :attachment2 {:label "label2"}
-                     :attachment1 {:label "label1"}}
+        form-attachment-fields expected-form-attachment-fields
         application {:answers
                      {:attachment1 {:key "attachment1" :values "value1"}
                       :attachment3 {:key "attachment3" :values "value3"}
@@ -19,25 +59,24 @@
                                                       "attachment2" "checked"
                                                       "attachment1" "checked"}}
         expected-value  [{:key :attachment1,
-                          :state "checked",
+                          :state nil,
                           :values "value1",
-                          :label "label1",
+                          :label {:fi "FI: Liite 1"},
                           :hakukohde-oid "hakukohde_oid"}
                          {:key :attachment2,
-                          :state "checked",
+                          :state nil,
                           :values "value2",
-                          :label "label2",
+                          :label {:fi "FI: Liite 2"},
                           :hakukohde-oid "hakukohde_oid"}
                          {:key :attachment3,
-                          :state "checked",
+                          :state nil,
                           :values "value3",
-                          :label "label3",
+                          :label {:fi "FI: Liite 3"},
                           :hakukohde-oid "hakukohde_oid"}]
 
         result (liitepyynnot-for-selected-hakukohteet
             [selected-hakukohde-oids
-             form-fields
+             form-attachment-fields
              application
              liitepyynnot-for-hakukohteet] 0)]
     (is (= result expected-value))))
-

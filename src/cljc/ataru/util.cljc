@@ -73,6 +73,12 @@
        flatten-form-fields
        (group-by-first (comp keyword :id))))
 
+(defn form-attachment-fields [form]
+  (->> form
+       :content
+       flatten-form-fields
+       (filter #(= "attachment" (:fieldType %)))))
+
 (defn- get-readable-koodi-value
   [koodisto value]
   (-> (filter #(= value (:value %)) koodisto)

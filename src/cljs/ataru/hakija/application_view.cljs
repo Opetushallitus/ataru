@@ -88,7 +88,7 @@
             [editable-fields form submit-status]))))))
 
 (defn application-contents []
-  (let [form                   (subscribe [:state-query [:form]]) ;; petar for read-only reads directly from here and it's OK
+  (let [form                   (subscribe [:state-query [:form]])
         load-failure?          (subscribe [:state-query [:error :code]])
         can-apply?             (subscribe [:application/can-apply?])
         editing?               (subscribe [:state-query [:application :editing?]])

@@ -1737,7 +1737,7 @@
                                                                          attachment-keys-of-liitepyynto
                                                                          attachments-with-inconsistent-visibility)]
                            (dispatch [:virkailija-attachments/toggle-attachment-selection attachments-to-toggle])))}]
-          [:p.application__attachment-review-row-label (some #(-> review :label % not-empty) [lang :fi :sv :en])] ; petar ovde se vidi pogresno sortiran teskst
+          [:p.application__attachment-review-row-label (some #(-> review :label % not-empty) [lang :fi :sv :en])]
           (if @list-opened
             [:div.application-handling__review-state-list
              (doall
@@ -1795,7 +1795,7 @@
                 text]
                text)])]]))))
 
-(defn- attachment-review-area [reviews lang]                ;; PETAR reviews are in wrong order
+(defn- attachment-review-area [reviews lang]
   (let [all-keys                 (->> (vals reviews)
                                       (mapcat #(-> % ffirst :values flatten))
                                       (keep :key)
@@ -1804,7 +1804,6 @@
                                       (filter (fn [attachment-key]
                                                 @(subscribe [:virkailija-attachments/attachment-selected? attachment-key])))
                                       (set))]
-    (println "petar review area")
     [:div.application-handling__attachment-review-container.animated
      {:class (str (if @(subscribe [:state-query [:application :show-attachment-reviews?]])
                     " fadeInRight"
@@ -1819,7 +1818,7 @@
                             @(subscribe [:editor/virkailija-translation :of-hakukohde]))
                           (.toLowerCase @(subscribe [:editor/virkailija-translation :attachments]))
                           (count (keys reviews)))]]
-        [:div.application__attachment-review-row            ; petar ovo je onaj "lataa liitteet" red, prvi
+        [:div.application__attachment-review-row
          [:div.application__attachment-review-info-row
           [:input.application-handling__attachment-download-checkbox
            {:type      "checkbox"
@@ -1850,7 +1849,7 @@
             @(subscribe [:editor/virkailija-translation :load-attachments])]]]]
         (doall (for [all-similar-attachments (vals reviews)]
                  ^{:key (:key (ffirst all-similar-attachments))}
-                 [attachment-review-row selected-attachment-keys all-similar-attachments lang]))])])) ; PETAR OVO PISE JEDAN ATACMENT
+                 [attachment-review-row selected-attachment-keys all-similar-attachments lang]))])]))
 
 (defn application-review []
   (let [settings-visible        (subscribe [:state-query [:application :review-settings :visible?]])
@@ -1862,11 +1861,10 @@
        :reagent-render
        (fn []
          (let [selected-review-hakukohde        @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-               attachment-reviews-for-hakukohde (->> @(subscribe [:virkailija-attachments/liitepyynnot-for-selected-hakukohteet]) ; PETAR odavde dobije nesortirano
+               attachment-reviews-for-hakukohde (->> @(subscribe [:virkailija-attachments/liitepyynnot-for-selected-hakukohteet])
                                                      (map (fn [liitepyynto]
                                                             [liitepyynto (:hakukohde-oid liitepyynto)]))
                                                      (group-by (comp :key first)))
-               dummy                            (println "petar evo ga lose sortiran reviews " attachment-reviews-for-hakukohde)
                lang                             (subscribe [:application/lang])
                show-attachment-review?          @(subscribe [:state-query [:application :show-attachment-reviews?]])]
            [:div.application-handling__review-outer
@@ -1896,7 +1894,7 @@
                       [review-settings-checkbox :attachment-handling])
                     [:span.application-handling__attachment-review-toggle-container-link
                      {:on-click (fn []
-                                  (when-not @settings-visible ; PETAR ovde ukljucuje i iskljucuje gledanje atacmenta
+                                  (when-not @settings-visible
                                     (dispatch [:state-update #(assoc-in % [:application :show-attachment-reviews?] (not show-attachment-review?))])))}
                      [:span.application-handling__attachment-review-toggle
                       (if show-attachment-review?

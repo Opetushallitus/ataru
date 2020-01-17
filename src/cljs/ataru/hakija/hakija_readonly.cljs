@@ -250,7 +250,7 @@
          {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice content application lang question-group-index]
          {:fieldClass "formField" :fieldType (:or "dropdown" "singleChoice")} [selectable content application lang question-group-index]
          {:fieldClass "formField" :fieldType (:or "textField" "textArea")} [text content application lang question-group-index]
-         {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang question-group-index] ; petar staticki u ispravnom redosledu se generise ovde
+         {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang question-group-index]
          {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content]))
 
 (defn- application-language [{:keys [lang]}]

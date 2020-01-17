@@ -68,22 +68,23 @@
 
 (defn liitepyynnot-for-selected-hakukohteet
   [[selected-hakukohde-oids
-    form-fields
+    form-attachment-fields
     application
     liitepyynnot-for-hakukohteet]
    _]
-  (transduce (comp (map (fn [hakukohde-oid]               ;; PETAR this thing is eventually creating the list of attachments, in random order
+  (transduce (comp (map (fn [hakukohde-oid]
                           (when-let [liitepyynnot-for-hakukohde (-> hakukohde-oid keyword liitepyynnot-for-hakukohteet)]
-                            (map (fn [[liitepyynto-key-str liitepyynto-state]]
-                                   (let [liitepyynto-key (keyword liitepyynto-key-str)
-                                         values          (-> application :answers liitepyynto-key :values)
-                                         label           (-> form-fields liitepyynto-key :label)]
+                            (map (fn [{liitepyynto-key-str :id
+                                       liitepyynto-label :label}]
+                                   (let [liitepyynto-key    (keyword liitepyynto-key-str)
+                                         values             (-> application :answers liitepyynto-key :values)
+                                         liitepyynto-state  (liitepyynnot-for-hakukohde liitepyynto-key)]
                                      {:key           liitepyynto-key
                                       :state         liitepyynto-state
                                       :values        values
-                                      :label         label
+                                      :label         liitepyynto-label
                                       :hakukohde-oid hakukohde-oid}))
-                                 liitepyynnot-for-hakukohde))))
+                              form-attachment-fields))))
                    (filter (comp not nil?))
                    (mapcat identity))
              conj
@@ -93,9 +94,9 @@
   :virkailija-attachments/liitepyynnot-for-selected-hakukohteet
   (fn []
     [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-     (re-frame/subscribe [:application/selected-form-fields-by-id])
+     (re-frame/subscribe [:application/selected-form-attachment-fields])
      (re-frame/subscribe [:application/selected-application])
-     (re-frame/subscribe [:state-query [:application :review :attachment-reviews]])]) ; petar ovde uzima listu attachmenta, iz stanja aplikacije ocigledno
+     (re-frame/subscribe [:state-query [:application :review :attachment-reviews]])])
   liitepyynnot-for-selected-hakukohteet)
 
 (re-frame/reg-sub

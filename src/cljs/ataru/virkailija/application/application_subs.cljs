@@ -28,7 +28,14 @@
   (fn [_ _]
     (re-frame/subscribe [:application/selected-form]))
   (fn selected-form-fields-by-id [form _]
-    (u/form-fields-by-id form)))                            ; petar ovde fino transformise form contents elemente
+    (u/form-fields-by-id form)))
+
+(re-frame/reg-sub
+  :application/selected-form-attachment-fields
+  (fn [_ _]
+    (re-frame/subscribe [:application/selected-form]))
+  (fn selected-form-attachment-fields [form _]
+    (u/form-attachment-fields form)))
 
 (re-frame/reg-sub
   :application/events

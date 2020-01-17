@@ -361,7 +361,7 @@
         (text content application lang group-idx)
         [selectable content application lang group-idx])
       {:fieldClass "formField" :fieldType (:or "textField" "textArea")} (text content application lang group-idx)
-      {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang group-idx] ; Petar mozda ovde stampa taj attachment readonly
+      {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang group-idx]
       {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content]
       {:fieldClass "pohjakoulutusristiriita"} nil)))
 
