@@ -1,8 +1,8 @@
 (ns ataru.virkailija.application.attachments.virkailija-attachment-subs
   (:require [re-frame.core :as re-frame]))
 
-(defonce attachment-preview-pages-to-display
-         (get (->> {} clj->js (set! js/config)) "attachment-preview-pages-to-display" 15))
+(defn attachment-preview-pages-to-display []
+         (get (js->clj js/config) "attachment-preview-pages-to-display" 15))
 
 (re-frame/reg-sub
   :virkailija-attachments/attachment-selected?
