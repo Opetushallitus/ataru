@@ -975,7 +975,15 @@
                                         field-descriptor
                                         row-idx
                                         value
-                                        question-group-idx])))]
+                                        question-group-idx])))
+            required?        (is-required-field? field-descriptor)]
+        (when (and (not value) (not required?))
+            ;Pre-set an empty string to preserve adjacent field structure broken by nil values.
+            (dispatch [:application/set-adjacent-field-answer
+                                                         field-descriptor
+                                                         row-idx
+                                                         ""
+                                                         question-group-idx]))
         [:input.application__form-text-input
          {:class    (if show-error?
                                " application__form-field-error"
