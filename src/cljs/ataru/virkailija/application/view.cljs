@@ -1892,7 +1892,7 @@
                    [:div.application-handling__attachment-review-toggle-container
                     (when @settings-visible
                       [review-settings-checkbox :attachment-handling])
-                    [:span.application-handling__attachment-review-toggle-container-link
+                    [:span.application-handling__attachment-review-toggle-container-link ;; petar ovo treba da se vidi
                      {:on-click (fn []
                                   (when-not @settings-visible
                                     (dispatch [:state-update #(assoc-in % [:application :show-attachment-reviews?] (not show-attachment-review?))])))}

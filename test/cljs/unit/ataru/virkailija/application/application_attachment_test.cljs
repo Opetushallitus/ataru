@@ -21,7 +21,10 @@
              :label      {:fi ""}
              :children   [{:id        "attachment2"
                            :fieldType "attachment"
-                           :label     {:fi "FI: Liite 2"}}]}
+                           :label     {:fi "FI: Liite 2"}}
+                          {:id        "attachmentInvisible"
+                           :fieldType "attachment"
+                           :label     {:fi "FI: Liite invisible"}}]}
             {:id        "first-name"
              :fieldType "textField"
              :label     {:fi "FI: Etunimet"}}
@@ -39,6 +42,10 @@
    {:id "attachment2",
     :fieldType "attachment",
     :label {:fi "FI: Liite 2"},
+    :children-of "ryhma-1"}
+   {:id "attachmentInvisible",
+    :fieldType "attachment",
+    :label {:fi "FI: Liite invisible"},
     :children-of "ryhma-1"}
    {:id "attachment3",
     :fieldType "attachment",
