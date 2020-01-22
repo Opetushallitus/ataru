@@ -85,5 +85,5 @@
             [selected-hakukohde-oids
              form-attachment-fields
              application
-             liitepyynnot-for-hakukohteet] 0)]
+             liitepyynnot-for-hakukohteet])]
     (is (= result expected-value))))

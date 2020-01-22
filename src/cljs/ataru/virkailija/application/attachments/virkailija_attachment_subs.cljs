@@ -1,6 +1,8 @@
 (ns ataru.virkailija.application.attachments.virkailija-attachment-subs
   (:require [re-frame.core :as re-frame]))
 
+(enable-console-print!)                                     ; petar remove later
+
 (defn attachment-preview-pages-to-display []
          (get (js->clj js/config) "attachment-preview-pages-to-display" 15))
 
@@ -70,26 +72,34 @@
   [[selected-hakukohde-oids
     form-attachment-fields
     application
-    liitepyynnot-for-hakukohteet]
-   _]
-  (transduce (comp (map (fn [hakukohde-oid]
-                          (when-let [liitepyynnot-for-hakukohde (-> hakukohde-oid keyword liitepyynnot-for-hakukohteet)]
-                            (->> form-attachment-fields
-                                 (map (fn [{liitepyynto-key-str :id
-                                            liitepyynto-label :label}]
-                                        (let [liitepyynto-key    (keyword liitepyynto-key-str)
-                                              values             (-> application :answers liitepyynto-key :values)
-                                              liitepyynto-state  (liitepyynnot-for-hakukohde liitepyynto-key)]
-                                          {:key           liitepyynto-key
-                                           :state         liitepyynto-state
-                                           :values        values
-                                           :label         liitepyynto-label
-                                           :hakukohde-oid hakukohde-oid})))
-                                 (filter #(contains? liitepyynnot-for-hakukohde (name (:key %))))))))
-                   (filter (comp not nil?))
-                   (mapcat identity))
-             conj
-             selected-hakukohde-oids))
+    liitepyynnot-for-hakukohteet]]
+  (js/console.log "petar here we go")
+  (js/console.log (pr-str selected-hakukohde-oids))
+  (js/console.log (pr-str form-attachment-fields))
+  (js/console.log (pr-str application))
+  (js/console.log (pr-str liitepyynnot-for-hakukohteet))
+  (let [result
+        (transduce (comp (map (fn [hakukohde-oid]
+                                (when-let [liitepyynnot-for-hakukohde (-> hakukohde-oid keyword liitepyynnot-for-hakukohteet)]
+                                  (->> form-attachment-fields
+                                       (map (fn [{liitepyynto-key-str :id
+                                                  liitepyynto-label :label}]
+                                              (let [liitepyynto-key    (keyword liitepyynto-key-str)
+                                                    values             (-> application :answers liitepyynto-key :values)
+                                                    liitepyynto-state  (liitepyynnot-for-hakukohde liitepyynto-key)]
+                                                {:key           liitepyynto-key
+                                                 :state         liitepyynto-state
+                                                 :values        values
+                                                 :label         liitepyynto-label
+                                                 :hakukohde-oid hakukohde-oid})))
+                                       (filter #(contains? liitepyynnot-for-hakukohde (name (:key %))))))))
+                         (filter (comp not nil?))
+                         (mapcat identity))
+                   conj
+                   selected-hakukohde-oids)]
+    (js/console.log "petar result")
+    (js/console.log (pr-str result))
+    result))
 
 (re-frame/reg-sub
   :virkailija-attachments/liitepyynnot-for-selected-hakukohteet
