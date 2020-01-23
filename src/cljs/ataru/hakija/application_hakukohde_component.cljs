@@ -218,7 +218,7 @@
       (if @(subscribe [:application/hakukohteet-full?])
         (let [max-hakukohteet @(subscribe [:application/max-hakukohteet])]
           [:span.application__hakukohde-max-selected
-           (translations/get-hakija-translation :applications_at_most max-hakukohteet lang)])
+           (translations/get-hakija-translation :applications_at_most lang max-hakukohteet)])
         [:div.application__hakukohde-selection-open-search-wrapper
          [:a.application__hakukohde-selection-open-search
           {:on-click hakukohde-search-toggle-event-handler}
