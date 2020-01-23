@@ -92,7 +92,7 @@
                                                  :values        values
                                                  :label         liitepyynto-label
                                                  :hakukohde-oid hakukohde-oid})))
-                                       (filter #(contains? liitepyynnot-for-hakukohde (name (:key %))))))))
+                                       (filter #(contains? liitepyynnot-for-hakukohde (:key %)))))))
                          (filter (comp not nil?))
                          (mapcat identity))
                    conj
