@@ -91,6 +91,16 @@
                        :options                []
                        :fieldType              "attachment"}]})
 
+(def form-hidden-attachment [{:label                  {:fi "Toka liite"
+                                                      :sv ""}
+                             :fieldClass             "formField"
+                             :metadata               metadata
+                             :belongs-to-hakukohteet ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
+                             :id                     "164954b5-7b23-4774-bd44-hidden"
+                             :params                 {:hidden true}
+                             :options                []
+                             :fieldType              "attachment"}])
+
 (def more-questions
   [{:fieldClass "formField"
     :metadata   metadata
