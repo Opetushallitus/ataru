@@ -848,7 +848,7 @@
              [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :identified]) :only-identified :identified]]
             [:div.application-handling__filter-group
              [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :active-status])]
-             [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translations :active-status-active]) :active-status :active]
+             [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :active-status-active]) :active-status :active]
              [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :active-status-passive]) :active-status :passive]]]
            [:div.application-handling__popup-column
             [:div.application-handling__filter-group
