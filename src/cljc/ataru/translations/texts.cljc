@@ -267,8 +267,8 @@
    :page-title                                  {:fi "Opintopolku – hakulomake"
                                                  :en "Studyinfo – application form"
                                                  :sv "Studieinfo – ansökningsblankett"}
-   :permission-for-electronic-transactions      {:fi "Opiskelijavalinnan tulokset saa lähettää minulle sähköisesti."
-                                                 :sv "Mitt antagningsresultat får skickas elektroniskt till mig."
+   :permission-for-electronic-transactions      {:fi "Lupa sähköiseen asiointiin"
+                                                 :sv "Medgivande till elektronisk kommunikation"
                                                  :en "Consent for electronic communication."}
    :permission-for-electronic-transactions-info {:fi "Täyttämällä sähköisen hakulomakkeen annat samalla luvan siihen, että opiskelijavalintaan liittyvä viestintä voidaan hoitaa pelkästään sähköisesti. Jos et suostu näihin ehtoihin, ota yhteyttä ensisijaisen hakutoiveesi korkeakoulun hakijapalveluihin."
                                                  :sv "Genom att fylla i denna elektroniska ansökningsblankett ger du samtidigt ditt medgivande till att kommunikationen gällande studerandeantagningen kan skötas enbart elektroniskt. Om du inte går med på dessa villkor, kontakta ansökningsservicen vid högskolan."
