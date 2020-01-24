@@ -63,7 +63,7 @@
                       :attachment3 {:key "attachment3" :values "value3"}
                       :attachment2 {:key "attachment2" :values "value2"}}}
         liitepyynnot-for-hakukohteet {:hakukohde_oid {:attachment3 "checked"
-                                                      :attachment2 "checked"
+                                                      :attachment2 "attachment-missing"
                                                       :attachment1 "checked"}}
         expected-value [{:key           :attachment1,
                          :state         "checked",
@@ -71,7 +71,7 @@
                          :label         {:fi "FI: Liite 1"},
                          :hakukohde-oid "hakukohde_oid"}
                         {:key           :attachment2,
-                         :state         "checked",
+                         :state         "attachment-missing",
                          :values        "value2",
                          :label         {:fi "FI: Liite 2"},
                          :hakukohde-oid "hakukohde_oid"}
