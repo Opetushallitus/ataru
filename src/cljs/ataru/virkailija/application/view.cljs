@@ -2082,11 +2082,8 @@
         applications            (subscribe [:application/applications-to-render])
         has-more?               (subscribe [:application/has-more-applications?])
         loading?                (subscribe [:application/fetching-applications?])
-        expanded                (subscribe [:state-query [:application :application-list-expanded?]])
-        changes                 (subscribe [:state-query [:application :form-changes]])
-        ]
+        expanded                (subscribe [:state-query [:application :application-list-expanded?]])]
     (fn []
-      (js/console.log (str "--- 22 form changes " @changes))
       [:div
        [:div.application-handling__overview
         [application-search-control]
