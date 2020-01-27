@@ -19,6 +19,7 @@
   (when (:oid hakukohde)
     {:oid                                                         (:oid hakukohde)
      :name                                                        (:name hakukohde)
+     :can-be-applied-to?                                          (:can-be-applied-to? hakukohde)
      :hakukohderyhmat                                             (filter #(contains? hakukohderyhmat %) (:ryhmaliitokset hakukohde))
      :kohdejoukko-korkeakoulu?                                    (clojure.string/starts-with?
                                                                    (:kohdejoukko-uri haku)

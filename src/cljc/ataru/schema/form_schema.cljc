@@ -273,6 +273,7 @@
 (s/defschema FormTarjontaHakukohde
   {:oid                                                                          s/Str
    :name                                                                         LocalizedStringOptional
+   :can-be-applied-to?                                                           s/Bool
    :kohdejoukko-korkeakoulu?                                                     s/Bool
    :tarjoaja-name                                                                LocalizedStringOptional
    (s/optional-key :form-key)                                                    (s/maybe s/Str)
@@ -320,7 +321,7 @@
 
 (s/defschema Hakukohde
   {:oid                                                                          s/Str
-   :tila                                                                         s/Keyword
+   :can-be-applied-to?                                                           s/Bool
    :haku-oid                                                                     s/Str
    :koulutus-oids                                                                [s/Str]
    :name                                                                         LocalizedStringOptional

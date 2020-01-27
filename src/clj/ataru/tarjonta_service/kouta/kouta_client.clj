@@ -50,12 +50,12 @@
      (when (some? (:hakulomakeAtaruId haku))
        {:ataru-form-key (:hakulomakeAtaruId haku)}))))
 
-(defn- parse-hakukohde-tila
+(defn- parse-can-be-applied-to?
   [hakukohde]
   (case (:tila hakukohde)
-    "tallennettu" :luonnos
-    "julkaistu"   :julkaistu
-    "arkistoitu"  :julkaistu
+    "tallennettu" false
+    "julkaistu"   true
+    "arkistoitu"  false
     (throw
      (new RuntimeException
           (str "Unknown hakukohteen tila " (:tila hakukohde)
@@ -65,7 +65,7 @@
   [hakukohde tarjoajat]
   (merge
    {:oid                                                         (:oid hakukohde)
-    :tila                                                        (parse-hakukohde-tila hakukohde)
+    :can-be-applied-to?                                          (parse-can-be-applied-to? hakukohde)
     :haku-oid                                                    (:hakuOid hakukohde)
     :koulutus-oids                                               [(:toteutusOid hakukohde)]
     :name                                                        (:nimi hakukohde)

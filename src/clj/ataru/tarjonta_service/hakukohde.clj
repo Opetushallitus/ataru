@@ -54,9 +54,11 @@
 (defn- populate-hakukohteet-field
   [field tarjonta-info]
   (-> field
-      (assoc :options
-             (map hakukohde->option
-                  (get-in tarjonta-info [:tarjonta :hakukohteet])))
+      (assoc :options (into []
+                            (comp
+                             (filter :can-be-applied-to?)
+                             (map hakukohde->option))
+                            (get-in tarjonta-info [:tarjonta :hakukohteet])))
       (assoc-in [:params :max-hakukohteet] (get-in tarjonta-info [:tarjonta :max-hakukohteet]))))
 
 (defn- update-hakukohde-question-on-top-level

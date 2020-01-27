@@ -13,8 +13,6 @@
   [search-result]
   (mapcat :tulokset (:tulokset search-result)))
 
-(def allowed-hakukohde-tilas #{:valmis :julkaistu})
-
 (defn fetch-or-cached-hakukohde-search
   [hakukohde-search-cache haku-oid organization-oid]
   (cache/get-from hakukohde-search-cache
@@ -30,13 +28,10 @@
                                   hakukohde-search-cache]
   TarjontaService
   (get-hakukohde [this hakukohde-oid]
-    (when-let [hakukohde (cache/get-from hakukohde-cache hakukohde-oid)]
-      (when (contains? allowed-hakukohde-tilas (:tila hakukohde))
-        hakukohde)))
+    (cache/get-from hakukohde-cache hakukohde-oid))
 
   (get-hakukohteet [this hakukohde-oids]
-    (filter #(contains? allowed-hakukohde-tilas (:tila %))
-            (vals (cache/get-many-from hakukohde-cache hakukohde-oids))))
+    (vals (cache/get-many-from hakukohde-cache hakukohde-oids)))
 
   (get-hakukohde-name [this hakukohde-oid]
     (:name (cache/get-from hakukohde-cache hakukohde-oid)))

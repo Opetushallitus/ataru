@@ -57,16 +57,16 @@
           (not (clojure.string/blank? (:tarkenne response)))
           (assoc :tarkenne (:tarkenne response))))
 
-(defn- parse-hakukohde-tila
+(defn- parse-can-be-applied-to?
   [hakukohde]
   (case (:tila hakukohde)
-    "POISTETTU"     :poistettu
-    "LUONNOS"       :luonnos
-    "VALMIS"        :valmis
-    "JULKAISTU"     :julkaistu
-    "PERUTTU"       :peruttu
-    "KOPIOITU"      :kopioitu
-    "PUUTTEELLINEN" :puutteellinen
+    "POISTETTU"     false
+    "LUONNOS"       false
+    "VALMIS"        true
+    "JULKAISTU"     true
+    "PERUTTU"       false
+    "KOPIOITU"      false
+    "PUUTTEELLINEN" false
     (throw
      (new RuntimeException
           (str "Unknown hakukohteen tila " (:tila hakukohde)
@@ -75,7 +75,7 @@
 (defn parse-hakukohde
   [hakukohde]
   (merge {:oid                                                         (:oid hakukohde)
-          :tila                                                        (parse-hakukohde-tila hakukohde)
+          :can-be-applied-to?                                          (parse-can-be-applied-to? hakukohde)
           :haku-oid                                                    (:hakuOid hakukohde)
           :koulutus-oids                                               (map :oid (:koulutukset hakukohde))
           :name                                                        (localized-names (:hakukohteenNimet hakukohde))
