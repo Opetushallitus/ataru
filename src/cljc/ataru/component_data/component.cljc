@@ -189,6 +189,7 @@
          :label (:permissions texts/translation-mapping)
          :children [(assoc (info-element metadata)
                            :text (:lupatiedot-info texts/translation-mapping))
+                    (lupa-sahkoiseen-asiointiin metadata)
                     (koulutusmarkkinointilupa metadata)
                     (valintatuloksen-julkaisulupa metadata)
                     (asiointikieli metadata)]))

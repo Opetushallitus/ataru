@@ -21,11 +21,11 @@
    :add-row                                     {:fi "Lisää rivi"
                                                  :sv "Lägg till rad"
                                                  :en "Add row"}
-   :allow-publishing-of-results-online          {:fi "Opiskelijavalinnan tulokseni saa julkaista internetissä?"
-                                                 :sv "Mitt antagningsresultat får publiceras på internet?"
-                                                 :en "Opiskelijavalinnan tulokseni saa julkaista internetissä?"}
+   :allow-publishing-of-results-online          {:fi "Jos tulen hyväksytyksi, oppilaitos voi julkaista nimeni omilla verkkosivuillaan."
+                                                 :sv "Om jag blir antagen, får läroanstalen publicera mitt namn på sin webbplats."
+                                                 :en "Education institution may publish my admission results on their web page."}
    :allow-use-of-contact-information            {:fi "Annan suostumuksen yhteystietojeni luovuttamiseen koulutusta koskevaa suoramarkkinointia varten."
-                                                 :sv "Min kontaktinformation får användas för utbildningsmarknadsföring?"
+                                                 :sv "Mina kontaktuppgifter får överlåtas för direkt marknadsföring angående utbildning."
                                                  :en "My contact information can be given to third parties for the purpose of direct education marketing."}
    :application-can-be-found-here               {:fi "Hakemuksesi löytyy täältä"
                                                  :sv "Din ansökan kan hittas här"
@@ -104,7 +104,7 @@
                                                  :en ["Check " " answers"]}
    :contact-language                            {:fi "Asiointikieli"
                                                  :sv "Ärendespråk"
-                                                 :en "Asiointikieli"}
+                                                 :en "Contact language"}
    :contact-language-info                       {:fi "Valitse kieli, jolla haluat vastaanottaa opiskelijavalintaan liittyviä tietoja. Toiveesi otetaan huomioon mahdollisuuksien mukaan."
                                                  :sv "Välj det språk på vilket du vill få information om studerandeantagningen. Ditt önskemål tas i beaktande om möjligt."
                                                  :en "Choose the language in which you wish to receive information regarding the student selection. Your choice will be taken into consideration if possible."}
@@ -228,15 +228,9 @@
    :liitepyynto-for-hakukohde                   {:fi "Liitepyyntö kuuluu hakukohteisiin:"
                                                  :en "Request for attachment is for study programmes:"
                                                  :sv "Begäran om bilagor berör ansökningsmål:"}
-   :lupatiedot-info                             {:fi "Tarkista hakulomakkeelle täyttämäsi tiedot huolellisesti ennen hakulomakkeen lähettämistä. Opiskelijavalinta voidaan purkaa, jos olet antanut vääriä tietoja. Hakemuksesi kaikki tiedot tallennetaan opiskelijavalintarekisteriin (L 884/2017). [Opintopolun tietosuojaseloste](https://opintopolku.fi/wp/tietosuojaseloste/).
-
-Saat vahvistusviestin vastaanotetusta hakulomakkeesta sähköpostiisi."
-                                                 :sv "Kontrollera noggrant de uppgifter som du har angett i ansökningsblanketten innan du skickar ansökningsblanketten. Antagningen av studerande kan hävas om du har gett felaktiga uppgifter. Alla uppgifter i din ansökan sparas i antagningsregistret (L 884/2017). [Studieinfors dataskyddsbeskrivning] (https://studieinfo.fi/wp/dataskyddsbeskrivning).
-
-Du får i din e-post ett bekräftelsemeddelande över att ansökningsblanketten har kommit fram."
-                                                 :en "Please check all the information you have given in the application before you submit the application. If you have given false information, your admission can be withdrawn. The information you have given in this application will be stored in the student admissions register (Act 884/2017). [Studyinfo's register description](https://studyinfo.fi/wp2/en/register/).
-
-You will receive a confirmation of your application to your email."}
+   :lupatiedot-info                             {:fi "Tarkista hakulomakkeelle täyttämäsi tiedot huolellisesti ennen hakulomakkeen lähettämistä. \n\nHakemuksella antamiasi tietoja käytetään opiskelijavalintaan. Näiden tietojen lisäksi opiskelijavalinnassa käytetään Perusopetuksen, lukiokoulutuksen ja ammatillisen koulutuksen valtakunnalliseen KOSKI-tietovarantoon tallennettuja tietoja, Ylioppilastutkintolautakunnasta ja korkeakouluista saatavia tutkinto- ja arvosanatietoja sekä Väestötietojärjestelmästä saatavia henkilötietoja.  Henkilötietojesi käsittely perustuu lakiin valtakunnallisista opinto- ja tutkintorekistereistä (884/2017).\n\nOpiskelijavalinnan jälkeen tietosi siirtyvät korkeakoululle, josta sait opiskelupaikan. Tietojasi voidaan lakiin perustuen luovuttaa myös muille viranomaisille sekä tutkimustarkoitukseen.\n\nTiedot säilytetään lain mukaan viisi vuotta, jonka jälkeen tiedot siirretään Kansallisarkiston päätöksen mukaan pysyvään säilytykseen. Opiskelupaikan vastaanottamistiedot säilytetään lain mukaan pysyvästi.\n\nSinulla on oikeus tarkastaa tietosi sekä vaatia tietojen oikaisemista tai käsittelyn rajoittamista. Sinulla on myös oikeus tehdä valitus tietosuojavaltuutetulle.\n \nLisätietoja: [Opintopolun tietosuojaseloste](https://opintopolku.fi/wp/tietosuojaseloste/opintopolun-opiskelijavalintarekisterin-tietosuojaseloste/).\n\nSaat vahvistusviestin vastaanotetusta hakulomakkeesta sähköpostiisi."
+                                                 :sv "Kontrollera noggrant de uppgifter som du har angett i ansökningsblanketten innan du skickar ansökningsblanketten. \n\nDe uppgifter som du har gett i din ansökan används för att genomföra antagningen av studerande. Utöver dessa uppgifter används uppgifter som sparats i informationsresursen Koski, examens- och vitsordsuppgifter från Studentexamensnämnden och högskolorna samt personuppgifter från Befolkningsdatasystemet. Behandlingen av dina uppgifter bygger på lagen om nationella studie- och examensregister (884/2017).\n\nEfter att antagningen av studerande har gjorts, överförs dina uppgifter till den högskolan där du fick en studieplats. Dina uppgifter kan enligt lag också ges till andra myndigheter eller för forskning.\n\nUppgifterna sparas enligt lag i fem år, varefter de enligt Riksarkivets beslut bevaras permanent. Uppgifterna om mottagande av studieplats bevaras också permanent.\n\nDu har rätt att granska dina egna uppgifter och be att uppgifterna ändras eller att behandlingen av dem begränsas. Du har dessutom rätt att begära ändring hos dataombudsmannen. \n\nMer information: [Studieinfors dataskyddsbeskrivning] (https://studieinfo.fi/wp/dataskyddsbeskrivning/dataskyddsbeskrivning-for-studieinfos-antagningsregister/).\n\nDu får i din e-post ett bekräftelsemeddelande över att ansökningsblanketten har kommit fram."
+                                                 :en "Please check all the information you have given in the application before you submit the application. \n\nThe information given on the application will be used for student admission and selection purposes. In addition to this information, data stored on the National Data Register for Basic Education, General Upper Secondary Education and Vocational Education, data received from the Finnish Matriculation Examination Board and data regarding degrees and grades received from higher education institutes as well as personal data received from the Finnish Population Information System will be used in student admission and selection. The processing of personal data is based on the Act on the National Registers of Education Records, Qualifications and Degrees (884/2017).\n\nAfter the student admission and selection process your data is transferred to the higher education institute to which you have received the right to study. Your data can be transferred to other officials as well as for research purposes.\nData in the data registry are kept for five years, starting from the decision of student admission. After this, the data will be transferred to permanent storage, according to the decision made by the National Archives of Finland. Data concerning receiving the right to study are kept forever.\n\nYou have the right to demand rectification of false or inaccurate data as well as the right to demand the limitation of processing the data. Additionally, you have the right to file a complaint to a data protection supervisor.\n\nAdditional information: [Studyinfo's register description](https://studyinfo.fi/wp2/en/register/).\n\nYou will receive a confirmation of your application to your email."}
    :minute                                      {:fi "minuutti"
                                                  :en "minute"
                                                  :sv "minut"}
@@ -273,10 +267,10 @@ You will receive a confirmation of your application to your email."}
    :page-title                                  {:fi "Opintopolku – hakulomake"
                                                  :en "Studyinfo – application form"
                                                  :sv "Studieinfo – ansökningsblankett"}
-   :permission-for-electronic-transactions      {:fi "Opiskelijavalinnan tulokset saa lähettää minulle sähköisesti."
-                                                 :sv "Mitt antagningsresultat får skickas elektroniskt till mig."
+   :permission-for-electronic-transactions      {:fi "Lupa sähköiseen asiointiin"
+                                                 :sv "Medgivande till elektronisk kommunikation"
                                                  :en "Consent for electronic communication."}
-   :permission-for-electronic-transactions-info {:fi "Täyttämällä sähköisen hakulomakkeen annat samalla luvan siihen, että opiskelijavalintaan liittyvä viestintä hoidetaan pelkästään sähköisesti. Jos et suostu näihin ehtoihin, ota yhteyttä korkeakoulun hakijapalveluihin."
+   :permission-for-electronic-transactions-info {:fi "Täyttämällä sähköisen hakulomakkeen annat samalla luvan siihen, että opiskelijavalintaan liittyvä viestintä voidaan hoitaa pelkästään sähköisesti. Jos et suostu näihin ehtoihin, ota yhteyttä ensisijaisen hakutoiveesi korkeakoulun hakijapalveluihin."
                                                  :sv "Genom att fylla i denna elektroniska ansökningsblankett ger du samtidigt ditt medgivande till att kommunikationen gällande studerandeantagningen kan skötas enbart elektroniskt. Om du inte går med på dessa villkor, kontakta ansökningsservicen vid högskolan."
                                                  :en "By filling in this electronic application form you also give your consent that communication regarding student admissions can be carried out only by email. If you do not agree to these terms, please contact the admissions services of the higher education institution that you are applying to."}
    :permissions                                 {:fi "Lupatiedot"
