@@ -1935,8 +1935,8 @@
           show-not-yksiloity?           (and (some? person-oid)
                                              (not (-> application :person :yksiloity)))
           show-metadata-not-found?      @(subscribe [:state-query [:application :metadata-not-found]])
-          form-changes       @(subscribe [:state-query [:application :form-changes]])
-          changes-count      (count (:changed-ids form-changes))]
+          changes-count (count @(subscribe [:application/form-highlighted-fields]))
+          ]
       (when (or (or show-not-latest-form? (> changes-count 0))
                 show-creating-henkilo-failed?
                 show-not-yksiloity?
@@ -1953,7 +1953,9 @@
             (when (> changes-count 0) [:show-form-changes
                                        "Tämä on lomakkeen uusin, muuttunut versio. " [:a
                                                                      {:on-click (fn []
-                                                                                  (.scrollIntoView (first (array-seq (.getElementsByClassName js/document "form-highlighted"))) (js-obj "behavior" "smooth" "block" "center")))}
+                                                                                  (if-let [target (first (array-seq (.getElementsByClassName js/document "form-highlighted")))]
+                                                                                    (.scrollIntoView target (js-obj "behavior" "smooth" "block" "center")))
+                                                                                  )}
                                                                      [:span (str "Näytä muutokset (" changes-count ")") ]]
                                        ]))
           (when show-creating-henkilo-failed?
