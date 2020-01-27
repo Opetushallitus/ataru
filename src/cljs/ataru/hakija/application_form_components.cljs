@@ -886,7 +886,7 @@
       [attachment-filename component-id question-group-idx attachment-idx true]]
      [:div.application__form-attachment-list-item-sub-container.application__form-attachment-error-container
       (doall
-       (map-indexed (fn [i error]
+       (map-indexed (fn [i [error]]
                       ^{:key (str "attachment-error-" i)}
                       [:span.application__form-attachment-error
                        (tu/get-hakija-translation error lang)])
