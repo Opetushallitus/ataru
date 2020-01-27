@@ -846,9 +846,8 @@
 
 (defn- cancel-attachment-upload-button
   [field-descriptor question-group-idx attachment-idx]
-  (let [id       (keyword (:id field-descriptor))
-        confirm? (r/atom false)
-        lang     (subscribe [:application/cannot-edit? id])]
+  (let [confirm? (r/atom false)
+        lang     (subscribe [:application/form-language])]
     (fn [field-descriptor question-group-idx attachment-idx]
       [:div.application__form-attachment-remove-button-container
        [:button.application__form-attachment-remove-button
