@@ -1,7 +1,7 @@
 (ns ataru.virkailija.application.view
   (:require [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]
-            [ataru.cljs-util :as cljs-util :refer [wrap-scroll-to-first-changed]]
+            [ataru.cljs-util :as cljs-util]
             [ataru.translations.texts :refer [state-translations general-texts]]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as kvt]
             [ataru.util :as util]
@@ -928,7 +928,7 @@
          (subscribe [:state-query [:application :selection-state-counts]])]])]))
 
 (defn application-contents [{:keys [form application]}]
-  [wrap-scroll-to-first-changed [readonly-contents/readonly-fields form application]])
+  [readonly-contents/readonly-fields form application])
 
 (defn review-state-selected-row [on-click label multiple-values?]
   (let [settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])

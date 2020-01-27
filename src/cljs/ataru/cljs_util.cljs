@@ -23,10 +23,6 @@
                                                 (.scrollIntoViewIfNeeded node)
                                                 (.scrollIntoView node)))}))
 
-(def wrap-scroll-to-first-changed
-  (with-meta identity {:component-did-mount #(if-let [target (first (array-seq (.getElementsByClassName js/document "form-highlighted")))]
-                                               (.scrollIntoView target (js-obj "behavior" "smooth" "block" "center")))}))
-
 (defn debounce
   ([f] (debounce f 1000))
   ([f timeout]
