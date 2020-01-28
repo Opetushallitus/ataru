@@ -1,4 +1,4 @@
-(ns ataru.virkailija.application.application-attachment-test
+(ns ataru.virkailija.application.attachments.virkailija-attachment-subs-test
   (:require [cljs.test :refer-macros [deftest is]]
             [clojure.string :refer [includes?]]
             [re-frame.core :refer [dispatch subscribe]]
