@@ -71,26 +71,23 @@
     form-attachment-fields
     application
     liitepyynnot-for-hakukohteet]]
-  (let [result
-        (transduce (comp (map (fn [hakukohde-oid]
-                                (when-let [liitepyynnot-for-hakukohde (-> hakukohde-oid keyword liitepyynnot-for-hakukohteet)]
-                                  (->> form-attachment-fields
-                                       (map (fn [{liitepyynto-key-str :id
-                                                  liitepyynto-label :label}]
-                                              (let [liitepyynto-key    (keyword liitepyynto-key-str)
-                                                    values             (-> application :answers liitepyynto-key :values)
-                                                    liitepyynto-state  (liitepyynnot-for-hakukohde liitepyynto-key)]
-                                                {:key           liitepyynto-key
-                                                 :state         liitepyynto-state
-                                                 :values        values
-                                                 :label         liitepyynto-label
-                                                 :hakukohde-oid hakukohde-oid})))
-                                       (filter #(contains? liitepyynnot-for-hakukohde (:key %)))))))
-                         (filter (comp not nil?))
-                         (mapcat identity))
-                   conj
-                   selected-hakukohde-oids)]
-    result))
+  (mapcat (fn [hakukohde-oid]
+            (when-let [liitepyynnot-for-hakukohde (-> hakukohde-oid keyword liitepyynnot-for-hakukohteet)]
+              (into []
+                    (comp (filter #(-> hakukohde-oid keyword liitepyynnot-for-hakukohteet))
+                          (map (fn [{liitepyynto-key-str :id
+                                     liitepyynto-label   :label}]
+                                 (let [liitepyynto-key (keyword liitepyynto-key-str)
+                                       values (-> application :answers liitepyynto-key :values)
+                                       liitepyynto-state (liitepyynnot-for-hakukohde liitepyynto-key)]
+                                   {:key           liitepyynto-key
+                                    :state         liitepyynto-state
+                                    :values        values
+                                    :label         liitepyynto-label
+                                    :hakukohde-oid hakukohde-oid})))
+                          (filter #(contains? liitepyynnot-for-hakukohde (:key %))))
+                    form-attachment-fields)))
+          selected-hakukohde-oids))
 
 (re-frame/reg-sub
   :virkailija-attachments/liitepyynnot-for-selected-hakukohteet
