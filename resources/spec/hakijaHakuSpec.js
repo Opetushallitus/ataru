@@ -1,6 +1,7 @@
 ;(function() {
   const singleHakukohdeHakuOid = '1.2.246.562.29.65950024185'
   const multipleHakukohdeHakuOid = '1.2.246.562.29.65950024186'
+  const kkHakuOid = '1.2.246.562.29.65950024190'
 
   before(function() {
     loadInFrame('/hakemus/haku/' + singleHakukohdeHakuOid)
@@ -28,6 +29,22 @@
           'Ajoneuvonosturinkuljettajan ammattitutkinto – Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie'
         )
       })
+    })
+  })
+
+  describe('hakemus by haku KK', () => {
+    before(
+      function() {
+        return loadInFrame('/hakemus/haku/' + kkHakuOid)
+      },
+      wait.until(function() {
+        return formSections().length == 3
+      }, 10000)
+    )
+    it('PETAR does not show the details', () => {
+      expect(selectedHakukohdeTexts()).to.equal(
+        'Testihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie'
+      )
     })
   })
 

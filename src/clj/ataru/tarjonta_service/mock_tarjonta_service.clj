@@ -141,7 +141,12 @@
                                                                     86400000),
                                                      :nimet      {:kieli_sv ""
                                                                   :kieli_fi ""
-                                                                  :kieli_en ""}}]})})
+                                                                  :kieli_en ""}}]})
+   :1.2.246.562.29.65950024190 (merge
+                                 base-haku
+                                 {:oid              "1.2.246.562.29.65950024190"
+                                  :usePriority      true
+                                  :kohdejoukkoUri   "haunkohdejoukko_12#"})})
 
 (def hakukohde
   {:1.2.246.562.20.49028196522 base-hakukohde
