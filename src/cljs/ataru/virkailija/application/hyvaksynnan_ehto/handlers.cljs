@@ -46,11 +46,9 @@
 (re-frame/reg-event-fx
   :hyvaksynnan-ehto/get-ehto-hakukohteessa
   (fn [{db :db} [_ application-key hakukohde-oid]]
-    (let [rights (get-in db [:application
-                             :selected-application-and-form
-                             :application
-                             :rights-by-hakukohde
-                             hakukohde-oid])]
+    (let [rights (->> (get-in db [:application :selected-application-and-form :application :rights-by-hakukohde])
+                      (map second)
+                      (apply clojure.set/union))]
       (when (or (contains? rights :view-applications)
                 (contains? rights :edit-applications))
         {:db
