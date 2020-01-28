@@ -56,7 +56,7 @@
   (->> (:previews metadata)
        (map :key)
        (map #(str "/lomake-editori/api/files/content/" %))
-       (take attachment-preview-pages-to-display)))
+       (take (attachment-preview-pages-to-display))))
 
 (re-frame/reg-sub
   :virkailija-attachments/attachment-preview-urls
