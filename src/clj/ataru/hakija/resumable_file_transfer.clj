@@ -94,7 +94,7 @@
   (let [url                         (resolve-url :liiteri.files)
         start-time                  (System/currentTimeMillis)
         {:keys [status body error]} (http-client/post url {:throw-exceptions false
-                                                           :socket-timeout   (* 1000 300)
+                                                           :socket-timeout   (* 1000 60 10)
                                                            :cookie-policy    :standard
                                                            :multipart        [{:part-name "file"
                                                                                :content   (FileInputStream. file)
