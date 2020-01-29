@@ -141,10 +141,10 @@
   (f/formatter "dd.MM.yyyy HH:mm:ss" tz))
 
 (defn- log-late-submitted-application [application submitted-at session]
-  (audit-log/log {:new       (format "Hakija yritti palauttaa hakemuksen hakuajan päätyttyä: %s. Hakemus: %s"
-                                     (f/unparse modified-time-format submitted-at)
-                                     (cheshire.core/generate-string application))
-                  :operation audit-log/operation-new
+  (audit-log/log {:new       {:late-submitted-application (format "Hakija yritti palauttaa hakemuksen hakuajan päätyttyä: %s. Hakemus: %s"
+                                                     (f/unparse modified-time-format submitted-at)
+                                                     (cheshire.core/generate-string application))}
+                  :operation audit-log/operation-failed
                   :session   session
                   :id        {:email (util/extract-email application)}}))
 
