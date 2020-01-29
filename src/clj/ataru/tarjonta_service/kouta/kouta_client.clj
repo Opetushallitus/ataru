@@ -65,6 +65,7 @@
   [hakukohde tarjoajat]
   (merge
    {:oid                                                         (:oid hakukohde)
+    :hakukohteen-tiedot-url                                      (url-helper/resolve-url :kouta-app.hakukohde (:oid hakukohde))
     :can-be-applied-to?                                          (parse-can-be-applied-to? hakukohde)
     :haku-oid                                                    (:hakuOid hakukohde)
     :koulutus-oids                                               [(:toteutusOid hakukohde)]

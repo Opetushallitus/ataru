@@ -244,53 +244,53 @@
               (str @(subscribe [:editor/virkailija-translation :unknown-option]) " " value)
               (str @(subscribe [:editor/virkailija-translation :empty-option])))]]))])]])
 
-(defn- haku-row [haku-name haku-oid]
+(defn- haku-row [haku-oid]
   [:div.application__form-field
    [:div.application-handling__hakukohde-wrapper
     [:div.application-handling__review-area-haku-heading
-     (str haku-name " ")
-     (when haku-oid
+     (str @(subscribe [:application/haku-name haku-oid]) " ")
+     (when-let [url @(subscribe [:application/haun-tiedot-url haku-oid])]
        [:a.editor-form__haku-admin-link
-        {:href   (str "/tarjonta-app/index.html#/haku/" haku-oid)
+        {:href   url
          :target "_blank"}
         [:i.zmdi.zmdi-open-in-new]])]]])
 
-(defn- hakukohteet-list-row [hakukohde-oid selected?]
-  [:div.application__form-field
-   [:div.application-handling__hakukohde-wrapper.application-handling__hakukohde--selectable
-    {:class (when selected?
-              "application-handling__hakukohde--selected")
-     :on-click (fn [_]
-                 (dispatch [:application/select-review-hakukohde hakukohde-oid]))}
-    (when @(subscribe [:application/prioritize-hakukohteet?])
-      [:p.application__hakukohde-priority-number-readonly
-       @(subscribe [:application/hakukohde-priority-number hakukohde-oid])])
-    [:div
-     [:div.application-handling__review-area-hakukohde-heading
-      (str @(subscribe [:application/hakukohde-label hakukohde-oid]) " ")
-      [:a.editor-form__haku-admin-link
-       {:href   (str "/tarjonta-app/index.html#/hakukohde/" hakukohde-oid)
-        :target "_blank"}
-       [:i.zmdi.zmdi-open-in-new]]]
-     [:div.application-handling__review-area-koulutus-heading
-      @(subscribe [:application/hakukohde-description hakukohde-oid])]]]])
+(defn- hakukohteet-list-row [hakukohde-oid]
+  (let [selected-hakukohde-oids (set @(subscribe [:state-query [:application :selected-review-hakukohde-oids]]))
+        selected?               (contains? selected-hakukohde-oids hakukohde-oid)]
+    [:div.application__form-field
+     [:div.application-handling__hakukohde-wrapper.application-handling__hakukohde--selectable
+      {:class    (when selected?
+                   "application-handling__hakukohde--selected")
+       :on-click (fn [_]
+                   (dispatch [:application/select-review-hakukohde hakukohde-oid]))}
+      (when @(subscribe [:application/prioritize-hakukohteet?])
+        [:p.application__hakukohde-priority-number-readonly
+         @(subscribe [:application/hakukohde-priority-number hakukohde-oid])])
+      [:div
+       [:div.application-handling__review-area-hakukohde-heading
+        (str @(subscribe [:application/hakukohde-label hakukohde-oid]) " ")
+        [:a.editor-form__haku-admin-link
+         {:href   @(subscribe [:application/hakukohteen-tiedot-url hakukohde-oid])
+          :target "_blank"}
+         [:i.zmdi.zmdi-open-in-new]]]
+       [:div.application-handling__review-area-koulutus-heading
+        @(subscribe [:application/hakukohde-description hakukohde-oid])]]]]))
 
 (defn- hakukohteet [content]
-  (let [selected-hakukohde-oids (set @(subscribe [:state-query [:application :selected-review-hakukohde-oids]]))]
-    (when-let [hakukohteet (seq @(subscribe [:application/hakutoiveet]))]
-      [:div.application__wrapper-element.application__wrapper-element--border
-       [:div.application__wrapper-heading
-        [:h2 @(subscribe [:application/hakukohteet-header])]
-        [scroll-to-anchor content]]
-       [:div.application__wrapper-contents
-        {:class (when @(subscribe [:application/field-highlighted? :hakukohteet])
-                  "highlighted")
-         :id    "hakukohteet"}
-        [haku-row @(subscribe [:application/selected-application-haku-name])
-         @(subscribe [:state-query [:application :selected-application-and-form :application :haku]])]
-        (for [hakukohde-oid hakukohteet]
-          ^{:key (str "hakukohteet-list-row-" hakukohde-oid)}
-          [hakukohteet-list-row hakukohde-oid (contains? selected-hakukohde-oids hakukohde-oid)])]])))
+  (when-let [hakukohteet (seq @(subscribe [:application/hakutoiveet]))]
+    [:div.application__wrapper-element.application__wrapper-element--border
+     [:div.application__wrapper-heading
+      [:h2 @(subscribe [:application/hakukohteet-header])]
+      [scroll-to-anchor content]]
+     [:div.application__wrapper-contents
+      {:class (when @(subscribe [:application/field-highlighted? :hakukohteet])
+                "highlighted")
+       :id    "hakukohteet"}
+      [haku-row @(subscribe [:state-query [:application :selected-application-and-form :application :haku]])]
+      (for [hakukohde-oid hakukohteet]
+        ^{:key (str "hakukohteet-list-row-" hakukohde-oid)}
+        [hakukohteet-list-row hakukohde-oid])]]))
 
 (defn- person-info-module [content application lang]
   [:div.application__person-info-wrapper.application__wrapper-element

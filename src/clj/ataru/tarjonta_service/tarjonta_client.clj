@@ -75,6 +75,7 @@
 (defn parse-hakukohde
   [hakukohde]
   (merge {:oid                                                         (:oid hakukohde)
+          :hakukohteen-tiedot-url                                      (resolve-url :tarjonta-app.hakukohde (:oid hakukohde))
           :can-be-applied-to?                                          (parse-can-be-applied-to? hakukohde)
           :haku-oid                                                    (:hakuOid hakukohde)
           :koulutus-oids                                               (map :oid (:koulutukset hakukohde))

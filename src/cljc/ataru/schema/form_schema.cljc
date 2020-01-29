@@ -321,6 +321,7 @@
 
 (s/defschema Hakukohde
   {:oid                                                                          s/Str
+   :hakukohteen-tiedot-url                                                       s/Str
    :can-be-applied-to?                                                           s/Bool
    :haku-oid                                                                     s/Str
    :koulutus-oids                                                                [s/Str]
