@@ -811,12 +811,7 @@
                                   attachment-idx]))
         link @(subscribe [:application/attachment-download-link (:key file)])]
     [:div
-     (if (:final file)
-       [:a.application__form-attachment-filename
-        {:href link}
-        (:filename file)]
-       [:span.application__form-attachment-filename
-        (:filename file)])
+     [:span.application__form-attachment-filename (:filename file)]
      (when (and (some? (:size file)) show-size?)
        [:span (str " (" (util/size-bytes->str (:size file)) ")")])]))
 
