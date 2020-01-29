@@ -94,7 +94,7 @@
      [:div.application__selected-hakukohde-row--content
       [:div.application__hakukohde-header
        @(subscribe [:application/hakukohde-label hakukohde-oid])]
-      [:div.application__hakukohde-description              ; petar evo ovde je taj opis koji ne treba da se vidi
+      [:div.application__hakukohde-description
        @(subscribe [:application/hakukohde-description hakukohde-oid])]
       (when (not hakukohde-editable?)
         [:div.application__hakukohde-application-period-ended

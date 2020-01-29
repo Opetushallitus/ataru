@@ -146,7 +146,17 @@
                                  base-haku
                                  {:oid              "1.2.246.562.29.65950024190"
                                   :usePriority      true
-                                  :kohdejoukkoUri   "haunkohdejoukko_12#"})})
+                                  :kohdejoukkoUri   "haunkohdejoukko_12#"})
+   :1.2.246.562.29.65950024191 (merge
+                                 base-haku
+                                 {:oid              "1.2.246.562.29.65950024191"
+                                  :usePriority      true
+                                  :kohdejoukkoUri   "haunkohdejoukko_12#"
+                                  :ataruLomakeAvain "41101b4f-1762-49af-9db0-e3603adae3ae"
+                                  :hakukohdeOids    ["1.2.246.562.20.49028196523"
+                                                     "1.2.246.562.20.49028196524"
+                                                     "1.2.246.562.20.49028196525"
+                                                     "1.2.246.562.20.49028196526"]})})
 
 (def hakukohde
   {:1.2.246.562.20.49028196522 base-hakukohde

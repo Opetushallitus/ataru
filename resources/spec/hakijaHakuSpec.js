@@ -2,6 +2,7 @@
   const singleHakukohdeHakuOid = '1.2.246.562.29.65950024185'
   const multipleHakukohdeHakuOid = '1.2.246.562.29.65950024186'
   const kkHakuOid = '1.2.246.562.29.65950024190'
+  const multipleHakukohdeKkHakuOid = '1.2.246.562.29.65950024191'
 
   before(function() {
     loadInFrame('/hakemus/haku/' + singleHakukohdeHakuOid)
@@ -33,18 +34,58 @@
   })
 
   describe('hakemus by haku KK', () => {
-    before(
-      function() {
-        return loadInFrame('/hakemus/haku/' + kkHakuOid)
-      },
-      wait.until(function() {
-        return formSections().length == 3
-      }, 10000)
-    )
-    it('PETAR does not show the details', () => {
-      expect(selectedHakukohdeTexts()).to.equal(
-        'Testihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie'
+    describe('with single hakukohde', () => {
+      before(
+        function() {
+          return loadInFrame('/hakemus/haku/' + kkHakuOid)
+        },
+        wait.until(function() {
+          return formSections().length == 3
+        }, 10000)
       )
+      it('does not show the details', () => {
+        expect(selectedHakukohdeTexts()).to.equal(
+          'Ajoneuvonosturinkuljettajan ammattitutkinto – Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie'
+        )
+      })
+    })
+    describe('with multiple hakukohde', () => {
+      before(
+        function() {
+          return loadInFrame('/hakemus/haku/' + multipleHakukohdeKkHakuOid)
+        },
+        wait.until(function() {
+          return formSections().length == 3
+        }, 10000)
+      )
+      describe('adding KK hakukohde', function() {
+        before(
+          clickElement(addHakukohdeLink),
+          setTextFieldValue(hakukohdeSearchInput, 'haku'),
+          wait.until(function() {
+            return hakukohdeSearchHits().length === 3
+          }),
+          clickElement(function() {
+            return nthHakukohdeSearchResultButton(2)
+          }),
+          wait.until(function() {
+            return selectedHakukohteet().length === 1
+          }),
+          wait.until(function() {
+            return invalidFieldsStatus().text() === 'Tarkista 10 tietoa'
+          })
+        )
+        it('has correct selected text and search text, with no description', function() {
+          expect(submitButton().prop('disabled')).to.equal(true)
+          expect(selectedHakukohteet().length).to.equal(1)
+          expect(selectedHakukohdeTexts()).to.equal(
+            'Testihakukohde 3 – Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie'
+          )
+          expect(searchHakukohdeTexts()).to.equal(
+            'Testihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTestihakukohde 2 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTestihakukohde 3 – Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie'
+          )
+        })
+      })
     })
   })
 
