@@ -40,9 +40,6 @@
                                :valinta-tulos-service
                                (fn valinnan-tulokset->db [valinta-tulos-service-db]
                                  (->> response
-                                      (filter (fn [valinnan-tulos]
-                                                (let [vastaanotto-tila (-> valinnan-tulos :valinnantulos :vastaanottotila)]
-                                                  (not= vastaanotto-tila "OTTANUT_VASTAAN_TOISEN_PAIKAN"))))
                                       (reduce (fn valinnan-tulos->db [acc valinnan-tulos]
                                                 (let [hakemus-oid   (-> valinnan-tulos :valinnantulos :hakemusOid)
                                                       hakukohde-oid (-> valinnan-tulos :valinnantulos :hakukohdeOid)]
@@ -99,7 +96,7 @@
           :vastaanottotila    vastaanotto-tila
           :ilmoittautumistila ilmoittautumisen-tila}
 
-         ["EI_VASTAANOTETTU_MAARA_AIKANA"]
+         [(:or "EI_VASTAANOTETTU_MAARA_AIKANA" "OTTANUT_VASTAAN_TOISEN_PAIKAN")]
          {:valinnantila       "PERUUNTUNUT"
           :julkaistavissa     julkaisun-tila
           :vastaanottotila    vastaanotto-tila
