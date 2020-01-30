@@ -67,7 +67,7 @@
         filename           (-> selected-attachment :filename)
         display-capability @(re-frame/subscribe [:virkailija-attachments/file-display-capability (:key selected-attachment)])
         page-count         (:page-count selected-attachment)
-        pages-to-display   attachment-subs/attachment-preview-pages-to-display]
+        pages-to-display   (attachment-subs/attachment-preview-pages-to-display)]
     [:<>
      [:div]
      [:span.attachment-skimming-filename__text--no-overflow  {:title filename} filename]

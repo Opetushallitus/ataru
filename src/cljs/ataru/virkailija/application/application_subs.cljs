@@ -31,6 +31,13 @@
     (u/form-fields-by-id form)))
 
 (re-frame/reg-sub
+  :application/selected-form-attachment-fields
+  (fn [_ _]
+    (re-frame/subscribe [:application/selected-form]))
+  (fn selected-form-attachment-fields [form _]
+    (u/form-attachment-fields form)))
+
+(re-frame/reg-sub
   :application/events
   (fn [db _]
     (get-in db [:application :events])))
