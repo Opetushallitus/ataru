@@ -175,6 +175,11 @@ const selectedHakukohdeTexts = () =>
     .find('.application__selected-hakukohde-row--content')
     .text()
 
+const searchHakukohdeTexts = () =>
+  testFrame()
+    .find('.application__search-hit-hakukohde-row--content')
+    .text()
+
 const assertOnlyFinnishSsn = () => {
   expect(hasFormField('ssn')).to.equal(true)
   expect(hasFormField('have-finnish-ssn')).to.equal(false)

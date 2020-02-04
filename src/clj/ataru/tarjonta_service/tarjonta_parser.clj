@@ -33,7 +33,7 @@
      :name                                                        (:name hakukohde)
      :hakukohderyhmat                                             (filter #(contains? hakukohderyhmat %) (:ryhmaliitokset hakukohde))
      :kohdejoukko-korkeakoulu?                                    (true? (some-> haku
-                                                                                 :kohdejoukko-uri
+                                                                                 :kohdejoukkoUri
                                                                                  (clojure.string/starts-with? "haunkohdejoukko_12#")))
      :tarjoaja-name                                               (:tarjoaja-name hakukohde)
      :form-key                                                    (:ataruLomakeAvain haku)
