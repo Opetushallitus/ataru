@@ -15,6 +15,7 @@
             [ataru.valintaperusteet.client :as valintaperusteet-client]
             [ataru.valintaperusteet.service :as valintaperusteet-service]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
+            [ataru.valinta-tulos-service.service :as valinta-tulos-service]
             [ataru.virkailija.virkailija-routes :as virkailija-routes]
             [ataru.cache.caches :refer [caches]]
             [ataru.redis :as redis]
@@ -72,6 +73,12 @@
          :expire-after-access [3 TimeUnit/DAYS]
          :refresh-after       [1 TimeUnit/SECONDS]})
       {:redis-cache :valintalaskentakoostepalvelu-hakukohde-valintalaskenta-redis-cache})
+
+    :valinta-tulos-service-cas-client (cas/new-client "/valinta-tulos-service" "auth/login" "session")
+
+    :valinta-tulos-service (component/using
+                            (valinta-tulos-service/map->RemoteValintaTulosService {})
+                            {:cas-client :valinta-tulos-service-cas-client})
 
     :valintalaskentakoostepalvelu-cas-client (cas/new-client "/valintalaskentakoostepalvelu" "j_spring_cas_security_check" "JSESSIONID")
 
@@ -150,6 +157,7 @@
                             :tarjonta-service
                             :valintalaskentakoostepalvelu-service
                             :valintaperusteet-service
+                            :valinta-tulos-service
                             :job-runner
                             :ohjausparametrit-service
                             :person-service

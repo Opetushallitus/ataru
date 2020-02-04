@@ -25,12 +25,9 @@
 (re-frame/reg-sub
   :hyvaksynnan-ehto/rights
   (fn [db _]
-    (let [hakukohde-oids (get-in db [:application :selected-review-hakukohde-oids])
-          hakukohde-oid  (first hakukohde-oids)]
-      (when (and (some? hakukohde-oid)
-                 (not (= "form" hakukohde-oid))
-                 (empty? (rest hakukohde-oids)))
-        (get-in db [:application :selected-application-and-form :application :rights-by-hakukohde hakukohde-oid])))))
+    (->> (get-in db [:application :selected-application-and-form :application :rights-by-hakukohde])
+         (map second)
+         (apply clojure.set/union))))
 
 (re-frame/reg-sub
   :hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa?
@@ -80,7 +77,9 @@
     (let [haku-oid       (get-in db [:application :selected-application-and-form :application :haku])
           hakukohde-oids (get-in db [:application :selected-review-hakukohde-oids])
           hakukohde-oid  (first hakukohde-oids)
-          rights         (get-in db [:application :selected-application-and-form :application :rights-by-hakukohde hakukohde-oid])]
+          rights         (->> (get-in db [:application :selected-application-and-form :application :rights-by-hakukohde])
+                              (map second)
+                              (apply clojure.set/union))]
       (and (some? hakukohde-oid)
            (empty? (rest hakukohde-oids))
            (clojure.string/starts-with?
