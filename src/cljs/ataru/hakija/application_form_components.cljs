@@ -959,11 +959,13 @@
   (let [id          (keyword (:id field-descriptor))
         local-state (r/atom {:focused? false :value nil})]
     (r/create-class
-      {:component-did-mount #(dispatch [:application/set-adjacent-field-answer
-                                        field-descriptor
-                                        row-idx
-                                        ""
-                                        question-group-idx])
+      {:component-did-mount #(let [value @(subscribe [:application/answer id question-group-idx row-idx])
+                                   required?        (is-required-field? field-descriptor)]
+                                  (if (and (not value) (not required)) (dispatch [:application/set-adjacent-field-answer
+                                                              field-descriptor
+                                                              row-idx
+                                                              ""
+                                                              question-group-idx])))
        :reagent-render      (fn [field-descriptor row-idx question-group-idx]
                               (let [{:keys [value
                                             valid]} @(subscribe [:application/answer id question-group-idx row-idx])
