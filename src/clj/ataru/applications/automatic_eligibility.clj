@@ -1,6 +1,8 @@
 (ns ataru.applications.automatic-eligibility
   (:require [ataru.background-job.job :as job]
+            [ataru.component-data.person-info-module :as person-info-module]
             [ataru.db.db :as db]
+            [ataru.forms.form-store :as form-store]
             [ataru.log.audit-log :as audit-log]
             [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit-service]
             [ataru.suoritus.suoritus-service :as suoritus-service]
@@ -16,13 +18,11 @@
 (defn- get-application
   [application-id]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-    (let [application (first (yesql-get-application {:id application-id}
-                                                    {:connection connection}))]
-      (when (nil? application)
-        (throw (new RuntimeException (str "Application " application-id
-                                          " not found"))))
-      (when (some? (:person-oid application))
-        application))))
+    (if-let [application (first (yesql-get-application {:id application-id}
+                                                       {:connection connection}))]
+      application
+      (throw (new RuntimeException (str "Application " application-id
+                                        " not found"))))))
 
 (defn- get-haku
   [tarjonta-service application]
@@ -171,25 +171,30 @@
            tarjonta-service
            suoritus-service
            audit-logger]}]
-  (if-let [application (get-application application-id)]
-    (let [haku                         (get-haku tarjonta-service application)
-          ohjausparametrit             (get-ohjausparametrit ohjausparametrit-service
-                                                             application)
-          hakukohteet                  (get-hakukohteet tarjonta-service application)
-          ylioppilas-tai-ammatillinen? (get-ylioppilas-tai-ammatillinen? suoritus-service application)
-          now                          (time/now)]
-      (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}
-                                 {:isolation :serializable}]
-        (doseq [update (automatic-eligibility-if-ylioppilas
-                        application
-                        haku
-                        ohjausparametrit
-                        now
-                        hakukohteet
-                        ylioppilas-tai-ammatillinen?)]
-          (update-application-hakukohde-review connection audit-logger update)))
-      {:transition {:id :final}})
-    {:transition {:id :retry}}))
+  (let [application (get-application application-id)]
+    (cond (some? (:person-oid application))
+          (let [haku                         (get-haku tarjonta-service application)
+                ohjausparametrit             (get-ohjausparametrit ohjausparametrit-service
+                                                                   application)
+                hakukohteet                  (get-hakukohteet tarjonta-service application)
+                ylioppilas-tai-ammatillinen? (get-ylioppilas-tai-ammatillinen? suoritus-service application)
+                now                          (time/now)]
+            (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}
+                                       {:isolation :serializable}]
+              (doseq [update (automatic-eligibility-if-ylioppilas
+                              application
+                              haku
+                              ohjausparametrit
+                              now
+                              hakukohteet
+                              ylioppilas-tai-ammatillinen?)]
+                (update-application-hakukohde-review connection audit-logger update)))
+            {:transition {:id :final}})
+          (person-info-module/muu-person-info-module?
+           (form-store/fetch-by-id (:form-id application)))
+          {:transition {:id :final}}
+          :else
+          {:transition {:id :retry}})))
 
 (defn- get-application-ids
   [suoritukset]

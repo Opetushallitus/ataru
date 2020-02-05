@@ -2,7 +2,8 @@
 SELECT key AS key,
        person_oid AS "person-oid",
        haku AS "haku-oid",
-       hakukohde AS "hakukohde-oids"
+       hakukohde AS "hakukohde-oids",
+       form_id AS "form-id"
 FROM applications
 WHERE id = (SELECT max(id) FROM applications WHERE id = :id);
 
