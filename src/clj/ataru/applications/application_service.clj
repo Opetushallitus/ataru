@@ -132,44 +132,48 @@
                            tarjonta-service
                            session
                            application-key)]
-    (let [tarjonta-info        (tarjonta-parser/parse-tarjonta-info-by-haku
+    (let [tarjonta-info         (tarjonta-parser/parse-tarjonta-info-by-haku
                                  koodisto-cache
                                  tarjonta-service
                                  organization-service
                                  ohjausparametrit-service
                                  (:haku application)
                                  (:hakukohde application))
-          form-in-application  (form-store/fetch-by-id (:form application))
-          newest-form          (form-store/fetch-by-key (:key form-in-application))
-          form                 (populate-form-fields (if with-newest-form?
-                                                       newest-form
-                                                       form-in-application) koodisto-cache tarjonta-info)
-          forms-differ?        (and (not with-newest-form?)
-                                    (forms-differ? application tarjonta-info form
-                                                   (populate-form-fields newest-form koodisto-cache tarjonta-info)))
-          alternative-form     (some-> (when forms-differ?
-                                             newest-form)
-                                       (assoc :content [])
-                                       (dissoc :organization-oid))
-          hakukohde-reviews    (future (parse-application-hakukohde-reviews application-key))
-          attachment-reviews   (future (parse-application-attachment-reviews application-key))
-          events               (future (get-application-events organization-service application-key))
-          review               (future (application-store/get-application-review application-key))
-          review-notes         (future (map (partial enrich-virkailija-organizations organization-service)
-                                            (application-store/get-application-review-notes application-key)))
-          information-requests (future (information-request-store/get-information-requests application-key))]
-      (util/remove-nil-values {:application          (-> application
-                                                         (dissoc :person-oid)
-                                                         (assoc :person (get-person application person-client))
-                                                         (merge tarjonta-info))
-                               :form                 form
-                               :latest-form          alternative-form
-                               :hakukohde-reviews    @hakukohde-reviews
-                               :attachment-reviews   @attachment-reviews
-                               :events               @events
-                               :review               @review
-                               :review-notes         @review-notes
-                               :information-requests @information-requests}))))
+          form-in-application   (form-store/fetch-by-id (:form application))
+          newest-form           (form-store/fetch-by-key (:key form-in-application))
+          form                  (populate-form-fields (if with-newest-form?
+                                                        newest-form
+                                                        form-in-application) koodisto-cache tarjonta-info)
+          forms-differ?         (and (not with-newest-form?)
+                                     (forms-differ? application tarjonta-info form
+                                                    (populate-form-fields newest-form koodisto-cache tarjonta-info)))
+          alternative-form      (some-> (when forms-differ?
+                                          newest-form)
+                                        (assoc :content [])
+                                        (dissoc :organization-oid))
+          hakukohde-reviews     (future (parse-application-hakukohde-reviews application-key))
+          attachment-reviews    (future (parse-application-attachment-reviews application-key))
+          events                (future (get-application-events organization-service application-key))
+          review                (future (application-store/get-application-review application-key))
+          review-notes          (future (map (partial enrich-virkailija-organizations organization-service)
+                                             (application-store/get-application-review-notes application-key)))
+          information-requests  (future (information-request-store/get-information-requests application-key))
+          selection-state-used? (future (if-let [haku-oid (:haku application)]
+                                          (application-store/selection-state-used? haku-oid)
+                                          true))]
+      (util/remove-nil-values {:application           (-> application
+                                                          (dissoc :person-oid)
+                                                          (assoc :person (get-person application person-client))
+                                                          (merge tarjonta-info))
+                               :form                  form
+                               :latest-form           alternative-form
+                               :hakukohde-reviews     @hakukohde-reviews
+                               :attachment-reviews    @attachment-reviews
+                               :events                @events
+                               :review                @review
+                               :review-notes          @review-notes
+                               :information-requests  @information-requests
+                               :selection-state-used? @selection-state-used?}))))
 
 (defn ->form-query
   [key]
