@@ -23,9 +23,11 @@
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/show-selection-state-dropdown?
   (fn []
-    [(re-frame/subscribe [:virkailija-kevyt-valinta/valintalaskenta-in-hakukohteet])])
-  (fn [[valintalaskenta-in-hakukohteet]]
+    [(re-frame/subscribe [:virkailija-kevyt-valinta/valintalaskenta-in-hakukohteet])
+     (re-frame/subscribe [:virkailija-kevyt-valinta/sijoittelu?])])
+  (fn [[valintalaskenta-in-hakukohteet sijoittelu?]]
     (or (not (fc/feature-enabled? :kevyt-valinta))
+        sijoittelu?
         ;; true?, koska nil tarkoittaa ettei tietoa ole vielä ladattu
         ;; backendiltä ja nil? palauttaisi väärän positiivisen tiedon
         (every? true? valintalaskenta-in-hakukohteet))))
