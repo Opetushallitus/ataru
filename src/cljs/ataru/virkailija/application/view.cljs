@@ -1131,31 +1131,35 @@
                                        (empty? (rest current-hakukohteet)))
                                 (first current-hakukohteet)
                                 "multiple-selected")
-          review-note         (subscribe [:state-query [:application :notes note-state-path state-name]])
-          selected-notes-idx  (subscribe [:application/review-note-indexes-on-eligibility])
-          button-enabled?     (and (-> @review-note clojure.string/blank? not)
-                                   (or (nil? (first @selected-notes-idx))
-                                       (not= @review-note (:notes @(subscribe [:state-query [:application :review-notes
-                                                                                             (first @selected-notes-idx)]])))))]
-      [:div.application-handling__review-state-selected-container
+          review-note         @(subscribe [:state-query [:application :notes note-state-path state-name]])
+          selected-notes-idx  @(subscribe [:application/review-note-indexes-on-eligibility])
+          latest-note         (if-let [idx (first selected-notes-idx)]
+                                @(subscribe [:state-query [:application :review-notes idx :notes]])
+                                "")
+          button-disabled?    (or (clojure.string/blank? review-note)
+                                  (= review-note latest-note))]
+      [:div.application-handling__review-state-comment-container
        [:textarea.application-handling__review-note-input
-        {:value       @review-note
+        {:value       review-note
          :placeholder @(subscribe [:editor/virkailija-translation :rejection-reason])
          :on-change   (fn [event]
                         (let [note (.. event -target -value)]
                           (dispatch [:state-update #(assoc-in % [:application :notes note-state-path state-name] note)])))}]
        [:button.application-handling__review-note-submit-button
         {:type     "button"
-         :on-click #(dispatch [:application/add-review-notes @review-note state-name])
-         :disabled (not button-enabled?)
-         :class    (if button-enabled?
-                     "application-handling__review-note-submit-button--enabled"
-                     "application-handling__review-note-submit-button--disabled")}
+         :on-click (fn [_]
+                     (dispatch [:state-update #(assoc-in % [:application :notes note-state-path state-name] "")])
+                     (dispatch [:application/add-review-notes review-note state-name]))
+         :disabled button-disabled?
+         :class    (if button-disabled?
+                     "application-handling__review-note-submit-button--disabled"
+                     "application-handling__review-note-submit-button--enabled")}
         @(subscribe [:editor/virkailija-translation :add])]
-       (->> @selected-notes-idx
-            (map (fn [idx]
-                   ^{:key (str "application-review-note-" idx)}
-                   [application-review-note idx])))])))
+       [:div.application-handling__review-state-comment--notes
+        (map (fn [idx]
+               ^{:key (str "application-review-note-" idx)}
+               [application-review-note idx])
+             selected-notes-idx)]])))
 
 (defn- application-hakukohde-review-input
   [label kw states]
@@ -1188,21 +1192,22 @@
                        @payment-obligation-automatically-checked?)
                   [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
                    {:title @(subscribe [:editor/virkailija-translation :payment-obligation-set-automatically])}])]
-           (if @list-opened
-             (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
+           [:div.application-handling__review-state-list-container
+            (if @list-opened
+              (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
                      {:on-click list-click}]
                     (opened-review-state-list kw review-state-for-current states @lang multiple-values?))
-             [:div.application-handling__review-state-list
-              [review-state-selected-row
-               list-click
-               (application-states/get-review-state-label-by-name
-                states
-                (or review-state-for-current (ffirst states))
-                @lang)
-               multiple-values?]
-              (when (and (= :eligibility-state kw)
-                         (= "uneligible" review-state-for-current))
-                [review-state-comment kw])])])))))
+              [:div.application-handling__review-state-list
+               [review-state-selected-row
+                list-click
+                (application-states/get-review-state-label-by-name
+                 states
+                 (or review-state-for-current (ffirst states))
+                 @lang)
+                multiple-values?]])
+            (when (and (= :eligibility-state kw)
+                       (= "uneligible" review-state-for-current))
+              [review-state-comment kw])]])))))
 
 (defn- ehdollisesti-hyvaksyttavissa
   []

@@ -566,7 +566,7 @@ and (max-width: 1000px) {
   top: -34px;
   right: 0;
   bottom: 0;
-  left: 0;
+  left: -20px;
   z-index: 1;
   pointer-events: none;
 }
@@ -931,7 +931,7 @@ and (max-width: 1000px) {
 .application-handling__review-state-setting-checkbox {
   position: absolute;
   left: -28px;
-  top: 8px;
+  top: 10px;
   z-index: 1;
 }
 
@@ -952,9 +952,31 @@ and (max-width: 1000px) {
 .application-handling__review-row--nocolumn {
   display: block;
 }
-.application-handling__review-state-selected-container .application-handling__review-note {
-  width: 219px;
+
+.application-handling__review-state-list-container {
+  display: flex;
+  flex-direction: column;
 }
+
+.application-handling__review-state-comment-container {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+  width: 252px;
+}
+
+.application-handling__review-state-comment--notes {
+  margin-top: 10px;
+}
+
+.application-handling__review-state-comment--notes .application-handling__review-note {
+  margin-bottom: 10px;
+
+  &:last-child {
+    margin-bottom: 0px;
+  }
+}
+
 .application-handling__review-note {
   background-color: @review-note-background-color;
   border-radius: 5px;
@@ -1390,11 +1412,6 @@ and (max-width: 1000px) {
   display: flex;
   justify-content: space-between;
   position: relative;
-}
-
-.application-handling__review-state-selected-container {
-  display: flex;
-  flex-direction: column;
 }
 
 .application-handling__review-state-container--bottom-border {
