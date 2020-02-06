@@ -96,6 +96,29 @@
       (update :params dissoc :info-text)
       (dissoc :metadata)))
 
+(defn get-changed [old-elems new-elems]
+  (let [old-by-id (util/group-by-first :id old-elems)
+        changed (filter (fn [new-elem] (let [old-with-same-id (get old-by-id (:id new-elem))
+                                             [a b _] (diff old-with-same-id new-elem)]
+                                         (not (and (empty? a) (empty? b)))))
+                        new-elems)]
+    (map #(:id %) changed)))
+
+(defn get-changed-field-ids [application tarjonta-info older-form newer-form]
+  (let [answers        (group-by :key (:answers application))
+        hakutoiveet    (set (:hakukohde application))
+        visible-fields (fn [form]
+                        (let [flat-form-fields (util/flatten-form-fields (:content form))
+                              field-by-id (util/group-by-first :id flat-form-fields)]
+                          (->> flat-form-fields
+                               (filter #(visible? % field-by-id answers hakutoiveet
+                                                  (-> tarjonta-info :tarjonta :hakukohteet)))
+                               (map remove-irrelevant-changes))))
+        fields-left    (sort-by :id (visible-fields older-form))
+        fields-right   (sort-by :id (visible-fields newer-form))
+        changed-ids (get-changed fields-left fields-right)]
+     changed-ids))
+
 (defn forms-differ? [application tarjonta-info form-left form-right]
   (and (not= (:id form-left) (:id form-right))
        (let [answers        (group-by :key (:answers application))
@@ -151,6 +174,12 @@
                                              newest-form)
                                        (assoc :content [])
                                        (dissoc :organization-oid))
+          changes (if with-newest-form?
+                              (let [old-form-fields      (populate-form-fields form-in-application koodisto-cache tarjonta-info)
+                                    new-form-fields      (populate-form-fields newest-form koodisto-cache tarjonta-info)
+                                    changes (get-changed-field-ids application tarjonta-info old-form-fields new-form-fields)]
+                                {:changed-ids changes}))
+
           hakukohde-reviews    (future (parse-application-hakukohde-reviews application-key))
           attachment-reviews   (future (parse-application-attachment-reviews application-key))
           events               (future (get-application-events organization-service application-key))
@@ -169,7 +198,8 @@
                                :events               @events
                                :review               @review
                                :review-notes         @review-notes
-                               :information-requests @information-requests}))))
+                               :information-requests @information-requests
+                               :form-changes         changes}))))
 
 (defn ->form-query
   [key]

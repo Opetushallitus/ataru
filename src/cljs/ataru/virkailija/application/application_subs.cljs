@@ -24,6 +24,17 @@
     (get-in db [:application :selected-application-and-form :application])))
 
 (re-frame/reg-sub
+  :application/form-highlighted-fields
+  (fn form-highlighted-fields []
+    (array-seq (.getElementsByClassName js/document "form-highlighted"))))
+
+(re-frame/reg-sub
+  :application/form-changes
+  (fn [db _]
+    (let [changes (get-in db [:application :form-changes])]
+      (set (concat (:new-ids changes) (:changed-ids changes))))))
+
+(re-frame/reg-sub
   :application/selected-form-fields-by-id
   (fn [_ _]
     (re-frame/subscribe [:application/selected-form]))

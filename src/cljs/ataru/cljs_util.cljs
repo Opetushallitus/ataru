@@ -23,7 +23,6 @@
                                                 (.scrollIntoViewIfNeeded node)
                                                 (.scrollIntoView node)))}))
 
-
 (defn debounce
   ([f] (debounce f 1000))
   ([f timeout]

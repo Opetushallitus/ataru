@@ -1939,20 +1939,30 @@
           show-creating-henkilo-failed? @(subscribe [:application/show-creating-henkilo-failed?])
           show-not-yksiloity?           (and (some? person-oid)
                                              (not (-> application :person :yksiloity)))
-          show-metadata-not-found?      @(subscribe [:state-query [:application :metadata-not-found]])]
-      (when (or show-not-latest-form?
+          show-metadata-not-found?      @(subscribe [:state-query [:application :metadata-not-found]])
+          changes-count (count @(subscribe [:application/form-highlighted-fields]))
+          ]
+      (when (or (or show-not-latest-form? (> changes-count 0))
                 show-creating-henkilo-failed?
                 show-not-yksiloity?
                 show-metadata-not-found?)
         [:div.application__message-display.application__message-display--notification
          [:div.application__message-display--exclamation [:i.zmdi.zmdi-alert-triangle]]
          [:div.application__message-display--details
-          (when show-not-latest-form?
+          (if show-not-latest-form?
             [notification {:text      :form-outdated
                            :link-text :show-newest-version
                            :on-click  (fn [evt]
                                         (.preventDefault evt)
-                                        (select-application (:key application) selected-review-hakukohde true))}])
+                                        (select-application (:key application) selected-review-hakukohde true))}]
+            (when (> changes-count 0) [:show-form-changes
+                                       "Tämä on lomakkeen uusin, muuttunut versio. " [:a
+                                                                     {:on-click (fn []
+                                                                                  (if-let [target (first (array-seq (.getElementsByClassName js/document "form-highlighted")))]
+                                                                                    (.scrollIntoView target (js-obj "behavior" "smooth" "block" "center")))
+                                                                                  )}
+                                                                     [:span (str "Näytä muutokset (" changes-count ")") ]]
+                                       ]))
           (when show-creating-henkilo-failed?
             [notification {:text :creating-henkilo-failed}])
           (when show-not-yksiloity?
