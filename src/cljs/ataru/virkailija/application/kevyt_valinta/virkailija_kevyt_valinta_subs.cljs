@@ -171,7 +171,7 @@
                                        :kevyt-valinta/vastaanotto-tila      :checked
                                        :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
-                                      [(:or "HYLATTY" "VARALLA") true _ _ _]
+                                      [(:or "HYLATTY" "VARALLA" "PERUUNTUNUT") true _ _ _]
                                       {:kevyt-valinta/valinnan-tila         :checked
                                        :kevyt-valinta/julkaisun-tila        :unchecked
                                        :kevyt-valinta/vastaanotto-tila      :grayed-out
