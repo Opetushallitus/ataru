@@ -541,6 +541,7 @@
                                              hakukohde-reviews
                                              attachment-reviews
                                              information-requests
+                                             selection-state-used?
                                              review-notes]}]
   (-> db
       (assoc-in [:application :selected-application-and-form]
@@ -556,6 +557,7 @@
       (assoc-in [:application :review :hakukohde-reviews] hakukohde-reviews)
       (assoc-in [:application :review :attachment-reviews] attachment-reviews)
       (assoc-in [:application :information-requests] information-requests)
+      (assoc-in [:application :selection-state-used?] selection-state-used?)
       (update-in [:application :selected-review-hakukohde-oids]
         (fn [current-hakukohde-oids]
           (cond

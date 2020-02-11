@@ -23,12 +23,16 @@
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/show-selection-state-dropdown?
   (fn []
-    [(re-frame/subscribe [:virkailija-kevyt-valinta/valintalaskenta-in-hakukohteet])])
-  (fn [[valintalaskenta-in-hakukohteet]]
+    [(re-frame/subscribe [:virkailija-kevyt-valinta/valintalaskenta-in-hakukohteet])
+     (re-frame/subscribe [:virkailija-kevyt-valinta/sijoittelu?])
+     (re-frame/subscribe [:state-query [:application :selection-state-used?]])])
+  (fn [[valintalaskenta-in-hakukohteet sijoittelu? selection-state-used?]]
     (or (not (fc/feature-enabled? :kevyt-valinta))
+        sijoittelu?
         ;; true?, koska nil tarkoittaa ettei tietoa ole vielä ladattu
         ;; backendiltä ja nil? palauttaisi väärän positiivisen tiedon
-        (every? true? valintalaskenta-in-hakukohteet))))
+        (every? true? valintalaskenta-in-hakukohteet)
+        selection-state-used?)))
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/sijoittelu?
@@ -46,17 +50,21 @@
     [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
      (re-frame/subscribe [:state-query [:application :selected-application-and-form :application :rights-by-hakukohde]])
      (re-frame/subscribe [:virkailija-kevyt-valinta/valintalaskenta-in-hakukohteet])
-     (re-frame/subscribe [:virkailija-kevyt-valinta/sijoittelu?])])
-  (fn [[hakukohde-oids rights-by-hakukohde valintalaskenta-in-hakukohteet sijoittelu?]]
+     (re-frame/subscribe [:virkailija-kevyt-valinta/sijoittelu?])
+     (re-frame/subscribe [:state-query [:application :selection-state-used?]])])
+  (fn [[hakukohde-oids rights-by-hakukohde valintalaskenta-in-hakukohteet sijoittelu? selection-state-used?]]
     (and (fc/feature-enabled? :kevyt-valinta)
-         ;; On päätetty, että kevyt valinta näkyy ainoastaan kun on yksi hakukohde valittavissa, muuten moni asia on todella epätriviaaleja toteuttaa
+         ;; On päätetty, että kevyt valinta näkyy ainoastaan kun on yksi
+         ;; hakukohde valittavissa, muuten moni asia on todella epätriviaaleja
+         ;; toteuttaa
          (and (= (count hakukohde-oids) 1)
               (not= (first hakukohde-oids) "form"))
          (kvr/kevyt-valinta-read-only-rights-for-hakukohteet? hakukohde-oids rights-by-hakukohde)
          (not sijoittelu?)
          ;; false?, koska nil tarkoittaa ettei tietoa ole vielä ladattu
          ;; backendiltä ja nil? palauttaisi väärän positiivisen tiedon
-         (every? false? valintalaskenta-in-hakukohteet))))
+         (every? false? valintalaskenta-in-hakukohteet)
+         (not selection-state-used?))))
 
 (defn- default-kevyt-valinta-property-value [kevyt-valinta-property]
   (when (= kevyt-valinta-property :kevyt-valinta/valinnan-tila)
