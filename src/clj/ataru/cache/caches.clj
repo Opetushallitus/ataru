@@ -122,28 +122,6 @@
        :refresh-after       [5 TimeUnit/MINUTES]})
      {:redis-cache :kouta-hakus-by-form-key-redis-cache})]
 
-   [:kouta-hakus-by-hakukohteen-tarjoaja-cache-loader
-    (component/using
-     (kouta-client/map->HakusByHakukohteenTarjoajaCacheLoader {})
-     {:cas-client :kouta-internal-cas-client})]
-   [:kouta-hakus-by-hakukohteen-tarjoaja-redis-cache
-    (component/using
-     (redis/map->Cache
-      {:name          "kouta-hakus-by-hakukohteen-tarjoaja"
-       :ttl           [3 TimeUnit/DAYS]
-       :refresh-after [15 TimeUnit/MINUTES]
-       :lock-timeout  [10 TimeUnit/SECONDS]})
-     {:loader :kouta-hakus-by-hakukohteen-tarjoaja-cache-loader
-      :redis  :redis})]
-   [:kouta-hakus-by-hakukohteen-tarjoaja-cache
-    (component/using
-     (two-layer/map->Cache
-      {:name                "in-memory-kouta-hakus-by-hakukohteen-tarjoaja"
-       :size                100
-       :expire-after-access [3 TimeUnit/DAYS]
-       :refresh-after       [5 TimeUnit/MINUTES]})
-     {:redis-cache :kouta-hakus-by-hakukohteen-tarjoaja-redis-cache})]
-
    [:forms-in-use-redis-cache
     (component/using
      (redis/map->Cache

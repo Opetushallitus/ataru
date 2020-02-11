@@ -50,7 +50,6 @@
                         :forms-in-use-cache
                         :koulutus-cache
                         :kouta-hakus-by-form-key-cache
-                        :kouta-hakus-by-hakukohteen-tarjoaja-cache
                         :hakukohde-cache
                         :haku-cache
                         :hakukohde-search-cache])

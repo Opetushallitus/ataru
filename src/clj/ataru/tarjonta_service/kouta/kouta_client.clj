@@ -106,17 +106,10 @@
           (get-result cas-client)
           parse-haku))
 
-(s/defn ^:always-validate get-hakus-by :- [s/Str]
-  [cas-client
-   query :- {(s/optional-key :form-key)     s/Str
-             (s/optional-key :tarjoaja-oid) s/Str}]
+(s/defn ^:always-validate get-hakus-by-form-key :- [s/Str]
+  [cas-client form-key]
   (some-> :kouta-internal.haku-search
-          (url-helper/resolve-url
-           (cond-> {}
-                   (contains? query :form-key)
-                   (assoc "ataruId" (:form-key query))
-                   (contains? query :tarjoaja-oid)
-                   (assoc "hakukohteenTarjoaja" (:tarjoaja-oid query))))
+          (url-helper/resolve-url {"ataruId" form-key})
           (get-result cas-client)
           ((fn [result] (mapv :oid result)))))
 
@@ -189,22 +182,7 @@
   cache-service/CacheLoader
 
   (load [_ form-key]
-    (get-hakus-by cas-client {:form-key form-key}))
-
-  (load-many [this form-keys]
-    (cache-service/default-load-many this form-keys))
-
-  (load-many-size [_]
-    1)
-
-  (check-schema [_ response]
-    (hakus-by-checker response)))
-
-(defrecord HakusByHakukohteenTarjoajaCacheLoader [cas-client]
-  cache-service/CacheLoader
-
-  (load [_ tarjoaja-oid]
-    (get-hakus-by cas-client {:tarjoaja-oid tarjoaja-oid}))
+    (get-hakus-by-form-key cas-client form-key))
 
   (load-many [this form-keys]
     (cache-service/default-load-many this form-keys))
