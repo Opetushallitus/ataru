@@ -294,15 +294,16 @@
    :yhteishaku                         (s/maybe s/Bool)})
 
 (s/defschema Haku
-  {:oid                    s/Str
-   :name                   LocalizedStringOptional
-   :yhteishaku             s/Bool
-   :kohdejoukko-uri        s/Str
-   :prioritize-hakukohteet s/Bool
-   :hakuajat               [{:start                java.time.ZonedDateTime
-                             (s/optional-key :end) java.time.ZonedDateTime}]
-   :hakukohteet            [s/Str]
-   :sijoittelu             s/Bool})
+  {:oid                             s/Str
+   :name                            LocalizedStringOptional
+   :yhteishaku                      s/Bool
+   :kohdejoukko-uri                 s/Str
+   :prioritize-hakukohteet          s/Bool
+   :hakuajat                        [{:start                java.time.ZonedDateTime
+                                      (s/optional-key :end) java.time.ZonedDateTime}]
+   :hakukohteet                     [s/Str]
+   :sijoittelu                      s/Bool
+   (s/optional-key :ataru-form-key) s/Str})
 
 (s/defschema Hakukohderyhma
   {:oid             s/Str
