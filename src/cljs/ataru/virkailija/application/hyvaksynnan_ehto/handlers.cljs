@@ -250,9 +250,9 @@
     (http (aget js/config "virkailija-caller-id")
           {:method        :get
            :url           (.url js/window
-                                "valinta-tulos-service.hyvaksynnan-ehto-muutoshistoria"
-                                application-key
-                                hakukohde-oid)
+                                "valinta-tulos-service.hyvaksynnan-ehto.muutoshistoria"
+                                hakukohde-oid
+                                application-key)
            :handler       [:hyvaksynnan-ehto/set-ehto-hakukohteessa-muutoshistoria
                            application-key
                            hakukohde-oid]
