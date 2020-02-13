@@ -224,6 +224,12 @@
       :return {s/Str {s/Str {:haku-oid s/Str :haku-name ataru-schema/LocalizedStringOptional}}}
       (ok (tarjonta/get-forms-in-use virkailija-tarjonta-service session)))
 
+    (api/GET "/forms/latest/:key" []
+      :path-params [key :- s/Str]
+      :return ataru-schema/FormWithContent
+      :summary "Get content for latest version of form"
+      (ok (form-store/fetch-by-key key)))
+
     (api/GET "/forms/:id" []
       :path-params [id :- Long]
       :return ataru-schema/FormWithContent
