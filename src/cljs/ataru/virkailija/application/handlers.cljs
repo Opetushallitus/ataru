@@ -358,44 +358,43 @@
           counts
           applications))
 
-(defn- fetch-applications-fx
-  [{db :db :as fx}]
-  (let [search-term    (get-in db [:application :search-control :search-term :parsed])
-        form           (when-let [form-key (get-in db [:application :selected-form-key])]
-                         {:form-key form-key})
-        haku           (when-let [haku-oid (get-in db [:application :selected-haku])]
-                         {:haku-oid haku-oid})
-        hakukohde      (when-let [hakukohde-oid (get-in db [:application :selected-hakukohde])]
-                         {:hakukohde-oid hakukohde-oid})
-        hakukohderyhma (when-let [[haku-oid hakukohderyhma-oid] (get-in db [:application :selected-hakukohderyhma])]
-                         (cond-> {:haku-oid           haku-oid
-                                  :hakukohderyhma-oid hakukohderyhma-oid}
-                                 (some? (get-in db [:application :rajaus-hakukohteella]))
-                                 (assoc :rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))))]
-    (if (some identity [search-term form haku hakukohde hakukohderyhma])
-      (-> fx
-          (assoc-in [:db :application :fetching-applications?] true)
-          (assoc :http
-                 {:id                  :applications-list
-                  :method              :post
-                  :path                "/lomake-editori/api/applications/list"
-                  :params              (merge {:sort               (get-in db [:application :sort] {:order-by "applicant-name"
-                                                                                                    :order    "asc"})
-                                               :states-and-filters {:attachment-states-to-include (get-in db [:application :attachment-state-filter])
-                                                                    :processing-states-to-include (get-in db [:application :processing-state-filter])
-                                                                    :selection-states-to-include  (get-in db [:application :selection-state-filter])
-                                                                    :filters                      (get-in db [:application :filters])}}
-                                              search-term
-                                              form
-                                              haku
-                                              hakukohde
-                                              hakukohderyhma
-                                              (when (get-in db [:application :ensisijaisesti?])
-                                                {:ensisijaisesti true}))
-                  :skip-parse-times?   true
-                  :skip-flasher?       true
-                  :handler-or-dispatch :application/handle-fetch-applications-response}))
-      (assoc-in fx [:db :application :fetching-applications?] false))))
+(reg-event-fx
+  :application/fetch-applications
+  (fn [{db :db} _]
+    (let [search-term    (get-in db [:application :search-control :search-term :parsed])
+          form           (when-let [form-key (get-in db [:application :selected-form-key])]
+                           {:form-key form-key})
+          haku           (when-let [haku-oid (get-in db [:application :selected-haku])]
+                           {:haku-oid haku-oid})
+          hakukohde      (when-let [hakukohde-oid (get-in db [:application :selected-hakukohde])]
+                           {:hakukohde-oid hakukohde-oid})
+          hakukohderyhma (when-let [[haku-oid hakukohderyhma-oid] (get-in db [:application :selected-hakukohderyhma])]
+                           (cond-> {:haku-oid           haku-oid
+                                    :hakukohderyhma-oid hakukohderyhma-oid}
+                                   (some? (get-in db [:application :rajaus-hakukohteella]))
+                                   (assoc :rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))))]
+      (if (some identity [search-term form haku hakukohde hakukohderyhma])
+        {:db   (assoc-in db [:application :fetching-applications?] true)
+         :http {:id                  :applications-list
+                :method              :post
+                :path                "/lomake-editori/api/applications/list"
+                :params              (merge {:sort               (get-in db [:application :sort] {:order-by "applicant-name"
+                                                                                                  :order    "asc"})
+                                             :states-and-filters {:attachment-states-to-include (get-in db [:application :attachment-state-filter])
+                                                                  :processing-states-to-include (get-in db [:application :processing-state-filter])
+                                                                  :selection-states-to-include  (get-in db [:application :selection-state-filter])
+                                                                  :filters                      (get-in db [:application :filters])}}
+                                            search-term
+                                            form
+                                            haku
+                                            hakukohde
+                                            hakukohderyhma
+                                            (when (get-in db [:application :ensisijaisesti?])
+                                              {:ensisijaisesti true}))
+                :skip-parse-times?   true
+                :skip-flasher?       true
+                :handler-or-dispatch :application/handle-fetch-applications-response}}
+        {:db (assoc-in db [:application :fetching-applications?] false)}))))
 
 (reg-event-fx
   :application/handle-fetch-applications-response
@@ -427,7 +426,8 @@
                                        (first)
                                        :key))]
       (if fetch-more?
-        (fetch-applications-fx {:db db})
+        {:db       db
+         :dispatch [:application/fetch-applications]}
         {:db       db
          :dispatch (if application-key
                      [:application/select-application application-key nil false]
@@ -481,7 +481,7 @@
                              (assoc-in [:application :attachment-state-counts] (get-in initial-db/default-db [:application :attachment-state-counts]))
                              (update-in [:application :sort] dissoc :offset)
                              (assoc-in [:application :fetching-applications?] true))
-               :dispatch [:application/refresh-haut-and-hakukohteet haku-oid hakukohde-oid fetch-applications-fx]}
+               :dispatch [:application/refresh-haut-and-hakukohteet haku-oid hakukohde-oid [[:application/fetch-applications]]]}
               (some? (get-in db [:request-handles :applications-list]))
               (assoc :http-abort (get-in db [:request-handles :applications-list]))))))
 
@@ -776,21 +776,21 @@
 
 (reg-event-fx
   :application/handle-refresh-haut-and-hakukohteet
-  (fn [{db :db} [_ {:keys [tarjonta-haut direct-form-haut haut hakukohteet hakukohderyhmat]} {:keys [callback-fx-transformer]}]]
-    (callback-fx-transformer
-     {:db (-> db
-              (update-in [:application :haut :tarjonta-haut] merge (keys-to-names tarjonta-haut))
-              (update-in [:application :haut :direct-form-haut] merge (keys-to-names direct-form-haut))
-              (update-in [:application :forms] merge (keys-to-names direct-form-haut))
-              (update :haut merge (keys-to-names haut))
-              (update :hakukohteet merge (keys-to-names hakukohteet))
-              (update :hakukohderyhmat merge (keys-to-names hakukohderyhmat))
-              (update :fetching-haut dec)
-              (update :fetching-hakukohteet dec))})))
+  (fn [{db :db} [_ {:keys [tarjonta-haut direct-form-haut haut hakukohteet hakukohderyhmat]} {:keys [dispatch-n-after]}]]
+    {:db         (-> db
+                     (update-in [:application :haut :tarjonta-haut] merge (keys-to-names tarjonta-haut))
+                     (update-in [:application :haut :direct-form-haut] merge (keys-to-names direct-form-haut))
+                     (update-in [:application :forms] merge (keys-to-names direct-form-haut))
+                     (update :haut merge (keys-to-names haut))
+                     (update :hakukohteet merge (keys-to-names hakukohteet))
+                     (update :hakukohderyhmat merge (keys-to-names hakukohderyhmat))
+                     (update :fetching-haut dec)
+                     (update :fetching-hakukohteet dec))
+     :dispatch-n dispatch-n-after}))
 
 (reg-event-fx
   :application/refresh-haut-and-hakukohteet
-  (fn [{:keys [db]} [_ haku-oid hakukohde-oid callback-fx-transformer]]
+  (fn [{:keys [db]} [_ haku-oid hakukohde-oid dispatch-n-after]]
     {:db   (-> db
                (update :fetching-haut inc)
                (update :fetching-hakukohteet inc))
@@ -803,7 +803,7 @@
                                        (str "/lomake-editori/api/haut?show-hakukierros-paattynyt="
                                             (boolean (:show-hakukierros-paattynyt db))))
             :handler-or-dispatch :application/handle-refresh-haut-and-hakukohteet
-            :handler-args        {:callback-fx-transformer (or callback-fx-transformer identity)}
+            :handler-args        {:dispatch-n-after dispatch-n-after}
             :skip-parse-times?   true
             :cache-ttl           (* 1000 60 5)}}))
 
@@ -1256,4 +1256,4 @@
   :application/toggle-show-hakukierros-paattynyt
   (fn toggle-show-hakukierros-paattynyt [{:keys [db]} _]
     {:db       (update db :show-hakukierros-paattynyt not)
-     :dispatch [:application/refresh-haut-and-hakukohteet nil nil nil]}))
+     :dispatch [:application/refresh-haut-and-hakukohteet nil nil []]}))
