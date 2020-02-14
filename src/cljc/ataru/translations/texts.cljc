@@ -339,9 +339,9 @@
    :network-offline                             {:fi "Ei yhteyttä verkkoon."
                                                  :sv "Network is offline."
                                                  :en "Network is offline."}
-   :application-period-closed                   {:fi "Hakuaika on päättynyt"
-                                                 :sv "Ansökningstiden har utgått"
-                                                 :en "Application period has ended"}
+   :application-period-closed                   {:fi "Hakemusta ei voi lähettää: Hakuaika on päättynyt tai liitteen määräaika on umpeutunut"
+                                                 :sv "Ansökan kan inte skickas: Ansökningstiden eller deadline för bilagor har utgått"
+                                                 :en "Application cannot be submitted: Application period has ended or deadline for submitting attachments has passed"}
    :inactivated                                 {:fi "Hakemuksesi on peruttu."
                                                  :sv "Din ansökning har annullerats."
                                                  :en "Your application is cancelled."}
