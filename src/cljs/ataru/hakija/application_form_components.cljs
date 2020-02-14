@@ -958,38 +958,46 @@
 (defn- adjacent-field-input [field-descriptor row-idx question-group-idx]
   (let [id          (keyword (:id field-descriptor))
         local-state (r/atom {:focused? false :value nil})]
-    (fn [field-descriptor row-idx question-group-idx]
-      (let [{:keys [value
-                    valid]}       @(subscribe [:application/answer id question-group-idx row-idx])
-            cannot-edit? @(subscribe [:application/cannot-edit? id])
-            show-error?            @(subscribe [:application/show-validation-error-class? id question-group-idx row-idx nil])
-            on-blur      (fn [_]
-                           (swap! local-state assoc
-                                  :focused? false))
-            on-change    (fn [evt]
-                           (let [value (-> evt .-target .-value)]
-                             (swap! local-state assoc
-                                    :focused? true
-                                    :value value)
-                             (dispatch [:application/set-adjacent-field-answer
-                                        field-descriptor
-                                        row-idx
-                                        value
-                                        question-group-idx])))]
-        [:input.application__form-text-input
-         {:class    (if show-error?
-                               " application__form-field-error"
-                               " application__form-text-input--normal")
-          :id           (str id "-" row-idx)
-          :type         "text"
-          :value        (if (:focused? @local-state)
-                          (:value @local-state)
-                          value)
-          :on-blur      on-blur
-          :on-change    on-change
-          :disabled     cannot-edit?
-          :aria-invalid (not valid)
-          :autoComplete autocomplete-off}]))))
+    (r/create-class
+      {:component-did-mount #(let [value @(subscribe [:application/answer id question-group-idx row-idx])
+                                   required?        (is-required-field? field-descriptor)]
+                                  (if (and (not value) (not required)) (dispatch [:application/set-adjacent-field-answer
+                                                              field-descriptor
+                                                              row-idx
+                                                              ""
+                                                              question-group-idx])))
+       :reagent-render      (fn [field-descriptor row-idx question-group-idx]
+                              (let [{:keys [value
+                                            valid]} @(subscribe [:application/answer id question-group-idx row-idx])
+                                    cannot-edit? @(subscribe [:application/cannot-edit? id])
+                                    show-error? @(subscribe [:application/show-validation-error-class? id question-group-idx row-idx nil])
+                                    on-blur (fn [_]
+                                              (swap! local-state assoc
+                                                     :focused? false))
+                                    on-change (fn [evt]
+                                                (let [value (-> evt .-target .-value)]
+                                                  (swap! local-state assoc
+                                                         :focused? true
+                                                         :value value)
+                                                  (dispatch [:application/set-adjacent-field-answer
+                                                             field-descriptor
+                                                             row-idx
+                                                             value
+                                                             question-group-idx])))]
+                                [:input.application__form-text-input
+                                 {:class        (if show-error?
+                                                  " application__form-field-error"
+                                                  " application__form-text-input--normal")
+                                  :id           (str id "-" row-idx)
+                                  :type         "text"
+                                  :value        (if (:focused? @local-state)
+                                                  (:value @local-state)
+                                                  value)
+                                  :on-blur      on-blur
+                                  :on-change    on-change
+                                  :disabled     cannot-edit?
+                                  :aria-invalid (not valid)
+                                  :autoComplete autocomplete-off}]))})))
 
 (defn adjacent-text-fields [field-descriptor]
   (let [cannot-edits? (map #(subscribe [:application/cannot-edit? (keyword (:id %))])
