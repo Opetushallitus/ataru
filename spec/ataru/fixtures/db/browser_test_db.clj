@@ -283,7 +283,7 @@
                                  :value     "seija.kuikeloinen@gmail.com"}
                                 {:fieldType "textField"
                                  :key       "first-name"
-                                 :value     "Johanna Irmeli"}
+                                 :value     (clojure.string/join ["Johanna Irmeli" \u0000])} ;This nullbyte char should be filtered before it reaches postgres
                                 {:fieldType "textField"
                                  :key       "birth-date"
                                  :value     "29.10.1984"}
