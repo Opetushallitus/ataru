@@ -18,7 +18,7 @@
                       {"CSRF" csrf-value})))
 
 (defn do-request
-  [{:keys [url method] :as opts}]
+  [{:keys [url method as] :as opts}]
   (let [method-name (clojure.string/upper-case (name method))
         opts        (enrich-with-mandatory-headers opts)
         start       (System/currentTimeMillis)
@@ -32,6 +32,10 @@
 (defn do-get
   [url]
   (do-request {:url url :method :get}))
+
+(defn do-get-stream
+  [url]
+  (do-request {:url url :method :get :as :stream}))
 
 (defn do-post
   [url opts]
