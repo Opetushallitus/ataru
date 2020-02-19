@@ -168,9 +168,8 @@
        [question-hakukohde-names field-descriptor :info-for-hakukohde])
      [markdown-paragraph text (-> field-descriptor :params :info-text-collapse) @application-identifier]]))
 
-(defn email-field [field-descriptor & {:keys [div-kwd disabled idx]
-                                       :or   {div-kwd  :div.application__form-field
-                                              disabled false}}]
+(defn email-field [field-descriptor & {:keys [div-kwd idx]
+                                       :or   {div-kwd :div.application__form-field}}]
   (let [id                    (keyword (:id field-descriptor))
         languages             (subscribe [:application/default-languages])
         size                  (get-in field-descriptor [:params :size])
@@ -211,8 +210,7 @@
                                    (:value answer))
                   :on-paste (fn [event]
                               (.preventDefault event))}
-                 (when (or disabled
-                           @(subscribe [:application/cannot-edit? id]))
+                 (when @(subscribe [:application/cannot-edit? id])
                    {:disabled true}))]
          [validation-error (:errors answer)]
          (let [id           :verify-email
@@ -640,10 +638,10 @@
            [multi-choice-followups (:followups option)])]))))
 
 (defn multiple-choice
-  [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
+  [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [id           (answer-key field-descriptor)
         languages    (subscribe [:application/default-languages])]
-    (fn [field-descriptor & {:keys [div-kwd disabled idx] :or {div-kwd :div.application__form-field disabled false}}]
+    (fn [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
       [div-kwd
        [label field-descriptor]
        (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
@@ -1048,41 +1046,40 @@
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [field-descriptor & {:keys [idx] :as args}]
       (if (visible? ui field-descriptor)
-        (let [disabled? (get-in @ui [(keyword (:id field-descriptor)) :disabled?] false)]
-          (cond-> (match field-descriptor
-                         {:id "email"
-                          :fieldClass "formField"
-                          :fieldType "textField"} [email-field field-descriptor :disabled disabled?]
-                         {:fieldClass "wrapperElement"
-                          :fieldType  "fieldset"
-                          :children   children} [wrapper-field field-descriptor children]
-                         {:fieldClass "questionGroup"
-                          :fieldType  "fieldset"
-                          :children   children} [question-group field-descriptor children]
-                         {:fieldClass "wrapperElement"
-                          :fieldType  "rowcontainer"
-                          :children   children} [row-wrapper children]
-                         {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor]
-                         {:fieldClass "formField" :fieldType "textField" :id id} [text-field field-descriptor]
-                         {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
-                         {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]
-                         {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]
-                         {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor]
-                         {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor]
-                         {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohde/hakukohteet field-descriptor]
-                         {:fieldClass "pohjakoulutusristiriita" :fieldType "pohjakoulutusristiriita"} [pohjakoulutusristiriita/pohjakoulutusristiriita field-descriptor]
-                         {:fieldClass "infoElement"} [info-element field-descriptor]
-                         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor])
-            (or (:idx args)
-                (empty? (:children field-descriptor)))
-            (into (flatten (seq args)))))
+        (cond-> (match field-descriptor
+                  {:id         "email"
+                   :fieldClass "formField"
+                   :fieldType  "textField"} [email-field field-descriptor]
+                  {:fieldClass "wrapperElement"
+                   :fieldType  "fieldset"
+                   :children   children} [wrapper-field field-descriptor children]
+                  {:fieldClass "questionGroup"
+                   :fieldType  "fieldset"
+                   :children   children} [question-group field-descriptor children]
+                  {:fieldClass "wrapperElement"
+                   :fieldType  "rowcontainer"
+                   :children   children} [row-wrapper children]
+                  {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor]
+                  {:fieldClass "formField" :fieldType "textField" :id id} [text-field field-descriptor]
+                  {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
+                  {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]
+                  {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]
+                  {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor]
+                  {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor]
+                  {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohde/hakukohteet field-descriptor]
+                  {:fieldClass "pohjakoulutusristiriita" :fieldType "pohjakoulutusristiriita"} [pohjakoulutusristiriita/pohjakoulutusristiriita field-descriptor]
+                  {:fieldClass "infoElement"} [info-element field-descriptor]
+                  {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor])
+                (or (:idx args)
+                    (empty? (:children field-descriptor)))
+                (into (flatten (seq args))))
         [:div]))))
 
 (defn editable-fields [form-data]
   (r/create-class
-    {:component-did-mount #(dispatch [:application/setup-window-unload])
-     :reagent-render      (fn [form-data]
-                            (into
-                              [:div.application__editable-content.animated.fadeIn]
-                              (for [content (:content form-data)]
-                                [render-field content])))}))
+   {:component-did-mount #(dispatch [:application/setup-window-unload])
+    :reagent-render      (fn [form-data]
+                           (into
+                            [:div.application__editable-content.animated.fadeIn]
+                            (for [content (:content form-data)]
+                              [render-field content])))}))
