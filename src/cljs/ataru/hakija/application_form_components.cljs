@@ -442,17 +442,16 @@
          (when max-length
            [:span.application__form-textarea-max-length (str (count value) " / " max-length)])]))))
 
-(defn wrapper-field [_ _ _]
-  (let [languages           (subscribe [:application/default-languages])]
-    (fn [field-descriptor children idx]
-      (let [label (util/non-blank-val (:label field-descriptor) @languages)]
-        [:div.application__wrapper-element
-         [:div.application__wrapper-heading
-          [:h2 label]
-          [scroll-to-anchor field-descriptor]]
-         (into [:div.application__wrapper-contents]
-           (for [child children]
-             [render-field child nil]))]))))
+(defn wrapper-field
+  [field-descriptor idx]
+  (let [label (util/non-blank-val (:label field-descriptor) @(subscribe [:application/default-languages]))]
+    [:div.application__wrapper-element
+     [:div.application__wrapper-heading
+      [:h2 label]
+      [scroll-to-anchor field-descriptor]]
+     (into [:div.application__wrapper-contents]
+           (for [child (:children field-descriptor)]
+             [render-field child nil]))]))
 
 (defn- remove-question-group-button [field-descriptor idx]
   (let [mouse-over? (subscribe [:application/mouse-over-remove-question-group-button
@@ -478,7 +477,7 @@
         :on-mouse-out on-mouse-out
         :on-click on-click}])))
 
-(defn- question-group-row [field-descriptor children idx can-remove?]
+(defn- question-group-row [field-descriptor idx can-remove?]
   (let [mouse-over? (subscribe [:application/mouse-over-remove-question-group-button
                                 field-descriptor
                                 idx])]
@@ -486,18 +485,18 @@
        :div.application__question-group-row.application__question-group-row-mouse-over
        :div.application__question-group-row)
      [:div.application__question-group-row-content
-      (for [child children]
+      (for [child (:children field-descriptor)]
         ^{:key (str (:id child) "-" idx)}
         [render-field child idx])]
      (when can-remove?
        [remove-question-group-button field-descriptor idx])]))
 
-(defn question-group [field-descriptor children idx]
+(defn question-group [field-descriptor _]
   (let [languages     (subscribe [:application/default-languages])
         label         (util/non-blank-val (:label field-descriptor) @languages)
         row-count     (subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]])
         cannot-edits? (map #(subscribe [:application/cannot-edit? (keyword (:id %))])
-                        (util/flatten-form-fields children))
+                           (util/flatten-form-fields (:children field-descriptor)))
         lang          @(subscribe [:application/form-language])]
     [:div.application__question-group
      (when-not (clojure.string/blank? label)
@@ -509,7 +508,6 @@
          ^{:key (str "question-group-row-" idx)}
          [question-group-row
           field-descriptor
-          children
           idx
           (and (< 1 @row-count) (not (some deref cannot-edits?)))]))]
      (when (not (some deref cannot-edits?))
@@ -521,9 +519,9 @@
          [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
          (tu/get-hakija-translation :add lang)]])]))
 
-(defn row-wrapper [children _]
+(defn row-wrapper [field-descriptor _]
   [:div.application__row-field-wrapper
-   (for [child children]
+   (for [child (:children field-descriptor)]
      ^{:key (:id child)}
      [render-field child nil])])
 
@@ -1042,14 +1040,11 @@
            :fieldClass "formField"
            :fieldType  "textField"} [email-field field-descriptor idx]
           {:fieldClass "wrapperElement"
-           :fieldType  "fieldset"
-           :children   children} [wrapper-field field-descriptor children idx]
+           :fieldType  "fieldset"} [wrapper-field field-descriptor idx]
           {:fieldClass "questionGroup"
-           :fieldType  "fieldset"
-           :children   children} [question-group field-descriptor children idx]
+           :fieldType  "fieldset"} [question-group field-descriptor idx]
           {:fieldClass "wrapperElement"
-           :fieldType  "rowcontainer"
-           :children   children} [row-wrapper children idx]
+           :fieldType  "rowcontainer"} [row-wrapper field-descriptor idx]
           {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor idx]
           {:fieldClass "formField" :fieldType "textField" :id id} [text-field field-descriptor idx]
           {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor idx]
