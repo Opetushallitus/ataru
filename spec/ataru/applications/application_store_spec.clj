@@ -170,7 +170,7 @@
 
   (it "should create attachment reviews for new application without hakukohteet"
     (let [application       (first (filter #(= "attachments" (:key %)) fixtures/applications))
-          flat-form-content (util/flatten-form-fields form-fixtures/attachment-test-form)
+          flat-form-content (util/flatten-form-fields (:content form-fixtures/attachment-test-form))
           answers-by-key    (-> application :content :answers util/answers-by-key)
           fields-by-id      (util/form-fields-by-id form-fixtures/attachment-test-form)]
       (should== [{:application_key "attachments"
@@ -196,7 +196,7 @@
 
   (it "should create attachment reviews for new application with hakukohteet"
     (let [application       (first (filter #(= "attachments" (:key %)) fixtures/applications))
-          flat-form-content (util/flatten-form-fields form-fixtures/attachment-test-form)
+          flat-form-content (util/flatten-form-fields (:content form-fixtures/attachment-test-form))
           answers-by-key    (-> application :content :answers util/answers-by-key)
           fields-by-id      (util/form-fields-by-id form-fixtures/attachment-test-form)]
       (should== [{:application_key "attachments"
@@ -232,7 +232,7 @@
 
   (it "should update attachment reviews for application without hakukohteet"
     (let [application       (first (filter #(= "attachments" (:key %)) fixtures/applications))
-          flat-form-content (util/flatten-form-fields form-fixtures/attachment-test-form)
+          flat-form-content (util/flatten-form-fields (:content form-fixtures/attachment-test-form))
           answers-by-key    (-> application :content :answers util/answers-by-key)
           fields-by-id      (util/form-fields-by-id form-fixtures/attachment-test-form)]
       (should== [{:application_key "attachments"
@@ -259,7 +259,7 @@
 
   (it "should delete orphans and preserve reviews"
       (let [application       (first (filter #(= "attachments" (:key %)) fixtures/applications))
-            flat-form-content (util/flatten-form-fields form-fixtures/attachment-test-form)
+            flat-form-content (util/flatten-form-fields (:content form-fixtures/attachment-test-form))
             answers-by-key    (-> application :content :answers util/answers-by-key)
             fields-by-id      (util/form-fields-by-id form-fixtures/attachment-test-form)
             reviews           (store/create-application-attachment-reviews
