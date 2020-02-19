@@ -28,28 +28,30 @@
   #?(:cljs (util/new-uuid)
      :clj  (str (UUID/randomUUID))))
 
-(defn flatten-form-fields [fields]
-  (flatten
-    (for [field fields
-          :when (not= "infoElement" (:fieldClass field))]
-      (match
-       field
-       {:fieldClass (:or "wrapperElement" "questionGroup")
-        :children   children}
-        (flatten-form-fields (map #(assoc % :children-of (:id field)) children))
+(declare flatten-form-fields)
 
-       {:fieldType (:or "dropdown" "multipleChoice" "singleChoice")
-        :options   options}
-       (cons field
-             (mapcat (fn [option]
-                       (map (fn [followup]
-                              (cond-> followup
-                                      (not (contains? followup :followup-of))
-                                      (assoc :followup-of (:id field)
-                                             :option-value (:value option))))
-                            (flatten-form-fields (:followups option))))
-                     options))
-       :else field))))
+(defn- flatten-form-field [field]
+  (let [children  (->> (:children field)
+                       (map #(assoc % :children-of (:id field)))
+                       flatten-form-fields)
+        followups (->> (:options field)
+                       (mapcat (fn [option]
+                                 (map #(assoc %
+                                              :followup-of (:id field)
+                                              :option-value (:value option))
+                                      (:followups option))))
+                       flatten-form-fields)]
+    (cons (cond-> (dissoc field :children)
+                  (contains? field :options)
+                  (update :options (partial mapv #(dissoc % :followups))))
+          (concat children followups))))
+
+(defn flatten-form-fields [fields]
+  (vec (mapcat flatten-form-field fields)))
+
+(defn answerable? [field]
+  (not (contains? #{"infoElement" "wrapperElement" "questionGroup"}
+                  (:fieldClass field))))
 
 (declare map-form-fields)
 

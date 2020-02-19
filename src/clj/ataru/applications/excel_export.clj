@@ -363,6 +363,7 @@
   [form-fields form-fields-by-id skip-answers? included-ids selected-oids]
   (->> form-fields
        (remove #(or (:exclude-from-answers %)
+                    (not (util/answerable? %))
                     (and (not (included-ids (:id %)))
                          (or (and skip-answers?
                                   (not (answer-to-always-include? (:id %))))
