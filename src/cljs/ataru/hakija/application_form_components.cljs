@@ -168,10 +168,9 @@
        [question-hakukohde-names field-descriptor :info-for-hakukohde])
      [markdown-paragraph text (-> field-descriptor :params :info-text-collapse) @application-identifier]]))
 
-(defn email-field [field-descriptor & {:keys [div-kwd disabled editing idx]
+(defn email-field [field-descriptor & {:keys [div-kwd disabled idx]
                                        :or   {div-kwd  :div.application__form-field
-                                              disabled false
-                                              editing  false}}]
+                                              disabled false}}]
   (let [id                    (keyword (:id field-descriptor))
         languages             (subscribe [:application/default-languages])
         size                  (get-in field-descriptor [:params :size])
@@ -249,7 +248,6 @@
         size                   (get-in field-descriptor [:params :size])
         size-class             (text-field-size->class size)
         languages              (subscribe [:application/default-languages])
-        editing?               (subscribe [:application/editing?])
         disabled?              (subscribe [:application/disabled? id])
         cannot-view?           (subscribe [:application/cannot-view? id])
         cannot-edit?           (subscribe [:application/cannot-edit? id])
@@ -257,7 +255,6 @@
     (fn [field-descriptor & {:keys [div-kwd idx]
                              :or   {div-kwd :div.application__form-field}}]
       (let [languages              @languages
-            editing?               @editing?
             disabled?              @disabled?
             {:keys [value
                     valid
@@ -552,7 +549,7 @@
 (defn- non-blank-option-label [option langs]
   (util/non-blank-val (:label option) langs))
 
-(defn dropdown [field-descriptor & {:keys [div-kwd editing idx] :or {div-kwd :div.application__form-field editing false}}]
+(defn dropdown [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
   (let [application (subscribe [:state-query [:application]])
         languages   (subscribe [:application/default-languages])
         id          (answer-key field-descriptor)
@@ -1048,15 +1045,14 @@
 
 (defn render-field
   [field-descriptor & args]
-  (let [ui       (subscribe [:state-query [:application :ui]])
-        editing? (subscribe [:state-query [:application :editing?]])]
+  (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [field-descriptor & {:keys [idx] :as args}]
       (if (visible? ui field-descriptor)
         (let [disabled? (get-in @ui [(keyword (:id field-descriptor)) :disabled?] false)]
           (cond-> (match field-descriptor
                          {:id "email"
                           :fieldClass "formField"
-                          :fieldType "textField"} [email-field field-descriptor :disabled disabled? :editing editing?]
+                          :fieldType "textField"} [email-field field-descriptor :disabled disabled?]
                          {:fieldClass "wrapperElement"
                           :fieldType  "fieldset"
                           :children   children} [wrapper-field field-descriptor children]
@@ -1069,7 +1065,7 @@
                          {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor]
                          {:fieldClass "formField" :fieldType "textField" :id id} [text-field field-descriptor]
                          {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
-                         {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor :editing editing?]
+                         {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]
                          {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]
                          {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor]
                          {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor]
