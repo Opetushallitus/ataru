@@ -503,6 +503,17 @@ WHERE la.key IS NULL\n"
            ORDER BY t.i ASC
            LIMIT 1) = ANY(?)\n"
               "      AND a.hakukohde[1] = ANY(?)\n"))
+          (when (contains? query :attachment-review-states)
+            (str "      AND EXISTS (SELECT 1
+           FROM application_hakukohde_attachment_reviews AS ahar
+           WHERE ahar.application_key = a.key
+                 AND ahar.attachment_key = ?\n"
+                 (when (not (empty? (second (:attachment-review-states query))))
+                   "                 AND ahar.state = ANY(?)\n")
+                 (when (or (contains? query :hakukohde)
+                           (contains? query :ensisijainen-hakukohde))
+                   "                 AND ahar.hakukohde = ANY(?)\n")
+                 "                 )\n"))
           (when (contains? sort :offset)
             (case (:order-by sort)
               "submitted"
@@ -540,6 +551,15 @@ WHERE la.key IS NULL\n"
                                    :hakukohde
                                    :ensisijaisesti-hakukohteissa
                                    :ensisijainen-hakukohde])
+             (when-let [[attachment-field-id states] (:attachment-review-states query)]
+               (cond-> [attachment-field-id]
+                       (not-empty states)
+                       (conj (->> states
+                                  to-array
+                                  (.createArrayOf (:connection connection) "varchar")))
+                       (or (contains? query :hakukohde)
+                           (contains? query :ensisijainen-hakukohde))
+                       (conj (or (:ensisijainen-hakukohde query) (:hakukohde query)))))
              (when (contains? sort :offset)
                (case (:order-by sort)
                  "submitted"
