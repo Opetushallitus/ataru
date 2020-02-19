@@ -2,6 +2,9 @@
   (:require [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]
             [ataru.cljs-util :as cljs-util]
+            [ataru.virkailija.dropdown :as dropdown]
+            [ataru.virkailija.question-search.view :as question-search]
+            [ataru.virkailija.question-search.handlers :as qsh]
             [ataru.translations.texts :refer [state-translations general-texts]]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as kvt]
             [ataru.util :as util]
@@ -785,6 +788,31 @@
             :on-hakukohderyhma-unselect (fn [])}]
           close]))]))
 
+(defn- filter-attachment-state-dropdown
+  [field-id]
+  (let [lang             @(subscribe [:editor/virkailija-lang])
+        states           @(subscribe [:application/filter-attachment-states field-id])
+        options          (map (fn [[state label]]
+                                (let [checked? (get states state false)]
+                                  [checked?
+                                   (util/non-blank-val label [lang :fi :sv :en])
+                                   [state checked?]]))
+                              review-states/attachment-hakukohde-review-types)
+        selected-options (filter first options)]
+    [:div.application-handling__filters-attachment-attachments__dropdown
+     [dropdown/multi-option
+      (cond (seq (rest selected-options))
+            @(subscribe [:editor/virkailija-translation :states-selected])
+            (seq selected-options)
+            (str @(subscribe [:editor/virkailija-translation :state])
+                 " "
+                 (second (first selected-options)))
+            :else
+            @(subscribe [:editor/virkailija-translation :filter-by-state]))
+      options
+      (fn [[state checked?]]
+        (dispatch [:application/set-filter-attachment-state field-id state (not checked?)]))]]))
+
 (defn- application-filters
   []
   (let [filters                                   (subscribe [:state-query [:application :filters]])
@@ -799,6 +827,9 @@
         show-ensisijaisesti?                      (subscribe [:application/show-ensisijaisesti?])
         show-rajaa-hakukohteella?                 (subscribe [:application/show-rajaa-hakukohteella?])
         filters-changed?                          (subscribe [:application/filters-changed?])
+        form-key                                  (subscribe [:application/selected-form-key])
+        filter-attachments                        (subscribe [:application/filter-attachments])
+        question-search-id                        :filters-attachment-search
         filters-visible                           (r/atom false)
         rajaava-hakukohde-opened?                 (r/atom false)
         filters-to-include                        #{:language-requirement :degree-requirement :eligibility-state :payment-obligation}
@@ -881,6 +912,33 @@
            (when @has-base-education-answers
              [:div.application-handling__popup-column.application-handling__popup-column--large
               [application-base-education-filters filters-checkboxes @lang]])]
+          [:div.application-handling__filters-attachment-search-input
+           [question-search/search-input
+            @form-key
+            question-search-id
+            @(subscribe [:editor/virkailija-translation :name-of-attachment])
+            (not (empty? @filter-attachments))
+            (fn [db]
+              (every-pred (qsh/field-type-filter-predicate "attachment")
+                          (qsh/belongs-to-selected-filter-predicate db)))]]
+          (if (seq @filter-attachments)
+            [:div.application-handling__filters-attachment-attachments
+             (into [:ul.application-handling__filters-attachment-attachments__list]
+                   (map (fn [[field-id _]]
+                          [:li.application-handling__filters-attachment-attachments__list-item
+                           [:button.application-handling__filters-attachment-attachments__remove-button
+                            {:on-click #(dispatch [:application/remove-filter-attachment field-id])}
+                            [:i.zmdi.zmdi-close]]
+                           [:span.application-handling__filters-attachment-attachments__label
+                            @(subscribe [:application/form-field-label @form-key field-id])]
+                           [filter-attachment-state-dropdown field-id]])
+                        @filter-attachments))]
+            [:div.application-handling__filters-attachment-search-results
+             [question-search/search-results
+              @form-key
+              question-search-id
+              #(do (dispatch [:question-search/clear-search-input @form-key question-search-id])
+                   (dispatch [:application/add-filter-attachment %]))]])
           [:div.application-handling__filters-popup-apply-button-container
            [:a.editor-form__control-button.editor-form__control-button--variable-width
             {:class    (if @filters-changed?

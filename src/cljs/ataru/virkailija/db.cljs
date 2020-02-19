@@ -2,6 +2,12 @@
   (:require
    [ataru.application.review-states :as review-states]))
 
+(def default-attachment-review-states
+  (into
+   {}
+   (map (fn [[state _]] [state false])
+        review-states/attachment-hakukohde-review-types)))
+
 (def default-filters {:language-requirement          {:unreviewed  true
                                                       :fulfilled   true
                                                       :unfulfilled true}

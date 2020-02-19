@@ -31,6 +31,16 @@
     (u/form-fields-by-id form)))
 
 (re-frame/reg-sub
+  :application/selected-form-key
+  (fn [db _]
+    (let [selected-haku (or (get-in db [:application :selected-haku])
+                            (get-in db [:hakukohteet (get-in db [:application :selected-hakukohde]) :haku-oid])
+                            (get-in db [:application :selected-hakukohderyhma 0]))
+          selected-form (or (get-in db [:application :selected-form-key])
+                            (get-in db [:haut selected-haku :ataru-form-key]))]
+      selected-form)))
+
+(re-frame/reg-sub
   :application/selected-form-attachment-fields
   (fn [_ _]
     (re-frame/subscribe [:application/selected-form]))
@@ -221,7 +231,9 @@
         (not= (get-in db [:application :ensisijaisesti?])
               (get-in db [:application :ensisijaisesti?-checkbox]))
         (not= (get-in db [:application :rajaus-hakukohteella])
-              (get-in db [:application :rajaus-hakukohteella-value])))))
+              (get-in db [:application :rajaus-hakukohteella-value]))
+        (not= (get-in db [:application :attachment-review-states])
+              (get-in db [:application :attachment-review-states-value])))))
 
 (re-frame/reg-sub
   :application/selected-hakukohderyhma-hakukohteet
@@ -404,6 +416,28 @@
           (filter #(= field-id (:id %)))
           first
           :label)
+     [lang :fi :sv :en])))
+
+(re-frame/reg-sub
+  :application/form
+  (fn [db [_ form-key]]
+    (get-in db [:forms form-key])))
+
+(re-frame/reg-sub
+  :application/form-fields-by-id
+  (fn [[_ form-key] _]
+    (re-frame/subscribe [:application/form form-key]))
+  (fn [form _]
+    (u/form-fields-by-id form)))
+
+(re-frame/reg-sub
+  :application/form-field-label
+  (fn [[_ form-key _] _]
+    [(re-frame/subscribe [:application/form-fields-by-id form-key])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn [[fields-by-id lang] [_ _ field-id]]
+    (u/non-blank-val
+     (get-in fields-by-id [(keyword field-id) :label])
      [lang :fi :sv :en])))
 
 (re-frame/reg-sub
@@ -868,3 +902,13 @@
   (fn show-creating-henkilo-failed? [[application form] _]
     (and (not (person-info-module/muu-person-info-module? form))
          (nil? (get-in application [:person :oid])))))
+
+(re-frame/reg-sub
+  :application/filter-attachments
+  (fn [db _]
+    (get-in db [:application :attachment-review-states-value])))
+
+(re-frame/reg-sub
+  :application/filter-attachment-states
+  (fn [db [_ field-id]]
+    (get-in db [:application :attachment-review-states-value field-id])))
