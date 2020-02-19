@@ -2466,13 +2466,6 @@ and (max-width: @desktop-content-width) {
     position: static;
     margin-left: 10px;
   }
-  /*
-     Without this first selector, the rule will be dependent on include
-     order (for row fields) which seems to be pretty random
-   */
-  .application__row-field.application__form-field, .application__form-field {
-    margin-left: 10px;
-  }
 
   .application-handling__form-list-column-wrapper {
     flex-flow: row wrap;

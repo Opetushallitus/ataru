@@ -533,7 +533,7 @@
   [:div.application__row-field-wrapper
    (for [child children]
      ^{:key (:id child)}
-     [render-field child :div-kwd :div.application__row-field.application__form-field])])
+     [render-field child])])
 
 (defn- dropdown-followups [field-descriptor value]
   (when-let [followups (seq (util/resolve-followups
