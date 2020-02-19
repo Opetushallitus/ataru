@@ -207,7 +207,7 @@
   [application applied-hakukohteet old-answers form update? connection]
   (let [flat-form-content   (-> form :content util/flatten-form-fields)
         fields-by-id        (util/form-fields-by-id form)
-        excluded-attachment-ids-when-yo-and-jyemp (util/attachment-ids-from-children flat-form-content
+        excluded-attachment-ids-when-yo-and-jyemp (util/attachment-ids-from-children (:content form)
                                                                                      higher-completed-base-education-id
                                                                                      attachment-always-visible?)
         answers-by-key      (-> application :content :answers util/answers-by-key)

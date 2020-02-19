@@ -28,37 +28,49 @@
   #?(:cljs (util/new-uuid)
      :clj  (str (UUID/randomUUID))))
 
+(declare flatten-form-fields)
+
+(defn- flatten-form-field [field]
+  (let [children  (->> (:children field)
+                       (map #(assoc % :children-of (:id field)))
+                       flatten-form-fields)
+        followups (->> (:options field)
+                       (mapcat (fn [option]
+                                 (map #(assoc %
+                                              :followup-of (:id field)
+                                              :option-value (:value option))
+                                      (:followups option))))
+                       flatten-form-fields)]
+    (cons (cond-> (dissoc field :children)
+                  (contains? field :options)
+                  (update :options (partial mapv #(dissoc % :followups))))
+          (concat children followups))))
+
 (defn flatten-form-fields [fields]
-  (flatten
-    (for [field fields
-          :when (not= "infoElement" (:fieldClass field))]
-      (match
-       field
-       {:fieldClass (:or "wrapperElement" "questionGroup")
-        :children   children}
-        (flatten-form-fields (map #(assoc % :children-of (:id field)) children))
+  (vec (mapcat flatten-form-field fields)))
 
-       {:fieldType (:or "dropdown" "multipleChoice" "singleChoice")
-        :options   options}
-       (cons field
-             (mapcat (fn [option]
-                       (map (fn [followup]
-                              (cond-> followup
-                                      (not (contains? followup :followup-of))
-                                      (assoc :followup-of (:id field)
-                                             :option-value (:value option))))
-                            (flatten-form-fields (:followups option))))
-                     options))
-       :else field))))
+(defn answerable? [field]
+  (not (contains? #{"infoElement" "wrapperElement" "questionGroup"}
+                  (:fieldClass field))))
 
-(defn attachment-ids-from-children [flat-fields parent-id skip?]
-  (let [attachment-ids (->> flat-fields
-                            (filter #(= parent-id (:id %)))
-                            (flatten-form-fields)
-                            (filter #(= "attachment" (:fieldType %)))
-                            (map #(:id %))
-                            (filter #(not (skip? %))))]
-    (set attachment-ids)))
+(defn find-field [fields id]
+  (cond (empty? fields)
+        nil
+        (= id (:id (first fields)))
+        (first fields)
+        :else
+        (recur (into (rest fields)
+                     (concat (:children (first fields))
+                             (mapcat :followups (:options (first fields)))))
+               id)))
+
+(defn attachment-ids-from-children [fields parent-id skip?]
+  (some->> (find-field fields parent-id)
+           flatten-form-field
+           (filter #(= "attachment" (:fieldType %)))
+           (map :id)
+           (remove skip?)
+           set))
 
 (declare map-form-fields)
 

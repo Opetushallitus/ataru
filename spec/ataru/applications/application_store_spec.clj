@@ -288,8 +288,7 @@
 
   (it "should be possible to extract attachment ids from base education module"
     (let [content                         (:content form-fixtures/base-education-attachment-test-form)
-          flat-fields                     (util/flatten-form-fields content)
-          attachments-from-base-education (util/attachment-ids-from-children flat-fields
+          attachments-from-base-education (util/attachment-ids-from-children content
                                                                              higher-completed-base-education-id
                                                                              attachment-always-visible?)]
       (should== #{"pohjakoulutus_kk_ulk--attachement"

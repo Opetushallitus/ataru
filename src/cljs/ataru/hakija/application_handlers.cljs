@@ -519,7 +519,7 @@
         preselected-hakukohde-oids (->> db :application :preselected-hakukohde-oids
                                         (filter #(contains? valid-hakukohde-oids %)))
         flat-form-content          (autil/flatten-form-fields (:content form))
-        higher-base-education-module-attachment-ids (autil/attachment-ids-from-children flat-form-content
+        higher-base-education-module-attachment-ids (autil/attachment-ids-from-children (:content form)
                                                                                         higher-completed-base-education-id
                                                                                         attachment-always-visible?)
         initial-answers            (create-initial-answers flat-form-content preselected-hakukohde-oids)]

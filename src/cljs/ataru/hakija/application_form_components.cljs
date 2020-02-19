@@ -535,12 +535,10 @@
          (tu/get-hakija-translation :add lang)]])]))
 
 (defn row-wrapper [children]
-  (into [:div.application__row-field-wrapper]
-        ; flatten fields here because 'rowcontainer' may
-        ; have nested fields because
-        ; of validation (for example :one-of validator)
-        (for [child (util/flatten-form-fields children)]
-          [render-field child :div-kwd :div.application__row-field.application__form-field])))
+  [:div.application__row-field-wrapper
+   (for [child children]
+     ^{:key (:id child)}
+     [render-field child :div-kwd :div.application__row-field.application__form-field])])
 
 (defn- dropdown-followups [field-descriptor value]
   (when-let [followups (seq (util/resolve-followups
