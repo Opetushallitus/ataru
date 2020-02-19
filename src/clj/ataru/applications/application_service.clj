@@ -104,6 +104,7 @@
                                 (let [flat-form-fields (util/flatten-form-fields (:content form))
                                       field-by-id (util/group-by-first :id flat-form-fields)]
                                   (->> flat-form-fields
+                                       (filter util/answerable?)
                                        (filter #(visible? % field-by-id answers hakutoiveet
                                                           (-> tarjonta-info :tarjonta :hakukohteet)))
                                        (map remove-irrelevant-changes))))

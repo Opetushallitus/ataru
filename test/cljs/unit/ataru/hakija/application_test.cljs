@@ -98,64 +98,88 @@
      :params {}}]})
 
 (deftest flattens-correctly
-  (let [expected   [{:id "G__2",
-                     :label {:fi "kenttä1", :sv ""},
-                     :params {:size "S"},
-                     :validators ["required"]
-                     :fieldType "textField",
-                     :fieldClass "formField"
-                     :children-of "G__1"
-                     :metadata metadata}
-                    {:id "G__14",
-                     :label {:fi "kenttä2", :sv ""},
-                     :params {:size "M"},
-                     :validators ["some-validator"]
-                     :fieldType "textField",
-                     :fieldClass "formField"
-                     :children-of "G__1"
-                     :metadata metadata}
-                    {:id "G__25",
-                     :label {:fi "ulkokenttä", :sv ""},
-                     :params {:size "L"},
-                     :fieldType "textField",
-                     :fieldClass "formField"
-                     :metadata metadata}]
-        actual (util/flatten-form-fields (:content form1))]
+  (let [expected [{:id         "G__1",
+                   :label      {:fi "osio1", :sv "Avsnitt namn"},
+                   :fieldType  "fieldset",
+                   :fieldClass "wrapperElement"
+                   :metadata   metadata},
+                  {:id          "G__2",
+                   :label       {:fi "kenttä1", :sv ""},
+                   :params      {:size "S"},
+                   :validators  ["required"]
+                   :fieldType   "textField",
+                   :fieldClass  "formField"
+                   :children-of "G__1"
+                   :metadata    metadata}
+                  {:id          "G__14",
+                   :label       {:fi "kenttä2", :sv ""},
+                   :params      {:size "M"},
+                   :validators  ["some-validator"]
+                   :fieldType   "textField",
+                   :fieldClass  "formField"
+                   :children-of "G__1"
+                   :metadata    metadata}
+                  {:id         "G__25",
+                   :label      {:fi "ulkokenttä", :sv ""},
+                   :params     {:size "L"},
+                   :fieldType  "textField",
+                   :fieldClass "formField"
+                   :metadata   metadata}]
+        actual   (util/flatten-form-fields (:content form1))]
     (is (= expected actual))))
 
 (deftest flattens-row-container-answers
-  (let [expected [{:label {:fi "Etunimet", :sv "Förnamn"},
-                   :fieldClass "formField"
-                          :metadata metadata,
-                   :id "380913e2-8c93-494c-bd86-57000ed50ae8",
-                   :params {},
-                   :validators ["required"]
-                   :children-of "399d9123-f15f-402a-9ce9-2749d0578399"
-                   :fieldType "textField"}
-                  {:label {:fi "Kutsumanimi", :sv "Smeknamn"},
-                   :fieldClass "formField"
-                          :metadata metadata,
-                   :id "7c8388f0-7ccb-4706-8630-15405b141552",
-                   :params {:size "S"},
-                   :validators ["required"]
-                   :children-of "399d9123-f15f-402a-9ce9-2749d0578399"
-                   :fieldType "textField"}
-                  {:label {:fi "Sukunimi", :sv "Efternamn"},
-                   :fieldClass "formField"
-                          :metadata metadata,
-                   :id "d2dc3e2e-c130-4fd4-8509-7c8fbf4d1c9e",
-                   :params {},
-                   :validators ["required"]
+  (let [expected [{:fieldClass "wrapperElement"
+                   :metadata   metadata,
+                   :id         "5febd7b0-75f0-462c-b9a4-6cac6a4bec88",
+                   :fieldType  "fieldset",
+                   :params     {},
+                   :label      {:fi "Henkilötiedot", :sv "Personlig information"},
+                   :module     "person-info"},
+                  {:fieldClass  "wrapperElement"
+                   :metadata    metadata,
+                   :id          "399d9123-f15f-402a-9ce9-2749d0578399",
+                   :fieldType   "rowcontainer",
                    :children-of "5febd7b0-75f0-462c-b9a4-6cac6a4bec88"
-                   :fieldType "textField"}
-                  {:fieldClass "formField"
-                               :metadata metadata,
-                   :fieldType "textField",
-                   :label {:fi "Random question", :sv ""},
-                   :id "839cb685-749a-46da-b215-842bc13ed542",
+                   :params      {}},
+                  {:label       {:fi "Etunimet", :sv "Förnamn"},
+                   :fieldClass  "formField"
+                   :metadata    metadata,
+                   :id          "380913e2-8c93-494c-bd86-57000ed50ae8",
+                   :params      {},
+                   :validators  ["required"]
+                   :children-of "399d9123-f15f-402a-9ce9-2749d0578399"
+                   :fieldType   "textField"}
+                  {:label       {:fi "Kutsumanimi", :sv "Smeknamn"},
+                   :fieldClass  "formField"
+                   :metadata    metadata,
+                   :id          "7c8388f0-7ccb-4706-8630-15405b141552",
+                   :params      {:size "S"},
+                   :validators  ["required"]
+                   :children-of "399d9123-f15f-402a-9ce9-2749d0578399"
+                   :fieldType   "textField"}
+                  {:label       {:fi "Sukunimi", :sv "Efternamn"},
+                   :fieldClass  "formField"
+                   :metadata    metadata,
+                   :id          "d2dc3e2e-c130-4fd4-8509-7c8fbf4d1c9e",
+                   :params      {},
+                   :validators  ["required"]
+                   :children-of "5febd7b0-75f0-462c-b9a4-6cac6a4bec88"
+                   :fieldType   "textField"}
+                  {:fieldClass "wrapperElement"
+                   :metadata   metadata,
+                   :fieldType  "fieldset",
+                   :id         "036a71bb-01dc-440e-8c05-80eea0ca9640",
+                   :label      {:fi "Osion nimi", :sv "Avsnitt namn"},
+                   :params     {}}
+                  {:fieldClass  "formField"
+                   :metadata    metadata,
+                   :fieldType   "textField",
+                   :label       {:fi "Random question", :sv ""},
+                   :id          "839cb685-749a-46da-b215-842bc13ed542",
                    :children-of "036a71bb-01dc-440e-8c05-80eea0ca9640"
-                   :params {}}]
-        actual (util/flatten-form-fields (:content person-info-form))]
+                   :params      {}}]
+        actual   (util/flatten-form-fields (:content person-info-form))]
     (is (= expected actual))))
 
 (deftest correct-initial-validity-for-nested-form
