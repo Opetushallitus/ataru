@@ -23,7 +23,7 @@
   :application/hakukohteet-wo-applicable-base-education
   (fn [db _] (hakukohteet-wo-applicable-base-education db)))
 
-(defn pohjakoulutusristiriita [field-descriptor]
+(defn pohjakoulutusristiriita [field-descriptor _]
   (let [lang @(re-frame/subscribe [:application/form-language])]
     [:div.application__wrapper-element
      [:div.application__wrapper-heading

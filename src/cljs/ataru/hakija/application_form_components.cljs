@@ -156,7 +156,7 @@
                          {:key (str "error-" idx)}))
                      errors))])))
 
-(defn info-element [field-descriptor]
+(defn info-element [field-descriptor _]
   (let [languages              (subscribe [:application/default-languages])
         application-identifier (subscribe [:application/application-identifier])
         header                 (util/non-blank-val (:label field-descriptor) @languages)
@@ -168,13 +168,13 @@
        [question-hakukohde-names field-descriptor :info-for-hakukohde])
      [markdown-paragraph text (-> field-descriptor :params :info-text-collapse) @application-identifier]]))
 
-(defn email-field [field-descriptor & {:keys [idx]}]
+(defn email-field [field-descriptor idx]
   (let [id                    (keyword (:id field-descriptor))
         languages             (subscribe [:application/default-languages])
         size                  (get-in field-descriptor [:params :size])
         size-class            (text-field-size->class size)
         validators-processing (subscribe [:state-query [:application :validators-processing]])]
-    (fn []
+    (fn [field-descriptor idx]
       (let [answer      @(subscribe [:application/answer id idx nil])
             on-change   #(if idx
                            (multi-value-field-change field-descriptor 0 idx %)
@@ -239,7 +239,7 @@
               :autoComplete autocomplete-off
               }]])]))))
 
-(defn text-field [field-descriptor & {:keys [idx]}]
+(defn text-field [field-descriptor idx]
   (let [id                     (keyword (:id field-descriptor))
         size                   (get-in field-descriptor [:params :size])
         size-class             (text-field-size->class size)
@@ -248,7 +248,7 @@
         cannot-view?           (subscribe [:application/cannot-view? id])
         cannot-edit?           (subscribe [:application/cannot-edit? id])
         local-state            (r/atom {:focused? false :value nil})]
-    (fn [field-descriptor & {:keys [idx]}]
+    (fn [field-descriptor idx]
       (let [languages              @languages
             disabled?              @disabled?
             {:keys [value
@@ -366,7 +366,7 @@
              {:on-click remove-field}]])]))))
 
 (defn repeatable-text-field
-  [field-descriptor & {:keys [idx]}]
+  [field-descriptor idx]
   (let [id           (keyword (:id field-descriptor))
         cannot-edit? @(subscribe [:application/cannot-edit? id])
         answer-count @(subscribe [:application/repeatable-answer-count id idx])]
@@ -400,14 +400,14 @@
     (when-not (or (empty? max-length) (= "0" max-length))
       max-length)))
 
-(defn text-area [field-descriptor & {:keys [idx]}]
+(defn text-area [field-descriptor idx]
   (let [id           (keyword (:id field-descriptor))
         size         (-> field-descriptor :params :size)
         size-class   (text-area-size->class size)
         max-length   (parse-max-length field-descriptor)
         cannot-edit? (subscribe [:application/cannot-edit? id])
         local-state  (r/atom {:focused? false :value nil})]
-    (fn [field-descriptor & {:keys [idx]}]
+    (fn [field-descriptor idx]
       (let [{:keys [value
                     valid]} @(subscribe [:application/answer id idx nil])
             cannot-edit?    @cannot-edit?
@@ -442,11 +442,9 @@
          (when max-length
            [:span.application__form-textarea-max-length (str (count value) " / " max-length)])]))))
 
-(declare render-field)
-
-(defn wrapper-field [field-descriptor children]
+(defn wrapper-field [_ _ _]
   (let [languages           (subscribe [:application/default-languages])]
-    (fn [field-descriptor children]
+    (fn [field-descriptor children idx]
       (let [label (util/non-blank-val (:label field-descriptor) @languages)]
         [:div.application__wrapper-element
          [:div.application__wrapper-heading
@@ -454,7 +452,7 @@
           [scroll-to-anchor field-descriptor]]
          (into [:div.application__wrapper-contents]
            (for [child children]
-             [render-field child]))]))))
+             [render-field child nil]))]))))
 
 (defn- remove-question-group-button [field-descriptor idx]
   (let [mouse-over? (subscribe [:application/mouse-over-remove-question-group-button
@@ -490,11 +488,11 @@
      [:div.application__question-group-row-content
       (for [child children]
         ^{:key (str (:id child) "-" idx)}
-        [render-field child :idx idx])]
+        [render-field child idx])]
      (when can-remove?
        [remove-question-group-button field-descriptor idx])]))
 
-(defn question-group [field-descriptor children]
+(defn question-group [field-descriptor children idx]
   (let [languages     (subscribe [:application/default-languages])
         label         (util/non-blank-val (:label field-descriptor) @languages)
         row-count     (subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]])
@@ -523,11 +521,11 @@
          [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
          (tu/get-hakija-translation :add lang)]])]))
 
-(defn row-wrapper [children]
+(defn row-wrapper [children _]
   [:div.application__row-field-wrapper
    (for [child children]
      ^{:key (:id child)}
-     [render-field child])])
+     [render-field child nil])])
 
 (defn- dropdown-followups [field-descriptor value]
   (when-let [followups (seq (util/resolve-followups
@@ -536,12 +534,12 @@
     [:div.application__form-dropdown-followups.animated.fadeIn
      (for [followup followups]
        ^{:key (:id followup)}
-       [render-field followup])]))
+       [render-field followup nil])]))
 
 (defn- non-blank-option-label [option langs]
   (util/non-blank-val (:label option) langs))
 
-(defn dropdown [field-descriptor & {:keys [idx]}]
+(defn dropdown [field-descriptor idx]
   (let [application (subscribe [:state-query [:application]])
         languages   (subscribe [:application/default-languages])
         id          (answer-key field-descriptor)
@@ -598,7 +596,7 @@
    [:div.application__form-multi-choice-followups-container.animated.fadeIn
     (map (fn [followup]
            ^{:key (:id followup)}
-           [render-field followup])
+           [render-field followup nil])
          followups)]])
 
 (defn- multiple-choice-option [field-descriptor option parent-id question-group-idx]
@@ -635,7 +633,7 @@
   [field-descriptor & _]
   (let [id           (answer-key field-descriptor)
         languages    (subscribe [:application/default-languages])]
-    (fn [field-descriptor & {:keys [idx]}]
+    (fn [field-descriptor idx]
       [:div.application__form-field
        [label field-descriptor]
        (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
@@ -717,7 +715,7 @@
         languages               (subscribe [:application/default-languages])
         verifying?              (subscribe [:application/fetching-selection-limits? button-id])
         use-multi-choice-style? (use-multi-choice-style? field-descriptor @languages)]
-    (fn [field-descriptor & {:keys [idx]}]
+    (fn [field-descriptor idx]
       (let [answer    @(subscribe [:application/answer button-id idx nil])
             options   @(subscribe [:application/visible-options field-descriptor])
             followups (->> options
@@ -747,7 +745,7 @@
            [:div.application__form-multi-choice-followups-container.animated.fadeIn
             (for [followup followups]
               ^{:key (:id followup)}
-              [render-field followup])])]))))
+              [render-field followup nil])])]))))
 
 (defonce max-attachment-size-bytes
   (get (js->clj js/config) "attachment-file-max-size-bytes" (* 10 1024 1024)))
@@ -916,11 +914,11 @@
         :deleting  attachment-deleting-file)
       field-descriptor component-id question-group-idx attachment-idx]]))
 
-(defn attachment [{:keys [id] :as field-descriptor} & {question-group-idx :idx}]
+(defn attachment [{:keys [id] :as field-descriptor} & _]
   (let [languages              (subscribe [:application/default-languages])
         application-identifier (subscribe [:application/application-identifier])
         text                   (reaction (util/non-blank-val (get-in field-descriptor [:params :info-text :value]) @languages))]
-    (fn [{:keys [id] :as field-descriptor} & {question-group-idx :idx}]
+    (fn [{:keys [id] :as field-descriptor} question-group-idx]
       (let [attachment-count (reaction (count @(subscribe [:state-query [:application :answers (keyword id) :values question-group-idx]])))]
         [:div.application__form-field
          [label field-descriptor]
@@ -985,10 +983,10 @@
                                   :aria-invalid (not valid)
                                   :autoComplete autocomplete-off}]))})))
 
-(defn adjacent-text-fields [field-descriptor]
+(defn adjacent-text-fields [field-descriptor _]
   (let [cannot-edits? (map #(subscribe [:application/cannot-edit? (keyword (:id %))])
                            (util/flatten-form-fields (:children field-descriptor)))]
-    (fn [field-descriptor & {question-group-idx :idx}]
+    (fn [field-descriptor question-group-idx]
       (let [row-amount      (subscribe [:application/adjacent-field-row-amount field-descriptor question-group-idx])
             remove-on-click (fn remove-adjacent-text-field [event]
                               (let [row-idx (int (.getAttribute (.-currentTarget event) "data-row-idx"))]
@@ -1035,37 +1033,34 @@
             [:i.zmdi.zmdi-plus-square] (str " " (tu/get-hakija-translation :add-row lang))])]))))
 
 (defn render-field
-  [field-descriptor & args]
+  [_ _]
   (let [ui (subscribe [:state-query [:application :ui]])]
-    (fn [field-descriptor & {:keys [idx] :as args}]
+    (fn [field-descriptor idx]
       (if (visible? ui field-descriptor)
-        (cond-> (match field-descriptor
-                  {:id         "email"
-                   :fieldClass "formField"
-                   :fieldType  "textField"} [email-field field-descriptor]
-                  {:fieldClass "wrapperElement"
-                   :fieldType  "fieldset"
-                   :children   children} [wrapper-field field-descriptor children]
-                  {:fieldClass "questionGroup"
-                   :fieldType  "fieldset"
-                   :children   children} [question-group field-descriptor children]
-                  {:fieldClass "wrapperElement"
-                   :fieldType  "rowcontainer"
-                   :children   children} [row-wrapper children]
-                  {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor]
-                  {:fieldClass "formField" :fieldType "textField" :id id} [text-field field-descriptor]
-                  {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
-                  {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]
-                  {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]
-                  {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor]
-                  {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor]
-                  {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohde/hakukohteet field-descriptor]
-                  {:fieldClass "pohjakoulutusristiriita" :fieldType "pohjakoulutusristiriita"} [pohjakoulutusristiriita/pohjakoulutusristiriita field-descriptor]
-                  {:fieldClass "infoElement"} [info-element field-descriptor]
-                  {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor])
-                (or (:idx args)
-                    (empty? (:children field-descriptor)))
-                (into (flatten (seq args))))
+        (match field-descriptor
+          {:id         "email"
+           :fieldClass "formField"
+           :fieldType  "textField"} [email-field field-descriptor idx]
+          {:fieldClass "wrapperElement"
+           :fieldType  "fieldset"
+           :children   children} [wrapper-field field-descriptor children idx]
+          {:fieldClass "questionGroup"
+           :fieldType  "fieldset"
+           :children   children} [question-group field-descriptor children idx]
+          {:fieldClass "wrapperElement"
+           :fieldType  "rowcontainer"
+           :children   children} [row-wrapper children idx]
+          {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor idx]
+          {:fieldClass "formField" :fieldType "textField" :id id} [text-field field-descriptor idx]
+          {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor idx]
+          {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor idx]
+          {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor idx]
+          {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor idx]
+          {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor idx]
+          {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohde/hakukohteet field-descriptor idx]
+          {:fieldClass "pohjakoulutusristiriita" :fieldType "pohjakoulutusristiriita"} [pohjakoulutusristiriita/pohjakoulutusristiriita field-descriptor idx]
+          {:fieldClass "infoElement"} [info-element field-descriptor idx]
+          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor idx])
         [:div]))))
 
 (defn editable-fields [form-data]
@@ -1075,4 +1070,4 @@
                            (into
                             [:div.application__editable-content.animated.fadeIn]
                             (for [content (:content form-data)]
-                              [render-field content])))}))
+                              [render-field content nil])))}))
