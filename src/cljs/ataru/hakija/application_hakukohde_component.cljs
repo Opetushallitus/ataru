@@ -225,7 +225,7 @@
           (translations/get-hakija-translation :add-application-option lang)]]))))
 
 (defn hakukohteet
-  [field-descriptor]
+  [field-descriptor _]
   [:div.application__wrapper-element
    [hakukohde-selection-header field-descriptor]
    [:div.application__wrapper-contents.application__hakukohde-contents-wrapper
