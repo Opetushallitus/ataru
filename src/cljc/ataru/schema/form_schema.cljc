@@ -744,6 +744,13 @@
                   (s/optional-key :offset) {:key       s/Str
                                             :submitted org.joda.time.DateTime}}))
 
+(s/defschema QueryAttachmentReviewStates
+  {s/Keyword
+   (into
+    {}
+    (map (fn [[state _]] [(keyword state) s/Bool])
+         review-states/attachment-hakukohde-review-types))})
+
 (s/defschema ApplicationQuery
   {(s/optional-key :form-key)             s/Str
    (s/optional-key :hakukohde-oid)        s/Str
@@ -757,6 +764,7 @@
    (s/optional-key :name)                 s/Str
    (s/optional-key :person-oid)           s/Str
    (s/optional-key :application-oid)      s/Str
+   :attachment-review-states              QueryAttachmentReviewStates
    :sort                                  Sort
    (s/optional-key :states-and-filters)   {:filters                      {s/Keyword {s/Keyword s/Bool}}
                                            :attachment-states-to-include [s/Str]

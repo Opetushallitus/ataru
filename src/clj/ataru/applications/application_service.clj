@@ -239,6 +239,13 @@
   [application-oids]
   {:application-oids application-oids})
 
+(defn ->attachment-review-states-query
+  [attachment-review-states-query]
+  (when-let [[attachment-field-id states] (first attachment-review-states-query)]
+    {:attachment-review-states
+     [(name attachment-field-id)
+      (keep #(when (second %) (name (first %))) states)]}))
+
 (defn ->empty-query
   []
   {})
@@ -615,6 +622,7 @@
                 name
                 person-oid
                 application-oid
+                attachment-review-states
                 sort
                 states-and-filters]} params
         ensisijaisesti               (boolean ensisijaisesti)
@@ -657,7 +665,8 @@
                             (some? person-oid)
                             (->person-oid-query person-oid)
                             (some? application-oid)
-                            (->application-oid-query application-oid)))]
+                            (->application-oid-query application-oid))
+                      (->attachment-review-states-query attachment-review-states))]
       (get-application-list-by-query
        person-service
        tarjonta-service

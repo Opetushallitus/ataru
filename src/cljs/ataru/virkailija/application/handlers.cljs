@@ -361,29 +361,31 @@
 (reg-event-fx
   :application/fetch-applications
   (fn [{db :db} _]
-    (let [search-term    (get-in db [:application :search-control :search-term :parsed])
-          form           (when-let [form-key (get-in db [:application :selected-form-key])]
-                           {:form-key form-key})
-          haku           (when-let [haku-oid (get-in db [:application :selected-haku])]
-                           {:haku-oid haku-oid})
-          hakukohde      (when-let [hakukohde-oid (get-in db [:application :selected-hakukohde])]
-                           {:hakukohde-oid hakukohde-oid})
-          hakukohderyhma (when-let [[haku-oid hakukohderyhma-oid] (get-in db [:application :selected-hakukohderyhma])]
-                           (cond-> {:haku-oid           haku-oid
-                                    :hakukohderyhma-oid hakukohderyhma-oid}
-                                   (some? (get-in db [:application :rajaus-hakukohteella]))
-                                   (assoc :rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))))]
+    (let [search-term              (get-in db [:application :search-control :search-term :parsed])
+          form                     (when-let [form-key (get-in db [:application :selected-form-key])]
+                                     {:form-key form-key})
+          haku                     (when-let [haku-oid (get-in db [:application :selected-haku])]
+                                     {:haku-oid haku-oid})
+          hakukohde                (when-let [hakukohde-oid (get-in db [:application :selected-hakukohde])]
+                                     {:hakukohde-oid hakukohde-oid})
+          hakukohderyhma           (when-let [[haku-oid hakukohderyhma-oid] (get-in db [:application :selected-hakukohderyhma])]
+                                     (cond-> {:haku-oid           haku-oid
+                                              :hakukohderyhma-oid hakukohderyhma-oid}
+                                             (some? (get-in db [:application :rajaus-hakukohteella]))
+                                             (assoc :rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))))
+          attachment-review-states (get-in db [:application :attachment-review-states])]
       (if (some identity [search-term form haku hakukohde hakukohderyhma])
         {:db   (assoc-in db [:application :fetching-applications?] true)
          :http {:id                  :applications-list
                 :method              :post
                 :path                "/lomake-editori/api/applications/list"
-                :params              (merge {:sort               (get-in db [:application :sort] {:order-by "applicant-name"
-                                                                                                  :order    "asc"})
-                                             :states-and-filters {:attachment-states-to-include (get-in db [:application :attachment-state-filter])
-                                                                  :processing-states-to-include (get-in db [:application :processing-state-filter])
-                                                                  :selection-states-to-include  (get-in db [:application :selection-state-filter])
-                                                                  :filters                      (get-in db [:application :filters])}}
+                :params              (merge {:sort                     (get-in db [:application :sort] {:order-by "applicant-name"
+                                                                                                        :order    "asc"})
+                                             :attachment-review-states attachment-review-states
+                                             :states-and-filters       {:attachment-states-to-include (get-in db [:application :attachment-state-filter])
+                                                                        :processing-states-to-include (get-in db [:application :processing-state-filter])
+                                                                        :selection-states-to-include  (get-in db [:application :selection-state-filter])
+                                                                        :filters                      (get-in db [:application :filters])}}
                                             search-term
                                             form
                                             haku
