@@ -265,7 +265,8 @@
     {:db       (-> db
                    (assoc-in [:application :filters] (get-in db [:application :filters-checkboxes]))
                    (assoc-in [:application :ensisijaisesti?] (get-in db [:application :ensisijaisesti?-checkbox]))
-                   (assoc-in [:application :rajaus-hakukohteella] (get-in db [:application :rajaus-hakukohteella-value])))
+                   (assoc-in [:application :rajaus-hakukohteella] (get-in db [:application :rajaus-hakukohteella-value]))
+                   (assoc-in [:application :attachment-review-states] (get-in db [:application :attachment-review-states-value])))
      :dispatch [:application/reload-applications]}))
 
 (defn- set-rajaus-hakukohteella
@@ -293,7 +294,8 @@
   (-> db
       (assoc-in [:application :filters-checkboxes] (get-in db [:application :filters]))
       (set-ensisijaisesti (get-in db [:application :ensisijaisesti?]))
-      (set-rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))))
+      (set-rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))
+      (assoc-in [:application :attachment-review-states-value] (get-in db [:application :attachment-review-states]))))
 
 (reg-event-db
   :application/undo-filters
@@ -315,7 +317,9 @@
                    (assoc-in [:application :ensisijaisesti?] false)
                    (assoc-in [:application :ensisijaisesti?-checkbox] false)
                    (assoc-in [:application :rajaus-hakukohteella] nil)
-                   (assoc-in [:application :rajaus-hakukohteella-value] nil))
+                   (assoc-in [:application :rajaus-hakukohteella-value] nil)
+                   (assoc-in [:application :attachment-review-states] {})
+                   (assoc-in [:application :attachment-review-states-value] {}))
      :dispatch [:application/reload-applications]}))
 
 (reg-event-fx
@@ -470,6 +474,28 @@
           (asch/set-search (or (:term query-params) ""))
           (undo-filters)))))
 
+(reg-event-db
+  :application/handle-fetch-form-contents
+  (fn [db [_ form]]
+    (-> db
+        (assoc-in [:forms (:key form)] form)
+        (assoc-in [:forms (:key form) :flat-form-fields] (util/flatten-form-fields (:content form)))
+        (assoc-in [:forms (:key form) :form-fields-by-id] (util/form-fields-by-id form)))))
+
+(reg-event-fx
+  :application/fetch-form-contents
+  (fn [{db :db} _]
+    (let [selected-haku (or (get-in db [:application :selected-haku])
+                            (get-in db [:hakukohteet (get-in db [:application :selected-hakukohde]) :haku-oid])
+                            (get-in db [:application :selected-hakukohderyhma 0]))
+          selected-form (or (get-in db [:application :selected-form-key])
+                            (get-in db [:haut selected-haku :ataru-form-key]))]
+      (when selected-form
+        {:http {:method              :get
+                :path                (str "/lomake-editori/api/forms/latest/" selected-form)
+                :handler-or-dispatch :application/handle-fetch-form-contents
+                :skip-parse-times?   true}}))))
+
 (reg-event-fx
   :application/reload-applications
   (fn [{:keys [db]} _]
@@ -483,7 +509,8 @@
                              (assoc-in [:application :attachment-state-counts] (get-in initial-db/default-db [:application :attachment-state-counts]))
                              (update-in [:application :sort] dissoc :offset)
                              (assoc-in [:application :fetching-applications?] true))
-               :dispatch [:application/refresh-haut-and-hakukohteet haku-oid hakukohde-oid [[:application/fetch-applications]]]}
+               :dispatch [:application/refresh-haut-and-hakukohteet haku-oid hakukohde-oid [[:application/fetch-applications]
+                                                                                            [:application/fetch-form-contents]]]}
               (some? (get-in db [:request-handles :applications-list]))
               (assoc :http-abort (get-in db [:request-handles :applications-list]))))))
 
@@ -1259,3 +1286,18 @@
   (fn toggle-show-hakukierros-paattynyt [{:keys [db]} _]
     {:db       (update db :show-hakukierros-paattynyt not)
      :dispatch [:application/refresh-haut-and-hakukohteet nil nil []]}))
+
+(reg-event-db
+  :application/add-filter-attachment
+  (fn [db [_ field-id]]
+    (assoc-in db [:application :attachment-review-states-value field-id] initial-db/default-attachment-review-states)))
+
+(reg-event-db
+  :application/remove-filter-attachment
+  (fn [db [_ field-id]]
+    (update-in db [:application :attachment-review-states-value] dissoc field-id)))
+
+(reg-event-db
+  :application/set-filter-attachment-state
+  (fn [db [_ field-id state value]]
+    (assoc-in db [:application :attachment-review-states-value field-id state] value)))
