@@ -3,6 +3,7 @@
   const multipleHakukohdeHakuOid = '1.2.246.562.29.65950024186'
   const kkHakuOid = '1.2.246.562.29.65950024190'
   const multipleHakukohdeKkHakuOid = '1.2.246.562.29.65950024191'
+  const hakuWithPohjakoulutusMooduliKk = '1.2.246.562.29.65950024192'
 
   before(function() {
     loadInFrame('/hakemus/haku/' + singleHakukohdeHakuOid)
@@ -85,6 +86,60 @@
             'Testihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTestihakukohde 2 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTestihakukohde 3 – Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie'
           )
         })
+      })
+    })
+    describe('when yo-tutkinto', () => {
+      const firstSegmentLabel = () =>
+        formSections()
+          .eq(2)
+          .find('label:contains("Suomessa suoritettu ylioppilastutkinto")')
+      const firstSegmentYesButton = () =>
+        formSections()
+          .eq(2)
+          .find(
+            'label:contains("Suomessa suoritettu ylioppilastutkinto") + div'
+          )
+          .find('label:contains("Kyllä")')
+      const firstSegmentInputBox = () =>
+        formSections()
+          .eq(2)
+          .find(
+            'label:contains("Suomessa suoritettu ylioppilastutkinto") + div'
+          )
+          .find('input.application__form-text-input')
+      const thirdSegmentLabel = () =>
+        formSections()
+          .eq(2)
+          .find('label:contains("Suomessa suoritettu korkeakoulututkinto")')
+      const thirdSegmentUploadButton = () =>
+        formSections()
+          .eq(2)
+          .find(
+            'label:contains("Suomessa suoritettu korkeakoulututkintoBLABLA") + div'
+          )
+          .find('label.application__form-upload-label')
+          .eq(0)
+      before(
+        function() {
+          return loadInFrame('/hakemus/haku/' + hakuWithPohjakoulutusMooduliKk)
+        },
+        wait.until(function() {
+          return formSections().length == 3
+        }, 10000),
+        clickElement(firstSegmentLabel),
+        clickElement(firstSegmentYesButton),
+        setTextFieldValue(firstSegmentInputBox, '2015'),
+        clickElement(thirdSegmentLabel)
+      )
+      it('hides the attachemnt requests that are under POHJAKOULUTUKSESI, and not the othersf', () => {
+        expect(
+          testFrame()
+            .find(
+              '#application-form-field-label-attachment-out-of-pohjakoulutus'
+            )
+            .text()
+        ).to.equal('Random liite.')
+        expect(thirdSegmentUploadButton().length).to.equal(0)
       })
     })
   })
