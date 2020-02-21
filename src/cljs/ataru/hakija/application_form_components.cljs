@@ -961,7 +961,7 @@
     (r/create-class
       {:component-did-mount #(let [value @(subscribe [:application/answer id question-group-idx row-idx])
                                    required?        (is-required-field? field-descriptor)]
-                                  (if (and (not value) (not required)) (dispatch [:application/set-adjacent-field-answer
+                                  (if (and (not value) (not required?)) (dispatch [:application/set-adjacent-field-answer
                                                               field-descriptor
                                                               row-idx
                                                               ""
