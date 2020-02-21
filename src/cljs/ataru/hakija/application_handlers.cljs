@@ -41,7 +41,7 @@
     (if (and (= (:status response) 401)
              (= "secret-expired" (get-in response [:body :code])))
       {:db (-> db
-               (assoc-in [:form :selected-language] (keyword (get-in response [:body :lang])))
+               (assoc-in [:form :selected-language] (or (keyword (get-in response [:body :lang])) :fi))
                (assoc-in [:application :secret-expired?] true)
                (assoc-in [:application :old-secret] old-secret))}
       {:db       db
