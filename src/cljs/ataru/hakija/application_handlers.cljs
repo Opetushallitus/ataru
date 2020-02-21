@@ -181,7 +181,8 @@
   (let [supported-langs (:languages form)
         lang            (or lang
                           (get-lang-from-path supported-langs)
-                          (first supported-langs))]
+                          (first supported-langs)
+                          :fi)]
     (assoc form :selected-language lang)))
 
 (defn- languages->kwd [form]
