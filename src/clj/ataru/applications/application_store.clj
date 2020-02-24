@@ -446,14 +446,36 @@
        a.hakukohde,
        a.ssn,
        to_char(a.dob, 'dd.MM.YYYY')     AS \"dob\",
-       hcbe.value                       AS \"base-education\",
-       ar.state                         AS state,
-       ar.score                         AS score,
+       (SELECT value->'value' AS value
+        FROM jsonb_array_elements(a.content->'answers')
+        WHERE value->>'key' = 'higher-completed-base-education'
+        LIMIT 1)                        AS \"base-education\",
+       (SELECT state
+        FROM application_reviews
+        WHERE application_key = a.key)  AS state,
+       (SELECT score
+        FROM application_reviews
+        WHERE application_key = a.key)  AS score,
        a.form_id                        AS form,
-       ae.eligibility_set_automatically AS \"eligibility-set-automatically\",
-       ae.new_modifications_count       AS \"new-application-modifications\",
+       (SELECT coalesce(array_agg(ae.hakukohde) FILTER (WHERE ae.event_type = 'eligibility-state-automatically-changed'), '{}')
+        FROM (SELECT DISTINCT ON (hakukohde) hakukohde, event_type
+              FROM application_events
+              WHERE application_key = a.key AND
+                    review_key = 'eligibility-state'
+              ORDER BY hakukohde, id DESC) AS ae) AS \"eligibility-set-automatically\",
+       (SELECT count(*) FILTER (WHERE ae.new_review_state = 'information-request' AND
+                                      ae.time < a.created_time)
+        FROM (SELECT DISTINCT ON (hakukohde) hakukohde, time, new_review_state
+              FROM application_events
+              WHERE application_key = a.key AND
+                    review_key = 'processing-state'
+              ORDER BY hakukohde, id DESC) AS ae) AS \"new-application-modifications\",
        a.submitted,
-       lf.organization_oid              AS \"organization-oid\",
+       (SELECT organization_oid
+        FROM forms
+        WHERE key = (SELECT key FROM forms WHERE id = a.form_id)
+        ORDER BY id DESC
+        LIMIT 1)                        AS \"organization-oid\",
        (SELECT jsonb_agg(jsonb_build_object('requirement', requirement,
                                             'state', state,
                                             'hakukohde', hakukohde))
@@ -461,29 +483,7 @@
         WHERE ahr.application_key = a.key) AS \"application-hakukohde-reviews\",
        ahar.agg                            AS \"application-attachment-reviews\"
 FROM applications AS a
-LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id
-JOIN application_reviews AS ar ON a.key = ar.application_key
-JOIN forms AS f ON f.id = a.form_id
-JOIN LATERAL (SELECT organization_oid
-              FROM forms
-              WHERE key = f.key
-              ORDER BY id DESC
-              LIMIT 1) AS lf ON true
-LEFT JOIN LATERAL (SELECT value->'value' AS value
-                   FROM jsonb_array_elements(a.content->'answers')
-                   WHERE value->>'key' = 'higher-completed-base-education'
-                   LIMIT 1) AS hcbe ON true
-JOIN LATERAL (SELECT coalesce(array_agg(ae.hakukohde) FILTER (WHERE ae.review_key = 'eligibility-state' AND
-                                                                    ae.event_type = 'eligibility-state-automatically-changed'), '{}')
-                       AS eligibility_set_automatically,
-                     count(*) FILTER (WHERE ae.review_key = 'processing-state' AND
-                                            ae.new_review_state = 'information-request' AND
-                                            ae.time < a.created_time)
-                       AS new_modifications_count
-              FROM (SELECT DISTINCT ON (hakukohde, review_key) hakukohde, review_key, event_type, new_review_state, time
-                    FROM application_events
-                    WHERE application_key = a.key
-                    ORDER BY hakukohde, review_key, id DESC) AS ae) AS ae ON true\n"
+LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
           (str "JOIN LATERAL (SELECT "
                (if-let [[_ states] (:attachment-review-states query)]
                  (str "count(*) FILTER (WHERE attachment_key = ?"
@@ -501,7 +501,7 @@ JOIN LATERAL (SELECT coalesce(array_agg(ae.hakukohde) FILTER (WHERE ae.review_ke
               WHERE application_key = a.key) AS ahar ON ahar.found\n")
           "WHERE la.key IS NULL\n"
           (when (contains? query :form)
-            "      AND (f.key = ? AND a.haku IS NULL)\n")
+            "      AND a.haku IS NULL AND (SELECT key FROM forms WHERE id = a.form_id) = ?\n")
           (when (contains? query :application-oid)
             "      AND a.key = ?\n")
           (when (contains? query :person-oid)

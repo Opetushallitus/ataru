@@ -197,15 +197,16 @@
    rajaus-hakukohteella]
   (let [kayttajan-hakukohteet (filter #(some authorized-organization-oids (:tarjoaja-oids %))
                                       ryhman-hakukohteet)]
-    (merge {:haku      haku-oid
-            :hakukohde (map :oid ryhman-hakukohteet)}
-           (when ensisijaisesti
-             (if (some? rajaus-hakukohteella)
-               {:hakukohde                    [rajaus-hakukohteella]
-                :ensisijainen-hakukohde       [rajaus-hakukohteella]
-                :ensisijaisesti-hakukohteissa (map :oid ryhman-hakukohteet)}
-               {:ensisijainen-hakukohde       (map :oid kayttajan-hakukohteet)
-                :ensisijaisesti-hakukohteissa (map :oid ryhman-hakukohteet)})))))
+    (if ensisijaisesti
+      (if (some? rajaus-hakukohteella)
+        {:haku                         haku-oid
+         :ensisijainen-hakukohde       [rajaus-hakukohteella]
+         :ensisijaisesti-hakukohteissa (map :oid ryhman-hakukohteet)}
+        {:haku                         haku-oid
+         :ensisijainen-hakukohde       (map :oid kayttajan-hakukohteet)
+         :ensisijaisesti-hakukohteissa (map :oid ryhman-hakukohteet)})
+      {:haku      haku-oid
+       :hakukohde (map :oid ryhman-hakukohteet)})))
 
 (defn ->haku-query
   [haku-oid]
