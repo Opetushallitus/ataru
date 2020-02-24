@@ -636,10 +636,10 @@
                           :en "First/given names"}
    :main-forename        {:fi "Kutsumanimi"
                           :sv "Tilltalsnamn"
-                          :en "Preferred first or given name"}
+                          :en "Preferred first/given name"}
    :surname              {:fi "Sukunimi"
                           :sv "Efternamn"
-                          :en "Surname"}
+                          :en "Last name"}
    :nationality          {:fi "Kansalaisuus"
                           :sv "Medborgarskap"
                           :en "Nationality"}
