@@ -23,7 +23,7 @@
     (t/to-time-zone (f/parse fmt s) tz)))
 
 (defn- parse-haku
-  [haku]
+  [haku hakukohteet]
   (let [hakuajat (mapv (fn [hakuaika]
                          {:hakuaika-id "kouta-hakuaika-id"
                           :start       (parse-date-time (:alkaa hakuaika))
@@ -35,7 +35,7 @@
       :hakukausi-vuosi                            (->> hakuajat
                                                        (map #(t/year (:start %)))
                                                        (apply max))
-      :hakukohteet                                (:hakukohteet haku)
+      :hakukohteet                                (mapv :oid hakukohteet)
       :hakutapa-uri                               (:hakutapaKoodiUri haku)
       :haun-tiedot-url                            (url-helper/resolve-url :kouta-app.haku (:oid haku))
       :kohdejoukko-uri                            (:kohdejoukkoKoodiUri haku)
@@ -101,10 +101,14 @@
 (s/defn ^:always-validate get-haku :- (s/maybe form-schema/Haku)
   [haku-oid :- s/Str
    cas-client]
-  (some-> :kouta-internal.haku
-          (url-helper/resolve-url haku-oid)
-          (get-result cas-client)
-          parse-haku))
+  (let [haku        (some-> :kouta-internal.haku
+                            (url-helper/resolve-url haku-oid)
+                            (get-result cas-client))
+        hakukohteet (some-> :kouta-internal.hakukohde-search
+                            (url-helper/resolve-url
+                             {"haku" haku-oid})
+                            (get-result cas-client))]
+    (parse-haku haku hakukohteet)))
 
 (s/defn ^:always-validate get-hakus-by-form-key :- [s/Str]
   [cas-client form-key]
