@@ -101,14 +101,13 @@
 (s/defn ^:always-validate get-haku :- (s/maybe form-schema/Haku)
   [haku-oid :- s/Str
    cas-client]
-  (let [haku        (some-> :kouta-internal.haku
-                            (url-helper/resolve-url haku-oid)
-                            (get-result cas-client))
-        hakukohteet (some-> :kouta-internal.hakukohde-search
-                            (url-helper/resolve-url
-                             {"haku" haku-oid})
-                            (get-result cas-client))]
-    (parse-haku haku hakukohteet)))
+  (when-let [haku (some-> :kouta-internal.haku
+                          (url-helper/resolve-url haku-oid)
+                          (get-result cas-client))]
+    (let [hakukohteet (some-> :kouta-internal.hakukohde-search
+                              (url-helper/resolve-url {"haku" haku-oid})
+                              (get-result cas-client))]
+      (parse-haku haku hakukohteet))))
 
 (s/defn ^:always-validate get-hakus-by-form-key :- [s/Str]
   [cas-client form-key]
@@ -121,17 +120,17 @@
   [hakukohde-oid :- s/Str
    organization-service
    cas-client]
-  (let [hakukohde (some-> :kouta-internal.hakukohde
-                          (url-helper/resolve-url hakukohde-oid)
-                          (get-result cas-client))
-        toteutus  (some-> :kouta-internal.toteutus
-                          (url-helper/resolve-url (:toteutusOid hakukohde))
-                          (get-result cas-client))
-        tarjoajat (some->> (or (seq (:tarjoajat hakukohde))
-                               (seq (:tarjoajat toteutus)))
-                           (organization-service/get-organizations-for-oids
-                            organization-service))]
-    (parse-hakukohde hakukohde tarjoajat)))
+  (when-let [hakukohde (some-> :kouta-internal.hakukohde
+                               (url-helper/resolve-url hakukohde-oid)
+                               (get-result cas-client))]
+    (let [toteutus  (some-> :kouta-internal.toteutus
+                            (url-helper/resolve-url (:toteutusOid hakukohde))
+                            (get-result cas-client))
+          tarjoajat (some->> (or (seq (:tarjoajat hakukohde))
+                                 (seq (:tarjoajat toteutus)))
+                             (organization-service/get-organizations-for-oids
+                              organization-service))]
+      (parse-hakukohde hakukohde tarjoajat))))
 
 (s/defn ^:always-validate get-hakukohdes-by :- (s/maybe [s/Str])
   [cas-client
