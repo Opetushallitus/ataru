@@ -115,7 +115,7 @@
         formSections()
           .eq(2)
           .find(
-            'label:contains("Suomessa suoritettu korkeakoulututkintoBLABLA") + div'
+            'label:contains("Suomessa suoritettu korkeakoulututkinto") + div'
           )
           .find('label.application__form-upload-label')
           .eq(0)
@@ -131,7 +131,7 @@
         setTextFieldValue(firstSegmentInputBox, '2015'),
         clickElement(thirdSegmentLabel)
       )
-      it('hides the attachemnt requests that are under POHJAKOULUTUKSESI, and not the othersf', () => {
+      it('hides the attachemnt requests that are under POHJAKOULUTUKSESI, and not the others', () => {
         expect(
           testFrame()
             .find(

@@ -2,7 +2,7 @@
   (:require [ataru.application.application-states :as application-states]
             [cheshire.core :as json]
             [ataru.application.review-states :refer [incomplete-states] :as application-review-states]
-            [ataru.component-data.higher-education-base-education-module :refer [excluded-attachment-ids-when-yo-and-jyemp]]
+            [ataru.component-data.higher-education-base-education-module :refer [higher-base-education-module-id]]
             [ataru.db.db :as db]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             [ataru.dob :as dob]
@@ -103,7 +103,7 @@
   (not-empty (clojure.set/intersection set1 set2)))
 
 (defn hakukohde-oids-for-attachment-review
-  [attachment-field hakutoiveet fields-by-id ylioppilastutkinto?]
+  [attachment-field hakutoiveet fields-by-id ylioppilastutkinto? excluded-attachment-ids-when-yo-and-jyemp]
   (let [belongs-tos (loop [field       attachment-field
                            belongs-tos []]
                       (if (some? field)
@@ -129,7 +129,7 @@
       ["form"])))
 
 (defn- create-attachment-reviews
-  [attachment-field answer old-answer update? application-key hakutoiveet fields-by-id ylioppilastutkinto?]
+  [attachment-field answer old-answer update? application-key hakutoiveet fields-by-id ylioppilastutkinto? excluded-attachment-ids-when-yo-and-jyemp]
   (let [value-changed? (and update?
                             (not= old-answer answer))
         review-base    {:application_key application-key
@@ -139,7 +139,7 @@
                                            "not-checked")
                         :updated?        value-changed?}]
     (map #(assoc review-base :hakukohde %)
-         (hakukohde-oids-for-attachment-review attachment-field hakutoiveet fields-by-id ylioppilastutkinto?))))
+         (hakukohde-oids-for-attachment-review attachment-field hakutoiveet fields-by-id ylioppilastutkinto? excluded-attachment-ids-when-yo-and-jyemp))))
 
 (defn- followup-option-selected?
   [field answers]
@@ -169,7 +169,7 @@
                  (get-in answers-by-key [:higher-completed-base-education :value]))))
 
 (defn create-application-attachment-reviews
-  [application-key visible-attachments answers-by-key old-answers applied-hakukohteet update? fields-by-id]
+  [application-key visible-attachments answers-by-key old-answers applied-hakukohteet update? fields-by-id excluded-attachment-ids-when-yo-and-jyemp]
   (let [ylioppilastutkinto? (ylioppilastutkinto? answers-by-key)]
     (mapcat (fn [attachment]
               (let [attachment-key (-> attachment :id keyword)
@@ -182,7 +182,8 @@
                                            application-key
                                            applied-hakukohteet
                                            fields-by-id
-                                           ylioppilastutkinto?)))
+                                           ylioppilastutkinto?
+                                           excluded-attachment-ids-when-yo-and-jyemp)))
             visible-attachments)))
 
 (defn delete-orphan-attachment-reviews
@@ -206,6 +207,7 @@
   [application applied-hakukohteet old-answers form update? connection]
   (let [flat-form-content   (-> form :content util/flatten-form-fields)
         fields-by-id        (util/form-fields-by-id form)
+        excluded-attachment-ids-when-yo-and-jyemp (util/attachment-ids-from-children form higher-base-education-module-id)
         answers-by-key      (-> application :content :answers util/answers-by-key)
         visible-attachments (filter-visible-attachments answers-by-key flat-form-content)
         reviews             (create-application-attachment-reviews
@@ -215,7 +217,8 @@
                              old-answers
                              applied-hakukohteet
                              update?
-                             fields-by-id)]
+                             fields-by-id
+                             excluded-attachment-ids-when-yo-and-jyemp)]
     (store-reviews reviews update? connection)
     (when update?
       (delete-orphan-attachment-reviews (:key application)

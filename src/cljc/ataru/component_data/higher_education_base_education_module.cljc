@@ -23,6 +23,8 @@
             :sv "Inget vitsord"}
     :value "6"}])
 
+(def higher-base-education-module-id "higher-base-education-module")
+
 (defn- arvosana-aidinkieli [id]
   {:fieldClass "formField"
    :fieldType  "dropdown"
@@ -1004,7 +1006,7 @@
                          :validators  ["required"]}]
            :fieldClass "wrapperElement"
            :fieldType  "fieldset"
-           :id         "higher-base-education-module"
+           :id         higher-base-education-module-id
            :label      {:en "Your educational background"
                         :fi "Pohjakoulutuksesi "
                         :sv "Utbildningsbakgrund"}
@@ -1016,13 +1018,3 @@
        util/flatten-form-fields
        (map (comp name :id))
        set))
-
-(def excluded-attachment-ids-when-yo-and-jyemp
-  #{"pohjakoulutus_lk--attachment"
-    "pohjakoulutus_am--attachment"
-    "pohjakoulutus_amt--attachment"
-    "pohjakoulutus_kk--attachment"
-    "pohjakoulutus_ulk--attachment"
-    "pohjakoulutus_kk_ulk--attachement"
-    "pohjakoulutus_avoin--attachment"
-    "pohjakoulutus_muu--attachment"})

@@ -3,7 +3,6 @@
   (:require [re-frame.core :as re-frame]
             [ataru.util :as util]
             [ataru.application-common.application-field-common :as afc]
-            [ataru.component-data.higher-education-base-education-module :refer [excluded-attachment-ids-when-yo-and-jyemp]]
             [ataru.hakija.application-validators :as validators]
             [ataru.hakija.person-info-fields :as person-info-fields]
             [cemerick.url :as url]))
@@ -53,6 +52,13 @@
     (re-frame/subscribe [:application/application]))
   (fn [application _]
     (:answers application)))
+
+(re-frame/reg-sub
+  :application/higher-base-education-module-attachment-ids
+  (fn [_ _]
+    (re-frame/subscribe [:application/application]))
+  (fn [application _]
+    (:higher-base-education-module-attachment-ids application)))
 
 (re-frame/reg-sub
   :application/person
@@ -245,8 +251,9 @@
   (fn [_ _]
     [(re-frame/subscribe [:application/tarjonta-hakukohteet-by-oid])
      (re-frame/subscribe [:application/selected-hakukohteet])
-     (re-frame/subscribe [:application/ylioppilastutkinto?])])
-  (fn [[hakukohteet selected-hakukohteet ylioppilastutkinto?] [_ field]]
+     (re-frame/subscribe [:application/ylioppilastutkinto?])
+     (re-frame/subscribe [:application/higher-base-education-module-attachment-ids])])
+  (fn [[hakukohteet selected-hakukohteet ylioppilastutkinto? excluded-attachment-ids-when-yo-and-jyemp] [_ field]]
     (when-let [ids (some-> (concat (get field :belongs-to-hakukohderyhma)
                                    (get field :belongs-to-hakukohteet))
                            seq

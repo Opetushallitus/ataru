@@ -1,5 +1,6 @@
 (ns ataru.applications.application-store-spec
   (:require [ataru.applications.application-store :as store]
+            [ataru.component-data.higher-education-base-education-module :refer [higher-base-education-module-id]]
             [ataru.fixtures.application :as fixtures]
             [ataru.fixtures.form :as form-fixtures]
             [clojure.java.jdbc :as jdbc]
@@ -164,7 +165,7 @@
                           {:oid :hb :hakukohderyhmat [:rb]}
                           {:oid :ha :hakukohderyhmat [:rb]}]
             result       (store/hakukohde-oids-for-attachment-review
-                           (:g fields-by-id) hakutoiveet fields-by-id false)]
+                           (:g fields-by-id) hakutoiveet fields-by-id false #{})]
         (should== [:ha] result)))
 
   (it "should create attachment reviews for new application without hakukohteet"
@@ -190,7 +191,8 @@
                  nil
                  []
                  false
-                 fields-by-id))))
+                 fields-by-id
+                 #{}))))
 
   (it "should create attachment reviews for new application with hakukohteet"
     (let [application       (first (filter #(= "attachments" (:key %)) fixtures/applications))
@@ -225,7 +227,8 @@
                  nil
                  [{:oid "hakukohde1"} {:oid "hakukohde2"}]
                  false
-                 fields-by-id))))
+                 fields-by-id
+                 #{}))))
 
   (it "should update attachment reviews for application without hakukohteet"
     (let [application       (first (filter #(= "attachments" (:key %)) fixtures/applications))
@@ -251,7 +254,8 @@
                   :att__2 {:value ["32131"]}}
                  []
                  true
-                 fields-by-id))))
+                 fields-by-id
+                 #{}))))
 
   (it "should delete orphans and preserve reviews"
       (let [application       (first (filter #(= "attachments" (:key %)) fixtures/applications))
@@ -267,7 +271,8 @@
                                  :att__2 {:value ["32131"]}}
                                 []
                                 true
-                                fields-by-id)]
+                                fields-by-id
+                                #{})]
         (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
           (let [connection {:connection connection}]
             (store/store-reviews reviews false connection)
@@ -277,3 +282,34 @@
             (should== 1 (store/delete-orphan-attachment-reviews (:key application)
                           [(first reviews)]
                           connection)))))))
+
+(describe "application with base education"
+          (tags :unit :attachments)
+
+  (it "should be possible to extract attachment ids from base education module"
+    (let [attachments-from-base-education (util/attachment-ids-from-children
+                                            form-fixtures/base-education-attachment-test-form
+                                            higher-base-education-module-id)]
+      (should== #{"pohjakoulutus_kk_ulk--attachement" "pohjakoulutus_lk--attachment"
+                  "pohjakoulutus_yo_ulkomainen--rb--this-year-predicted" "pohjakoulutus_avoin--attachment"
+                  "pohjakoulutus_yo_kansainvalinen_suomessa--ib--this-year-predicted"
+                  "pohjakoulutus_yo_ulkomainen--ib--previous-year-diploma"
+                  "pohjakoulutus_am--attachment" "pohjakoulutus_amt--attachment"
+                  "pohjakoulutus_yo_ulkomainen--ib--this-year-diploma"
+                  "pohjakoulutus_yo_kansainvalinen_suomessa--ib--this-year-diploma"
+                  "pohjakoulutus_yo_kansainvalinen_suomessa--rb--this-year-predicted"
+                  "pohjakoulutus_yo_kansainvalinen_suomessa--eb--previous-year-diploma"
+                  "pohjakoulutus_yo_kansainvalinen_suomessa--rb--this-year-diploma"
+                  "pohjakoulutus_yo_kansainvalinen_suomessa--rb--previous-year-diploma"
+                  "pohjakoulutus_yo_kansainvalinen_suomessa--ib--previous-year-diploma"
+                  "pohjakoulutus_yo_kansainvalinen_suomessa--eb--this-year-predicted"
+                  "pohjakoulutus_ulk--attachment" "pohjakoulutus_yo_ulkomainen--rb--this-year-diploma"
+                  "pohjakoulutus_kk--attachment" "pohjakoulutus_yo_ulkomainen--rb--previous-year-diploma"
+                  "pohjakoulutus_yo_ulkomainen--eb--this-year-predicted"
+                  "pohjakoulutus_yo_ulkomainen--eb--this-year-diploma"
+                  "pohjakoulutus-yo--attachment" "pohjakoulutus_yo_ulkomainen--eb--previous-year-diploma"
+                  "pohjakoulutus_yo_kansainvalinen_suomessa--eb--this-year-diploma"
+                  "pohjakoulutus_yo_ammatillinen--attachment"
+                  "pohjakoulutus_muu--attachment"
+                  "pohjakoulutus_yo_ulkomainen--ib--this-year-predicted"}
+                attachments-from-base-education))))
