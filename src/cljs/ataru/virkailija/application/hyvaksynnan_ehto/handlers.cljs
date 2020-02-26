@@ -185,8 +185,12 @@
   (fn [{db :db} [_ application-key hakukohde-oid response]]
     (case (:status response)
       (200 201 204 404)
-      {:db (update-in db [:hyvaksynnan-ehto application-key hakukohde-oid]
-                      update-ehto-hakukohteessa response)}
+      {:db
+       (update-in db [:hyvaksynnan-ehto application-key hakukohde-oid]
+                  update-ehto-hakukohteessa response)
+       :hyvaksynnan-ehto/get-ehto-hakukohteessa-muutoshistoria
+       {:application-key application-key
+        :hakukohde-oid   hakukohde-oid}}
       410
       {:hyvaksynnan-ehto/get-ehto-valintatapajonoissa
        {:application-key application-key
