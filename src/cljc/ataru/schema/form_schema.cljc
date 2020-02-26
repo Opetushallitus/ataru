@@ -301,7 +301,6 @@
    :ylioppilastutkinto-antaa-hakukelpoisuuden? s/Bool
    :kohdejoukko-uri                            s/Str
    :hakutapa-uri                               s/Str
-   :hakukausi-vuosi                            s/Int
    :yhteishaku                                 s/Bool
    :prioritize-hakukohteet                     s/Bool
    :can-submit-multiple-applications           s/Bool
@@ -310,6 +309,7 @@
                                                  :start                org.joda.time.DateTime
                                                  (s/optional-key :end) org.joda.time.DateTime}]
    :haun-tiedot-url                            s/Str
+   (s/optional-key :hakukausi-vuosi)           s/Int
    (s/optional-key :ataru-form-key)            s/Str
    (s/optional-key :max-hakukohteet)           s/Int})
 

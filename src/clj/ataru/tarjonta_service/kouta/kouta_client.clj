@@ -32,9 +32,6 @@
     (merge
      {:can-submit-multiple-applications           true
       :hakuajat                                   hakuajat
-      :hakukausi-vuosi                            (->> hakuajat
-                                                       (map #(t/year (:start %)))
-                                                       (apply max))
       :hakukohteet                                (mapv :oid hakukohteet)
       :hakutapa-uri                               (:hakutapaKoodiUri haku)
       :haun-tiedot-url                            (url-helper/resolve-url :kouta-app.haku (:oid haku))
@@ -47,6 +44,10 @@
                                                    (:hakutapaKoodiUri haku)
                                                    "hakutapa_01#")
       :ylioppilastutkinto-antaa-hakukelpoisuuden? false}
+     (when (seq hakuajat)
+       {:hakukausi-vuosi (->> hakuajat
+                              (map #(t/year (:start %)))
+                              (apply max))})
      (when (some? (:hakulomakeAtaruId haku))
        {:ataru-form-key (:hakulomakeAtaruId haku)}))))
 
