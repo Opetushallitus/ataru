@@ -51,12 +51,13 @@
                      options))
        :else field))))
 
-(defn attachment-ids-from-children [fields parent-id]
-  (let [flat-all          (flatten-form-fields fields)
-        parent            (filter #(= parent-id (:id %)) flat-all)
-        flat-children     (flatten-form-fields parent)
-        attachments       (filter #(= "attachment" (:fieldType %)) flat-children)
-        attachment-ids    (map #(:id %) attachments)]
+(defn attachment-ids-from-children [flat-fields parent-id skip?]
+  (let [attachment-ids (->> flat-fields
+                            (filter #(= parent-id (:id %)))
+                            (flatten-form-fields)
+                            (filter #(= "attachment" (:fieldType %)))
+                            (map #(:id %))
+                            (filter #(not (skip? %))))]
     (set attachment-ids)))
 
 (declare map-form-fields)

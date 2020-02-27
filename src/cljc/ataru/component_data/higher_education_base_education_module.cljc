@@ -9,7 +9,8 @@
                                                     dropdown
                                                     question-group]]
             [ataru.util :as util]
-            [ataru.translations.texts :refer [higher-base-education-module-texts general-texts]]))
+            [ataru.translations.texts :refer [higher-base-education-module-texts general-texts]]
+            [clojure.string :refer [starts-with?]]))
 
 (def yo-arvosana-options
   [{:label {:en "L" :fi "L" :sv "L"} :value "0"}
@@ -23,7 +24,7 @@
             :sv "Inget vitsord"}
     :value "6"}])
 
-(def higher-base-education-module-id "higher-base-education-module")
+(def higher-completed-base-education-id "higher-completed-base-education")
 
 (defn- arvosana-aidinkieli [id]
   {:fieldClass "formField"
@@ -915,7 +916,7 @@
           {:children   [{:belongs-to-hakukohteet   []
                          :fieldClass               "formField"
                          :fieldType                "multipleChoice"
-                         :id                       "higher-completed-base-education"
+                         :id                       higher-completed-base-education-id
                          :koodisto-ordered-by-user true
                          :koodisto-source          {:title   "Kk-pohjakoulutusvaihtoehdot"
                                                     :uri     "pohjakoulutuskklomake"
@@ -1006,7 +1007,7 @@
                          :validators  ["required"]}]
            :fieldClass "wrapperElement"
            :fieldType  "fieldset"
-           :id         higher-base-education-module-id
+           :id         "higher-base-education-module"
            :label      {:en "Your educational background"
                         :fi "Pohjakoulutuksesi "
                         :sv "Utbildningsbakgrund"}
@@ -1018,3 +1019,8 @@
        util/flatten-form-fields
        (map (comp name :id))
        set))
+
+(defn attachment-always-visible?
+  [attachment-id]
+  (or (starts-with? attachment-id "pohjakoulutus_yo")
+      (starts-with? attachment-id "pohjakoulutus-yo")))

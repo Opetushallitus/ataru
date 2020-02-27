@@ -1,6 +1,6 @@
 (ns ataru.hakija.application-handlers
   (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch subscribe]]
-            [ataru.component-data.higher-education-base-education-module :refer [higher-base-education-module-id]]
+            [ataru.component-data.higher-education-base-education-module :refer [higher-completed-base-education-id attachment-always-visible?]]
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
             [ataru.util :as autil]
@@ -181,8 +181,7 @@
   (let [supported-langs (:languages form)
         lang            (or lang
                           (get-lang-from-path supported-langs)
-                          (first supported-langs)
-                          :fi)]
+                          (first supported-langs))]
     (assoc form :selected-language lang)))
 
 (defn- languages->kwd [form]
@@ -520,7 +519,9 @@
         preselected-hakukohde-oids (->> db :application :preselected-hakukohde-oids
                                         (filter #(contains? valid-hakukohde-oids %)))
         flat-form-content          (autil/flatten-form-fields (:content form))
-        higher-base-education-module-attachment-ids (autil/attachment-ids-from-children form higher-base-education-module-id)
+        higher-base-education-module-attachment-ids (autil/attachment-ids-from-children flat-form-content
+                                                                                        higher-completed-base-education-id
+                                                                                        attachment-always-visible?)
         initial-answers            (create-initial-answers flat-form-content preselected-hakukohde-oids)]
     (-> db
         (update :form (fn [{:keys [selected-language]}]

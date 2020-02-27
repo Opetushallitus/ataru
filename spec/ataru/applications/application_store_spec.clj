@@ -1,6 +1,6 @@
 (ns ataru.applications.application-store-spec
   (:require [ataru.applications.application-store :as store]
-            [ataru.component-data.higher-education-base-education-module :refer [higher-base-education-module-id]]
+            [ataru.component-data.higher-education-base-education-module :refer [higher-completed-base-education-id attachment-always-visible?]]
             [ataru.fixtures.application :as fixtures]
             [ataru.fixtures.form :as form-fixtures]
             [clojure.java.jdbc :as jdbc]
@@ -287,29 +287,17 @@
           (tags :unit :attachments)
 
   (it "should be possible to extract attachment ids from base education module"
-    (let [attachments-from-base-education (util/attachment-ids-from-children
-                                            form-fixtures/base-education-attachment-test-form
-                                            higher-base-education-module-id)]
-      (should== #{"pohjakoulutus_kk_ulk--attachement" "pohjakoulutus_lk--attachment"
-                  "pohjakoulutus_yo_ulkomainen--rb--this-year-predicted" "pohjakoulutus_avoin--attachment"
-                  "pohjakoulutus_yo_kansainvalinen_suomessa--ib--this-year-predicted"
-                  "pohjakoulutus_yo_ulkomainen--ib--previous-year-diploma"
-                  "pohjakoulutus_am--attachment" "pohjakoulutus_amt--attachment"
-                  "pohjakoulutus_yo_ulkomainen--ib--this-year-diploma"
-                  "pohjakoulutus_yo_kansainvalinen_suomessa--ib--this-year-diploma"
-                  "pohjakoulutus_yo_kansainvalinen_suomessa--rb--this-year-predicted"
-                  "pohjakoulutus_yo_kansainvalinen_suomessa--eb--previous-year-diploma"
-                  "pohjakoulutus_yo_kansainvalinen_suomessa--rb--this-year-diploma"
-                  "pohjakoulutus_yo_kansainvalinen_suomessa--rb--previous-year-diploma"
-                  "pohjakoulutus_yo_kansainvalinen_suomessa--ib--previous-year-diploma"
-                  "pohjakoulutus_yo_kansainvalinen_suomessa--eb--this-year-predicted"
-                  "pohjakoulutus_ulk--attachment" "pohjakoulutus_yo_ulkomainen--rb--this-year-diploma"
-                  "pohjakoulutus_kk--attachment" "pohjakoulutus_yo_ulkomainen--rb--previous-year-diploma"
-                  "pohjakoulutus_yo_ulkomainen--eb--this-year-predicted"
-                  "pohjakoulutus_yo_ulkomainen--eb--this-year-diploma"
-                  "pohjakoulutus-yo--attachment" "pohjakoulutus_yo_ulkomainen--eb--previous-year-diploma"
-                  "pohjakoulutus_yo_kansainvalinen_suomessa--eb--this-year-diploma"
-                  "pohjakoulutus_yo_ammatillinen--attachment"
-                  "pohjakoulutus_muu--attachment"
-                  "pohjakoulutus_yo_ulkomainen--ib--this-year-predicted"}
+    (let [content                         (:content form-fixtures/base-education-attachment-test-form)
+          flat-fields                     (util/flatten-form-fields content)
+          attachments-from-base-education (util/attachment-ids-from-children flat-fields
+                                                                             higher-completed-base-education-id
+                                                                             attachment-always-visible?)]
+      (should== #{"pohjakoulutus_kk_ulk--attachement"
+                  "pohjakoulutus_lk--attachment"
+                  "pohjakoulutus_avoin--attachment"
+                  "pohjakoulutus_am--attachment"
+                  "pohjakoulutus_amt--attachment"
+                  "pohjakoulutus_ulk--attachment"
+                  "pohjakoulutus_kk--attachment"
+                  "pohjakoulutus_muu--attachment"}
                 attachments-from-base-education))))
