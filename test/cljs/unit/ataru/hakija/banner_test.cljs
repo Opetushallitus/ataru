@@ -7,21 +7,20 @@
 
 (deftest correctly-shows-remaining-time
   (defn invoke-and-verify [hours minutes substring]
-    (let [actual (hakuaika-left-text hours minutes :fi)
+    (let [seconds-left (+ (* hours 3600) (* minutes 60))
+          actual (hakuaika-left-text seconds-left :fi)
           text   (second actual)]
       (is (includes? text substring)))
     )
-  (defn subscription-stub [_]
-    (atom :fi))
-  (with-redefs [subscribe subscription-stub]
-               (invoke-and-verify 0 14 "Hakuaikaa jäljellä alle 15 min")
-               (invoke-and-verify 0 15 "Hakuaikaa jäljellä alle 30 min")
-               (invoke-and-verify 0 29 "Hakuaikaa jäljellä alle 30 min")
-               (invoke-and-verify 0 30 "Hakuaikaa jäljellä alle 45 min")
-               (invoke-and-verify 0 44 "Hakuaikaa jäljellä alle 45 min")
-               (invoke-and-verify 0 45 "Hakuaikaa jäljellä alle tunti")
-               (invoke-and-verify 0 59 "Hakuaikaa jäljellä alle tunti")
-               (invoke-and-verify 1 00 "Hakuaikaa jäljellä alle vuorokausi")
-               (invoke-and-verify 23 59 "Hakuaikaa jäljellä alle vuorokausi")
-               (is (nil? (hakuaika-left-text 24 0 :fi)))))
+  (invoke-and-verify 0 14 "Hakuaikaa jäljellä alle 15 min")
+  (invoke-and-verify 0 15 "Hakuaikaa jäljellä alle 30 min")
+  (invoke-and-verify 0 29 "Hakuaikaa jäljellä alle 30 min")
+  (invoke-and-verify 0 30 "Hakuaikaa jäljellä alle 45 min")
+  (invoke-and-verify 0 44 "Hakuaikaa jäljellä alle 45 min")
+  (invoke-and-verify 0 45 "Hakuaikaa jäljellä alle tunti")
+  (invoke-and-verify 0 59 "Hakuaikaa jäljellä alle tunti")
+  (invoke-and-verify 1 00 "Hakuaikaa jäljellä alle vuorokausi")
+  (invoke-and-verify 23 59 "Hakuaikaa jäljellä alle vuorokausi")
+  (invoke-and-verify 0 -1 "Hakuaika on päättynyt")
+  (is (nil? (hakuaika-left-text (* 24 60 60) :fi))))
 

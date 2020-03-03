@@ -124,8 +124,12 @@
   (let [inv (/ 1.0 step)]
     (/ (Math/ceil (* value inv)) inv)))
 
-(defn hakuaika-left-text [hours minutes lang]
-  (let [text-code (cond
+(defn hakuaika-left-text [seconds-left lang]
+  (let [hours     (Math/floor (/ seconds-left 3600))
+        minutes   (Math/floor (/ (rem seconds-left 3600) 60))
+        text-code (cond
+                    (< 23 hours)                        nil
+                    (< seconds-left 0)                  :application-period-expired
                     (and (zero? hours) (> 15 minutes))  :application-period-less-than-15-min-left
                     (and (zero? hours) (> 30 minutes))  :application-period-less-than-30-min-left
                     (and (zero? hours) (> 45 minutes))  :application-period-less-than-45-min-left
@@ -148,10 +152,7 @@
                                            (.clearInterval js/window @interval))))
                                      1000))
     (fn []
-      (when (< 0 @seconds-left (* 3600 24))
-        (let [hours   (Math/floor (/ @seconds-left 3600))
-              minutes (Math/floor (/ (rem @seconds-left 3600) 60))]
-          (hakuaika-left-text hours minutes lang))))))
+      (hakuaika-left-text @seconds-left lang))))
 
 (defn status-controls [submit-status]
   (let [valid-status (subscribe [:application/valid-status])

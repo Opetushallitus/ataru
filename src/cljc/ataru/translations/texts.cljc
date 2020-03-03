@@ -60,6 +60,9 @@
    :application-period-less-than-15-min-left    {:fi "Hakuaikaa jäljellä alle 15 min"
                                                  :sv "Av ansökningstiden återstår mindre än 15 min."
                                                  :en "Less than 15 min left in the application period"}
+   :application-period-expired                  {:fi "Hakuaika on päättynyt"
+                                                 :sv "Ansökningstiden har utgått"
+                                                 :en "Application period has ended"}
    :application-priorization-invalid            {:fi "Hakukohteet ovat väärässä ensisijaisuusjärjestyksessä"
                                                  :sv "Fel prioritetsordning för ansökningsmålen"
                                                  :en "Study programmes are in an invalid order of preference"}
