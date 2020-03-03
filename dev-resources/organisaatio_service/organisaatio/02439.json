@@ -1,0 +1,81 @@
+{
+  "nimi": {
+    "fi": "Suonenjoen maatalous- ja palvelualojen oppilaitos",
+    "sv": "Suonenjoen maatalous- ja palvelualojen oppilaitos",
+    "en": "Suonenjoen maatalous- ja palvelualojen oppilaitos"
+  },
+  "oid": "1.2.246.562.10.36800014437",
+  "alkuPvm": "1994-08-01",
+  "lakkautusPvm": "1996-07-31",
+  "parentOidPath": "|1.2.246.562.10.00000000001|1.2.246.562.10.12041478947|",
+  "oppilaitosKoodi": "02439",
+  "ryhmatyypit": [],
+  "kayttoryhmat": [],
+  "postiosoite": {
+    "postinumeroUri": "posti_77600",
+    "osoiteTyyppi": "posti",
+    "yhteystietoOid": "1.2.246.562.5.78061575367",
+    "postitoimipaikka": "SUONENJOKI",
+    "osoite": "Jalkalantie 6"
+  },
+  "kuvaus2": {},
+  "parentOid": "1.2.246.562.10.12041478947",
+  "tyypit": [
+    "Oppilaitos"
+  ],
+  "yhteystietoArvos": [],
+  "yhteystiedot": [
+    {
+      "osoiteTyyppi": "posti",
+      "kieli": "kieli_fi#1",
+      "postinumeroUri": "posti_77600",
+      "yhteystietoOid": "1.2.246.562.5.78061575367",
+      "id": "93203",
+      "postitoimipaikka": "SUONENJOKI",
+      "osoite": "Jalkalantie 6"
+    },
+    {
+      "kieli": "kieli_fi#1",
+      "numero": "979  511 691",
+      "tyyppi": "puhelin",
+      "yhteystietoOid": "1.2.246.562.5.87456059812",
+      "id": "93202"
+    },
+    {
+      "osoiteTyyppi": "kaynti",
+      "kieli": "kieli_fi#1",
+      "postinumeroUri": "posti_77600",
+      "yhteystietoOid": "1.2.246.562.5.23586637573",
+      "id": "93204",
+      "postitoimipaikka": "SUONENJOKI",
+      "osoite": "Jalkalantie 6"
+    }
+  ],
+  "nimet": [
+    {
+      "nimi": {
+        "fi": "Suonenjoen maatalous- ja palvelualojen oppilaitos",
+        "sv": "Suonenjoen maatalous- ja palvelualojen oppilaitos",
+        "en": "Suonenjoen maatalous- ja palvelualojen oppilaitos"
+      },
+      "alkuPvm": "1994-08-01",
+      "version": 1
+    }
+  ],
+  "kieletUris": [
+    "oppilaitoksenopetuskieli_1#1"
+  ],
+  "kotipaikkaUri": "kunta_778",
+  "maaUri": "maatjavaltiot1_fin",
+  "oppilaitosTyyppiUri": "oppilaitostyyppi_21#1",
+  "kayntiosoite": {
+    "postinumeroUri": "posti_77600",
+    "osoiteTyyppi": "kaynti",
+    "yhteystietoOid": "1.2.246.562.5.23586637573",
+    "postitoimipaikka": "SUONENJOKI",
+    "osoite": "Jalkalantie 6"
+  },
+  "vuosiluokat": [],
+  "version": 1,
+  "status": "PASSIIVINEN"
+}
