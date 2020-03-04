@@ -1,5 +1,6 @@
 (ns ataru.applications.application-store-spec
   (:require [ataru.applications.application-store :as store]
+            [ataru.component-data.higher-education-base-education-module :refer [higher-completed-base-education-id attachment-always-visible?]]
             [ataru.fixtures.application :as fixtures]
             [ataru.fixtures.form :as form-fixtures]
             [clojure.java.jdbc :as jdbc]
@@ -164,7 +165,7 @@
                           {:oid :hb :hakukohderyhmat [:rb]}
                           {:oid :ha :hakukohderyhmat [:rb]}]
             result       (store/hakukohde-oids-for-attachment-review
-                           (:g fields-by-id) hakutoiveet fields-by-id false)]
+                           (:g fields-by-id) hakutoiveet fields-by-id false #{})]
         (should== [:ha] result)))
 
   (it "should create attachment reviews for new application without hakukohteet"
@@ -190,7 +191,8 @@
                  nil
                  []
                  false
-                 fields-by-id))))
+                 fields-by-id
+                 #{}))))
 
   (it "should create attachment reviews for new application with hakukohteet"
     (let [application       (first (filter #(= "attachments" (:key %)) fixtures/applications))
@@ -225,7 +227,8 @@
                  nil
                  [{:oid "hakukohde1"} {:oid "hakukohde2"}]
                  false
-                 fields-by-id))))
+                 fields-by-id
+                 #{}))))
 
   (it "should update attachment reviews for application without hakukohteet"
     (let [application       (first (filter #(= "attachments" (:key %)) fixtures/applications))
@@ -251,7 +254,8 @@
                   :att__2 {:value ["32131"]}}
                  []
                  true
-                 fields-by-id))))
+                 fields-by-id
+                 #{}))))
 
   (it "should delete orphans and preserve reviews"
       (let [application       (first (filter #(= "attachments" (:key %)) fixtures/applications))
@@ -267,7 +271,8 @@
                                  :att__2 {:value ["32131"]}}
                                 []
                                 true
-                                fields-by-id)]
+                                fields-by-id
+                                #{})]
         (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
           (let [connection {:connection connection}]
             (store/store-reviews reviews false connection)
@@ -277,3 +282,22 @@
             (should== 1 (store/delete-orphan-attachment-reviews (:key application)
                           [(first reviews)]
                           connection)))))))
+
+(describe "application with base education"
+          (tags :unit :attachments)
+
+  (it "should be possible to extract attachment ids from base education module"
+    (let [content                         (:content form-fixtures/base-education-attachment-test-form)
+          flat-fields                     (util/flatten-form-fields content)
+          attachments-from-base-education (util/attachment-ids-from-children flat-fields
+                                                                             higher-completed-base-education-id
+                                                                             attachment-always-visible?)]
+      (should== #{"pohjakoulutus_kk_ulk--attachement"
+                  "pohjakoulutus_lk--attachment"
+                  "pohjakoulutus_avoin--attachment"
+                  "pohjakoulutus_am--attachment"
+                  "pohjakoulutus_amt--attachment"
+                  "pohjakoulutus_ulk--attachment"
+                  "pohjakoulutus_kk--attachment"
+                  "pohjakoulutus_muu--attachment"}
+                attachments-from-base-education))))

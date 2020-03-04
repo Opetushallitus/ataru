@@ -1,6 +1,6 @@
 (ns ataru.hakija.application-handlers
   (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch subscribe]]
-            [ataru.component-data.higher-education-base-education-module :refer [excluded-attachment-ids-when-yo-and-jyemp]]
+            [ataru.component-data.higher-education-base-education-module :refer [higher-completed-base-education-id attachment-always-visible?]]
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
             [ataru.util :as autil]
@@ -41,7 +41,7 @@
     (if (and (= (:status response) 401)
              (= "secret-expired" (get-in response [:body :code])))
       {:db (-> db
-               (assoc-in [:form :selected-language] (keyword (get-in response [:body :lang])))
+               (assoc-in [:form :selected-language] (or (keyword (get-in response [:body :lang])) :fi))
                (assoc-in [:application :secret-expired?] true)
                (assoc-in [:application :old-secret] old-secret))}
       {:db       db
@@ -262,6 +262,7 @@
          id                     (keyword (:id field-descriptor))
          belongs-to             (set (concat (:belongs-to-hakukohderyhma field-descriptor)
                                              (:belongs-to-hakukohteet field-descriptor)))
+         excluded-attachment-ids-when-yo-and-jyemp (-> db :application :higher-base-education-module-attachment-ids)
          jyemp?                 (and ylioppilastutkinto?
                                      (contains? excluded-attachment-ids-when-yo-and-jyemp (:id field-descriptor)))
          visible?               (and (not (get-in field-descriptor [:params :hidden] false))
@@ -518,6 +519,9 @@
         preselected-hakukohde-oids (->> db :application :preselected-hakukohde-oids
                                         (filter #(contains? valid-hakukohde-oids %)))
         flat-form-content          (autil/flatten-form-fields (:content form))
+        higher-base-education-module-attachment-ids (autil/attachment-ids-from-children flat-form-content
+                                                                                        higher-completed-base-education-id
+                                                                                        attachment-always-visible?)
         initial-answers            (create-initial-answers flat-form-content preselected-hakukohde-oids)]
     (-> db
         (update :form (fn [{:keys [selected-language]}]
@@ -525,6 +529,7 @@
                                 (some? selected-language)
                                 (assoc :selected-language selected-language))))
         (assoc :flat-form-content flat-form-content)
+        (assoc-in [:application :higher-base-education-module-attachment-ids] higher-base-education-module-attachment-ids)
         (assoc-in [:application :answers] initial-answers)
         (assoc-in [:application :show-hakukohde-search] false)
         (assoc-in [:application :validators-processing] #{})

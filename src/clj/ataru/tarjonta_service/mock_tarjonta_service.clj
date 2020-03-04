@@ -156,7 +156,14 @@
                                   :hakukohdeOids    ["1.2.246.562.20.49028196523"
                                                      "1.2.246.562.20.49028196524"
                                                      "1.2.246.562.20.49028196525"
-                                                     "1.2.246.562.20.49028196526"]})})
+                                                     "1.2.246.562.20.49028196526"]})
+   :1.2.246.562.29.65950024192 (merge
+                                 base-haku
+                                 {:oid              "1.2.246.562.29.65950024192"
+                                  :usePriority      true
+                                  :kohdejoukkoUri   "haunkohdejoukko_12#"
+                                  :ataruLomakeAvain "pohjakoulutus-test-form"
+                                  :hakukohdeOids    ["1.2.246.562.20.49028196523"]})})
 
 (def hakukohde
   {:1.2.246.562.20.49028196522 base-hakukohde
@@ -170,6 +177,7 @@
                                   :oid              "1.2.246.562.20.49028196523"
                                   :hakuOid          "1.2.246.562.29.65950024186"
                                   :koulutukset      [{:oid "1.2.246.562.17.74335799462"}]
+                                  :josYoEiMuitaLiitepyyntoja true
                                   :hakukohteenNimet
                                                     {:kieli_fi "Testihakukohde 1"
                                                      :kieli_sv "sv Testihakukohde 1"}})

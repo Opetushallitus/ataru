@@ -1,5 +1,6 @@
 (ns ataru.fixtures.form
   (:require [ataru.db.migrations :as migrations]
+            [ataru.component-data.higher-education-base-education-module :as higher-education-base-education-module]
             [ataru.component-data.component :as component]))
 
 (def metadata {:created-by  {:oid  "1.2.246.562.24.1000000"
@@ -191,6 +192,23 @@
    :locked     nil
    :locked-by  nil
    :content    [(component/hakukohteet)
+                {:id         "att__1"
+                 :fieldClass "formField"
+                 :metadata   metadata
+                 :fieldType  "attachment"
+                 :label      {:fi "Liite"}}
+                {:id         "att__2"
+                 :fieldClass "formField"
+                 :metadata   metadata
+                 :fieldType  "attachment"
+                 :label      {:fi "Liite ilman vastausta"}}]})
+
+(def base-education-attachment-test-form
+  {:name       {:fi "Attachment and Base Education test form"}
+   :created-by "1.2.246.562.11.11111111111"
+   :content    [(component/hakukohteet)
+                (ataru.component-data.person-info-module/person-info-module)
+                (higher-education-base-education-module/module metadata)
                 {:id         "att__1"
                  :fieldClass "formField"
                  :metadata   metadata

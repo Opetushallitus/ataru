@@ -9,7 +9,8 @@
                                                     dropdown
                                                     question-group]]
             [ataru.util :as util]
-            [ataru.translations.texts :refer [higher-base-education-module-texts general-texts]]))
+            [ataru.translations.texts :refer [higher-base-education-module-texts general-texts]]
+            [clojure.string :refer [starts-with?]]))
 
 (def yo-arvosana-options
   [{:label {:en "L" :fi "L" :sv "L"} :value "0"}
@@ -22,6 +23,8 @@
             :fi "Ei arvosanaa"
             :sv "Inget vitsord"}
     :value "6"}])
+
+(def higher-completed-base-education-id "higher-completed-base-education")
 
 (defn- arvosana-aidinkieli [id]
   {:fieldClass "formField"
@@ -913,7 +916,7 @@
           {:children   [{:belongs-to-hakukohteet   []
                          :fieldClass               "formField"
                          :fieldType                "multipleChoice"
-                         :id                       "higher-completed-base-education"
+                         :id                       higher-completed-base-education-id
                          :koodisto-ordered-by-user true
                          :koodisto-source          {:title   "Kk-pohjakoulutusvaihtoehdot"
                                                     :uri     "pohjakoulutuskklomake"
@@ -1017,12 +1020,7 @@
        (map (comp name :id))
        set))
 
-(def excluded-attachment-ids-when-yo-and-jyemp
-  #{"pohjakoulutus_lk--attachment"
-    "pohjakoulutus_am--attachment"
-    "pohjakoulutus_amt--attachment"
-    "pohjakoulutus_kk--attachment"
-    "pohjakoulutus_ulk--attachment"
-    "pohjakoulutus_kk_ulk--attachement"
-    "pohjakoulutus_avoin--attachment"
-    "pohjakoulutus_muu--attachment"})
+(defn attachment-always-visible?
+  [attachment-id]
+  (or (starts-with? attachment-id "pohjakoulutus_yo")
+      (starts-with? attachment-id "pohjakoulutus-yo")))

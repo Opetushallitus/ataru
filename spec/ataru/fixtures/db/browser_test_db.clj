@@ -8,6 +8,7 @@
             [ataru.db.db :as db]
             [ataru.component-data.component :as component]
             [ataru.component-data.person-info-module :as person-info-module]
+            [ataru.component-data.higher-education-base-education-module :as higher-education-base-education-module]
             [ataru.config.core :refer [config]]
             [ataru.db.migrations :as migrations]))
 
@@ -25,6 +26,7 @@
             :name             {:fi "Selaintestilomake1"}
             :created-by       "1.2.246.562.11.11111111111"
             :organization-oid "1.2.246.562.10.0439845"
+            :languages        ["fi"]
             :content          [{:fieldClass "wrapperElement"
                                 :id         "G__31"
                                 :metadata   metadata
@@ -44,6 +46,7 @@
             :name             {:fi "Selaintestilomake2"}
             :created-by       "1.2.246.562.11.11111111111"
             :organization-oid "1.2.246.562.10.0439845"
+            :languages        ["fi"]
             :content          [{:fieldClass "wrapperElement"
                                 :metadata   metadata
                                 :id         "d5cd3c63-02a3-4c19-a61e-35d85e46602f"
@@ -89,6 +92,29 @@
             :content          []
             :locked           nil
             :locked-by        nil})
+
+(def pohjakoulutus-form
+  {:id               43
+   :key              "pohjakoulutus-test-form"
+   :name             {:fi "Uusi lomake pohjakoulutus"}
+   :created-by       "1.2.246.562.11.11111111111"
+   :organization-oid "1.2.246.562.10.0439845"
+   :languages        ["fi"]
+   :created-time     "2016-07-28T09:58:34.217+03:00"
+   :locked           nil
+   :locked-by        nil
+   :content          [(component/hakukohteet)
+                      (person-info-module/person-info-module)
+                      (higher-education-base-education-module/module metadata)
+                      {:label                  {:fi "Random liite"
+                                                :sv "Randöm liitö"}
+                       :fieldClass             "formField"
+                       :metadata               metadata
+                       :belongs-to-hakukohteet ["1.2.246.562.20.49028196523"]
+                       :id                     "attachment-out-of-pohjakoulutus"
+                       :params                 {}
+                       :options                []
+                       :fieldType              "attachment"}]})
 
 (def ssn-testform {:id               4
                    :key              "41101b4f-1762-49af-9db0-e3603adae656"
@@ -286,6 +312,7 @@
   (form-store/create-new-form! form3 (:key form3))
   (form-store/create-new-form! form3 "41101b4f-1762-49af-9db0-e3603adae3ae")
   (form-store/create-new-form! form4 (:key form4))
+  (form-store/create-new-form! pohjakoulutus-form (:key pohjakoulutus-form))
   (form-store/create-new-form! assosiaatio-hakukohteen-organisaatiosta-form
                                (:key assosiaatio-hakukohteen-organisaatiosta-form))
   (form-store/create-new-form! belongs-to-hakukohteet-test-form
